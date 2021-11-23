@@ -1,5 +1,5 @@
 #
-# Library Makefile for CUPS.
+# Library Makefile for libcups.
 #
 # Copyright © 2021 by OpenPrinting.
 # Copyright © 2007-2021 by Apple Inc.
@@ -16,7 +16,7 @@ include ../Makedefs
 # Object files...
 #
 
-COREOBJS	=	\
+LIBOBJS		= \
 		array.o \
 		auth.o \
 		debug.o \
@@ -57,43 +57,11 @@ COREOBJS	=	\
 		transcode.o \
 		usersys.o \
 		util.o
-
-DRIVEROBJS	=	\
-		adminutil.o \
-		backchannel.o \
-		backend.o \
-		getdevices.o \
-		getifaddrs.o \
-		ppd.o \
-		ppd-attr.o \
-		ppd-cache.o \
-		ppd-conflicts.o \
-		ppd-custom.o \
-		ppd-emit.o \
-		ppd-localize.o \
-		ppd-mark.o \
-		ppd-page.o \
-		ppd-util.o \
-		raster-interpret.o \
-		raster-interstub.o \
-		sidechannel.o \
-		snmp.o
-
-LIBOBJS		= \
-		$(LIBCUPSOBJS)
-
-IMAGEOBJS	= \
-		raster-interstub.o \
-		raster-stubs.o
-
 TESTOBJS	= \
 		fuzzipp.o \
 		rasterbench.o \
-		testadmin.o \
 		testarray.o \
-		testcache.o \
 		testclient.o \
-		testconflicts.o \
 		testcreds.o \
 		testcups.o \
 		testdest.o \
@@ -104,15 +72,12 @@ TESTOBJS	= \
 		testipp.o \
 		testoptions.o \
 		testlang.o \
-		testppd.o \
 		testpwg.o \
 		testraster.o \
-		testsnmp.o \
 		testthreads.o \
 		tlscheck.o
 OBJS	=	\
 		$(LIBOBJS) \
-		$(IMAGEOBJS) \
 		$(TESTOBJS)
 
 
@@ -120,7 +85,7 @@ OBJS	=	\
 # Header files to install...
 #
 
-COREHEADERS	=	\
+HEADERS	=	\
 		array.h \
 		cups.h \
 		dir.h \
@@ -133,45 +98,14 @@ COREHEADERS	=	\
 		transcode.h \
 		versioning.h
 
-DRIVERHEADERS	=	\
-		adminutil.h \
-		backend.h \
-		ppd.h \
-		sidechannel.h
-
-HEADERS		=	\
-		$(LIBHEADERS)
-
-COREHEADERSPRIV =	\
-		array-private.h \
-		cups-private.h \
-		debug-private.h \
-		file-private.h \
-		http-private.h \
-		ipp-private.h \
-		language-private.h \
-		pwg-private.h \
-		raster-private.h \
-		string-private.h \
-		thread-private.h
-
-DRIVERHEADERSPRIV	=	\
-		ppd-private.h \
-		snmp-private.h
-
-HEADERSPRIV	=	\
-		$(LIBHEADERSPRIV)
-
 
 #
 # Targets in this directory...
 #
 
 LIBTARGETS =	\
-		$(LIBCUPSIMAGE) \
 		$(LIBCUPSSTATIC) \
-		$(LIBCUPS) \
-		libcupsimage.a
+		$(LIBCUPS)
 
 UNITTARGETS =	\
 		fuzzipp \
@@ -191,7 +125,6 @@ UNITTARGETS =	\
 		testipp \
 		testlang \
 		testoptions \
-		testppd \
 		testpwg \
 		testraster \
 		testsnmp \
@@ -210,13 +143,6 @@ all:		$(TARGETS)
 
 
 #
-# Make library targets...
-#
-
-libs:		$(LIBTARGETS)
-
-
-#
 # Make unit tests...
 #
 
@@ -230,7 +156,6 @@ unittests:	$(UNITTARGETS)
 clean:
 	$(RM) $(OBJS) $(TARGETS) $(UNITTARGETS)
 	$(RM) libcups.so libcups.dylib
-	$(RM) libcupsimage.so libcupsimage.dylib
 
 
 #
@@ -238,95 +163,41 @@ clean:
 #
 
 depend:
-	$(CC) -MM $(ALL_CFLAGS) $(OBJS:.o=.c) >Dependencies
-
-
-#
-# Run oclint to check code coverage...
-#
-
-oclint:
-	oclint -o=oclint.html -html $(LIBOBJS:.o=.c) -- $(ALL_CFLAGS)
+	$(CC) -MM -I.. -D_CUPS_SOURCE $(CPPFLAGS) $(OPTIONS) $(OBJS:.o=.c) >Dependencies
 
 
 #
 # Install all targets...
 #
 
-install:	all install-data install-headers install-libs install-exec
-
-
-#
-# Install data files...
-#
-
-install-data:
-
-
-#
-# Install programs...
-#
-
-install-exec:
-
-
-#
-# Install headers...
-#
-
-install-headers:
-	echo Installing header files into $(INCLUDEDIR)/cups...
-	$(INSTALL_DIR) -m 755 $(INCLUDEDIR)/cups
+install:	all $(INSTALLSTATIC)
+	echo Installing header files into $(BUILDROOT)$(includedir)/cups...
+	$(INSTALL_DIR) -m 755 $(BUILDROOT)$(includedir)/cups
 	for file in $(HEADERS); do \
-		$(INSTALL_DATA) $$file $(INCLUDEDIR)/cups; \
+		$(INSTALL_DATA) $$file $(BUILDROOT)$(includedir)/cups; \
 	done
-
-
-#
-# Install libraries...
-#
-
-install-libs: $(LIBTARGETS) $(INSTALLSTATIC)
-	echo Installing libraries in $(LIBDIR)...
-	$(INSTALL_DIR) -m 755 $(LIBDIR)
-	$(INSTALL_LIB) $(LIBCUPS) $(LIBDIR)
-	if test $(LIBCUPS) = "libcups.so.2"; then \
-		$(RM) $(LIBDIR)/`basename $(LIBCUPS) .2`; \
-		$(LN) $(LIBCUPS) $(LIBDIR)/`basename $(LIBCUPS) .2`; \
+	echo Installing libraries in $(BUILDROOT)$(libdir)...
+	$(INSTALL_DIR) -m 755 $(BUILDROOT)$(libdir)
+	$(INSTALL_LIB) $(LIBCUPS) $(BUILDROOT)$(libdir)
+	if test $(LIBCUPS) = "libcups.so.3"; then \
+		$(RM) $(BUILDROOT)$(libdir)/`basename $(LIBCUPS) .3`; \
+		$(LN) $(LIBCUPS) $(BUILDROOT)$(libdir)/`basename $(LIBCUPS) .3`; \
 	fi
-	if test $(LIBCUPS) = "libcups.2.dylib"; then \
-		$(RM) $(LIBDIR)/libcups.dylib; \
-		$(LN) $(LIBCUPS) $(LIBDIR)/libcups.dylib; \
-	fi
-	-if test "x$(LIBCUPSIMAGE)" != x; then \
-		$(INSTALL_LIB) $(LIBCUPSIMAGE) $(LIBDIR); \
-	fi
-	-if test "x$(LIBCUPSIMAGE)" = "xlibcupsimage.so.2"; then \
-		$(RM) $(LIBDIR)/`basename $(LIBCUPSIMAGE) .2`; \
-		$(LN) $(LIBCUPSIMAGE) $(LIBDIR)/`basename $(LIBCUPSIMAGE) .2`; \
-	fi
-	-if test "x$(LIBCUPSIMAGE)" = "xlibcupsimage.2.dylib"; then \
-		$(RM) $(LIBDIR)/libcupsimage.dylib; \
-		$(LN) $(LIBCUPSIMAGE) $(LIBDIR)/libcupsimage.dylib; \
+	if test $(LIBCUPS) = "libcups.3.dylib"; then \
+		$(RM) $(BUILDROOT)$(libdir)/libcups.dylib; \
+		$(LN) $(LIBCUPS) $(BUILDROOT)$(libdir)/libcups.dylib; \
 	fi
 	if test "x$(SYMROOT)" != "x"; then \
 		$(INSTALL_DIR) $(SYMROOT); \
 		cp $(LIBCUPS) $(SYMROOT); \
 		dsymutil $(SYMROOT)/$(LIBCUPS); \
-		if test "x$(LIBCUPSIMAGE)" != x; then \
-			cp $(LIBCUPSIMAGE) $(SYMROOT); \
-			dsymutil $(SYMROOT)/$(LIBCUPSIMAGE); \
-		fi; \
 	fi
 
 installstatic:
-	$(INSTALL_DIR) -m 755 $(LIBDIR)
-	$(INSTALL_LIB) -m 755 $(LIBCUPSSTATIC) $(LIBDIR)
-	$(RANLIB) $(LIBDIR)/$(LIBCUPSSTATIC)
-	$(CHMOD) 555 $(LIBDIR)/$(LIBCUPSSTATIC)
-	$(INSTALL_LIB) -m 755 libcupsimage.a $(LIBDIR)
-	$(RANLIB) $(LIBDIR)/libcupsimage.a
-	$(CHMOD) 555 $(LIBDIR)/libcupsimage.a
+	$(INSTALL_DIR) -m 755 $(BUILDROOT)$(libdir)
+	$(INSTALL_LIB) -m 755 $(LIBCUPSSTATIC) $(BUILDROOT)$(libdir)
+	$(RANLIB) $(BUILDROOT)$(libdir)/$(LIBCUPSSTATIC)
+	$(CHMOD) 555 $(BUILDROOT)$(libdir)/$(LIBCUPSSTATIC)
 
 
 #
@@ -334,46 +205,38 @@ installstatic:
 #
 
 uninstall:
-	$(RM) $(LIBDIR)/libcups.2.dylib
-	$(RM) $(LIBDIR)/libcups.a
-	$(RM) $(LIBDIR)/libcups.dylib
-	$(RM) $(LIBDIR)/libcups.so
-	$(RM) $(LIBDIR)/libcups.so.2
-	$(RM) $(LIBDIR)/libcupsimage.2.dylib
-	$(RM) $(LIBDIR)/libcupsimage.a
-	$(RM) $(LIBDIR)/libcupsimage.dylib
-	$(RM) $(LIBDIR)/libcupsimage.so
-	$(RM) $(LIBDIR)/libcupsimage.so.2
-	-$(RMDIR) $(LIBDIR)
+	$(RM) $(BUILDROOT)$(libdir)/libcups.3.dylib
+	$(RM) $(BUILDROOT)$(libdir)/libcups.a
+	$(RM) $(BUILDROOT)$(libdir)/libcups.dylib
+	$(RM) $(BUILDROOT)$(libdir)/libcups.so
+	$(RM) $(BUILDROOT)$(libdir)/libcups.so.3
+	-$(RMDIR) $(BUILDROOT)$(libdir)
 	for file in $(HEADERS); do \
-		$(RM) $(INCLUDEDIR)/cups/$$file; \
+		$(RM) $(BUILDROOT)$(includedir)/cups/$$file; \
 	done
-	-$(RMDIR) $(INCLUDEDIR)/cups
+	-$(RMDIR) $(BUILDROOT)$(includedir)/cups
 
 
 #
-# libcups.so.2
+# libcups.so.3
 #
 
-libcups.so.2:	$(LIBOBJS)
+libcups.so.3:	$(LIBOBJS)
 	echo Linking $@...
-	$(DSO) $(ARCHFLAGS) $(ALL_DSOFLAGS) -o $@ $(LIBOBJS) $(LIBS)
-	$(RM) `basename $@ .2`
-	$(LN) $@ `basename $@ .2`
+	$(DSO) $(DSOFLAGS) $(OPTIM) -o $@ $(LIBOBJS) $(LIBS)
+	$(RM) `basename $@ .3`
+	$(LN) $@ `basename $@ .3`
 
 
 #
-# libcups.2.dylib
+# libcups.3.dylib
 #
 
-libcups.2.dylib:	$(LIBOBJS)
+libcups.3.dylib:	$(LIBOBJS)
 	echo Linking $@...
-	$(DSO) $(ARCHFLAGS) $(ALL_DSOFLAGS) -o $@ \
-		-install_name $(libdir)/$@ \
-		-current_version 2.14.0 \
-		-compatibility_version 2.0.0 \
-		$(LIBOBJS) $(LIBS)
-	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
+	$(DSO) $(DSOFLAGS) $(OPTIM) -o $@ -install_name $(libdir)/$@ \
+		-current_version 3.0.0 -compatibility_version 3.0.0 $(LIBOBJS) $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
 	$(RM) libcups.dylib
 	$(LN) $@ libcups.dylib
 
@@ -384,8 +247,8 @@ libcups.2.dylib:	$(LIBOBJS)
 
 libcups.la:    $(LIBOBJS)
 	echo Linking $@...
-	$(LD_CC) $(ARCHFLAGS) $(ALL_DSOFLAGS) -o $@ $(LIBOBJS:.o=.lo) \
-		-rpath $(LIBDIR) -version-info 2:14 $(LIBS)
+	$(LD_CC) $(DSOFLAGS) $(OPTIM) -o $@ $(LIBOBJS:.o=.lo) \
+		-rpath $(BUILDROOT)$(libdir) -version-info 3:0 $(LIBS)
 
 
 #
@@ -400,69 +263,18 @@ libcups.a:	$(LIBOBJS)
 
 
 #
-# libcups2.def (Windows DLL exports file...)
+# libcups3.def (Windows DLL exports file...)
 #
 
-libcups2.def: $(LIBOBJS) $(IMAGEOBJS) Makefile
+libcups3.def: $(LIBOBJS) $(IMAGEOBJS) Makefile
 	echo Generating $@...
-	echo "LIBRARY libcups2" >libcups2.def
-	echo "VERSION 2.14" >>libcups2.def
-	echo "EXPORTS" >>libcups2.def
-	(nm $(LIBOBJS) $(IMAGEOBJS) 2>/dev/null | grep "T _" | awk '{print $$3}'; \
-	 echo __cups_strcpy; echo __cups_strlcat; echo __cups_strlcpy; \
-	 echo __cups_snprintf; echo __cups_vsnprintf; echo __cups_gettimeofday) | \
-		grep -v -E \
-		    -e 'cups_debug|Apple|BackChannel|Backend|FileCheck|Filter|GSSService|SetNegotiate|SideChannel|SNMP' \
-		    -e 'Block$$' | \
-		sed -e '1,$$s/^_//' | sort >>libcups2.def
-
-
-#
-# libcupsimage.so.2
-#
-
-libcupsimage.so.2:	$(IMAGEOBJS) libcups.so.2
-	echo Linking $@...
-	$(DSO) $(ARCHFLAGS) $(ALL_DSOFLAGS) -o $@ $(IMAGEOBJS) $(LINKCUPS)
-	$(RM) `basename $@ .2`
-	$(LN) $@ `basename $@ .2`
-
-
-#
-# libcupsimage.2.dylib
-#
-
-libcupsimage.2.dylib:	$(IMAGEOBJS) libcups.2.dylib
-	echo Linking $@...
-	$(DSO) $(ARCHFLAGS) $(ALL_DSOFLAGS) -o $@ \
-		-install_name $(libdir)/$@ \
-		-current_version 2.3.0 \
-		-compatibility_version 2.0.0 \
-		$(IMAGEOBJS) $(LINKCUPS)
-	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
-	$(RM) libcupsimage.dylib
-	$(LN) $@ libcupsimage.dylib
-
-
-#
-# libcupsimage.la
-#
-
-libcupsimage.la:       $(IMAGEOBJS) libcups.la
-	echo Linking $@...
-	$(DSO) $(ARCHFLAGS) $(ALL_DSOFLAGS) -o $@ $(IMAGEOBJS:.o=.lo) \
-		$(LINKCUPS) -rpath $(LIBDIR) -version-info 2:3
-
-
-#
-# libcupsimage.a
-#
-
-libcupsimage.a:	$(IMAGEOBJS)
-	echo Archiving $@...
-	$(RM) $@
-	$(AR) $(ARFLAGS) $@ $(IMAGEOBJS)
-	$(RANLIB) $@
+	echo "LIBRARY libcups3" >$@
+	echo "VERSION 3.0" >>$@
+	echo "EXPORTS" >>$@
+	(nm $(LIBOBJS) 2>/dev/null | grep "T _" | awk '{print $$3}'; \
+	 echo __cups_strcpy; echo __cups_strlcpy; echo __cups_gettimeofday) | \
+		grep -v -E -e '^cups_debug' -e 'Block$$' | \
+		sed -e '1,$$s/^_//' | sort >>$@
 
 
 #
@@ -471,8 +283,8 @@ libcupsimage.a:	$(IMAGEOBJS)
 
 fuzzipp:	fuzzipp.o $(LIBCUPSSTATIC)
 	echo Linking $@...
-	$(LD_CC) $(ARCHFLAGS) $(ALL_LDFLAGS) -o $@ fuzzipp.o $(LINKCUPSSTATIC)
-	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
+	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ fuzzipp.o libcups.a $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
 	echo Fuzzing IPP API...
 	./fuzzipp
 
@@ -483,18 +295,8 @@ fuzzipp:	fuzzipp.o $(LIBCUPSSTATIC)
 
 rasterbench:	rasterbench.o $(LIBCUPSSTATIC)
 	echo Linking $@...
-	$(LD_CC) $(ALL_LDFLAGS) -o $@ rasterbench.o $(LINKCUPSSTATIC)
-	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
-
-
-#
-# testadmin (dependency on static CUPS library is intentional)
-#
-
-testadmin:	testadmin.o $(LIBCUPSSTATIC)
-	echo Linking $@...
-	$(LD_CC) $(ALL_LDFLAGS) -o $@ testadmin.o $(LINKCUPSSTATIC)
-	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
+	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ rasterbench.o libcups.a $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
 
 
 #
@@ -503,20 +305,10 @@ testadmin:	testadmin.o $(LIBCUPSSTATIC)
 
 testarray:	testarray.o $(LIBCUPSSTATIC)
 	echo Linking $@...
-	$(LD_CC) $(ARCHFLAGS) $(ALL_LDFLAGS) -o $@ testarray.o $(LINKCUPSSTATIC)
-	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
+	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testarray.o libcups.a $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
 	echo Running array API tests...
 	./testarray
-
-
-#
-# testcache (dependency on static CUPS library is intentional)
-#
-
-testcache:	testcache.o $(LIBCUPSSTATIC)
-	echo Linking $@...
-	$(LD_CC) $(ALL_LDFLAGS) -o $@ testcache.o $(LINKCUPSSTATIC)
-	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
 
 
 #
@@ -525,18 +317,8 @@ testcache:	testcache.o $(LIBCUPSSTATIC)
 
 testclient:	testclient.o $(LIBCUPSSTATIC)
 	echo Linking $@...
-	$(LD_CC) $(ALL_LDFLAGS) -o $@ testclient.o $(LINKCUPSSTATIC)
-	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
-
-
-#
-# testconflicts (dependency on static CUPS library is intentional)
-#
-
-testconflicts:	testconflicts.o $(LIBCUPSSTATIC)
-	echo Linking $@...
-	$(LD_CC) $(ALL_LDFLAGS) -o $@ testconflicts.o $(LINKCUPSSTATIC)
-	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
+	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testclient.o libcups.a $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
 
 
 #
@@ -545,8 +327,8 @@ testconflicts:	testconflicts.o $(LIBCUPSSTATIC)
 
 testcreds:	testcreds.o $(LIBCUPSSTATIC)
 	echo Linking $@...
-	$(LD_CC) $(ARCHFLAGS) $(ALL_LDFLAGS) -o $@ testcreds.o $(LINKCUPSSTATIC)
-	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
+	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testcreds.o libcups.a $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
 
 
 #
@@ -555,8 +337,8 @@ testcreds:	testcreds.o $(LIBCUPSSTATIC)
 
 testcups:	testcups.o $(LIBCUPSSTATIC)
 	echo Linking $@...
-	$(LD_CC) $(ALL_LDFLAGS) -o $@ testcups.o $(LINKCUPSSTATIC)
-	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
+	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testcups.o libcups.a $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
 
 
 #
@@ -565,8 +347,8 @@ testcups:	testcups.o $(LIBCUPSSTATIC)
 
 testdest:	testdest.o $(LIBCUPSSTATIC)
 	echo Linking $@...
-	$(LD_CC) $(ALL_LDFLAGS) -o $@ testdest.o $(LINKCUPSSTATIC)
-	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
+	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testdest.o libcups.a $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
 
 
 #
@@ -575,8 +357,8 @@ testdest:	testdest.o $(LIBCUPSSTATIC)
 
 testfile:	testfile.o $(LIBCUPSSTATIC)
 	echo Linking $@...
-	$(LD_CC) $(ARCHFLAGS) $(ALL_LDFLAGS) -o $@ testfile.o $(LINKCUPSSTATIC)
-	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
+	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testfile.o libcups.a $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
 	echo Running file API tests...
 	./testfile
 
@@ -587,8 +369,8 @@ testfile:	testfile.o $(LIBCUPSSTATIC)
 
 testgetdests:	testgetdests.o $(LIBCUPSSTATIC)
 	echo Linking $@...
-	$(LD_CC) $(ALL_LDFLAGS) -o $@ testgetdests.o $(LINKCUPSSTATIC)
-	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
+	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testgetdests.o libcups.a $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
 
 
 #
@@ -597,8 +379,8 @@ testgetdests:	testgetdests.o $(LIBCUPSSTATIC)
 
 testhttp:	testhttp.o $(LIBCUPSSTATIC)
 	echo Linking $@...
-	$(LD_CC) $(ARCHFLAGS) $(ALL_LDFLAGS) -o $@ testhttp.o $(LINKCUPSSTATIC)
-	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
+	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testhttp.o libcups.a $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
 	echo Running HTTP API tests...
 	./testhttp
 
@@ -609,8 +391,8 @@ testhttp:	testhttp.o $(LIBCUPSSTATIC)
 
 testipp:	testipp.o $(LIBCUPSSTATIC)
 	echo Linking $@...
-	$(LD_CC) $(ARCHFLAGS) $(ALL_LDFLAGS) -o $@ testipp.o $(LINKCUPSSTATIC)
-	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
+	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testipp.o libcups.a $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
 	echo Running IPP API tests...
 	./testipp
 
@@ -621,8 +403,8 @@ testipp:	testipp.o $(LIBCUPSSTATIC)
 
 testi18n:	testi18n.o $(LIBCUPSSTATIC)
 	echo Linking $@...
-	$(LD_CC) $(ARCHFLAGS) $(ALL_LDFLAGS) -o $@ testi18n.o $(LINKCUPSSTATIC)
-	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
+	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testi18n.o libcups.a $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
 	echo Running internationalization API tests...
 	./testi18n
 
@@ -633,8 +415,8 @@ testi18n:	testi18n.o $(LIBCUPSSTATIC)
 
 testlang:	testlang.o $(LIBCUPSSTATIC)
 	echo Linking $@...
-	$(LD_CC) $(ARCHFLAGS) $(ALL_LDFLAGS) -o $@ testlang.o $(LINKCUPSSTATIC)
-	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
+	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testlang.o libcups.a $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
 	echo Creating locale directory structure...
 	$(RM) -r locale
 	for po in ../locale/cups_*.po; do \
@@ -654,22 +436,10 @@ testlang:	testlang.o $(LIBCUPSSTATIC)
 
 testoptions:	testoptions.o $(LIBCUPSSTATIC)
 	echo Linking $@...
-	$(LD_CC) $(ARCHFLAGS) $(ALL_LDFLAGS) -o $@ testoptions.o $(LINKCUPSSTATIC)
-	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
+	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testoptions.o libcups.a $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
 	echo Running option API tests...
 	./testoptions
-
-
-#
-# testppd (dependency on static CUPS library is intentional)
-#
-
-testppd:	testppd.o $(LIBCUPSSTATIC) test.ppd test2.ppd
-	echo Linking $@...
-	$(LD_CC) $(ARCHFLAGS) $(ALL_LDFLAGS) -o $@ testppd.o $(LINKCUPSSTATIC)
-	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
-	echo Running PPD API tests...
-	./testppd
 
 
 #
@@ -678,8 +448,8 @@ testppd:	testppd.o $(LIBCUPSSTATIC) test.ppd test2.ppd
 
 testpwg:	testpwg.o $(LIBCUPSSTATIC) test.ppd
 	echo Linking $@...
-	$(LD_CC) $(ARCHFLAGS) $(ALL_LDFLAGS) -o $@ testpwg.o $(LINKCUPSSTATIC)
-	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
+	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testpwg.o libcups.a $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
 	echo Running PWG API tests...
 	./testpwg test.ppd
 
@@ -690,20 +460,10 @@ testpwg:	testpwg.o $(LIBCUPSSTATIC) test.ppd
 
 testraster:	testraster.o $(LIBCUPSSTATIC)
 	echo Linking $@...
-	$(LD_CC) $(ARCHFLAGS) $(ALL_LDFLAGS) -o $@ testraster.o $(LINKCUPSSTATIC)
-	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
+	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testraster.o libcups.a $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
 	echo Running raster API tests...
 	./testraster
-
-
-#
-# testsnmp (dependency on static CUPS library is intentional)
-#
-
-testsnmp:	testsnmp.o $(LIBCUPSSTATIC)
-	echo Linking $@...
-	$(LD_CC) $(ALL_LDFLAGS) -o $@ testsnmp.o $(LINKCUPSSTATIC)
-	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
 
 
 #
@@ -712,8 +472,8 @@ testsnmp:	testsnmp.o $(LIBCUPSSTATIC)
 
 testthreads:	testthreads.o $(LIBCUPSSTATIC)
 	echo Linking $@...
-	$(LD_CC) $(ALL_LDFLAGS) -o $@ testthreads.o $(LINKCUPSSTATIC)
-	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
+	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testthreads.o libcups.a $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
 
 
 #
@@ -722,15 +482,15 @@ testthreads:	testthreads.o $(LIBCUPSSTATIC)
 
 tlscheck:	tlscheck.o $(LIBCUPSSTATIC)
 	echo Linking $@...
-	$(LD_CC) $(ARCHFLAGS) $(ALL_LDFLAGS) -o $@ tlscheck.o $(LINKCUPSSTATIC)
-	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
+	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ tlscheck.o libcups.a $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
 
 
 #
-# Automatic API help files...
+# Generate documentation using Codedoc (https://www.msweet.org/codedoc)
 #
 
-apihelp:
+doc:
 	echo "Generating CUPS Programming Manual..."
 	$(RM) cupspm.xml
 	codedoc --section "Programming" --body cupspm.md \
@@ -743,20 +503,6 @@ apihelp:
 	codedoc --section "Programming" --body cupspm.md \
 		cupspm.xml > ../doc/help/cupspm.html
 	$(RM) cupspm.xml
-	echo "Generating Administration APIs help..."
-	codedoc --section "Programming" --title "Administration APIs" \
-		--header api-admin.header --body api-admin.shtml \
-		adminutil.c adminutil.h getdevices.c >../doc/help/api-admin.html
-	echo "Generating PPD API (deprecated) help..."
-	codedoc --section "Programming" --title "PPD API (DEPRECATED)" \
-		--header api-ppd.header --body api-ppd.shtml \
-		ppd.h ppd-*.c raster-interstub.c >../doc/help/api-ppd.html
-	echo "Generating Filter and Backend Programming help..."
-	codedoc --section "Programming" \
-		--title "Filter and Backend Programming" \
-		--header api-filter.header --body api-filter.shtml \
-		backchannel.c backend.h backend.c sidechannel.c sidechannel.h \
-		>../doc/help/api-filter.html
 
 
 #
@@ -766,8 +512,7 @@ apihelp:
 sloc:
 	echo "libcups: \c"
 	sloccount $(LIBOBJS:.o=.c) 2>/dev/null | grep "Total Physical" | awk '{print $$9}'
-	echo "libcupsimage: \c"
-	sloccount $(IMAGEOBJS:.o=.c) 2>/dev/null | grep "Total Physical" | awk '{print $$9}'
+$$9}'
 
 
 #
