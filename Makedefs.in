@@ -23,12 +23,10 @@ LIBCUPS_VERSION_MINOR	=	@LIBCUPS_VERSION_MINOR@
 #
 
 AR		=	@AR@
-CC		=	@LIBTOOL_CC@ @CC@
+CC		=	@CC@
 DSO		=	@DSO@
 INSTALL		=	@INSTALL@
 LD		=	@LD@
-LD_CC		=	@LD_CC@
-LIBTOOL		=	@LIBTOOL@
 LN		=	@LN@ -sf
 MKDIR           =       @MKDIR@ -p
 MV		=	@MV@ -f

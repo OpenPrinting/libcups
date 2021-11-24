@@ -20,9 +20,6 @@
 #define LIBCUPS_VERSION_MAJOR	""
 #define LIBCUPS_VERSION_MINOR	""
 
-#define CUPS_SVERSION	""
-#define CUPS_MINIMAL	""
-
 
 /*
  * Where are files stored?

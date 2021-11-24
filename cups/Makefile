@@ -63,7 +63,6 @@ TESTOBJS	= \
 		testarray.o \
 		testclient.o \
 		testcreds.o \
-		testcups.o \
 		testdest.o \
 		testfile.o \
 		testgetdests.o \
@@ -71,14 +70,16 @@ TESTOBJS	= \
 		testi18n.o \
 		testipp.o \
 		testoptions.o \
-		testlang.o \
-		testpwg.o \
 		testraster.o \
 		testthreads.o \
 		tlscheck.o
 OBJS	=	\
 		$(LIBOBJS) \
 		$(TESTOBJS)
+
+#		testcups.o \
+#		testlang.o \
+#		testpwg.o \
 
 
 #
@@ -104,7 +105,7 @@ HEADERS	=	\
 #
 
 LIBTARGETS =	\
-		$(LIBCUPSSTATIC) \
+		libcups.a \
 		$(LIBCUPS)
 
 UNITTARGETS =	\
@@ -116,20 +117,21 @@ UNITTARGETS =	\
 		testclient \
 		testconflicts \
 		testcreds \
-		testcups \
 		testdest \
 		testfile \
 		testgetdests \
 		testhttp \
 		testi18n \
 		testipp \
-		testlang \
 		testoptions \
-		testpwg \
 		testraster \
 		testsnmp \
 		testthreads \
 		tlscheck
+
+#		testcups \
+#		testlang \
+#		testpwg \
 
 TARGETS	=	\
 		$(LIBTARGETS)
@@ -206,7 +208,7 @@ installstatic:
 
 uninstall:
 	$(RM) $(BUILDROOT)$(libdir)/libcups.3.dylib
-	$(RM) $(BUILDROOT)$(libdir)/libcups.a
+	$(RM) $(BUILDROOT)$(libdir)/$(LIBCUPSSTATIC)
 	$(RM) $(BUILDROOT)$(libdir)/libcups.dylib
 	$(RM) $(BUILDROOT)$(libdir)/libcups.so
 	$(RM) $(BUILDROOT)$(libdir)/libcups.so.3
@@ -223,7 +225,7 @@ uninstall:
 
 libcups.so.3:	$(LIBOBJS)
 	echo Linking $@...
-	$(DSO) $(DSOFLAGS) $(OPTIM) -o $@ $(LIBOBJS) $(LIBS)
+	$(CC) $(DSOFLAGS) $(OPTIM) -o $@ $(LIBOBJS) $(LIBS)
 	$(RM) `basename $@ .3`
 	$(LN) $@ `basename $@ .3`
 
@@ -234,21 +236,13 @@ libcups.so.3:	$(LIBOBJS)
 
 libcups.3.dylib:	$(LIBOBJS)
 	echo Linking $@...
-	$(DSO) $(DSOFLAGS) $(OPTIM) -o $@ -install_name $(libdir)/$@ \
-		-current_version 3.0.0 -compatibility_version 3.0.0 $(LIBOBJS) $(LIBS)
+	$(CC) $(DSOFLAGS) $(OPTIM) -o $@ -dynamiclib \
+		-install_name $(libdir)/$@ \
+		-current_version 3.0.0 -compatibility_version 3.0.0 \
+		$(LIBOBJS) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 	$(RM) libcups.dylib
 	$(LN) $@ libcups.dylib
-
-
-#
-# libcups.la
-#
-
-libcups.la:    $(LIBOBJS)
-	echo Linking $@...
-	$(LD_CC) $(DSOFLAGS) $(OPTIM) -o $@ $(LIBOBJS:.o=.lo) \
-		-rpath $(BUILDROOT)$(libdir) -version-info 3:0 $(LIBS)
 
 
 #
@@ -283,7 +277,7 @@ libcups3.def: $(LIBOBJS) $(IMAGEOBJS) Makefile
 
 fuzzipp:	fuzzipp.o $(LIBCUPSSTATIC)
 	echo Linking $@...
-	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ fuzzipp.o libcups.a $(LIBS)
+	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ fuzzipp.o $(LIBCUPSSTATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 	echo Fuzzing IPP API...
 	./fuzzipp
@@ -295,7 +289,7 @@ fuzzipp:	fuzzipp.o $(LIBCUPSSTATIC)
 
 rasterbench:	rasterbench.o $(LIBCUPSSTATIC)
 	echo Linking $@...
-	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ rasterbench.o libcups.a $(LIBS)
+	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ rasterbench.o $(LIBCUPSSTATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 
@@ -305,7 +299,7 @@ rasterbench:	rasterbench.o $(LIBCUPSSTATIC)
 
 testarray:	testarray.o $(LIBCUPSSTATIC)
 	echo Linking $@...
-	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testarray.o libcups.a $(LIBS)
+	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testarray.o $(LIBCUPSSTATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 	echo Running array API tests...
 	./testarray
@@ -317,7 +311,7 @@ testarray:	testarray.o $(LIBCUPSSTATIC)
 
 testclient:	testclient.o $(LIBCUPSSTATIC)
 	echo Linking $@...
-	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testclient.o libcups.a $(LIBS)
+	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testclient.o $(LIBCUPSSTATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 
@@ -327,7 +321,7 @@ testclient:	testclient.o $(LIBCUPSSTATIC)
 
 testcreds:	testcreds.o $(LIBCUPSSTATIC)
 	echo Linking $@...
-	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testcreds.o libcups.a $(LIBS)
+	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testcreds.o $(LIBCUPSSTATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 
@@ -337,7 +331,7 @@ testcreds:	testcreds.o $(LIBCUPSSTATIC)
 
 testcups:	testcups.o $(LIBCUPSSTATIC)
 	echo Linking $@...
-	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testcups.o libcups.a $(LIBS)
+	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testcups.o $(LIBCUPSSTATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 
@@ -347,7 +341,7 @@ testcups:	testcups.o $(LIBCUPSSTATIC)
 
 testdest:	testdest.o $(LIBCUPSSTATIC)
 	echo Linking $@...
-	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testdest.o libcups.a $(LIBS)
+	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testdest.o $(LIBCUPSSTATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 
@@ -357,7 +351,7 @@ testdest:	testdest.o $(LIBCUPSSTATIC)
 
 testfile:	testfile.o $(LIBCUPSSTATIC)
 	echo Linking $@...
-	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testfile.o libcups.a $(LIBS)
+	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testfile.o $(LIBCUPSSTATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 	echo Running file API tests...
 	./testfile
@@ -369,7 +363,7 @@ testfile:	testfile.o $(LIBCUPSSTATIC)
 
 testgetdests:	testgetdests.o $(LIBCUPSSTATIC)
 	echo Linking $@...
-	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testgetdests.o libcups.a $(LIBS)
+	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testgetdests.o $(LIBCUPSSTATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 
@@ -379,7 +373,7 @@ testgetdests:	testgetdests.o $(LIBCUPSSTATIC)
 
 testhttp:	testhttp.o $(LIBCUPSSTATIC)
 	echo Linking $@...
-	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testhttp.o libcups.a $(LIBS)
+	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testhttp.o $(LIBCUPSSTATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 	echo Running HTTP API tests...
 	./testhttp
@@ -391,7 +385,7 @@ testhttp:	testhttp.o $(LIBCUPSSTATIC)
 
 testipp:	testipp.o $(LIBCUPSSTATIC)
 	echo Linking $@...
-	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testipp.o libcups.a $(LIBS)
+	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testipp.o $(LIBCUPSSTATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 	echo Running IPP API tests...
 	./testipp
@@ -403,7 +397,7 @@ testipp:	testipp.o $(LIBCUPSSTATIC)
 
 testi18n:	testi18n.o $(LIBCUPSSTATIC)
 	echo Linking $@...
-	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testi18n.o libcups.a $(LIBS)
+	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testi18n.o $(LIBCUPSSTATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 	echo Running internationalization API tests...
 	./testi18n
@@ -415,7 +409,7 @@ testi18n:	testi18n.o $(LIBCUPSSTATIC)
 
 testlang:	testlang.o $(LIBCUPSSTATIC)
 	echo Linking $@...
-	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testlang.o libcups.a $(LIBS)
+	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testlang.o $(LIBCUPSSTATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 	echo Creating locale directory structure...
 	$(RM) -r locale
@@ -436,7 +430,7 @@ testlang:	testlang.o $(LIBCUPSSTATIC)
 
 testoptions:	testoptions.o $(LIBCUPSSTATIC)
 	echo Linking $@...
-	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testoptions.o libcups.a $(LIBS)
+	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testoptions.o $(LIBCUPSSTATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 	echo Running option API tests...
 	./testoptions
@@ -448,7 +442,7 @@ testoptions:	testoptions.o $(LIBCUPSSTATIC)
 
 testpwg:	testpwg.o $(LIBCUPSSTATIC) test.ppd
 	echo Linking $@...
-	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testpwg.o libcups.a $(LIBS)
+	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testpwg.o $(LIBCUPSSTATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 	echo Running PWG API tests...
 	./testpwg test.ppd
@@ -460,7 +454,7 @@ testpwg:	testpwg.o $(LIBCUPSSTATIC) test.ppd
 
 testraster:	testraster.o $(LIBCUPSSTATIC)
 	echo Linking $@...
-	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testraster.o libcups.a $(LIBS)
+	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testraster.o $(LIBCUPSSTATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 	echo Running raster API tests...
 	./testraster
@@ -472,7 +466,7 @@ testraster:	testraster.o $(LIBCUPSSTATIC)
 
 testthreads:	testthreads.o $(LIBCUPSSTATIC)
 	echo Linking $@...
-	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testthreads.o libcups.a $(LIBS)
+	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ testthreads.o $(LIBCUPSSTATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 
@@ -482,7 +476,7 @@ testthreads:	testthreads.o $(LIBCUPSSTATIC)
 
 tlscheck:	tlscheck.o $(LIBCUPSSTATIC)
 	echo Linking $@...
-	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ tlscheck.o libcups.a $(LIBS)
+	$(LD_CC) $(LDFLAGS) $(OPTIM) -o $@ tlscheck.o $(LIBCUPSSTATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 
@@ -512,7 +506,6 @@ doc:
 sloc:
 	echo "libcups: \c"
 	sloccount $(LIBOBJS:.o=.c) 2>/dev/null | grep "Total Physical" | awk '{print $$9}'
-$$9}'
 
 
 #

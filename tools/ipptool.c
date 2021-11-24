@@ -318,7 +318,7 @@ main(int  argc,				/* I - Number of command-line args */
     }
     else if (!strcmp(argv[i], "--version"))
     {
-      puts(CUPS_SVERSION);
+      puts(LIBCUPS_VERSION);
       return (0);
     }
     else if (argv[i][0] == '-')
@@ -3869,7 +3869,7 @@ print_json_attr(
 }
 
 
-/* 
+/*
  * 'print_json_string()' - Print a string in JSON format.
  */
 
@@ -4031,7 +4031,7 @@ print_xml_header(ipptool_test_t *data)/* I - Test data */
     cupsFilePuts(data->outfile, "<plist version=\"1.0\">\n");
     cupsFilePuts(data->outfile, "<dict>\n");
     cupsFilePuts(data->outfile, "<key>ipptoolVersion</key>\n");
-    cupsFilePuts(data->outfile, "<string>" CUPS_SVERSION "</string>\n");
+    cupsFilePuts(data->outfile, "<string>" LIBCUPS_VERSION "</string>\n");
     cupsFilePuts(data->outfile, "<key>Transfer</key>\n");
     cupsFilePrintf(data->outfile, "<string>%s</string>\n", data->transfer == IPPTOOL_TRANSFER_AUTO ? "auto" : data->transfer == IPPTOOL_TRANSFER_CHUNKED ? "chunked" : "length");
     cupsFilePuts(data->outfile, "<key>Tests</key>\n");

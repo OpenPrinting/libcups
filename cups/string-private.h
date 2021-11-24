@@ -141,34 +141,15 @@ extern int _cups_toupper(int ch);
 extern ssize_t	_cups_safe_vsnprintf(char *buffer, size_t bufsize, const char *format, va_list args) _CUPS_PRIVATE;
 extern void	_cups_strcpy(char *dst, const char *src) _CUPS_PRIVATE;
 
-#  ifndef HAVE_STRDUP
-extern char	*_cups_strdup(const char *) _CUPS_PRIVATE;
-#    define strdup _cups_strdup
-#  endif /* !HAVE_STRDUP */
-
 extern int	_cups_strcasecmp(const char *, const char *) _CUPS_PRIVATE;
 
 extern int	_cups_strncasecmp(const char *, const char *, size_t n) _CUPS_PRIVATE;
-
-#  ifndef HAVE_STRLCAT
-extern size_t _cups_strlcat(char *, const char *, size_t) _CUPS_PRIVATE;
-#    define strlcat _cups_strlcat
-#  endif /* !HAVE_STRLCAT */
 
 #  ifndef HAVE_STRLCPY
 extern size_t _cups_strlcpy(char *, const char *, size_t) _CUPS_PRIVATE;
 #    define strlcpy _cups_strlcpy
 #  endif /* !HAVE_STRLCPY */
 
-#  ifndef HAVE_SNPRINTF
-extern int	_cups_snprintf(char *, size_t, const char *, ...) _CUPS_FORMAT(3, 4) _CUPS_PRIVATE;
-#    define snprintf _cups_snprintf
-#  endif /* !HAVE_SNPRINTF */
-
-#  ifndef HAVE_VSNPRINTF
-extern int	_cups_vsnprintf(char *, size_t, const char *, va_list) _CUPS_PRIVATE;
-#    define vsnprintf _cups_vsnprintf
-#  endif /* !HAVE_VSNPRINTF */
 
 /*
  * String pool functions...

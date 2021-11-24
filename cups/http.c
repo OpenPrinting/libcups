@@ -3406,7 +3406,7 @@ httpWriteResponse(http_t        *http,	/* I - HTTP connection */
 #endif /* HAVE_TLS */
 
   if (!http->fields[HTTP_FIELD_SERVER])
-    httpSetField(http, HTTP_FIELD_SERVER, http->default_fields[HTTP_FIELD_SERVER] ? http->default_fields[HTTP_FIELD_SERVER] : CUPS_MINIMAL);
+    httpSetField(http, HTTP_FIELD_SERVER, http->default_fields[HTTP_FIELD_SERVER] ? http->default_fields[HTTP_FIELD_SERVER] : "CUPS/" LIBCUPS_VERSION " IPP/2.1");
 
  /*
   * Set the Accept-Encoding field if it isn't already...

@@ -45,6 +45,33 @@ AS_IF([test "x$host_os_version" = x], [
 ])
 
 
+dnl Determine whether we are cross-compiling...
+AS_IF([test "$build" = "$host"], [
+    # No, build local targets
+    LOCALTARGET="local"
+], [
+    # Yes, don't build local targets
+    LOCALTARGET=""
+])
+AC_SUBST([LOCALTARGET])
+
+AC_PATH_PROGS([CODE_SIGN], [codesign true])
+
+
+dnl Unit tests take up time during a compile...
+AC_ARG_ENABLE([unit_tests], AS_HELP_STRING([--enable-unit-tests], [build and run unit tests]))
+AS_IF([test x$enable_unit_tests = xyes], [
+    AS_IF([test "$build" != "$host"], [
+	AC_MSG_ERROR([Sorry, cannot build unit tests when cross-compiling.])
+    ])
+
+    UNITTESTS="unittests"
+], [
+    UNITTESTS=""
+])
+AC_SUBST([UNITTESTS])
+
+
 dnl Compiler options...
 CFLAGS="${CFLAGS:=}"
 CPPFLAGS="${CPPFLAGS:=}"
@@ -92,16 +119,42 @@ AC_PATH_TOOL([PKGCONFIG], [pkg-config])
 
 PKGCONFIG_CFLAGS=""
 PKGCONFIG_LIBS="-L\${libdir} -lcups"
-PKGCONFIG_LIBS_PRIVATE="-lm"
+PKGCONFIG_LIBS_PRIVATE="-lz -lm"
 PKGCONFIG_REQUIRES=""
+PKGCONFIG_REQUIRES_PRIVATE="zlib"
 AC_SUBST([PKGCONFIG_CFLAGS])
 AC_SUBST([PKGCONFIG_LIBS])
 AC_SUBST([PKGCONFIG_LIBS_PRIVATE])
 AC_SUBST([PKGCONFIG_REQUIRES])
+AC_SUBST([PKGCONFIG_REQUIRES_PRIVATE])
 
 
 dnl String functions...
 AC_CHECK_FUNCS([strlcpy])
+
+
+dnl Check for "long long" support...
+AC_CACHE_CHECK([for long long int], [ac_cv_c_long_long], [
+    AS_IF([test "$GCC" = yes], [
+	ac_cv_c_long_long="yes"
+    ], [
+	AC_COMPILE_IFELSE([
+	    AC_LANG_PROGRAM([[ ]], [[long long int i;]])
+	], [
+	    ac_cv_c_long_long="yes"
+	], [
+	    ac_cv_c_long_long="no"
+	])
+    ])
+])
+
+AS_IF([test $ac_cv_c_long_long = yes], [
+    AC_DEFINE([HAVE_LONG_LONG], [1], [Does the compiler support the long long type?])
+])
+
+AC_CHECK_FUNC([strtoll], [
+    AC_DEFINE([HAVE_STRTOLL], [1], [Do we have the strtoll function?])
+])
 
 
 dnl POSIX threads (required)
@@ -140,9 +193,9 @@ AS_IF([test x$ac_cv_header_zlib_h != xyes], [
     AC_MSG_ERROR([Sorry, this software requires ZLIB.])
 ])
 
+
 dnl DNS-SD support...
 AC_ARG_WITH([dnssd], AS_HELP_STRING([--with-dnssd=LIBRARY], [set DNS-SD library (auto, avahi, mdnsresponder)]))
-PKGCONFIG_AVAHI=""
 
 AS_IF([test "x$with_dnssd" != xmdnsresponder -a "x$with_dnssd" != xno -a "x$PKGCONFIG" != x -a x$host_os_name != xdarwin], [
     AC_MSG_CHECKING([for Avahi])
@@ -150,8 +203,8 @@ AS_IF([test "x$with_dnssd" != xmdnsresponder -a "x$with_dnssd" != xno -a "x$PKGC
 	AC_MSG_RESULT([yes])
 	CPPFLAGS="$CPPFLAGS $($PKGCONFIG --cflags avahi-client)"
 	LIBS="$LIBS $($PKGCONFIG --libs avahi-client)"
-	PKGCONFIG_AVAHI="avahi-client"
 	PKGCONFIG_LIBS_PRIVATE="$($PKGCONFIG --libs avahi-client) $PKGCONFIG_LIBS_PRIVATE"
+	PKGCONFIG_REQUIRES_PRIVATE="avahi-client, $PKGCONFIG_REQUIRES_PRIVATE"
 	AC_DEFINE([HAVE_DNSSD], 1, [Have DNS-SD support?])
 	AC_DEFINE([HAVE_AVAHI], 1, [Have Avahi?])
     ], [
@@ -196,10 +249,8 @@ AS_IF([test "x$with_dnssd" != xmdnsresponder -a "x$with_dnssd" != xno -a "x$PKGC
 ])
 AC_SUBST([PKGCONFIG_AVAHI])
 
-dnl TLS support...
-PKGCONFIG_GNUTLS=""
-AC_SUBST([PKGCONFIG_GNUTLS])
 
+dnl TLS support...
 AS_IF([test $host_os_name = darwin], [
     AC_CHECK_HEADER([Security/SecureTransport.h], [
 	AC_DEFINE([HAVE_TLS], [1], [Do we support TLS?])
@@ -217,7 +268,7 @@ AS_IF([test $host_os_name = darwin], [
 	    AC_DEFINE([HAVE_SECPOLICY_H], [1], [Have the <Security/SecPolicy.h header?])
 	])
     ])
-], ]
+], [
     AS_IF([test "x$PKGCONFIG" != x], [
 	AS_IF([$PKGCONFIG --exists gnutls], [
 	    AC_DEFINE([HAVE_TLS], [1], [Do we support TLS?])
@@ -225,8 +276,8 @@ AS_IF([test $host_os_name = darwin], [
 	    CPPFLAGS="$CPPFLAGS `$PKGCONFIG --cflags gnutls`"
 	    LIBS="$LIBS `$PKGCONFIG --libs gnutls`"
 	    PKGCONFIG_LIBS_PRIVATE="$($PKGCONFIG --libs gnutls) $PKGCONFIG_LIBS_PRIVATE"
+	    PKGCONFIG_REQUIRES_PRIVATE="gnutls >= 3.0, $PKGCONFIG_REQUIRES_PRIVATE"
 	    AC_DEFINE(HAVE_GNUTLS, 1, [Have GNU TLS?])
-	    PKGCONFIG_GNUTLS="gnutls >= 3.0,"
 	])
     ])
 ])
@@ -263,6 +314,8 @@ AS_IF([test x$enable_shared != xno], [
     LIBCUPS_STATIC=""
     PKGCONFIG_LIBS="$PKGCONFIG_LIBS $PKGCONFIG_LIBS_PRIVATE"
     PKGCONFIG_LIBS_PRIVATE=""
+    PKGCONFIG_REQUIRES="$PKGCONFIG_REQUIRES $PKGCONFIG_REQUIRES_PRIVATE"
+    PKGCONFIG_REQUIRES_PRIVATE=""
 ])
 
 AC_SUBST([INSTALLSTATIC])
@@ -377,7 +430,6 @@ AS_IF([test "$prefix" = NONE], [
 ], [
     realprefix="$prefix"
 ])
-
 
 
 dnl Provide autoconf with a list of files to generate and output them...

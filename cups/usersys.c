@@ -577,13 +577,13 @@ cupsSetUserAgent(const char *user_agent)/* I - User-Agent string or @code NULL@ 
 	  strlcpy(cg->user_agent, "CUPS IPP", sizeof(cg->user_agent));
 	  break;
       case _CUPS_UATOKENS_MAJOR :
-	  snprintf(cg->user_agent, sizeof(cg->user_agent), "CUPS/%d IPP/2", CUPS_VERSION_MAJOR);
+	  snprintf(cg->user_agent, sizeof(cg->user_agent), "CUPS/%d IPP/2", LIBCUPS_VERSION_MAJOR);
 	  break;
       case _CUPS_UATOKENS_MINOR :
-	  snprintf(cg->user_agent, sizeof(cg->user_agent), "CUPS/%d.%d IPP/2.1", CUPS_VERSION_MAJOR, CUPS_VERSION_MINOR);
+	  snprintf(cg->user_agent, sizeof(cg->user_agent), "CUPS/%d.%d IPP/2.1", LIBCUPS_VERSION_MAJOR, LIBCUPS_VERSION_MINOR);
 	  break;
       case _CUPS_UATOKENS_MINIMAL :
-	  strlcpy(cg->user_agent, CUPS_MINIMAL " IPP/2.1", sizeof(cg->user_agent));
+	  strlcpy(cg->user_agent, "CUPS/" LIBCUPS_VERSION " IPP/2.0", sizeof(cg->user_agent));
 	  break;
     }
   }
@@ -621,9 +621,9 @@ cupsSetUserAgent(const char *user_agent)/* I - User-Agent string or @code NULL@ 
   }
 
   if (cg->uatokens == _CUPS_UATOKENS_OS)
-    snprintf(cg->user_agent, sizeof(cg->user_agent), CUPS_MINIMAL " (Windows %d.%d) IPP/2.0", version.dwMajorVersion, version.dwMinorVersion);
+    snprintf(cg->user_agent, sizeof(cg->user_agent), "CUPS/" LIBCUPS_VERSION " (Windows %d.%d) IPP/2.0", version.dwMajorVersion, version.dwMinorVersion);
   else
-    snprintf(cg->user_agent, sizeof(cg->user_agent), CUPS_MINIMAL " (Windows %d.%d; %s) IPP/2.0", version.dwMajorVersion, version.dwMinorVersion, machine);
+    snprintf(cg->user_agent, sizeof(cg->user_agent), "CUPS/" LIBCUPS_VERSION " (Windows %d.%d; %s) IPP/2.0", version.dwMajorVersion, version.dwMinorVersion, machine);
 
 #elif defined(__APPLE__)
  /*
@@ -640,15 +640,15 @@ cupsSetUserAgent(const char *user_agent)/* I - User-Agent string or @code NULL@ 
 
 #  if TARGET_OS_OSX
   if (cg->uatokens == _CUPS_UATOKENS_OS)
-    snprintf(cg->user_agent, sizeof(cg->user_agent), CUPS_MINIMAL " (macOS %s) IPP/2.0", version);
+    snprintf(cg->user_agent, sizeof(cg->user_agent), "CUPS/" LIBCUPS_VERSION " (macOS %s) IPP/2.0", version);
   else
-    snprintf(cg->user_agent, sizeof(cg->user_agent), CUPS_MINIMAL " (macOS %s; %s) IPP/2.0", version, name.machine);
+    snprintf(cg->user_agent, sizeof(cg->user_agent), "CUPS/" LIBCUPS_VERSION " (macOS %s; %s) IPP/2.0", version, name.machine);
 
 #  else
   if (cg->uatokens == _CUPS_UATOKENS_OS)
-    snprintf(cg->user_agent, sizeof(cg->user_agent), CUPS_MINIMAL " (iOS %s) IPP/2.0", version);
+    snprintf(cg->user_agent, sizeof(cg->user_agent), "CUPS/" LIBCUPS_VERSION " (iOS %s) IPP/2.0", version);
   else
-    snprintf(cg->user_agent, sizeof(cg->user_agent), CUPS_MINIMAL " (iOS %s; %s) IPP/2.0", version, name.machine);
+    snprintf(cg->user_agent, sizeof(cg->user_agent), "CUPS/" LIBCUPS_VERSION " (iOS %s; %s) IPP/2.0", version, name.machine);
 #  endif /* TARGET_OS_OSX */
 
 #else
@@ -659,9 +659,9 @@ cupsSetUserAgent(const char *user_agent)/* I - User-Agent string or @code NULL@ 
   uname(&name);
 
   if (cg->uatokens == _CUPS_UATOKENS_OS)
-    snprintf(cg->user_agent, sizeof(cg->user_agent), CUPS_MINIMAL " (%s %s) IPP/2.0", name.sysname, name.release);
+    snprintf(cg->user_agent, sizeof(cg->user_agent), "CUPS/" LIBCUPS_VERSION " (%s %s) IPP/2.0", name.sysname, name.release);
   else
-    snprintf(cg->user_agent, sizeof(cg->user_agent), CUPS_MINIMAL " (%s %s; %s) IPP/2.0", name.sysname, name.release, name.machine);
+    snprintf(cg->user_agent, sizeof(cg->user_agent), "CUPS/" LIBCUPS_VERSION " (%s %s; %s) IPP/2.0", name.sysname, name.release, name.machine);
 #endif /* _WIN32 */
 }
 
@@ -1453,10 +1453,10 @@ cups_set_default_ipp_port(
   if ((ipp_port = getenv("IPP_PORT")) != NULL)
   {
     if ((cg->ipp_port = atoi(ipp_port)) <= 0)
-      cg->ipp_port = CUPS_DEFAULT_IPP_PORT;
+      cg->ipp_port = 631;
   }
   else
-    cg->ipp_port = CUPS_DEFAULT_IPP_PORT;
+    cg->ipp_port = 631;
 }
 
 

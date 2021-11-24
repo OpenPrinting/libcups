@@ -1,6 +1,7 @@
 #
-# IPP tools makefile for CUPS.
+# IPP tools makefile for libcups.
 #
+# Copyright © 2021 by OpenPrinting.
 # Copyright © 2007-2019 by Apple Inc.
 # Copyright © 1997-2006 by Easy Software Products, all rights reserved.
 #
@@ -12,19 +13,22 @@ include ../Makedefs
 
 
 OBJS		=	\
-			ippevepcl.o \
 			ippeveprinter.o \
-			ippeveps.o \
 			ippfind.o \
 			ipptool.o
+
+#			ippevepcl.o \
+#			ippeveps.o \
+
 IPPTOOLS	=	\
 			ippeveprinter \
 			$(IPPFIND_BIN) \
 			ipptool
 TARGETS		=	\
-			$(IPPEVECOMMANDS) \
 			$(IPPTOOLS) \
 			$(LOCALTARGET)
+
+#			$(IPPEVECOMMANDS) \
 
 
 #
@@ -62,7 +66,7 @@ clean:
 #
 
 depend:
-	$(CC) -MM $(ALL_CFLAGS) $(OBJS:.o=.c) >Dependencies
+	$(CC) -MM -I.. -D_CUPS_SOURCE $(CPPFLAGS) $(OPTIONS) $(OBJS:.o=.c) >Dependencies
 
 
 #
@@ -147,8 +151,8 @@ local:	ippeveprinter-static ipptool-static
 
 ippeveprinter:	ippeveprinter.o ../cups/$(LIBCUPS)
 	echo Linking $@...
-	$(LD_CC) $(ALL_LDFLAGS) -o $@ ippeveprinter.o $(DNSSDLIBS) $(PAMLIBS) $(LINKCUPS)
-	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ ippeveprinter.o -L../cups -lcups $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
 
 
 #
@@ -157,8 +161,8 @@ ippeveprinter:	ippeveprinter.o ../cups/$(LIBCUPS)
 
 ippeveprinter-static:	ippeveprinter.o ../cups/$(LIBCUPSSTATIC)
 	echo Linking $@...
-	$(LD_CC) $(ALL_LDFLAGS) -o $@ ippeveprinter.o $(PAMLIBS) $(LINKCUPSSTATIC)
-	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ ippeveprinter.o $(PAMLIBS) ../cups/libcups.a $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
 
 
 #
@@ -167,8 +171,8 @@ ippeveprinter-static:	ippeveprinter.o ../cups/$(LIBCUPSSTATIC)
 
 ippevepcl:	ippevepcl.o ../cups/$(LIBCUPS)
 	echo Linking $@...
-	$(LD_CC) $(ALL_LDFLAGS) -o $@ ippevepcl.o $(LINKCUPS)
-	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ ippevepcl.o -L../cups -lcups $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
 
 
 #
@@ -177,8 +181,8 @@ ippevepcl:	ippevepcl.o ../cups/$(LIBCUPS)
 
 ippeveps:	ippeveps.o ../cups/$(LIBCUPS)
 	echo Linking $@...
-	$(LD_CC) $(ALL_LDFLAGS) -o $@ ippeveps.o $(LINKCUPS)
-	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ ippeveps.o -L../cups -lcups $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
 
 
 #
@@ -187,8 +191,8 @@ ippeveps:	ippeveps.o ../cups/$(LIBCUPS)
 
 ippfind:	ippfind.o ../cups/$(LIBCUPS)
 	echo Linking $@...
-	$(LD_CC) $(ALL_LDFLAGS) -o $@ ippfind.o $(DNSSDLIBS) $(LINKCUPS)
-	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ ippfind.o $(DNSSDLIBS) -L../cups -lcups $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
 
 
 #
@@ -197,8 +201,8 @@ ippfind:	ippfind.o ../cups/$(LIBCUPS)
 
 ippfind-static:	ippfind.o ../cups/$(LIBCUPSSTATIC)
 	echo Linking $@
-	$(LD_CC) $(ALL_LDFLAGS) -o $@ ippfind.o $(LINKCUPSSTATIC)
-	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ ippfind.o ../cups/libcups.a $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
 
 
 #
@@ -207,8 +211,8 @@ ippfind-static:	ippfind.o ../cups/$(LIBCUPSSTATIC)
 
 ipptool:	ipptool.o ../cups/$(LIBCUPS)
 	echo Linking $@...
-	$(LD_CC) $(ALL_LDFLAGS) -o $@ ipptool.o $(LINKCUPS)
-	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ ipptool.o -L../cups -lcups $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
 
 
 #
@@ -217,8 +221,8 @@ ipptool:	ipptool.o ../cups/$(LIBCUPS)
 
 ipptool-static:	ipptool.o ../cups/$(LIBCUPSSTATIC)
 	echo Linking $@...
-	$(LD_CC) $(ALL_LDFLAGS) -o $@ ipptool.o $(LINKCUPSSTATIC)
-	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ ipptool.o ../cups/libcups.a $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
 
 
 #
