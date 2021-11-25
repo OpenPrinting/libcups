@@ -963,11 +963,7 @@ do_monitor_printer_state(
     return (0);
   }
 
-#ifdef HAVE_LIBZ
   httpSetDefaultField(http, HTTP_FIELD_ACCEPT_ENCODING, "deflate, gzip, identity");
-#else
-  httpSetDefaultField(http, HTTP_FIELD_ACCEPT_ENCODING, "identity");
-#endif /* HAVE_LIBZ */
 
   if (data->timeout > 0.0)
     httpSetTimeout(http, data->timeout, timeout_cb, NULL);
@@ -1370,10 +1366,8 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
 
 	status = cupsSendRequest(data->http, request, data->resource, length);
 
-#ifdef HAVE_LIBZ
 	if (data->compression[0])
 	  httpSetField(data->http, HTTP_FIELD_CONTENT_ENCODING, data->compression);
-#endif /* HAVE_LIBZ */
 
 	if (!Cancel && status == HTTP_STATUS_CONTINUE && ippGetState(request) == IPP_DATA && data->file[0])
 	{
@@ -2241,11 +2235,7 @@ do_tests(const char     *testfile,	/* I - Test file to use */
     return (0);
   }
 
-#ifdef HAVE_LIBZ
   httpSetDefaultField(data->http, HTTP_FIELD_ACCEPT_ENCODING, "deflate, gzip, identity");
-#else
-  httpSetDefaultField(data->http, HTTP_FIELD_ACCEPT_ENCODING, "identity");
-#endif /* HAVE_LIBZ */
 
   if (data->timeout > 0.0)
     httpSetTimeout(data->http, data->timeout, timeout_cb, NULL);
@@ -4308,12 +4298,7 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       if (_ippFileReadToken(f, temp, sizeof(temp)))
       {
 	_ippVarsExpand(vars, data->compression, temp, sizeof(data->compression));
-#ifdef HAVE_LIBZ
-	if (strcmp(data->compression, "none") && strcmp(data->compression, "deflate") &&
-	    strcmp(data->compression, "gzip"))
-#else
-	if (strcmp(data->compression, "none"))
-#endif /* HAVE_LIBZ */
+	if (strcmp(data->compression, "none") && strcmp(data->compression, "deflate") && strcmp(data->compression, "gzip"))
 	{
 	  print_fatal_error(data, "Unsupported COMPRESSION value \"%s\" on line %d of \"%s\".", data->compression, f->linenum, f->filename);
 	  return (0);

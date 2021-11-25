@@ -63,7 +63,6 @@ main(int  argc,				/* I - Number of command-line arguments */
 
     status = read_write_tests(0);
 
-#ifdef HAVE_LIBZ
    /*
     * Do compressed file tests...
     */
@@ -71,7 +70,6 @@ main(int  argc,				/* I - Number of command-line arguments */
     putchar('\n');
 
     status += read_write_tests(1);
-#endif /* HAVE_LIBZ */
 
    /*
     * Do uncompressed random I/O tests...

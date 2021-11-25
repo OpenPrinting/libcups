@@ -1,8 +1,9 @@
 /*
  * Private HTTP definitions for CUPS.
  *
- * Copyright 2007-2018 by Apple Inc.
- * Copyright 1997-2007 by Easy Software Products, all rights reserved.
+ * Copyright © 2021 by OpenPrinting.
+ * Copyright © 2007-2018 by Apple Inc.
+ * Copyright © 1997-2007 by Easy Software Products, all rights reserved.
  *
  * Licensed under Apache License v2.0.  See the file "LICENSE" for more
  * information.
@@ -282,11 +283,9 @@ struct _http_s				/**** HTTP connection structure ****/
   /**** New in CUPS 1.7 ****/
   int			tls_upgrade;	/* Non-zero if we are doing an upgrade */
   _http_mode_t		mode;		/* _HTTP_MODE_CLIENT or _HTTP_MODE_SERVER */
-#  ifdef HAVE_LIBZ
   _http_coding_t	coding;		/* _HTTP_CODING_xxx */
   void			*stream;	/* (De)compression stream */
   unsigned char		*sbuffer;	/* (De)compression buffer */
-#  endif /* HAVE_LIBZ */
 
   /**** New in CUPS 2.2.9 ****/
   char			algorithm[65],	/* Algorithm from WWW-Authenticate */

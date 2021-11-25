@@ -22,10 +22,7 @@
 #include "debug-internal.h"
 #include <sys/stat.h>
 #include <sys/types.h>
-
-#  ifdef HAVE_LIBZ
-#    include <zlib.h>
-#  endif /* HAVE_LIBZ */
+#include <zlib.h>
 
 
 /*
@@ -45,11 +42,9 @@ struct _cups_file_s			/**** CUPS file structure... ****/
   off_t		pos,			/* Position in file */
 		bufpos;			/* File position for start of buffer */
 
-#ifdef HAVE_LIBZ
   z_stream	stream;			/* (De)compression stream */
   Bytef		cbuf[4096];		/* (De)compression buffer */
   uLong		crc;			/* (De)compression CRC */
-#endif /* HAVE_LIBZ */
 
   char		*printf_buffer;		/* cupsFilePrintf buffer */
   size_t	printf_size;		/* Size of cupsFilePrintf buffer */
@@ -60,9 +55,7 @@ struct _cups_file_s			/**** CUPS file structure... ****/
  * Local functions...
  */
 
-#ifdef HAVE_LIBZ
 static ssize_t	cups_compress(cups_file_t *fp, const char *buf, size_t bytes);
-#endif /* HAVE_LIBZ */
 static ssize_t	cups_fill(cups_file_t *fp);
 static int	cups_open(const char *filename, int mode);
 static ssize_t	cups_read(cups_file_t *fp, char *buf, size_t bytes);
@@ -370,7 +363,6 @@ cupsFileClose(cups_file_t *fp)		/* I - CUPS file */
   else
     status = 0;
 
-#ifdef HAVE_LIBZ
   if (fp->compressed && status >= 0)
   {
     if (fp->mode == 'r')
@@ -435,7 +427,6 @@ cupsFileClose(cups_file_t *fp)		/* I - CUPS file */
       deflateEnd(&(fp->stream));
     }
   }
-#endif /* HAVE_LIBZ */
 
  /*
   * If this is one of the cupsFileStdin/out/err files, return now and don't
@@ -637,11 +628,9 @@ cupsFileFlush(cups_file_t *fp)		/* I - CUPS file */
 
   if (bytes > 0)
   {
-#ifdef HAVE_LIBZ
     if (fp->compressed)
       bytes = cups_compress(fp, fp->buf, (size_t)bytes);
     else
-#endif /* HAVE_LIBZ */
       bytes = cups_write(fp, fp->buf, (size_t)bytes);
 
     if (bytes < 0)
@@ -1233,7 +1222,6 @@ cupsFileOpenFd(int        fd,		/* I - File descriptor */
 	fp->ptr  = fp->buf;
 	fp->end  = fp->buf + sizeof(fp->buf);
 
-#ifdef HAVE_LIBZ
 	if (mode[1] >= '1' && mode[1] <= '9')
 	{
 	 /*
@@ -1275,7 +1263,6 @@ cupsFileOpenFd(int        fd,		/* I - File descriptor */
 	  fp->compressed       = 1;
 	  fp->crc              = crc32(0L, Z_NULL, 0);
 	}
-#endif /* HAVE_LIBZ */
         break;
 
     case 'r' :
@@ -1427,11 +1414,9 @@ cupsFilePrintf(cups_file_t *fp,		/* I - CUPS file */
 
   if ((size_t)bytes > sizeof(fp->buf))
   {
-#ifdef HAVE_LIBZ
     if (fp->compressed)
       return ((int)cups_compress(fp, fp->printf_buffer, (size_t)bytes));
     else
-#endif /* HAVE_LIBZ */
       return ((int)cups_write(fp, fp->printf_buffer, (size_t)bytes));
   }
   else
@@ -1610,11 +1595,9 @@ cupsFilePuts(cups_file_t *fp,		/* I - CUPS file */
 
   if ((size_t)bytes > sizeof(fp->buf))
   {
-#ifdef HAVE_LIBZ
     if (fp->compressed)
       return ((int)cups_compress(fp, s, (size_t)bytes));
     else
-#endif /* HAVE_LIBZ */
       return ((int)cups_write(fp, s, (size_t)bytes));
   }
   else
@@ -1759,13 +1742,11 @@ cupsFileRewind(cups_file_t *fp)		/* I - CUPS file */
   * Otherwise, seek in the file and cleanup any compression buffers...
   */
 
-#ifdef HAVE_LIBZ
   if (fp->compressed)
   {
     inflateEnd(&fp->stream);
     fp->compressed = 0;
   }
-#endif /* HAVE_LIBZ */
 
   if (lseek(fp->fd, 0, SEEK_SET))
   {
@@ -1837,7 +1818,6 @@ cupsFileSeek(cups_file_t *fp,		/* I - CUPS file */
     }
   }
 
-#ifdef HAVE_LIBZ
   if (!fp->compressed && !fp->ptr)
   {
    /*
@@ -1847,7 +1827,6 @@ cupsFileSeek(cups_file_t *fp,		/* I - CUPS file */
     if (cups_fill(fp) <= 0)
       return (-1);
   }
-#endif /* HAVE_LIBZ */
 
  /*
   * Seek forwards or backwards...
@@ -1863,7 +1842,6 @@ cupsFileSeek(cups_file_t *fp,		/* I - CUPS file */
 
     DEBUG_puts("2cupsFileSeek: SEEK BACKWARDS");
 
-#ifdef HAVE_LIBZ
     if (fp->compressed)
     {
       inflateEnd(&fp->stream);
@@ -1885,7 +1863,6 @@ cupsFileSeek(cups_file_t *fp,		/* I - CUPS file */
       fp->pos = pos;
     }
     else
-#endif /* HAVE_LIBZ */
     {
       fp->bufpos = lseek(fp->fd, pos, SEEK_SET);
       fp->pos    = fp->bufpos;
@@ -1904,7 +1881,6 @@ cupsFileSeek(cups_file_t *fp,		/* I - CUPS file */
 
     DEBUG_puts("2cupsFileSeek: SEEK FORWARDS");
 
-#ifdef HAVE_LIBZ
     if (fp->compressed)
     {
       while ((bytes = cups_fill(fp)) > 0)
@@ -1920,7 +1896,6 @@ cupsFileSeek(cups_file_t *fp,		/* I - CUPS file */
       fp->pos = pos;
     }
     else
-#endif /* HAVE_LIBZ */
     {
       fp->bufpos = lseek(fp->fd, pos, SEEK_SET);
       fp->pos    = fp->bufpos;
@@ -2135,11 +2110,9 @@ cupsFileWrite(cups_file_t *fp,		/* I - CUPS file */
 
   if (bytes > sizeof(fp->buf))
   {
-#ifdef HAVE_LIBZ
     if (fp->compressed)
       return (cups_compress(fp, buf, bytes));
     else
-#endif /* HAVE_LIBZ */
       return (cups_write(fp, buf, bytes));
   }
   else
@@ -2151,7 +2124,6 @@ cupsFileWrite(cups_file_t *fp,		/* I - CUPS file */
 }
 
 
-#ifdef HAVE_LIBZ
 /*
  * 'cups_compress()' - Compress a buffer of data.
  */
@@ -2203,7 +2175,6 @@ cups_compress(cups_file_t *fp,		/* I - CUPS file */
 
   return ((ssize_t)bytes);
 }
-#endif /* HAVE_LIBZ */
 
 
 /*
@@ -2214,11 +2185,9 @@ static ssize_t				/* O - Number of bytes or -1 */
 cups_fill(cups_file_t *fp)		/* I - CUPS file */
 {
   ssize_t		bytes;		/* Number of bytes read */
-#ifdef HAVE_LIBZ
   int			status;		/* Decompression status */
   const unsigned char	*ptr,		/* Pointer into buffer */
 			*end;		/* End of buffer */
-#endif /* HAVE_LIBZ */
 
 
   DEBUG_printf(("7cups_fill(fp=%p)", (void *)fp));
@@ -2227,7 +2196,6 @@ cups_fill(cups_file_t *fp)		/* I - CUPS file */
   if (fp->ptr && fp->end)
     fp->bufpos += fp->end - fp->buf;
 
-#ifdef HAVE_LIBZ
   DEBUG_printf(("9cups_fill: fp->compressed=%d", fp->compressed));
 
   while (!fp->ptr || fp->compressed)
@@ -2570,7 +2538,6 @@ cups_fill(cups_file_t *fp)		/* I - CUPS file */
       }
     }
   }
-#endif /* HAVE_LIBZ */
 
  /*
   * Read a buffer's full of data...

@@ -1433,10 +1433,8 @@ create_printer(
   };
   static const char * const compressions[] =/* compression-supported values */
   {
-#ifdef HAVE_LIBZ
     "deflate",
     "gzip",
-#endif /* HAVE_LIBZ */
     "none"
   };
   static const char * const identify_actions[] =

@@ -43,14 +43,6 @@
 
 
 /*
- * Do we have ZLIB?
- */
-
-#undef HAVE_LIBZ
-#undef HAVE_INFLATECOPY
-
-
-/*
  * Use <stdint.h>?
  */
 

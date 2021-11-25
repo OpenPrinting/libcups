@@ -8,6 +8,16 @@ Cleanup:
 - Remove all of the shadow entries in the http_t structure
 - Normalize function/structure naming
 - Bump DSO version
+- Use `bool` type for boolean values
+
+
+New Prerequisites:
+
+- C99
+- poll function (WSAPoll on Windows)
+- POSIX threads (emulation on Windows)
+- ZLIB 1.1.x or later (with inflateCopy function)
+
 
 Feature work:
 
@@ -15,3 +25,7 @@ Feature work:
 - Need API for getting/setting TLS certificates (something to share certs between printer
   applications and potentially users)
 - Better localization support
+- Add PAPPL random number functions
+- Add mOAuth JSON functions
+- Updated/improved test suite and fuzzing support
+

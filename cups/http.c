@@ -28,9 +28,7 @@
 #  include <sys/time.h>
 #  include <sys/resource.h>
 #endif /* _WIN32 */
-#  ifdef HAVE_LIBZ
-#    include <zlib.h>
-#  endif /* HAVE_LIBZ */
+#include <zlib.h>
 
 
 /*
@@ -38,11 +36,9 @@
  */
 
 static void		http_add_field(http_t *http, http_field_t field, const char *value, int append);
-#ifdef HAVE_LIBZ
 static void		http_content_coding_finish(http_t *http);
 static void		http_content_coding_start(http_t *http,
 						  const char *value);
-#endif /* HAVE_LIBZ */
 static http_t		*http_create(const char *host, int port,
 			             http_addrlist_t *addrlist, int family,
 				     http_encryption_t encryption,
@@ -656,10 +652,8 @@ httpFlush(http_t *http)			/* I - HTTP connection */
     * Didn't get the data back, so close the current connection.
     */
 
-#ifdef HAVE_LIBZ
     if (http->coding)
       http_content_coding_finish(http);
-#endif /* HAVE_LIBZ */
 
     DEBUG_puts("1httpFlush: Setting state to HTTP_STATE_WAITING and closing.");
 
@@ -813,7 +807,6 @@ const char *				/* O - Content-Coding value or
 					       coding. */
 httpGetContentEncoding(http_t *http)	/* I - HTTP connection */
 {
-#ifdef HAVE_LIBZ
   if (http && http->fields[HTTP_FIELD_ACCEPT_ENCODING])
   {
     int		i;			/* Looping var */
@@ -878,7 +871,6 @@ httpGetContentEncoding(http_t *http)	/* I - HTTP connection */
           return (codings[i]);
     }
   }
-#endif /* HAVE_LIBZ */
 
   return (NULL);
 }
@@ -1663,10 +1655,8 @@ httpPeek(http_t *http,			/* I - HTTP connection */
     * data, go idle...
     */
 
-#ifdef HAVE_LIBZ
     if (http->coding >= _HTTP_CODING_GUNZIP)
       http_content_coding_finish(http);
-#endif /* HAVE_LIBZ */
 
     if (http->data_encoding == HTTP_ENCODING_CHUNKED)
       httpGets(len, sizeof(len), http);
@@ -1690,13 +1680,9 @@ httpPeek(http_t *http,			/* I - HTTP connection */
   else if (length > (size_t)http->data_remaining)
     length = (size_t)http->data_remaining;
 
-#ifdef HAVE_LIBZ
   if (http->used == 0 &&
       (http->coding == _HTTP_CODING_IDENTITY ||
        (http->coding >= _HTTP_CODING_GUNZIP && ((z_stream *)http->stream)->avail_in == 0)))
-#else
-  if (http->used == 0)
-#endif /* HAVE_LIBZ */
   {
    /*
     * Buffer small reads for better performance...
@@ -1735,10 +1721,8 @@ httpPeek(http_t *http,			/* I - HTTP connection */
     }
   }
 
-#ifdef HAVE_LIBZ
   if (http->coding >= _HTTP_CODING_GUNZIP)
   {
-#  ifdef HAVE_INFLATECOPY
     int		zerr;			/* Decompressor error */
     z_stream	stream;			/* Copy of decompressor stream */
 
@@ -1799,16 +1783,8 @@ httpPeek(http_t *http,			/* I - HTTP connection */
     }
 
     bytes = (ssize_t)(length - ((z_stream *)http->stream)->avail_out);
-
-#  else
-    DEBUG_puts("2httpPeek: No inflateCopy on this platform, httpPeek does not "
-               "work with compressed streams.");
-    return (-1);
-#  endif /* HAVE_INFLATECOPY */
   }
-  else
-#endif /* HAVE_LIBZ */
-  if (http->used > 0)
+  else if (http->used > 0)
   {
     if (length > (size_t)http->used)
       length = (size_t)http->used;
@@ -1950,11 +1926,7 @@ httpRead2(http_t *http,			/* I - HTTP connection */
   ssize_t	bytes;			/* Bytes read */
 
 
-#ifdef HAVE_LIBZ
   DEBUG_printf(("httpRead2(http=%p, buffer=%p, length=" CUPS_LLFMT ") coding=%d data_encoding=%d data_remaining=" CUPS_LLFMT, (void *)http, (void *)buffer, CUPS_LLCAST length, http ? http->coding : 0, http ? http->data_encoding : 0, CUPS_LLCAST (http ? http->data_remaining : -1)));
-#else
-  DEBUG_printf(("httpRead2(http=%p, buffer=%p, length=" CUPS_LLFMT ") data_encoding=%d data_remaining=" CUPS_LLFMT, (void *)http, (void *)buffer, CUPS_LLCAST length, http ? http->data_encoding : 0, CUPS_LLCAST (http ? http->data_remaining : -1)));
-#endif /* HAVE_LIBZ */
 
   if (http == NULL || buffer == NULL)
     return (-1);
@@ -1965,7 +1937,6 @@ httpRead2(http_t *http,			/* I - HTTP connection */
   if (length <= 0)
     return (0);
 
-#ifdef HAVE_LIBZ
   if (http->coding >= _HTTP_CODING_GUNZIP)
   {
     do
@@ -2059,9 +2030,7 @@ httpRead2(http_t *http,			/* I - HTTP connection */
     }
     while (bytes == 0);
   }
-  else
-#endif /* HAVE_LIBZ */
-  if (http->data_remaining == 0 && http->data_encoding == HTTP_ENCODING_CHUNKED)
+  else if (http->data_remaining == 0 && http->data_encoding == HTTP_ENCODING_CHUNKED)
   {
     if ((bytes = http_read_chunk(http, buffer, length)) > 0)
     {
@@ -2113,19 +2082,14 @@ httpRead2(http_t *http,			/* I - HTTP connection */
     }
   }
 
-  if (
-#ifdef HAVE_LIBZ
-      (http->coding == _HTTP_CODING_IDENTITY ||
+  if ((http->coding == _HTTP_CODING_IDENTITY ||
        (http->coding >= _HTTP_CODING_GUNZIP && ((z_stream *)http->stream)->avail_in == 0)) &&
-#endif /* HAVE_LIBZ */
       ((http->data_remaining <= 0 &&
         http->data_encoding == HTTP_ENCODING_LENGTH) ||
        (http->data_encoding == HTTP_ENCODING_CHUNKED && bytes == 0)))
   {
-#ifdef HAVE_LIBZ
     if (http->coding >= _HTTP_CODING_GUNZIP)
       http_content_coding_finish(http);
-#endif /* HAVE_LIBZ */
 
     if (http->state == HTTP_STATE_POST_RECV)
       http->state ++;
@@ -2839,11 +2803,9 @@ _httpUpdate(http_t        *http,	/* I - HTTP connection */
 	  break;
     }
 
-#ifdef HAVE_LIBZ
     DEBUG_puts("1_httpUpdate: Calling http_content_coding_start.");
     http_content_coding_start(http,
                               httpGetField(http, HTTP_FIELD_CONTENT_ENCODING));
-#endif /* HAVE_LIBZ */
 
     *status = http->status;
     return (0);
@@ -3068,13 +3030,11 @@ httpWait(http_t *http,			/* I - HTTP connection */
     return (1);
   }
 
-#ifdef HAVE_LIBZ
   if (http->coding >= _HTTP_CODING_GUNZIP && ((z_stream *)http->stream)->avail_in > 0)
   {
     DEBUG_puts("3httpWait: Returning 1 since there is buffered data ready.");
     return (1);
   }
-#endif /* HAVE_LIBZ */
 
  /*
   * Flush pending data, if any...
@@ -3150,7 +3110,6 @@ httpWrite2(http_t     *http,		/* I - HTTP connection */
   * Buffer small writes for better performance...
   */
 
-#ifdef HAVE_LIBZ
   if (http->coding == _HTTP_CODING_GZIP || http->coding == _HTTP_CODING_DEFLATE)
   {
     DEBUG_printf(("1httpWrite2: http->coding=%d", http->coding));
@@ -3199,9 +3158,7 @@ httpWrite2(http_t     *http,		/* I - HTTP connection */
       bytes = (ssize_t)length;
     }
   }
-  else
-#endif /* HAVE_LIBZ */
-  if (length > 0)
+  else if (length > 0)
   {
     if (http->wused && (length + (size_t)http->wused) > sizeof(http->wbuffer))
     {
@@ -3260,10 +3217,8 @@ httpWrite2(http_t     *http,		/* I - HTTP connection */
     * data, go idle...
     */
 
-#ifdef HAVE_LIBZ
     if (http->coding == _HTTP_CODING_GZIP || http->coding == _HTTP_CODING_DEFLATE)
       http_content_coding_finish(http);
-#endif /* HAVE_LIBZ */
 
     if (http->wused)
     {
@@ -3381,12 +3336,7 @@ httpWriteResponse(http_t        *http,	/* I - HTTP connection */
   */
 
   if (!http->fields[HTTP_FIELD_ACCEPT_ENCODING])
-    httpSetField(http, HTTP_FIELD_ACCEPT_ENCODING, http->default_fields[HTTP_FIELD_ACCEPT_ENCODING] ? http->default_fields[HTTP_FIELD_ACCEPT_ENCODING] :
-#ifdef HAVE_LIBZ
-                                                 "gzip, deflate, identity");
-#else
-                                                 "identity");
-#endif /* HAVE_LIBZ */
+    httpSetField(http, HTTP_FIELD_ACCEPT_ENCODING, http->default_fields[HTTP_FIELD_ACCEPT_ENCODING] ? http->default_fields[HTTP_FIELD_ACCEPT_ENCODING] : "gzip, deflate, identity");
 
  /*
   * Send the response header...
@@ -3510,16 +3460,12 @@ httpWriteResponse(http_t        *http,	/* I - HTTP connection */
     if (http->state == HTTP_STATE_POST_RECV || http->state == HTTP_STATE_GET)
       http->state ++;
 
-#ifdef HAVE_LIBZ
    /*
     * Then start any content encoding...
     */
 
     DEBUG_puts("1httpWriteResponse: Calling http_content_coding_start.");
-    http_content_coding_start(http,
-			      httpGetField(http, HTTP_FIELD_CONTENT_ENCODING));
-#endif /* HAVE_LIBZ */
-
+    http_content_coding_start(http, httpGetField(http, HTTP_FIELD_CONTENT_ENCODING));
   }
 
   return (0);
@@ -3659,17 +3605,14 @@ http_add_field(http_t       *http,	/* I - HTTP connection */
     http->fields[field] = strdup(value);
   }
 
-#ifdef HAVE_LIBZ
   if (field == HTTP_FIELD_CONTENT_ENCODING && http->data_encoding != HTTP_ENCODING_FIELDS)
   {
     DEBUG_puts("1httpSetField: Calling http_content_coding_start.");
     http_content_coding_start(http, value);
   }
-#endif /* HAVE_LIBZ */
 }
 
 
-#ifdef HAVE_LIBZ
 /*
  * 'http_content_coding_finish()' - Finish doing any content encoding.
  */
@@ -3898,7 +3841,6 @@ http_content_coding_start(
   DEBUG_printf(("1http_content_coding_start: http->coding now %d.",
 		http->coding));
 }
-#endif /* HAVE_LIBZ */
 
 
 /*
