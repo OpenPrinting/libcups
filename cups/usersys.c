@@ -81,10 +81,6 @@ typedef struct _cups_client_conf_s	/**** client.conf config data ****/
   char			user[65],	/* User name */
 			server_name[256];
 					/* Server hostname */
-#ifdef HAVE_GSSAPI
-  char			gss_service_name[32];
-  					/* Kerberos service name */
-#endif /* HAVE_GSSAPI */
 } _cups_client_conf_t;
 
 
@@ -105,9 +101,6 @@ static void	cups_read_client_conf(cups_file_t *fp, _cups_client_conf_t *cc);
 static void	cups_set_default_ipp_port(_cups_globals_t *cg);
 static void	cups_set_digestoptions(_cups_client_conf_t *cc, const char *value);
 static void	cups_set_encryption(_cups_client_conf_t *cc, const char *value);
-#ifdef HAVE_GSSAPI
-static void	cups_set_gss_service_name(_cups_client_conf_t *cc, const char *value);
-#endif /* HAVE_GSSAPI */
 static void	cups_set_server_name(_cups_client_conf_t *cc, const char *value);
 #ifdef HAVE_TLS
 static void	cups_set_ssl_options(_cups_client_conf_t *cc, const char *value);
@@ -984,25 +977,6 @@ _cupsGetPassword(const char *prompt)	/* I - Prompt string */
 }
 
 
-#ifdef HAVE_GSSAPI
-/*
- * '_cupsGSSServiceName()' - Get the GSS (Kerberos) service name.
- */
-
-const char *
-_cupsGSSServiceName(void)
-{
-  _cups_globals_t *cg = _cupsGlobals();	/* Thread globals */
-
-
-  if (!cg->gss_service_name[0])
-    _cupsSetDefaults();
-
-  return (cg->gss_service_name);
-}
-#endif /* HAVE_GSSAPI */
-
-
 /*
  * '_cupsSetDefaults()' - Set the default server, port, and encryption.
  */
@@ -1074,11 +1048,6 @@ _cupsSetDefaults(void)
 
   if (!cg->user[0])
     strlcpy(cg->user, cc.user, sizeof(cg->user));
-
-#ifdef HAVE_GSSAPI
-  if (!cg->gss_service_name[0])
-    strlcpy(cg->gss_service_name, cc.gss_service_name, sizeof(cg->gss_service_name));
-#endif /* HAVE_GSSAPI */
 
   if (cg->trust_first < 0)
     cg->trust_first = cc.trust_first;
@@ -1185,11 +1154,6 @@ cups_finalize_client_conf(
   if ((value = getenv("CUPS_EXPIREDCERTS")) != NULL)
     cc->expired_certs = cups_boolean_value(value);
 
-#ifdef HAVE_GSSAPI
-  if ((value = getenv("CUPS_GSSSERVICENAME")) != NULL)
-    cups_set_gss_service_name(cc, value);
-#endif /* HAVE_GSSAPI */
-
   if ((value = getenv("CUPS_SERVER")) != NULL)
     cups_set_server_name(cc, value);
 
@@ -1214,11 +1178,6 @@ cups_finalize_client_conf(
 
   if (cc->expired_certs < 0)
     cc->expired_certs = 0;
-
-#ifdef HAVE_GSSAPI
-  if (!cc->gss_service_name[0])
-    cups_set_gss_service_name(cc, CUPS_DEFAULT_GSSSERVICENAME);
-#endif /* HAVE_GSSAPI */
 
   if (!cc->server_name[0])
   {
@@ -1427,10 +1386,6 @@ cups_read_client_conf(
       cc->expired_certs = cups_boolean_value(value);
     else if (!_cups_strcasecmp(line, "ValidateCerts") && value)
       cc->validate_certs = cups_boolean_value(value);
-#ifdef HAVE_GSSAPI
-    else if (!_cups_strcasecmp(line, "GSSServiceName") && value)
-      cups_set_gss_service_name(cc, value);
-#endif /* HAVE_GSSAPI */
 #ifdef HAVE_TLS
     else if (!_cups_strcasecmp(line, "SSLOptions") && value)
       cups_set_ssl_options(cc, value);
@@ -1494,21 +1449,6 @@ cups_set_encryption(
   else
     cc->encryption = HTTP_ENCRYPTION_IF_REQUESTED;
 }
-
-
-/*
- * 'cups_set_gss_service_name()' - Set the GSSServiceName value.
- */
-
-#ifdef HAVE_GSSAPI
-static void
-cups_set_gss_service_name(
-    _cups_client_conf_t *cc,		/* I - client.conf values */
-    const char          *value)		/* I - Value */
-{
-  strlcpy(cc->gss_service_name, value, sizeof(cc->gss_service_name));
-}
-#endif /* HAVE_GSSAPI */
 
 
 /*

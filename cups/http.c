@@ -5,9 +5,6 @@
  * Copyright © 2007-2021 by Apple Inc.
  * Copyright © 1997-2007 by Easy Software Products, all rights reserved.
  *
- * This file contains Kerberos support code, copyright 2006 by
- * Jelmer Vernooij.
- *
  * Licensed under Apache License v2.0.  See the file "LICENSE" for more
  * information.
  */
@@ -332,11 +329,6 @@ httpClearFields(http_t *http)		/* I - HTTP connection */
 void
 httpClose(http_t *http)			/* I - HTTP connection */
 {
-#ifdef HAVE_GSSAPI
-  OM_uint32	minor_status;		/* Minor status code */
-#endif /* HAVE_GSSAPI */
-
-
   DEBUG_printf(("httpClose(http=%p)", (void *)http));
 
  /*
@@ -360,14 +352,6 @@ httpClose(http_t *http)			/* I - HTTP connection */
 
   if (http->cookie)
     free(http->cookie);
-
-#ifdef HAVE_GSSAPI
-  if (http->gssctx != GSS_C_NO_CONTEXT)
-    gss_delete_sec_context(&minor_status, &http->gssctx, GSS_C_NO_BUFFER);
-
-  if (http->gssname != GSS_C_NO_NAME)
-    gss_release_name(&minor_status, &http->gssname);
-#endif /* HAVE_GSSAPI */
 
 #ifdef HAVE_AUTHORIZATION_H
   if (http->auth_ref)
@@ -3907,10 +3891,6 @@ http_create(
   http->addrlist = myaddrlist;
   http->blocking = blocking;
   http->fd       = -1;
-#ifdef HAVE_GSSAPI
-  http->gssctx   = GSS_C_NO_CONTEXT;
-  http->gssname  = GSS_C_NO_NAME;
-#endif /* HAVE_GSSAPI */
   http->status   = HTTP_STATUS_CONTINUE;
   http->version  = HTTP_VERSION_1_1;
 

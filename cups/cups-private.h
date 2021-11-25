@@ -99,12 +99,6 @@ typedef struct _cups_globals_s		/**** CUPS global state data ****/
 					/* Number of server settings */
   cups_option_t		*cupsd_settings;/* Server settings */
 
-  /* auth.c */
-#  ifdef HAVE_GSSAPI
-  char			gss_service_name[32];
-  					/* Kerberos service name */
-#  endif /* HAVE_GSSAPI */
-
   /* backend.c */
   char			resolved_uri[1024];
 					/* Buffer for cupsBackendDeviceURI */
@@ -275,16 +269,10 @@ extern const char	*_cupsGetPassword(const char *prompt) _CUPS_PRIVATE;
 extern void		_cupsGlobalLock(void) _CUPS_PRIVATE;
 extern _cups_globals_t	*_cupsGlobals(void) _CUPS_PRIVATE;
 extern void		_cupsGlobalUnlock(void) _CUPS_PRIVATE;
-#  ifdef HAVE_GSSAPI
-extern const char	*_cupsGSSServiceName(void) _CUPS_PRIVATE;
-#  endif /* HAVE_GSSAPI */
 extern int		_cupsNextDelay(int current, int *previous) _CUPS_PRIVATE;
 extern void		_cupsSetDefaults(void) _CUPS_INTERNAL;
 extern void		_cupsSetError(ipp_status_t status, const char *message, int localize) _CUPS_PRIVATE;
 extern void		_cupsSetHTTPError(http_status_t status) _CUPS_INTERNAL;
-#  ifdef HAVE_GSSAPI
-extern int		_cupsSetNegotiateAuthString(http_t *http, const char *method, const char *resource) _CUPS_PRIVATE;
-#  endif /* HAVE_GSSAPI */
 extern char		*_cupsUserDefault(char *name, size_t namesize) _CUPS_INTERNAL;
 
 
