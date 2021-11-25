@@ -4859,14 +4859,20 @@ esac
         case "$host_os_name" in #(
   linux*) :
 
-	CPPFLAGS="$CPPFLAGS -D__USE_MISC -D_TIME_BITS=64"
+    	# Make sure we get the full set of Linux APIs from the headers...
+	CPPFLAGS="$CPPFLAGS -D__USE_MISC -D_TIME_BITS=64 -D_GNU_SOURCE"
+
+	# Mark read-only sections as relocatable to random addresses...
+	LDFLAGS="$LDFLAGS -Wl,-z,relro,-z,now"
      ;; #(
   darwin*) :
 
+        # When not building for debug, target macOS 10.14 or later, "universal"
+        # binaries when possible...
         if test "$host_os_version" -ge 200 -a x$enable_debug != xyes
 then :
 
-            # macOS 11.0 and higher support the Apple Silicon (arm64) CPUs
+	    # macOS 11.0 and higher support the Apple Silicon (arm64) CPUs
 	    OPTIM="$OPTIM -mmacosx-version-min=10.14 -arch x86_64 -arch arm64"
 
 elif test x$enable_debug != xyes
