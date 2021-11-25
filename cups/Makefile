@@ -49,7 +49,6 @@ LIBOBJS		= \
 		raster-stream.o \
 		raster-stubs.o \
 		request.o \
-		snprintf.o \
 		string.o \
 		tempfile.o \
 		thread.o \

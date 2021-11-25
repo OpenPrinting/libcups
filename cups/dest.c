@@ -17,9 +17,9 @@
 #include "debug-internal.h"
 #include <sys/stat.h>
 
-#ifdef HAVE_NOTIFY_H
+#ifdef __APPLE__
 #  include <notify.h>
-#endif /* HAVE_NOTIFY_H */
+#endif // __APPLE__
 
 #ifndef _WIN32
 #  include <poll.h>
@@ -434,9 +434,7 @@ _cupsAppleSetDefaultPaperID(
   CFPreferencesSetAppValue(kDefaultPaperIDKey, name, kCUPSPrintingPrefs);
   CFPreferencesAppSynchronize(kCUPSPrintingPrefs);
 
-#  ifdef HAVE_NOTIFY_POST
   notify_post("com.apple.printerPrefsChange");
-#  endif /* HAVE_NOTIFY_POST */
 }
 
 
@@ -526,9 +524,7 @@ _cupsAppleSetDefaultPrinter(
                                kCUPSPrintingPrefs);
       CFPreferencesAppSynchronize(kCUPSPrintingPrefs);
 
-#  ifdef HAVE_NOTIFY_POST
       notify_post("com.apple.printerPrefsChange");
-#  endif /* HAVE_NOTIFY_POST */
     }
 
     if (newlocations)
@@ -562,9 +558,7 @@ _cupsAppleSetUseLastPrinter(
 			   kCUPSPrintingPrefs);
   CFPreferencesAppSynchronize(kCUPSPrintingPrefs);
 
-#  ifdef HAVE_NOTIFY_POST
   notify_post("com.apple.printerPrefsChange");
-#  endif /* HAVE_NOTIFY_POST */
 }
 #endif /* __APPLE__ */
 
@@ -2234,16 +2228,14 @@ cupsSetDests2(http_t      *http,	/* I - Connection to server or @code CUPS_HTTP_
       CFRelease(name);
     }
   }
-#endif /* __APPLE__ */
 
-#ifdef HAVE_NOTIFY_POST
  /*
   * Send a notification so that macOS applications can know about the
   * change, too.
   */
 
   notify_post("com.apple.printerListChange");
-#endif /* HAVE_NOTIFY_POST */
+#endif /* __APPLE__ */
 
   return (0);
 }

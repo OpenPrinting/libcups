@@ -340,18 +340,6 @@ cupsPutFd(http_t     *http,		/* I - Connection to server or @code CUPS_HTTP_DEFA
       _httpSetDigestAuthString(http, http->nextnonce, "PUT", resource);
     }
 
-#ifdef HAVE_GSSAPI
-    if (http->authstring && !strncmp(http->authstring, "Negotiate", 9) && !new_auth)
-    {
-     /*
-      * Do not use cached Kerberos credentials since they will look like a
-      * "replay" attack...
-      */
-
-      _cupsSetNegotiateAuthString(http, "PUT", resource);
-    }
-#endif /* HAVE_GSSAPI */
-
     httpSetField(http, HTTP_FIELD_AUTHORIZATION, http->authstring);
 
     if (httpPut(http, resource))

@@ -1,6 +1,7 @@
 /*
  * HTTP address routines for CUPS.
  *
+ * Copyright © 2021 by OpenPrinting.
  * Copyright © 2007-2021 by Apple Inc.
  * Copyright © 1997-2006 by Easy Software Products, all rights reserved.
  *
@@ -380,55 +381,23 @@ httpAddrLookup(
   }
 #endif /* HAVE_RES_INIT */
 
-#ifdef HAVE_GETNAMEINFO
+ /*
+  * STR #2486: httpAddrLookup() fails when getnameinfo() returns EAI_AGAIN
+  *
+  * FWIW, I think this is really a bug in the implementation of
+  * getnameinfo(), but falling back on httpAddrString() is easy to
+  * do...
+  */
+
+  int error = getnameinfo(&addr->addr, (socklen_t)httpAddrLength(addr), name, (socklen_t)namelen, NULL, 0, 0);
+
+  if (error)
   {
-   /*
-    * STR #2486: httpAddrLookup() fails when getnameinfo() returns EAI_AGAIN
-    *
-    * FWIW, I think this is really a bug in the implementation of
-    * getnameinfo(), but falling back on httpAddrString() is easy to
-    * do...
-    */
+    if (error == EAI_FAIL)
+      cg->need_res_init = 1;
 
-    int error = getnameinfo(&addr->addr, (socklen_t)httpAddrLength(addr), name, (socklen_t)namelen, NULL, 0, 0);
-
-    if (error)
-    {
-      if (error == EAI_FAIL)
-        cg->need_res_init = 1;
-
-      return (httpAddrString(addr, name, namelen));
-    }
+    return (httpAddrString(addr, name, namelen));
   }
-#else
-  {
-    struct hostent	*host;			/* Host from name service */
-
-
-#  ifdef AF_INET6
-    if (addr->addr.sa_family == AF_INET6)
-      host = gethostbyaddr((char *)&(addr->ipv6.sin6_addr),
-                	   sizeof(struct in_addr), AF_INET6);
-    else
-#  endif /* AF_INET6 */
-    host = gethostbyaddr((char *)&(addr->ipv4.sin_addr),
-                	 sizeof(struct in_addr), AF_INET);
-
-    if (host == NULL)
-    {
-     /*
-      * No hostname, so return the raw address...
-      */
-
-      if (h_errno == NO_RECOVERY)
-        cg->need_res_init = 1;
-
-      return (httpAddrString(addr, name, namelen));
-    }
-
-    strlcpy(name, host->h_name, (size_t)namelen);
-  }
-#endif /* HAVE_GETNAMEINFO */
 
   DEBUG_printf(("1httpAddrLookup: returning \"%s\"...", name));
 

@@ -589,30 +589,6 @@ _cups_strcpy(char       *dst,		/* I - Destination string */
 
 
 /*
- * '_cups_strdup()' - Duplicate a string.
- */
-
-#ifndef HAVE_STRDUP
-char 	*				/* O - New string pointer */
-_cups_strdup(const char *s)		/* I - String to duplicate */
-{
-  char		*t;			/* New string pointer */
-  size_t	slen;			/* Length of string */
-
-
-  if (!s)
-    return (NULL);
-
-  slen = strlen(s);
-  if ((t = malloc(slen + 1)) == NULL)
-    return (NULL);
-
-  return (memcpy(t, s, slen + 1));
-}
-#endif /* !HAVE_STRDUP */
-
-
-/*
  * '_cups_strcasecmp()' - Do a case-insensitive comparison.
  */
 

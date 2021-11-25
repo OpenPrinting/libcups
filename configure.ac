@@ -129,9 +129,61 @@ AC_SUBST([PKGCONFIG_REQUIRES])
 AC_SUBST([PKGCONFIG_REQUIRES_PRIVATE])
 
 
-dnl String functions...
-AC_CHECK_FUNCS([strlcpy])
+dnl Functions...
+AC_CHECK_FUNCS([strlcat strlcpy])
+AC_SEARCH_LIBS([__res_init], [resolv bind], [
+    AC_DEFINE([HAVE_RES_INIT], [1], [Have res_init function?])
+], [
+    AC_SEARCH_LIBS([res_9_init], [resolv bind], [
+        AC_DEFINE([HAVE_RES_INIT], [1], [Have res_init function?])
+    ], [
+	AC_SEARCH_LIBS([res_init], [resolv bind], [
+	    AC_DEFINE([HAVE_RES_INIT], [1], [Have res_init function?])
+	])
+    ])
+])
 
+SAVELIBS="$LIBS"
+LIBS="-framework SystemConfiguration $LIBS"
+AC_CHECK_FUNCS([SCDynamicStoreCopyComputerName], [
+    AC_DEFINE([HAVE_SCDYNAMICSTORECOPYCOMPUTERNAME], [1], [Have SCDynamicStoreCopyComputerName function?])
+],[
+    LIBS="$SAVELIBS"
+])
+
+
+dnl Header files...
+AC_CHECK_HEADER([CoreFoundation/CoreFoundation.h], [
+    AC_DEFINE([HAVE_COREFOUNDATION_H], [1], [Have <CoreFoundation/CoreFoundation.h>?])
+])
+AC_CHECK_HEADER([langinfo.h], [
+    AC_DEFINE([HAVE_LANGINFO_H], [1], [Have <langinfo.h> header?])
+])
+AC_CHECK_HEADER([resolv.h], [
+    AC_DEFINE([HAVE_RESOLV_H], [1], [Have the <resolv.h> header?])
+], [
+]. [
+    #include <sys/socket.h>
+    #include <netinet/in.h>
+    #include <arpa/inet.h>
+    #include <netinet/in_systm.h>
+    #include <netinet/ip.h>
+])
+
+
+dnl See if the stat structure has the st_gen member...
+AC_MSG_CHECKING([for st_gen member in stat structure])
+AC_COMPILE_IFELSE([
+    AC_LANG_PROGRAM([[#include <sys/stat.h>]], [[
+        struct stat t;
+	int o = t.st_gen;
+    ]])
+], [
+    AC_MSG_RESULT([yes])
+    AC_DEFINE([HAVE_ST_GEN], [1], [Have st_gen member in struct stat?])
+], [
+    AC_MSG_RESULT([no])
+])
 
 dnl Check for "long long" support...
 AC_CACHE_CHECK([for long long int], [ac_cv_c_long_long], [

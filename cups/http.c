@@ -1499,20 +1499,11 @@ httpInitialize(void)
   * Ignore SIGPIPE signals...
   */
 
-#  ifdef HAVE_SIGSET
-  sigset(SIGPIPE, SIG_IGN);
-
-#  elif defined(HAVE_SIGACTION)
   struct sigaction	action;		/* POSIX sigaction data */
-
 
   memset(&action, 0, sizeof(action));
   action.sa_handler = SIG_IGN;
   sigaction(SIGPIPE, &action, NULL);
-
-#  else
-  signal(SIGPIPE, SIG_IGN);
-#  endif /* !SO_NOSIGPIPE */
 #endif /* _WIN32 */
 
 #  ifdef HAVE_TLS

@@ -80,14 +80,6 @@ typedef int socklen_t;
 #  ifndef _WIN32
 #    include <net/if.h>
 #    include <resolv.h>
-#    ifdef HAVE_GETIFADDRS
-#      include <ifaddrs.h>
-#    else
-#      include <sys/ioctl.h>
-#      ifdef HAVE_SYS_SOCKIO_H
-#        include <sys/sockio.h>
-#      endif /* HAVE_SYS_SOCKIO_H */
-#    endif /* HAVE_GETIFADDRS */
 #  endif /* !_WIN32 */
 
 

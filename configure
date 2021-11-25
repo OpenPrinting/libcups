@@ -4134,6 +4134,12 @@ PKGCONFIG_REQUIRES_PRIVATE="zlib"
 
 
 
+ac_fn_c_check_func "$LINENO" "strlcat" "ac_cv_func_strlcat"
+if test "x$ac_cv_func_strlcat" = xyes
+then :
+  printf "%s\n" "#define HAVE_STRLCAT 1" >>confdefs.h
+
+fi
 ac_fn_c_check_func "$LINENO" "strlcpy" "ac_cv_func_strlcpy"
 if test "x$ac_cv_func_strlcpy" = xyes
 then :
@@ -4141,7 +4147,329 @@ then :
 
 fi
 
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for library containing __res_init" >&5
+printf %s "checking for library containing __res_init... " >&6; }
+if test ${ac_cv_search___res_init+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  ac_func_search_save_LIBS=$LIBS
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
 
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+char __res_init ();
+int
+main (void)
+{
+return __res_init ();
+  ;
+  return 0;
+}
+_ACEOF
+for ac_lib in '' resolv bind
+do
+  if test -z "$ac_lib"; then
+    ac_res="none required"
+  else
+    ac_res=-l$ac_lib
+    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+  fi
+  if ac_fn_c_try_link "$LINENO"
+then :
+  ac_cv_search___res_init=$ac_res
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext
+  if test ${ac_cv_search___res_init+y}
+then :
+  break
+fi
+done
+if test ${ac_cv_search___res_init+y}
+then :
+
+else $as_nop
+  ac_cv_search___res_init=no
+fi
+rm conftest.$ac_ext
+LIBS=$ac_func_search_save_LIBS
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search___res_init" >&5
+printf "%s\n" "$ac_cv_search___res_init" >&6; }
+ac_res=$ac_cv_search___res_init
+if test "$ac_res" != no
+then :
+  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
+
+
+printf "%s\n" "#define HAVE_RES_INIT 1" >>confdefs.h
+
+
+else $as_nop
+
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for library containing res_9_init" >&5
+printf %s "checking for library containing res_9_init... " >&6; }
+if test ${ac_cv_search_res_9_init+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  ac_func_search_save_LIBS=$LIBS
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+char res_9_init ();
+int
+main (void)
+{
+return res_9_init ();
+  ;
+  return 0;
+}
+_ACEOF
+for ac_lib in '' resolv bind
+do
+  if test -z "$ac_lib"; then
+    ac_res="none required"
+  else
+    ac_res=-l$ac_lib
+    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+  fi
+  if ac_fn_c_try_link "$LINENO"
+then :
+  ac_cv_search_res_9_init=$ac_res
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext
+  if test ${ac_cv_search_res_9_init+y}
+then :
+  break
+fi
+done
+if test ${ac_cv_search_res_9_init+y}
+then :
+
+else $as_nop
+  ac_cv_search_res_9_init=no
+fi
+rm conftest.$ac_ext
+LIBS=$ac_func_search_save_LIBS
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_res_9_init" >&5
+printf "%s\n" "$ac_cv_search_res_9_init" >&6; }
+ac_res=$ac_cv_search_res_9_init
+if test "$ac_res" != no
+then :
+  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
+
+
+printf "%s\n" "#define HAVE_RES_INIT 1" >>confdefs.h
+
+
+else $as_nop
+
+	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for library containing res_init" >&5
+printf %s "checking for library containing res_init... " >&6; }
+if test ${ac_cv_search_res_init+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  ac_func_search_save_LIBS=$LIBS
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+char res_init ();
+int
+main (void)
+{
+return res_init ();
+  ;
+  return 0;
+}
+_ACEOF
+for ac_lib in '' resolv bind
+do
+  if test -z "$ac_lib"; then
+    ac_res="none required"
+  else
+    ac_res=-l$ac_lib
+    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+  fi
+  if ac_fn_c_try_link "$LINENO"
+then :
+  ac_cv_search_res_init=$ac_res
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext
+  if test ${ac_cv_search_res_init+y}
+then :
+  break
+fi
+done
+if test ${ac_cv_search_res_init+y}
+then :
+
+else $as_nop
+  ac_cv_search_res_init=no
+fi
+rm conftest.$ac_ext
+LIBS=$ac_func_search_save_LIBS
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_res_init" >&5
+printf "%s\n" "$ac_cv_search_res_init" >&6; }
+ac_res=$ac_cv_search_res_init
+if test "$ac_res" != no
+then :
+  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
+
+
+printf "%s\n" "#define HAVE_RES_INIT 1" >>confdefs.h
+
+
+fi
+
+
+fi
+
+
+fi
+
+
+SAVELIBS="$LIBS"
+LIBS="-framework SystemConfiguration $LIBS"
+
+  for ac_func in SCDynamicStoreCopyComputerName
+do :
+  ac_fn_c_check_func "$LINENO" "SCDynamicStoreCopyComputerName" "ac_cv_func_SCDynamicStoreCopyComputerName"
+if test "x$ac_cv_func_SCDynamicStoreCopyComputerName" = xyes
+then :
+  printf "%s\n" "#define HAVE_SCDYNAMICSTORECOPYCOMPUTERNAME 1" >>confdefs.h
+
+
+printf "%s\n" "#define HAVE_SCDYNAMICSTORECOPYCOMPUTERNAME 1" >>confdefs.h
+
+
+else $as_nop
+
+    LIBS="$SAVELIBS"
+
+fi
+
+done
+
+
+ac_header= ac_cache=
+for ac_item in $ac_header_c_list
+do
+  if test $ac_cache; then
+    ac_fn_c_check_header_compile "$LINENO" $ac_header ac_cv_header_$ac_cache "$ac_includes_default"
+    if eval test \"x\$ac_cv_header_$ac_cache\" = xyes; then
+      printf "%s\n" "#define $ac_item 1" >> confdefs.h
+    fi
+    ac_header= ac_cache=
+  elif test $ac_header; then
+    ac_cache=$ac_item
+  else
+    ac_header=$ac_item
+  fi
+done
+
+
+
+
+
+
+
+
+if test $ac_cv_header_stdlib_h = yes && test $ac_cv_header_string_h = yes
+then :
+
+printf "%s\n" "#define STDC_HEADERS 1" >>confdefs.h
+
+fi
+ac_fn_c_check_header_compile "$LINENO" "CoreFoundation/CoreFoundation.h" "ac_cv_header_CoreFoundation_CoreFoundation_h" "$ac_includes_default"
+if test "x$ac_cv_header_CoreFoundation_CoreFoundation_h" = xyes
+then :
+
+
+printf "%s\n" "#define HAVE_COREFOUNDATION_H 1" >>confdefs.h
+
+
+fi
+
+ac_fn_c_check_header_compile "$LINENO" "langinfo.h" "ac_cv_header_langinfo_h" "$ac_includes_default"
+if test "x$ac_cv_header_langinfo_h" = xyes
+then :
+
+
+printf "%s\n" "#define HAVE_LANGINFO_H 1" >>confdefs.h
+
+
+fi
+
+ac_fn_c_check_header_compile "$LINENO" "resolv.h" "ac_cv_header_resolv_h" "$ac_includes_default"
+if test "x$ac_cv_header_resolv_h" = xyes
+then :
+
+
+printf "%s\n" "#define HAVE_RESOLV_H 1" >>confdefs.h
+
+
+else $as_nop
+
+.
+    #include <sys/socket.h>
+    #include <netinet/in.h>
+    #include <arpa/inet.h>
+    #include <netinet/in_systm.h>
+    #include <netinet/ip.h>
+
+fi
+
+
+
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for st_gen member in stat structure" >&5
+printf %s "checking for st_gen member in stat structure... " >&6; }
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+    #include <sys/stat.h>
+int
+main (void)
+{
+
+        struct stat t;
+	int o = t.st_gen;
+
+  ;
+  return 0;
+}
+
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"
+then :
+
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf "%s\n" "yes" >&6; }
+
+printf "%s\n" "#define HAVE_ST_GEN 1" >>confdefs.h
+
+
+else $as_nop
+
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
 
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for long long int" >&5
 printf %s "checking for long long int... " >&6; }
@@ -4209,35 +4537,6 @@ fi
 
 
 
-ac_header= ac_cache=
-for ac_item in $ac_header_c_list
-do
-  if test $ac_cache; then
-    ac_fn_c_check_header_compile "$LINENO" $ac_header ac_cv_header_$ac_cache "$ac_includes_default"
-    if eval test \"x\$ac_cv_header_$ac_cache\" = xyes; then
-      printf "%s\n" "#define $ac_item 1" >> confdefs.h
-    fi
-    ac_header= ac_cache=
-  elif test $ac_header; then
-    ac_cache=$ac_item
-  else
-    ac_header=$ac_item
-  fi
-done
-
-
-
-
-
-
-
-
-if test $ac_cv_header_stdlib_h = yes && test $ac_cv_header_string_h = yes
-then :
-
-printf "%s\n" "#define STDC_HEADERS 1" >>confdefs.h
-
-fi
 ac_fn_c_check_header_compile "$LINENO" "pthread.h" "ac_cv_header_pthread_h" "$ac_includes_default"
 if test "x$ac_cv_header_pthread_h" = xyes
 then :
