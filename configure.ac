@@ -328,6 +328,8 @@ AC_SUBST([LIBCUPS_STATIC])
 
 dnl Extra compiler options...
 AC_ARG_ENABLE([debug], AS_HELP_STRING([--enable-debug], [turn on debugging, default=no]))
+AC_ARG_ENABLE([debug_guards], AS_HELP_STRING([--enable-debug-guards], [build with memory allocation guards]))
+AC_ARG_ENABLE([debug_printfs], AS_HELP_STRING([--enable-debug-printfs], [build with CUPS_DEBUG_LOG support]))
 AC_ARG_ENABLE([maintainer], AS_HELP_STRING([--enable-maintainer], [turn on maintainer mode, default=no]))
 AC_ARG_ENABLE([sanitizer], AS_HELP_STRING([--enable-sanitizer], [build with AddressSanitizer, default=no]))
 
@@ -340,6 +342,17 @@ AS_IF([test x$enable_debug = xyes], [
 ])
 
 AC_SUBST([CSFLAGS])
+
+OPTIONS=""
+AC_SUBST([OPTIONS])
+
+AS_IF([test x$enable_debug_guards = xyes], [
+    OPTIONS="$OPTIONS -DDEBUG_GUARDS"
+])
+
+AS_IF([test x$enable_debug_printfs = xyes], [
+    OPTIONS="$OPTIONS -DDEBUG"
+])
 
 WARNINGS=""
 AC_SUBST([WARNINGS])

@@ -1,5 +1,5 @@
 #
-# Common makefile definitions for CUPS.
+# Common makefile definitions for libcups.
 #
 # Copyright © 2021 by OpenPrinting.
 # Copyright © 2007-2019 by Apple Inc.
@@ -8,6 +8,13 @@
 # Licensed under Apache License v2.0.  See the file "LICENSE" for more
 # information.
 #
+
+#
+# This is a POSIX makefile
+#
+
+.POSIX:
+
 
 #
 # CUPS version...
@@ -69,6 +76,7 @@ LIBCUPSSTATIC	=	@LIBCUPSSTATIC@
 
 INSTALLSTATIC	=	@INSTALLSTATIC@
 
+
 #
 # Code signing...
 #
@@ -79,22 +87,54 @@ CSFLAGS		=	-s "$(CODESIGN_IDENTITY)" @CSFLAGS@ --timestamp
 
 
 #
-# Program options...
-#
-# OPTIM         Defines the common compiler optimization/debugging options
-#               for all architectures.
-# OPTIONS       Defines other compile-time options (currently only -DDEBUG
-#               for extra debug info)
+# Library archiver...
 #
 
 ARFLAGS		=	@ARFLAGS@
+
+
+#
+# C compiler and preprocessor...
+#
+
 CFLAGS		=	@CFLAGS@
 CPPFLAGS	=	@CPPFLAGS@
+WARNINGS	=	@WARNINGS@
+
+
+#
+# Linker options...
+#
+
 LIBS		=	@LIBS@ -lz
 DSOFLAGS	=	@DSOFLAGS@
 LDFLAGS		=	@LDFLAGS@
+
+
+#
+# Optimization and architecture options for both the compiler and linker.
+#
+
 OPTIM		=	@OPTIM@
-WARNINGS	=	@WARNINGS@
+
+
+#
+# Library options:
+#
+# - DEBUG
+#   Support for debug logging via the CUPS_DEBUG_{FILTER,LEVEL,LOG} environment
+#   variables.
+#
+# - DEBUG_GUARDS
+#   Support for guard bytes for allocated structures and values.
+#
+
+OPTIONS		=	@OPTIONS@
+
+
+#
+# Unit test target...
+#
 
 UNITTESTS	=	@UNITTESTS@
 
