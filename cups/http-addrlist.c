@@ -18,11 +18,11 @@
 #ifdef HAVE_RESOLV_H
 #  include <resolv.h>
 #endif /* HAVE_RESOLV_H */
-#ifdef HAVE_POLL
-#  include <poll.h>
-#endif /* HAVE_POLL */
-#ifndef _WIN32
+#ifdef _WIN32
+#  define poll WSAPoll
+#else
 #  include <fcntl.h>
+#  include <poll.h>
 #endif /* _WIN32 */
 
 
@@ -67,18 +67,8 @@ httpAddrConnect2(
   int			nfds,		/* Number of file descriptors */
 			fds[100];	/* Socket file descriptors */
   http_addrlist_t	*addrs[100];	/* Addresses */
-#ifndef HAVE_POLL
-  int			max_fd = -1;	/* Highest file descriptor */
-#endif /* !HAVE_POLL */
 #ifdef O_NONBLOCK
-#  ifdef HAVE_POLL
   struct pollfd		pfds[100];	/* Polled file descriptors */
-#  else
-  fd_set		input_set,	/* select() input set */
-			output_set,	/* select() output set */
-			error_set;	/* select() error set */
-  struct timeval	timeout;	/* Timeout */
-#  endif /* HAVE_POLL */
 #endif /* O_NONBLOCK */
 #ifdef DEBUG
 #  ifndef _WIN32
@@ -230,11 +220,6 @@ httpAddrConnect2(
       fcntl(fds[nfds], F_SETFL, flags);
 #endif /* !_WIN32 */
 
-#ifndef HAVE_POLL
-      if (fds[nfds] > max_fd)
-	max_fd = fds[nfds];
-#endif /* !HAVE_POLL */
-
       addrs[nfds] = addrlist;
       nfds ++;
       addrlist = addrlist->next;
@@ -278,7 +263,6 @@ httpAddrConnect2(
 	return (NULL);
       }
 
-#  ifdef HAVE_POLL
       for (i = 0; i < nfds; i ++)
       {
 	pfds[i].fd     = fds[i];
@@ -288,21 +272,6 @@ httpAddrConnect2(
       result = poll(pfds, (nfds_t)nfds, addrlist ? 100 : remaining > 250 ? 250 : remaining);
 
       DEBUG_printf(("1httpAddrConnect2: poll() returned %d (%d)", result, errno));
-
-#  else
-      FD_ZERO(&input_set);
-      for (i = 0; i < nfds; i ++)
-	FD_SET(fds[i], &input_set);
-      output_set = input_set;
-      error_set  = input_set;
-
-      timeout.tv_sec  = 0;
-      timeout.tv_usec = (addrlist ? 100 : remaining > 250 ? 250 : remaining) * 1000;
-
-      result = select(max_fd + 1, &input_set, &output_set, &error_set, &timeout);
-
-      DEBUG_printf(("1httpAddrConnect2: select() returned %d (%d)", result, errno));
-#  endif /* HAVE_POLL */
     }
 #  ifdef _WIN32
     while (result < 0 && (WSAGetLastError() == WSAEINTR || WSAGetLastError() == WSAEWOULDBLOCK));
@@ -316,12 +285,8 @@ httpAddrConnect2(
 
       for (i = 0; i < nfds; i ++)
       {
-#  ifdef HAVE_POLL
 	DEBUG_printf(("pfds[%d].revents=%x\n", i, pfds[i].revents));
 	if (pfds[i].revents && !(pfds[i].revents & (POLLERR | POLLHUP)))
-#  else
-	if (FD_ISSET(fds[i], &input_set) && !FD_ISSET(fds[i], &error_set))
-#  endif /* HAVE_POLL */
 	{
 	  *sock    = fds[i];
 	  connaddr = addrs[i];
@@ -334,11 +299,7 @@ httpAddrConnect2(
 
           break;
 	}
-#  ifdef HAVE_POLL
 	else if (pfds[i].revents & (POLLERR | POLLHUP))
-#  else
-	else if (FD_ISSET(fds[i], &error_set))
-#  endif /* HAVE_POLL */
         {
 #  ifdef __sun
           // Solaris incorrectly returns errors when you poll() a socket that is
@@ -569,7 +530,6 @@ httpAddrGetList(const char *hostname,	/* I - Hostname, IP address, or NULL for p
 #endif /* AF_LOCAL */
   if (!hostname || _cups_strcasecmp(hostname, "localhost"))
   {
-#ifdef HAVE_GETADDRINFO
     struct addrinfo	hints,		/* Address lookup hints */
 			*results,	/* Address lookup results */
 			*current;	/* Current result */
@@ -685,133 +645,6 @@ httpAddrGetList(const char *hostname,	/* I - Hostname, IP address, or NULL for p
       _cupsSetError(IPP_STATUS_ERROR_INTERNAL, gai_strerror(error), 0);
 #  endif /* _WIN32 */
     }
-
-#else
-    if (hostname)
-    {
-      int		i;		/* Looping vars */
-      unsigned		ip[4];		/* IPv4 address components */
-      const char	*ptr;		/* Pointer into hostname */
-      struct hostent	*host;		/* Result of lookup */
-      struct servent	*port;		/* Port number for service */
-      int		portnum;	/* Port number */
-
-
-     /*
-      * Lookup the service...
-      */
-
-      if (!service)
-	portnum = 0;
-      else if (isdigit(*service & 255))
-	portnum = atoi(service);
-      else if ((port = getservbyname(service, NULL)) != NULL)
-	portnum = ntohs(port->s_port);
-      else if (!strcmp(service, "http"))
-        portnum = 80;
-      else if (!strcmp(service, "https"))
-        portnum = 443;
-      else if (!strcmp(service, "ipp") || !strcmp(service, "ipps"))
-        portnum = 631;
-      else if (!strcmp(service, "lpd"))
-        portnum = 515;
-      else if (!strcmp(service, "socket"))
-        portnum = 9100;
-      else
-	return (NULL);
-
-     /*
-      * This code is needed because some operating systems have a
-      * buggy implementation of gethostbyname() that does not support
-      * IPv4 addresses.  If the hostname string is an IPv4 address, then
-      * sscanf() is used to extract the IPv4 components.  We then pack
-      * the components into an IPv4 address manually, since the
-      * inet_aton() function is deprecated.  We use the htonl() macro
-      * to get the right byte order for the address.
-      */
-
-      for (ptr = hostname; isdigit(*ptr & 255) || *ptr == '.'; ptr ++);
-
-      if (!*ptr)
-      {
-       /*
-	* We have an IPv4 address; break it up and create an IPv4 address...
-	*/
-
-	if (sscanf(hostname, "%u.%u.%u.%u", ip, ip + 1, ip + 2, ip + 3) == 4 &&
-            ip[0] <= 255 && ip[1] <= 255 && ip[2] <= 255 && ip[3] <= 255)
-	{
-	  first = (http_addrlist_t *)calloc(1, sizeof(http_addrlist_t));
-	  if (!first)
-	    return (NULL);
-
-          first->addr.ipv4.sin_family = AF_INET;
-          first->addr.ipv4.sin_addr.s_addr = htonl((((((((unsigned)ip[0] << 8) |
-	                                               (unsigned)ip[1]) << 8) |
-						     (unsigned)ip[2]) << 8) |
-						   (unsigned)ip[3]));
-          first->addr.ipv4.sin_port = htons(portnum);
-	}
-      }
-      else if ((host = gethostbyname(hostname)) != NULL &&
-#  ifdef AF_INET6
-               (host->h_addrtype == AF_INET || host->h_addrtype == AF_INET6))
-#  else
-               host->h_addrtype == AF_INET)
-#  endif /* AF_INET6 */
-      {
-	for (i = 0; host->h_addr_list[i]; i ++)
-	{
-	 /*
-          * Copy the address over...
-	  */
-
-	  temp = (http_addrlist_t *)calloc(1, sizeof(http_addrlist_t));
-	  if (!temp)
-	  {
-	    httpAddrFreeList(first);
-	    return (NULL);
-	  }
-
-#  ifdef AF_INET6
-          if (host->h_addrtype == AF_INET6)
-	  {
-            temp->addr.ipv6.sin6_family = AF_INET6;
-	    memcpy(&(temp->addr.ipv6.sin6_addr), host->h_addr_list[i],
-	           sizeof(temp->addr.ipv6));
-            temp->addr.ipv6.sin6_port = htons(portnum);
-	  }
-	  else
-#  endif /* AF_INET6 */
-	  {
-            temp->addr.ipv4.sin_family = AF_INET;
-	    memcpy(&(temp->addr.ipv4.sin_addr), host->h_addr_list[i],
-	           sizeof(temp->addr.ipv4));
-            temp->addr.ipv4.sin_port = htons(portnum);
-          }
-
-	 /*
-	  * Append the address to the list...
-	  */
-
-	  if (!first)
-	    first = temp;
-
-	  if (addr)
-	    addr->next = temp;
-
-	  addr = temp;
-	}
-      }
-      else
-      {
-        if (h_errno == NO_RECOVERY)
-          cg->need_res_init = 1;
-
-	_cupsSetError(IPP_STATUS_ERROR_INTERNAL, hstrerror(h_errno), 0);
-      }
-    }
-#endif /* HAVE_GETADDRINFO */
   }
 
  /*

@@ -23,13 +23,11 @@
 #ifdef _WIN32
 #  include <tchar.h>
 #else
+#  include <poll.h>
 #  include <signal.h>
 #  include <sys/time.h>
 #  include <sys/resource.h>
 #endif /* _WIN32 */
-#ifdef HAVE_POLL
-#  include <poll.h>
-#endif /* HAVE_POLL */
 
 
 /*

@@ -159,7 +159,7 @@ ippeveprinter:	ippeveprinter.o ../cups/$(LIBCUPS)
 # ippeveprinter-static
 #
 
-ippeveprinter-static:	ippeveprinter.o ../cups/$(LIBCUPSSTATIC)
+ippeveprinter-static:	ippeveprinter.o ../cups/libcups.a
 	echo Linking $@...
 	$(CC) $(LDFLAGS) $(OPTIM) -o $@ ippeveprinter.o $(PAMLIBS) ../cups/libcups.a $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
@@ -199,7 +199,7 @@ ippfind:	ippfind.o ../cups/$(LIBCUPS)
 # ippfind-static
 #
 
-ippfind-static:	ippfind.o ../cups/$(LIBCUPSSTATIC)
+ippfind-static:	ippfind.o ../cups/libcups.a
 	echo Linking $@
 	$(CC) $(LDFLAGS) $(OPTIM) -o $@ ippfind.o ../cups/libcups.a $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
@@ -219,7 +219,7 @@ ipptool:	ipptool.o ../cups/$(LIBCUPS)
 # ipptool-static
 #
 
-ipptool-static:	ipptool.o ../cups/$(LIBCUPSSTATIC)
+ipptool-static:	ipptool.o ../cups/libcups.a
 	echo Linking $@...
 	$(CC) $(LDFLAGS) $(OPTIM) -o $@ ipptool.o ../cups/libcups.a $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@

@@ -452,7 +452,9 @@ cupsLangGet(const char *language)	/* I - Language or locale */
   char			langname[16],	/* Requested language name */
 			country[16],	/* Country code */
 			charset[16],	/* Character set */
+#ifndef __APPLE__
 			*csptr,		/* Pointer to CODESET string */
+#endif // !__APPLE__
 			*ptr,		/* Pointer into language/charset */
 			real[48];	/* Real language name */
   cups_encoding_t	encoding;	/* Encoding to use */

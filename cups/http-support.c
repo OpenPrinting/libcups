@@ -19,10 +19,8 @@
 #  include <dns_sd.h>
 #  ifdef _WIN32
 #    include <io.h>
-#  elif defined(HAVE_POLL)
-#    include <poll.h>
 #  else
-#    include <sys/select.h>
+#    include <poll.h>
 #  endif /* _WIN32 */
 #elif defined(HAVE_AVAHI)
 #  include <avahi-client/client.h>
@@ -1784,12 +1782,7 @@ _httpResolveURI(
 			ippsref = NULL,	/* DNS-SD service reference for network IPPS */
 			localref;	/* DNS-SD service reference for .local */
     int			extrasent = 0;	/* Send the domain/IPP/IPPS resolves? */
-#    ifdef HAVE_POLL
     struct pollfd	polldata;	/* Polling data */
-#    else /* select() */
-    fd_set		input_set;	/* Input set for select() */
-    struct timeval	stimeout;	/* Timeout value for select() */
-#    endif /* HAVE_POLL */
 #  elif defined(HAVE_AVAHI)
     AvahiClient		*client;	/* Client information */
     int			error;		/* Status */
@@ -1896,28 +1889,10 @@ _httpResolveURI(
 	  if ((timeout = end_time - time(NULL)) > 2)
 	    timeout = 2;
 
-#    ifdef HAVE_POLL
 	  polldata.fd     = DNSServiceRefSockFD(ref);
 	  polldata.events = POLLIN;
 
-	  fds = poll(&polldata, 1, (int)(1000 * timeout));
-
-#    else /* select() */
-	  FD_ZERO(&input_set);
-	  FD_SET(DNSServiceRefSockFD(ref), &input_set);
-
-#      ifdef _WIN32
-	  stimeout.tv_sec  = (long)timeout;
-#      else
-	  stimeout.tv_sec  = timeout;
-#      endif /* _WIN32 */
-	  stimeout.tv_usec = 0;
-
-	  fds = select(DNSServiceRefSockFD(ref)+1, &input_set, NULL, NULL,
-		       &stimeout);
-#    endif /* HAVE_POLL */
-
-	  if (fds < 0)
+	  if ((fds = poll(&polldata, 1, (int)(1000 * timeout))) < 0)
 	  {
 	    if (errno != EINTR && errno != EAGAIN)
 	    {
