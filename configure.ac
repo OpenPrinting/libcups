@@ -195,6 +195,22 @@ AS_IF([test x$ac_cv_header_zlib_h != xyes -o x$ac_cv_lib_z_inflateCopy != xyes],
 ])
 
 
+dnl Checks for iconv.h and iconv_open
+AC_CHECK_HEADER([iconv.h], [
+    SAVELIBS="$LIBS"
+    LIBS=""
+    AC_SEARCH_LIBS([iconv_open], [iconv], [
+        AC_DEFINE([HAVE_ICONV_H], [1], [Have <iconv.h> header?])
+	SAVELIBS="$SAVELIBS $LIBS"
+    ])
+    AC_SEARCH_LIBS([libiconv_open], [iconv], [
+	AC_DEFINE([HAVE_ICONV_H], [1], [Have <iconv.h> header?])
+	SAVELIBS="$SAVELIBS $LIBS"
+    ])
+    LIBS="$SAVELIBS"
+])
+
+
 dnl DNS-SD support...
 AC_ARG_WITH([dnssd], AS_HELP_STRING([--with-dnssd=LIBRARY], [set DNS-SD library (auto, avahi, mdnsresponder)]))
 
