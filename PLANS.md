@@ -28,4 +28,4 @@ Feature work:
 - Add PAPPL random number functions
 - Add mOAuth JSON functions
 - Updated/improved test suite and fuzzing support
-
+- Public threading API

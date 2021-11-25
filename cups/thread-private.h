@@ -1,9 +1,11 @@
 /*
  * Private threading definitions for CUPS.
  *
- * Copyright 2009-2017 by Apple Inc.
+ * Copyright © 2021 by OpenPrinting.
+ * Copyright © 2009-2017 by Apple Inc.
  *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more information.
+ * Licensed under Apache License v2.0.  See the file "LICENSE" for more
+ * information.
  */
 
 #ifndef _CUPS_THREAD_PRIVATE_H_
@@ -26,22 +28,7 @@ extern "C" {
 #  endif /* __cplusplus */
 
 
-#  ifdef HAVE_PTHREAD_H			/* POSIX threading */
-#    include <pthread.h>
-typedef void *(*_cups_thread_func_t)(void *arg);
-typedef pthread_t _cups_thread_t;
-typedef pthread_cond_t _cups_cond_t;
-typedef pthread_mutex_t _cups_mutex_t;
-typedef pthread_rwlock_t _cups_rwlock_t;
-typedef pthread_key_t	_cups_threadkey_t;
-#    define _CUPS_COND_INITIALIZER PTHREAD_COND_INITIALIZER
-#    define _CUPS_MUTEX_INITIALIZER PTHREAD_MUTEX_INITIALIZER
-#    define _CUPS_RWLOCK_INITIALIZER PTHREAD_RWLOCK_INITIALIZER
-#    define _CUPS_THREADKEY_INITIALIZER 0
-#    define _cupsThreadGetData(k) pthread_getspecific(k)
-#    define _cupsThreadSetData(k,p) pthread_setspecific(k,p)
-
-#  elif defined(_WIN32)			/* Windows threading */
+#  if _WIN32				/* Windows threading */
 #    include <winsock2.h>
 #    include <windows.h>
 typedef void *(__stdcall *_cups_thread_func_t)(void *arg);
@@ -62,20 +49,21 @@ typedef DWORD	_cups_threadkey_t;
 #    define _cupsThreadGetData(k) TlsGetValue(k)
 #    define _cupsThreadSetData(k,p) TlsSetValue(k,p)
 
-#  else					/* No threading */
-typedef void	*(*_cups_thread_func_t)(void *arg);
-typedef int	_cups_thread_t;
-typedef char	_cups_cond_t;
-typedef char	_cups_mutex_t;
-typedef char	_cups_rwlock_t;
-typedef void	*_cups_threadkey_t;
-#    define _CUPS_COND_INITIALIZER 0
-#    define _CUPS_MUTEX_INITIALIZER 0
-#    define _CUPS_RWLOCK_INITIALIZER 0
-#    define _CUPS_THREADKEY_INITIALIZER (void *)0
-#    define _cupsThreadGetData(k) k
-#    define _cupsThreadSetData(k,p) k=p
-#  endif /* HAVE_PTHREAD_H */
+#  else					/* POSIX threading */
+#    include <pthread.h>
+typedef void *(*_cups_thread_func_t)(void *arg);
+typedef pthread_t _cups_thread_t;
+typedef pthread_cond_t _cups_cond_t;
+typedef pthread_mutex_t _cups_mutex_t;
+typedef pthread_rwlock_t _cups_rwlock_t;
+typedef pthread_key_t	_cups_threadkey_t;
+#    define _CUPS_COND_INITIALIZER PTHREAD_COND_INITIALIZER
+#    define _CUPS_MUTEX_INITIALIZER PTHREAD_MUTEX_INITIALIZER
+#    define _CUPS_RWLOCK_INITIALIZER PTHREAD_RWLOCK_INITIALIZER
+#    define _CUPS_THREADKEY_INITIALIZER 0
+#    define _cupsThreadGetData(k) pthread_getspecific(k)
+#    define _cupsThreadSetData(k,p) pthread_setspecific(k,p)
+#  endif /* _WIN32 */
 
 
 /*
