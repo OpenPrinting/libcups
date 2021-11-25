@@ -188,9 +188,10 @@ done
 
 dnl ZLIB (required)
 AC_CHECK_HEADER([zlib.h])
+AC_CHECK_LIB([z], [inflateCopy])
 
-AS_IF([test x$ac_cv_header_zlib_h != xyes], [
-    AC_MSG_ERROR([Sorry, this software requires ZLIB.])
+AS_IF([test x$ac_cv_header_zlib_h != xyes -o x$ac_cv_lib_z_inflateCopy != xyes], [
+    AC_MSG_ERROR([Sorry, this software requires ZLIB 1.1 or higher.])
 ])
 
 
@@ -278,6 +279,8 @@ AS_IF([test $host_os_name = darwin], [
 	    PKGCONFIG_LIBS_PRIVATE="$($PKGCONFIG --libs gnutls) $PKGCONFIG_LIBS_PRIVATE"
 	    PKGCONFIG_REQUIRES_PRIVATE="gnutls >= 3.0, $PKGCONFIG_REQUIRES_PRIVATE"
 	    AC_DEFINE(HAVE_GNUTLS, 1, [Have GNU TLS?])
+	], [
+	    AC_MSG_ERROR([Sorry, this software requires GNU TLS or the corresponding platform TLS support.])
 	])
     ])
 ])

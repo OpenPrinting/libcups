@@ -4306,11 +4306,54 @@ then :
 
 fi
 
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for inflateCopy in -lz" >&5
+printf %s "checking for inflateCopy in -lz... " >&6; }
+if test ${ac_cv_lib_z_inflateCopy+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lz  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
 
-if test x$ac_cv_header_zlib_h != xyes
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+char inflateCopy ();
+int
+main (void)
+{
+return inflateCopy ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
+then :
+  ac_cv_lib_z_inflateCopy=yes
+else $as_nop
+  ac_cv_lib_z_inflateCopy=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_z_inflateCopy" >&5
+printf "%s\n" "$ac_cv_lib_z_inflateCopy" >&6; }
+if test "x$ac_cv_lib_z_inflateCopy" = xyes
+then :
+  printf "%s\n" "#define HAVE_LIBZ 1" >>confdefs.h
+
+  LIBS="-lz $LIBS"
+
+fi
+
+
+if test x$ac_cv_header_zlib_h != xyes -o x$ac_cv_lib_z_inflateCopy != xyes
 then :
 
-    as_fn_error $? "Sorry, this software requires ZLIB." "$LINENO" 5
+    as_fn_error $? "Sorry, this software requires ZLIB 1.1 or higher." "$LINENO" 5
 
 fi
 
@@ -4510,6 +4553,10 @@ printf "%s\n" "#define HAVE_GNUTLS 1" >>confdefs.h
 
 printf "%s\n" "#define HAVE_GNUTLS 1" >>confdefs.h
 
+
+else $as_nop
+
+	    as_fn_error $? "Sorry, this software requires GNU TLS or the corresponding platform TLS support." "$LINENO" 5
 
 fi
 

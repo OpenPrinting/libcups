@@ -16,6 +16,7 @@ New Prerequisites:
 - C99
 - poll function (WSAPoll on Windows)
 - POSIX threads (emulation on Windows)
+- TLS support (various libraries/frameworks)
 - ZLIB 1.1.x or later (with inflateCopy function)
 
 
