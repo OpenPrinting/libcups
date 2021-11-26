@@ -1,6 +1,7 @@
 /*
  * IPP fuzzing program for CUPS.
  *
+ * Copyright © 2021 by OpenPrinting.
  * Copyright © 2007-2021 by Apple Inc.
  * Copyright © 1997-2005 by Easy Software Products.
  *
@@ -25,6 +26,13 @@
 #endif /* _WIN32 */
 
 
+//
+// Local constants...
+//
+
+#define NUM_FUZZ	10		// Number of fuzzers to run in parallel
+
+
 /*
  * Local types...
  */
@@ -37,14 +45,13 @@ typedef struct _ippdata_t		// Data
 } _ippdata_t;
 
 
-
-
 /*
  * Local functions...
  */
 
 void	fuzzdata(_ippdata_t *data);
 void	hex_dump(ipp_uchar_t *buffer, size_t bytes);
+int	wait_child(int pid, const char *filename);
 ssize_t	write_cb(_ippdata_t *data, ipp_uchar_t *buffer, size_t bytes);
 
 
@@ -56,6 +63,7 @@ int				// O - Exit status
 main(int  argc,			// I - Number of command-line arguments
      char *argv[])		// I - Command-line arguments
 {
+  int		status = 0;	// Exit status
   ipp_state_t	state;		// State
   cups_file_t	*fp;		// File pointer
   ipp_t		*request;	// Request
@@ -65,10 +73,13 @@ main(int  argc,			// I - Number of command-line arguments
   {
     // Generate a Print-Job request with all common attribute types...
     int		i;		// Looping var
-    char	filename[256];	// Test filename
+    const char	*tmpdir;	// Temporary directory
+    char	filenames[NUM_FUZZ][256];
+				// Test filenames
     const char	*fuzz_args[3];	// Arguments for sub-process
-    pid_t	fuzz_pid;	// Sub-process ID
-    int		fuzz_status;	// Exit status
+    int		num_fuzz_pids;	// Number of sub-processes
+    pid_t	fuzz_pids[NUM_FUZZ];
+				// Sub-process IDs
     ipp_t	*media_col,	// media-col collection
 		*media_size;	// media-size collection
     _ippdata_t	data;		// IPP buffer
@@ -116,66 +127,79 @@ main(int  argc,			// I - Number of command-line arguments
 	break;
     }
 
+    fputs("ippReadIO/ippWriteIO: ", stdout);
+
     if (state != IPP_STATE_DATA)
     {
-      puts("Failed to create base IPP message.");
+      puts("FAIL");
+      fputs("fuzzipp: Failed to create base IPP message.\n", stderr);
       return (1);
     }
 
     ippDelete(request);
 
-    // Now iterate 1000 times and test the fuzzed request...
-    for (i = 0; i < 1000; i ++)
+    // Find the temporary directory...
+    if ((tmpdir = getenv("TMPDIR")) == NULL)
+    {
+#ifdef __APPLE__
+      tmpdir = "/private/tmp";
+#else
+      tmpdir = "/tmp";
+#endif // __APPLE__
+    }
+
+    // Now iterate 10000 times and test the fuzzed request...
+    for (i = 0, num_fuzz_pids = 0; i < 10000; i ++)
     {
       fuzzdata(&data);
 
-      snprintf(filename, sizeof(filename), "fuzz-%03d.ipp", i);
-      if ((fp = cupsFileOpen(filename, "w")) == NULL)
+      snprintf(filenames[num_fuzz_pids], sizeof(filenames[0]), "%s/fuzz-%03d.ipp", tmpdir, i);
+      if ((fp = cupsFileOpen(filenames[num_fuzz_pids], "w")) == NULL)
       {
-        perror(filename);
-        return (1);
+        puts("FAIL");
+        perror(filenames[num_fuzz_pids]);
+        status = 1;
+        break;
       }
 
       cupsFileWrite(fp, (char *)buffer, data.wused);
       cupsFileClose(fp);
 
-      printf("%s: ", filename);
-      fflush(stdout);
-
       fuzz_args[0] = argv[0];
-      fuzz_args[1] = filename;
+      fuzz_args[1] = filenames[num_fuzz_pids];
       fuzz_args[2] = NULL;
 
-      if (posix_spawn(&fuzz_pid, argv[0], NULL, NULL, (char * const *)fuzz_args, NULL))
+      if (posix_spawn(fuzz_pids + num_fuzz_pids, argv[0], NULL, NULL, (char * const *)fuzz_args, NULL))
       {
         puts("FAIL");
-        perror(argv[0]);
-        unlink(filename);
-        return (1);
+        fprintf(stderr, "Unable to run '%s %s': %s\n", argv[0], filenames[num_fuzz_pids], strerror(errno));
+        status = 1;
+        break;
       }
 
-      while (waitpid(fuzz_pid, &fuzz_status, 0) < 0)
+      num_fuzz_pids ++;
+      if (num_fuzz_pids >= NUM_FUZZ)
       {
-        if (errno != EINTR && errno != EAGAIN)
+        putchar('.');
+        fflush(stdout);
+        while (num_fuzz_pids > 0)
         {
-          puts("FAIL");
-          perror(argv[0]);
-          unlink(filename);
-          return (1);
+          num_fuzz_pids --;
+          if (wait_child(fuzz_pids[num_fuzz_pids], filenames[num_fuzz_pids]))
+            status = 1;
         }
       }
-
-      if (fuzz_status)
-      {
-        puts("FAIL");
-        hex_dump(buffer, data.wused);
-        unlink(filename);
-        return (1);
-      }
-
-      puts("PASS");
-      unlink(filename);
     }
+
+    while (num_fuzz_pids > 0)
+    {
+      num_fuzz_pids --;
+      if (wait_child(fuzz_pids[num_fuzz_pids], filenames[num_fuzz_pids]))
+	status = 1;
+    }
+
+    if (!status)
+      puts("PASS");
   }
   else
   {
@@ -211,7 +235,7 @@ main(int  argc,			// I - Number of command-line arguments
     ippDelete(request);
   }
 
-  return (0);
+  return (status);
 }
 
 
@@ -236,6 +260,20 @@ fuzzdata(_ippdata_t *data)		// I - Data buffer
     switch ((len = CUPS_RAND() & 7))
     {
       case 0 :
+          if (data->wused < data->wsize)
+          {
+            // Insert bytes
+	    len  = (CUPS_RAND() & 7) + 1;
+	    if (len > (int)(data->wsize - data->wused))
+	      len = (int)(data->wsize - data->wused);
+
+	    pos = CUPS_RAND() % (data->wused - len);
+	    memmove(data->wbuffer + pos + len, data->wbuffer + pos, data->wused - pos);
+	    for (i = 0; i < len; i ++)
+	      data->wbuffer[pos + i] = CUPS_RAND();
+	    break;
+	  }
+
       case 1 :
       case 2 :
       case 3 :
@@ -319,6 +357,50 @@ hex_dump(ipp_uchar_t *buffer,		// I - Buffer to dump
 
     putchar('\n');
   }
+}
+
+
+//
+// 'wait_child()' - Wait for a child process to finish and show any errors as
+//                  needed.
+//
+
+int					// O - Exit status
+wait_child(int        pid,		// I - Child process ID
+           const char *filename)	// I - Test data
+{
+  int	status;				// Exit status
+
+
+  while (waitpid(pid, &status, 0) < 0)
+  {
+    if (errno != EINTR && errno != EAGAIN)
+    {
+      printf("FAIL (%s: %s)\n", filename, strerror(errno));
+      unlink(filename);
+      return (1);
+    }
+  }
+
+  if (status)
+  {
+    cups_file_t	*fp;			// File
+    ipp_uchar_t	buffer[262144];		// Data buffer
+    ssize_t	bytes;			// Bytes read
+
+    printf("FAIL (%s: %d)\n", filename, status);
+    if ((fp = cupsFileOpen(filename, "r")) != NULL)
+    {
+      if ((bytes = cupsFileRead(fp, (char *)buffer, sizeof(buffer))) > 0)
+        hex_dump(buffer, (size_t)bytes);
+
+      cupsFileClose(fp);
+    }
+  }
+
+  unlink(filename);
+
+  return (status != 0);
 }
 
 
