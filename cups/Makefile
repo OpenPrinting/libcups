@@ -140,27 +140,27 @@ all:		$(TARGETS)
 
 
 #
-# Make unit tests...
+# Make and run unit tests...
 #
 
-unittests:	$(UNITTARGETS)
-	rm -f unittests.log
+test:		$(UNITTARGETS)
+	rm -f test.log
 	echo Running array API tests...
-	./testarray 2>>unittests.log
+	./testarray 2>>test.log
 	echo Running file API tests...
-	./testfile 2>>unittests.log
+	./testfile 2>>test.log
 	echo Running HTTP API tests...
-	./testhttp 2>>unittests.log
+	./testhttp 2>>test.log
 	echo Running IPP API tests...
-	./testipp 2>>unittests.log
+	./testipp 2>>test.log
 	echo Fuzzing IPP API...
-	./fuzzipp 2>>unittests.log
+	./fuzzipp 2>>test.log
 	echo Running internationalization API tests...
-	./testi18n 2>>unittests.log
+	./testi18n 2>>test.log
 	echo Running option API tests...
-	./testoptions 2>>unittests.log
+	./testoptions 2>>test.log
 	echo Running raster API tests...
-	./testraster 2>>unittests.log
+	./testraster 2>>test.log
 
 
 #

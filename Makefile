@@ -33,25 +33,7 @@ all:
 	echo Using LIBS="$(LIBS)"
 	for dir in $(DIRS); do\
 		echo Making all in $$dir... ;\
-		(cd $$dir ; $(MAKE) $(MFLAGS) all $(UNITTESTS)) || exit 1;\
-	done
-
-
-#
-# Make unit test targets...
-#
-
-unittests:
-	echo Using CC="$(CC)"
-	echo Using CFLAGS="$(CFLAGS)"
-	echo Using CPPFLAGS="-I.. -D_CUPS_SOURCE $(CPPFLAGS) $(OPTIONS)"
-	echo Using DSO="$(DSO)"
-	echo Using DSOFLAGS="$(DSOFLAGS)"
-	echo Using LDFLAGS="$(LDFLAGS)"
-	echo Using LIBS="$(LIBS)"
-	for dir in $(DIRS); do\
-		echo Making all in $$dir... ;\
-		(cd $$dir ; $(MAKE) $(MFLAGS) unittests) || exit 1;\
+		(cd $$dir ; $(MAKE) $(MFLAGS) all) || exit 1;\
 	done
 
 
@@ -116,10 +98,14 @@ uninstall:
 
 
 #
-# Run the test suite...
+# Test everything...
 #
 
-test:		all unittests
+test:		all
+	for dir in $(DIRS); do\
+		echo Making all in $$dir... ;\
+		(cd $$dir ; $(MAKE) $(MFLAGS) test) || exit 1;\
+	done
 
 
 #

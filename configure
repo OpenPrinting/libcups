@@ -678,7 +678,6 @@ CFLAGS
 CC
 OPTIM
 DSOFLAGS
-UNITTESTS
 CODE_SIGN
 LOCALTARGET
 host_os
@@ -734,13 +733,10 @@ SHELL'
 ac_subst_files=''
 ac_user_opts='
 enable_option_checking
-enable_unit_tests
 with_dnssd
 enable_static
 enable_shared
 enable_debug
-enable_debug_guards
-enable_debug_printfs
 enable_maintainer
 enable_sanitizer
 with_dsoflags
@@ -1376,12 +1372,9 @@ Optional Features:
   --disable-option-checking  ignore unrecognized --enable/--with options
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
-  --enable-unit-tests     build and run unit tests
   --disable-static        do not install static library
   --disable-shared        do not install shared library
   --enable-debug          turn on debugging, default=no
-  --enable-debug-guards   build with memory allocation guards
-  --enable-debug-printfs  build with CUPS_DEBUG_LOG support
   --enable-maintainer     turn on maintainer mode, default=no
   --enable-sanitizer      build with AddressSanitizer, default=no
 
@@ -2616,32 +2609,6 @@ fi
 
   test -n "$CODE_SIGN" && break
 done
-
-
-
-# Check whether --enable-unit_tests was given.
-if test ${enable_unit_tests+y}
-then :
-  enableval=$enable_unit_tests;
-fi
-
-if test x$enable_unit_tests = xyes
-then :
-
-    if test "$build" != "$host"
-then :
-
-	as_fn_error $? "Sorry, cannot build unit tests when cross-compiling." "$LINENO" 5
-
-fi
-
-    UNITTESTS="unittests"
-
-else $as_nop
-
-    UNITTESTS=""
-
-fi
 
 
 
@@ -5104,18 +5071,6 @@ then :
   enableval=$enable_debug;
 fi
 
-# Check whether --enable-debug_guards was given.
-if test ${enable_debug_guards+y}
-then :
-  enableval=$enable_debug_guards;
-fi
-
-# Check whether --enable-debug_printfs was given.
-if test ${enable_debug_printfs+y}
-then :
-  enableval=$enable_debug_printfs;
-fi
-
 # Check whether --enable-maintainer was given.
 if test ${enable_maintainer+y}
 then :
@@ -5132,34 +5087,20 @@ fi
 if test x$enable_debug = xyes
 then :
 
-    OPTIM="$OPTIM -g"
     CSFLAGS=""
+    OPTIM="$OPTIM -g"
+    OPTIONS="-DDEBUG -DDEBUG_GUARDS"
 
 else $as_nop
 
-    OPTIM="$OPTIM -g -Os"
     CSFLAGS="-o runtime"
+    OPTIM="$OPTIM -g -Os"
+    OPTIONS=""
 
 fi
 
 
 
-OPTIONS=""
-
-
-if test x$enable_debug_guards = xyes
-then :
-
-    OPTIONS="$OPTIONS -DDEBUG_GUARDS"
-
-fi
-
-if test x$enable_debug_printfs = xyes
-then :
-
-    OPTIONS="$OPTIONS -DDEBUG"
-
-fi
 
 WARNINGS=""
 

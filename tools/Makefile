@@ -142,7 +142,14 @@ uninstall:
 # Local programs (not built when cross-compiling...)
 #
 
-local:	ippeveprinter-static ipptool-static
+local:		ippeveprinter-static ipptool-static
+
+
+#
+# Test everything...
+#
+
+test:		all
 
 
 #

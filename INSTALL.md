@@ -43,22 +43,17 @@ To see a complete list of configuration options, use the `--help` option:
 
     ./configure --help
 
-The `--enable-debug` option compiles CUPS with debugging information enabled.
-Additional debug logging support can be enabled using the `--enable-debug-printfs` option.
-These debug messages are enabled using the `CUPS_DEBUG_xxx` environment variables at
-run-time - see "Getting Debug Logging" below.
-
-CUPS also includes an extensive set of unit tests that can be used to find and diagnose a
-variety of common problems - use the "--enable-unit-tests" configure option to run them at
-build time.
+The `--enable-debug` option compiles CUPS with debugging information and logging enabled.
+Debug logging is enabled using the `CUPS_DEBUG_xxx` environment variables at run-time -
+see "Enabling Debug Logging" below.
 
 Once you have configured things, just type the following to build the software:
 
     make
 
 
-Getting Debug Logging
----------------------
+Enabling Debug Logging
+----------------------
 
 When configured with the `--enable-debug-printfs` option, libcups includes additional
 debug logging support.  The following environment variables are used to enable and control

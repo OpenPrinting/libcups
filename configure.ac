@@ -58,20 +58,6 @@ AC_SUBST([LOCALTARGET])
 AC_PATH_PROGS([CODE_SIGN], [codesign true])
 
 
-dnl Unit tests take up time during a compile...
-AC_ARG_ENABLE([unit_tests], AS_HELP_STRING([--enable-unit-tests], [build and run unit tests]))
-AS_IF([test x$enable_unit_tests = xyes], [
-    AS_IF([test "$build" != "$host"], [
-	AC_MSG_ERROR([Sorry, cannot build unit tests when cross-compiling.])
-    ])
-
-    UNITTESTS="unittests"
-], [
-    UNITTESTS=""
-])
-AC_SUBST([UNITTESTS])
-
-
 dnl Compiler options...
 CFLAGS="${CFLAGS:=}"
 CPPFLAGS="${CPPFLAGS:=}"
@@ -396,31 +382,21 @@ AC_SUBST([LIBCUPS_STATIC])
 
 dnl Extra compiler options...
 AC_ARG_ENABLE([debug], AS_HELP_STRING([--enable-debug], [turn on debugging, default=no]))
-AC_ARG_ENABLE([debug_guards], AS_HELP_STRING([--enable-debug-guards], [build with memory allocation guards]))
-AC_ARG_ENABLE([debug_printfs], AS_HELP_STRING([--enable-debug-printfs], [build with CUPS_DEBUG_LOG support]))
 AC_ARG_ENABLE([maintainer], AS_HELP_STRING([--enable-maintainer], [turn on maintainer mode, default=no]))
 AC_ARG_ENABLE([sanitizer], AS_HELP_STRING([--enable-sanitizer], [build with AddressSanitizer, default=no]))
 
 AS_IF([test x$enable_debug = xyes], [
-    OPTIM="$OPTIM -g"
     CSFLAGS=""
+    OPTIM="$OPTIM -g"
+    OPTIONS="-DDEBUG -DDEBUG_GUARDS"
 ], [
-    OPTIM="$OPTIM -g -Os"
     CSFLAGS="-o runtime"
+    OPTIM="$OPTIM -g -Os"
+    OPTIONS=""
 ])
 
 AC_SUBST([CSFLAGS])
-
-OPTIONS=""
 AC_SUBST([OPTIONS])
-
-AS_IF([test x$enable_debug_guards = xyes], [
-    OPTIONS="$OPTIONS -DDEBUG_GUARDS"
-])
-
-AS_IF([test x$enable_debug_printfs = xyes], [
-    OPTIONS="$OPTIONS -DDEBUG"
-])
 
 WARNINGS=""
 AC_SUBST([WARNINGS])

@@ -133,13 +133,6 @@ OPTIONS		=	@OPTIONS@
 
 
 #
-# Unit test target...
-#
-
-UNITTESTS	=	@UNITTESTS@
-
-
-#
 # Directories...
 #
 # The first section uses the GNU names (which are *extremely*
