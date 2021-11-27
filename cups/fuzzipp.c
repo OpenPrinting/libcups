@@ -16,6 +16,7 @@
 #include "file.h"
 #include "string-private.h"
 #include "ipp-private.h"
+#include "test-internal.h"
 #include <spawn.h>
 #include <sys/wait.h>
 #ifdef _WIN32
@@ -49,8 +50,7 @@ typedef struct _ippdata_t		// Data
  * Local functions...
  */
 
-void	fuzzdata(_ippdata_t *data);
-void	hex_dump(ipp_uchar_t *buffer, size_t bytes);
+void	fuzz_data(_ippdata_t *data);
 int	wait_child(int pid, const char *filename);
 ssize_t	write_cb(_ippdata_t *data, ipp_uchar_t *buffer, size_t bytes);
 
@@ -127,12 +127,11 @@ main(int  argc,			// I - Number of command-line arguments
 	break;
     }
 
-    fputs("ippReadIO/ippWriteIO: ", stdout);
+    testBegin("ippReadIO/ippWriteIO");
 
     if (state != IPP_STATE_DATA)
     {
-      puts("FAIL");
-      fputs("fuzzipp: Failed to create base IPP message.\n", stderr);
+      testEndMessage(false, "Failed to create base IPP message.");
       return (1);
     }
 
@@ -151,13 +150,12 @@ main(int  argc,			// I - Number of command-line arguments
     // Now iterate 10000 times and test the fuzzed request...
     for (i = 0, num_fuzz_pids = 0; i < 10000; i ++)
     {
-      fuzzdata(&data);
+      fuzz_data(&data);
 
       snprintf(filenames[num_fuzz_pids], sizeof(filenames[0]), "%s/fuzz-%03d.ipp", tmpdir, i);
       if ((fp = cupsFileOpen(filenames[num_fuzz_pids], "w")) == NULL)
       {
-        puts("FAIL");
-        perror(filenames[num_fuzz_pids]);
+        testEndMessage(false, "%s: %s", filenames[num_fuzz_pids], strerror(errno));
         status = 1;
         break;
       }
@@ -171,8 +169,7 @@ main(int  argc,			// I - Number of command-line arguments
 
       if (posix_spawn(fuzz_pids + num_fuzz_pids, argv[0], NULL, NULL, (char * const *)fuzz_args, NULL))
       {
-        puts("FAIL");
-        fprintf(stderr, "Unable to run '%s %s': %s\n", argv[0], filenames[num_fuzz_pids], strerror(errno));
+        testEndMessage(false, "Unable to run '%s %s': %s", argv[0], filenames[num_fuzz_pids], strerror(errno));
         status = 1;
         break;
       }
@@ -180,8 +177,8 @@ main(int  argc,			// I - Number of command-line arguments
       num_fuzz_pids ++;
       if (num_fuzz_pids >= NUM_FUZZ)
       {
-        putchar('.');
-        fflush(stdout);
+        testProgress();
+
         while (num_fuzz_pids > 0)
         {
           num_fuzz_pids --;
@@ -199,7 +196,7 @@ main(int  argc,			// I - Number of command-line arguments
     }
 
     if (!status)
-      puts("PASS");
+      testEnd(true);
   }
   else
   {
@@ -240,11 +237,11 @@ main(int  argc,			// I - Number of command-line arguments
 
 
 //
-// 'fuzzdata()' - Mutate a buffer for fuzzing purposes...
+// 'fuzz_data()' - Mutate a buffer for fuzzing purposes...
 //
 
 void
-fuzzdata(_ippdata_t *data)		// I - Data buffer
+fuzz_data(_ippdata_t *data)		// I - Data buffer
 {
   int		i,			// Looping vars
 		pos,			// Position in buffer
@@ -305,62 +302,6 @@ fuzzdata(_ippdata_t *data)		// I - Data buffer
 
 
 //
-// 'hex_dump()' - Produce a hex dump of a buffer.
-//
-
-void
-hex_dump(ipp_uchar_t *buffer,		// I - Buffer to dump
-         size_t      bytes)		// I - Number of bytes
-{
-  size_t	i, j;			// Looping vars
-  int		ch;			// Current ASCII char
-
-
- /*
-  * Show lines of 16 bytes at a time...
-  */
-
-  for (i = 0; i < bytes; i += 16)
-  {
-   /*
-    * Show the offset...
-    */
-
-    printf("%04x ", (unsigned)i);
-
-   /*
-    * Then up to 16 bytes in hex...
-    */
-
-    for (j = 0; j < 16; j ++)
-      if ((i + j) < bytes)
-        printf(" %02x", buffer[i + j]);
-      else
-        printf("   ");
-
-   /*
-    * Then the ASCII representation of the bytes...
-    */
-
-    putchar(' ');
-    putchar(' ');
-
-    for (j = 0; j < 16 && (i + j) < bytes; j ++)
-    {
-      ch = buffer[i + j] & 127;
-
-      if (ch < ' ' || ch == 127)
-        putchar('.');
-      else
-        putchar(ch);
-    }
-
-    putchar('\n');
-  }
-}
-
-
-//
 // 'wait_child()' - Wait for a child process to finish and show any errors as
 //                  needed.
 //
@@ -385,14 +326,14 @@ wait_child(int        pid,		// I - Child process ID
   if (status)
   {
     cups_file_t	*fp;			// File
-    ipp_uchar_t	buffer[262144];		// Data buffer
+    unsigned char buffer[262144];	// Data buffer
     ssize_t	bytes;			// Bytes read
 
     printf("FAIL (%s: %d)\n", filename, status);
     if ((fp = cupsFileOpen(filename, "r")) != NULL)
     {
       if ((bytes = cupsFileRead(fp, (char *)buffer, sizeof(buffer))) > 0)
-        hex_dump(buffer, (size_t)bytes);
+        testHexDump(buffer, (size_t)bytes);
 
       cupsFileClose(fp);
     }

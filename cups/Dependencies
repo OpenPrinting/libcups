@@ -169,7 +169,6 @@ request.o: request.c cups-private.h string-private.h ../config.h \
   pwg.h http-private.h ../cups/language.h ../cups/http.h \
   language-private.h ../cups/transcode.h pwg-private.h thread-private.h \
   debug-internal.h debug-private.h
-snprintf.o: snprintf.c string-private.h ../config.h ../cups/versioning.h
 string.o: string.c cups-private.h string-private.h ../config.h \
   ../cups/versioning.h array-private.h ../cups/array.h versioning.h \
   ipp-private.h ../cups/cups.h file.h ipp.h http.h array.h language.h \
@@ -213,12 +212,12 @@ util.o: util.c cups-private.h string-private.h ../config.h \
   debug-internal.h debug-private.h
 fuzzipp.o: fuzzipp.c file.h versioning.h string-private.h ../config.h \
   ../cups/versioning.h ipp-private.h ../cups/cups.h ipp.h http.h array.h \
-  language.h pwg.h
+  language.h pwg.h test-internal.h
 rasterbench.o: rasterbench.c ../config.h ../cups/raster.h cups.h file.h \
   versioning.h ipp.h http.h array.h language.h pwg.h
 testarray.o: testarray.c string-private.h ../config.h \
   ../cups/versioning.h debug-private.h array-private.h ../cups/array.h \
-  versioning.h dir.h
+  versioning.h dir.h test-internal.h
 testclient.o: testclient.c ../config.h ../cups/cups.h file.h versioning.h \
   ipp.h http.h array.h language.h pwg.h ../cups/raster.h cups.h \
   ../cups/string-private.h ../cups/versioning.h ../cups/thread-private.h
