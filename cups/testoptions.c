@@ -1,9 +1,11 @@
 /*
  * Option unit test program for CUPS.
  *
- * Copyright 2008-2016 by Apple Inc.
+ * Copyright © 2021 by OpenPrinting.
+ * Copyright © 2008-2016 by Apple Inc.
  *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more information.
+ * Licensed under Apache License v2.0.  See the file "LICENSE" for more
+ * information.
  */
 
 /*
@@ -11,6 +13,7 @@
  */
 
 #include "cups-private.h"
+#include "test-internal.h"
 
 
 /*
@@ -36,7 +39,7 @@ main(int  argc,				/* I - Number of command-line arguments */
     * cupsParseOptions()
     */
 
-    fputs("cupsParseOptions: ", stdout);
+    testBegin("cupsParseOptions");
 
     num_options = cupsParseOptions("foo=1234 "
 				   "bar=\"One Fish\",\"Two Fish\",\"Red Fish\","
@@ -49,50 +52,49 @@ main(int  argc,				/* I - Number of command-line arguments */
 
     if (num_options != 6)
     {
-      printf("FAIL (num_options=%d, expected 6)\n", num_options);
+      testEndMessage(false, "num_options=%d, expected 6", num_options);
       status ++;
     }
     else if ((value = cupsGetOption("foo", num_options, options)) == NULL ||
 	     strcmp(value, "1234"))
     {
-      printf("FAIL (foo=\"%s\", expected \"1234\")\n", value);
+      testEndMessage(false, "foo=\"%s\", expected \"1234\"", value);
       status ++;
     }
     else if ((value = cupsGetOption("bar", num_options, options)) == NULL ||
 	     strcmp(value, "One Fish,Two Fish,Red Fish,Blue Fish"))
     {
-      printf("FAIL (bar=\"%s\", expected \"One Fish,Two Fish,Red Fish,Blue "
-	     "Fish\")\n", value);
+      testEndMessage(false, "bar=\"%s\", expected \"One Fish,Two Fish,Red Fish,Blue Fish\"", value);
       status ++;
     }
     else if ((value = cupsGetOption("baz", num_options, options)) == NULL ||
 	     strcmp(value, "{param1=1 param2=2}"))
     {
-      printf("FAIL (baz=\"%s\", expected \"{param1=1 param2=2}\")\n", value);
+      testEndMessage(false, "baz=\"%s\", expected \"{param1=1 param2=2}\"", value);
       status ++;
     }
     else if ((value = cupsGetOption("foobar", num_options, options)) == NULL ||
 	     strcmp(value, "FOO BAR"))
     {
-      printf("FAIL (foobar=\"%s\", expected \"FOO BAR\")\n", value);
+      testEndMessage(false, "foobar=\"%s\", expected \"FOO BAR\"", value);
       status ++;
     }
     else if ((value = cupsGetOption("barfoo", num_options, options)) == NULL ||
 	     strcmp(value, "\'BAR FOO\'"))
     {
-      printf("FAIL (barfoo=\"%s\", expected \"\'BAR FOO\'\")\n", value);
+      testEndMessage(false, "barfoo=\"%s\", expected \"\'BAR FOO\'\"", value);
       status ++;
     }
     else if ((value = cupsGetOption("auth-info", num_options, options)) == NULL ||
              strcmp(value, "user,pass\\,word\\\\"))
     {
-      printf("FAIL (auth-info=\"%s\", expected \"user,pass\\,word\\\\\")\n", value);
+      testEndMessage(false, "auth-info=\"%s\", expected \"user,pass\\,word\\\\\"", value);
       status ++;
     }
     else
-      puts("PASS");
+      testEnd(true);
 
-    fputs("cupsEncodeOptions2: ", stdout);
+    testBegin("cupsEncodeOptions2");
     request = ippNew();
     ippSetOperation(request, IPP_OP_PRINT_JOB);
 
@@ -100,56 +102,56 @@ main(int  argc,				/* I - Number of command-line arguments */
     for (count = 0, attr = ippFirstAttribute(request); attr; attr = ippNextAttribute(request), count ++);
     if (count != 6)
     {
-      printf("FAIL (%d attributes, expected 6)\n", count);
+      testEndMessage(false, "%d attributes, expected 6", count);
       status ++;
     }
     else if ((attr = ippFindAttribute(request, "foo", IPP_TAG_ZERO)) == NULL)
     {
-      puts("FAIL (Unable to find attribute \"foo\")");
+      testEndMessage(false, "Unable to find attribute \"foo\"");
       status ++;
     }
     else if (ippGetValueTag(attr) != IPP_TAG_NAME)
     {
-      printf("FAIL (\"foo\" of type %s, expected name)\n", ippTagString(ippGetValueTag(attr)));
+      testEndMessage(false, "\"foo\" of type %s, expected name", ippTagString(ippGetValueTag(attr)));
       status ++;
     }
     else if (ippGetCount(attr) != 1)
     {
-      printf("FAIL (\"foo\" has %d values, expected 1)\n", (int)ippGetCount(attr));
+      testEndMessage(false, "\"foo\" has %d values, expected 1", (int)ippGetCount(attr));
       status ++;
     }
     else if (strcmp(ippGetString(attr, 0, NULL), "1234"))
     {
-      printf("FAIL (\"foo\" has value %s, expected 1234)\n", ippGetString(attr, 0, NULL));
+      testEndMessage(false, "\"foo\" has value %s, expected 1234", ippGetString(attr, 0, NULL));
       status ++;
     }
     else if ((attr = ippFindAttribute(request, "auth-info", IPP_TAG_ZERO)) == NULL)
     {
-      puts("FAIL (Unable to find attribute \"auth-info\")");
+      testEndMessage(false, "Unable to find attribute \"auth-info\"");
       status ++;
     }
     else if (ippGetValueTag(attr) != IPP_TAG_TEXT)
     {
-      printf("FAIL (\"auth-info\" of type %s, expected text)\n", ippTagString(ippGetValueTag(attr)));
+      testEndMessage(false, "\"auth-info\" of type %s, expected text", ippTagString(ippGetValueTag(attr)));
       status ++;
     }
     else if (ippGetCount(attr) != 2)
     {
-      printf("FAIL (\"auth-info\" has %d values, expected 2)\n", (int)ippGetCount(attr));
+      testEndMessage(false, "\"auth-info\" has %d values, expected 2", (int)ippGetCount(attr));
       status ++;
     }
     else if (strcmp(ippGetString(attr, 0, NULL), "user"))
     {
-      printf("FAIL (\"auth-info\"[0] has value \"%s\", expected \"user\")\n", ippGetString(attr, 0, NULL));
+      testEndMessage(false, "\"auth-info\"[0] has value \"%s\", expected \"user\"", ippGetString(attr, 0, NULL));
       status ++;
     }
     else if (strcmp(ippGetString(attr, 1, NULL), "pass,word\\"))
     {
-      printf("FAIL (\"auth-info\"[1] has value \"%s\", expected \"pass,word\\\")\n", ippGetString(attr, 1, NULL));
+      testEndMessage(false, "\"auth-info\"[1] has value \"%s\", expected \"pass,word\\\"", ippGetString(attr, 1, NULL));
       status ++;
     }
     else
-      puts("PASS");
+      testEnd(true);
   }
   else
   {

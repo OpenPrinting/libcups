@@ -248,7 +248,8 @@ testoptions.o: testoptions.c cups-private.h string-private.h ../config.h \
   ../cups/versioning.h array-private.h ../cups/array.h versioning.h \
   ipp-private.h ../cups/cups.h file.h ipp.h http.h array.h language.h \
   pwg.h http-private.h ../cups/language.h ../cups/http.h \
-  language-private.h ../cups/transcode.h pwg-private.h thread-private.h
+  language-private.h ../cups/transcode.h pwg-private.h thread-private.h \
+  test-internal.h
 testraster.o: testraster.c ../cups/raster-private.h raster.h cups.h \
   file.h versioning.h ipp.h http.h array.h language.h pwg.h \
   ../cups/cups.h ../cups/debug-private.h ../cups/versioning.h \
