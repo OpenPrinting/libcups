@@ -1,6 +1,7 @@
 /*
- * IPP test program for CUPS.
+ * IPP unit test program for libcups.
  *
+ * Copyright © 2021 by OpenPrinting.
  * Copyright © 2007-2019 by Apple Inc.
  * Copyright © 1997-2005 by Easy Software Products.
  *
@@ -15,6 +16,7 @@
 #include "file.h"
 #include "string-private.h"
 #include "ipp-private.h"
+#include "test-internal.h"
 #ifdef _WIN32
 #  include <io.h>
 #else
@@ -286,7 +288,6 @@ static ipp_uchar_t mixed[] =		/* Mixed value buffer */
  * Local functions...
  */
 
-void	hex_dump(const char *title, ipp_uchar_t *buffer, size_t bytes);
 void	print_attributes(ipp_t *ipp, int indent);
 ssize_t	read_cb(_ippdata_t *data, ipp_uchar_t *buffer, size_t bytes);
 ssize_t	read_hex(cups_file_t *fp, ipp_uchar_t *buffer, size_t bytes);
@@ -328,7 +329,7 @@ main(int  argc,			/* I - Number of command-line arguments */
     * Test request generation code...
     */
 
-    printf("Create Sample Request: ");
+    testBegin("Create Sample Request");
 
     request = ippNew();
     request->request.op.version[0]   = 0x01;
@@ -373,18 +374,18 @@ main(int  argc,			/* I - Number of command-line arguments */
     length = ippLength(request);
     if (length != sizeof(collection))
     {
-      printf("FAIL - wrong ippLength(), %d instead of %d bytes!\n",
+      testEndMessage(false, "wrong ippLength(), %d instead of %d bytes",
              (int)length, (int)sizeof(collection));
       status = 1;
     }
     else
-      puts("PASS");
+      testEnd(true);
 
    /*
     * Write test #1...
     */
 
-    printf("Write Sample to Memory: ");
+    testBegin("Write Sample to Memory");
 
     data.wused   = 0;
     data.wsize   = sizeof(buffer);
@@ -397,15 +398,17 @@ main(int  argc,			/* I - Number of command-line arguments */
 
     if (state != IPP_STATE_DATA)
     {
-      printf("FAIL - %d bytes written.\n", (int)data.wused);
+      testEndMessage(false, "%d bytes written", (int)data.wused);
       status = 1;
     }
     else if (data.wused != sizeof(collection))
     {
-      printf("FAIL - wrote %d bytes, expected %d bytes!\n", (int)data.wused,
+      testEndMessage(false, "wrote %d bytes, expected %d bytes", (int)data.wused,
              (int)sizeof(collection));
-      hex_dump("Bytes Written", data.wbuffer, data.wused);
-      hex_dump("Baseline", collection, sizeof(collection));
+      testError("Bytes Written");
+      testHexDump(data.wbuffer, data.wused);
+      testError("Baseline");
+      testHexDump(collection, sizeof(collection));
       status = 1;
     }
     else if (memcmp(data.wbuffer, collection, data.wused))
@@ -414,13 +417,15 @@ main(int  argc,			/* I - Number of command-line arguments */
         if (data.wbuffer[i] != collection[i])
 	  break;
 
-      printf("FAIL - output does not match baseline at 0x%04x!\n", (unsigned)i);
-      hex_dump("Bytes Written", data.wbuffer, data.wused);
-      hex_dump("Baseline", collection, sizeof(collection));
+      testEndMessage(false, "output does not match baseline at 0x%04x", (unsigned)i);
+      testError("Bytes Written");
+      testHexDump(data.wbuffer, data.wused);
+      testError("Baseline");
+      testHexDump(collection, sizeof(collection));
       status = 1;
     }
     else
-      puts("PASS");
+      testEnd(true);
 
     ippDelete(request);
 
@@ -428,63 +433,65 @@ main(int  argc,			/* I - Number of command-line arguments */
     * Read the data back in and confirm...
     */
 
-    printf("Read Sample from Memory: ");
+    testBegin("Read Sample from Memory");
 
-    request     = ippNew();
+    request   = ippNew();
     data.rpos = 0;
 
     while ((state = ippReadIO(&data, (ipp_iocb_t)read_cb, 1, NULL,
                               request)) != IPP_STATE_DATA)
+    {
       if (state == IPP_STATE_ERROR)
 	break;
+    }
 
     length = ippLength(request);
 
     if (state != IPP_STATE_DATA)
     {
-      printf("FAIL - %d bytes read.\n", (int)data.rpos);
+      testEndMessage(false, "%d bytes read", (int)data.rpos);
       status = 1;
     }
     else if (data.rpos != data.wused)
     {
-      printf("FAIL - read %d bytes, expected %d bytes!\n", (int)data.rpos,
+      testEndMessage(false, "read %d bytes, expected %d bytes", (int)data.rpos,
              (int)data.wused);
       print_attributes(request, 8);
       status = 1;
     }
     else if (length != sizeof(collection))
     {
-      printf("FAIL - wrong ippLength(), %d instead of %d bytes!\n",
+      testEndMessage(false, "wrong ippLength(), %d instead of %d bytes",
              (int)length, (int)sizeof(collection));
       print_attributes(request, 8);
       status = 1;
     }
     else
-      puts("PASS");
+      testEnd(true);
 
-    fputs("ippFindAttribute(media-col): ", stdout);
+    testBegin("ippFindAttribute(media-col)");
     if ((media_col = ippFindAttribute(request, "media-col",
                                       IPP_TAG_BEGIN_COLLECTION)) == NULL)
     {
       if ((media_col = ippFindAttribute(request, "media-col",
                                         IPP_TAG_ZERO)) == NULL)
-        puts("FAIL (not found)");
+        testEndMessage(false, "not found");
       else
-        printf("FAIL (wrong type - %s)\n", ippTagString(media_col->value_tag));
+        testEndMessage(false, "wrong type - %s", ippTagString(media_col->value_tag));
 
       status = 1;
     }
     else if (media_col->num_values != 2)
     {
-      printf("FAIL (wrong count - %d)\n", media_col->num_values);
+      testEndMessage(false, "wrong count - %d", media_col->num_values);
       status = 1;
     }
     else
-      puts("PASS");
+      testEnd(true);
 
     if (media_col)
     {
-      fputs("ippFindAttribute(media-size 1): ", stdout);
+      testBegin("ippFindAttribute(media-size 1)");
       if ((media_size = ippFindAttribute(media_col->values[0].collection,
 					 "media-size",
 					 IPP_TAG_BEGIN_COLLECTION)) == NULL)
@@ -492,9 +499,9 @@ main(int  argc,			/* I - Number of command-line arguments */
 	if ((media_size = ippFindAttribute(media_col->values[0].collection,
 					   "media-col",
 					   IPP_TAG_ZERO)) == NULL)
-	  puts("FAIL (not found)");
+	  testEndMessage(false, "not found");
 	else
-	  printf("FAIL (wrong type - %s)\n",
+	  testEndMessage(false, "wrong type - %s",
 	         ippTagString(media_size->value_tag));
 
 	status = 1;
@@ -506,16 +513,16 @@ main(int  argc,			/* I - Number of command-line arguments */
 	{
 	  if ((attr = ippFindAttribute(media_size->values[0].collection,
 				       "x-dimension", IPP_TAG_ZERO)) == NULL)
-	    puts("FAIL (missing x-dimension)");
+	    testEndMessage(false, "missing x-dimension");
 	  else
-	    printf("FAIL (wrong type for x-dimension - %s)\n",
+	    testEndMessage(false, "wrong type for x-dimension - %s",
 		   ippTagString(attr->value_tag));
 
 	  status = 1;
 	}
 	else if (attr->values[0].integer != 21590)
 	{
-	  printf("FAIL (wrong value for x-dimension - %d)\n",
+	  testEndMessage(false, "wrong value for x-dimension - %d",
 		 attr->values[0].integer);
 	  status = 1;
 	}
@@ -525,24 +532,24 @@ main(int  argc,			/* I - Number of command-line arguments */
 	{
 	  if ((attr = ippFindAttribute(media_size->values[0].collection,
 				       "y-dimension", IPP_TAG_ZERO)) == NULL)
-	    puts("FAIL (missing y-dimension)");
+	    testEndMessage(false, "missing y-dimension");
 	  else
-	    printf("FAIL (wrong type for y-dimension - %s)\n",
+	    testEndMessage(false, "wrong type for y-dimension - %s",
 		   ippTagString(attr->value_tag));
 
 	  status = 1;
 	}
 	else if (attr->values[0].integer != 27940)
 	{
-	  printf("FAIL (wrong value for y-dimension - %d)\n",
+	  testEndMessage(false, "wrong value for y-dimension - %d",
 		 attr->values[0].integer);
 	  status = 1;
 	}
 	else
-	  puts("PASS");
+	  testEnd(true);
       }
 
-      fputs("ippFindAttribute(media-size 2): ", stdout);
+      testBegin("ippFindAttribute(media-size 2)");
       if ((media_size = ippFindAttribute(media_col->values[1].collection,
 					 "media-size",
 					 IPP_TAG_BEGIN_COLLECTION)) == NULL)
@@ -550,9 +557,9 @@ main(int  argc,			/* I - Number of command-line arguments */
 	if ((media_size = ippFindAttribute(media_col->values[1].collection,
 					   "media-col",
 					   IPP_TAG_ZERO)) == NULL)
-	  puts("FAIL (not found)");
+	  testEndMessage(false, "not found");
 	else
-	  printf("FAIL (wrong type - %s)\n",
+	  testEndMessage(false, "wrong type - %s",
 	         ippTagString(media_size->value_tag));
 
 	status = 1;
@@ -565,16 +572,16 @@ main(int  argc,			/* I - Number of command-line arguments */
 	{
 	  if ((attr = ippFindAttribute(media_size->values[0].collection,
 				       "x-dimension", IPP_TAG_ZERO)) == NULL)
-	    puts("FAIL (missing x-dimension)");
+	    testEndMessage(false, "missing x-dimension");
 	  else
-	    printf("FAIL (wrong type for x-dimension - %s)\n",
+	    testEndMessage(false, "wrong type for x-dimension - %s",
 		   ippTagString(attr->value_tag));
 
 	  status = 1;
 	}
 	else if (attr->values[0].integer != 21000)
 	{
-	  printf("FAIL (wrong value for x-dimension - %d)\n",
+	  testEndMessage(false, "wrong value for x-dimension - %d",
 		 attr->values[0].integer);
 	  status = 1;
 	}
@@ -584,21 +591,21 @@ main(int  argc,			/* I - Number of command-line arguments */
 	{
 	  if ((attr = ippFindAttribute(media_size->values[0].collection,
 				       "y-dimension", IPP_TAG_ZERO)) == NULL)
-	    puts("FAIL (missing y-dimension)");
+	    testEndMessage(false, "missing y-dimension");
 	  else
-	    printf("FAIL (wrong type for y-dimension - %s)\n",
+	    testEndMessage(false, "wrong type for y-dimension - %s",
 		   ippTagString(attr->value_tag));
 
 	  status = 1;
 	}
 	else if (attr->values[0].integer != 29700)
 	{
-	  printf("FAIL (wrong value for y-dimension - %d)\n",
+	  testEndMessage(false, "wrong value for y-dimension - %d",
 		 attr->values[0].integer);
 	  status = 1;
 	}
 	else
-	  puts("PASS");
+	  testEnd(true);
       }
     }
 
@@ -606,48 +613,48 @@ main(int  argc,			/* I - Number of command-line arguments */
     * Test hierarchical find...
     */
 
-    fputs("ippFindAttribute(media-col/media-size/x-dimension): ", stdout);
+    testBegin("ippFindAttribute(media-col/media-size/x-dimension)");
     if ((attr = ippFindAttribute(request, "media-col/media-size/x-dimension", IPP_TAG_INTEGER)) != NULL)
     {
       if (ippGetInteger(attr, 0) != 21590)
       {
-        printf("FAIL (wrong value for x-dimension - %d)\n", ippGetInteger(attr, 0));
+        testEndMessage(false, "wrong value for x-dimension - %d", ippGetInteger(attr, 0));
         status = 1;
       }
       else
-        puts("PASS");
+        testEnd(true);
     }
     else
     {
-      puts("FAIL (not found)");
+      testEndMessage(false, "not found");
       status = 1;
     }
 
-    fputs("ippFindNextAttribute(media-col/media-size/x-dimension): ", stdout);
+    testBegin("ippFindNextAttribute(media-col/media-size/x-dimension)");
     if ((attr = ippFindNextAttribute(request, "media-col/media-size/x-dimension", IPP_TAG_INTEGER)) != NULL)
     {
       if (ippGetInteger(attr, 0) != 21000)
       {
-        printf("FAIL (wrong value for x-dimension - %d)\n", ippGetInteger(attr, 0));
+        testEndMessage(false, "wrong value for x-dimension - %d", ippGetInteger(attr, 0));
         status = 1;
       }
       else
-        puts("PASS");
+        testEnd(true);
     }
     else
     {
-      puts("FAIL (not found)");
+      testEndMessage(false, "not found");
       status = 1;
     }
 
-    fputs("ippFindNextAttribute(media-col/media-size/x-dimension) again: ", stdout);
+    testBegin("ippFindNextAttribute(media-col/media-size/x-dimension) again");
     if ((attr = ippFindNextAttribute(request, "media-col/media-size/x-dimension", IPP_TAG_INTEGER)) != NULL)
     {
-      printf("FAIL (got %d, expected nothing)\n", ippGetInteger(attr, 0));
+      testEndMessage(false, "got %d, expected nothing", ippGetInteger(attr, 0));
       status = 1;
     }
     else
-      puts("PASS");
+      testEnd(true);
 
     ippDelete(request);
 
@@ -655,7 +662,7 @@ main(int  argc,			/* I - Number of command-line arguments */
     * Read the bad collection data and confirm we get an error...
     */
 
-    fputs("Read Bad Collection from Memory: ", stdout);
+    testBegin("Read Bad Collection from Memory");
 
     request = ippNew();
     data.rpos    = 0;
@@ -668,16 +675,16 @@ main(int  argc,			/* I - Number of command-line arguments */
 	break;
 
     if (state != IPP_STATE_ERROR)
-      puts("FAIL (read successful)");
+      testEndMessage(false, "read successful");
     else
-      puts("PASS");
+      testEnd(true);
 
    /*
     * Read the mixed data and confirm we converted everything to rangeOfInteger
     * values...
     */
 
-    fputs("Read Mixed integer/rangeOfInteger from Memory: ", stdout);
+    testBegin("Read Mixed integer/rangeOfInteger from Memory");
 
     request = ippNew();
     data.rpos    = 0;
@@ -694,41 +701,41 @@ main(int  argc,			/* I - Number of command-line arguments */
 
     if (state != IPP_STATE_DATA)
     {
-      printf("FAIL - %d bytes read.\n", (int)data.rpos);
+      testEndMessage(false, "%d bytes read", (int)data.rpos);
       status = 1;
     }
     else if (data.rpos != sizeof(mixed))
     {
-      printf("FAIL - read %d bytes, expected %d bytes!\n", (int)data.rpos,
+      testEndMessage(false, "read %d bytes, expected %d bytes", (int)data.rpos,
              (int)sizeof(mixed));
       print_attributes(request, 8);
       status = 1;
     }
     else if (length != (sizeof(mixed) + 4))
     {
-      printf("FAIL - wrong ippLength(), %d instead of %d bytes!\n",
+      testEndMessage(false, "wrong ippLength(), %d instead of %d bytes",
              (int)length, (int)sizeof(mixed) + 4);
       print_attributes(request, 8);
       status = 1;
     }
     else
-      puts("PASS");
+      testEnd(true);
 
-    fputs("ippFindAttribute(notify-lease-duration-supported): ", stdout);
+    testBegin("ippFindAttribute(notify-lease-duration-supported)");
     if ((attr = ippFindAttribute(request, "notify-lease-duration-supported",
                                  IPP_TAG_ZERO)) == NULL)
     {
-      puts("FAIL (not found)");
+      testEndMessage(false, "not found");
       status = 1;
     }
     else if (attr->value_tag != IPP_TAG_RANGE)
     {
-      printf("FAIL (wrong type - %s)\n", ippTagString(attr->value_tag));
+      testEndMessage(false, "wrong type - %s", ippTagString(attr->value_tag));
       status = 1;
     }
     else if (attr->num_values != 2)
     {
-      printf("FAIL (wrong count - %d)\n", attr->num_values);
+      testEndMessage(false, "wrong count - %d", attr->num_values);
       status = 1;
     }
     else if (attr->values[0].range.lower != 1 ||
@@ -736,7 +743,7 @@ main(int  argc,			/* I - Number of command-line arguments */
              attr->values[1].range.lower != 16 ||
              attr->values[1].range.upper != 32)
     {
-      printf("FAIL (wrong values - %d,%d and %d,%d)\n",
+      testEndMessage(false, "wrong values - %d,%d and %d,%d",
              attr->values[0].range.lower,
              attr->values[0].range.upper,
              attr->values[1].range.lower,
@@ -744,7 +751,7 @@ main(int  argc,			/* I - Number of command-line arguments */
       status = 1;
     }
     else
-      puts("PASS");
+      testEnd(true);
 
     ippDelete(request);
 
@@ -753,12 +760,12 @@ main(int  argc,			/* I - Number of command-line arguments */
     * Test that private option array is sorted...
     */
 
-    fputs("_ippCheckOptions: ", stdout);
+    testBegin("_ippCheckOptions");
     if ((name = _ippCheckOptions()) == NULL)
-      puts("PASS");
+      testEnd(true);
     else
     {
-      printf("FAIL (\"%s\" out of order)\n", name);
+      testEndMessage(false, "\"%s\" out of order", name);
       status = 1;
     }
 #endif /* DEBUG */
@@ -767,25 +774,14 @@ main(int  argc,			/* I - Number of command-line arguments */
     * Test _ippFindOption() private API...
     */
 
-    fputs("_ippFindOption(\"printer-type\"): ", stdout);
+    testBegin("_ippFindOption(\"printer-type\")");
     if (_ippFindOption("printer-type"))
-      puts("PASS");
+      testEnd(true);
     else
     {
-      puts("FAIL");
+      testEnd(false);
       status = 1;
     }
-
-   /*
-    * Summarize...
-    */
-
-    putchar('\n');
-
-    if (status)
-      puts("Core IPP tests failed.");
-    else
-      puts("Core IPP tests passed.");
   }
   else
   {
@@ -877,65 +873,6 @@ main(int  argc,			/* I - Number of command-line arguments */
 
 
 /*
- * 'hex_dump()' - Produce a hex dump of a buffer.
- */
-
-void
-hex_dump(const char  *title,		/* I - Title */
-         ipp_uchar_t *buffer,		/* I - Buffer to dump */
-         size_t      bytes)		/* I - Number of bytes */
-{
-  size_t	i, j;			/* Looping vars */
-  int		ch;			/* Current ASCII char */
-
-
- /*
-  * Show lines of 16 bytes at a time...
-  */
-
-  printf("    %s:\n", title);
-
-  for (i = 0; i < bytes; i += 16)
-  {
-   /*
-    * Show the offset...
-    */
-
-    printf("    %04x ", (unsigned)i);
-
-   /*
-    * Then up to 16 bytes in hex...
-    */
-
-    for (j = 0; j < 16; j ++)
-      if ((i + j) < bytes)
-        printf(" %02x", buffer[i + j]);
-      else
-        printf("   ");
-
-   /*
-    * Then the ASCII representation of the bytes...
-    */
-
-    putchar(' ');
-    putchar(' ');
-
-    for (j = 0; j < 16 && (i + j) < bytes; j ++)
-    {
-      ch = buffer[i + j] & 127;
-
-      if (ch < ' ' || ch == 127)
-        putchar('.');
-      else
-        putchar(ch);
-    }
-
-    putchar('\n');
-  }
-}
-
-
-/*
  * 'print_attributes()' - Print the attributes in a request...
  */
 
@@ -961,12 +898,12 @@ print_attributes(ipp_t *ipp,		/* I - IPP request */
     {
       group = attr->group_tag;
 
-      printf("\n%*s%s:\n\n", indent - 4, "", ippTagString(group));
+      testError("\n%*s%s:\n", indent - 4, "", ippTagString(group));
     }
 
     ippAttributeString(attr, buffer, sizeof(buffer));
 
-    printf("%*s%s (%s%s): %s\n", indent, "", attr->name ? attr->name : "(null)", attr->num_values > 1 ? "1setOf " : "", ippTagString(attr->value_tag), buffer);
+    testError("%*s%s (%s%s): %s\n", indent, "", attr->name ? attr->name : "(null)", attr->num_values > 1 ? "1setOf " : "", ippTagString(attr->value_tag), buffer);
   }
 }
 
