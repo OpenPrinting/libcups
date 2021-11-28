@@ -250,10 +250,10 @@ testoptions.o: testoptions.c cups-private.h string-private.h ../config.h \
   pwg.h http-private.h ../cups/language.h ../cups/http.h \
   language-private.h ../cups/transcode.h pwg-private.h thread-private.h \
   test-internal.h
-testraster.o: testraster.c ../cups/raster-private.h raster.h cups.h \
-  file.h versioning.h ipp.h http.h array.h language.h pwg.h \
-  ../cups/cups.h ../cups/debug-private.h ../cups/versioning.h \
-  ../cups/string-private.h ../config.h
+testraster.o: testraster.c raster-private.h raster.h cups.h file.h \
+  versioning.h ipp.h http.h array.h language.h pwg.h ../cups/cups.h \
+  ../cups/debug-private.h ../cups/versioning.h ../cups/string-private.h \
+  ../config.h test-internal.h
 testthreads.o: testthreads.c ../cups/cups.h file.h versioning.h ipp.h \
   http.h array.h language.h pwg.h ../cups/thread-private.h ../config.h \
   ../cups/versioning.h
