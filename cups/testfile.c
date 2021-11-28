@@ -17,6 +17,7 @@
 #include "debug-private.h"
 #include "file.h"
 #include "dir.h"
+#include "test-internal.h"
 #include <stdlib.h>
 #include <time.h>
 #ifdef _WIN32
@@ -67,8 +68,6 @@ main(int  argc,				/* I - Number of command-line arguments */
     * Do compressed file tests...
     */
 
-    putchar('\n');
-
     status += read_write_tests(1);
 
    /*
@@ -85,12 +84,11 @@ main(int  argc,				/* I - Number of command-line arguments */
     pipe(fds);
     close(fds[1]);
 
-    fputs("\ncupsFileOpenFd(fd, \"r\"): ", stdout);
-    fflush(stdout);
+    testBegin("cupsFileOpenFd(fd, \"r\")");
 
     if ((fdfile = cupsFileOpenFd(fds[0], "r")) == NULL)
     {
-      puts("FAIL");
+      testEnd(false);
       status ++;
     }
     else
@@ -101,15 +99,14 @@ main(int  argc,				/* I - Number of command-line arguments */
       * alarm signal...
       */
 
-      puts("PASS");
-      fputs("cupsFileClose(no read): ", stdout);
-      fflush(stdout);
+      testEnd(true);
+      testBegin("cupsFileClose(no read)");
 
       alarm(5);
       cupsFileClose(fdfile);
       alarm(0);
 
-      puts("PASS");
+      testEnd(true);
     }
 #endif /* !_WIN32 */
 
@@ -117,45 +114,45 @@ main(int  argc,				/* I - Number of command-line arguments */
     * Count lines in test file, rewind, then count again.
     */
 
-    fputs("\ncupsFileOpen(\"testfile.txt\", \"r\"): ", stdout);
+    testBegin("cupsFileOpen(\"testfile.txt\", \"r\")");
 
     if ((fp = cupsFileOpen("testfile.txt", "r")) == NULL)
     {
-      puts("FAIL");
+      testEnd(false);
       status ++;
     }
     else
     {
-      puts("PASS");
-      fputs("cupsFileGets: ", stdout);
+      testEnd(true);
+      testBegin("cupsFileGets");
 
       if ((count = count_lines(fp)) != 477)
       {
-        printf("FAIL (got %d lines, expected 477)\n", count);
+        testEndMessage(false, "got %d lines, expected 477", count);
 	status ++;
       }
       else
       {
-        puts("PASS");
-	fputs("cupsFileRewind: ", stdout);
+        testEnd(true);
+	testBegin("cupsFileRewind");
 
 	if (cupsFileRewind(fp) != 0)
 	{
-	  puts("FAIL");
+	  testEnd(false);
 	  status ++;
 	}
 	else
 	{
-	  puts("PASS");
-	  fputs("cupsFileGets: ", stdout);
+	  testEnd(true);
+	  testBegin("cupsFileGets");
 
 	  if ((count = count_lines(fp)) != 477)
 	  {
-	    printf("FAIL (got %d lines, expected 477)\n", count);
+	    testEndMessage(false, "got %d lines, expected 477", count);
 	    status ++;
 	  }
 	  else
-	    puts("PASS");
+	    testEnd(true);
         }
       }
 
@@ -166,7 +163,7 @@ main(int  argc,				/* I - Number of command-line arguments */
     * Test path functions...
     */
 
-    fputs("\ncupsFileFind: ", stdout);
+    testBegin("cupsFileFind");
 #ifdef _WIN32
     if (cupsFileFind("notepad.exe", "C:/WINDOWS", 1, filename, sizeof(filename)) &&
 	cupsFileFind("notepad.exe", "C:/WINDOWS;C:/WINDOWS/SYSTEM32", 1, filename, sizeof(filename)))
@@ -174,10 +171,10 @@ main(int  argc,				/* I - Number of command-line arguments */
     if (cupsFileFind("cat", "/bin", 1, filename, sizeof(filename)) &&
 	cupsFileFind("cat", "/bin:/usr/bin", 1, filename, sizeof(filename)))
 #endif /* _WIN32 */
-      printf("PASS (%s)\n", filename);
+      testEndMessage(true, "%s", filename);
     else
     {
-      puts("FAIL");
+      testEnd(false);
       status ++;
     }
 
@@ -185,11 +182,10 @@ main(int  argc,				/* I - Number of command-line arguments */
     * Test directory functions...
     */
 
-    fputs("\nCreating test directory \"test.d\"...\n", stdout);
-    fputs("mkdir(test.d): ", stdout);
+    testBegin("mkdir(\"test.d\")");
     if (mkdir("test.d", 0777))
     {
-      printf("FAIL (%s)\n", strerror(errno));
+      testEndMessage(false, "%s", strerror(errno));
       status ++;
     }
     else
@@ -198,25 +194,25 @@ main(int  argc,				/* I - Number of command-line arguments */
       cups_dir_t	*dir;		// Directory pointer
       cups_dentry_t	*dent;		// Directory entry
 
-      puts("PASS");
+      testEnd(true);
 
-      fputs("cupsDirOpen(test.d): ", stdout);
+      testBegin("cupsDirOpen(test.d)");
       if ((dir = cupsDirOpen("test.d")) == NULL)
       {
-        printf("FAIL (%s)\n", strerror(errno));
+        testEndMessage(false, "%s", strerror(errno));
         status ++;
       }
       else
       {
-        puts("PASS");
-        fputs("cupsDirRead: ", stdout);
+        testEnd(true);
+        testBegin("cupsDirRead");
         if ((dent = cupsDirRead(dir)) != NULL)
         {
-          printf("FAIL (Got '%s', expected NULL)\n", dent->filename);
+          testEndMessage(false, "Got '%s', expected NULL", dent->filename);
           status ++;
         }
         else
-          puts("PASS");
+          testEnd(true);
 
         cupsDirClose(dir);
       }
@@ -225,16 +221,16 @@ main(int  argc,				/* I - Number of command-line arguments */
       for (i = 0; i < 10; i ++)
       {
         snprintf(filename, sizeof(filename), "test.d/testfile%d.txt", i);
-        printf("cupsFileOpen(%s): ", filename);
+        testBegin("cupsFileOpen(%s)", filename);
         if ((fp = cupsFileOpen(filename, "w")) == NULL)
         {
-          printf("FAIL (%s)\n", strerror(errno));
+          testEndMessage(false, "%s", strerror(errno));
           status ++;
           break;
         }
         else
         {
-          puts("PASS");
+          testEnd(true);
           cupsFilePuts(fp, "This is a test.\n");
           cupsFileClose(fp);
         }
@@ -242,25 +238,26 @@ main(int  argc,				/* I - Number of command-line arguments */
 
       if (i >= 10)
       {
-	fputs("cupsDirOpen(test.d): ", stdout);
+	testBegin("cupsDirOpen(test.d)");
 	if ((dir = cupsDirOpen("test.d")) == NULL)
 	{
-	  printf("FAIL (%s)\n", strerror(errno));
+	  testEndMessage(false, "%s", strerror(errno));
 	  status ++;
 	}
 	else
 	{
-	  puts("PASS");
-	  fputs("cupsDirRead: ", stdout);
+	  testEnd(true);
+	  testBegin("cupsDirRead");
 	  for (num_files = 0; (dent = cupsDirRead(dir)) != NULL; num_files ++)
-	    printf("%s ", dent->filename);
+	    /* do nothing */;
+
 	  if (num_files != 10)
 	  {
-	    printf("FAIL (Got %d files, expected 10)\n", num_files);
+	    testEndMessage(false, "Got %d files, expected 10", num_files);
 	    status ++;
 	  }
 	  else
-	    puts("PASS");
+	    testEnd(true);
 
 	  cupsDirClose(dir);
 	}
@@ -275,15 +272,6 @@ main(int  argc,				/* I - Number of command-line arguments */
 
       rmdir("test.d");
     }
-
-   /*
-    * Summarize the results and return...
-    */
-
-    if (!status)
-      puts("\nALL TESTS PASSED!");
-    else
-      printf("\n%d TEST(S) FAILED!\n", status);
   }
   else
   {
@@ -377,16 +365,16 @@ random_tests(void)
     * cupsFileOpen(append)
     */
 
-    printf("\ncupsFileOpen(append %d): ", pass);
+    testBegin("cupsFileOpen(append %d)", pass);
 
     if ((fp = cupsFileOpen("testfile.dat", "a")) == NULL)
     {
-      printf("FAIL (%s)\n", strerror(errno));
+      testEndMessage(false, "%s", strerror(errno));
       status ++;
       break;
     }
     else
-      puts("PASS");
+      testEnd(true);
 
    /*
     * cupsFileTell()
@@ -394,22 +382,22 @@ random_tests(void)
 
     expected = 256 * (ssize_t)sizeof(buffer) * pass;
 
-    fputs("cupsFileTell(): ", stdout);
+    testBegin("cupsFileTell()");
     if ((pos = cupsFileTell(fp)) != (off_t)expected)
     {
-      printf("FAIL (" CUPS_LLFMT " instead of " CUPS_LLFMT ")\n",
+      testEndMessage(false, "" CUPS_LLFMT " instead of " CUPS_LLFMT "",
 	     CUPS_LLCAST pos, CUPS_LLCAST expected);
       status ++;
       break;
     }
     else
-      puts("PASS");
+      testEnd(true);
 
    /*
     * cupsFileWrite()
     */
 
-    fputs("cupsFileWrite(256 512-byte records): ", stdout);
+    testBegin("cupsFileWrite(256 512-byte records)");
     for (record = 0; record < 256; record ++)
     {
       memset(buffer, record, sizeof(buffer));
@@ -419,12 +407,12 @@ random_tests(void)
 
     if (record < 256)
     {
-      printf("FAIL (%d: %s)\n", record, strerror(errno));
+      testEndMessage(false, "%d: %s", record, strerror(errno));
       status ++;
       break;
     }
     else
-      puts("PASS");
+      testEnd(true);
 
    /*
     * cupsFileTell()
@@ -432,16 +420,16 @@ random_tests(void)
 
     expected += 256 * (ssize_t)sizeof(buffer);
 
-    fputs("cupsFileTell(): ", stdout);
+    testBegin("cupsFileTell()");
     if ((pos = cupsFileTell(fp)) != (off_t)expected)
     {
-      printf("FAIL (" CUPS_LLFMT " instead of " CUPS_LLFMT ")\n",
+      testEndMessage(false, "" CUPS_LLFMT " instead of " CUPS_LLFMT "",
              CUPS_LLCAST pos, CUPS_LLCAST expected);
       status ++;
       break;
     }
     else
-      puts("PASS");
+      testEnd(true);
 
     cupsFileClose(fp);
 
@@ -449,22 +437,22 @@ random_tests(void)
     * cupsFileOpen(read)
     */
 
-    printf("\ncupsFileOpen(read %d): ", pass);
+    testBegin("cupsFileOpen(read %d)", pass);
 
     if ((fp = cupsFileOpen("testfile.dat", "r")) == NULL)
     {
-      printf("FAIL (%s)\n", strerror(errno));
+      testEndMessage(false, "%s", strerror(errno));
       status ++;
       break;
     }
     else
-      puts("PASS");
+      testEnd(true);
 
    /*
     * cupsFileSeek, cupsFileRead
     */
 
-    fputs("cupsFileSeek(), cupsFileRead(): ", stdout);
+    testBegin("cupsFileSeek(), cupsFileRead()");
 
     for (num_records = (pass + 1) * 256, count = (pass + 1) * 256, record = ((int)CUPS_RAND() & 65535) % num_records;
          count > 0;
@@ -486,7 +474,7 @@ random_tests(void)
 
       if ((pos = cupsFileSeek(fp, expected)) != expected)
       {
-        printf("FAIL (" CUPS_LLFMT " instead of " CUPS_LLFMT ")\n",
+        testEndMessage(false, "" CUPS_LLFMT " instead of " CUPS_LLFMT "",
 	       CUPS_LLCAST pos, CUPS_LLCAST expected);
         status ++;
 	break;
@@ -495,14 +483,14 @@ random_tests(void)
       {
 	if (cupsFileRead(fp, buffer, sizeof(buffer)) != sizeof(buffer))
 	{
-	  printf("FAIL (%s)\n", strerror(errno));
+	  testEndMessage(false, "%s", strerror(errno));
 	  status ++;
 	  break;
 	}
 	else if ((buffer[0] & 255) != (record & 255) ||
 	         memcmp(buffer, buffer + 1, sizeof(buffer) - 1))
 	{
-	  printf("FAIL (Bad Data - %d instead of %d)\n", buffer[0] & 255,
+	  testEndMessage(false, "Bad Data - %d instead of %d", buffer[0] & 255,
 	         record & 255);
 	  status ++;
 	  break;
@@ -511,7 +499,7 @@ random_tests(void)
     }
 
     if (count == 0)
-      puts("PASS");
+      testEnd(true);
 
     cupsFileClose(fp);
   }
@@ -537,7 +525,7 @@ random_tests(void)
 static int				/* O - Status */
 read_write_tests(int compression)	/* I - Use compression? */
 {
-  int		i;			/* Looping var */
+  int		i, j;			/* Looping vars */
   cups_file_t	*fp;			/* File */
   int		status;			/* Exit status */
   char		line[1024],		/* Line from file */
@@ -571,26 +559,24 @@ read_write_tests(int compression)	/* I - Use compression? */
   * cupsFileOpen(write)
   */
 
-  printf("cupsFileOpen(write%s): ", compression ? " compressed" : "");
+  testBegin("cupsFileOpen(write%s)", compression ? " compressed" : "");
 
-  fp = cupsFileOpen(compression ? "testfile.dat.gz" : "testfile.dat",
-                    compression ? "w9" : "w");
+  fp = cupsFileOpen(compression ? "testfile.dat.gz" : "testfile.dat", compression ? "w9" : "w");
   if (fp)
   {
-    puts("PASS");
+    testEnd(true);
 
    /*
     * cupsFileCompression()
     */
 
-    fputs("cupsFileCompression(): ", stdout);
+    testBegin("cupsFileCompression()");
 
     if (cupsFileCompression(fp) == compression)
-      puts("PASS");
+      testEnd(true);
     else
     {
-      printf("FAIL (Got %d, expected %d)\n", cupsFileCompression(fp),
-             compression);
+      testEndMessage(false, "Got %d, expected %d", cupsFileCompression(fp), compression);
       status ++;
     }
 
@@ -598,13 +584,13 @@ read_write_tests(int compression)	/* I - Use compression? */
     * cupsFilePuts()
     */
 
-    fputs("cupsFilePuts(): ", stdout);
+    testBegin("cupsFilePuts()");
 
     if (cupsFilePuts(fp, "# Hello, World\n") > 0)
-      puts("PASS");
+      testEnd(true);
     else
     {
-      printf("FAIL (%s)\n", strerror(errno));
+      testEndMessage(false, "%s", strerror(errno));
       status ++;
     }
 
@@ -612,17 +598,17 @@ read_write_tests(int compression)	/* I - Use compression? */
     * cupsFilePrintf()
     */
 
-    fputs("cupsFilePrintf(): ", stdout);
+    testBegin("cupsFilePrintf()");
 
     for (i = 0; i < 1000; i ++)
       if (cupsFilePrintf(fp, "TestLine %03d\n", i) < 0)
         break;
 
     if (i >= 1000)
-      puts("PASS");
+      testEnd(true);
     else
     {
-      printf("FAIL (%s)\n", strerror(errno));
+      testEndMessage(false, "%s", strerror(errno));
       status ++;
     }
 
@@ -630,17 +616,17 @@ read_write_tests(int compression)	/* I - Use compression? */
     * cupsFilePutChar()
     */
 
-    fputs("cupsFilePutChar(): ", stdout);
+    testBegin("cupsFilePutChar()");
 
     for (i = 0; i < 256; i ++)
       if (cupsFilePutChar(fp, i) < 0)
         break;
 
     if (i >= 256)
-      puts("PASS");
+      testEnd(true);
     else
     {
-      printf("FAIL (%s)\n", strerror(errno));
+      testEndMessage(false, "%s", strerror(errno));
       status ++;
     }
 
@@ -648,17 +634,17 @@ read_write_tests(int compression)	/* I - Use compression? */
     * cupsFileWrite()
     */
 
-    fputs("cupsFileWrite(): ", stdout);
+    testBegin("cupsFileWrite()");
 
     for (i = 0; i < 10000; i ++)
       if (cupsFileWrite(fp, (char *)writebuf, sizeof(writebuf)) < 0)
         break;
 
     if (i >= 10000)
-      puts("PASS");
+      testEnd(true);
     else
     {
-      printf("FAIL (%s)\n", strerror(errno));
+      testEndMessage(false, "%s", strerror(errno));
       status ++;
     }
 
@@ -666,13 +652,13 @@ read_write_tests(int compression)	/* I - Use compression? */
     * cupsFilePuts() with partial line...
     */
 
-    fputs("cupsFilePuts(\"partial line\"): ", stdout);
+    testBegin("cupsFilePuts(\"partial line\")");
 
     if (cupsFilePuts(fp, partial_line) > 0)
-      puts("PASS");
+      testEnd(true);
     else
     {
-      printf("FAIL (%s)\n", strerror(errno));
+      testEndMessage(false, "%s", strerror(errno));
       status ++;
     }
 
@@ -680,13 +666,13 @@ read_write_tests(int compression)	/* I - Use compression? */
     * cupsFileTell()
     */
 
-    fputs("cupsFileTell(): ", stdout);
+    testBegin("cupsFileTell()");
 
     if ((length = cupsFileTell(fp)) == 81933283)
-      puts("PASS");
+      testEnd(true);
     else
     {
-      printf("FAIL (" CUPS_LLFMT " instead of 81933283)\n", CUPS_LLCAST length);
+      testEndMessage(false, "" CUPS_LLFMT " instead of 81933283", CUPS_LLCAST length);
       status ++;
     }
 
@@ -694,19 +680,19 @@ read_write_tests(int compression)	/* I - Use compression? */
     * cupsFileClose()
     */
 
-    fputs("cupsFileClose(): ", stdout);
+    testBegin("cupsFileClose()");
 
     if (!cupsFileClose(fp))
-      puts("PASS");
+      testEnd(true);
     else
     {
-      printf("FAIL (%s)\n", strerror(errno));
+      testEndMessage(false, "%s", strerror(errno));
       status ++;
     }
   }
   else
   {
-    printf("FAIL (%s)\n", strerror(errno));
+    testEndMessage(false, "%s", strerror(errno));
     status ++;
   }
 
@@ -714,32 +700,32 @@ read_write_tests(int compression)	/* I - Use compression? */
   * cupsFileOpen(read)
   */
 
-  fputs("\ncupsFileOpen(read): ", stdout);
+  testBegin("cupsFileOpen(read)");
 
   fp = cupsFileOpen(compression ? "testfile.dat.gz" : "testfile.dat", "r");
   if (fp)
   {
-    puts("PASS");
+    testEnd(true);
 
    /*
     * cupsFileGets()
     */
 
-    fputs("cupsFileGets(): ", stdout);
+    testBegin("cupsFileGets()");
 
     if (cupsFileGets(fp, line, sizeof(line)))
     {
       if (line[0] == '#')
-        puts("PASS");
+        testEnd(true);
       else
       {
-        printf("FAIL (Got line \"%s\", expected comment line)\n", line);
+        testEndMessage(false, "Got line \"%s\", expected comment line", line);
 	status ++;
       }
     }
     else
     {
-      printf("FAIL (%s)\n", strerror(errno));
+      testEndMessage(false, "%s", strerror(errno));
       status ++;
     }
 
@@ -747,13 +733,13 @@ read_write_tests(int compression)	/* I - Use compression? */
     * cupsFileCompression()
     */
 
-    fputs("cupsFileCompression(): ", stdout);
+    testBegin("cupsFileCompression()");
 
     if (cupsFileCompression(fp) == compression)
-      puts("PASS");
+      testEnd(true);
     else
     {
-      printf("FAIL (Got %d, expected %d)\n", cupsFileCompression(fp),
+      testEndMessage(false, "Got %d, expected %d", cupsFileCompression(fp),
              compression);
       status ++;
     }
@@ -764,7 +750,7 @@ read_write_tests(int compression)	/* I - Use compression? */
 
     linenum = 1;
 
-    fputs("cupsFileGetConf(): ", stdout);
+    testBegin("cupsFileGetConf()");
 
     for (i = 0, value = NULL; i < 1000; i ++)
       if (!cupsFileGetConf(fp, line, sizeof(line), &value, &linenum))
@@ -774,16 +760,16 @@ read_write_tests(int compression)	/* I - Use compression? */
         break;
 
     if (i >= 1000)
-      puts("PASS");
+      testEnd(true);
     else if (line[0])
     {
-      printf("FAIL (Line %d, directive \"%s\", value \"%s\")\n", linenum,
+      testEndMessage(false, "Line %d, directive \"%s\", value \"%s\"", linenum,
              line, value ? value : "(null)");
       status ++;
     }
     else
     {
-      printf("FAIL (%s)\n", strerror(errno));
+      testEndMessage(false, "%s", strerror(errno));
       status ++;
     }
 
@@ -791,22 +777,22 @@ read_write_tests(int compression)	/* I - Use compression? */
     * cupsFileGetChar()
     */
 
-    fputs("cupsFileGetChar(): ", stdout);
+    testBegin("cupsFileGetChar()");
 
     for (i = 0, byte = 0; i < 256; i ++)
       if ((byte = cupsFileGetChar(fp)) != i)
         break;
 
     if (i >= 256)
-      puts("PASS");
+      testEnd(true);
     else if (byte >= 0)
     {
-      printf("FAIL (Got %d, expected %d)\n", byte, i);
+      testEndMessage(false, "Got %d, expected %d", byte, i);
       status ++;
     }
     else
     {
-      printf("FAIL (%s)\n", strerror(errno));
+      testEndMessage(false, "%s", strerror(errno));
       status ++;
     }
 
@@ -814,7 +800,7 @@ read_write_tests(int compression)	/* I - Use compression? */
     * cupsFileRead()
     */
 
-    fputs("cupsFileRead(): ", stdout);
+    testBegin("cupsFileRead()");
 
     for (i = 0, bytes = 0; i < 10000; i ++)
       if ((bytes = cupsFileRead(fp, (char *)readbuf, sizeof(readbuf))) < 0)
@@ -823,21 +809,18 @@ read_write_tests(int compression)	/* I - Use compression? */
         break;
 
     if (i >= 10000)
-      puts("PASS");
+      testEnd(true);
     else if (bytes > 0)
     {
-      printf("FAIL (Pass %d, ", i);
-
-      for (i = 0; i < (int)sizeof(readbuf); i ++)
-        if (readbuf[i] != writebuf[i])
+      for (j = 0; j < (int)sizeof(readbuf); j ++)
+        if (readbuf[j] != writebuf[j])
 	  break;
 
-      printf("match failed at offset %d - got %02X, expected %02X)\n",
-             i, readbuf[i], writebuf[i]);
+      testEndMessage(false, "Pass %d, match failed at offset %d - got %02X, expected %02X", i, j, readbuf[j], writebuf[j]);
     }
     else
     {
-      printf("FAIL (%s)\n", strerror(errno));
+      testEndMessage(false, "%s", strerror(errno));
       status ++;
     }
 
@@ -845,7 +828,7 @@ read_write_tests(int compression)	/* I - Use compression? */
     * cupsFileGetChar() with partial line...
     */
 
-    fputs("cupsFileGetChar(partial line): ", stdout);
+    testBegin("cupsFileGetChar(partial line)");
 
     for (i = 0; i < (int)strlen(partial_line); i ++)
       if ((byte = cupsFileGetChar(fp)) < 0)
@@ -854,10 +837,10 @@ read_write_tests(int compression)	/* I - Use compression? */
         break;
 
     if (!partial_line[i])
-      puts("PASS");
+      testEnd(true);
     else
     {
-      printf("FAIL (got '%c', expected '%c')\n", byte, partial_line[i]);
+      testEndMessage(false, "got '%c', expected '%c'", byte, partial_line[i]);
       status ++;
     }
 
@@ -865,13 +848,13 @@ read_write_tests(int compression)	/* I - Use compression? */
     * cupsFileTell()
     */
 
-    fputs("cupsFileTell(): ", stdout);
+    testBegin("cupsFileTell()");
 
     if ((length = cupsFileTell(fp)) == 81933283)
-      puts("PASS");
+      testEnd(true);
     else
     {
-      printf("FAIL (" CUPS_LLFMT " instead of 81933283)\n", CUPS_LLCAST length);
+      testEndMessage(false, "" CUPS_LLFMT " instead of 81933283", CUPS_LLCAST length);
       status ++;
     }
 
@@ -879,19 +862,19 @@ read_write_tests(int compression)	/* I - Use compression? */
     * cupsFileClose()
     */
 
-    fputs("cupsFileClose(): ", stdout);
+    testBegin("cupsFileClose()");
 
     if (!cupsFileClose(fp))
-      puts("PASS");
+      testEnd(true);
     else
     {
-      printf("FAIL (%s)\n", strerror(errno));
+      testEndMessage(false, "%s", strerror(errno));
       status ++;
     }
   }
   else
   {
-    printf("FAIL (%s)\n", strerror(errno));
+    testEndMessage(false, "%s", strerror(errno));
     status ++;
   }
 

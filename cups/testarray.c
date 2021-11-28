@@ -259,7 +259,6 @@ main(void)
   */
 
   testBegin("Load unique words");
-  fflush(stdout);
 
   start = get_seconds();
 
