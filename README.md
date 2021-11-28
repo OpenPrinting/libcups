@@ -1,5 +1,5 @@
-The CUPS Library (libcups)
-==========================
+The CUPS Library v3 (libcups)
+=============================
 
 ![Version](https://img.shields.io/github/v/release/michaelrsweet/libcups?include_prereleases)
 ![Apache 2.0](https://img.shields.io/github/license/michaelrsweet/libcups)
@@ -8,14 +8,18 @@ The CUPS Library (libcups)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/4ea68dc02692436b82541b6f232eba66)](https://www.codacy.com/gh/michaelrsweet/libcups/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=michaelrsweet/libcups&amp;utm_campaign=Badge_Grade)
 [![LGTM Grade](https://img.shields.io/lgtm/grade/cpp/github/michaelrsweet/libcups)](https://lgtm.com/projects/g/michaelrsweet/libcups/?mode=list)
 
-The CUPS library (libcups) provides a common C API for HTTP/HTTPS and IPP communications
-on Unix®-like operating systems and Microsoft Windows®.  It is used by many printing-
-related projects such as CUPS (<https://openprinting.github.io/cups>) and PAPPL
-(<https://www.msweet.org/pappl>).
+The CUPS library (libcups) provides a common C API for HTTP/HTTPS and IPP
+communications on Unix®-like operating systems and Microsoft Windows®.  It is
+used by many printing-related projects such as [CUPS][1] and [PAPPL][2].
 
-The CUPS library is licensed under the Apache License Version 2.0 with an exception to
-allow linking against GNU GPL2-only software.  See the files `LICENSE` and `NOTICE` for
-more information.
+This version of the CUPS library removes all of the deprecated and obsolete APIs
+from CUPS 2.x and earlier and is *not* binary compatible with older releases.
+See the file `MIGRATING.md` for a description of the changes and how to migrate
+your code to the new library.
+
+The CUPS library is licensed under the Apache License Version 2.0 with an
+exception to allow linking against GNU GPL2-only software.  See the files
+`LICENSE` and `NOTICE` for more information.
 
 
 Reading the Documentation
@@ -30,6 +34,8 @@ the CUPS sources:
 - `DEVELOPING.md`: Guidelines for developing code for the CUPS project.
 - `INSTALL.md`: Instructions for building and installing the CUPS library.
 - `LICENSE`: The CUPS license agreement (Apache 2.0).
+- `MIGRATING.md`: Guidance on migrating CUPS 2.x and earlier code to the new
+  CUPS library.
 - `NOTICE`: Copyright notices and exceptions to the CUPS license agreement.
 - `README.md`: This file.
 
@@ -56,3 +62,7 @@ Unless required by applicable law or agreed to in writing, software distributed
 under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations under the License.
+
+
+[1]: https://openprinting.github.io/cups
+[2]: https://www.msweet.org/pappl

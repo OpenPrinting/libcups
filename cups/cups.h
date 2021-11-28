@@ -341,11 +341,9 @@ extern ipp_t		*cupsDoRequest(http_t *http, ipp_t *request,
 			               const char *resource) _CUPS_PUBLIC;
 extern http_encryption_t cupsEncryption(void);
 extern void		cupsFreeJobs(int num_jobs, cups_job_t *jobs) _CUPS_PUBLIC;
-extern int		cupsGetClasses(char ***classes) _CUPS_DEPRECATED_MSG("Use cupsEnumDests instead.");
 extern const char	*cupsGetDefault(void) _CUPS_PUBLIC;
 extern int		cupsGetJobs(cups_job_t **jobs, const char *name,
 			            int myjobs, int whichjobs) _CUPS_PUBLIC;
-extern int		cupsGetPrinters(char ***printers) _CUPS_DEPRECATED_MSG("Use cupsEnumDests instead.");
 extern ipp_status_t	cupsLastError(void) _CUPS_PUBLIC;
 extern int		cupsPrintFile(const char *name, const char *filename,
 			              const char *title, int num_options,

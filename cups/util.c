@@ -264,25 +264,6 @@ cupsFreeJobs(int        num_jobs,	/* I - Number of jobs */
 
 
 /*
- * 'cupsGetClasses()' - Get a list of printer classes from the default server.
- *
- * This function is deprecated and no longer returns a list of printer
- * classes - use @link cupsGetDests@ instead.
- *
- * @deprecated@ @exclude all@
- */
-
-int					/* O - Number of classes */
-cupsGetClasses(char ***classes)		/* O - Classes */
-{
-  if (classes)
-    *classes = NULL;
-
-  return (0);
-}
-
-
-/*
  * 'cupsGetDefault()' - Get the default printer or class for the default server.
  *
  * This function returns the default printer or class as defined by
@@ -670,25 +651,6 @@ cupsGetJobs2(http_t     *http,		/* I - Connection to server or @code CUPS_HTTP_D
     return (-1);
   else
     return (n);
-}
-
-
-/*
- * 'cupsGetPrinters()' - Get a list of printers from the default server.
- *
- * This function is deprecated and no longer returns a list of printers - use
- * @link cupsGetDests@ instead.
- *
- * @deprecated@ @exclude all@
- */
-
-int					/* O - Number of printers */
-cupsGetPrinters(char ***printers)	/* O - Printers */
-{
-  if (printers)
-    *printers = NULL;
-
-  return (0);
 }
 
 
