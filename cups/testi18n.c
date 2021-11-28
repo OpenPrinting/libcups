@@ -1,10 +1,12 @@
 /*
  * Internationalization test for CUPS.
  *
- * Copyright 2007-2014 by Apple Inc.
- * Copyright 1997-2006 by Easy Software Products.
+ * Copyright © 2021 by OpenPrinting.
+ * Copyright © 2007-2014 by Apple Inc.
+ * Copyright © 1997-2006 by Easy Software Products.
  *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more information.
+ * Licensed under Apache License v2.0.  See the file "LICENSE" for more
+ * information.
  */
 
 /*
@@ -13,6 +15,7 @@
 
 #include "string-private.h"
 #include "language-private.h"
+#include "test-internal.h"
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
@@ -142,7 +145,6 @@ main(int  argc,				/* I - Argument Count */
     int			i;		/* Looping var */
     cups_encoding_t	encoding;	/* Source encoding */
 
-
     if (argc != 3)
     {
       puts("Usage: ./testi18n [filename charset]");
@@ -158,11 +160,13 @@ main(int  argc,				/* I - Argument Count */
     for (i = 0, encoding = CUPS_AUTO_ENCODING;
          i < (int)(sizeof(lang_encodings) / sizeof(lang_encodings[0]));
 	 i ++)
+    {
       if (!_cups_strcasecmp(lang_encodings[i], argv[2]))
       {
         encoding = (cups_encoding_t)i;
 	break;
       }
+    }
 
     if (encoding == CUPS_AUTO_ENCODING)
     {
@@ -201,7 +205,7 @@ main(int  argc,				/* I - Argument Count */
   * cupsUTF8ToUTF32
   */
 
-  fputs("cupsUTF8ToUTF32 of utfdemo.txt: ", stdout);
+  testBegin("cupsUTF8ToUTF32 of utfdemo.txt");
 
   for (count = 0, status = 0; fgets(line, sizeof(line), fp);)
   {
@@ -209,7 +213,7 @@ main(int  argc,				/* I - Argument Count */
 
     if (cupsUTF8ToUTF32(utf32dest, (cups_utf8_t *)line, 1024) < 0)
     {
-      printf("FAIL (UTF-8 to UTF-32 on line %d)\n", count);
+      testEndMessage(false, "UTF-8 to UTF-32 on line %d", count);
       errors ++;
       status = 1;
       break;
@@ -217,13 +221,13 @@ main(int  argc,				/* I - Argument Count */
   }
 
   if (!status)
-    puts("PASS");
+    testEnd(true);
 
  /*
   * cupsUTF8ToCharset(CUPS_EUC_JP)
   */
 
-  fputs("cupsUTF8ToCharset(CUPS_EUC_JP) of utfdemo.txt: ", stdout);
+  testBegin("cupsUTF8ToCharset(CUPS_EUC_JP) of utfdemo.txt");
 
   rewind(fp);
 
@@ -234,7 +238,7 @@ main(int  argc,				/* I - Argument Count */
     len = cupsUTF8ToCharset(legdest, (cups_utf8_t *)line, 1024, CUPS_EUC_JP);
     if (len < 0)
     {
-      printf("FAIL (UTF-8 to EUC-JP on line %d)\n", count);
+      testEndMessage(false, "UTF-8 to EUC-JP on line %d", count);
       errors ++;
       status = 1;
       break;
@@ -242,7 +246,7 @@ main(int  argc,				/* I - Argument Count */
   }
 
   if (!status)
-    puts("PASS");
+    testEnd(true);
 
   fclose(fp);
 
@@ -250,59 +254,59 @@ main(int  argc,				/* I - Argument Count */
   * Test UTF-8 to legacy charset (ISO 8859-1)...
   */
 
-  fputs("cupsUTF8ToCharset(CUPS_ISO8859_1): ", stdout);
+  testBegin("cupsUTF8ToCharset(CUPS_ISO8859_1)");
 
   legdest[0] = 0;
 
   len = cupsUTF8ToCharset(legdest, utf8latin, 1024, CUPS_ISO8859_1);
   if (len < 0)
   {
-    printf("FAIL (len=%d)\n", len);
+    testEndMessage(false, "len=%d", len);
     errors ++;
   }
   else
-    puts("PASS");
+    testEnd(true);
 
  /*
   * cupsCharsetToUTF8
   */
 
-  fputs("cupsCharsetToUTF8(CUPS_ISO8859_1): ", stdout);
+  testBegin("cupsCharsetToUTF8(CUPS_ISO8859_1)");
 
   strlcpy(legsrc, legdest, sizeof(legsrc));
 
   len = cupsCharsetToUTF8(utf8dest, legsrc, 1024, CUPS_ISO8859_1);
   if ((size_t)len != strlen((char *)utf8latin))
   {
-    printf("FAIL (len=%d, expected %d)\n", len, (int)strlen((char *)utf8latin));
+    testEndMessage(false, "len=%d, expected %d", len, (int)strlen((char *)utf8latin));
     print_utf8("    utf8latin", utf8latin);
     print_utf8("    utf8dest", utf8dest);
     errors ++;
   }
   else if (memcmp(utf8latin, utf8dest, (size_t)len))
   {
-    puts("FAIL (results do not match)");
+    testEndMessage(false, "results do not match");
     print_utf8("    utf8latin", utf8latin);
     print_utf8("    utf8dest", utf8dest);
     errors ++;
   }
   else if (cupsUTF8ToCharset(legdest, utf8repla, 1024, CUPS_ISO8859_1) < 0)
   {
-    puts("FAIL (replacement characters do not work!)");
+    testEndMessage(false, "replacement characters do not work!");
     errors ++;
   }
   else
-    puts("PASS");
+    testEnd(true);
 
  /*
   * Test UTF-8 to/from legacy charset (ISO 8859-7)...
   */
 
-  fputs("cupsUTF8ToCharset(CUPS_ISO8859_7): ", stdout);
+  testBegin("cupsUTF8ToCharset(CUPS_ISO8859_7)");
 
   if (cupsUTF8ToCharset(legdest, utf8greek, 1024, CUPS_ISO8859_7) < 0)
   {
-    puts("FAIL");
+    testEnd(false);
     errors ++;
   }
   else
@@ -311,44 +315,44 @@ main(int  argc,				/* I - Argument Count */
 
     if (*legptr)
     {
-      puts("FAIL (unknown character)");
+      testEndMessage(false, "unknown character");
       errors ++;
     }
     else
-      puts("PASS");
+      testEnd(true);
   }
 
-  fputs("cupsCharsetToUTF8(CUPS_ISO8859_7): ", stdout);
+  testBegin("cupsCharsetToUTF8(CUPS_ISO8859_7)");
 
   strlcpy(legsrc, legdest, sizeof(legsrc));
 
   len = cupsCharsetToUTF8(utf8dest, legsrc, 1024, CUPS_ISO8859_7);
   if ((size_t)len != strlen((char *)utf8greek))
   {
-    printf("FAIL (len=%d, expected %d)\n", len, (int)strlen((char *)utf8greek));
+    testEndMessage(false, "len=%d, expected %d", len, (int)strlen((char *)utf8greek));
     print_utf8("    utf8greek", utf8greek);
     print_utf8("    utf8dest", utf8dest);
     errors ++;
   }
   else if (memcmp(utf8greek, utf8dest, (size_t)len))
   {
-    puts("FAIL (results do not match)");
+    testEndMessage(false, "results do not match");
     print_utf8("    utf8greek", utf8greek);
     print_utf8("    utf8dest", utf8dest);
     errors ++;
   }
   else
-    puts("PASS");
+    testEnd(true);
 
  /*
   * Test UTF-8 to/from legacy charset (Windows 932)...
   */
 
-  fputs("cupsUTF8ToCharset(CUPS_WINDOWS_932): ", stdout);
+  testBegin("cupsUTF8ToCharset(CUPS_WINDOWS_932)");
 
   if (cupsUTF8ToCharset(legdest, utf8japan, 1024, CUPS_WINDOWS_932) < 0)
   {
-    puts("FAIL");
+    testEnd(false);
     errors ++;
   }
   else
@@ -357,44 +361,44 @@ main(int  argc,				/* I - Argument Count */
 
     if (*legptr)
     {
-      puts("FAIL (unknown character)");
+      testEndMessage(false, "unknown character");
       errors ++;
     }
     else
-      puts("PASS");
+      testEnd(true);
   }
 
-  fputs("cupsCharsetToUTF8(CUPS_WINDOWS_932): ", stdout);
+  testBegin("cupsCharsetToUTF8(CUPS_WINDOWS_932)");
 
   strlcpy(legsrc, legdest, sizeof(legsrc));
 
   len = cupsCharsetToUTF8(utf8dest, legsrc, 1024, CUPS_WINDOWS_932);
   if ((size_t)len != strlen((char *)utf8japan))
   {
-    printf("FAIL (len=%d, expected %d)\n", len, (int)strlen((char *)utf8japan));
+    testEndMessage(false, "len=%d, expected %d", len, (int)strlen((char *)utf8japan));
     print_utf8("    utf8japan", utf8japan);
     print_utf8("    utf8dest", utf8dest);
     errors ++;
   }
   else if (memcmp(utf8japan, utf8dest, (size_t)len))
   {
-    puts("FAIL (results do not match)");
+    testEndMessage(false, "results do not match");
     print_utf8("    utf8japan", utf8japan);
     print_utf8("    utf8dest", utf8dest);
     errors ++;
   }
   else
-    puts("PASS");
+    testEnd(true);
 
  /*
   * Test UTF-8 to/from legacy charset (EUC-JP)...
   */
 
-  fputs("cupsUTF8ToCharset(CUPS_EUC_JP): ", stdout);
+  testBegin("cupsUTF8ToCharset(CUPS_EUC_JP)");
 
   if (cupsUTF8ToCharset(legdest, utf8japan, 1024, CUPS_EUC_JP) < 0)
   {
-    puts("FAIL");
+    testEnd(false);
     errors ++;
   }
   else
@@ -403,46 +407,46 @@ main(int  argc,				/* I - Argument Count */
 
     if (*legptr)
     {
-      puts("FAIL (unknown character)");
+      testEndMessage(false, "unknown character");
       errors ++;
     }
     else
-      puts("PASS");
+      testEnd(true);
   }
 
 #if !defined(__linux__) && !defined(__GLIBC__)
-  fputs("cupsCharsetToUTF8(CUPS_EUC_JP): ", stdout);
+  testBegin("cupsCharsetToUTF8(CUPS_EUC_JP)");
 
   strlcpy(legsrc, legdest, sizeof(legsrc));
 
   len = cupsCharsetToUTF8(utf8dest, legsrc, 1024, CUPS_EUC_JP);
   if ((size_t)len != strlen((char *)utf8japan))
   {
-    printf("FAIL (len=%d, expected %d)\n", len, (int)strlen((char *)utf8japan));
+    testEndMessage(false, "len=%d, expected %d", len, (int)strlen((char *)utf8japan));
     print_utf8("    utf8japan", utf8japan);
     print_utf8("    utf8dest", utf8dest);
     errors ++;
   }
   else if (memcmp(utf8japan, utf8dest, (size_t)len))
   {
-    puts("FAIL (results do not match)");
+    testEndMessage(false, "results do not match");
     print_utf8("    utf8japan", utf8japan);
     print_utf8("    utf8dest", utf8dest);
     errors ++;
   }
   else
-    puts("PASS");
+    testEnd(true);
 #endif /* !__linux && !__GLIBC__ */
 
  /*
   * Test UTF-8 to/from legacy charset (Windows 950)...
   */
 
-  fputs("cupsUTF8ToCharset(CUPS_WINDOWS_950): ", stdout);
+  testBegin("cupsUTF8ToCharset(CUPS_WINDOWS_950)");
 
   if (cupsUTF8ToCharset(legdest, utf8taiwan, 1024, CUPS_WINDOWS_950) < 0)
   {
-    puts("FAIL");
+    testEnd(false);
     errors ++;
   }
   else
@@ -451,44 +455,44 @@ main(int  argc,				/* I - Argument Count */
 
     if (*legptr)
     {
-      puts("FAIL (unknown character)");
+      testEndMessage(false, "unknown character");
       errors ++;
     }
     else
-      puts("PASS");
+      testEnd(true);
   }
 
-  fputs("cupsCharsetToUTF8(CUPS_WINDOWS_950): ", stdout);
+  testBegin("cupsCharsetToUTF8(CUPS_WINDOWS_950)");
 
   strlcpy(legsrc, legdest, sizeof(legsrc));
 
   len = cupsCharsetToUTF8(utf8dest, legsrc, 1024, CUPS_WINDOWS_950);
   if ((size_t)len != strlen((char *)utf8taiwan))
   {
-    printf("FAIL (len=%d, expected %d)\n", len, (int)strlen((char *)utf8taiwan));
+    testEndMessage(false, "len=%d, expected %d", len, (int)strlen((char *)utf8taiwan));
     print_utf8("    utf8taiwan", utf8taiwan);
     print_utf8("    utf8dest", utf8dest);
     errors ++;
   }
   else if (memcmp(utf8taiwan, utf8dest, (size_t)len))
   {
-    puts("FAIL (results do not match)");
+    testEndMessage(false, "results do not match");
     print_utf8("    utf8taiwan", utf8taiwan);
     print_utf8("    utf8dest", utf8dest);
     errors ++;
   }
   else
-    puts("PASS");
+    testEnd(true);
 
  /*
   * Test UTF-8 to/from legacy charset (EUC-TW)...
   */
 
-  fputs("cupsUTF8ToCharset(CUPS_EUC_TW): ", stdout);
+  testBegin("cupsUTF8ToCharset(CUPS_EUC_TW)");
 
   if (cupsUTF8ToCharset(legdest, utf8taiwan, 1024, CUPS_EUC_TW) < 0)
   {
-    puts("FAIL");
+    testEnd(false);
     errors ++;
   }
   else
@@ -497,77 +501,34 @@ main(int  argc,				/* I - Argument Count */
 
     if (*legptr)
     {
-      puts("FAIL (unknown character)");
+      testEndMessage(false, "unknown character");
       errors ++;
     }
     else
-      puts("PASS");
+      testEnd(true);
   }
 
-  fputs("cupsCharsetToUTF8(CUPS_EUC_TW): ", stdout);
+  testBegin("cupsCharsetToUTF8(CUPS_EUC_TW)");
 
   strlcpy(legsrc, legdest, sizeof(legsrc));
 
   len = cupsCharsetToUTF8(utf8dest, legsrc, 1024, CUPS_EUC_TW);
   if ((size_t)len != strlen((char *)utf8taiwan))
   {
-    printf("FAIL (len=%d, expected %d)\n", len, (int)strlen((char *)utf8taiwan));
+    testEndMessage(false, "len=%d, expected %d", len, (int)strlen((char *)utf8taiwan));
     print_utf8("    utf8taiwan", utf8taiwan);
     print_utf8("    utf8dest", utf8dest);
     errors ++;
   }
   else if (memcmp(utf8taiwan, utf8dest, (size_t)len))
   {
-    puts("FAIL (results do not match)");
+    testEndMessage(false, "results do not match");
     print_utf8("    utf8taiwan", utf8taiwan);
     print_utf8("    utf8dest", utf8dest);
     errors ++;
   }
   else
-    puts("PASS");
-
-#if 0
- /*
-  * Test UTF-8 (16-bit) to UTF-32 (w/ BOM)...
-  */
-  if (verbose)
-    printf("\ntesti18n: Testing UTF-8 to UTF-32 (w/ BOM)...\n");
-  len = cupsUTF8ToUTF32(utf32dest, utf8good, 1024);
-  if (len < 0)
-    return (1);
-  if (verbose)
-  {
-    print_utf8(" utf8good ", utf8good);
-    print_utf32(" utf32dest", utf32dest);
-  }
-  memcpy(utf32src, utf32dest, (len + 1) * sizeof(cups_utf32_t));
-  len = cupsUTF32ToUTF8(utf8dest, utf32src, 1024);
-  if (len < 0)
-    return (1);
-  if (len != strlen ((char *) utf8good))
-    return (1);
-  if (memcmp(utf8good, utf8dest, len) != 0)
-    return (1);
-
- /*
-  * Test invalid UTF-8 (16-bit) to UTF-32 (w/ BOM)...
-  */
-  if (verbose)
-    printf("\ntesti18n: Testing UTF-8 bad 16-bit source string...\n");
-  len = cupsUTF8ToUTF32(utf32dest, utf8bad, 1024);
-  if (len >= 0)
-    return (1);
-  if (verbose)
-    print_utf8(" utf8bad  ", utf8bad);
-
- /*
-  * Test _cupsCharmapFlush()...
-  */
-  if (verbose)
-    printf("\ntesti18n: Testing _cupsCharmapFlush()...\n");
-  _cupsCharmapFlush();
-  return (0);
-#endif /* 0 */
+    testEnd(true);
 
   return (errors > 0);
 }
@@ -585,11 +546,11 @@ print_utf8(const char	     *msg,	/* I - Message String */
 
 
   if (msg)
-    printf("%s:", msg);
+    testError("%s:", msg);
 
   for (prefix = " "; *src; src ++)
   {
-    printf("%s%02x", prefix, *src);
+    fprintf(stderr, "%s%02x", prefix, *src);
 
     if ((src[0] & 0x80) && (src[1] & 0x80))
       prefix = "";
@@ -597,5 +558,5 @@ print_utf8(const char	     *msg,	/* I - Message String */
       prefix = " ";
   }
 
-  putchar('\n');
+  fputc('\n', stderr);
 }

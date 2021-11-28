@@ -239,7 +239,8 @@ testhttp.o: testhttp.c cups-private.h string-private.h ../config.h \
   language-private.h ../cups/transcode.h pwg-private.h thread-private.h \
   test-internal.h
 testi18n.o: testi18n.c string-private.h ../config.h ../cups/versioning.h \
-  language-private.h ../cups/transcode.h language.h array.h versioning.h
+  language-private.h ../cups/transcode.h language.h array.h versioning.h \
+  test-internal.h
 testipp.o: testipp.c file.h versioning.h string-private.h ../config.h \
   ../cups/versioning.h ipp-private.h ../cups/cups.h ipp.h http.h array.h \
   language.h pwg.h test-internal.h
