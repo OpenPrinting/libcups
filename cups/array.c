@@ -369,6 +369,8 @@ cupsArrayDup(cups_array_t *a)		/* I - Array */
     return (NULL);
 
   da->compare   = a->compare;
+  da->copyfunc  = a->copyfunc;
+  da->freefunc  = a->freefunc;
   da->data      = a->data;
   da->current   = a->current;
   da->insert    = a->insert;

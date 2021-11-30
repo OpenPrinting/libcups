@@ -59,10 +59,10 @@ main(void)
   * cupsArrayNew()
   */
 
-  testBegin("cupsArrayNew");
+  testBegin("cupsArrayNew3");
 
   data  = (void *)"testarray";
-  array = cupsArrayNew((cups_array_func_t)strcmp, data);
+  array = cupsArrayNew3((cups_array_func_t)strcmp, data, NULL, 0, (cups_acopy_func_t)strdup, (cups_afree_func_t)free);
 
   if (array)
     testEnd(true);
@@ -91,28 +91,28 @@ main(void)
 
   testBegin("cupsArrayAdd");
 
-  if (!cupsArrayAdd(array, strdup("One Fish")))
+  if (!cupsArrayAdd(array, "One Fish"))
   {
     testEndMessage(false, "\"One Fish\"");
     status ++;
   }
   else
   {
-    if (!cupsArrayAdd(array, strdup("Two Fish")))
+    if (!cupsArrayAdd(array, "Two Fish"))
     {
       testEndMessage(false, "\"Two Fish\"");
       status ++;
     }
     else
     {
-      if (!cupsArrayAdd(array, strdup("Red Fish")))
+      if (!cupsArrayAdd(array, "Red Fish"))
       {
 	testEndMessage(false, "\"Red Fish\"");
 	status ++;
       }
       else
       {
-        if (!cupsArrayAdd(array, strdup("Blue Fish")))
+        if (!cupsArrayAdd(array, "Blue Fish"))
 	{
 	  testEndMessage(false, "\"Blue Fish\"");
 	  status ++;
@@ -329,7 +329,6 @@ main(void)
 
   text = (char *)cupsArrayFirst(array);
   cupsArrayRemove(array, text);
-  free(text);
 
   text = (char *)cupsArrayNext(array);
   if (!text)
@@ -519,7 +518,7 @@ load_words(const char   *filename,	/* I - File to load */
   while (fscanf(fp, "%255s", word) == 1)
   {
     if (!cupsArrayFind(array, word))
-      cupsArrayAdd(array, strdup(word));
+      cupsArrayAdd(array, word);
   }
 
   fclose(fp);
