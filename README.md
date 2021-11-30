@@ -39,8 +39,8 @@ the CUPS sources:
 - `NOTICE`: Copyright notices and exceptions to the CUPS license agreement.
 - `README.md`: This file.
 
-You will find the CUPS Programing Guide in HTML and EPUB formats as well as man pages in
-the `doc` directory.
+You will find the CUPS Programing Guide in HTML and EPUB formats as well as man
+pages in the `doc` directory.
 
 *Please read the documentation before asking questions.*
 
