@@ -248,8 +248,7 @@ libcups.so.3:	$(LIBOBJS)
 
 libcups.3.dylib:	$(LIBOBJS)
 	echo Linking $@...
-	$(CC) $(DSOFLAGS) $(OPTIM) -o $@ -dynamiclib \
-		-install_name $(libdir)/$@ \
+	$(CC) $(DSOFLAGS) $(OPTIM) -o $@ -install_name $(libdir)/$@ \
 		-current_version 3.0.0 -compatibility_version 3.0.0 \
 		$(LIBOBJS) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@

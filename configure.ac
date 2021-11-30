@@ -351,10 +351,23 @@ AC_ARG_ENABLE([static], AS_HELP_STRING([--disable-static], [do not install stati
 AC_ARG_ENABLE([shared], AS_HELP_STRING([--disable-shared], [do not install shared library]))
 
 AS_IF([test x$enable_shared != xno], [
-    AS_IF([test "$host_os_name" = darwin], [
-	LIBCUPS="libcups.3.dylib"
-    ], [
+    AS_CASE(["$host_os_name"], [linux* | gnu* | *bsd*], [
 	LIBCUPS="libcups.so.3"
+	DSO="\$(CC)"
+	DSOFLAGS="$DSOFLAGS -Wl,-soname,\`basename \$@\` -shared"
+    ], [darwin*], [
+	LIBCUPS="libcups.3.dylib"
+	DSO="\$(CC)"
+	DSOFLAGS="$DSOFLAGS -Wl,-no_warn_inits -dynamiclib -single_module -lc"
+    ], [sunos*], [
+	LIBCUPS="libcups.so.3"
+	DSO="\$(CC)"
+	DSOFLAGS="$DSOFLAGS -Wl,-h,\`basename \$@\` -G"
+    ], [*], [
+	AC_MSG_NOTICE([Warning: Shared libraries may not work, trying -shared option.])
+	LIBCUPS="libcups.so.3"
+	DSO="\$(CC)"
+	DSOFLAGS="$DSOFLAGS -Wl,-soname,\`basename \$@\` -shared"
     ])
 
     AS_IF([test x$enable_static != xno], [

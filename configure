@@ -5022,16 +5022,36 @@ fi
 if test x$enable_shared != xno
 then :
 
-    if test "$host_os_name" = darwin
-then :
-
-	LIBCUPS="libcups.3.dylib"
-
-else $as_nop
+    case "$host_os_name" in #(
+  linux* | gnu* | *bsd*) :
 
 	LIBCUPS="libcups.so.3"
+	DSO="\$(CC)"
+	DSOFLAGS="$DSOFLAGS -Wl,-soname,\`basename \$@\` -shared"
+     ;; #(
+  darwin*) :
 
-fi
+	LIBCUPS="libcups.3.dylib"
+	DSO="\$(CC)"
+	DSOFLAGS="$DSOFLAGS -Wl,-no_warn_inits -dynamiclib -single_module -lc"
+     ;; #(
+  sunos*) :
+
+	LIBCUPS="libcups.so.3"
+	DSO="\$(CC)"
+	DSOFLAGS="$DSOFLAGS -Wl,-h,\`basename \$@\` -G"
+     ;; #(
+  *) :
+
+	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: Warning: Shared libraries may not work, trying -shared option." >&5
+printf "%s\n" "$as_me: Warning: Shared libraries may not work, trying -shared option." >&6;}
+	LIBCUPS="libcups.so.3"
+	DSO="\$(CC)"
+	DSOFLAGS="$DSOFLAGS -Wl,-soname,\`basename \$@\` -shared"
+     ;; #(
+  *) :
+     ;;
+esac
 
     if test x$enable_static != xno
 then :
