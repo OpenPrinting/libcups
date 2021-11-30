@@ -69,7 +69,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>bcrypt.lib;ws2_32.lib;advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(OutDir)libcups2.dll</OutputFile>
+      <OutputFile>$(OutDir)libcups3.dll</OutputFile>
       <ModuleDefinitionFile>..\cups\libcups2.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(Platform)\$(Configuration)\libcups2.pdb</ProgramDatabaseFile>
@@ -93,7 +93,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>bcrypt.lib;ws2_32.lib;advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(OutDir)libcups2.dll</OutputFile>
+      <OutputFile>$(OutDir)libcups3.dll</OutputFile>
       <ModuleDefinitionFile>..\cups\libcups2.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(Platform)\$(Configuration)\libcups2.pdb</ProgramDatabaseFile>
@@ -112,7 +112,6 @@ xcopy /I/Y "$(TargetPath)"                                                      
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\cups\adminutil.c" />
     <ClCompile Include="..\cups\array.c">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -141,7 +140,6 @@ xcopy /I/Y "$(TargetPath)"                                                      
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\cups\getdevices.c" />
     <ClCompile Include="..\cups\getputfile.c">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -198,30 +196,12 @@ xcopy /I/Y "$(TargetPath)"                                                      
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\cups\ppd-attr.c" />
-    <ClCompile Include="..\cups\ppd-cache.c" />
-    <ClCompile Include="..\cups\ppd-conflicts.c" />
-    <ClCompile Include="..\cups\ppd-custom.c" />
-    <ClCompile Include="..\cups\ppd-emit.c" />
-    <ClCompile Include="..\cups\ppd-localize.c" />
-    <ClCompile Include="..\cups\ppd-mark.c" />
-    <ClCompile Include="..\cups\ppd-page.c" />
-    <ClCompile Include="..\cups\ppd-util.c" />
-    <ClCompile Include="..\cups\ppd.c">
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
     <ClCompile Include="..\cups\pwg-media.c" />
     <ClCompile Include="..\cups\raster-error.c" />
-    <ClCompile Include="..\cups\raster-interpret.c" />
     <ClCompile Include="..\cups\raster-interstub.c" />
     <ClCompile Include="..\cups\raster-stream.c" />
     <ClCompile Include="..\cups\raster-stubs.c" />
     <ClCompile Include="..\cups\request.c" />
-    <ClCompile Include="..\cups\snprintf.c">
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
     <ClCompile Include="..\cups\string.c">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -246,7 +226,7 @@ xcopy /I/Y "$(TargetPath)"                                                      
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\cups\libcups2.def" />
+    <None Include="..\cups\libcups3.def" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
