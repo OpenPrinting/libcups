@@ -2857,7 +2857,7 @@ show_usage(void)
 static void
 show_version(void)
 {
-  _cupsLangPuts(stderr, CUPS_SVERSION);
+  _cupsLangPuts(stderr, LIBCUPS_VERSION);
 
   exit(IPPFIND_EXIT_TRUE);
 }

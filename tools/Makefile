@@ -22,7 +22,7 @@ OBJS		=	\
 
 IPPTOOLS	=	\
 			ippeveprinter \
-			$(IPPFIND_BIN) \
+			ippfind \
 			ipptool
 TARGETS		=	\
 			$(IPPTOOLS) \
@@ -73,21 +73,7 @@ depend:
 # Install all targets...
 #
 
-install:	all install-data install-headers install-libs install-exec
-
-
-#
-# Install data files...
-#
-
-install-data:
-
-
-#
-# Install programs...
-#
-
-install-exec:
+install:	all
 	echo Installing IPP tools in $(BINDIR)...
 	$(INSTALL_DIR) -m 755 $(BINDIR)
 	for file in $(IPPTOOLS); do \
@@ -105,20 +91,6 @@ install-exec:
 			dsymutil $(SYMROOT)/$$file; \
 		done; \
 	fi
-
-
-#
-# Install headers...
-#
-
-install-headers:
-
-
-#
-# Install libraries...
-#
-
-install-libs:
 
 
 #
