@@ -790,6 +790,8 @@ authenticate_request(
   * No authentication support built-in, return 'continue'...
   */
 
+  (void)client;
+
   return (HTTP_STATUS_CONTINUE);
 #endif /* HAVE_LIBPAM */
 }

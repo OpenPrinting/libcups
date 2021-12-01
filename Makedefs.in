@@ -33,7 +33,6 @@ AR		=	@AR@
 CC		=	@CC@
 DSO		=	@DSO@
 INSTALL		=	@INSTALL@
-LD		=	@LD@
 LN		=	@LN@ -sf
 MKDIR           =       @MKDIR@ -p
 MV		=	@MV@ -f

@@ -13,9 +13,6 @@
  */
 
 #include "ippevecommon.h"
-#if !CUPS_LITE
-#  include <cups/ppd-private.h>
-#endif /* !CUPS_LITE */
 #include <limits.h>
 #include <sys/wait.h>
 
@@ -24,17 +21,6 @@
 #else
 #  define PDFTOPS CUPS_SERVERBIN "/filter/pdftops"
 #endif /* __APPLE__ */
-
-
-/*
- * Local globals...
- */
-
-#if !CUPS_LITE
-static ppd_file_t	*ppd = NULL;	/* PPD file data */
-static _ppd_cache_t	*ppd_cache = NULL;
-					/* IPP to PPD cache data */
-#endif /* !CUPS_LITE */
 
 
 /*
@@ -244,13 +230,6 @@ dsc_header(int num_pages)		/* I - Number of pages or 0 if not known */
 					/* job-name value */
 
 
-#if !CUPS_LITE
-  const char	*job_id = getenv("IPP_JOB_ID");
-					/* job-id value */
-
-  ppdEmitJCL(ppd, stdout, job_id ? atoi(job_id) : 0, cupsUser(), job_name ? job_name : "Unknown");
-#endif /* !CUPS_LITE */
-
   puts("%!PS-Adobe-3.0");
   puts("%%LanguageLevel: 2");
   printf("%%%%Creator: ippeveps/%d.%d.%d\n", CUPS_VERSION_MAJOR, CUPS_VERSION_MINOR, CUPS_VERSION_PATCH);
@@ -273,26 +252,6 @@ dsc_header(int num_pages)		/* I - Number of pages or 0 if not known */
   else
     puts("%%Pages: (atend)");
   puts("%%EndComments");
-
-#if !CUPS_LITE
-  if (ppd)
-  {
-    puts("%%BeginProlog");
-    if (ppd->patches)
-    {
-      puts("%%BeginFeature: *JobPatchFile 1");
-      puts(ppd->patches);
-      puts("%%EndFeature");
-    }
-    ppdEmit(ppd, stdout, PPD_ORDER_PROLOG);
-    puts("%%EndProlog");
-
-    puts("%%BeginSetup");
-    ppdEmit(ppd, stdout, PPD_ORDER_DOCUMENT);
-    ppdEmit(ppd, stdout, PPD_ORDER_ANY);
-    puts("%%EndSetup");
-  }
-#endif /* !CUPS_LITE */
 }
 
 
@@ -306,15 +265,6 @@ dsc_page(int page)			/* I - Page numebr (1-based) */
   printf("%%%%Page: (%d) %d\n", page, page);
 
   fprintf(stderr, "ATTR: job-impressions-completed=%d\n", page);
-
-#if !CUPS_LITE
-  if (ppd)
-  {
-    puts("%%BeginPageSetup");
-    ppdEmit(ppd, stdout, PPD_ORDER_PAGE);
-    puts("%%EndPageSetup");
-  }
-#endif /* !CUPS_LITE */
 }
 
 
@@ -331,13 +281,7 @@ dsc_trailer(int num_pages)		/* I - Number of pages */
     printf("%%%%Pages: %d\n", num_pages);
     puts("%%EOF");
   }
-
-#if !CUPS_LITE
-  if (ppd && ppd->jcl_end)
-    ppdEmitJCLEnd(ppd, stdout);
-  else
-#endif /* !CUPS_LITE */
-    putchar(0x04);
+  putchar(0x04);
 }
 
 
@@ -354,9 +298,6 @@ get_options(cups_option_t **options)	/* O - Options */
   pwg_media_t	*media = NULL;		/* Media mapping */
   int		num_media_col = 0;	/* Number of media-col values */
   cups_option_t	*media_col = NULL;	/* media-col values */
-#if !CUPS_LITE
-  const char	*choice;		/* PPD choice */
-#endif /* !CUPS_LITE */
 
 
  /*
@@ -416,105 +357,6 @@ get_options(cups_option_t **options)	/* O - Options */
   if (media)
     num_options = cupsAddOption("PageSize", media->ppd, num_options, options);
 
-#if !CUPS_LITE
- /*
-  * Load PPD file and the corresponding IPP <-> PPD cache data...
-  */
-
-  if ((ppd = ppdOpenFile(getenv("PPD"))) != NULL && (ppd_cache = _ppdCacheCreateWithPPD(ppd)) != NULL)
-  {
-    /* TODO: Fix me - values are names, not numbers... Also need to support finishings-col */
-    if ((value = getenv("IPP_FINISHINGS")) == NULL)
-      value = getenv("IPP_FINISHINGS_DEFAULT");
-
-    if (value)
-    {
-      char	*ptr;			/* Pointer into value */
-      int	fin;			/* Current value */
-
-      for (fin = strtol(value, &ptr, 10); fin > 0; fin = strtol(ptr + 1, &ptr, 10))
-      {
-	num_options = _ppdCacheGetFinishingOptions(ppd_cache, NULL, (ipp_finishings_t)fin, num_options, options);
-
-	if (*ptr != ',')
-	  break;
-      }
-    }
-
-    if ((value = cupsGetOption("media-source", num_media_col, media_col)) != NULL)
-    {
-      if ((choice = _ppdCacheGetInputSlot(ppd_cache, NULL, value)) != NULL)
-	num_options = cupsAddOption("InputSlot", choice, num_options, options);
-    }
-
-    if ((value = cupsGetOption("media-type", num_media_col, media_col)) != NULL)
-    {
-      if ((choice = _ppdCacheGetMediaType(ppd_cache, NULL, value)) != NULL)
-	num_options = cupsAddOption("MediaType", choice, num_options, options);
-    }
-
-    if ((value = getenv("IPP_OUTPUT_BIN")) == NULL)
-      value = getenv("IPP_OUTPUT_BIN_DEFAULT");
-
-    if (value)
-    {
-      if ((choice = _ppdCacheGetOutputBin(ppd_cache, value)) != NULL)
-	num_options = cupsAddOption("OutputBin", choice, num_options, options);
-    }
-
-    if ((value = getenv("IPP_SIDES")) == NULL)
-      value = getenv("IPP_SIDES_DEFAULT");
-
-    if (value && ppd_cache->sides_option)
-    {
-      if (!strcmp(value, "one-sided") && ppd_cache->sides_1sided)
-	num_options = cupsAddOption(ppd_cache->sides_option, ppd_cache->sides_1sided, num_options, options);
-      else if (!strcmp(value, "two-sided-long-edge") && ppd_cache->sides_2sided_long)
-	num_options = cupsAddOption(ppd_cache->sides_option, ppd_cache->sides_2sided_long, num_options, options);
-      else if (!strcmp(value, "two-sided-short-edge") && ppd_cache->sides_2sided_short)
-	num_options = cupsAddOption(ppd_cache->sides_option, ppd_cache->sides_2sided_short, num_options, options);
-    }
-
-    if ((value = getenv("IPP_PRINT_QUALITY")) == NULL)
-      value = getenv("IPP_PRINT_QUALITY_DEFAULT");
-
-    if (value)
-    {
-      int		i;		/* Looping var */
-      int		pq;		/* Print quality (0-2) */
-      int		pcm = 1;	/* Print color model (0 = mono, 1 = color) */
-      int		num_presets;	/* Number of presets */
-      cups_option_t	*presets;	/* Presets */
-
-      if (!strcmp(value, "draft"))
-        pq = 0;
-      else if (!strcmp(value, "high"))
-        pq = 2;
-      else
-        pq = 1;
-
-      if ((value = getenv("IPP_PRINT_COLOR_MODE")) == NULL)
-	value = getenv("IPP_PRINT_COLOR_MODE_DEFAULT");
-
-      if (value && !strcmp(value, "monochrome"))
-	pcm = 0;
-
-      num_presets = ppd_cache->num_presets[pcm][pq];
-      presets     = ppd_cache->presets[pcm][pq];
-
-      for (i = 0; i < num_presets; i ++)
-	num_options = cupsAddOption(presets[i].name, presets[i].value, num_options, options);
-    }
-
-   /*
-    * Mark the PPD with the options...
-    */
-
-    ppdMarkDefaults(ppd);
-    cupsMarkOptions(ppd, num_options, *options);
-  }
-#endif /* !CUPS_LITE */
-
   cupsFreeOptions(num_media_col, media_col);
 
   return (num_options);
@@ -547,9 +389,6 @@ jpeg_to_ps(const char    *filename,	/* I - Filename */
 		x_factor,		/* X image scaling factor */
 		y_factor,		/* Y image scaling factor */
 		page_scaling;		/* Image scaling factor */
-#if !CUPS_LITE
-  ppd_size_t	*page_size;		/* Current page size */
-#endif /* !CUPS_LITE */
 
 
  /*
@@ -687,28 +526,10 @@ jpeg_to_ps(const char    *filename,	/* I - Filename */
   * Figure out the dimensions/scaling of the final image...
   */
 
-#if CUPS_LITE
   page_left   = 18.0f;
   page_top    = 756.0f;
   page_width  = 576.0f;
   page_height = 720.0f;
-
-#else
-  if ((page_size = ppdPageSize(ppd, NULL)) != NULL)
-  {
-    page_left   = page_size->left;
-    page_top    = page_size->top;
-    page_width  = page_size->right - page_left;
-    page_height = page_top - page_size->bottom;
-  }
-  else
-  {
-    page_left   = 18.0f;
-    page_top    = 756.0f;
-    page_width  = 576.0f;
-    page_height = 720.0f;
-  }
-#endif /* CUPS_LITE */
 
   fprintf(stderr, "DEBUG: page_left=%.2f, page_top=%.2f, page_width=%.2f, page_height=%.2f\n", page_left, page_top, page_width, page_height);
 

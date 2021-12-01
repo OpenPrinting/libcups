@@ -47,5 +47,5 @@
 /vcnet/.vs
 /vcnet/packages
 /vcnet/x64
-/xcode/CUPS.xcodeproj/project.xcworkspace/
-/xcode/CUPS.xcodeproj/xcuserdata/
+/xcode/libcups.xcodeproj/project.xcworkspace/
+/xcode/libcups.xcodeproj/xcuserdata/

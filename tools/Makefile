@@ -13,22 +13,22 @@ include ../Makedefs
 
 
 OBJS		=	\
+			ippevepcl.o \
 			ippeveprinter.o \
+			ippeveps.o \
 			ippfind.o \
 			ipptool.o
-
-#			ippevepcl.o \
-#			ippeveps.o \
-
+IPPEVECOMMANDS	=	\
+			ippevepcl \
+			ippeveps
 IPPTOOLS	=	\
 			ippeveprinter \
 			ippfind \
 			ipptool
 TARGETS		=	\
+			$(IPPEVECOMMANDS) \
 			$(IPPTOOLS) \
 			$(LOCALTARGET)
-
-#			$(IPPEVECOMMANDS) \
 
 
 #
@@ -74,15 +74,15 @@ depend:
 #
 
 install:	all
-	echo Installing IPP tools in $(BINDIR)...
-	$(INSTALL_DIR) -m 755 $(BINDIR)
+	echo Installing IPP tools in $(BUILDROOT)$(bindir)...
+	$(INSTALL_DIR) -m 755 $(BUILDROOT)$(bindir)
 	for file in $(IPPTOOLS); do \
-		$(INSTALL_BIN) $$file $(BINDIR); \
+		$(INSTALL_BIN) $$file $(BUILDROOT)$(bindir); \
 	done
-	echo Installing printer commands in $(SERVERBIN)/command...
-	$(INSTALL_DIR) -m 755 $(SERVERBIN)/command
+	echo Installing printer commands in $(BUILDROOT)$(libexecdir)/ippeveprinter...
+	$(INSTALL_DIR) -m 755 $(BUILDROOT)$(libexecdir)/ippeveprinter
 	for file in $(IPPEVECOMMANDS); do \
-		$(INSTALL_BIN) $$file $(SERVERBIN)/command; \
+		$(INSTALL_BIN) $$file $(BUILDROOT)$(libexecdir)/ippeveprinter; \
 	done
 	if test "x$(SYMROOT)" != "x"; then \
 		$(INSTALL_DIR) $(SYMROOT); \
@@ -98,16 +98,16 @@ install:	all
 #
 
 uninstall:
-	echo Uninstalling IPP tools from $(BINDIR)...
+	echo Uninstalling IPP tools from $(BUILDROOT)$(bindir)...
 	for file in $(IPPTOOLS); do \
-		$(RM) $(BINDIR)/$$file; \
+		$(RM) $(BUILDROOT)$(bindir)/$$file; \
 	done
-	-$(RMDIR) $(BINDIR)
-	echo Uninstalling print commands from $(SERVERBIN)/command...
+	-$(RMDIR) $(BUILDROOT)$(bindir)
+	echo Uninstalling print commands from $(BUILDROOT)$(libexecdir)/ippeveprinter...
 	for file in $(IPPEVECOMMANDS); do \
-		$(RM) $(SERVERBIN)/command/$$file; \
+		$(RM) $(BUILDROOT)$(libexecdir)/ippeveprinter/$$file; \
 	done
-	-$(RMDIR) $(SERVERBIN)/ippeveprinter
+	-$(RMDIR) $(BUILDROOT)$(libexecdir)/ippeveprinter
 
 
 #
