@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
     <metadata>
-        <id>libcups2_native.redist</id>
+        <id>libcups3_native.redist</id>
         <title>OpenPrinting CUPS Library for VS2019+ Redist</title>
-        <version>2.4.0.1</version>
+        <version>3.0.0-b1</version>
         <authors>Michael R Sweet, OpenPrinting</authors>
         <owners>michaelrsweet</owners>
         <projectUrl>https://github.com/OpenPrinting/cups</projectUrl>
@@ -11,8 +11,7 @@
         <icon>build/native/cups-128.png</icon>
         <readme>build/native/README.md</readme>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
-        <description>OpenPrinting CUPS is a standards-based, open source printing system for Linux®
-and other Unix®-like operating systems. This package provides the redistributable content for the CUPS library. CUPS is licensed under the Apache License Version 2.0 with an exception to allow linking against GNU GPL2-only software.</description>
+        <description>OpenPrinting CUPS is a standards-based, open source printing system for Linux® and other Unix®-like operating systems. This package provides the redistributable content for the CUPS library. CUPS is licensed under the Apache License Version 2.0 with an exception to allow linking against GNU GPL2-only software.</description>
         <copyright>Copyright © 2020-2021 by OpenPrinting, Copyright © 2007-2019 by Apple Inc., Copyright © 1997-2007 by Easy Software Products.</copyright>
         <tags>http ipp native</tags>
 	<dependencies>
@@ -22,9 +21,9 @@ and other Unix®-like operating systems. This package provides the redistributab
     <files>
         <file src="..\desktop\cups-128.png" target="build\native" />
         <file src="..\README.md" target="build\native" />
-        <!--<file src="Win32\**\libcups2*.dll" target="build\native\bin\Win32" />
+        <!--<file src="Win32\**\libcups3*.dll" target="build\native\bin\Win32" />
         <file src="Win32\**\regex*.dll" target="build\native\bin\Win32" />-->
-        <file src="x64\**\libcups2*.dll" target="build\native\bin\x64" />
+        <file src="x64\**\libcups3*.dll" target="build\native\bin\x64" />
         <file src="x64\**\regex*.dll" target="build\native\bin\x64" />
     </files>
 </package>
