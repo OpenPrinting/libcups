@@ -4,13 +4,19 @@ The CUPS Library v3 (libcups)
 ![Version](https://img.shields.io/github/v/release/michaelrsweet/libcups?include_prereleases)
 ![Apache 2.0](https://img.shields.io/github/license/michaelrsweet/libcups)
 [![Build and Test](https://github.com/michaelrsweet/libcups/workflows/Build%20and%20Test/badge.svg)](https://github.com/michaelrsweet/libcups/actions/workflows/build.yml)
-[![Coverity Scan](https://img.shields.io/coverity/scan/23806)](https://scan.coverity.com/projects/michaelrsweet-libcups)
+[![Coverity Scan](https://img.shields.io/coverity/scan/24180)](https://scan.coverity.com/projects/michaelrsweet-libcups)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/4ea68dc02692436b82541b6f232eba66)](https://www.codacy.com/gh/michaelrsweet/libcups/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=michaelrsweet/libcups&amp;utm_campaign=Badge_Grade)
 [![LGTM Grade](https://img.shields.io/lgtm/grade/cpp/github/michaelrsweet/libcups)](https://lgtm.com/projects/g/michaelrsweet/libcups/?mode=list)
 
+> *Note:* This is a major release update of the CUPS library that breaks both
+> binary and source compatibility with prior releases of CUPS.  This library
+> is not yet ready for production use!
+
 The CUPS library (libcups) provides a common C API for HTTP/HTTPS and IPP
 communications on Unix®-like operating systems and Microsoft Windows®.  It is
-used by many printing-related projects such as [CUPS][1] and [PAPPL][2].
+used by many printing-related projects such as [CUPS][1] and [PAPPL][2].  This
+project is part of OpenPrinting's CUPS 3.0 development, which will provide a
+100% driverless printing system for Unix®-life operating systems.
 
 This version of the CUPS library removes all of the deprecated and obsolete APIs
 from CUPS 2.x and earlier and is *not* binary compatible with older releases.
