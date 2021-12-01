@@ -22,6 +22,13 @@
 
 
 /*
+ * Do we have domain socket support, and if so what is the default one?
+ */
+
+#undef CUPS_DEFAULT_DOMAINSOCKET
+
+
+/*
  * Where are files stored?
  *
  * Note: These are defaults, which can be overridden by environment
@@ -76,9 +83,10 @@
 
 
 /*
- * Do we have the strlcpy() function?
+ * Do we have the strlcat() or strlcpy() functions?
  */
 
+#undef HAVE_STRLCAT
 #undef HAVE_STRLCPY
 
 
@@ -151,6 +159,13 @@
 
 
 /*
+ * Does the "stat" structure contain the "st_gen" member?
+ */
+
+/* #undef HAVE_ST_GEN */
+
+
+/*
  * Does the "tm" structure contain the "tm_gmtoff" member?
  */
 
@@ -179,24 +194,17 @@
 
 
 /*
- * Do we have the <sys/sockio.h> header file?
- */
-
-#undef HAVE_SYS_SOCKIO_H
-
-
-/*
- * Does the sockaddr structure contain an sa_len parameter?
- */
-
-#undef HAVE_STRUCT_SOCKADDR_SA_LEN
-
-
-/*
  * Do we have CoreFoundation public headers?
  */
 
 #undef HAVE_COREFOUNDATION_H
+
+
+/*
+ * Do we have the SCDynamicStoreCopyComputerName function?
+ */
+
+/* #undef HAVE_SCDYNAMICSTORECOPYCOMPUTERNAME */
 
 
 /*

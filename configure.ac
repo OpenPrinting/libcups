@@ -117,6 +117,9 @@ AC_SUBST([PKGCONFIG_REQUIRES_PRIVATE])
 
 dnl Functions...
 AC_CHECK_FUNCS([strlcat strlcpy])
+AC_SEARCH_LIBS([hstrerror], [nsl socket resolv], [
+    AC_DEFINE([HAVE_HSTRERROR], [1], [Have the hstrerror function?])
+])
 AC_SEARCH_LIBS([__res_init], [resolv bind], [
     AC_DEFINE([HAVE_RES_INIT], [1], [Have res_init function?])
 ], [

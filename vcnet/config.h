@@ -1,5 +1,5 @@
 /*
- * Configuration file for CUPS on Windows.
+ * Configuration file for libcups on Windows.
  *
  * Copyright © 2021 by OpenPrinting
  * Copyright © 2007-2019 by Apple Inc.
@@ -9,8 +9,8 @@
  * information.
  */
 
-#ifndef _CUPS_CONFIG_H_
-#define _CUPS_CONFIG_H_
+#ifndef CUPS_CONFIG_H
+#define CUPS_CONFIG_H
 
 /*
  * Include necessary headers...
@@ -100,87 +100,9 @@ typedef unsigned long useconds_t;
  * Version of software...
  */
 
-#define CUPS_SVERSION "CUPS v2.4rc1"
-#define CUPS_MINIMAL "CUPS/2.4rc1"
-
-
-/*
- * Default user and groups...
- */
-
-#define CUPS_DEFAULT_USER	""
-#define CUPS_DEFAULT_GROUP	""
-#define CUPS_DEFAULT_SYSTEM_GROUPS ""
-#define CUPS_DEFAULT_PRINTOPERATOR_AUTH ""
-#define CUPS_DEFAULT_SYSTEM_AUTHKEY ""
-
-
-/*
- * Default file permissions...
- */
-
-#define CUPS_DEFAULT_CONFIG_FILE_PERM 0644
-#define CUPS_DEFAULT_LOG_FILE_PERM 0644
-
-
-/*
- * Default logging settings...
- */
-
-#define CUPS_DEFAULT_LOG_LEVEL "warn"
-#define CUPS_DEFAULT_ACCESS_LOG_LEVEL "none"
-#define CUPS_DEFAULT_MAX_LOG_SIZE "1m"
-
-
-/*
- * Default fatal error settings...
- */
-
-#define CUPS_DEFAULT_FATAL_ERRORS "config"
-
-
-/*
- * Default browsing settings...
- */
-
-#define CUPS_DEFAULT_BROWSING 1
-#define CUPS_DEFAULT_BROWSE_LOCAL_PROTOCOLS "dnssd"
-#define CUPS_DEFAULT_DEFAULT_SHARED 1
-
-
-/*
- * Default IPP port...
- */
-
-#define CUPS_DEFAULT_IPP_PORT 631
-
-
-/*
- * Default printcap file...
- */
-
-#define CUPS_DEFAULT_PRINTCAP ""
-
-
-/*
- * Default ErrorPolicy value...
- */
-
-#define CUPS_DEFAULT_ERROR_POLICY "stop-printer"
-
-
-/*
- * Default MaxCopies value...
- */
-
-#define CUPS_DEFAULT_MAX_COPIES 9999
-
-
-/*
- * Default SyncOnClose value...
- */
-
-/* #undef CUPS_DEFAULT_SYNC_ON_CLOSE */
+#define LIBCUPS_VERSION "3.0b1"
+#define LIBCUPS_VERSION_MAJOR 3
+#define LIBCUPS_VERSION_MINOR 0
 
 
 /*
@@ -188,13 +110,6 @@ typedef unsigned long useconds_t;
  */
 
 #undef CUPS_DEFAULT_DOMAINSOCKET
-
-
-/*
- * Default WebInterface value...
- */
-
-#define CUPS_DEFAULT_WEBIF 0
 
 
 /*
@@ -218,58 +133,10 @@ typedef unsigned long useconds_t;
 
 
 /*
- * Do we have posix_spawn?
- */
-
-/* #undef HAVE_POSIX_SPAWN */
-
-
-/*
- * Do we have ZLIB?
- */
-
-#define HAVE_LIBZ 1
-#define HAVE_INFLATECOPY 1
-
-
-/*
- * Do we have PAM stuff?
- */
-
-#define HAVE_LIBPAM 0
-/* #undef HAVE_PAM_PAM_APPL_H */
-/* #undef HAVE_PAM_SET_ITEM */
-/* #undef HAVE_PAM_SETCRED */
-
-
-/*
- * Do we have <shadow.h>?
- */
-
-/* #undef HAVE_SHADOW_H */
-
-
-/*
- * Do we have <crypt.h>?
- */
-
-/* #undef HAVE_CRYPT_H */
-
-
-/*
  * Use <stdint.h>?
  */
 
 /* #undef HAVE_STDINT_H */
-
-
-/*
- * Use <string.h>, <strings.h>, and/or <bstring.h>?
- */
-
-#define HAVE_STRING_H 1
-/* #undef HAVE_STRINGS_H */
-/* #undef HAVE_BSTRING_H */
 
 
 /*
@@ -299,10 +166,9 @@ typedef unsigned long useconds_t;
 
 
 /*
- * Do we have the strXXX() functions?
+ * Do we have the strlcat() or strlcpy() functions?
  */
 
-#define HAVE_STRDUP 1
 /* #undef HAVE_STRLCAT */
 /* #undef HAVE_STRLCPY */
 
@@ -312,66 +178,6 @@ typedef unsigned long useconds_t;
  */
 
 /* #undef HAVE_GETEUID */
-
-
-/*
- * Do we have the setpgid() function?
- */
-
-/* #undef HAVE_SETPGID */
-
-
-/*
- * Do we have the vsyslog() function?
- */
-
-/* #undef HAVE_VSYSLOG */
-
-
-/*
- * Do we have the systemd journal functions?
- */
-
-/* #undef HAVE_SYSTEMD_SD_JOURNAL_H */
-
-
-/*
- * Do we have the (v)snprintf() functions?
- */
-
-#define HAVE_SNPRINTF 1
-#define HAVE_VSNPRINTF 1
-
-
-/*
- * What signal functions to use?
- */
-
-/* #undef HAVE_SIGSET */
-/* #undef HAVE_SIGACTION */
-
-
-/*
- * What wait functions to use?
- */
-
-/* #undef HAVE_WAITPID */
-/* #undef HAVE_WAIT3 */
-
-
-/*
- * Do we have the mallinfo function and malloc.h?
- */
-
-/* #undef HAVE_MALLINFO */
-/* #undef HAVE_MALLOC_H */
-
-
-/*
- * Do we have the POSIX ACL functions?
- */
-
-/* #undef HAVE_ACL_INIT */
 
 
 /*
@@ -409,24 +215,9 @@ typedef unsigned long useconds_t;
  * What Security framework headers do we have?
  */
 
-/* #undef HAVE_AUTHORIZATION_H */
 /* #undef HAVE_SECCERTIFICATE_H */
 /* #undef HAVE_SECITEM_H */
 /* #undef HAVE_SECPOLICY_H */
-
-
-/*
- * Do we have the SecGenerateSelfSignedCertificate function?
- */
-
-/* #undef HAVE_SECGENERATESELFSIGNEDCERTIFICATE */
-
-
-/*
- * Do we have libpaper?
- */
-
-/* #undef HAVE_LIBPAPER */
 
 
 /*
@@ -451,13 +242,6 @@ typedef unsigned long useconds_t;
 
 
 /*
- * Do we have <sys/ioctl.h>?
- */
-
-/* #undef HAVE_SYS_IOCTL_H */
-
-
-/*
  * Does the "stat" structure contain the "st_gen" member?
  */
 
@@ -469,34 +253,6 @@ typedef unsigned long useconds_t;
  */
 
 /* #undef HAVE_TM_GMTOFF */
-
-
-/*
- * Do we have rresvport_af()?
- */
-
-/* #undef HAVE_RRESVPORT_AF */
-
-
-/*
- * Do we have getaddrinfo()?
- */
-
-#define HAVE_GETADDRINFO 1
-
-
-/*
- * Do we have getnameinfo()?
- */
-
-#define HAVE_GETNAMEINFO 1
-
-
-/*
- * Do we have getifaddrs()?
- */
-
-/* #undef HAVE_GETIFADDRS */
 
 
 /*
@@ -521,56 +277,6 @@ typedef unsigned long useconds_t;
 
 
 /*
- * Do we have the <sys/sockio.h> header file?
- */
-
-/* #undef HAVE_SYS_SOCKIO_H */
-
-
-/*
- * Does the sockaddr structure contain an sa_len parameter?
- */
-
-/* #undef HAVE_STRUCT_SOCKADDR_SA_LEN */
-
-
-/*
- * Do we have pthread support?
- */
-
-/* #undef HAVE_PTHREAD_H */
-
-
-/*
- * Do we have on-demand support (launchd/systemd/upstart)?
- */
-
-/* #undef HAVE_ONDEMAND */
-
-
-/*
- * Do we have launchd support?
- */
-
-/* #undef HAVE_LAUNCH_H */
-/* #undef HAVE_LAUNCHD */
-
-
-/*
- * Do we have systemd support?
- */
-
-/* #undef HAVE_SYSTEMD */
-
-
-/*
- * Do we have upstart support?
- */
-
-/* #undef HAVE_UPSTART */
-
-
-/*
  * Do we have CoreFoundation public headers?
  */
 
@@ -578,113 +284,10 @@ typedef unsigned long useconds_t;
 
 
 /*
- * Do we have ApplicationServices public headers?
- */
-
-/* #undef HAVE_APPLICATIONSERVICES_H */
-
-
-/*
  * Do we have the SCDynamicStoreCopyComputerName function?
  */
 
 /* #undef HAVE_SCDYNAMICSTORECOPYCOMPUTERNAME */
-
-
-/*
- * Do we have the getgrouplist() function?
- */
-
-#undef HAVE_GETGROUPLIST
-
-
-/*
- * Do we have macOS 10.4's mbr_XXX functions?
- */
-
-/* #undef HAVE_MEMBERSHIP_H */
-/* #undef HAVE_MBR_UID_TO_UUID */
-
-
-/*
- * Do we have Darwin's notify_post header and function?
- */
-
-/* #undef HAVE_NOTIFY_H */
-/* #undef HAVE_NOTIFY_POST */
-
-
-/*
- * Do we have DBUS?
- */
-
-/* #undef HAVE_DBUS */
-/* #undef HAVE_DBUS_MESSAGE_ITER_INIT_APPEND */
-/* #undef HAVE_DBUS_THREADS_INIT */
-
-
-/*
- * Do we have the GSSAPI support library (for Kerberos support)?
- */
-
-/* #undef HAVE_GSS_ACQUIRE_CRED_EX_F */
-/* #undef HAVE_GSS_C_NT_HOSTBASED_SERVICE */
-/* #undef HAVE_GSS_GSSAPI_H */
-/* #undef HAVE_GSS_GSSAPI_SPI_H */
-/* #undef HAVE_GSSAPI */
-/* #undef HAVE_GSSAPI_GSSAPI_H */
-/* #undef HAVE_GSSAPI_H */
-
-
-/*
- * Default GSS service name...
- */
-
-#define CUPS_DEFAULT_GSSSERVICENAME "host"
-
-
-/*
- * Select/poll interfaces...
- */
-
-/* #undef HAVE_POLL */
-/* #undef HAVE_EPOLL */
-/* #undef HAVE_KQUEUE */
-
-
-/*
- * Do we have the <dlfcn.h> header?
- */
-
-/* #undef HAVE_DLFCN_H */
-
-
-/*
- * Do we have <sys/param.h>?
- */
-
-/* #undef HAVE_SYS_PARAM_H */
-
-
-/*
- * Do we have <sys/ucred.h>?
- */
-
-/* #undef HAVE_SYS_UCRED_H */
-
-
-/*
- * Do we have removefile()?
- */
-
-/* #undef HAVE_REMOVEFILE */
-
-
-/*
- * Do we have <sandbox.h>?
- */
-
-/* #undef HAVE_SANDBOX_H */
 
 
 /*
@@ -711,20 +314,6 @@ typedef unsigned long useconds_t;
 
 
 /*
- * Do we have libusb?
- */
-
-/* #undef HAVE_LIBUSB */
-
-
-/*
- * Do we have libwrap and tcpd.h?
- */
-
-/* #undef HAVE_TCPD_H */
-
-
-/*
  * Do we have <iconv.h>?
  */
 
@@ -742,36 +331,4 @@ typedef unsigned long useconds_t;
 /* #undef HAVE_SYS_STATVFS_H */
 /* #undef HAVE_SYS_VFS_H */
 
-
-/*
- * Location of macOS localization bundle, if any.
- */
-
-/* #undef CUPS_BUNDLEDIR */
-
-
-/*
- * Do we have XPC?
- */
-
-/* #undef HAVE_XPC */
-
-
-/*
- * Do we have the C99 abs() function?
- */
-
-/* #undef HAVE_ABS */
-#if !defined(HAVE_ABS) && !defined(abs)
-#  if defined(__GNUC__) || __STDC_VERSION__ >= 199901L
-#    define abs(x) _cups_abs(x)
-static inline int _cups_abs(int i) { return (i < 0 ? -i : i); }
-#  elif defined(_MSC_VER)
-#    define abs(x) _cups_abs(x)
-static __inline int _cups_abs(int i) { return (i < 0 ? -i : i); }
-#  else
-#    define abs(x) ((x) < 0 ? -(x) : (x))
-#  endif /* __GNUC__ || __STDC_VERSION__ */
-#endif /* !HAVE_ABS && !abs */
-
-#endif /* !_CUPS_CONFIG_H_ */
+#endif /* !CUPS_CONFIG_H */
