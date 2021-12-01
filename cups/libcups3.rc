@@ -45,9 +45,9 @@ BEGIN
             VALUE "CompanyName", MASTER_COMPANY_NAME
             VALUE "FileDescription", "CUPS Library"
             VALUE "FileVersion", MASTER_PROD_VERS_STR
-            VALUE "InternalName", "libcups2.dll"
+            VALUE "InternalName", "libcups3.dll"
             VALUE "LegalCopyright", MASTER_LEGAL_COPYRIGHT
-            VALUE "OriginalFilename", "libcups2.dll"
+            VALUE "OriginalFilename", "libcups3.dll"
             VALUE "ProductName", MASTER_PROD_NAME
             VALUE "ProductVersion", MASTER_PROD_VERS_STR
         END
