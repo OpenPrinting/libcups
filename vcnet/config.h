@@ -47,6 +47,7 @@
 #define unlink		_unlink
 #define vsnprintf	_vsnprintf
 #define write		_write
+#define poll		WSAPoll
 
 
 /*

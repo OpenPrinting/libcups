@@ -1,14 +1,6 @@
 LIBRARY libcups3
 VERSION 3.0
 EXPORTS
-_cupsAppleCopyDefaultPaperID
-_cupsAppleCopyDefaultPrinter
-_cupsAppleGetUseLastPrinter
-_cupsAppleLanguage
-_cupsAppleLocale
-_cupsAppleSetDefaultPaperID
-_cupsAppleSetDefaultPrinter
-_cupsAppleSetUseLastPrinter
 _cupsArrayAddStrings
 _cupsArrayNewStrings
 _cupsBufferGet
@@ -21,8 +13,6 @@ _cupsConnect
 _cupsCreateDest
 _cupsEncodeOption
 _cupsEncodingName
-_cupsFileCheck
-_cupsFileCheckFilter
 _cupsFilePeekAhead
 _cupsGet1284Values
 _cupsGetDestResource

@@ -99,9 +99,8 @@
     <ClCompile Include="..\cups\testhttp.c" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="libcups2.vcxproj">
+    <ProjectReference Include="libcups3.vcxproj">
       <Project>{cb4aa6f2-3e84-45be-b505-95cd375e8be3}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

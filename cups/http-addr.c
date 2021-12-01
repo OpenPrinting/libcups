@@ -512,7 +512,6 @@ httpAddrString(const http_addr_t *addr,	/* I - Address to convert */
     char	*sptr,			/* Pointer into string */
 		temps[64];		/* Temporary string for address */
 
-#  ifdef HAVE_GETNAMEINFO
     if (getnameinfo(&addr->addr, (socklen_t)httpAddrLength(addr), temps, sizeof(temps), NULL, 0, NI_NUMERICHOST))
     {
      /*
@@ -532,75 +531,6 @@ httpAddrString(const http_addr_t *addr,	/* I - Address to convert */
 
       *sptr = '+';
     }
-
-#  else
-    int		i;			/* Looping var */
-    unsigned	temp;			/* Current value */
-    const char	*prefix;		/* Prefix for address */
-
-
-    prefix = "";
-    for (sptr = temps, i = 0; i < 4 && addr->ipv6.sin6_addr.s6_addr32[i]; i ++)
-    {
-      temp = ntohl(addr->ipv6.sin6_addr.s6_addr32[i]);
-
-      snprintf(sptr, sizeof(temps) - (size_t)(sptr - temps), "%s%x", prefix, (temp >> 16) & 0xffff);
-      prefix = ":";
-      sptr += strlen(sptr);
-
-      temp &= 0xffff;
-
-      if (temp || i == 3 || addr->ipv6.sin6_addr.s6_addr32[i + 1])
-      {
-        snprintf(sptr, sizeof(temps) - (size_t)(sptr - temps), "%s%x", prefix, temp);
-	sptr += strlen(sptr);
-      }
-    }
-
-    if (i < 4)
-    {
-      while (i < 4 && !addr->ipv6.sin6_addr.s6_addr32[i])
-	i ++;
-
-      if (i < 4)
-      {
-        snprintf(sptr, sizeof(temps) - (size_t)(sptr - temps), "%s:", prefix);
-	prefix = ":";
-	sptr += strlen(sptr);
-
-	for (; i < 4; i ++)
-	{
-          temp = ntohl(addr->ipv6.sin6_addr.s6_addr32[i]);
-
-          if ((temp & 0xffff0000) ||
-	      (i > 0 && addr->ipv6.sin6_addr.s6_addr32[i - 1]))
-	  {
-            snprintf(sptr, sizeof(temps) - (size_t)(sptr - temps), "%s%x", prefix, (temp >> 16) & 0xffff);
-	    sptr += strlen(sptr);
-          }
-
-          snprintf(sptr, sizeof(temps) - (size_t)(sptr - temps), "%s%x", prefix, temp & 0xffff);
-	  sptr += strlen(sptr);
-	}
-      }
-      else if (sptr == s)
-      {
-       /*
-        * Empty address...
-	*/
-
-        strlcpy(temps, "::", sizeof(temps));
-      }
-      else
-      {
-       /*
-	* Empty at end...
-	*/
-
-        strlcpy(sptr, "::", sizeof(temps) - (size_t)(sptr - temps));
-      }
-    }
-#  endif /* HAVE_GETNAMEINFO */
 
    /*
     * Add "[v1." and "]" around IPv6 address to convert to URI form.

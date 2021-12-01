@@ -70,11 +70,11 @@
     <Link>
       <AdditionalDependencies>bcrypt.lib;ws2_32.lib;advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)libcups3.dll</OutputFile>
-      <ModuleDefinitionFile>..\cups\libcups2.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>..\cups\libcups3.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ProgramDatabaseFile>$(Platform)\$(Configuration)\libcups2.pdb</ProgramDatabaseFile>
+      <ProgramDatabaseFile>$(Platform)\$(Configuration)\libcups3.pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
-      <ImportLibrary>$(OutDir)libcups2.lib</ImportLibrary>
+      <ImportLibrary>$(OutDir)libcups3.lib</ImportLibrary>
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
   </ItemDefinitionGroup>
@@ -94,13 +94,13 @@
     <Link>
       <AdditionalDependencies>bcrypt.lib;ws2_32.lib;advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)libcups3.dll</OutputFile>
-      <ModuleDefinitionFile>..\cups\libcups2.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>..\cups\libcups3.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ProgramDatabaseFile>$(Platform)\$(Configuration)\libcups2.pdb</ProgramDatabaseFile>
+      <ProgramDatabaseFile>$(Platform)\$(Configuration)\libcups3.pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <ImportLibrary>$(OutDir)libcups2.lib</ImportLibrary>
+      <ImportLibrary>$(OutDir)libcups3.lib</ImportLibrary>
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
     <PostBuildEvent>
@@ -198,7 +198,6 @@ xcopy /I/Y "$(TargetPath)"                                                      
     </ClCompile>
     <ClCompile Include="..\cups\pwg-media.c" />
     <ClCompile Include="..\cups\raster-error.c" />
-    <ClCompile Include="..\cups\raster-interstub.c" />
     <ClCompile Include="..\cups\raster-stream.c" />
     <ClCompile Include="..\cups\raster-stubs.c" />
     <ClCompile Include="..\cups\request.c" />

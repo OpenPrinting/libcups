@@ -105,9 +105,8 @@
     <ProjectReference Include="dnssdstub.vcxproj">
       <Project>{c0899b3a-43e7-4bc3-a785-659e1fd2ea83}</Project>
     </ProjectReference>
-    <ProjectReference Include="libcups2.vcxproj">
+    <ProjectReference Include="libcups3.vcxproj">
       <Project>{cb4aa6f2-3e84-45be-b505-95cd375e8be3}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

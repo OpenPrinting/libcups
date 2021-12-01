@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28010.2036
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30204.135
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libcups3", "libcups3.vcxproj", "{CB4AA6F2-3E84-45BE-B505-95CD375E8BE3}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -8,6 +8,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libcups3", "libcups3.vcxpro
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testfile", "testfile.vcxproj", "{CE75FC5F-E0CF-45DC-AD27-84666D3FBA30}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C0899B3A-43E7-4BC3-A785-659E1FD2EA83} = {C0899B3A-43E7-4BC3-A785-659E1FD2EA83}
+		{CB4AA6F2-3E84-45BE-B505-95CD375E8BE3} = {CB4AA6F2-3E84-45BE-B505-95CD375E8BE3}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testhttp", "testhttp.vcxproj", "{90B0058C-8393-411F-BD3B-E2C831D4E883}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -51,10 +55,6 @@ Global
 		{90B0058C-8393-411F-BD3B-E2C831D4E883}.Debug|x64.Build.0 = Debug|x64
 		{90B0058C-8393-411F-BD3B-E2C831D4E883}.Release|x64.ActiveCfg = Release|x64
 		{90B0058C-8393-411F-BD3B-E2C831D4E883}.Release|x64.Build.0 = Release|x64
-		{6BE0CDD3-4ED7-409C-A80F-19DF73664B1F}.Debug|x64.ActiveCfg = Debug|x64
-		{6BE0CDD3-4ED7-409C-A80F-19DF73664B1F}.Debug|x64.Build.0 = Debug|x64
-		{6BE0CDD3-4ED7-409C-A80F-19DF73664B1F}.Release|x64.ActiveCfg = Release|x64
-		{6BE0CDD3-4ED7-409C-A80F-19DF73664B1F}.Release|x64.Build.0 = Release|x64
 		{B246D91E-61F2-4433-BFD2-6C2A96FBD4D4}.Debug|x64.ActiveCfg = Debug|x64
 		{B246D91E-61F2-4433-BFD2-6C2A96FBD4D4}.Debug|x64.Build.0 = Debug|x64
 		{B246D91E-61F2-4433-BFD2-6C2A96FBD4D4}.Release|x64.ActiveCfg = Release|x64

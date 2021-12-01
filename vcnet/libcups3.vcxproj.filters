@@ -120,9 +120,6 @@
     <ClCompile Include="..\cups\raster-error.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\cups\raster-interstub.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\cups\raster-stream.c">
       <Filter>Source Files</Filter>
     </ClCompile>

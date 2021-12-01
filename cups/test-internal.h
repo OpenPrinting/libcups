@@ -14,7 +14,9 @@
 #  include <stdarg.h>
 #  include <stdbool.h>
 #  include <string.h>
-#  if !_WIN32
+#  if _WIN32
+#    define isatty(f) _isatty(f)
+#  else
 #    include <unistd.h>
 #  endif // !_WIN32
 #  ifdef __cplusplus

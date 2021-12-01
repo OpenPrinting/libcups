@@ -100,9 +100,8 @@
     <ClCompile Include="..\tools\ipptool.c" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="libcups2.vcxproj">
+    <ProjectReference Include="libcups3.vcxproj">
       <Project>{cb4aa6f2-3e84-45be-b505-95cd375e8be3}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="regex.vcxproj">
       <Project>{18950a1b-d37a-40c7-b2df-c12986c0526e}</Project>
