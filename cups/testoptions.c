@@ -94,11 +94,11 @@ main(int  argc,				/* I - Number of command-line arguments */
     else
       testEnd(true);
 
-    testBegin("cupsEncodeOptions2");
+    testBegin("cupsEncodeOptions");
     request = ippNew();
     ippSetOperation(request, IPP_OP_PRINT_JOB);
 
-    cupsEncodeOptions2(request, num_options, options, IPP_TAG_JOB);
+    cupsEncodeOptions(request, num_options, options, IPP_TAG_JOB);
     for (count = 0, attr = ippFirstAttribute(request); attr; attr = ippNextAttribute(request), count ++);
     if (count != 6)
     {

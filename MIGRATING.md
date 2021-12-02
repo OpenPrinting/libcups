@@ -28,3 +28,23 @@ The following CUPS 2.x API functions have been removed from the CUPS library:
 - PPD helper functions: `cupsGetConflicts`, `cupsGetPPD`, `cupsGetPPD2`,
   `cupsGetPPD3`, `cupsGetServerPPD`, `cupsMarkOptions`,
   `cupsRasterInterpretPPD`, and `cupsResolveConflicts`.
+- Deprecated functions: `cupsTempFile`.
+- Non-destination print functions: `cupsCancelJob`, `cupsCancelJob2`,
+  `cupsCreateJob`, `cupsCloseJob`, `cupsFinishDocument`, `cupsGetDefault`, `cupsGetDefault2`,
+  `cupsPrintFile`, `cupsPrintFile2`, `cupsPrintFiles`, `cupsPrintFiles2`,
+  `cupsSendDocument`
+
+
+Renamed Functions
+-----------------
+
+| Old Name | New Name |
++----------+----------+
+| `cupsEncryption`     | `cupsGetEncryption` |
+| `cupsTempFile2`      | `cupsTempFile`      |
+| `cupsGetDests2`      | `cupsGetDests`      |
+| `cupsServer`         | `cupsGetServer`     |
+| `cupsGetPassword2`   | `cupsGetPassword`   |
+| `cupsUser`           | `cupsGetUser`       |
+| `cupsUserAgent`      | `cupsGetUserAgent`  |
+| `cupsSetPasswordCB2` | `cupsSetPasswordCB` |

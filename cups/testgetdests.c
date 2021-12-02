@@ -31,7 +31,7 @@ main(void)
   for (;;)
   {
     gettimeofday(&start, NULL);
-    num_dests = cupsGetDests(&dests);
+    num_dests = cupsGetDests(CUPS_HTTP_DEFAULT, &dests);
     gettimeofday(&end, NULL);
     secs = end.tv_sec - start.tv_sec + 0.000001 * (end.tv_usec - start.tv_usec);
 

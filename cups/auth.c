@@ -50,7 +50,7 @@ static int	cups_local_auth(http_t *http);
  * This function should be called in response to a @code HTTP_STATUS_UNAUTHORIZED@
  * status, prior to resubmitting your request.
  *
- * @since CUPS 1.1.20/macOS 10.4@
+ * @since CUPS 1.1.20@
  */
 
 int					/* O - 0 on success, -1 on error */
@@ -184,19 +184,19 @@ cupsDoAuthentication(
       if (cups_auth_param(schemedata, "username", default_username, sizeof(default_username)))
 	cupsSetUser(default_username);
 
-      snprintf(prompt, sizeof(prompt), _cupsLangString(cg->lang_default, _("Password for %s on %s? ")), cupsUser(), http->hostname[0] == '/' ? "localhost" : http->hostname);
+      snprintf(prompt, sizeof(prompt), _cupsLangString(cg->lang_default, _("Password for %s on %s? ")), cupsGetUser(), http->hostname[0] == '/' ? "localhost" : http->hostname);
 
       http->digest_tries  = _cups_strncasecmp(scheme, "Digest", 6) != 0;
       http->userpass[0]   = '\0';
 
-      if ((password = cupsGetPassword2(prompt, http, method, resource)) == NULL)
+      if ((password = cupsGetPassword(prompt, http, method, resource)) == NULL)
       {
         DEBUG_puts("1cupsDoAuthentication: User canceled password request.");
 	http->status = HTTP_STATUS_CUPS_AUTHORIZATION_CANCELED;
 	return (-1);
       }
 
-      snprintf(http->userpass, sizeof(http->userpass), "%s:%s", cupsUser(), password);
+      snprintf(http->userpass, sizeof(http->userpass), "%s:%s", cupsGetUser(), password);
     }
     else if (http->status == HTTP_STATUS_UNAUTHORIZED)
       http->digest_tries ++;
@@ -654,14 +654,14 @@ cups_local_auth(http_t *http)		/* I - HTTP connection to server */
       cups_auth_find(www_auth, "PeerCred"))
   {
    /*
-    * Verify that the current cupsUser() matches the current UID...
+    * Verify that the current cupsGetUser() matches the current UID...
     */
 
     struct passwd	pwd;		/* Password information */
     struct passwd	*result;	/* Auxiliary pointer */
     const char		*username;	/* Current username */
 
-    username = cupsUser();
+    username = cupsGetUser();
 
     getpwnam_r(username, &pwd, cg->pw_buf, PW_BUF_SIZE, &result);
     if (result && pwd.pw_uid == getuid())

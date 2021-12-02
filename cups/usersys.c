@@ -110,7 +110,7 @@ static void	cups_set_user(_cups_client_conf_t *cc, const char *value);
 
 
 /*
- * 'cupsEncryption()' - Get the current encryption settings.
+ * 'cupsGetEncryption()' - Get the current encryption settings.
  *
  * The default encryption setting comes from the CUPS_ENCRYPTION
  * environment variable, then the ~/.cups/client.conf file, and finally the
@@ -124,7 +124,7 @@ static void	cups_set_user(_cups_client_conf_t *cc, const char *value);
  */
 
 http_encryption_t			/* O - Encryption settings */
-cupsEncryption(void)
+cupsGetEncryption(void)
 {
   _cups_globals_t *cg = _cupsGlobals();	/* Pointer to library globals */
 
@@ -137,31 +137,7 @@ cupsEncryption(void)
 
 
 /*
- * 'cupsGetPassword()' - Get a password from the user.
- *
- * Uses the current password callback function. Returns @code NULL@ if the
- * user does not provide a password.
- *
- * Note: The current password callback function is tracked separately for each
- * thread in a program. Multi-threaded programs that override the setting via
- * the @link cupsSetPasswordCB@ or @link cupsSetPasswordCB2@ functions need to
- * do so in each thread for the same function to be used.
- *
- * @exclude all@
- */
-
-const char *				/* O - Password */
-cupsGetPassword(const char *prompt)	/* I - Prompt string */
-{
-  _cups_globals_t *cg = _cupsGlobals();	/* Pointer to library globals */
-
-
-  return ((cg->password_cb)(prompt, NULL, NULL, NULL, cg->password_data));
-}
-
-
-/*
- * 'cupsGetPassword2()' - Get a password from the user using the current
+ * 'cupsGetPassword()' - Get a password from the user using the current
  *                        password callback.
  *
  * Uses the current password callback function. Returns @code NULL@ if the
@@ -176,10 +152,10 @@ cupsGetPassword(const char *prompt)	/* I - Prompt string */
  */
 
 const char *				/* O - Password */
-cupsGetPassword2(const char *prompt,	/* I - Prompt string */
-		 http_t     *http,	/* I - Connection to server or @code CUPS_HTTP_DEFAULT@ */
-		 const char *method,	/* I - Request method ("GET", "POST", "PUT") */
-		 const char *resource)	/* I - Resource path */
+cupsGetPassword(const char *prompt,	/* I - Prompt string */
+		http_t     *http,	/* I - Connection to server or @code CUPS_HTTP_DEFAULT@ */
+		const char *method,	/* I - Request method ("GET", "POST", "PUT") */
+		const char *resource)	/* I - Resource path */
 {
   _cups_globals_t *cg = _cupsGlobals();	/* Pointer to library globals */
 
@@ -192,7 +168,7 @@ cupsGetPassword2(const char *prompt,	/* I - Prompt string */
 
 
 /*
- * 'cupsServer()' - Return the hostname/address of the current server.
+ * 'cupsGetServer()' - Return the hostname/address of the current server.
  *
  * The default server comes from the CUPS_SERVER environment variable, then the
  * ~/.cups/client.conf file, and finally the /etc/cups/client.conf file. If not
@@ -209,7 +185,7 @@ cupsGetPassword2(const char *prompt,	/* I - Prompt string */
  */
 
 const char *				/* O - Server name */
-cupsServer(void)
+cupsGetServer(void)
 {
   _cups_globals_t *cg = _cupsGlobals();	/* Pointer to library globals */
 
@@ -351,49 +327,19 @@ cupsSetOAuthCB(
  * in a program. Multi-threaded programs that override the callback need to do
  * so in each thread for the same callback to be used.
  *
- * @exclude all@
+ * @since CUPS 1.4/macOS 10.6@
  */
 
 void
-cupsSetPasswordCB(cups_password_cb_t cb)/* I - Callback function */
+cupsSetPasswordCB(
+    cups_password_cb_t cb,		/* I - Callback function */
+    void               *user_data)	/* I - User data pointer */
 {
   _cups_globals_t *cg = _cupsGlobals();	/* Pointer to library globals */
 
 
   if (cb == (cups_password_cb_t)0)
-    cg->password_cb = (cups_password_cb2_t)_cupsGetPassword;
-  else
-    cg->password_cb = (cups_password_cb2_t)cb;
-
-  cg->password_data = NULL;
-}
-
-
-/*
- * 'cupsSetPasswordCB2()' - Set the advanced password callback for CUPS.
- *
- * Pass @code NULL@ to restore the default (console) password callback, which
- * reads the password from the console. Programs should call either this
- * function or @link cupsSetPasswordCB2@, as only one callback can be registered
- * by a program per thread.
- *
- * Note: The current password callback is tracked separately for each thread
- * in a program. Multi-threaded programs that override the callback need to do
- * so in each thread for the same callback to be used.
- *
- * @since CUPS 1.4/macOS 10.6@
- */
-
-void
-cupsSetPasswordCB2(
-    cups_password_cb2_t cb,		/* I - Callback function */
-    void                *user_data)	/* I - User data pointer */
-{
-  _cups_globals_t *cg = _cupsGlobals();	/* Pointer to library globals */
-
-
-  if (cb == (cups_password_cb2_t)0)
-    cg->password_cb = (cups_password_cb2_t)_cupsGetPassword;
+    cg->password_cb = (cups_password_cb_t)_cupsGetPassword;
   else
     cg->password_cb = cb;
 
@@ -664,7 +610,7 @@ cupsSetUserAgent(const char *user_agent)/* I - User-Agent string or @code NULL@ 
 
 
 /*
- * 'cupsUser()' - Return the current user's name.
+ * 'cupsGetUser()' - Return the current user's name.
  *
  * Note: The current user name is tracked separately for each thread in a
  * program. Multi-threaded programs that override the user name with the
@@ -673,7 +619,7 @@ cupsSetUserAgent(const char *user_agent)/* I - User-Agent string or @code NULL@ 
  */
 
 const char *				/* O - User name */
-cupsUser(void)
+cupsGetUser(void)
 {
   _cups_globals_t *cg = _cupsGlobals();	/* Pointer to library globals */
 
@@ -686,13 +632,13 @@ cupsUser(void)
 
 
 /*
- * 'cupsUserAgent()' - Return the default HTTP User-Agent string.
+ * 'cupsGetUserAgent()' - Return the default HTTP User-Agent string.
  *
  * @since CUPS 1.7/macOS 10.9@
  */
 
 const char *				/* O - User-Agent string */
-cupsUserAgent(void)
+cupsGetUserAgent(void)
 {
   _cups_globals_t *cg = _cupsGlobals();	/* Thread globals */
 

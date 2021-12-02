@@ -1,6 +1,7 @@
 /*
  * Destination localization support for CUPS.
  *
+ * Copyright © 2021 by OpenPrinting.
  * Copyright © 2012-2017 by Apple Inc.
  *
  * Licensed under Apache License v2.0.  See the file "LICENSE" for more
@@ -408,7 +409,7 @@ cups_create_localizations(
   * Get a temporary file...
   */
 
-  if ((temp = cupsTempFile2(tempfile, sizeof(tempfile))) == NULL)
+  if ((temp = cupsTempFile(tempfile, sizeof(tempfile))) == NULL)
   {
     DEBUG_printf(("4cups_create_localizations: Unable to create temporary "
                   "file: %s", cupsLastErrorString()));

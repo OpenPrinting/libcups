@@ -1042,8 +1042,8 @@ _cupsConnect(void)
 
   if (!cg->http)
   {
-    if ((cg->http = httpConnect2(cupsServer(), ippPort(), NULL, AF_UNSPEC,
-				 cupsEncryption(), 1, 30000, NULL)) == NULL)
+    if ((cg->http = httpConnect2(cupsGetServer(), ippPort(), NULL, AF_UNSPEC,
+				 cupsGetEncryption(), 1, 30000, NULL)) == NULL)
     {
       if (errno)
         _cupsSetError(IPP_STATUS_ERROR_SERVICE_UNAVAILABLE, NULL, 0);

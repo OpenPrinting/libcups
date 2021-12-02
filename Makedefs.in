@@ -31,7 +31,6 @@ LIBCUPS_VERSION_MINOR	=	@LIBCUPS_VERSION_MINOR@
 
 AR		=	@AR@
 CC		=	@CC@
-DSO		=	@DSO@
 INSTALL		=	@INSTALL@
 LN		=	@LN@ -sf
 MKDIR           =       @MKDIR@ -p

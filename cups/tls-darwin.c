@@ -118,7 +118,7 @@ cupsMakeServerCredentials(
   * command...
   */
 
- if ((fp = cupsTempFile2(infofile, sizeof(infofile))) == NULL)
+ if ((fp = cupsTempFile(infofile, sizeof(infofile))) == NULL)
     return (-1);
 
   cupsFilePrintf(fp,

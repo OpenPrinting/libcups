@@ -51,7 +51,7 @@ main(int  argc,				/* I - Number of command-line arguments */
   if (!strcmp(argv[1], "--get"))
   {
     cups_dest_t	*dests;			/* Destinations */
-    int		num_dests = cupsGetDests2(CUPS_HTTP_DEFAULT, &dests);
+    int		num_dests = cupsGetDests(CUPS_HTTP_DEFAULT, &dests);
 					/* Number of destinations */
 
     for (i = 0; i < num_dests; i ++)

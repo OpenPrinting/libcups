@@ -1,9 +1,11 @@
 /*
  * Destination job support for CUPS.
  *
- * Copyright 2012-2017 by Apple Inc.
+ * Copyright © 2021 by OpenPrinting.
+ * Copyright © 2012-2017 by Apple Inc.
  *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more information.
+ * Licensed under Apache License v2.0.  See the file "LICENSE" for more
+ * information.
  */
 
 /*
@@ -44,7 +46,7 @@ cupsCancelDestJob(http_t      *http,	/* I - Connection to destination */
 
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, info->uri);
     ippAddInteger(request, IPP_TAG_OPERATION, IPP_TAG_INTEGER, "job-id", job_id);
-    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsUser());
+    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsGetUser());
 
     ippDelete(cupsDoRequest(http, request, info->resource));
     cupsFreeDestInfo(info);
@@ -129,7 +131,7 @@ cupsCloseDestJob(
   ippAddInteger(request, IPP_TAG_OPERATION, IPP_TAG_INTEGER, "job-id",
                 job_id);
   ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name",
-               NULL, cupsUser());
+               NULL, cupsGetUser());
   if (ippGetOperation(request) == IPP_OP_SEND_DOCUMENT)
     ippAddBoolean(request, IPP_TAG_OPERATION, "last-document", 1);
 
@@ -210,14 +212,14 @@ cupsCreateDestJob(
   ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri",
                NULL, info->uri);
   ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name",
-               NULL, cupsUser());
+               NULL, cupsGetUser());
   if (title)
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "job-name", NULL,
                  title);
 
-  cupsEncodeOptions2(request, num_options, options, IPP_TAG_OPERATION);
-  cupsEncodeOptions2(request, num_options, options, IPP_TAG_JOB);
-  cupsEncodeOptions2(request, num_options, options, IPP_TAG_SUBSCRIPTION);
+  cupsEncodeOptions(request, num_options, options, IPP_TAG_OPERATION);
+  cupsEncodeOptions(request, num_options, options, IPP_TAG_JOB);
+  cupsEncodeOptions(request, num_options, options, IPP_TAG_SUBSCRIPTION);
 
  /*
   * Send the request and get the job-id...
@@ -314,7 +316,7 @@ cupsStartDestDocument(
     const char    *format,		/* I - Document format */
     int           num_options,		/* I - Number of document options */
     cups_option_t *options,		/* I - Document options */
-    int           last_document)	/* I - 1 if this is the last document */
+    bool          last_document)	/* I - `true` if this is the last document */
 {
   ipp_t		*request;		/* Send-Document request */
   http_status_t	status;			/* HTTP status */
@@ -358,7 +360,7 @@ cupsStartDestDocument(
                NULL, info->uri);
   ippAddInteger(request, IPP_TAG_OPERATION, IPP_TAG_INTEGER, "job-id", job_id);
   ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name",
-               NULL, cupsUser());
+               NULL, cupsGetUser());
   if (docname)
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "document-name",
                  NULL, docname);
@@ -367,8 +369,8 @@ cupsStartDestDocument(
                  "document-format", NULL, format);
   ippAddBoolean(request, IPP_TAG_OPERATION, "last-document", (char)last_document);
 
-  cupsEncodeOptions2(request, num_options, options, IPP_TAG_OPERATION);
-  cupsEncodeOptions2(request, num_options, options, IPP_TAG_DOCUMENT);
+  cupsEncodeOptions(request, num_options, options, IPP_TAG_OPERATION);
+  cupsEncodeOptions(request, num_options, options, IPP_TAG_DOCUMENT);
 
  /*
   * Send and delete the request, then return the status...

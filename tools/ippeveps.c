@@ -637,7 +637,7 @@ pdf_to_ps(const char    *filename,	/* I - Filename */
 
   pdf_argv[0] = "printer";
   pdf_argv[1] = job_id;
-  pdf_argv[2] = cupsUser();
+  pdf_argv[2] = cupsGetUser();
   pdf_argv[3] = job_name;
   pdf_argv[4] = "1";
   pdf_argv[5] = pdf_options;

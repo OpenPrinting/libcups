@@ -763,7 +763,7 @@ cupsCopyDestInfo(
 
     ippSetVersion(request, version / 10, version % 10);
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, uri);
-    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsUser());
+    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsGetUser());
     ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD, "requested-attributes", (int)(sizeof(requested_attrs) / sizeof(requested_attrs[0])), NULL, requested_attrs);
     response = cupsDoRequest(http, request, resource);
     status   = cupsLastError();
@@ -2828,7 +2828,7 @@ cups_update_ready(http_t       *http,	/* I - Connection to destination */
   ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL,
                dinfo->uri);
   ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name",
-               NULL, cupsUser());
+               NULL, cupsGetUser());
   ippAddStrings(request, IPP_TAG_OPERATION, IPP_CONST_TAG(IPP_TAG_KEYWORD), "requested-attributes", (int)(sizeof(pattrs) / sizeof(pattrs[0])), NULL, pattrs);
 
   dinfo->ready_attrs = cupsDoRequest(http, request, dinfo->resource);

@@ -669,7 +669,7 @@ main(int  argc,				/* I - Number of command-line args */
       }
 
       if (data.vars->username[0] && data.vars->password)
-	cupsSetPasswordCB2(_ippVarsPasswordCB, data.vars);
+	cupsSetPasswordCB(_ippVarsPasswordCB, data.vars);
     }
     else
     {
@@ -977,7 +977,7 @@ do_monitor_printer_state(
   ippSetRequestId(request, data->request_id * 100 - 1);
   ippSetVersion(request, data->version / 10, data->version % 10);
   ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, data->monitor_uri);
-  ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsUser());
+  ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsGetUser());
 
   for (i = data->num_monitor_expects, expect = data->monitor_expects, num_pattrs = 0; i > 0; i --, expect ++)
   {

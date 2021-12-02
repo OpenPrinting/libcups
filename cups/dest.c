@@ -155,10 +155,6 @@ static CFStringRef	appleGetPrinter(CFArrayRef locations,
 #endif /* _CUPS_LOCATION_DEFAULTS */
 static cups_dest_t	*cups_add_dest(const char *name, const char *instance,
 				       int *num_dests, cups_dest_t **dests);
-#ifdef __BLOCKS__
-static int		cups_block_cb(cups_dest_block_t block, unsigned flags,
-			              cups_dest_t *dest);
-#endif /* __BLOCKS__ */
 static int		cups_compare_dests(cups_dest_t *a, cups_dest_t *b);
 #ifdef HAVE_DNSSD
 #  ifdef HAVE_MDNSRESPONDER
@@ -578,7 +574,7 @@ _cupsAppleSetUseLastPrinter(
  * the destination.  Otherwise, the connection is made to the CUPS scheduler
  * associated with the destination.
  *
- * @since CUPS 1.6/macOS 10.8@
+ * @since CUPS 1.6@
  */
 
 http_t *				/* O - Connection to destination or @code NULL@ */
@@ -751,40 +747,6 @@ cupsConnectDest(
 }
 
 
-#ifdef __BLOCKS__
-/*
- * 'cupsConnectDestBlock()' - Open a connection to the destination.
- *
- * Connect to the destination, returning a new @code http_t@ connection object
- * and optionally the resource path to use for the destination.  These calls
- * will block until a connection is made, the timeout expires, the integer
- * pointed to by "cancel" is non-zero, or the block returns 0.  The caller is
- * responsible for calling @link httpClose@ on the returned connection.
- *
- * Starting with CUPS 2.2.4, the caller can pass  @code CUPS_DEST_FLAGS_DEVICE@
- * for the "flags" argument to connect directly to the device associated with
- * the destination.  Otherwise, the connection is made to the CUPS scheduler
- * associated with the destination.
- *
- * @since CUPS 1.6/macOS 10.8@ @exclude all@
- */
-
-http_t *				/* O - Connection to destination or @code NULL@ */
-cupsConnectDestBlock(
-    cups_dest_t       *dest,		/* I - Destination */
-    unsigned          flags,		/* I - Connection flags */
-    int               msec,		/* I - Timeout in milliseconds */
-    int               *cancel,		/* I - Pointer to "cancel" variable */
-    char              *resource,	/* I - Resource buffer */
-    size_t            resourcesize,	/* I - Size of resource buffer */
-    cups_dest_block_t block)		/* I - Callback block */
-{
-  return (cupsConnectDest(dest, flags, msec, cancel, resource, resourcesize,
-                          (cups_dest_cb_t)cups_block_cb, (void *)block));
-}
-#endif /* __BLOCKS__ */
-
-
 /*
  * 'cupsCopyDest()' - Copy a destination.
  *
@@ -792,7 +754,7 @@ cupsConnectDestBlock(
  * copy) - for use with the cupsEnumDests* functions. The caller is responsible
  * for calling cupsFreeDests() on the returned object(s).
  *
- * @since CUPS 1.6/macOS 10.8@
+ * @since CUPS 1.6@
  */
 
 int                                     /* O  - New number of destinations */
@@ -885,13 +847,13 @@ _cupsCreateDest(const char *name,	/* I - Printer name */
   if (!name || !device_uri || !uri || urisize < 32)
     return (NULL);
 
-  if ((http = httpConnect2(cupsServer(), ippPort(), NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, 30000, NULL)) == NULL)
+  if ((http = httpConnect2(cupsGetServer(), ippPort(), NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, 30000, NULL)) == NULL)
     return (NULL);
 
   request = ippNewRequest(IPP_OP_CUPS_CREATE_LOCAL_PRINTER);
 
   ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, "ipp://localhost/");
-  ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsUser());
+  ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsGetUser());
 
   ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_URI, "device-uri", NULL, device_uri);
   ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_NAME, "printer-name", NULL, name);
@@ -922,7 +884,7 @@ _cupsCreateDest(const char *name,	/* I - Printer name */
     request = ippNewRequest(IPP_OP_GET_PRINTER_ATTRIBUTES);
 
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, uri);
-    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsUser());
+    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsGetUser());
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD, "requested-attributes", NULL, "printer-state");
 
     response = cupsDoRequest(http, request, "/");
@@ -958,7 +920,7 @@ _cupsCreateDest(const char *name,	/* I - Printer name */
  * Note: The callback function will likely receive multiple updates for the same
  * destinations - it is up to the caller to suppress any duplicate destinations.
  *
- * @since CUPS 1.6/macOS 10.8@
+ * @since CUPS 1.6@
  */
 
 int					/* O - 1 on success, 0 on failure */
@@ -973,44 +935,6 @@ cupsEnumDests(
 {
   return (cups_enum_dests(CUPS_HTTP_DEFAULT, flags, msec, cancel, type, mask, cb, user_data));
 }
-
-
-#  ifdef __BLOCKS__
-/*
- * 'cupsEnumDestsBlock()' - Enumerate available destinations with a block.
- *
- * Destinations are enumerated from one or more sources.  The block receives the
- * @code user_data@ pointer and the destination pointer which can be used as
- * input to the @link cupsCopyDest@ function.  The block must return 1 to
- * continue enumeration or 0 to stop.
- *
- * The @code type@ and @code mask@ arguments allow the caller to filter the
- * destinations that are enumerated.  Passing 0 for both will enumerate all
- * printers.  The constant @code CUPS_PRINTER_DISCOVERED@ is used to filter on
- * destinations that are available but have not yet been added locally.
- *
- * Enumeration happens on the current thread and does not return until all
- * destinations have been enumerated or the block returns 0.
- *
- * Note: The block will likely receive multiple updates for the same
- * destinations - it is up to the caller to suppress any duplicate destinations.
- *
- * @since CUPS 1.6/macOS 10.8@ @exclude all@
- */
-
-int					/* O - 1 on success, 0 on failure */
-cupsEnumDestsBlock(
-    unsigned          flags,		/* I - Enumeration flags */
-    int               timeout,		/* I - Timeout in milliseconds, 0 for indefinite */
-    int               *cancel,		/* I - Pointer to "cancel" variable */
-    cups_ptype_t      type,		/* I - Printer type bits */
-    cups_ptype_t      mask,		/* I - Mask for printer type bits */
-    cups_dest_block_t block)		/* I - Block */
-{
-  return (cupsEnumDests(flags, timeout, cancel, type, mask,
-                        (cups_dest_cb_t)cups_block_cb, (void *)block));
-}
-#  endif /* __BLOCKS__ */
 
 
 /*
@@ -1210,7 +1134,7 @@ _cupsGetDestResource(
  *
  * "uri" is the "ipp" or "ipps" URI for the printer.
  *
- * @since CUPS 2.0/macOS 10.10@
+ * @since CUPS 2.0@
  */
 
 cups_dest_t *				/* O - Destination or @code NULL@ */
@@ -1421,7 +1345,7 @@ _cupsGetDests(http_t       *http,	/* I  - Connection to server or
 		NULL, pattrs);
 
   ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME,
-               "requesting-user-name", NULL, cupsUser());
+               "requesting-user-name", NULL, cupsGetUser());
 
   if (name && op != IPP_OP_CUPS_GET_DEFAULT)
   {
@@ -1590,7 +1514,7 @@ _cupsGetDests(http_t       *http,	/* I  - Connection to server or
 
 
 /*
- * 'cupsGetDests()' - Get the list of destinations from the default server.
+ * 'cupsGetDests()' - Get the list of destinations from the specified server.
  *
  * Starting with CUPS 1.2, the returned list of destinations include the
  * "printer-info", "printer-is-accepting-jobs", "printer-is-shared",
@@ -1609,47 +1533,17 @@ _cupsGetDests(http_t       *http,	/* I  - Connection to server or
  * Use the @link cupsFreeDests@ function to free the destination list and
  * the @link cupsGetDest@ function to find a particular destination.
  *
- * @exclude all@
+ * @since CUPS 1.1.21@
  */
 
 int					/* O - Number of destinations */
-cupsGetDests(cups_dest_t **dests)	/* O - Destinations */
-{
-  return (cupsGetDests2(CUPS_HTTP_DEFAULT, dests));
-}
-
-
-/*
- * 'cupsGetDests2()' - Get the list of destinations from the specified server.
- *
- * Starting with CUPS 1.2, the returned list of destinations include the
- * "printer-info", "printer-is-accepting-jobs", "printer-is-shared",
- * "printer-make-and-model", "printer-state", "printer-state-change-time",
- * "printer-state-reasons", "printer-type", and "printer-uri-supported"
- * attributes as options.
- *
- * CUPS 1.4 adds the "marker-change-time", "marker-colors",
- * "marker-high-levels", "marker-levels", "marker-low-levels", "marker-message",
- * "marker-names", "marker-types", and "printer-commands" attributes as options.
- *
- * CUPS 2.2 adds accessible IPP printers to the list of destinations that can
- * be used.  The "printer-uri-supported" option will be present for those IPP
- * printers that have been recently used.
- *
- * Use the @link cupsFreeDests@ function to free the destination list and
- * the @link cupsGetDest@ function to find a particular destination.
- *
- * @since CUPS 1.1.21/macOS 10.4@
- */
-
-int					/* O - Number of destinations */
-cupsGetDests2(http_t      *http,	/* I - Connection to server or @code CUPS_HTTP_DEFAULT@ */
-              cups_dest_t **dests)	/* O - Destinations */
+cupsGetDests(http_t      *http,		/* I - Connection to server or @code CUPS_HTTP_DEFAULT@ */
+             cups_dest_t **dests)	/* O - Destinations */
 {
   _cups_getdata_t data;                 /* Enumeration data */
 
 
-  DEBUG_printf(("cupsGetDests2(http=%p, dests=%p)", (void *)http, (void *)dests));
+  DEBUG_printf(("cupsGetDests(http=%p, dests=%p)", (void *)http, (void *)dests));
 
 /*
   * Range check the input...
@@ -1658,7 +1552,7 @@ cupsGetDests2(http_t      *http,	/* I - Connection to server or @code CUPS_HTTP_
   if (!dests)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad NULL dests pointer"), 1);
-    DEBUG_puts("1cupsGetDests2: NULL dests pointer, returning 0.");
+    DEBUG_puts("1cupsGetDests: NULL dests pointer, returning 0.");
     return (0);
   }
 
@@ -1711,7 +1605,7 @@ cupsGetDests2(http_t      *http,	/* I - Connection to server or @code CUPS_HTTP_
   if (data.num_dests > 0)
     _cupsSetError(IPP_STATUS_OK, NULL, 0);
 
-  DEBUG_printf(("1cupsGetDests2: Returning %d destinations.", data.num_dests));
+  DEBUG_printf(("1cupsGetDests: Returning %d destinations.", data.num_dests));
 
   return (data.num_dests);
 }
@@ -1735,7 +1629,7 @@ cupsGetDests2(http_t      *http,	/* I - Connection to server or @code CUPS_HTTP_
  * The returned destination must be freed using @link cupsFreeDests@ with a
  * "num_dests" value of 1.
  *
- * @since CUPS 1.4/macOS 10.6@
+ * @since CUPS 1.4@
  */
 
 cups_dest_t *				/* O - Destination or @code NULL@ */
@@ -1764,7 +1658,7 @@ cupsGetNamedDest(http_t     *http,	/* I - Connection to server or @code CUPS_HTT
   if (!dest_name)
   {
     set_as_default = 1;
-    dest_name      = _cupsUserDefault(defname, sizeof(defname));
+    dest_name      = _cupsGetUserDefault(defname, sizeof(defname));
 
     if (dest_name)
     {
@@ -1921,10 +1815,9 @@ cupsGetNamedDest(http_t     *http,	/* I - Connection to server or @code CUPS_HTT
  *
  * Removing a destination/instance does not delete the class or printer
  * queue, merely the lpoptions for that destination/instance.  Use the
- * @link cupsSetDests@ or @link cupsSetDests2@ functions to save the new
- * options for the user.
+ * @link cupsSetDests@ function to save the new options for the user.
  *
- * @since CUPS 1.3/macOS 10.5@
+ * @since CUPS 1.3@
  */
 
 int					/* O  - New number of destinations */
@@ -1970,7 +1863,7 @@ cupsRemoveDest(const char  *name,	/* I  - Destination name */
 /*
  * 'cupsSetDefaultDest()' - Set the default destination.
  *
- * @since CUPS 1.3/macOS 10.5@
+ * @since CUPS 1.3@
  */
 
 void
@@ -2005,35 +1898,18 @@ cupsSetDefaultDest(
 
 
 /*
- * 'cupsSetDests()' - Save the list of destinations for the default server.
+ * 'cupsSetDests()' - Save the list of destinations for the specified server.
  *
  * This function saves the destinations to /etc/cups/lpoptions when run
  * as root and ~/.cups/lpoptions when run as a normal user.
  *
- * @exclude all@
- */
-
-void
-cupsSetDests(int         num_dests,	/* I - Number of destinations */
-             cups_dest_t *dests)	/* I - Destinations */
-{
-  cupsSetDests2(CUPS_HTTP_DEFAULT, num_dests, dests);
-}
-
-
-/*
- * 'cupsSetDests2()' - Save the list of destinations for the specified server.
- *
- * This function saves the destinations to /etc/cups/lpoptions when run
- * as root and ~/.cups/lpoptions when run as a normal user.
- *
- * @since CUPS 1.1.21/macOS 10.4@
+ * @since CUPS 1.1.21@
  */
 
 int					/* O - 0 on success, -1 on error */
-cupsSetDests2(http_t      *http,	/* I - Connection to server or @code CUPS_HTTP_DEFAULT@ */
-              int         num_dests,	/* I - Number of destinations */
-              cups_dest_t *dests)	/* I - Destinations */
+cupsSetDests(http_t      *http,		/* I - Connection to server or @code CUPS_HTTP_DEFAULT@ */
+             int         num_dests,	/* I - Number of destinations */
+             cups_dest_t *dests)	/* I - Destinations */
 {
   int		i, j;			/* Looping vars */
   int		wrote;			/* Wrote definition? */
@@ -2242,12 +2118,12 @@ cupsSetDests2(http_t      *http,	/* I - Connection to server or @code CUPS_HTTP_
 
 
 /*
- * '_cupsUserDefault()' - Get the user default printer from environment
+ * '_cupsGetUserDefault()' - Get the user default printer from environment
  *                        variables and location information.
  */
 
 char *					/* O - Default printer or NULL */
-_cupsUserDefault(char   *name,		/* I - Name buffer */
+_cupsGetUserDefault(char   *name,		/* I - Name buffer */
                  size_t namesize)	/* I - Size of name buffer */
 {
   const char	*env;			/* LPDEST or PRINTER env variable */
@@ -2280,7 +2156,7 @@ _cupsUserDefault(char   *name,		/* I - Name buffer */
   else
     name[0] = '\0';
 
-  DEBUG_printf(("1_cupsUserDefault: Returning \"%s\".", name));
+  DEBUG_printf(("1_cupsGetUserDefault: Returning \"%s\".", name));
 
   return (*name ? name : NULL);
 
@@ -2529,22 +2405,6 @@ cups_add_dest(const char  *name,	/* I  - Name of destination */
 
   return (dest);
 }
-
-
-#  ifdef __BLOCKS__
-/*
- * 'cups_block_cb()' - Enumeration callback for block API.
- */
-
-static int				/* O - 1 to continue, 0 to stop */
-cups_block_cb(
-    cups_dest_block_t block,		/* I - Block */
-    unsigned          flags,		/* I - Destination flags */
-    cups_dest_t       *dest)		/* I - Destination */
-{
-  return ((block)(flags, dest));
-}
-#  endif /* __BLOCKS__ */
 
 
 /*
@@ -3447,7 +3307,7 @@ cups_enum_dests(
 
   memset(&data, 0, sizeof(data));
 
-  user_default = _cupsUserDefault(data.def_name, sizeof(data.def_name));
+  user_default = _cupsGetUserDefault(data.def_name, sizeof(data.def_name));
 
   snprintf(filename, sizeof(filename), "%s/lpoptions", cg->cups_serverroot);
   data.num_dests = cups_get_dests(filename, NULL, NULL, 1, user_default != NULL, data.num_dests, &data.dests);
@@ -3478,7 +3338,7 @@ cups_enum_dests(
   {
     const char	*default_printer;	/* Server default printer */
 
-    if ((default_printer = cupsGetDefault2(http)) != NULL)
+    if ((default_printer = cupsGetDefault(http)) != NULL)
       strlcpy(data.def_name, default_printer, sizeof(data.def_name));
   }
 

@@ -172,7 +172,7 @@ typedef struct _cups_globals_s		/**** CUPS global state data ****/
 			password[128];	/* Password for default callback */
   cups_oauth_cb_t	oauth_cb;	/* OAuth callback */
   void			*oauth_data;	/* OAuth user data */
-  cups_password_cb2_t	password_cb;	/* Password callback */
+  cups_password_cb_t	password_cb;	/* Password callback */
   void			*password_data;	/* Password user data */
   http_tls_credentials_t tls_credentials;
 					/* Default client credentials */
@@ -273,7 +273,7 @@ extern int		_cupsNextDelay(int current, int *previous) _CUPS_PRIVATE;
 extern void		_cupsSetDefaults(void) _CUPS_INTERNAL;
 extern void		_cupsSetError(ipp_status_t status, const char *message, int localize) _CUPS_PRIVATE;
 extern void		_cupsSetHTTPError(http_status_t status) _CUPS_INTERNAL;
-extern char		*_cupsUserDefault(char *name, size_t namesize) _CUPS_INTERNAL;
+extern char		*_cupsGetUserDefault(char *name, size_t namesize) _CUPS_INTERNAL;
 
 
 /*

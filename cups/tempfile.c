@@ -1,6 +1,7 @@
 /*
  * Temp file utilities for CUPS.
  *
+ * Copyright © 2021 by OpenPrinting.
  * Copyright © 2007-2018 by Apple Inc.
  * Copyright © 1997-2006 by Easy Software Products.
  *
@@ -32,8 +33,8 @@
  */
 
 int					/* O - New file descriptor or -1 on error */
-cupsTempFd(char *filename,		/* I - Pointer to buffer */
-           int  len)			/* I - Size of buffer */
+cupsTempFd(char   *filename,		/* I - Pointer to buffer */
+           size_t len)			/* I - Size of buffer */
 {
   int		fd;			/* File descriptor for temp file */
   int		tries;			/* Number of tries */
@@ -156,40 +157,17 @@ cupsTempFd(char *filename,		/* I - Pointer to buffer */
 
 
 /*
- * 'cupsTempFile()' - Generates a temporary filename.
- *
- * The temporary filename is returned in the filename buffer.
- * This function is deprecated and will no longer generate a temporary
- * filename - use @link cupsTempFd@ or @link cupsTempFile2@ instead.
- *
- * @deprecated@
- */
-
-char *					/* O - Filename or @code NULL@ on error */
-cupsTempFile(char *filename,		/* I - Pointer to buffer */
-             int  len)			/* I - Size of buffer */
-{
-  (void)len;
-
-  if (filename)
-    *filename = '\0';
-
-  return (NULL);
-}
-
-
-/*
- * 'cupsTempFile2()' - Creates a temporary CUPS file.
+ * 'cupsTempFile()' - Creates a temporary CUPS file.
  *
  * The temporary filename is returned in the filename buffer.
  * The temporary file is opened for writing.
  *
- * @since CUPS 1.2/macOS 10.5@
+ * @since CUPS 1.2@
  */
 
 cups_file_t *				/* O - CUPS file or @code NULL@ on error */
-cupsTempFile2(char *filename,		/* I - Pointer to buffer */
-              int  len)			/* I - Size of buffer */
+cupsTempFile(char   *filename,		/* I - Pointer to buffer */
+             size_t len)		/* I - Size of buffer */
 {
   cups_file_t	*file;			/* CUPS file */
   int		fd;			/* File descriptor */
