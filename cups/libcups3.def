@@ -373,8 +373,6 @@ httpReconnect
 httpReconnect2
 httpResolveHostname
 httpSaveCredentials
-httpSeparate
-httpSeparate2
 httpSeparateURI
 httpSetAuthString
 httpSetCookie
