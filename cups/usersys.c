@@ -448,9 +448,13 @@ cupsSetServer(const char *server)	/* I - Server name */
     if (cg->server[0] != '/' && (port = strrchr(cg->server, ':')) != NULL &&
         !strchr(port, ']') && isdigit(port[1] & 255))
     {
-      *port++ = '\0';
+      int	portnum;		// Port number
 
-      cg->ipp_port = atoi(port);
+      *port++ = '\0';
+      portnum = atoi(port);
+
+      if (portnum > 0 && portnum < 65536)
+        cg->ipp_port = portnum;
     }
 
     if (!cg->ipp_port)
@@ -847,7 +851,7 @@ _cupsGetPassword(const char *prompt)	/* I - Prompt string */
   * Disable input echo and set raw input...
   */
 
-  if ((tty = open("/dev/tty", O_RDONLY)) < 0)
+  if ((tty = open("/dev/tty", O_RDONLY | O_NOFOLLOW)) < 0)
     return (NULL);
 
   if (tcgetattr(tty, &original))
@@ -1407,7 +1411,11 @@ cups_set_default_ipp_port(
 
   if ((ipp_port = getenv("IPP_PORT")) != NULL)
   {
-    if ((cg->ipp_port = atoi(ipp_port)) <= 0)
+    int port = atoi(ipp_port);		// IPP_PORT value
+
+    if (port > 0 && port < 65536)
+      cg->ipp_port = port;
+    else
       cg->ipp_port = 631;
   }
   else
