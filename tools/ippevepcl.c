@@ -507,7 +507,11 @@ raster_to_pcl(const char *filename)	/* I - File to print (NULL for stdin) */
       break;
     }
 
-    line = malloc(header.cupsBytesPerLine);
+    if ((line = malloc(header.cupsBytesPerLine)) == NULL)
+    {
+      fputs("ERROR: Unable to allocate memory for line, aborting.\n", stderr);
+      break;
+    }
 
     pcl_start_page(&header, page);
     for (y = 0; y < header.cupsHeight; y ++)

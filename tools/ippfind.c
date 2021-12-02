@@ -320,7 +320,7 @@ main(int  argc,				/* I - Number of command-line args */
 
           if ((temp = new_expr(IPPFIND_OP_DOMAIN_REGEX, invert, NULL, argv[i],
                                NULL)) == NULL)
-            return (IPPFIND_EXIT_MEMORY);
+            exit(IPPFIND_EXIT_MEMORY);
         }
         else if (!strcmp(argv[i], "--exec"))
         {
@@ -334,7 +334,7 @@ main(int  argc,				/* I - Number of command-line args */
 
           if ((temp = new_expr(IPPFIND_OP_EXEC, invert, NULL, NULL,
                                argv + i)) == NULL)
-            return (IPPFIND_EXIT_MEMORY);
+            exit(IPPFIND_EXIT_MEMORY);
 
           while (i < argc)
             if (!strcmp(argv[i], ";"))
@@ -355,7 +355,7 @@ main(int  argc,				/* I - Number of command-line args */
         {
           if ((temp = new_expr(IPPFIND_OP_FALSE, invert, NULL, NULL,
                                NULL)) == NULL)
-            return (IPPFIND_EXIT_MEMORY);
+            exit(IPPFIND_EXIT_MEMORY);
         }
         else if (!strcmp(argv[i], "--help"))
         {
@@ -374,13 +374,13 @@ main(int  argc,				/* I - Number of command-line args */
 
           if ((temp = new_expr(IPPFIND_OP_HOST_REGEX, invert, NULL, argv[i],
                                NULL)) == NULL)
-            return (IPPFIND_EXIT_MEMORY);
+            exit(IPPFIND_EXIT_MEMORY);
         }
         else if (!strcmp(argv[i], "--ls"))
         {
           if ((temp = new_expr(IPPFIND_OP_LIST, invert, NULL, NULL,
                                NULL)) == NULL)
-            return (IPPFIND_EXIT_MEMORY);
+            exit(IPPFIND_EXIT_MEMORY);
 
           have_output = 1;
         }
@@ -388,7 +388,7 @@ main(int  argc,				/* I - Number of command-line args */
         {
           if ((temp = new_expr(IPPFIND_OP_IS_LOCAL, invert, NULL, NULL,
                                NULL)) == NULL)
-            return (IPPFIND_EXIT_MEMORY);
+            exit(IPPFIND_EXIT_MEMORY);
         }
         else if (!strcmp(argv[i], "--literal-name"))
         {
@@ -400,7 +400,7 @@ main(int  argc,				/* I - Number of command-line args */
           }
 
           if ((temp = new_expr(IPPFIND_OP_NAME_LITERAL, invert, argv[i], NULL, NULL)) == NULL)
-            return (IPPFIND_EXIT_MEMORY);
+            exit(IPPFIND_EXIT_MEMORY);
         }
         else if (!strcmp(argv[i], "--name"))
         {
@@ -415,7 +415,7 @@ main(int  argc,				/* I - Number of command-line args */
 
           if ((temp = new_expr(IPPFIND_OP_NAME_REGEX, invert, NULL, argv[i],
                                NULL)) == NULL)
-            return (IPPFIND_EXIT_MEMORY);
+            exit(IPPFIND_EXIT_MEMORY);
         }
         else if (!strcmp(argv[i], "--not"))
         {
@@ -457,7 +457,7 @@ main(int  argc,				/* I - Number of command-line args */
 
 	    if ((temp = new_expr(IPPFIND_OP_OR, 0, NULL, NULL,
 				 NULL)) == NULL)
-	      return (IPPFIND_EXIT_MEMORY);
+	      exit(IPPFIND_EXIT_MEMORY);
 
             temp->parent    = parent;
             temp->child     = current;
@@ -480,7 +480,7 @@ main(int  argc,				/* I - Number of command-line args */
 
 	    if ((temp = new_expr(IPPFIND_OP_AND, 0, NULL, NULL,
 				 NULL)) == NULL)
-	      return (IPPFIND_EXIT_MEMORY);
+	      exit(IPPFIND_EXIT_MEMORY);
 
 	    while (current->prev)
 	    {
@@ -494,7 +494,7 @@ main(int  argc,				/* I - Number of command-line args */
 
 	    if ((temp = new_expr(IPPFIND_OP_OR, 0, NULL, NULL,
 				 NULL)) == NULL)
-	      return (IPPFIND_EXIT_MEMORY);
+	      exit(IPPFIND_EXIT_MEMORY);
 
             temp->parent    = parent;
             current->parent = temp;
@@ -521,7 +521,7 @@ main(int  argc,				/* I - Number of command-line args */
 
           if ((temp = new_expr(IPPFIND_OP_PATH_REGEX, invert, NULL, argv[i],
                                NULL)) == NULL)
-            return (IPPFIND_EXIT_MEMORY);
+            exit(IPPFIND_EXIT_MEMORY);
         }
         else if (!strcmp(argv[i], "--port"))
         {
@@ -536,13 +536,13 @@ main(int  argc,				/* I - Number of command-line args */
 
           if ((temp = new_expr(IPPFIND_OP_PORT_RANGE, invert, argv[i], NULL,
                                NULL)) == NULL)
-            return (IPPFIND_EXIT_MEMORY);
+            exit(IPPFIND_EXIT_MEMORY);
         }
         else if (!strcmp(argv[i], "--print"))
         {
           if ((temp = new_expr(IPPFIND_OP_PRINT_URI, invert, NULL, NULL,
                                NULL)) == NULL)
-            return (IPPFIND_EXIT_MEMORY);
+            exit(IPPFIND_EXIT_MEMORY);
 
           have_output = 1;
         }
@@ -550,7 +550,7 @@ main(int  argc,				/* I - Number of command-line args */
         {
           if ((temp = new_expr(IPPFIND_OP_PRINT_NAME, invert, NULL, NULL,
                                NULL)) == NULL)
-            return (IPPFIND_EXIT_MEMORY);
+            exit(IPPFIND_EXIT_MEMORY);
 
           have_output = 1;
         }
@@ -558,7 +558,7 @@ main(int  argc,				/* I - Number of command-line args */
         {
           if ((temp = new_expr(IPPFIND_OP_QUIET, invert, NULL, NULL,
                                NULL)) == NULL)
-            return (IPPFIND_EXIT_MEMORY);
+            exit(IPPFIND_EXIT_MEMORY);
 
           have_output = 1;
         }
@@ -566,13 +566,13 @@ main(int  argc,				/* I - Number of command-line args */
         {
           if ((temp = new_expr(IPPFIND_OP_IS_REMOTE, invert, NULL, NULL,
                                NULL)) == NULL)
-            return (IPPFIND_EXIT_MEMORY);
+            exit(IPPFIND_EXIT_MEMORY);
         }
         else if (!strcmp(argv[i], "--true"))
         {
           if ((temp = new_expr(IPPFIND_OP_TRUE, invert, NULL, argv[i],
                                NULL)) == NULL)
-            return (IPPFIND_EXIT_MEMORY);
+            exit(IPPFIND_EXIT_MEMORY);
         }
         else if (!strcmp(argv[i], "--txt"))
         {
@@ -586,7 +586,7 @@ main(int  argc,				/* I - Number of command-line args */
 
           if ((temp = new_expr(IPPFIND_OP_TXT_EXISTS, invert, argv[i], NULL,
                                NULL)) == NULL)
-            return (IPPFIND_EXIT_MEMORY);
+            exit(IPPFIND_EXIT_MEMORY);
         }
         else if (!strncmp(argv[i], "--txt-", 6))
         {
@@ -603,7 +603,7 @@ main(int  argc,				/* I - Number of command-line args */
 
           if ((temp = new_expr(IPPFIND_OP_TXT_REGEX, invert, key, argv[i],
                                NULL)) == NULL)
-            return (IPPFIND_EXIT_MEMORY);
+            exit(IPPFIND_EXIT_MEMORY);
         }
         else if (!strcmp(argv[i], "--uri"))
         {
@@ -618,7 +618,7 @@ main(int  argc,				/* I - Number of command-line args */
 
           if ((temp = new_expr(IPPFIND_OP_URI_REGEX, invert, NULL, argv[i],
                                NULL)) == NULL)
-            return (IPPFIND_EXIT_MEMORY);
+            exit(IPPFIND_EXIT_MEMORY);
         }
         else if (!strcmp(argv[i], "--version"))
         {
@@ -649,7 +649,7 @@ main(int  argc,				/* I - Number of command-line args */
 
 	    if ((tempand = new_expr(IPPFIND_OP_AND, 0, NULL, NULL,
 				    NULL)) == NULL)
-	      return (IPPFIND_EXIT_MEMORY);
+	      exit(IPPFIND_EXIT_MEMORY);
 
            /*
             * Replace "current" with new AND node at the end of this list...
@@ -716,7 +716,7 @@ main(int  argc,				/* I - Number of command-line args */
 		}
 
 		if ((temp = new_expr(IPPFIND_OP_NAME_LITERAL, invert, argv[i], NULL, NULL)) == NULL)
-		  return (IPPFIND_EXIT_MEMORY);
+		  exit(IPPFIND_EXIT_MEMORY);
 		break;
 
             case 'P' :
@@ -731,7 +731,7 @@ main(int  argc,				/* I - Number of command-line args */
 
 		if ((temp = new_expr(IPPFIND_OP_PORT_RANGE, invert, argv[i],
 		                     NULL, NULL)) == NULL)
-		  return (IPPFIND_EXIT_MEMORY);
+		  exit(IPPFIND_EXIT_MEMORY);
 		break;
 
             case 'T' :
@@ -785,7 +785,7 @@ main(int  argc,				/* I - Number of command-line args */
 
 		if ((temp = new_expr(IPPFIND_OP_DOMAIN_REGEX, invert, NULL,
 		                     argv[i], NULL)) == NULL)
-		  return (IPPFIND_EXIT_MEMORY);
+		  exit(IPPFIND_EXIT_MEMORY);
                 break;
 
             case 'h' :
@@ -800,13 +800,13 @@ main(int  argc,				/* I - Number of command-line args */
 
 		if ((temp = new_expr(IPPFIND_OP_HOST_REGEX, invert, NULL,
 		                     argv[i], NULL)) == NULL)
-		  return (IPPFIND_EXIT_MEMORY);
+		  exit(IPPFIND_EXIT_MEMORY);
                 break;
 
             case 'l' :
 		if ((temp = new_expr(IPPFIND_OP_LIST, invert, NULL, NULL,
 				     NULL)) == NULL)
-		  return (IPPFIND_EXIT_MEMORY);
+		  exit(IPPFIND_EXIT_MEMORY);
 
 		have_output = 1;
                 break;
@@ -823,13 +823,13 @@ main(int  argc,				/* I - Number of command-line args */
 
 		if ((temp = new_expr(IPPFIND_OP_NAME_REGEX, invert, NULL,
 		                     argv[i], NULL)) == NULL)
-		  return (IPPFIND_EXIT_MEMORY);
+		  exit(IPPFIND_EXIT_MEMORY);
                 break;
 
             case 'p' :
 		if ((temp = new_expr(IPPFIND_OP_PRINT_URI, invert, NULL, NULL,
 				     NULL)) == NULL)
-		  return (IPPFIND_EXIT_MEMORY);
+		  exit(IPPFIND_EXIT_MEMORY);
 
 		have_output = 1;
                 break;
@@ -837,7 +837,7 @@ main(int  argc,				/* I - Number of command-line args */
             case 'q' :
 		if ((temp = new_expr(IPPFIND_OP_QUIET, invert, NULL, NULL,
 				     NULL)) == NULL)
-		  return (IPPFIND_EXIT_MEMORY);
+		  exit(IPPFIND_EXIT_MEMORY);
 
 		have_output = 1;
                 break;
@@ -845,13 +845,13 @@ main(int  argc,				/* I - Number of command-line args */
             case 'r' :
 		if ((temp = new_expr(IPPFIND_OP_IS_REMOTE, invert, NULL, NULL,
 				     NULL)) == NULL)
-		  return (IPPFIND_EXIT_MEMORY);
+		  exit(IPPFIND_EXIT_MEMORY);
                 break;
 
             case 's' :
 		if ((temp = new_expr(IPPFIND_OP_PRINT_NAME, invert, NULL, NULL,
 				     NULL)) == NULL)
-		  return (IPPFIND_EXIT_MEMORY);
+		  exit(IPPFIND_EXIT_MEMORY);
 
 		have_output = 1;
                 break;
@@ -868,7 +868,7 @@ main(int  argc,				/* I - Number of command-line args */
 
 		if ((temp = new_expr(IPPFIND_OP_TXT_EXISTS, invert, argv[i],
 		                     NULL, NULL)) == NULL)
-		  return (IPPFIND_EXIT_MEMORY);
+		  exit(IPPFIND_EXIT_MEMORY);
                 break;
 
             case 'u' :
@@ -883,7 +883,7 @@ main(int  argc,				/* I - Number of command-line args */
 
 		if ((temp = new_expr(IPPFIND_OP_URI_REGEX, invert, NULL,
 		                     argv[i], NULL)) == NULL)
-		  return (IPPFIND_EXIT_MEMORY);
+		  exit(IPPFIND_EXIT_MEMORY);
                 break;
 
             case 'x' :
@@ -898,7 +898,7 @@ main(int  argc,				/* I - Number of command-line args */
 
 		if ((temp = new_expr(IPPFIND_OP_EXEC, invert, NULL, NULL,
 				     argv + i)) == NULL)
-		  return (IPPFIND_EXIT_MEMORY);
+		  exit(IPPFIND_EXIT_MEMORY);
 
 		while (i < argc)
 		  if (!strcmp(argv[i], ";"))
@@ -941,7 +941,7 @@ main(int  argc,				/* I - Number of command-line args */
 
 	      if ((tempand = new_expr(IPPFIND_OP_AND, 0, NULL, NULL,
 				      NULL)) == NULL)
-		return (IPPFIND_EXIT_MEMORY);
+		exit(IPPFIND_EXIT_MEMORY);
 
 	     /*
 	      * Replace "current" with new AND node at the end of this list...
@@ -992,7 +992,7 @@ main(int  argc,				/* I - Number of command-line args */
       }
 
       if ((temp = new_expr(IPPFIND_OP_AND, invert, NULL, NULL, NULL)) == NULL)
-	return (IPPFIND_EXIT_MEMORY);
+	exit(IPPFIND_EXIT_MEMORY);
 
       parens[num_parens++] = temp;
 
@@ -1054,7 +1054,7 @@ main(int  argc,				/* I - Number of command-line args */
     */
 
     if ((temp = new_expr(IPPFIND_OP_PRINT_URI, 0, NULL, NULL, NULL)) == NULL)
-      return (IPPFIND_EXIT_MEMORY);
+      exit(IPPFIND_EXIT_MEMORY);
 
     if (current)
     {
@@ -1135,7 +1135,7 @@ main(int  argc,				/* I - Number of command-line args */
   {
     _cupsLangPrintf(stderr, _("ippfind: Unable to use Bonjour: %s"),
                     dnssd_error_string(err));
-    return (IPPFIND_EXIT_BONJOUR);
+    exit(IPPFIND_EXIT_BONJOUR);
   }
 
 #elif defined(HAVE_AVAHI)
@@ -1143,7 +1143,7 @@ main(int  argc,				/* I - Number of command-line args */
   {
     _cupsLangPrintf(stderr, _("ippfind: Unable to use Bonjour: %s"),
                     strerror(errno));
-    return (IPPFIND_EXIT_BONJOUR);
+    exit(IPPFIND_EXIT_BONJOUR);
   }
 
   avahi_simple_poll_set_func(avahi_poll, poll_callback, NULL);
@@ -1154,7 +1154,7 @@ main(int  argc,				/* I - Number of command-line args */
   {
     _cupsLangPrintf(stderr, _("ippfind: Unable to use Bonjour: %s"),
                     dnssd_error_string(err));
-    return (IPPFIND_EXIT_BONJOUR);
+    exit(IPPFIND_EXIT_BONJOUR);
   }
 #endif /* HAVE_MDNSRESPONDER */
 
@@ -1299,7 +1299,7 @@ main(int  argc,				/* I - Number of command-line args */
       _cupsLangPrintf(stderr, _("ippfind: Unable to browse or resolve: %s"),
                       dnssd_error_string(err));
 
-      return (IPPFIND_EXIT_BONJOUR);
+      exit(IPPFIND_EXIT_BONJOUR);
     }
   }
 
@@ -1356,7 +1356,7 @@ main(int  argc,				/* I - Number of command-line args */
       * Avahi failed.
       */
 
-      return (IPPFIND_EXIT_BONJOUR);
+      exit(IPPFIND_EXIT_BONJOUR);
     }
 
     if (!avahi_got_data)
@@ -1426,7 +1426,7 @@ main(int  argc,				/* I - Number of command-line args */
 	      _cupsLangPrintf(stderr,
 	                      _("ippfind: Unable to browse or resolve: %s"),
 			      dnssd_error_string(err));
-	      return (IPPFIND_EXIT_BONJOUR);
+	      exit(IPPFIND_EXIT_BONJOUR);
 	    }
 
 	    active ++;
@@ -1468,9 +1468,9 @@ main(int  argc,				/* I - Number of command-line args */
   }
 
   if (bonjour_error)
-    return (IPPFIND_EXIT_BONJOUR);
+    exit(IPPFIND_EXIT_BONJOUR);
   else
-    return (status);
+    exit(status);
 }
 
 

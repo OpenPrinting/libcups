@@ -907,7 +907,11 @@ raster_to_ps(const char *filename)	/* I - Filename */
       break;
     }
 
-    line = malloc(header.cupsBytesPerLine);
+    if ((line = malloc(header.cupsBytesPerLine)) == NULL)
+    {
+      fputs("ERROR: Unable to allocate memory for line, aborting.\n", stderr);
+      break;
+    }
 
     dsc_page(page);
 
