@@ -422,9 +422,14 @@ cupsGetResponse(http_t     *http,	/* I - Connection to server or @code CUPS_HTTP
       DEBUG_puts("2cupsGetResponse: Need authorization...");
 
       if (!cupsDoAuthentication(http, "POST", resource))
-        httpReconnect2(http, 30000, NULL);
+      {
+        if (httpReconnect2(http, 30000, NULL))
+          http->status = HTTP_STATUS_ERROR;
+      }
       else
+      {
         http->status = HTTP_STATUS_CUPS_AUTHORIZATION_CANCELED;
+      }
     }
 
 #ifdef HAVE_TLS

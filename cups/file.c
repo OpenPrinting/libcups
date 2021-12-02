@@ -1089,8 +1089,7 @@ cupsFileOpen(const char *filename,	/* I - Name of file */
   switch (*mode)
   {
     case 'a' : /* Append file */
-        fd = cups_open(filename,
-		       O_RDWR | O_CREAT | O_APPEND | O_LARGEFILE | O_BINARY);
+        fd = cups_open(filename, O_RDWR | O_CREAT | O_APPEND | O_LARGEFILE | O_BINARY);
         break;
 
     case 'r' : /* Read file */
@@ -1101,8 +1100,7 @@ cupsFileOpen(const char *filename,	/* I - Name of file */
         fd = cups_open(filename, O_WRONLY | O_LARGEFILE | O_BINARY);
 	if (fd < 0 && errno == ENOENT)
 	{
-	  fd = cups_open(filename,
-	                 O_WRONLY | O_CREAT | O_EXCL | O_LARGEFILE | O_BINARY);
+	  fd = cups_open(filename, O_WRONLY | O_CREAT | O_EXCL | O_LARGEFILE | O_BINARY);
 	  if (fd < 0 && errno == EEXIST)
 	    fd = cups_open(filename, O_WRONLY | O_LARGEFILE | O_BINARY);
 	}
@@ -1253,7 +1251,6 @@ cupsFileOpenFd(int        fd,		/* I - File descriptor */
 
           if (deflateInit2(&(fp->stream), mode[1] - '0', Z_DEFLATED, -15, 8, Z_DEFAULT_STRATEGY) < Z_OK)
           {
-            close(fd);
             free(fp);
 	    return (NULL);
           }

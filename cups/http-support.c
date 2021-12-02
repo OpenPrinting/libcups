@@ -885,56 +885,6 @@ httpGetDateTime(const char *s)		/* I - Date/time string */
 
 
 /*
- * 'httpSeparate()' - Separate a Universal Resource Identifier into its
- *                    components.
- *
- * This function is deprecated; use the httpSeparateURI() function instead.
- *
- * @deprecated@ @exclude all@
- */
-
-void
-httpSeparate(const char *uri,		/* I - Universal Resource Identifier */
-             char       *scheme,	/* O - Scheme [32] (http, https, etc.) */
-	     char       *username,	/* O - Username [1024] */
-	     char       *host,		/* O - Hostname [1024] */
-	     int        *port,		/* O - Port number to use */
-             char       *resource)	/* O - Resource/filename [1024] */
-{
-  httpSeparateURI(HTTP_URI_CODING_ALL, uri, scheme, 32, username,
-                  HTTP_MAX_URI, host, HTTP_MAX_URI, port, resource,
-		  HTTP_MAX_URI);
-}
-
-
-/*
- * 'httpSeparate2()' - Separate a Universal Resource Identifier into its
- *                     components.
- *
- * This function is deprecated; use the httpSeparateURI() function instead.
- *
- * @since CUPS 1.1.21/macOS 10.4@
- * @deprecated@ @exclude all@
- */
-
-void
-httpSeparate2(const char *uri,		/* I - Universal Resource Identifier */
-              char       *scheme,	/* O - Scheme (http, https, etc.) */
-	      int        schemelen,	/* I - Size of scheme buffer */
-	      char       *username,	/* O - Username */
-	      int        usernamelen,	/* I - Size of username buffer */
-	      char       *host,		/* O - Hostname */
-	      int        hostlen,	/* I - Size of hostname buffer */
-	      int        *port,		/* O - Port number to use */
-              char       *resource,	/* O - Resource/filename */
-	      int        resourcelen)	/* I - Size of resource buffer */
-{
-  httpSeparateURI(HTTP_URI_CODING_ALL, uri, scheme, schemelen, username,
-                  usernamelen, host, hostlen, port, resource, resourcelen);
-}
-
-
-/*
  * 'httpSeparateURI()' - Separate a Universal Resource Identifier into its
  *                       components.
  *

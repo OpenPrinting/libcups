@@ -2500,12 +2500,19 @@ new_expr(ippfind_op_t op,		/* I - Operation */
     int	num_args;			/* Number of arguments */
 
     for (num_args = 1; args[num_args]; num_args ++)
+    {
       if (!strcmp(args[num_args], ";"))
         break;
+    }
 
-     temp->num_args = num_args;
-     temp->args     = malloc((size_t)num_args * sizeof(char *));
-     memcpy(temp->args, args, (size_t)num_args * sizeof(char *));
+    temp->num_args = num_args;
+    if ((temp->args = malloc((size_t)num_args * sizeof(char *))) == NULL)
+    {
+      regfree(&temp->re);
+      free(temp);
+      return (NULL);
+    }
+    memcpy(temp->args, args, (size_t)num_args * sizeof(char *));
   }
 
   return (temp);

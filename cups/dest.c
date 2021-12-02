@@ -1111,7 +1111,7 @@ _cupsGetDestResource(
   int		port;			/* Port number */
 
 
-  DEBUG_printf(("_cupsGetDestResource(dest=%p(%s), flags=%u, resource=%p, resourcesize=%d)", (void *)dest, dest->name, flags, (void *)resource, (int)resourcesize));
+  DEBUG_printf(("_cupsGetDestResource(dest=%p(%s), flags=%u, resource=%p, resourcesize=%d)", (void *)dest, dest ? dest->name : "(null)", flags, (void *)resource, (int)resourcesize));
 
  /*
   * Range check input...

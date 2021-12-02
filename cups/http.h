@@ -494,7 +494,6 @@ extern int		httpPrintf(http_t *http, const char *format, ...) _CUPS_FORMAT(2, 3)
 extern int		httpPut(http_t *http, const char *uri) _CUPS_PUBLIC;
 extern int		httpRead(http_t *http, char *buffer, int length) _CUPS_DEPRECATED_MSG("Use httpRead2 instead.");
 extern int		httpReconnect(http_t *http) _CUPS_DEPRECATED_1_6_MSG("Use httpReconnect2 instead.");
-extern void		httpSeparate(const char *uri, char *method, char *username, char *host, int *port, char *resource) _CUPS_DEPRECATED_1_2_MSG("Use httpSeparateURI instead.");
 extern void		httpSetField(http_t *http, http_field_t field, const char *value) _CUPS_PUBLIC;
 extern const char	*httpStatus(http_status_t status) _CUPS_PUBLIC;
 extern int		httpTrace(http_t *http, const char *uri) _CUPS_PUBLIC;
@@ -516,7 +515,6 @@ extern int		httpWait(http_t *http, int msec) _CUPS_API_1_1_19;
 /**** New in CUPS 1.1.21 ****/
 extern char		*httpDecode64_2(char *out, int *outlen, const char *in) _CUPS_API_1_1_21;
 extern char		*httpEncode64_2(char *out, int outlen, const char *in, int inlen) _CUPS_API_1_1_21;
-extern void		httpSeparate2(const char *uri, char *method, int methodlen, char *username, int usernamelen, char *host, int hostlen, int *port, char *resource, int resourcelen) _CUPS_DEPRECATED_1_2_MSG("Use httpSeparateURI instead.");
 
 /**** New in CUPS 1.2/macOS 10.5 ****/
 extern int		httpAddrAny(const http_addr_t *addr) _CUPS_API_1_2;

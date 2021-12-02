@@ -2511,7 +2511,7 @@ httpSetDefaultField(http_t       *http,	/* I - HTTP connection */
                     http_field_t field,	/* I - Field index */
 	            const char   *value)/* I - Value */
 {
-  DEBUG_printf(("httpSetDefaultField(http=%p, field=%d(%s), value=\"%s\")", (void *)http, field, http_fields[field], value));
+  DEBUG_printf(("httpSetDefaultField(http=%p, field=%d(%s), value=\"%s\")", (void *)http, field, field >= HTTP_FIELD_ACCEPT_LANGUAGE && field < HTTP_FIELD_MAX ? http_fields[field] : "unknown", value));
 
   if (!http || field <= HTTP_FIELD_UNKNOWN || field >= HTTP_FIELD_MAX)
     return;
@@ -2553,7 +2553,7 @@ httpSetField(http_t       *http,	/* I - HTTP connection */
              http_field_t field,	/* I - Field index */
 	     const char   *value)	/* I - Value */
 {
-  DEBUG_printf(("httpSetField(http=%p, field=%d(%s), value=\"%s\")", (void *)http, field, http_fields[field], value));
+  DEBUG_printf(("httpSetField(http=%p, field=%d(%s), value=\"%s\")", (void *)http, field, field >= HTTP_FIELD_ACCEPT_LANGUAGE && field < HTTP_FIELD_MAX ? http_fields[field] : "unknown", value));
 
   if (!http || field <= HTTP_FIELD_UNKNOWN || field >= HTTP_FIELD_MAX || !value)
     return;

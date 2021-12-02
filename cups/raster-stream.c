@@ -1186,7 +1186,7 @@ _cupsRasterWritePixels(
   unsigned	remaining;		/* Bytes remaining */
 
 
-  DEBUG_printf(("_cupsRasterWritePixels(r=%p, p=%p, len=%u), remaining=%u", (void *)r, (void *)p, len, r->remaining));
+  DEBUG_printf(("_cupsRasterWritePixels(r=%p, p=%p, len=%u), remaining=%u", (void *)r, (void *)p, len, r ? r->remaining : 0));
 
   if (r == NULL || r->mode == CUPS_RASTER_READ || r->remaining == 0)
     return (0);

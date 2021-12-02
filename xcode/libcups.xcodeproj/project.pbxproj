@@ -1369,10 +1369,16 @@
 			isa = PBXGroup;
 			children = (
 				72220EB81333056300FCA411 /* array.c */,
+				72220EB91333056300FCA411 /* array.h */,
+				7234F41F1378A16F00D3E9C9 /* array-private.h */,
 				72220EBB1333056300FCA411 /* auth.c */,
+				72220F471333063D00FCA411 /* config.h */,
+				72220EC11333056300FCA411 /* cups.h */,
+				72220EC01333056300FCA411 /* cups-private.h */,
 				276683561337A8C5000D33D0 /* cups.strings */,
-				722A24EE2178D00C000CAB20 /* debug-internal.h */,
 				72220ED1133305BB00FCA411 /* debug.c */,
+				722A24EE2178D00C000CAB20 /* debug-internal.h */,
+				722A24F22178D090000CAB20 /* debug-private.h */,
 				72CF95E018A13543000FCAE4 /* dest-job.c */,
 				72CF95E118A13543000FCAE4 /* dest-localization.c */,
 				72CF95E218A13543000FCAE4 /* dest-options.c */,
@@ -1381,79 +1387,58 @@
 				72220ED4133305BB00FCA411 /* dir.h */,
 				72220ED6133305BB00FCA411 /* encode.c */,
 				72220ED8133305BB00FCA411 /* file.c */,
+				72220ED9133305BB00FCA411 /* file.h */,
+				72220ED7133305BB00FCA411 /* file-private.h */,
 				72220EDC133305BB00FCA411 /* getputfile.c */,
 				72220EDD133305BB00FCA411 /* globals.c */,
 				7284F9EF1BFCCD940026F886 /* hash.c */,
+				72220EE2133305BB00FCA411 /* http.c */,
+				72220EE3133305BB00FCA411 /* http.h */,
 				72220EDE133305BB00FCA411 /* http-addr.c */,
 				72220EDF133305BB00FCA411 /* http-addrlist.c */,
+				72220EE0133305BB00FCA411 /* http-private.h */,
 				72220EE1133305BB00FCA411 /* http-support.c */,
-				72220EE2133305BB00FCA411 /* http.c */,
+				72220EE6133305BB00FCA411 /* ipp.c */,
+				72220EE7133305BB00FCA411 /* ipp.h */,
 				720E854120164E7A00C6C411 /* ipp-file.c */,
+				72220EE4133305BB00FCA411 /* ipp-private.h */,
 				72220EE5133305BB00FCA411 /* ipp-support.c */,
 				720E854220164E7A00C6C411 /* ipp-vars.c */,
-				72220EE6133305BB00FCA411 /* ipp.c */,
 				72220EE8133305BB00FCA411 /* langprintf.c */,
 				72220EEA133305BB00FCA411 /* language.c */,
+				72220EEB133305BB00FCA411 /* language.h */,
+				72220EE9133305BB00FCA411 /* language-private.h */,
 				27D3037D134148CB00F022B1 /* libcups3.def */,
-				72220EEE133305BB00FCA411 /* md5-internal.h */,
 				72220EEF133305BB00FCA411 /* md5.c */,
+				72220EEE133305BB00FCA411 /* md5-internal.h */,
 				72220EF0133305BB00FCA411 /* md5passwd.c */,
 				72220EF1133305BB00FCA411 /* notify.c */,
 				72220EF2133305BB00FCA411 /* options.c */,
+				2767FC7519269687000F61D3 /* pwg.h */,
 				72220EF8133305BB00FCA411 /* pwg-media.c */,
+				72220EF9133305BB00FCA411 /* pwg-private.h */,
+				72220EFA133305BB00FCA411 /* raster.h */,
 				72F75A691336FA8A004BB496 /* raster-error.c */,
+				2767FC76192696A0000F61D3 /* raster-private.h */,
 				72F75A6B1336FA8A004BB496 /* raster-stream.c */,
+				7253C45D216ED51500494ADD /* raster-stubs.c */,
 				72220EFB133305BB00FCA411 /* request.c */,
 				72220F02133305BB00FCA411 /* string.c */,
+				72220F01133305BB00FCA411 /* string-private.h */,
 				72220F03133305BB00FCA411 /* tempfile.c */,
 				72220F05133305BB00FCA411 /* thread.c */,
+				72220F04133305BB00FCA411 /* thread-private.h */,
 				270B267D17F5C06700C8A3A9 /* tls-darwin.c */,
 				270B267E17F5C06700C8A3A9 /* tls-gnutls.c */,
 				270B268117F5C5D600C8A3A9 /* tls-sspi.c */,
 				727AD5B619100A58009F6862 /* tls.c */,
 				72220F06133305BB00FCA411 /* transcode.c */,
+				72220F07133305BB00FCA411 /* transcode.h */,
 				72220F08133305BB00FCA411 /* usersys.c */,
 				72220F09133305BB00FCA411 /* util.c */,
-			);
-			name = libcups;
-			sourceTree = "<group>";
-			wrapsLines = 1;
-		};
-		72220F45133305D000FCA411 /* Public Headers */ = {
-			isa = PBXGroup;
-			children = (
-				72220EB91333056300FCA411 /* array.h */,
-				72220EC11333056300FCA411 /* cups.h */,
-				72220ED9133305BB00FCA411 /* file.h */,
-				72220EE3133305BB00FCA411 /* http.h */,
-				72220EE7133305BB00FCA411 /* ipp.h */,
-				72220EEB133305BB00FCA411 /* language.h */,
-				2767FC7519269687000F61D3 /* pwg.h */,
-				72220EFA133305BB00FCA411 /* raster.h */,
-				72220F07133305BB00FCA411 /* transcode.h */,
 				72220F0A133305BB00FCA411 /* versioning.h */,
 			);
-			name = "Public Headers";
-			sourceTree = "<group>";
-			wrapsLines = 1;
-		};
-		72220F461333060C00FCA411 /* Private Headers */ = {
-			isa = PBXGroup;
-			children = (
-				7234F41F1378A16F00D3E9C9 /* array-private.h */,
-				72220F471333063D00FCA411 /* config.h */,
-				72220EC01333056300FCA411 /* cups-private.h */,
-				722A24F22178D090000CAB20 /* debug-private.h */,
-				72220ED7133305BB00FCA411 /* file-private.h */,
-				72220EE0133305BB00FCA411 /* http-private.h */,
-				72220EE4133305BB00FCA411 /* ipp-private.h */,
-				72220EE9133305BB00FCA411 /* language-private.h */,
-				72220EF9133305BB00FCA411 /* pwg-private.h */,
-				2767FC76192696A0000F61D3 /* raster-private.h */,
-				72220F01133305BB00FCA411 /* string-private.h */,
-				72220F04133305BB00FCA411 /* thread-private.h */,
-			);
-			name = "Private Headers";
+			name = libcups;
 			sourceTree = "<group>";
 			wrapsLines = 1;
 		};
@@ -1488,10 +1473,7 @@
 			children = (
 				72E65BA218DC796500097E89 /* Autoconf Files */,
 				72E65BB818DC79F800097E89 /* Documentation */,
-				72220F45133305D000FCA411 /* Public Headers */,
-				72220F461333060C00FCA411 /* Private Headers */,
 				72220EB41333050100FCA411 /* libcups */,
-				72F75A681336FA42004BB496 /* libcupsimage */,
 				274FF67313333B0A00317ECB /* commands */,
 				273BF6B81333B4A90022CAAB /* tests */,
 				271286821CC13D7600E517C7 /* tools */,
@@ -1529,15 +1511,6 @@
 			);
 			name = Documentation;
 			sourceTree = "<group>";
-		};
-		72F75A681336FA42004BB496 /* libcupsimage */ = {
-			isa = PBXGroup;
-			children = (
-				7253C45D216ED51500494ADD /* raster-stubs.c */,
-			);
-			name = libcupsimage;
-			sourceTree = "<group>";
-			wrapsLines = 1;
 		};
 /* End PBXGroup section */
 
