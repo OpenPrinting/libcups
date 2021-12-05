@@ -1,6 +1,7 @@
 /*
  * Internet Printing Protocol functions for CUPS.
  *
+ * Copyright © 2021 by OpenPrinting.
  * Copyright © 2007-2021 by Apple Inc.
  * Copyright © 1997-2007 by Easy Software Products, all rights reserved.
  *
@@ -507,7 +508,7 @@ ippAddOctetString(ipp_t      *ipp,	/* I - IPP message */
                   ipp_tag_t  group,	/* I - IPP group */
                   const char *name,	/* I - Name of attribute */
                   const void *data,	/* I - octetString data */
-		  int        datalen)	/* I - Length of data in bytes */
+		  size_t     datalen)	/* I - Length of data in bytes */
 {
   ipp_attribute_t	*attr;		/* New attribute */
 
@@ -2270,7 +2271,7 @@ void *					/* O - Pointer to octetString data */
 ippGetOctetString(
     ipp_attribute_t *attr,		/* I - IPP attribute */
     int             element,		/* I - Value number (0-based) */
-    int             *datalen)		/* O - Length of octetString data */
+    size_t          *datalen)		/* O - Length of octetString data */
 {
  /*
   * Range check input...
@@ -2828,8 +2829,7 @@ ippRead(http_t *http,			/* I - HTTP connection */
 
   DEBUG_printf(("2ippRead: http->state=%d, http->used=%d", http->state, http->used));
 
-  return (ippReadIO(http, (ipp_iocb_t)ipp_read_http, http->blocking, NULL,
-                    ipp));
+  return (ippReadIO(http, (ipp_iocb_t)ipp_read_http, http->blocking, NULL, ipp));
 }
 
 
@@ -3562,7 +3562,7 @@ ippReadIO(void       *src,		/* I - Data source */
 		  goto rollback;
 		}
 
-                value->unknown.length = n;
+                value->unknown.length = (size_t)n;
 
 	        if (n > 0)
 		{
@@ -3900,7 +3900,7 @@ ippSetOctetString(
     ipp_attribute_t **attr,		/* IO - IPP attribute */
     int             element,		/* I  - Value number (0-based) */
     const void      *data,		/* I  - Pointer to octetString data */
-    int             datalen)		/* I  - Length of octetString data */
+    size_t          datalen)		/* I  - Length of octetString data */
 {
   _ipp_value_t	*value;			/* Current value */
 
@@ -5230,7 +5230,7 @@ ippWrite(http_t *http,			/* I - HTTP connection */
   if (!http)
     return (IPP_STATE_ERROR);
 
-  return (ippWriteIO(http, (ipp_iocb_t)httpWrite2, http->blocking, NULL, ipp));
+  return (ippWriteIO(http, (ipp_iocb_t)httpWrite, http->blocking, NULL, ipp));
 }
 
 
@@ -6610,7 +6610,7 @@ ipp_read_http(http_t      *http,	/* I - Client connection */
       }
     }
 
-    if ((bytes = httpRead2(http, (char *)buffer, length - (size_t)tbytes)) < 0)
+    if ((bytes = httpRead(http, (char *)buffer, length - (size_t)tbytes)) < 0)
     {
 #ifdef _WIN32
       break;

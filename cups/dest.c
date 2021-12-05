@@ -715,7 +715,7 @@ cupsConnectDest(
   else
     encryption = HTTP_ENCRYPTION_IF_REQUESTED;
 
-  http = httpConnect2(hostname, port, addrlist, AF_UNSPEC, encryption, 1, 0, NULL);
+  http = httpConnect(hostname, port, addrlist, AF_UNSPEC, encryption, 1, 0, NULL);
   httpAddrFreeList(addrlist);
 
  /*
@@ -732,7 +732,7 @@ cupsConnectDest(
     if (cb)
       (*cb)(user_data, CUPS_DEST_FLAGS_UNCONNECTED | CUPS_DEST_FLAGS_CONNECTING, dest);
 
-    if (!httpReconnect2(http, msec, cancel) && cb)
+    if (!httpReconnect(http, msec, cancel) && cb)
     {
       if (cancel && *cancel)
 	(*cb)(user_data, CUPS_DEST_FLAGS_UNCONNECTED | CUPS_DEST_FLAGS_CONNECTING, dest);
@@ -847,7 +847,7 @@ _cupsCreateDest(const char *name,	/* I - Printer name */
   if (!name || !device_uri || !uri || urisize < 32)
     return (NULL);
 
-  if ((http = httpConnect2(cupsGetServer(), ippPort(), NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, 30000, NULL)) == NULL)
+  if ((http = httpConnect(cupsGetServer(), ippPort(), NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, 30000, NULL)) == NULL)
     return (NULL);
 
   request = ippNewRequest(IPP_OP_CUPS_CREATE_LOCAL_PRINTER);

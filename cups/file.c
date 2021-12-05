@@ -862,7 +862,7 @@ cupsFileOpen(const char *filename,	/* I - Name of file */
 	* Connect to the server...
 	*/
 
-        if (!httpAddrConnect(addrlist, &fd))
+        if (!httpAddrConnect(addrlist, &fd, 30000, NULL))
 	{
 	  httpAddrFreeList(addrlist);
 	  return (NULL);

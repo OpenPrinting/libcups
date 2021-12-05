@@ -15,6 +15,7 @@ Removed Functions
 The following CUPS 2.x API functions have been removed from the CUPS library:
 
 - Old class/printer functions: `cupsGetClasses` and `cupsGetPrinters`.
+- Old HTTP functions: `httpConnect` and `httpConnectEncrypt`.
 - PPD file functions: `ppdClose`, `ppdCollect`, `ppdCollect2`, `ppdConflicts`,
   `ppdEmit`, `ppdEmitAfterOrder`, `ppdEmitFd`, `ppdEmitJCL`, `ppdEmitJCLEnd`,
   `ppdEmitString`, `ppdErrorString`, `ppdFindAttr`, `ppdFindChoice`,
@@ -48,3 +49,22 @@ Renamed Functions
 | `cupsUser`           | `cupsGetUser`       |
 | `cupsUserAgent`      | `cupsGetUserAgent`  |
 | `cupsSetPasswordCB2` | `cupsSetPasswordCB` |
+| `httpConnect2` | `httpConnect` |
+| `httpReconnect2` | `httpReconnect` |
+| `httpGetLength2` | `httpGetLength` |
+| `httpDecode64_2` | `httpDecode64` |
+| `httpEncode64_2` | `httpEncode64` |
+| `httpRead2` | `httpRead` |
+| `httpWrite2` | `httpWrite` |
+| `httpGetDateString2` | `httpGetDateString` |
+| `http` | `http` |
+| `http` | `http` |
+| `http` | `http` |
+
+
+API Changes
+-----------
+
+- `httpGets` now has the `http_t` pointer as the first argument.
+- `ippAddOctetString`, `ippGetOctetString`, and `ippSetOctetString` now use the
+  `size_t` type for lengths.

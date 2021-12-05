@@ -762,10 +762,10 @@ parse_value(_ipp_file_t      *f,	/* I  - IPP data file */
             tempptr ++;
           }
 
-          return (ippSetOctetString(ipp, attr, element, temp, (int)(tempptr - temp)));
+          return (ippSetOctetString(ipp, attr, element, temp, (size_t)(tempptr - temp)));
         }
         else
-          return (ippSetOctetString(ipp, attr, element, value, (int)valuelen));
+          return (ippSetOctetString(ipp, attr, element, value, valuelen));
 
     case IPP_TAG_TEXTLANG :
     case IPP_TAG_NAMELANG :

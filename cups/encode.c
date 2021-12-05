@@ -540,7 +540,7 @@ _cupsEncodeOption(
 	  * octetString
 	  */
 
-          ippSetOctetString(ipp, &attr, i, val, (int)strlen(val));
+          ippSetOctetString(ipp, &attr, i, val, strlen(val));
 	  break;
 
       case IPP_TAG_BEGIN_COLLECTION :

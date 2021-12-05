@@ -74,7 +74,6 @@
 		270696191CADF3E200FFE5FB /* langprintf.c in Sources */ = {isa = PBXBuildFile; fileRef = 72220EE8133305BB00FCA411 /* langprintf.c */; };
 		2706961A1CADF3E200FFE5FB /* language.c in Sources */ = {isa = PBXBuildFile; fileRef = 72220EEA133305BB00FCA411 /* language.c */; };
 		2706961D1CADF3E200FFE5FB /* md5.c in Sources */ = {isa = PBXBuildFile; fileRef = 72220EEF133305BB00FCA411 /* md5.c */; };
-		2706961E1CADF3E200FFE5FB /* md5passwd.c in Sources */ = {isa = PBXBuildFile; fileRef = 72220EF0133305BB00FCA411 /* md5passwd.c */; };
 		2706961F1CADF3E200FFE5FB /* hash.c in Sources */ = {isa = PBXBuildFile; fileRef = 7284F9EF1BFCCD940026F886 /* hash.c */; };
 		270696201CADF3E200FFE5FB /* notify.c in Sources */ = {isa = PBXBuildFile; fileRef = 72220EF1133305BB00FCA411 /* notify.c */; };
 		270696211CADF3E200FFE5FB /* options.c in Sources */ = {isa = PBXBuildFile; fileRef = 72220EF2133305BB00FCA411 /* options.c */; };
@@ -163,7 +162,6 @@
 		274FF6A31333B1C400317ECB /* langprintf.c in Sources */ = {isa = PBXBuildFile; fileRef = 72220EE8133305BB00FCA411 /* langprintf.c */; };
 		274FF6A41333B1C400317ECB /* language.c in Sources */ = {isa = PBXBuildFile; fileRef = 72220EEA133305BB00FCA411 /* language.c */; };
 		274FF6A71333B1C400317ECB /* md5.c in Sources */ = {isa = PBXBuildFile; fileRef = 72220EEF133305BB00FCA411 /* md5.c */; };
-		274FF6A81333B1C400317ECB /* md5passwd.c in Sources */ = {isa = PBXBuildFile; fileRef = 72220EF0133305BB00FCA411 /* md5passwd.c */; };
 		274FF6A91333B1C400317ECB /* notify.c in Sources */ = {isa = PBXBuildFile; fileRef = 72220EF1133305BB00FCA411 /* notify.c */; };
 		274FF6AA1333B1C400317ECB /* options.c in Sources */ = {isa = PBXBuildFile; fileRef = 72220EF2133305BB00FCA411 /* options.c */; };
 		274FF6AE1333B1C400317ECB /* pwg-media.c in Sources */ = {isa = PBXBuildFile; fileRef = 72220EF8133305BB00FCA411 /* pwg-media.c */; };
@@ -234,7 +232,6 @@
 		72220F25133305BB00FCA411 /* language.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220EEB133305BB00FCA411 /* language.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		72220F28133305BB00FCA411 /* md5-internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220EEE133305BB00FCA411 /* md5-internal.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		72220F29133305BB00FCA411 /* md5.c in Sources */ = {isa = PBXBuildFile; fileRef = 72220EEF133305BB00FCA411 /* md5.c */; };
-		72220F2A133305BB00FCA411 /* md5passwd.c in Sources */ = {isa = PBXBuildFile; fileRef = 72220EF0133305BB00FCA411 /* md5passwd.c */; };
 		72220F2B133305BB00FCA411 /* notify.c in Sources */ = {isa = PBXBuildFile; fileRef = 72220EF1133305BB00FCA411 /* notify.c */; };
 		72220F2C133305BB00FCA411 /* options.c in Sources */ = {isa = PBXBuildFile; fileRef = 72220EF2133305BB00FCA411 /* options.c */; };
 		72220F32133305BB00FCA411 /* pwg-media.c in Sources */ = {isa = PBXBuildFile; fileRef = 72220EF8133305BB00FCA411 /* pwg-media.c */; };
@@ -938,7 +935,6 @@
 		72220EEB133305BB00FCA411 /* language.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = language.h; path = ../cups/language.h; sourceTree = "<group>"; };
 		72220EEE133305BB00FCA411 /* md5-internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "md5-internal.h"; path = "../cups/md5-internal.h"; sourceTree = "<group>"; };
 		72220EEF133305BB00FCA411 /* md5.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = md5.c; path = ../cups/md5.c; sourceTree = "<group>"; };
-		72220EF0133305BB00FCA411 /* md5passwd.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = md5passwd.c; path = ../cups/md5passwd.c; sourceTree = "<group>"; };
 		72220EF1133305BB00FCA411 /* notify.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = notify.c; path = ../cups/notify.c; sourceTree = "<group>"; };
 		72220EF2133305BB00FCA411 /* options.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = options.c; path = ../cups/options.c; sourceTree = "<group>"; };
 		72220EF8133305BB00FCA411 /* pwg-media.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "pwg-media.c"; path = "../cups/pwg-media.c"; sourceTree = "<group>"; };
@@ -1411,7 +1407,6 @@
 				27D3037D134148CB00F022B1 /* libcups3.def */,
 				72220EEF133305BB00FCA411 /* md5.c */,
 				72220EEE133305BB00FCA411 /* md5-internal.h */,
-				72220EF0133305BB00FCA411 /* md5passwd.c */,
 				72220EF1133305BB00FCA411 /* notify.c */,
 				72220EF2133305BB00FCA411 /* options.c */,
 				2767FC7519269687000F61D3 /* pwg.h */,
@@ -2085,7 +2080,6 @@
 				270696191CADF3E200FFE5FB /* langprintf.c in Sources */,
 				2706961A1CADF3E200FFE5FB /* language.c in Sources */,
 				2706961D1CADF3E200FFE5FB /* md5.c in Sources */,
-				2706961E1CADF3E200FFE5FB /* md5passwd.c in Sources */,
 				2706961F1CADF3E200FFE5FB /* hash.c in Sources */,
 				270696201CADF3E200FFE5FB /* notify.c in Sources */,
 				270696211CADF3E200FFE5FB /* options.c in Sources */,
@@ -2178,7 +2172,6 @@
 				274FF6A31333B1C400317ECB /* langprintf.c in Sources */,
 				274FF6A41333B1C400317ECB /* language.c in Sources */,
 				274FF6A71333B1C400317ECB /* md5.c in Sources */,
-				274FF6A81333B1C400317ECB /* md5passwd.c in Sources */,
 				7284F9F11BFCCDB20026F886 /* hash.c in Sources */,
 				274FF6A91333B1C400317ECB /* notify.c in Sources */,
 				274FF6AA1333B1C400317ECB /* options.c in Sources */,
@@ -2250,7 +2243,6 @@
 				72220F24133305BB00FCA411 /* language.c in Sources */,
 				72220F29133305BB00FCA411 /* md5.c in Sources */,
 				7284F9F01BFCCDB10026F886 /* hash.c in Sources */,
-				72220F2A133305BB00FCA411 /* md5passwd.c in Sources */,
 				72220F2B133305BB00FCA411 /* notify.c in Sources */,
 				72220F2C133305BB00FCA411 /* options.c in Sources */,
 				7253C463216ED51500494ADD /* raster-stubs.c in Sources */,

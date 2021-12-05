@@ -343,7 +343,7 @@ main(int  argc,				/* I - Number of command-line args */
 
 	  case 'E' : /* Encrypt with TLS */
 #ifdef HAVE_TLS
-	      data.encryption = HTTP_ENCRYPT_REQUIRED;
+	      data.encryption = HTTP_ENCRYPTION_REQUIRED;
 #else
 	      _cupsLangPrintf(stderr, _("%s: Sorry, no encryption support."),
 			      argv[0]);
@@ -391,7 +391,7 @@ main(int  argc,				/* I - Number of command-line args */
 
 	  case 'S' : /* Encrypt with SSL */
 #ifdef HAVE_TLS
-	      data.encryption = HTTP_ENCRYPT_ALWAYS;
+	      data.encryption = HTTP_ENCRYPTION_ALWAYS;
 #else
 	      _cupsLangPrintf(stderr, _("%s: Sorry, no encryption support."), "ipptool");
 #endif /* HAVE_TLS */
@@ -659,7 +659,7 @@ main(int  argc,				/* I - Number of command-line args */
 
 #ifdef HAVE_TLS
       if (!strncmp(argv[i], "ipps://", 7) || !strncmp(argv[i], "https://", 8))
-        data.encryption = HTTP_ENCRYPT_ALWAYS;
+        data.encryption = HTTP_ENCRYPTION_ALWAYS;
 #endif /* HAVE_TLS */
 
       if (!_ippVarsSet(data.vars, "uri", argv[i]))
@@ -957,7 +957,7 @@ do_monitor_printer_state(
   else
     encryption = data->encryption;
 
-  if ((http = httpConnect2(host, port, NULL, data->family, encryption, 1, 30000, NULL)) == NULL)
+  if ((http = httpConnect(host, port, NULL, data->family, encryption, 1, 30000, NULL)) == NULL)
   {
     print_fatal_error(data, "Unable to connect to \"%s\" on port %d - %s", host, port, cupsLastErrorString());
     return (0);
@@ -1014,7 +1014,7 @@ do_monitor_printer_state(
 	httpError(data->http) != ETIMEDOUT)
 #endif // _WIN32
     {
-      if (httpReconnect2(http, 30000, NULL))
+      if (httpReconnect(http, 30000, NULL))
 	break;
     }
     else if (status == HTTP_STATUS_ERROR || status == HTTP_STATUS_CUPS_AUTHORIZATION_CANCELED)
@@ -1407,7 +1407,7 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
 	    httpError(data->http) != ETIMEDOUT)
 #endif /* _WIN32 */
 	{
-	  if (httpReconnect2(data->http, 30000, NULL))
+	  if (httpReconnect(data->http, 30000, NULL))
 	    data->prev_pass = 0;
 	}
 	else if (status == HTTP_STATUS_ERROR || status == HTTP_STATUS_CUPS_AUTHORIZATION_CANCELED)
@@ -1434,13 +1434,13 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
 	httpError(data->http) != ETIMEDOUT)
 #endif /* _WIN32 */
     {
-      if (httpReconnect2(data->http, 30000, NULL))
+      if (httpReconnect(data->http, 30000, NULL))
 	data->prev_pass = 0;
     }
     else if (status == HTTP_STATUS_ERROR)
     {
       if (!Cancel)
-	httpReconnect2(data->http, 30000, NULL);
+	httpReconnect(data->http, 30000, NULL);
 
       data->prev_pass = 0;
     }
@@ -1456,7 +1456,7 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
 
     cupsArrayClear(data->errors);
 
-    if (httpGetVersion(data->http) != HTTP_1_1)
+    if (httpGetVersion(data->http) != HTTP_VERSION_1_1)
     {
       int version = (int)httpGetVersion(data->http);
 
@@ -2229,7 +2229,7 @@ do_tests(const char     *testfile,	/* I - Test file to use */
   else
     encryption = data->encryption;
 
-  if ((data->http = httpConnect2(data->vars->host, data->vars->port, NULL, data->family, encryption, 1, 30000, NULL)) == NULL)
+  if ((data->http = httpConnect(data->vars->host, data->vars->port, NULL, data->family, encryption, 1, 30000, NULL)) == NULL)
   {
     print_fatal_error(data, "Unable to connect to \"%s\" on port %d - %s", data->vars->host, data->vars->port, cupsLastErrorString());
     return (0);
@@ -2421,11 +2421,11 @@ expect_matches(
 
 	    for (i = 0; i < count; i ++)
 	    {
-	      int	datalen;	// Length of octetString value
+	      size_t	datalen;	// Length of octetString value
 
 	      ippGetOctetString(attr, i, &datalen);
 
-	      if (datalen > upper)
+	      if (datalen > (size_t)upper)
 		break;
 	    }
 
@@ -3289,13 +3289,13 @@ print_attr(cups_file_t      *outfile,	/* I  - Output file */
       case IPP_TAG_STRING :
           for (i = 0; i < count; i ++)
           {
-            int		datalen;	/* Length of data */
+            size_t	datalen;	/* Length of data */
             void	*data = ippGetOctetString(attr, i, &datalen);
 					/* Data */
 	    char	buffer[IPP_MAX_LENGTH * 5 / 4 + 1];
 					/* Base64 output buffer */
 
-	    cupsFilePrintf(outfile, "<data>%s</data>\n", httpEncode64_2(buffer, sizeof(buffer), data, datalen));
+	    cupsFilePrintf(outfile, "<data>%s</data>\n", httpEncode64(buffer, sizeof(buffer), data, datalen));
           }
           break;
 
@@ -3570,11 +3570,11 @@ print_ippserver_attr(
     case IPP_TAG_STRING :
 	for (i = 0; i < count; i ++)
 	{
-	  int len;
+	  size_t len;
 	  const char *s = (const char *)ippGetOctetString(attr, i, &len);
 
 	  cupsFilePuts(data->outfile, i ? "," : " ");
-	  print_ippserver_string(data, s, (size_t)len);
+	  print_ippserver_string(data, s, len);
 	}
 	break;
 
@@ -3753,7 +3753,7 @@ print_json_attr(
     case IPP_TAG_STRING :
         if (count == 1)
         {
-	  int len;
+	  size_t len;
 	  const char *s = (const char *)ippGetOctetString(attr, 0, &len);
 
 	  cupsFilePuts(data->outfile, ": \"");
@@ -3769,7 +3769,7 @@ print_json_attr(
           cupsFilePuts(data->outfile, ": [\n");
 	  for (i = 0; i < count; i ++)
 	  {
-	    int len;
+	    size_t len;
 	    const char *s = (const char *)ippGetOctetString(attr, i, &len);
 
 	    cupsFilePrintf(data->outfile, "%*s\"", indent + 4, "");
@@ -6220,7 +6220,7 @@ with_value(ipptool_test_t *data,	/* I - Test data */
 	  */
 
 	  void		*adata;		/* Pointer to octetString data */
-	  int		adatalen;	/* Length of octetString */
+	  size_t	adatalen;	/* Length of octetString */
 	  regex_t	re;		/* Regular expression */
 
           if ((i = regcomp(&re, value, REG_EXTENDED | REG_NOSUB)) != 0)
@@ -6283,7 +6283,7 @@ with_value(ipptool_test_t *data,	/* I - Test data */
 
           unsigned char	withdata[1023],	/* WITH-VALUE data */
 			*adata;		/* Pointer to octetString data */
-	  int		withlen,	/* Length of WITH-VALUE data */
+	  size_t	withlen,	/* Length of WITH-VALUE data */
 			adatalen;	/* Length of octetString */
 
           if (*value == '<')
@@ -6292,7 +6292,7 @@ with_value(ipptool_test_t *data,	/* I - Test data */
             * Grab hex-encoded value...
             */
 
-            if ((withlen = (int)strlen(value)) & 1 || withlen > (int)(2 * (sizeof(withdata) + 1)))
+            if ((withlen = strlen(value)) & 1 || withlen > (2 * (sizeof(withdata) + 1)))
             {
 	      print_fatal_error(data, "Bad WITH-VALUE hex value.");
               return (0);
@@ -6333,7 +6333,7 @@ with_value(ipptool_test_t *data,	/* I - Test data */
             * Copy literal string value...
             */
 
-            withlen = (int)strlen(value);
+            withlen = strlen(value);
 
             memcpy(withdata, value, (size_t)withlen);
 	  }

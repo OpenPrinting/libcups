@@ -1,6 +1,7 @@
 /*
  * Internet Printing Protocol definitions for CUPS.
  *
+ * Copyright © 2021 by OpenPrinting.
  * Copyright © 2007-2018 by Apple Inc.
  * Copyright © 1997-2006 by Easy Software Products.
  *
@@ -806,9 +807,7 @@ extern ipp_state_t	ippReadFile(int fd, ipp_t *ipp) _CUPS_API_1_1_19;
 extern ipp_state_t	ippWriteFile(int fd, ipp_t *ipp) _CUPS_API_1_1_19;
 
 /**** New in CUPS 1.2/macOS 10.5 ****/
-extern ipp_attribute_t	*ippAddOctetString(ipp_t *ipp, ipp_tag_t group,
-			                   const char *name,
-					   const void *data, int datalen) _CUPS_API_1_2;
+extern ipp_attribute_t	*ippAddOctetString(ipp_t *ipp, ipp_tag_t group, const char *name, const void *data, size_t datalen) _CUPS_API_1_2;
 extern ipp_status_t	ippErrorValue(const char *name) _CUPS_API_1_2;
 extern ipp_t		*ippNewRequest(ipp_op_t op) _CUPS_API_1_2;
 extern const char	*ippOpString(ipp_op_t op) _CUPS_API_1_2;
@@ -916,12 +915,9 @@ extern int		ippContainsInteger(ipp_attribute_t *attr, int value)
 extern int		ippContainsString(ipp_attribute_t *attr,
 			                  const char *value) _CUPS_API_1_7;
 extern cups_array_t	*ippCreateRequestedArray(ipp_t *request) _CUPS_API_1_7;
-extern void		*ippGetOctetString(ipp_attribute_t *attr, int element,
-			                   int *datalen) _CUPS_API_1_7;
+extern void		*ippGetOctetString(ipp_attribute_t *attr, int element, size_t *datalen) _CUPS_API_1_7;
 extern ipp_t		*ippNewResponse(ipp_t *request) _CUPS_API_1_7;
-extern int		ippSetOctetString(ipp_t *ipp, ipp_attribute_t **attr,
-			                  int element, const void *data,
-					  int datalen) _CUPS_API_1_7;
+extern int		ippSetOctetString(ipp_t *ipp, ipp_attribute_t **attr, int element, const void *data, size_t datalen) _CUPS_API_1_7;
 extern int		ippSetStringf(ipp_t *ipp, ipp_attribute_t **attr,
 			              int element, const char *format,
 				      ...) _CUPS_API_1_7;

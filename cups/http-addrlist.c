@@ -27,31 +27,14 @@
 
 
 /*
- * 'httpAddrConnect()' - Connect to any of the addresses in the list.
- *
- * @since CUPS 1.2/macOS 10.5@ @exclude all@
- */
-
-http_addrlist_t *			/* O - Connected address or NULL on failure */
-httpAddrConnect(
-    http_addrlist_t *addrlist,		/* I - List of potential addresses */
-    int             *sock)		/* O - Socket */
-{
-  DEBUG_printf(("httpAddrConnect(addrlist=%p, sock=%p)", (void *)addrlist, (void *)sock));
-
-  return (httpAddrConnect2(addrlist, sock, 30000, NULL));
-}
-
-
-/*
- * 'httpAddrConnect2()' - Connect to any of the addresses in the list with a
- *                        timeout and optional cancel.
+ * 'httpAddrConnect()' - Connect to any of the addresses in the list with a
+ *                       timeout and optional cancel.
  *
  * @since CUPS 1.7/macOS 10.9@
  */
 
 http_addrlist_t *			/* O - Connected address or NULL on failure */
-httpAddrConnect2(
+httpAddrConnect(
     http_addrlist_t *addrlist,		/* I - List of potential addresses */
     int             *sock,		/* O - Socket */
     int             msec,		/* I - Timeout in milliseconds */

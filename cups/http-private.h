@@ -191,7 +191,7 @@ typedef enum _http_mode_e		/**** HTTP mode enumeration ****/
 struct _http_s				/**** HTTP connection structure ****/
 {
   int			fd;		/* File descriptor for this socket */
-  int			blocking;	/* To block or not to block */
+  bool			blocking;	/* To block or not to block */
   int			error;		/* Last error on read */
   time_t		activity;	/* Time since last read/write */
   http_state_t		state;		/* State of client */

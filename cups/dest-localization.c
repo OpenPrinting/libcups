@@ -396,8 +396,7 @@ cups_create_localizations(
     else
       encryption = HTTP_ENCRYPTION_IF_REQUESTED;
 
-    if ((http2 = httpConnect2(hostname, port, NULL, AF_UNSPEC, encryption, 1,
-                              30000, NULL)) == NULL)
+    if ((http2 = httpConnect(hostname, port, NULL, AF_UNSPEC, encryption, 1, 30000, NULL)) == NULL)
     {
       DEBUG_printf(("4cups_create_localizations: Unable to connect to "
                     "%s:%d: %s", hostname, port, cupsLastErrorString()));

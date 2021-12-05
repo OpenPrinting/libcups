@@ -1,6 +1,7 @@
 /*
  * Private IPP definitions for CUPS.
  *
+ * Copyright © 2021 by OpenPrinting.
  * Copyright © 2007-2018 by Apple Inc.
  * Copyright © 1997-2006 by Easy Software Products.
  *
@@ -100,7 +101,7 @@ typedef union _ipp_value_u		/**** Attribute Value ****/
 
   struct
   {
-    int		length;			/* Length of attribute */
+    size_t	length;			/* Length of attribute */
     void	*data;			/* Data in attribute */
   }		unknown;		/* Unknown attribute type */
 

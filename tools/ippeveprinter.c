@@ -2362,7 +2362,7 @@ finish_document_data(
   if (Verbosity)
     fprintf(stderr, "Created job file \"%s\", format \"%s\".\n", filename, job->format);
 
-  while ((bytes = httpRead2(client->http, buffer, sizeof(buffer))) > 0)
+  while ((bytes = httpRead(client->http, buffer, sizeof(buffer))) > 0)
   {
     if (write(job->fd, buffer, (size_t)bytes) < bytes)
     {
@@ -2621,7 +2621,7 @@ finish_document_uri(
 #endif /* HAVE_TLS */
     encryption = HTTP_ENCRYPTION_IF_REQUESTED;
 
-    if ((http = httpConnect2(hostname, port, NULL, AF_UNSPEC, encryption, 1, 30000, NULL)) == NULL)
+    if ((http = httpConnect(hostname, port, NULL, AF_UNSPEC, encryption, 1, 30000, NULL)) == NULL)
     {
       respond_ipp(client, IPP_STATUS_ERROR_DOCUMENT_ACCESS, "Unable to connect to %s: %s", hostname, cupsLastErrorString());
 
@@ -2663,7 +2663,7 @@ finish_document_uri(
       goto abort_job;
     }
 
-    while ((bytes = httpRead2(http, buffer, sizeof(buffer))) > 0)
+    while ((bytes = httpRead(http, buffer, sizeof(buffer))) > 0)
     {
       if (write(job->fd, buffer, (size_t)bytes) < bytes)
       {
@@ -2761,7 +2761,7 @@ flush_document_data(
 
   if (httpGetState(client->http) == HTTP_STATE_POST_RECV)
   {
-    while (httpRead2(client->http, buffer, sizeof(buffer)) > 0);
+    while (httpRead(client->http, buffer, sizeof(buffer)) > 0);
   }
 }
 
@@ -2805,12 +2805,12 @@ html_escape(ippeve_client_t *client,	/* I - Client */
     if (*s == '&' || *s == '<')
     {
       if (s > start)
-        httpWrite2(client->http, start, (size_t)(s - start));
+        httpWrite(client->http, start, (size_t)(s - start));
 
       if (*s == '&')
-        httpWrite2(client->http, "&amp;", 5);
+        httpWrite(client->http, "&amp;", 5);
       else
-        httpWrite2(client->http, "&lt;", 4);
+        httpWrite(client->http, "&lt;", 4);
 
       start = s + 1;
     }
@@ -2819,7 +2819,7 @@ html_escape(ippeve_client_t *client,	/* I - Client */
   }
 
   if (s > start)
-    httpWrite2(client->http, start, (size_t)(s - start));
+    httpWrite(client->http, start, (size_t)(s - start));
 }
 
 
@@ -2836,7 +2836,7 @@ html_footer(ippeve_client_t *client)	/* I - Client */
 	      "</div>\n"
 	      "</body>\n"
 	      "</html>\n");
-  httpWrite2(client->http, "", 0);
+  httpWrite(client->http, "", 0);
 }
 
 
@@ -2927,14 +2927,14 @@ html_printf(ippeve_client_t *client,	/* I - Client */
     if (*format == '%')
     {
       if (format > start)
-        httpWrite2(client->http, start, (size_t)(format - start));
+        httpWrite(client->http, start, (size_t)(format - start));
 
       tptr    = tformat;
       *tptr++ = *format++;
 
       if (*format == '%')
       {
-        httpWrite2(client->http, "%", 1);
+        httpWrite(client->http, "%", 1);
         format ++;
 	start = format;
 	continue;
@@ -3048,7 +3048,7 @@ html_printf(ippeve_client_t *client,	/* I - Client */
 
 	    snprintf(temp, sizeof(temp), tformat, va_arg(ap, double));
 
-            httpWrite2(client->http, temp, strlen(temp));
+            httpWrite(client->http, temp, strlen(temp));
 	    break;
 
         case 'B' : /* Integer formats */
@@ -3072,7 +3072,7 @@ html_printf(ippeve_client_t *client,	/* I - Client */
 	    else
 	      snprintf(temp, sizeof(temp), tformat, va_arg(ap, int));
 
-            httpWrite2(client->http, temp, strlen(temp));
+            httpWrite(client->http, temp, strlen(temp));
 	    break;
 
 	case 'p' : /* Pointer value */
@@ -3081,7 +3081,7 @@ html_printf(ippeve_client_t *client,	/* I - Client */
 
 	    snprintf(temp, sizeof(temp), tformat, va_arg(ap, void *));
 
-            httpWrite2(client->http, temp, strlen(temp));
+            httpWrite(client->http, temp, strlen(temp));
 	    break;
 
         case 'c' : /* Character or character array */
@@ -3108,7 +3108,7 @@ html_printf(ippeve_client_t *client,	/* I - Client */
   }
 
   if (format > start)
-    httpWrite2(client->http, start, (size_t)(format - start));
+    httpWrite(client->http, start, (size_t)(format - start));
 
   va_end(ap);
 }
@@ -4833,15 +4833,15 @@ load_legacy_attributes(
   /* printer-input-tray */
   if (ppm_color > 0)
   {
-    attr = ippAddOctetString(attrs, IPP_TAG_PRINTER, "printer-input-tray", printer_input_tray_color[0], (int)strlen(printer_input_tray_color[0]));
+    attr = ippAddOctetString(attrs, IPP_TAG_PRINTER, "printer-input-tray", printer_input_tray_color[0], strlen(printer_input_tray_color[0]));
     for (i = 1; i < (int)(sizeof(printer_input_tray_color) / sizeof(printer_input_tray_color[0])); i ++)
-      ippSetOctetString(attrs, &attr, i, printer_input_tray_color[i], (int)strlen(printer_input_tray_color[i]));
+      ippSetOctetString(attrs, &attr, i, printer_input_tray_color[i], strlen(printer_input_tray_color[i]));
   }
   else
   {
-    attr = ippAddOctetString(attrs, IPP_TAG_PRINTER, "printer-input-tray", printer_input_tray[0], (int)strlen(printer_input_tray[0]));
+    attr = ippAddOctetString(attrs, IPP_TAG_PRINTER, "printer-input-tray", printer_input_tray[0], strlen(printer_input_tray[0]));
     for (i = 1; i < (int)(sizeof(printer_input_tray) / sizeof(printer_input_tray[0])); i ++)
-      ippSetOctetString(attrs, &attr, i, printer_input_tray[i], (int)strlen(printer_input_tray[i]));
+      ippSetOctetString(attrs, &attr, i, printer_input_tray[i], strlen(printer_input_tray[i]));
   }
 
   /* printer-make-and-model */
@@ -4857,17 +4857,17 @@ load_legacy_attributes(
   /* printer-supply and printer-supply-description */
   if (ppm_color > 0)
   {
-    attr = ippAddOctetString(attrs, IPP_TAG_PRINTER, "printer-supply", printer_supply_color[0], (int)strlen(printer_supply_color[0]));
+    attr = ippAddOctetString(attrs, IPP_TAG_PRINTER, "printer-supply", printer_supply_color[0], strlen(printer_supply_color[0]));
     for (i = 1; i < (int)(sizeof(printer_supply_color) / sizeof(printer_supply_color[0])); i ++)
-      ippSetOctetString(attrs, &attr, i, printer_supply_color[i], (int)strlen(printer_supply_color[i]));
+      ippSetOctetString(attrs, &attr, i, printer_supply_color[i], strlen(printer_supply_color[i]));
 
     ippAddStrings(attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_TEXT), "printer-supply-description", (int)(sizeof(printer_supply_description_color) / sizeof(printer_supply_description_color[0])), NULL, printer_supply_description_color);
   }
   else
   {
-    attr = ippAddOctetString(attrs, IPP_TAG_PRINTER, "printer-supply", printer_supply[0], (int)strlen(printer_supply[0]));
+    attr = ippAddOctetString(attrs, IPP_TAG_PRINTER, "printer-supply", printer_supply[0], strlen(printer_supply[0]));
     for (i = 1; i < (int)(sizeof(printer_supply) / sizeof(printer_supply[0])); i ++)
-      ippSetOctetString(attrs, &attr, i, printer_supply[i], (int)strlen(printer_supply[i]));
+      ippSetOctetString(attrs, &attr, i, printer_supply[i], strlen(printer_supply[i]));
 
     ippAddStrings(attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_TEXT), "printer-supply-description", (int)(sizeof(printer_supply_description) / sizeof(printer_supply_description[0])), NULL, printer_supply_description);
   }
@@ -5402,7 +5402,7 @@ process_http(ippeve_client_t *client)	/* I - Client connection */
 	      }
 
 	      while ((bytes = read(fd, buffer, sizeof(buffer))) > 0)
-		httpWrite2(client->http, buffer, (size_t)bytes);
+		httpWrite(client->http, buffer, (size_t)bytes);
 
 	      httpFlushWrite(client->http);
 
@@ -5436,7 +5436,7 @@ process_http(ippeve_client_t *client)	/* I - Client connection */
 	      }
 
 	      while ((bytes = read(fd, buffer, sizeof(buffer))) > 0)
-		httpWrite2(client->http, buffer, (size_t)bytes);
+		httpWrite(client->http, buffer, (size_t)bytes);
 
 	      httpFlushWrite(client->http);
 
@@ -5452,7 +5452,7 @@ process_http(ippeve_client_t *client)	/* I - Client connection */
 	    if (!respond_http(client, HTTP_STATUS_OK, NULL, "image/png", sizeof(printer_png)))
 	      return (0);
 
-            httpWrite2(client->http, (const char *)printer_png, sizeof(printer_png));
+            httpWrite(client->http, (const char *)printer_png, sizeof(printer_png));
 	    httpFlushWrite(client->http);
 	  }
 	}
@@ -5478,7 +5478,7 @@ process_http(ippeve_client_t *client)	/* I - Client connection */
 	      }
 
 	      while ((bytes = read(fd, buffer, sizeof(buffer))) > 0)
-		httpWrite2(client->http, buffer, (size_t)bytes);
+		httpWrite(client->http, buffer, (size_t)bytes);
 
 	      httpFlushWrite(client->http);
 
@@ -5494,7 +5494,7 @@ process_http(ippeve_client_t *client)	/* I - Client connection */
 	    if (!respond_http(client, HTTP_STATUS_OK, NULL, "image/png", sizeof(printer_lg_png)))
 	      return (0);
 
-            httpWrite2(client->http, (const char *)printer_lg_png, sizeof(printer_lg_png));
+            httpWrite(client->http, (const char *)printer_lg_png, sizeof(printer_lg_png));
 	    httpFlushWrite(client->http);
 	  }
 	}
@@ -5520,7 +5520,7 @@ process_http(ippeve_client_t *client)	/* I - Client connection */
 	      }
 
 	      while ((bytes = read(fd, buffer, sizeof(buffer))) > 0)
-		httpWrite2(client->http, buffer, (size_t)bytes);
+		httpWrite(client->http, buffer, (size_t)bytes);
 
 	      httpFlushWrite(client->http);
 
@@ -5536,7 +5536,7 @@ process_http(ippeve_client_t *client)	/* I - Client connection */
 	    if (!respond_http(client, HTTP_STATUS_OK, NULL, "image/png", sizeof(printer_sm_png)))
 	      return (0);
 
-            httpWrite2(client->http, (const char *)printer_sm_png, sizeof(printer_sm_png));
+            httpWrite(client->http, (const char *)printer_sm_png, sizeof(printer_sm_png));
 	    httpFlushWrite(client->http);
 	  }
 	}
@@ -6133,7 +6133,7 @@ process_job(ippeve_job_t *job)		/* I - Job */
 
         if ((addrlist = httpAddrGetList(host, AF_UNSPEC, service)) == NULL)
           fprintf(stderr, "[Job %d] Unable to find \"%s\": %s\n", job->id, host, cupsLastErrorString());
-        else if (!httpAddrConnect2(addrlist, &mystdout, 30000, &(job->cancel)))
+        else if (!httpAddrConnect(addrlist, &mystdout, 30000, &(job->cancel)))
           fprintf(stderr, "[Job %d] Unable to connect to \"%s\": %s\n", job->id, host, cupsLastErrorString());
 
         httpAddrFreeList(addrlist);
@@ -6843,7 +6843,7 @@ respond_http(
     if (httpPrintf(client->http, "%s", message) < 0)
       return (0);
 
-    if (httpWrite2(client->http, "", 0) < 0)
+    if (httpWrite(client->http, "", 0) < 0)
       return (0);
   }
   else if (client->response)
@@ -7050,7 +7050,7 @@ show_media(ippeve_client_t  *client)	/* I - Client connection */
                         *ready_type;	/* media-col-ready media-type value */
   char			tray_str[1024],	/* printer-input-tray string value */
 			*tray_ptr;	/* Pointer into value */
-  int			tray_len;	/* Length of printer-input-tray value */
+  size_t		tray_len;	/* Length of printer-input-tray value */
   int			ready_sheets;	/* printer-input-tray sheets value */
   int			num_options = 0;/* Number of form options */
   cups_option_t		*options = NULL;/* Form options */
@@ -7192,7 +7192,7 @@ show_media(ippeve_client_t  *client)	/* I - Client connection */
 
       snprintf(tray_str, sizeof(tray_str), "type=sheetFeedAuto%sRemovableTray;mediafeed=%d;mediaxfeed=%d;maxcapacity=%d;level=%d;status=0;name=%s;", !strcmp(media_source, "by-pass-tray") ? "Non" : "", media ? media->length : 0, media ? media->width : 0, strcmp(media_source, "by-pass-tray") ? 250 : 25, ready_sheets, media_source);
 
-      ippSetOctetString(printer->attrs, &input_tray, i, tray_str, (int)strlen(tray_str));
+      ippSetOctetString(printer->attrs, &input_tray, i, tray_str, strlen(tray_str));
 
       if (ready_sheets == 0)
       {
@@ -7456,8 +7456,8 @@ show_supplies(
 		*supply_desc;		/* printer-supply-description attribute */
   int		num_options = 0;	/* Number of form options */
   cups_option_t	*options = NULL;	/* Form options */
-  int		supply_len,		/* Length of supply value */
-		level;			/* Supply level */
+  size_t	supply_len;		/* Length of supply value */
+  int		level;			/* Supply level */
   const char	*supply_value;		/* Supply value */
   char		supply_text[1024],	/* Supply string */
 		*supply_ptr;		/* Pointer into supply string */
@@ -7552,9 +7552,9 @@ show_supplies(
 
         snprintf(supply_text, sizeof(supply_text), printer_supply[i], level);
         if (supply)
-          ippSetOctetString(printer->attrs, &supply, ippGetCount(supply), supply_text, (int)strlen(supply_text));
+          ippSetOctetString(printer->attrs, &supply, ippGetCount(supply), supply_text, strlen(supply_text));
         else
-          supply = ippAddOctetString(printer->attrs, IPP_TAG_PRINTER, "printer-supply", supply_text, (int)strlen(supply_text));
+          supply = ippAddOctetString(printer->attrs, IPP_TAG_PRINTER, "printer-supply", supply_text, strlen(supply_text));
 
         if (i == 0)
         {

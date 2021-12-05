@@ -812,7 +812,8 @@ httpCredentialsString(
     CFStringRef		cf_string;	/* CF string */
     char		commonName[256],/* Common name associated with cert */
 			issuer[256],	/* Issuer name */
-			sigalg[256];	/* Signature algorithm */
+			sigalg[256],	/* Signature algorithm */
+			expstr[256];	/* Expiration date as string */
     time_t		expiration;	/* Expiration date of cert */
     unsigned char	md5_digest[16];	/* MD5 result */
 
@@ -882,7 +883,7 @@ httpCredentialsString(
 
     cupsHashData("md5", first->data, first->datalen, md5_digest, sizeof(md5_digest));
 
-    snprintf(buffer, bufsize, "%s (issued by %s) / %s / %s / %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X", commonName, issuer, httpGetDateString(expiration), sigalg, md5_digest[0], md5_digest[1], md5_digest[2], md5_digest[3], md5_digest[4], md5_digest[5], md5_digest[6], md5_digest[7], md5_digest[8], md5_digest[9], md5_digest[10], md5_digest[11], md5_digest[12], md5_digest[13], md5_digest[14], md5_digest[15]);
+    snprintf(buffer, bufsize, "%s (issued by %s) / %s / %s / %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X", commonName, issuer, httpGetDateString(expiration, expstr, sizeof(expstr)), sigalg, md5_digest[0], md5_digest[1], md5_digest[2], md5_digest[3], md5_digest[4], md5_digest[5], md5_digest[6], md5_digest[7], md5_digest[8], md5_digest[9], md5_digest[10], md5_digest[11], md5_digest[12], md5_digest[13], md5_digest[14], md5_digest[15]);
 
     CFRelease(secCert);
   }

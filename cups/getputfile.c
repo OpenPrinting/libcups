@@ -76,7 +76,7 @@ cupsGetFd(http_t     *http,		/* I - Connection to server or @code CUPS_HTTP_DEFA
     if (!_cups_strcasecmp(httpGetField(http, HTTP_FIELD_CONNECTION), "close"))
     {
       httpClearFields(http);
-      if (httpReconnect2(http, 30000, NULL))
+      if (httpReconnect(http, 30000, NULL))
       {
 	status = HTTP_STATUS_ERROR;
 	break;
@@ -101,7 +101,7 @@ cupsGetFd(http_t     *http,		/* I - Connection to server or @code CUPS_HTTP_DEFA
 
     if (httpGet(http, resource))
     {
-      if (httpReconnect2(http, 30000, NULL))
+      if (httpReconnect(http, 30000, NULL))
       {
         status = HTTP_STATUS_ERROR;
 	break;
@@ -137,7 +137,7 @@ cupsGetFd(http_t     *http,		/* I - Connection to server or @code CUPS_HTTP_DEFA
         break;
       }
 
-      if (httpReconnect2(http, 30000, NULL))
+      if (httpReconnect(http, 30000, NULL))
       {
         status = HTTP_STATUS_ERROR;
         break;
@@ -152,7 +152,7 @@ cupsGetFd(http_t     *http,		/* I - Connection to server or @code CUPS_HTTP_DEFA
       httpFlush(http);
 
       /* Reconnect... */
-      if (httpReconnect2(http, 30000, NULL))
+      if (httpReconnect(http, 30000, NULL))
       {
         status = HTTP_STATUS_ERROR;
         break;
@@ -178,7 +178,7 @@ cupsGetFd(http_t     *http,		/* I - Connection to server or @code CUPS_HTTP_DEFA
     * Yes, copy the file...
     */
 
-    while ((bytes = httpRead2(http, buffer, sizeof(buffer))) > 0)
+    while ((bytes = httpRead(http, buffer, sizeof(buffer))) > 0)
       write(fd, buffer, (size_t)bytes);
   }
   else
@@ -315,7 +315,7 @@ cupsPutFd(http_t     *http,		/* I - Connection to server or @code CUPS_HTTP_DEFA
     if (!_cups_strcasecmp(httpGetField(http, HTTP_FIELD_CONNECTION), "close"))
     {
       httpClearFields(http);
-      if (httpReconnect2(http, 30000, NULL))
+      if (httpReconnect(http, 30000, NULL))
       {
 	status = HTTP_STATUS_ERROR;
 	break;
@@ -344,7 +344,7 @@ cupsPutFd(http_t     *http,		/* I - Connection to server or @code CUPS_HTTP_DEFA
 
     if (httpPut(http, resource))
     {
-      if (httpReconnect2(http, 30000, NULL))
+      if (httpReconnect(http, 30000, NULL))
       {
         status = HTTP_STATUS_ERROR;
 	break;
@@ -380,12 +380,12 @@ cupsPutFd(http_t     *http,		/* I - Connection to server or @code CUPS_HTTP_DEFA
             break;
 	}
 	else
-          httpWrite2(http, buffer, (size_t)bytes);
+          httpWrite(http, buffer, (size_t)bytes);
     }
 
     if (status == HTTP_STATUS_CONTINUE)
     {
-      httpWrite2(http, buffer, 0);
+      httpWrite(http, buffer, 0);
 
       while ((status = httpUpdate(http)) == HTTP_STATUS_CONTINUE);
     }
@@ -400,7 +400,7 @@ cupsPutFd(http_t     *http,		/* I - Connection to server or @code CUPS_HTTP_DEFA
       httpFlush(http);
 
       /* Reconnect... */
-      if (httpReconnect2(http, 30000, NULL))
+      if (httpReconnect(http, 30000, NULL))
       {
         status = HTTP_STATUS_ERROR;
         break;
@@ -434,7 +434,7 @@ cupsPutFd(http_t     *http,		/* I - Connection to server or @code CUPS_HTTP_DEFA
         break;
       }
 
-      if (httpReconnect2(http, 30000, NULL))
+      if (httpReconnect(http, 30000, NULL))
       {
         status = HTTP_STATUS_ERROR;
         break;
@@ -449,7 +449,7 @@ cupsPutFd(http_t     *http,		/* I - Connection to server or @code CUPS_HTTP_DEFA
       httpFlush(http);
 
       /* Reconnect... */
-      if (httpReconnect2(http, 30000, NULL))
+      if (httpReconnect(http, 30000, NULL))
       {
         status = HTTP_STATUS_ERROR;
         break;

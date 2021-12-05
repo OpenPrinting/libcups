@@ -41,7 +41,6 @@ LIBOBJS		= \
 		langprintf.o \
 		language.o \
 		md5.o \
-		md5passwd.o \
 		notify.o \
 		options.o \
 		pwg-media.o \

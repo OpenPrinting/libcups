@@ -2268,11 +2268,7 @@ list_service(ippfind_srv_t *service)	/* I - Service */
     * Connect to the printer...
     */
 
-    http = httpConnect2(service->host, service->port, addrlist, address_family,
-			!strncmp(service->regtype, "_ipps._tcp", 10) ?
-			    HTTP_ENCRYPTION_ALWAYS :
-			    HTTP_ENCRYPTION_IF_REQUESTED,
-			1, 30000, NULL);
+    http = httpConnect(service->host, service->port, addrlist, address_family, !strncmp(service->regtype, "_ipps._tcp", 10) ? HTTP_ENCRYPTION_ALWAYS : HTTP_ENCRYPTION_IF_REQUESTED, 1, 30000, NULL);
 
     httpAddrFreeList(addrlist);
 
@@ -2367,11 +2363,7 @@ list_service(ippfind_srv_t *service)	/* I - Service */
     * Connect to the web server...
     */
 
-    http = httpConnect2(service->host, service->port, addrlist, address_family,
-			!strncmp(service->regtype, "_ipps._tcp", 10) ?
-			    HTTP_ENCRYPTION_ALWAYS :
-			    HTTP_ENCRYPTION_IF_REQUESTED,
-			1, 30000, NULL);
+    http = httpConnect(service->host, service->port, addrlist, address_family, !strncmp(service->regtype, "_ipps._tcp", 10) ? HTTP_ENCRYPTION_ALWAYS : HTTP_ENCRYPTION_IF_REQUESTED, 1, 30000, NULL);
 
     httpAddrFreeList(addrlist);
 
@@ -2413,7 +2405,7 @@ list_service(ippfind_srv_t *service)	/* I - Service */
     int	sock;				/* Socket */
 
 
-    if (!httpAddrConnect(addrlist, &sock))
+    if (!httpAddrConnect(addrlist, &sock, 30000, NULL))
     {
       _cupsLangPrintf(stdout, "%s unavailable", service->uri);
       httpAddrFreeList(addrlist);

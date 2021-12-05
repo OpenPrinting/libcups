@@ -251,7 +251,7 @@ cupsDoIORequest(http_t     *http,	/* I - Connection to server or @code CUPS_HTTP
       * Write trailing data to file...
       */
 
-      while ((bytes = httpRead2(http, buffer, sizeof(buffer))) > 0)
+      while ((bytes = httpRead(http, buffer, sizeof(buffer))) > 0)
 	if (write(outfile, buffer, (size_t)bytes) < bytes)
 	  break;
     }
@@ -353,7 +353,7 @@ cupsGetResponse(http_t     *http,	/* I - Connection to server or @code CUPS_HTTP
 
     DEBUG_puts("2cupsGetResponse: Finishing chunked POST...");
 
-    if (httpWrite2(http, "", 0) < 0)
+    if (httpWrite(http, "", 0) < 0)
       return (NULL);
   }
 
@@ -423,7 +423,7 @@ cupsGetResponse(http_t     *http,	/* I - Connection to server or @code CUPS_HTTP
 
       if (!cupsDoAuthentication(http, "POST", resource))
       {
-        if (httpReconnect2(http, 30000, NULL))
+        if (httpReconnect(http, 30000, NULL))
           http->status = HTTP_STATUS_ERROR;
       }
       else
@@ -441,7 +441,7 @@ cupsGetResponse(http_t     *http,	/* I - Connection to server or @code CUPS_HTTP
 
       DEBUG_puts("2cupsGetResponse: Need encryption...");
 
-      if (!httpReconnect2(http, 30000, NULL))
+      if (!httpReconnect(http, 30000, NULL))
         httpEncryption(http, HTTP_ENCRYPTION_REQUIRED);
     }
 #endif /* HAVE_TLS */
@@ -561,7 +561,7 @@ cupsReadResponseData(
   * Then read from the HTTP connection...
   */
 
-  return (httpRead2(http, buffer, length));
+  return (httpRead(http, buffer, length));
 }
 
 
@@ -631,7 +631,7 @@ cupsSendRequest(http_t     *http,	/* I - Connection to server or @code CUPS_HTTP
   {
     DEBUG_printf(("1cupsSendRequest: Unknown HTTP state (%d), "
                   "reconnecting.", http->state));
-    if (httpReconnect2(http, 30000, NULL))
+    if (httpReconnect(http, 30000, NULL))
       return (HTTP_STATUS_ERROR);
   }
 
@@ -659,7 +659,7 @@ cupsSendRequest(http_t     *http,	/* I - Connection to server or @code CUPS_HTTP
   {
     DEBUG_puts("2cupsSendRequest: Connection: close");
     httpClearFields(http);
-    if (httpReconnect2(http, 30000, NULL))
+    if (httpReconnect(http, 30000, NULL))
     {
       DEBUG_puts("1cupsSendRequest: Unable to reconnect.");
       return (HTTP_STATUS_SERVICE_UNAVAILABLE);
@@ -683,7 +683,7 @@ cupsSendRequest(http_t     *http,	/* I - Connection to server or @code CUPS_HTTP
     httpClearFields(http);
     httpSetExpect(http, expect);
     httpSetField(http, HTTP_FIELD_CONTENT_TYPE, "application/ipp");
-    httpSetField(http, HTTP_FIELD_DATE, httpGetDateString2(time(NULL), date, (int)sizeof(date)));
+    httpSetField(http, HTTP_FIELD_DATE, httpGetDateString(time(NULL), date, sizeof(date)));
     httpSetLength(http, length);
 
     digest = http->authstring && !strncmp(http->authstring, "Digest ", 7);
@@ -710,7 +710,7 @@ cupsSendRequest(http_t     *http,	/* I - Connection to server or @code CUPS_HTTP
     if (httpPost(http, resource))
     {
       DEBUG_puts("2cupsSendRequest: POST failed, reconnecting.");
-      if (httpReconnect2(http, 30000, NULL))
+      if (httpReconnect(http, 30000, NULL))
       {
         DEBUG_puts("1cupsSendRequest: Unable to reconnect.");
         return (HTTP_STATUS_SERVICE_UNAVAILABLE);
@@ -821,7 +821,7 @@ cupsSendRequest(http_t     *http,	/* I - Connection to server or @code CUPS_HTTP
 
           DEBUG_puts("2cupsSendRequest: Reconnecting after HTTP_STATUS_UNAUTHORIZED.");
 
-	  if (httpReconnect2(http, 30000, NULL))
+	  if (httpReconnect(http, 30000, NULL))
 	  {
 	    DEBUG_puts("1cupsSendRequest: Unable to reconnect.");
 	    return (HTTP_STATUS_SERVICE_UNAVAILABLE);
@@ -838,7 +838,7 @@ cupsSendRequest(http_t     *http,	/* I - Connection to server or @code CUPS_HTTP
           DEBUG_puts("2cupsSendRequest: Reconnecting after "
 	             "HTTP_STATUS_UPGRADE_REQUIRED.");
 
-	  if (httpReconnect2(http, 30000, NULL))
+	  if (httpReconnect(http, 30000, NULL))
 	  {
 	    DEBUG_puts("1cupsSendRequest: Unable to reconnect.");
 	    return (HTTP_STATUS_SERVICE_UNAVAILABLE);
@@ -863,7 +863,7 @@ cupsSendRequest(http_t     *http,	/* I - Connection to server or @code CUPS_HTTP
           DEBUG_puts("2cupsSendRequest: Reconnecting after "
 	             "HTTP_EXPECTATION_FAILED.");
 
-	  if (httpReconnect2(http, 30000, NULL))
+	  if (httpReconnect(http, 30000, NULL))
 	  {
 	    DEBUG_puts("1cupsSendRequest: Unable to reconnect.");
 	    return (HTTP_STATUS_SERVICE_UNAVAILABLE);
@@ -924,7 +924,7 @@ cupsWriteRequestData(
 
   wused = http->wused;
 
-  if (httpWrite2(http, buffer, length) < 0)
+  if (httpWrite(http, buffer, length) < 0)
   {
     DEBUG_puts("1cupsWriteRequestData: Returning HTTP_STATUS_ERROR.");
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(http->error), 0);
@@ -1042,8 +1042,7 @@ _cupsConnect(void)
 
   if (!cg->http)
   {
-    if ((cg->http = httpConnect2(cupsGetServer(), ippPort(), NULL, AF_UNSPEC,
-				 cupsGetEncryption(), 1, 30000, NULL)) == NULL)
+    if ((cg->http = httpConnect(cupsGetServer(), ippPort(), NULL, AF_UNSPEC, cupsGetEncryption(), 1, 30000, NULL)) == NULL)
     {
       if (errno)
         _cupsSetError(IPP_STATUS_ERROR_SERVICE_UNAVAILABLE, NULL, 0);

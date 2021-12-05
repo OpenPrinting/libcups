@@ -222,7 +222,7 @@ cupsDoAuthentication(
       char	encode[256];		/* Base64 buffer */
 
       DEBUG_puts("2cupsDoAuthentication: Using Basic.");
-      httpEncode64_2(encode, sizeof(encode), http->userpass, (int)strlen(http->userpass));
+      httpEncode64(encode, sizeof(encode), http->userpass, strlen(http->userpass));
       httpSetAuthString(http, "Basic", encode);
       break;
     }

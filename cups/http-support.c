@@ -146,7 +146,7 @@ static void	http_resolve_cb(AvahiServiceResolver *resolver,
  * place of traditional string functions whenever you need to create a
  * URI string.
  *
- * @since CUPS 1.2/macOS 10.5@
+ * @since CUPS 1.2@
  */
 
 http_uri_status_t			/* O - URI status */
@@ -426,7 +426,7 @@ httpAssembleURI(
  * this function in place of traditional string functions whenever
  * you need to create a URI string.
  *
- * @since CUPS 1.2/macOS 10.5@
+ * @since CUPS 1.2@
  */
 
 http_uri_status_t			/* O - URI status */
@@ -486,7 +486,7 @@ httpAssembleURIf(
  *
  * The buffer needs to be at least 46 bytes in size.
  *
- * @since CUPS 1.7/macOS 10.9@
+ * @since CUPS 1.7@
  */
 
 char *					/* I - UUID string */
@@ -533,43 +533,17 @@ httpAssembleUUID(const char *server,	/* I - Server name */
 /*
  * 'httpDecode64()' - Base64-decode a string.
  *
- * This function is deprecated. Use the httpDecode64_2() function instead
- * which provides buffer length arguments.
- *
- * @deprecated@ @exclude all@
- */
-
-char *					/* O - Decoded string */
-httpDecode64(char       *out,		/* I - String to write to */
-             const char *in)		/* I - String to read from */
-{
-  int	outlen;				/* Output buffer length */
-
-
- /*
-  * Use the old maximum buffer size for binary compatibility...
-  */
-
-  outlen = 512;
-
-  return (httpDecode64_2(out, &outlen, in));
-}
-
-
-/*
- * 'httpDecode64_2()' - Base64-decode a string.
- *
  * The caller must initialize "outlen" to the maximum size of the decoded
  * string before calling @code httpDecode64_2@.  On return "outlen" contains the
  * decoded length of the string.
  *
- * @since CUPS 1.1.21/macOS 10.4@
+ * @since CUPS 1.1.21@
  */
 
 char *					/* O  - Decoded string */
-httpDecode64_2(char       *out,		/* I  - String to write to */
-	       int        *outlen,	/* IO - Size of output string */
-               const char *in)		/* I  - String to read from */
+httpDecode64(char       *out,		/* I  - String to write to */
+	     size_t     *outlen,	/* IO - Size of output string */
+             const char *in)		/* I  - String to read from */
 {
   int		pos;			/* Bit position */
   unsigned	base64;			/* Value of this character */
@@ -656,7 +630,7 @@ httpDecode64_2(char       *out,		/* I  - String to write to */
   * Return the decoded string and size...
   */
 
-  *outlen = (int)(outptr - out);
+  *outlen = (size_t)(outptr - out);
 
   return (out);
 }
@@ -665,31 +639,14 @@ httpDecode64_2(char       *out,		/* I  - String to write to */
 /*
  * 'httpEncode64()' - Base64-encode a string.
  *
- * This function is deprecated. Use the httpEncode64_2() function instead
- * which provides buffer length arguments.
- *
- * @deprecated@ @exclude all@
+ * @since CUPS 1.1.21@
  */
 
 char *					/* O - Encoded string */
 httpEncode64(char       *out,		/* I - String to write to */
-             const char *in)		/* I - String to read from */
-{
-  return (httpEncode64_2(out, 512, in, (int)strlen(in)));
-}
-
-
-/*
- * 'httpEncode64_2()' - Base64-encode a string.
- *
- * @since CUPS 1.1.21/macOS 10.4@
- */
-
-char *					/* O - Encoded string */
-httpEncode64_2(char       *out,		/* I - String to write to */
-	       int        outlen,	/* I - Maximum size of output string */
-               const char *in,		/* I - String to read from */
-	       int        inlen)	/* I - Size of input string */
+	     size_t     outlen,		/* I - Maximum size of output string */
+             const char *in,		/* I - String to read from */
+	     size_t     inlen)		/* I - Size of input string */
 {
   char		*outptr,		/* Output pointer */
 		*outend;		/* End of output buffer */
@@ -775,36 +732,20 @@ httpEncode64_2(char       *out,		/* I - String to write to */
 /*
  * 'httpGetDateString()' - Get a formatted date/time string from a time value.
  *
- * @deprecated@ @exclude all@
+ * @since CUPS 1.2@
  */
 
 const char *				/* O - Date/time string */
-httpGetDateString(time_t t)		/* I - Time in seconds */
-{
-  _cups_globals_t *cg = _cupsGlobals();	/* Pointer to library globals */
-
-
-  return (httpGetDateString2(t, cg->http_date, sizeof(cg->http_date)));
-}
-
-
-/*
- * 'httpGetDateString2()' - Get a formatted date/time string from a time value.
- *
- * @since CUPS 1.2/macOS 10.5@
- */
-
-const char *				/* O - Date/time string */
-httpGetDateString2(time_t t,		/* I - Time in seconds */
-                   char   *s,		/* I - String buffer */
-		   int    slen)		/* I - Size of string buffer */
+httpGetDateString(time_t t,		/* I - Time in seconds */
+                  char   *s,		/* I - String buffer */
+		  size_t slen)		/* I - Size of string buffer */
 {
   struct tm	tdate;			/* UNIX date/time data */
 
 
   gmtime_r(&t, &tdate);
 
-  snprintf(s, (size_t)slen, "%s, %02d %s %d %02d:%02d:%02d GMT", http_days[tdate.tm_wday], tdate.tm_mday, http_months[tdate.tm_mon], tdate.tm_year + 1900, tdate.tm_hour, tdate.tm_min, tdate.tm_sec);
+  snprintf(s, slen, "%s, %02d %s %d %02d:%02d:%02d GMT", http_days[tdate.tm_wday], tdate.tm_mday, http_months[tdate.tm_mon], tdate.tm_year + 1900, tdate.tm_hour, tdate.tm_min, tdate.tm_sec);
 
   return (s);
 }
@@ -888,7 +829,7 @@ httpGetDateTime(const char *s)		/* I - Date/time string */
  * 'httpSeparateURI()' - Separate a Universal Resource Identifier into its
  *                       components.
  *
- * @since CUPS 1.2/macOS 10.5@
+ * @since CUPS 1.2@
  */
 
 http_uri_status_t			/* O - Result of separation */
