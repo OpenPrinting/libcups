@@ -39,8 +39,8 @@ The following CUPS 2.x API functions have been removed from the CUPS library:
 Renamed Functions
 -----------------
 
-| Old Name | New Name |
-+----------+----------+
+| Old Name             | New Name            |
++----------------------+---------------------+
 | `cupsEncryption`     | `cupsGetEncryption` |
 | `cupsTempFile2`      | `cupsTempFile`      |
 | `cupsGetDests2`      | `cupsGetDests`      |
@@ -49,15 +49,15 @@ Renamed Functions
 | `cupsUser`           | `cupsGetUser`       |
 | `cupsUserAgent`      | `cupsGetUserAgent`  |
 | `cupsSetPasswordCB2` | `cupsSetPasswordCB` |
-| `httpConnect2` | `httpConnect` |
-| `httpReconnect2` | `httpReconnect` |
-| `httpGetLength2` | `httpGetLength` |
-| `httpDecode64_2` | `httpDecode64` |
-| `httpEncode64_2` | `httpEncode64` |
-| `httpRead2` | `httpRead` |
-| `httpWrite2` | `httpWrite` |
+| `httpConnect2`       | `httpConnect`       |
+| `httpReconnect2`     | `httpReconnect`     |
+| `httpGetLength2`     | `httpGetLength`     |
+| `httpDecode64_2`     | `httpDecode64`      |
+| `httpEncode64_2`     | `httpEncode64`      |
+| `httpRead2`          | `httpRead`          |
+| `httpWrite2`         | `httpWrite`         |
 | `httpGetDateString2` | `httpGetDateString` |
-| `http` | `http` |
+| `httpBlocking`       | `httpSetBlocking`   |
 | `http` | `http` |
 | `http` | `http` |
 

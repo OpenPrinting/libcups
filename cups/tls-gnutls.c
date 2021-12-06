@@ -721,7 +721,7 @@ httpLoadCredentials(
   unsigned char		*data = NULL;	/* Buffer for cert data */
   size_t		alloc_data = 0,	/* Bytes allocated */
 			num_data = 0;	/* Bytes used */
-  int			decoded;	/* Bytes decoded */
+  size_t		decoded;	/* Bytes decoded */
   int			in_certificate = 0;
 					/* In a certificate? */
 
@@ -808,8 +808,8 @@ httpLoadCredentials(
         alloc_data += 1024;
       }
 
-      decoded = alloc_data - num_data;
-      httpDecode64_2((char *)data + num_data, &decoded, line);
+      decoded = (size_t)(alloc_data - num_data);
+      httpDecode64((char *)data + num_data, &decoded, line);
       num_data += (size_t)decoded;
     }
   }
@@ -991,7 +991,7 @@ http_gnutls_load_crl(void)
     unsigned char	*data = NULL;	/* Buffer for cert data */
     size_t		alloc_data = 0,	/* Bytes allocated */
 			num_data = 0;	/* Bytes used */
-    int			decoded;	/* Bytes decoded */
+    size_t		decoded;	/* Bytes decoded */
     gnutls_datum_t	datum;		/* Data record */
 
 
@@ -1052,8 +1052,8 @@ http_gnutls_load_crl(void)
 	    alloc_data += 1024;
 	  }
 
-	  decoded = alloc_data - num_data;
-	  httpDecode64_2((char *)data + num_data, &decoded, line);
+	  decoded = (size_t)(alloc_data - num_data);
+	  httpDecode64((char *)data + num_data, &decoded, line);
 	  num_data += (size_t)decoded;
 	}
       }
