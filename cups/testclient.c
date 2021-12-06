@@ -647,7 +647,7 @@ monitor_printer(
   * Open a connection to the printer...
   */
 
-  http = httpConnect2(data->hostname, data->port, NULL, AF_UNSPEC, data->encryption, 1, 0, NULL);
+  http = httpConnect(data->hostname, data->port, NULL, AF_UNSPEC, data->encryption, 1, 0, NULL);
 
  /*
   * Loop until the job is canceled, aborted, or completed.
@@ -666,7 +666,7 @@ monitor_printer(
     */
 
     if (httpGetFd(http) < 0)
-      httpReconnect2(http, 30000, NULL);
+      httpReconnect(http, 30000, NULL);
 
     if (httpGetFd(http) >= 0)
     {
@@ -786,7 +786,7 @@ run_client(
   * Open a connection to the printer...
   */
 
-  http = httpConnect2(data->hostname, data->port, NULL, AF_UNSPEC, data->encryption, 1, 0, NULL);
+  http = httpConnect(data->hostname, data->port, NULL, AF_UNSPEC, data->encryption, 1, 0, NULL);
 
  /*
   * Query printer status and capabilities...

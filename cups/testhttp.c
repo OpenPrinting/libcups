@@ -228,7 +228,7 @@ main(int  argc,				/* I - Number of command-line arguments */
   FILE		*out;			/* Output file */
   char		encode[256],		/* Base64-encoded string */
 		decode[256];		/* Base64-decoded string */
-  int		decodelen;		/* Length of decoded string */
+  size_t	decodelen;		/* Length of decoded string */
   char		scheme[HTTP_MAX_URI],	/* Scheme from URI */
 		hostname[HTTP_MAX_URI],	/* Hostname from URI */
 		username[HTTP_MAX_URI],	/* Username:password from URI */
@@ -272,7 +272,7 @@ main(int  argc,				/* I - Number of command-line arguments */
     testBegin("httpGetDateString()/httpGetDateTime()");
 
     start = time(NULL);
-    strlcpy(buffer, httpGetDateString(start), sizeof(buffer));
+    httpGetDateString(start, buffer, sizeof(buffer));
     current = httpGetDateTime(buffer);
 
     i = (int)(current - start);
@@ -288,7 +288,7 @@ main(int  argc,				/* I - Number of command-line arguments */
       testError("Difference is %d seconds, %02d:%02d:%02d.", i, i / 3600, (i / 60) % 60, i % 60);
       testError("httpGetDateString(%d) returned \"%s\"", (int)start, buffer);
       testError("httpGetDateTime(\"%s\") returned %d", buffer, (int)current);
-      testError("httpGetDateString(%d) returned \"%s\"", (int)current, httpGetDateString(current));
+      testError("httpGetDateString(%d) returned \"%s\"", (int)current, httpGetDateString(current, buffer, sizeof(buffer)));
     }
 
    /*
@@ -299,9 +299,9 @@ main(int  argc,				/* I - Number of command-line arguments */
 
     for (i = 0, j = 0; i < (int)(sizeof(base64_tests) / sizeof(base64_tests[0])); i ++)
     {
-      httpEncode64_2(encode, sizeof(encode), base64_tests[i][0], (int)strlen(base64_tests[i][0]));
-      decodelen = (int)sizeof(decode);
-      httpDecode64_2(decode, &decodelen, base64_tests[i][1]);
+      httpEncode64(encode, sizeof(encode), base64_tests[i][0], strlen(base64_tests[i][0]));
+      decodelen = sizeof(decode);
+      httpDecode64(decode, &decodelen, base64_tests[i][1]);
 
       if (strcmp(decode, base64_tests[i][0]))
       {
@@ -609,7 +609,7 @@ main(int  argc,				/* I - Number of command-line arguments */
     else
       encryption = HTTP_ENCRYPTION_IF_REQUESTED;
 
-    http = httpConnect2(hostname, port, NULL, AF_UNSPEC, encryption, 1, 30000, NULL);
+    http = httpConnect(hostname, port, NULL, AF_UNSPEC, encryption, 1, 30000, NULL);
     if (http == NULL)
     {
       perror(hostname);
@@ -619,7 +619,7 @@ main(int  argc,				/* I - Number of command-line arguments */
     if (httpIsEncrypted(http))
     {
       cups_array_t *creds;
-      char info[1024];
+      char info[1024], expstr[256];
       static const char *trusts[] = { "OK", "Invalid", "Changed", "Expired", "Renewed", "Unknown" };
       if (!httpCopyCredentials(http, &creds))
       {
@@ -630,7 +630,7 @@ main(int  argc,				/* I - Number of command-line arguments */
 
 	printf("Count: %d\n", cupsArrayCount(creds));
         printf("Trust: %s\n", trusts[trust]);
-        printf("Expiration: %s\n", httpGetDateString(httpCredentialsGetExpiration(creds)));
+        printf("Expiration: %s\n", httpGetDateString(httpCredentialsGetExpiration(creds), expstr, sizeof(expstr)));
         printf("IsValidName: %d\n", httpCredentialsAreValidForName(creds, hostname));
         printf("String: \"%s\"\n", info);
 
@@ -678,7 +678,7 @@ main(int  argc,				/* I - Number of command-line arguments */
       if (!_cups_strcasecmp(httpGetField(http, HTTP_FIELD_CONNECTION), "close"))
       {
 	httpClearFields(http);
-	if (httpReconnect2(http, 30000, NULL))
+	if (httpReconnect(http, 30000, NULL))
 	{
           status = HTTP_STATUS_ERROR;
           break;
@@ -694,7 +694,7 @@ main(int  argc,				/* I - Number of command-line arguments */
 
       if (httpHead(http, resource))
       {
-        if (httpReconnect2(http, 30000, NULL))
+        if (httpReconnect(http, 30000, NULL))
         {
           status = HTTP_STATUS_ERROR;
           break;
@@ -730,7 +730,7 @@ main(int  argc,				/* I - Number of command-line arguments */
 	  break;
 	}
 
-	if (httpReconnect2(http, 30000, NULL))
+	if (httpReconnect(http, 30000, NULL))
 	{
 	  status = HTTP_STATUS_ERROR;
 	  break;
@@ -745,7 +745,7 @@ main(int  argc,				/* I - Number of command-line arguments */
 	httpFlush(http);
 
 	/* Reconnect... */
-	if (httpReconnect2(http, 30000, NULL))
+	if (httpReconnect(http, 30000, NULL))
 	{
 	  status = HTTP_STATUS_ERROR;
 	  break;
@@ -779,7 +779,7 @@ main(int  argc,				/* I - Number of command-line arguments */
       if (!_cups_strcasecmp(httpGetField(http, HTTP_FIELD_CONNECTION), "close"))
       {
 	httpClearFields(http);
-	if (httpReconnect2(http, 30000, NULL))
+	if (httpReconnect(http, 30000, NULL))
 	{
           status = HTTP_STATUS_ERROR;
           break;
@@ -796,7 +796,7 @@ main(int  argc,				/* I - Number of command-line arguments */
 
       if (httpGet(http, resource))
       {
-        if (httpReconnect2(http, 30000, NULL))
+        if (httpReconnect(http, 30000, NULL))
         {
           status = HTTP_STATUS_ERROR;
           break;
@@ -832,7 +832,7 @@ main(int  argc,				/* I - Number of command-line arguments */
 	  break;
 	}
 
-	if (httpReconnect2(http, 30000, NULL))
+	if (httpReconnect(http, 30000, NULL))
 	{
 	  status = HTTP_STATUS_ERROR;
 	  break;
@@ -847,7 +847,7 @@ main(int  argc,				/* I - Number of command-line arguments */
 	httpFlush(http);
 
 	/* Reconnect... */
-	if (httpReconnect2(http, 30000, NULL))
+	if (httpReconnect(http, 30000, NULL))
 	{
 	  status = HTTP_STATUS_ERROR;
 	  break;
@@ -869,10 +869,10 @@ main(int  argc,				/* I - Number of command-line arguments */
       printf("GET failed with status %d...\n", status);
 
     start  = time(NULL);
-    length = httpGetLength2(http);
+    length = httpGetLength(http);
     total  = 0;
 
-    while ((bytes = httpRead2(http, buffer, sizeof(buffer))) > 0)
+    while ((bytes = httpRead(http, buffer, sizeof(buffer))) > 0)
     {
       total += bytes;
       fwrite(buffer, (size_t)bytes, 1, out);

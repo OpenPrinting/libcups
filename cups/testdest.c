@@ -366,7 +366,7 @@ localize(http_t       *http,		/* I - Connection to destination */
         case IPP_TAG_STRING :
 	    for (i = 0; i < count; i ++)
 	    {
-	      int j, len;
+	      size_t j, len;
 	      unsigned char *data = ippGetOctetString(attr, i, &len);
 
               fputs("  ", stdout);
@@ -719,7 +719,7 @@ show_supported(http_t       *http,	/* I - Connection to destination */
         case IPP_TAG_STRING :
 	    for (i = 0; i < count; i ++)
 	    {
-	      int j, len;
+	      size_t j, len;
 	      unsigned char *data = ippGetOctetString(attr, i, &len);
 
               fputs("  ", stdout);

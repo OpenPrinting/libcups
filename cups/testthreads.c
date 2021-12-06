@@ -236,8 +236,10 @@ show_supported(http_t       *http,	/* I - Connection to destination */
         case IPP_TAG_STRING :
 	    for (i = 0; i < count; i ++)
 	    {
-	      int j, len;
+	      size_t j;			// Looping var
+	      size_t len;		// Length of value
 	      unsigned char *data = ippGetOctetString(attr, i, &len);
+					// Pointer to octet string
 
               fputs("        ", stdout);
 	      for (j = 0; j < len; j ++)

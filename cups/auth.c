@@ -23,10 +23,6 @@
 #  include <unistd.h>
 #endif /* _WIN32 || __EMX__ */
 
-#if HAVE_AUTHORIZATION_H
-#  include <Security/Authorization.h>
-#endif /* HAVE_AUTHORIZATION_H */
-
 #if defined(SO_PEERCRED) && defined(AF_LOCAL)
 #  include <pwd.h>
 #endif /* SO_PEERCRED && AF_LOCAL */
@@ -551,15 +547,6 @@ cups_local_auth(http_t *http)		/* I - HTTP connection to server */
   const char		*www_auth,	/* WWW-Authenticate header */
 			*schemedata;	/* Data for the named auth scheme */
   _cups_globals_t *cg = _cupsGlobals();	/* Global data */
-#  if defined(HAVE_AUTHORIZATION_H)
-  OSStatus		status;		/* Status */
-  AuthorizationItem	auth_right;	/* Authorization right */
-  AuthorizationRights	auth_rights;	/* Authorization rights */
-  AuthorizationFlags	auth_flags;	/* Authorization flags */
-  AuthorizationExternalForm auth_extrn;	/* Authorization ref external */
-  char			auth_key[1024];	/* Buffer */
-  char			buffer[1024];	/* Buffer */
-#  endif /* HAVE_AUTHORIZATION_H */
 
 
   DEBUG_printf(("7cups_local_auth(http=%p) hostaddr=%s, hostname=\"%s\"", (void *)http, httpAddrString(http->hostaddr, filename, sizeof(filename)), http->hostname));
@@ -575,72 +562,6 @@ cups_local_auth(http_t *http)		/* I - HTTP connection to server */
   }
 
   www_auth = httpGetField(http, HTTP_FIELD_WWW_AUTHENTICATE);
-
-#  if defined(HAVE_AUTHORIZATION_H)
- /*
-  * Delete any previous authorization reference...
-  */
-
-  if (http->auth_ref)
-  {
-    AuthorizationFree(http->auth_ref, kAuthorizationFlagDefaults);
-    http->auth_ref = NULL;
-  }
-
-  if (!getenv("GATEWAY_INTERFACE") && (schemedata = cups_auth_find(www_auth, "AuthRef")) != NULL && cups_auth_param(schemedata, "key", auth_key, sizeof(auth_key)))
-  {
-    status = AuthorizationCreate(NULL, kAuthorizationEmptyEnvironment, kAuthorizationFlagDefaults, &http->auth_ref);
-    if (status != errAuthorizationSuccess)
-    {
-      DEBUG_printf(("8cups_local_auth: AuthorizationCreate() returned %d",
-		    (int)status));
-      return (-1);
-    }
-
-    auth_right.name        = auth_key;
-    auth_right.valueLength = 0;
-    auth_right.value       = NULL;
-    auth_right.flags       = 0;
-
-    auth_rights.count = 1;
-    auth_rights.items = &auth_right;
-
-    auth_flags = kAuthorizationFlagDefaults |
-		 kAuthorizationFlagPreAuthorize |
-		 kAuthorizationFlagInteractionAllowed |
-		 kAuthorizationFlagExtendRights;
-
-    status = AuthorizationCopyRights(http->auth_ref, &auth_rights,
-				     kAuthorizationEmptyEnvironment,
-				     auth_flags, NULL);
-    if (status == errAuthorizationSuccess)
-      status = AuthorizationMakeExternalForm(http->auth_ref, &auth_extrn);
-
-    if (status == errAuthorizationSuccess)
-    {
-     /*
-      * Set the authorization string and return...
-      */
-
-      httpEncode64_2(buffer, sizeof(buffer), (void *)&auth_extrn,
-		     sizeof(auth_extrn));
-
-      httpSetAuthString(http, "AuthRef", buffer);
-
-      DEBUG_printf(("8cups_local_auth: Returning authstring=\"%s\"",
-		    http->authstring));
-      return (0);
-    }
-    else if (status == errAuthorizationCanceled)
-      return (-1);
-
-    DEBUG_printf(("9cups_local_auth: AuthorizationCopyRights() returned %d", (int)status));
-
-  /*
-   * Fall through to try certificates...
-   */
-  }
-#  endif /* HAVE_AUTHORIZATION_H */
 
 #  if defined(SO_PEERCRED) && defined(AF_LOCAL)
  /*

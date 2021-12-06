@@ -190,6 +190,11 @@ typedef enum _http_mode_e		/**** HTTP mode enumeration ****/
 #  ifndef _HTTP_NO_PRIVATE
 struct _http_s				/**** HTTP connection structure ****/
 {
+  _http_mode_t		mode;		/* _HTTP_MODE_CLIENT or _HTTP_MODE_SERVER */
+  char			hostname[HTTP_MAX_HOST];
+  					/* Name of connected host */
+  http_addr_t		*hostaddr;	/* Current host address and port */
+  http_addrlist_t	*hostlist;	/* List of valid addresses */
   int			fd;		/* File descriptor for this socket */
   bool			blocking;	/* To block or not to block */
   int			error;		/* Last error on read */
@@ -197,81 +202,48 @@ struct _http_s				/**** HTTP connection structure ****/
   http_state_t		state;		/* State of client */
   http_status_t		status;		/* Status of last request */
   http_version_t	version;	/* Protocol version */
+  char			*fields[HTTP_FIELD_MAX],
+					/* Allocated field values */
+  			*default_fields[HTTP_FIELD_MAX];
+					/* Default field values, if any */
+  char			*authstring;	/* Current Authorization field */
+  char			*cookie;	/* Cookie value(s) */
+  http_status_t		expect;		/* Expect: header */
   http_keepalive_t	keep_alive;	/* Keep-alive supported? */
-  struct sockaddr_in	_hostaddr;	/* Address of connected host (deprecated) */
-  char			hostname[HTTP_MAX_HOST],
-  					/* Name of connected host */
-			_fields[HTTP_FIELD_ACCEPT_ENCODING][HTTP_MAX_VALUE];
-					/* Field values up to Accept-Encoding (deprecated) */
+  unsigned		nonce_count;	/* Nonce count */
+  int			digest_tries;	/* Number of tries for digest auth */
+  char			userpass[HTTP_MAX_VALUE];
+					/* Username:password string */
   char			*data;		/* Pointer to data buffer */
   http_encoding_t	data_encoding;	/* Chunked or not */
-  int			_data_remaining;/* Number of bytes left (deprecated) */
+  off_t			data_remaining;	/* Number of bytes left */
   int			used;		/* Number of bytes used in buffer */
   char			buffer[HTTP_MAX_BUFFER];
 					/* Buffer for incoming data */
-  int			_auth_type;	/* Authentication in use (deprecated) */
-  unsigned char		_md5_state[88];	/* MD5 state (deprecated) */
-  char			nonce[HTTP_MAX_VALUE];
+  char			algorithm[65],	/* Algorithm from WWW-Authenticate */
+			nextnonce[HTTP_MAX_VALUE],
+					/* Next nonce value from Authentication-Info */
+			nonce[HTTP_MAX_VALUE],
 					/* Nonce value */
-  unsigned		nonce_count;	/* Nonce count */
-  http_tls_t		tls;		/* TLS state information */
+			opaque[HTTP_MAX_VALUE],
+					/* Opaque value from WWW-Authenticate */
+			realm[HTTP_MAX_VALUE];
+					/* Realm from WWW-Authenticate */
   http_encryption_t	encryption;	/* Encryption requirements */
-
-  /**** New in CUPS 1.1.19 ****/
-  fd_set		*input_set;	/* select() set for httpWait() (deprecated) */
-  http_status_t		expect;		/* Expect: header */
-  char			*cookie;	/* Cookie value(s) */
-
-  /**** New in CUPS 1.1.20 ****/
-  char			_authstring[HTTP_MAX_VALUE],
-					/* Current Authorization value (deprecated) */
-			userpass[HTTP_MAX_VALUE];
-					/* Username:password string */
-  int			digest_tries;	/* Number of tries for digest auth */
-
-  /**** New in CUPS 1.2 ****/
-  off_t			data_remaining;	/* Number of bytes left */
-  http_addr_t		*hostaddr;	/* Current host address and port */
-  http_addrlist_t	*addrlist;	/* List of valid addresses */
+  http_tls_t		tls;		/* TLS state information */
+  http_tls_credentials_t tls_credentials;
+  bool			tls_upgrade;	/* `true` if we are doing an upgrade */
   char			wbuffer[HTTP_MAX_BUFFER];
 					/* Buffer for outgoing data */
   int			wused;		/* Write buffer bytes used */
-
-  /**** New in CUPS 1.3 ****/
-  char			*authstring;	/* Current Authorization field */
-#  ifdef HAVE_AUTHORIZATION_H
-  AuthorizationRef	auth_ref;	/* Authorization ref */
-#  endif /* HAVE_AUTHORIZATION_H */
-
-  /**** New in CUPS 1.5 ****/
-  http_tls_credentials_t tls_credentials;
 					/* TLS credentials */
   http_timeout_cb_t	timeout_cb;	/* Timeout callback */
   void			*timeout_data;	/* User data pointer */
   double		timeout_value;	/* Timeout in seconds */
   int			wait_value;	/* httpWait value for timeout */
-
-  /**** New in CUPS 1.7 ****/
-  int			tls_upgrade;	/* Non-zero if we are doing an upgrade */
-  _http_mode_t		mode;		/* _HTTP_MODE_CLIENT or _HTTP_MODE_SERVER */
   _http_coding_t	coding;		/* _HTTP_CODING_xxx */
   void			*stream;	/* (De)compression stream */
   unsigned char		*sbuffer;	/* (De)compression buffer */
-
-  /**** New in CUPS 2.2.9 ****/
-  char			algorithm[65],	/* Algorithm from WWW-Authenticate */
-			nextnonce[HTTP_MAX_VALUE],
-					/* Next nonce value from Authentication-Info */
-			opaque[HTTP_MAX_VALUE],
-					/* Opaque value from WWW-Authenticate */
-			realm[HTTP_MAX_VALUE];
-					/* Realm from WWW-Authenticate */
-
-  /**** New in CUPS 2.3 ****/
-  char			*fields[HTTP_FIELD_MAX],
-					/* Allocated field values */
-  			*default_fields[HTTP_FIELD_MAX];
-					/* Default field values, if any */
 };
 #  endif /* !_HTTP_NO_PRIVATE */
 
@@ -291,18 +263,12 @@ extern const char *_cups_hstrerror(int error);
  */
 
 extern void		_httpAddrSetPort(http_addr_t *addr, int port) _CUPS_PRIVATE;
-extern http_tls_credentials_t
-			_httpCreateCredentials(cups_array_t *credentials) _CUPS_PRIVATE;
-extern char		*_httpDecodeURI(char *dst, const char *src,
-			                size_t dstsize) _CUPS_PRIVATE;
+extern http_tls_credentials_t _httpCreateCredentials(cups_array_t *credentials) _CUPS_PRIVATE;
+extern char		*_httpDecodeURI(char *dst, const char *src, size_t dstsize) _CUPS_PRIVATE;
 extern void		_httpDisconnect(http_t *http) _CUPS_PRIVATE;
-extern char		*_httpEncodeURI(char *dst, const char *src,
-			                size_t dstsize) _CUPS_PRIVATE;
+extern char		*_httpEncodeURI(char *dst, const char *src, size_t dstsize) _CUPS_PRIVATE;
 extern void		_httpFreeCredentials(http_tls_credentials_t credentials) _CUPS_PRIVATE;
-extern const char	*_httpResolveURI(const char *uri, char *resolved_uri,
-			                 size_t resolved_size, int options,
-					 int (*cb)(void *context),
-					 void *context) _CUPS_PRIVATE;
+extern const char	*_httpResolveURI(const char *uri, char *resolved_uri, size_t resolved_size, int options, int (*cb)(void *context), void *context) _CUPS_PRIVATE;
 extern int		_httpSetDigestAuthString(http_t *http, const char *nonce, const char *method, const char *resource) _CUPS_PRIVATE;
 extern const char	*_httpStatus(cups_lang_t *lang, http_status_t status) _CUPS_PRIVATE;
 extern void		_httpTLSInitialize(void) _CUPS_PRIVATE;

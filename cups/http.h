@@ -354,7 +354,6 @@ typedef int (*http_timeout_cb_t)(http_t *http, void *user_data);
 					/**** HTTP timeout callback @since CUPS 1.5@ ****/
 
 
-
 /*
  * Prototypes...
  */
@@ -429,14 +428,10 @@ extern void		httpFreeCredentials(cups_array_t *certs) _CUPS_PUBLIC;
 extern int		httpSetCredentials(http_t *http, cups_array_t *certs) _CUPS_PUBLIC;
 extern void		httpSetTimeout(http_t *http, double timeout, http_timeout_cb_t cb, void *user_data) _CUPS_PUBLIC;
 
-/**** New in CUPS 1.6 ****/
 extern http_addrlist_t	*httpAddrConnect(http_addrlist_t *addrlist, int *sock, int msec, int *cancel) _CUPS_PUBLIC;
 extern http_state_t	httpGetState(http_t *http) _CUPS_PUBLIC;
 extern http_version_t	httpGetVersion(http_t *http) _CUPS_PUBLIC;
 extern int		httpReconnect(http_t *http, int msec, int *cancel) _CUPS_PUBLIC;
-
-
-/**** New in CUPS 1.7 ****/
 extern http_t		*httpAcceptConnection(int fd, int blocking) _CUPS_PUBLIC;
 extern http_addrlist_t	*httpAddrCopyList(http_addrlist_t *src) _CUPS_PUBLIC;
 extern int		httpAddrListen(http_addr_t *addr, int port) _CUPS_PUBLIC;
@@ -449,8 +444,6 @@ extern ssize_t		httpPeek(http_t *http, char *buffer, size_t length) _CUPS_PUBLIC
 extern http_state_t	httpReadRequest(http_t *http, char *resource, size_t resourcelen) _CUPS_PUBLIC;
 extern void		httpSetDefaultField(http_t *http, http_field_t field, const char *value) _CUPS_PUBLIC;
 extern http_state_t	httpWriteResponse(http_t *http, http_status_t status) _CUPS_PUBLIC;
-
-/* New in CUPS 2.0 */
 extern int		httpAddrClose(http_addr_t *addr, int fd) _CUPS_PUBLIC;
 extern int		httpAddrFamily(http_addr_t *addr) _CUPS_PUBLIC;
 extern int		httpCompareCredentials(cups_array_t *cred1, cups_array_t *cred2) _CUPS_PUBLIC;

@@ -32,7 +32,7 @@
  * Local functions...
  */
 
-static void		http_add_field(http_t *http, http_field_t field, const char *value, int append);
+static void		http_add_field(http_t *http, http_field_t field, const char *value, bool append);
 static void		http_content_coding_finish(http_t *http);
 static void		http_content_coding_start(http_t *http,
 						  const char *value);
@@ -156,8 +156,7 @@ httpAcceptConnection(int fd,		/* I - Listen socket file descriptor */
 
   addrlen = sizeof(http_addr_t);
 
-  if ((http->fd = accept(fd, (struct sockaddr *)&(http->addrlist->addr),
-			 &addrlen)) < 0)
+  if ((http->fd = accept(fd, (struct sockaddr *)&(http->hostlist->addr), &addrlen)) < 0)
   {
     _cupsSetHTTPError(HTTP_STATUS_ERROR);
     httpClose(http);
@@ -165,7 +164,7 @@ httpAcceptConnection(int fd,		/* I - Listen socket file descriptor */
     return (NULL);
   }
 
-  http->hostaddr = &(http->addrlist->addr);
+  http->hostaddr = &(http->hostlist->addr);
 
   if (httpAddrLocalhost(http->hostaddr))
     strlcpy(http->hostname, "localhost", sizeof(http->hostname));
@@ -299,13 +298,9 @@ httpClearFields(http_t *http)		/* I - HTTP connection */
 
   if (http)
   {
-    memset(http->_fields, 0, sizeof(http->fields));
-
     for (field = HTTP_FIELD_ACCEPT_LANGUAGE; field < HTTP_FIELD_MAX; field ++)
     {
-      if (http->fields[field] && http->fields[field] != http->_fields[field])
-        free(http->fields[field]);
-
+      free(http->fields[field]);
       http->fields[field] = NULL;
     }
 
@@ -348,20 +343,12 @@ httpClose(http_t *http)			/* I - HTTP connection */
   * Free memory used...
   */
 
-  httpAddrFreeList(http->addrlist);
-
-  if (http->cookie)
-    free(http->cookie);
-
-#ifdef HAVE_AUTHORIZATION_H
-  if (http->auth_ref)
-    AuthorizationFree(http->auth_ref, kAuthorizationFlagDefaults);
-#endif /* HAVE_AUTHORIZATION_H */
+  httpAddrFreeList(http->hostlist);
 
   httpClearFields(http);
 
-  if (http->authstring && http->authstring != http->_authstring)
-    free(http->authstring);
+  free(http->authstring);
+  free(http->cookie);
 
   free(http);
 }
@@ -2195,9 +2182,7 @@ httpReconnect(http_t *http,		/* I - HTTP connection */
   http->state           = HTTP_STATE_WAITING;
   http->version         = HTTP_VERSION_1_1;
   http->keep_alive      = HTTP_KEEPALIVE_OFF;
-  memset(&http->_hostaddr, 0, sizeof(http->_hostaddr));
   http->data_encoding   = HTTP_ENCODING_FIELDS;
-  http->_data_remaining = 0;
   http->used            = 0;
   http->data_remaining  = 0;
   http->hostaddr        = NULL;
@@ -2208,13 +2193,13 @@ httpReconnect(http_t *http,		/* I - HTTP connection */
   */
 
 #ifdef DEBUG
-  for (current = http->addrlist; current; current = current->next)
+  for (current = http->hostlist; current; current = current->next)
     DEBUG_printf(("2httpReconnect: Address %s:%d",
                   httpAddrString(&(current->addr), temp, sizeof(temp)),
                   httpAddrPort(&(current->addr))));
 #endif /* DEBUG */
 
-  if ((addr = httpAddrConnect(http->addrlist, &(http->fd), msec, cancel)) == NULL)
+  if ((addr = httpAddrConnect(http->hostlist, &(http->fd), msec, cancel)) == NULL)
   {
    /*
     * Unable to connect...
@@ -2282,8 +2267,8 @@ httpReconnect(http_t *http,		/* I - HTTP connection */
 
 void
 httpSetAuthString(http_t     *http,	/* I - HTTP connection */
-                  const char *scheme,	/* I - Auth scheme (NULL to clear it) */
-		  const char *data)	/* I - Auth data (NULL for none) */
+                  const char *scheme,	/* I - Auth scheme (`NULL` to clear it) */
+		  const char *data)	/* I - Auth data (`NULL` for none) */
 {
  /*
   * Range check input...
@@ -2292,10 +2277,7 @@ httpSetAuthString(http_t     *http,	/* I - HTTP connection */
   if (!http)
     return;
 
-  if (http->authstring && http->authstring != http->_authstring)
-    free(http->authstring);
-
-  http->authstring = http->_authstring;
+  free(http->authstring);
 
   if (scheme)
   {
@@ -2304,20 +2286,14 @@ httpSetAuthString(http_t     *http,	/* I - HTTP connection */
     */
 
     size_t len = strlen(scheme) + (data ? strlen(data) + 1 : 0) + 1;
-    char *temp;
 
-    if (len > sizeof(http->_authstring))
+    if ((http->authstring = malloc(len)) != NULL)
     {
-      if ((temp = malloc(len)) == NULL)
-        len = sizeof(http->_authstring);
+      if (data)
+	snprintf(http->authstring, len, "%s %s", scheme, data);
       else
-        http->authstring = temp;
+	strlcpy(http->authstring, scheme, len);
     }
-
-    if (data)
-      snprintf(http->authstring, len, "%s %s", scheme, data);
-    else
-      strlcpy(http->authstring, scheme, len);
   }
   else
   {
@@ -2325,7 +2301,7 @@ httpSetAuthString(http_t     *http,	/* I - HTTP connection */
     * Clear the current authorization string...
     */
 
-    http->_authstring[0] = '\0';
+    http->authstring = NULL;
   }
 }
 
@@ -3264,11 +3240,6 @@ httpWriteResponse(http_t        *http,	/* I - HTTP connection */
 
     http->data_encoding  = old_encoding;
     http->data_remaining = old_remaining;
-
-    if (old_remaining <= INT_MAX)
-      http->_data_remaining = (int)old_remaining;
-    else
-      http->_data_remaining = INT_MAX;
   }
   else if (http->state == HTTP_STATE_OPTIONS ||
            http->state == HTTP_STATE_HEAD ||
@@ -3321,11 +3292,9 @@ static void
 http_add_field(http_t       *http,	/* I - HTTP connection */
                http_field_t field,	/* I - HTTP field */
                const char   *value,	/* I - Value string */
-               int          append)	/* I - Append value? */
+               bool         append)	/* I - Append value? */
 {
-  char		temp[1024],		/* Temporary value string */
-		combined[HTTP_MAX_VALUE];
-					/* Combined value string */
+  char		temp[1024];		/* Temporary value string */
   size_t	fieldlen,		/* Length of existing value */
 		valuelen,		/* Length of value string */
 		total;			/* Total length of string */
@@ -3372,8 +3341,7 @@ http_add_field(http_t       *http,	/* I - HTTP connection */
 
   if (!append && http->fields[field])
   {
-    if (http->fields[field] != http->_fields[field])
-      free(http->fields[field]);
+    free(http->fields[field]);
 
     http->fields[field] = NULL;
   }
@@ -3381,11 +3349,7 @@ http_add_field(http_t       *http,	/* I - HTTP connection */
   valuelen = strlen(value);
 
   if (!valuelen)
-  {
-    if (field < HTTP_FIELD_ACCEPT_ENCODING)
-      http->_fields[field][0] = '\0';
     return;
-  }
 
   if (http->fields[field])
   {
@@ -3398,23 +3362,7 @@ http_add_field(http_t       *http,	/* I - HTTP connection */
     total    = valuelen;
   }
 
-  if (total < HTTP_MAX_VALUE && field < HTTP_FIELD_ACCEPT_ENCODING)
-  {
-   /*
-    * Copy short values to legacy char arrays (maintained for binary
-    * compatibility with CUPS 1.2.x and earlier applications...)
-    */
-
-    if (fieldlen)
-    {
-      snprintf(combined, sizeof(combined), "%s, %s", http->_fields[field], value);
-      value = combined;
-    }
-
-    strlcpy(http->_fields[field], value, sizeof(http->_fields[field]));
-    http->fields[field] = http->_fields[field];
-  }
-  else if (fieldlen)
+  if (fieldlen)
   {
    /*
     * Expand the field value...
@@ -3422,15 +3370,7 @@ http_add_field(http_t       *http,	/* I - HTTP connection */
 
     char *mcombined;			/* New value string */
 
-    if (http->fields[field] == http->_fields[field])
-    {
-      if ((mcombined = malloc(total + 1)) != NULL)
-      {
-	http->fields[field] = mcombined;
-	snprintf(mcombined, total + 1, "%s, %s", http->_fields[field], value);
-      }
-    }
-    else if ((mcombined = realloc(http->fields[field], total + 1)) != NULL)
+    if ((mcombined = realloc(http->fields[field], total + 1)) != NULL)
     {
       http->fields[field] = mcombined;
       strlcat(mcombined, ", ", total + 1);
@@ -3745,7 +3685,7 @@ http_create(
 
   http->mode     = mode;
   http->activity = time(NULL);
-  http->addrlist = myaddrlist;
+  http->hostlist = myaddrlist;
   http->blocking = blocking;
   http->fd       = -1;
   http->status   = HTTP_STATUS_CONTINUE;
@@ -4207,16 +4147,10 @@ http_send(http_t       *http,		/* I - HTTP connection */
   * The Kerberos and AuthRef authentication strings can only be used once...
   */
 
-  if (http->fields[HTTP_FIELD_AUTHORIZATION] && http->authstring &&
-      (!strncmp(http->authstring, "Negotiate", 9) ||
-       !strncmp(http->authstring, "AuthRef", 7)))
+  if (http->fields[HTTP_FIELD_AUTHORIZATION] && http->authstring)
   {
-    http->_authstring[0] = '\0';
-
-    if (http->authstring != http->_authstring)
-      free(http->authstring);
-
-    http->authstring = http->_authstring;
+    free(http->authstring);
+    http->authstring = NULL;
   }
 
   return (0);
@@ -4263,11 +4197,6 @@ http_set_length(http_t *http)		/* I - Connection */
     DEBUG_printf(("1http_set_length: Setting data_remaining to " CUPS_LLFMT ".",
                   CUPS_LLCAST remaining));
     http->data_remaining = remaining;
-
-    if (remaining <= INT_MAX)
-      http->_data_remaining = (int)remaining;
-    else
-      http->_data_remaining = INT_MAX;
   }
 
   return (remaining);
@@ -4377,12 +4306,10 @@ http_tls_upgrade(http_t *http)		/* I - HTTP connection */
   * Restore the HTTP request data...
   */
 
-  memcpy(http->_fields, myhttp._fields, sizeof(http->_fields));
   memcpy(http->fields, myhttp.fields, sizeof(http->fields));
 
   http->data_encoding   = myhttp.data_encoding;
   http->data_remaining  = myhttp.data_remaining;
-  http->_data_remaining = myhttp._data_remaining;
   http->expect          = myhttp.expect;
   http->digest_tries    = myhttp.digest_tries;
   http->tls_upgrade     = 0;

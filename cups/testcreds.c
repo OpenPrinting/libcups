@@ -32,7 +32,8 @@ main(int  argc,				/* I - Number of command-line arguments */
   cups_array_t	*hcreds,		/* Credentials from connection */
 		*tcreds;		/* Credentials from trust store */
   char		hinfo[1024],		/* String for connection credentials */
-		tinfo[1024];		/* String for trust store credentials */
+		tinfo[1024],		/* String for trust store credentials */
+		datestr[256];		// Date string
   static const char *trusts[] =		/* Trust strings */
   { "OK", "Invalid", "Changed", "Expired", "Renewed", "Unknown" };
 
@@ -60,7 +61,7 @@ main(int  argc,				/* I - Number of command-line arguments */
       return (1);
     }
 
-    if ((http = httpConnect2(hostname, port, NULL, AF_UNSPEC, HTTP_ENCRYPTION_ALWAYS, 1, 30000, NULL)) == NULL)
+    if ((http = httpConnect(hostname, port, NULL, AF_UNSPEC, HTTP_ENCRYPTION_ALWAYS, 1, 30000, NULL)) == NULL)
     {
       printf("ERROR: Unable to connect to \"%s\" on port %d: %s\n", hostname, port, cupsLastErrorString());
       return (1);
@@ -78,7 +79,7 @@ main(int  argc,				/* I - Number of command-line arguments */
         puts("    Trust: OK");
       else
         printf("    Trust: %s (%s)\n", trusts[trust], cupsLastErrorString());
-      printf("    Expiration: %s\n", httpGetDateString(httpCredentialsGetExpiration(hcreds)));
+      printf("    Expiration: %s\n", httpGetDateString(httpCredentialsGetExpiration(hcreds), datestr, sizeof(datestr)));
       printf("    IsValidName: %d\n", httpCredentialsAreValidForName(hcreds, hostname));
       printf("    String: \"%s\"\n", hinfo);
 
@@ -105,7 +106,7 @@ main(int  argc,				/* I - Number of command-line arguments */
     httpCredentialsString(tcreds, tinfo, sizeof(tinfo));
 
     printf("    Certificate Count: %d\n", cupsArrayCount(tcreds));
-    printf("    Expiration: %s\n", httpGetDateString(httpCredentialsGetExpiration(tcreds)));
+    printf("    Expiration: %s\n", httpGetDateString(httpCredentialsGetExpiration(tcreds), datestr, sizeof(datestr)));
     printf("    IsValidName: %d\n", httpCredentialsAreValidForName(tcreds, hostname));
     printf("    String: \"%s\"\n", tinfo);
 

@@ -166,7 +166,7 @@ main(int  argc,				/* I - Number of command-line arguments */
 
   _httpTLSSetOptions(tls_options, tls_min_version, tls_max_version);
 
-  http = httpConnect2(server, port, NULL, af, HTTP_ENCRYPTION_ALWAYS, 1, 30000, NULL);
+  http = httpConnect(server, port, NULL, af, HTTP_ENCRYPTION_ALWAYS, 1, 30000, NULL);
   if (!http)
   {
     printf("%s: ERROR (%s)\n", server, cupsLastErrorString());
