@@ -674,6 +674,8 @@ main(int  argc,			/* I - Number of command-line arguments */
       if (state == IPP_STATE_ERROR)
 	break;
 
+    ippDelete(request);
+
     if (state != IPP_STATE_ERROR)
       testEndMessage(false, "read successful");
     else
