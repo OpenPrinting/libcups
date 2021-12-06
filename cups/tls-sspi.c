@@ -2,9 +2,11 @@
  * TLS support for CUPS on Windows using the Security Support Provider
  * Interface (SSPI).
  *
- * Copyright 2010-2018 by Apple Inc.
+ * Copyright © 2021 by OpenPrinting.
+ * Copyright © 2010-2018 by Apple Inc.
  *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more information.
+ * Licensed under Apache License v2.0.  See the file "LICENSE" for more
+ * information.
  */
 
 /**** This file is included from tls.c ****/
@@ -347,6 +349,7 @@ httpCredentialsString(
     SYSTEMTIME		systime;	/* System time */
     struct tm		tm;		/* UNIX date/time */
     time_t		expiration;	/* Expiration date of cert */
+    char		expstr[256];	/* Expiration date string */
     unsigned char	md5_digest[16];	/* MD5 result */
 
     FileTimeToSystemTime(&(cert->pCertInfo->NotAfter), &systime);
@@ -375,7 +378,7 @@ httpCredentialsString(
 
     cupsHashData("md5", first->data, first->datalen, md5_digest, sizeof(md5_digest));
 
-    snprintf(buffer, bufsize, "%s / %s / %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X", cert_name, httpGetDateString(expiration), md5_digest[0], md5_digest[1], md5_digest[2], md5_digest[3], md5_digest[4], md5_digest[5], md5_digest[6], md5_digest[7], md5_digest[8], md5_digest[9], md5_digest[10], md5_digest[11], md5_digest[12], md5_digest[13], md5_digest[14], md5_digest[15]);
+    snprintf(buffer, bufsize, "%s / %s / %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X", cert_name, httpGetDateString(expiration, expstr, sizeof(expstr)), md5_digest[0], md5_digest[1], md5_digest[2], md5_digest[3], md5_digest[4], md5_digest[5], md5_digest[6], md5_digest[7], md5_digest[8], md5_digest[9], md5_digest[10], md5_digest[11], md5_digest[12], md5_digest[13], md5_digest[14], md5_digest[15]);
 
     CertFreeCertificateContext(cert);
   }
