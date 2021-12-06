@@ -248,7 +248,7 @@ main(int  argc,				/* I - Number of command-line arguments */
 	{
 	  testEnd(true);
 	  testBegin("cupsDirRead");
-	  for (num_files = 0; (dent = cupsDirRead(dir)) != NULL; num_files ++)
+	  for (num_files = 0; cupsDirRead(dir) != NULL; num_files ++)
 	    /* do nothing */;
 
 	  if (num_files != 10)

@@ -510,7 +510,7 @@ make_raster_file(ipp_t      *response,  /* I - Printer attributes */
     return (NULL);
   }
 
-  if ((fd = cupsTempFd(tempname, (int)tempsize)) < 0)
+  if ((fd = cupsTempFd(tempname, tempsize)) < 0)
   {
     printf("Unable to create temporary print file: %s\n", strerror(errno));
     free(line);

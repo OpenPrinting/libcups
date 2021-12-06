@@ -13,24 +13,22 @@
 			buildPhases = (
 			);
 			dependencies = (
+				271284911CC11FA500E517C7 /* PBXTargetDependency */,
+				2778BBDD275DA0ED0070DA11 /* PBXTargetDependency */,
+				2712849F1CC11FA500E517C7 /* PBXTargetDependency */,
 				729181C32011560E005E7560 /* PBXTargetDependency */,
 				270D02281D707E5100EA9403 /* PBXTargetDependency */,
-				271286E01CC13EF400E517C7 /* PBXTargetDependency */,
-				271284911CC11FA500E517C7 /* PBXTargetDependency */,
-				2712849F1CC11FA500E517C7 /* PBXTargetDependency */,
+				2767FC5619267469000F61D3 /* PBXTargetDependency */,
 				271284AB1CC11FA500E517C7 /* PBXTargetDependency */,
+				278C58D6136B641D00836530 /* PBXTargetDependency */,
 				271284AF1CC11FA500E517C7 /* PBXTargetDependency */,
 				271284B11CC11FA500E517C7 /* PBXTargetDependency */,
-				271284B31CC11FA500E517C7 /* PBXTargetDependency */,
 				271284B91CC11FA500E517C7 /* PBXTargetDependency */,
-				271284BD1CC11FA500E517C7 /* PBXTargetDependency */,
 				271284BF1CC11FA500E517C7 /* PBXTargetDependency */,
 				274770E42345347D0089BC31 /* PBXTargetDependency */,
+				271286E01CC13EF400E517C7 /* PBXTargetDependency */,
 				726AD704135E8AA1002C930D /* PBXTargetDependency */,
 				2767FC5419267469000F61D3 /* PBXTargetDependency */,
-				273BF6DE1333B6370022CAAB /* PBXTargetDependency */,
-				2767FC5619267469000F61D3 /* PBXTargetDependency */,
-				278C58D6136B641D00836530 /* PBXTargetDependency */,
 			);
 			name = Tests;
 			productName = Tests;
@@ -195,6 +193,13 @@
 		2767FC7219268F06000F61D3 /* dest-job.c in Sources */ = {isa = PBXBuildFile; fileRef = 72CF95E018A13543000FCAE4 /* dest-job.c */; };
 		2767FC7319268F09000F61D3 /* dest-localization.c in Sources */ = {isa = PBXBuildFile; fileRef = 72CF95E118A13543000FCAE4 /* dest-localization.c */; };
 		2767FC7419268F0C000F61D3 /* dest-options.c in Sources */ = {isa = PBXBuildFile; fileRef = 72CF95E218A13543000FCAE4 /* dest-options.c */; };
+		2778BBCF275DA09B0070DA11 /* libcups_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 72A4332F155844CF002E172D /* libcups_static.a */; };
+		2778BBD0275DA09B0070DA11 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC591926750C000F61D3 /* CoreFoundation.framework */; };
+		2778BBD1275DA09B0070DA11 /* libiconv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5A1926750C000F61D3 /* libiconv.dylib */; };
+		2778BBD2275DA09B0070DA11 /* libresolv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5B1926750C000F61D3 /* libresolv.dylib */; };
+		2778BBD3275DA09B0070DA11 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5C1926750C000F61D3 /* libz.dylib */; };
+		2778BBD4275DA09B0070DA11 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5D1926750C000F61D3 /* Security.framework */; };
+		2778BBDB275DA0D80070DA11 /* fuzzipp.c in Sources */ = {isa = PBXBuildFile; fileRef = 2778BBDA275DA0D80070DA11 /* fuzzipp.c */; };
 		278C58E3136B647200836530 /* testhttp.c in Sources */ = {isa = PBXBuildFile; fileRef = 278C58E2136B647200836530 /* testhttp.c */; };
 		279AE6F52395B80F004DD600 /* libpam.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 279AE6F42395B80F004DD600 /* libpam.tbd */; };
 		720E854320164E7B00C6C411 /* ipp-file.c in Sources */ = {isa = PBXBuildFile; fileRef = 720E854120164E7A00C6C411 /* ipp-file.c */; };
@@ -403,26 +408,12 @@
 			remoteGlobalIDString = 724FA5961CC037AA0092477B;
 			remoteInfo = testipp;
 		};
-		271284B21CC11FA500E517C7 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 72BF96371333042100B1EAD7 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 724FA5A91CC037C60092477B;
-			remoteInfo = testlang;
-		};
 		271284B81CC11FA500E517C7 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 72BF96371333042100B1EAD7 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 724FA5CF1CC037F00092477B;
 			remoteInfo = testoptions;
-		};
-		271284BC1CC11FA500E517C7 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 72BF96371333042100B1EAD7 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 724FA5F71CC038190092477B;
-			remoteInfo = testpwg;
 		};
 		271284BE1CC11FA500E517C7 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -487,13 +478,6 @@
 			remoteGlobalIDString = 274FF6891333B1C400317ECB;
 			remoteInfo = libcups_static;
 		};
-		273BF6DD1333B6370022CAAB /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 72BF96371333042100B1EAD7 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 273BF6BC1333B5000022CAAB;
-			remoteInfo = testcups;
-		};
 		274770D32345342B0089BC31 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 72BF96371333042100B1EAD7 /* Project object */;
@@ -549,6 +533,20 @@
 			proxyType = 1;
 			remoteGlobalIDString = 2767FC4619266A0D000F61D3;
 			remoteInfo = testdest;
+		};
+		2778BBCB275DA09B0070DA11 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 72BF96371333042100B1EAD7 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 274FF6891333B1C400317ECB;
+			remoteInfo = libcups_static;
+		};
+		2778BBDC275DA0ED0070DA11 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 72BF96371333042100B1EAD7 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 2778BBC9275DA09B0070DA11;
+			remoteInfo = fuzzipp;
 		};
 		278C58D5136B641D00836530 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -744,6 +742,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
+		2778BBD5275DA09B0070DA11 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
 		278C58C9136B640300836530 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -892,6 +899,8 @@
 		2767FC5E1926750C000F61D3 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
 		2767FC7519269687000F61D3 /* pwg.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = pwg.h; path = ../cups/pwg.h; sourceTree = "<group>"; };
 		2767FC76192696A0000F61D3 /* raster-private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "raster-private.h"; path = "../cups/raster-private.h"; sourceTree = "<group>"; };
+		2778BBD9275DA09B0070DA11 /* fuzzipp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = fuzzipp; sourceTree = BUILT_PRODUCTS_DIR; };
+		2778BBDA275DA0D80070DA11 /* fuzzipp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = fuzzipp.c; path = ../cups/fuzzipp.c; sourceTree = "<group>"; };
 		278C58CB136B640300836530 /* testhttp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = testhttp; sourceTree = BUILT_PRODUCTS_DIR; };
 		278C58E2136B647200836530 /* testhttp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = testhttp.c; path = ../cups/testhttp.c; sourceTree = "<group>"; };
 		278C58E5136B64AF00836530 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = /System/Library/Frameworks/CoreFoundation.framework; sourceTree = "<absolute>"; };
@@ -1128,6 +1137,19 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		2778BBCE275DA09B0070DA11 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2778BBCF275DA09B0070DA11 /* libcups_static.a in Frameworks */,
+				2778BBD0275DA09B0070DA11 /* CoreFoundation.framework in Frameworks */,
+				2778BBD1275DA09B0070DA11 /* libiconv.dylib in Frameworks */,
+				2778BBD2275DA09B0070DA11 /* libresolv.dylib in Frameworks */,
+				2778BBD3275DA09B0070DA11 /* libz.dylib in Frameworks */,
+				2778BBD4275DA09B0070DA11 /* Security.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		278C58C8136B640300836530 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -1297,6 +1319,7 @@
 		273BF6B81333B4A90022CAAB /* tests */ = {
 			isa = PBXGroup;
 			children = (
+				2778BBDA275DA0D80070DA11 /* fuzzipp.c */,
 				2712866A1CC130FF00E517C7 /* rasterbench.c */,
 				727EF042192E3544001EF690 /* testarray.c */,
 				729181AB20115597005E7560 /* testclient.c */,
@@ -1357,6 +1380,7 @@
 				273B1EAA226B3E4800428143 /* ippevepcl */,
 				273B1EBB226B3E5200428143 /* ippeveps */,
 				274770E02345342B0089BC31 /* testthreads */,
+				2778BBD9275DA09B0070DA11 /* fuzzipp */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1765,6 +1789,24 @@
 			productReference = 2767FC5019266A0D000F61D3 /* testdest */;
 			productType = "com.apple.product-type.tool";
 		};
+		2778BBC9275DA09B0070DA11 /* fuzzipp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2778BBD6275DA09B0070DA11 /* Build configuration list for PBXNativeTarget "fuzzipp" */;
+			buildPhases = (
+				2778BBCC275DA09B0070DA11 /* Sources */,
+				2778BBCE275DA09B0070DA11 /* Frameworks */,
+				2778BBD5275DA09B0070DA11 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				2778BBCA275DA09B0070DA11 /* PBXTargetDependency */,
+			);
+			name = fuzzipp;
+			productName = testcups;
+			productReference = 2778BBD9275DA09B0070DA11 /* fuzzipp */;
+			productType = "com.apple.product-type.tool";
+		};
 		278C58CA136B640300836530 /* testhttp */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 278C58D3136B640300836530 /* Build configuration list for PBXNativeTarget "testhttp" */;
@@ -2030,6 +2072,7 @@
 				72220EAD1333047D00FCA411 /* libcups */,
 				270695FD1CADF3E200FFE5FB /* libcups_ios */,
 				274FF6891333B1C400317ECB /* libcups_static */,
+				2778BBC9275DA09B0070DA11 /* fuzzipp */,
 				273B1E9A226B3E4800428143 /* ippevepcl */,
 				726AD6F6135E88F0002C930D /* ippeveprinter */,
 				273B1EAB226B3E5200428143 /* ippeveps */,
@@ -2048,8 +2091,8 @@
 				724FA5CF1CC037F00092477B /* testoptions */,
 				724FA5F71CC038190092477B /* testpwg */,
 				724FA60B1CC0382B0092477B /* testraster */,
-				271286571CC1309000E517C7 /* tlscheck */,
 				274770D12345342B0089BC31 /* testthreads */,
+				271286571CC1309000E517C7 /* tlscheck */,
 			);
 		};
 /* End PBXProject section */
@@ -2204,6 +2247,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				2767FC5219266A36000F61D3 /* testdest.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2778BBCC275DA09B0070DA11 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2778BBDB275DA0D80070DA11 /* fuzzipp.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2386,20 +2437,10 @@
 			target = 724FA5961CC037AA0092477B /* testipp */;
 			targetProxy = 271284B01CC11FA500E517C7 /* PBXContainerItemProxy */;
 		};
-		271284B31CC11FA500E517C7 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 724FA5A91CC037C60092477B /* testlang */;
-			targetProxy = 271284B21CC11FA500E517C7 /* PBXContainerItemProxy */;
-		};
 		271284B91CC11FA500E517C7 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 724FA5CF1CC037F00092477B /* testoptions */;
 			targetProxy = 271284B81CC11FA500E517C7 /* PBXContainerItemProxy */;
-		};
-		271284BD1CC11FA500E517C7 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 724FA5F71CC038190092477B /* testpwg */;
-			targetProxy = 271284BC1CC11FA500E517C7 /* PBXContainerItemProxy */;
 		};
 		271284BF1CC11FA500E517C7 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -2446,11 +2487,6 @@
 			target = 274FF6891333B1C400317ECB /* libcups_static */;
 			targetProxy = 273BF6C81333B5410022CAAB /* PBXContainerItemProxy */;
 		};
-		273BF6DE1333B6370022CAAB /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 273BF6BC1333B5000022CAAB /* testcups */;
-			targetProxy = 273BF6DD1333B6370022CAAB /* PBXContainerItemProxy */;
-		};
 		274770D22345342B0089BC31 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 274FF6891333B1C400317ECB /* libcups_static */;
@@ -2490,6 +2526,16 @@
 			isa = PBXTargetDependency;
 			target = 2767FC4619266A0D000F61D3 /* testdest */;
 			targetProxy = 2767FC5519267469000F61D3 /* PBXContainerItemProxy */;
+		};
+		2778BBCA275DA09B0070DA11 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 274FF6891333B1C400317ECB /* libcups_static */;
+			targetProxy = 2778BBCB275DA09B0070DA11 /* PBXContainerItemProxy */;
+		};
+		2778BBDD275DA0ED0070DA11 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 2778BBC9275DA09B0070DA11 /* fuzzipp */;
+			targetProxy = 2778BBDC275DA0ED0070DA11 /* PBXContainerItemProxy */;
 		};
 		278C58D6136B641D00836530 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -2830,6 +2876,24 @@
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
 				PRODUCT_NAME = testdest;
+			};
+			name = Release;
+		};
+		2778BBD7275DA09B0070DA11 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "-";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		2778BBD8275DA09B0070DA11 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "-";
+				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
 		};
@@ -3320,6 +3384,15 @@
 			buildConfigurations = (
 				2767FC4E19266A0D000F61D3 /* Debug */,
 				2767FC4F19266A0D000F61D3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		2778BBD6275DA09B0070DA11 /* Build configuration list for PBXNativeTarget "fuzzipp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2778BBD7275DA09B0070DA11 /* Debug */,
+				2778BBD8275DA09B0070DA11 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
