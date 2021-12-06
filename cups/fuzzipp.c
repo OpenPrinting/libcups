@@ -201,8 +201,6 @@ main(int  argc,			// I - Number of command-line arguments
   else
   {
     // Read an IPP file...
-    cups_file_t	*fp;		// File pointer
-
     if ((fp = cupsFileOpen(argv[1], "r")) == NULL)
     {
       perror(argv[1]);
@@ -243,7 +241,7 @@ main(int  argc,			// I - Number of command-line arguments
 void
 fuzz_data(_ippdata_t *data)		// I - Data buffer
 {
-  int		i,			// Looping vars
+  size_t	i,			// Looping vars
 		pos,			// Position in buffer
 		pos2,			// Second position in buffer
 		len;			// Number of bytes
@@ -261,13 +259,13 @@ fuzz_data(_ippdata_t *data)		// I - Data buffer
           {
             // Insert bytes
 	    len  = (CUPS_RAND() & 7) + 1;
-	    if (len > (int)(data->wsize - data->wused))
-	      len = (int)(data->wsize - data->wused);
+	    if (len > (size_t)(data->wsize - data->wused))
+	      len = (size_t)(data->wsize - data->wused);
 
 	    pos = CUPS_RAND() % (data->wused - len);
 	    memmove(data->wbuffer + pos + len, data->wbuffer + pos, data->wused - pos);
 	    for (i = 0; i < len; i ++)
-	      data->wbuffer[pos + i] = CUPS_RAND();
+	      data->wbuffer[pos + i] = (ipp_uchar_t)CUPS_RAND();
 	    break;
 	  }
 
@@ -282,16 +280,16 @@ fuzz_data(_ippdata_t *data)		// I - Data buffer
           pos = CUPS_RAND() % (data->wused - len);
           while (len > 0)
           {
-            data->wbuffer[pos ++] = CUPS_RAND();
+            data->wbuffer[pos ++] = (ipp_uchar_t)CUPS_RAND();
             len --;
           }
           break;
 
       case 7 :
           // Swap bytes
-          len  = (CUPS_RAND() & 7) + 1;
-          pos  = CUPS_RAND() % (data->wused - len);
-          pos2 = CUPS_RAND() % (data->wused - len);
+          len  = (size_t)(CUPS_RAND() & 7) + 1;
+          pos  = (size_t)(CUPS_RAND() % (data->wused - len));
+          pos2 = (size_t)(CUPS_RAND() % (data->wused - len));
           memmove(temp, data->wbuffer + pos, len);
           memmove(data->wbuffer + pos, data->wbuffer + pos2, len);
           memmove(data->wbuffer + pos2, temp, len);
