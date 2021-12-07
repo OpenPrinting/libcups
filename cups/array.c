@@ -231,8 +231,8 @@ cupsArrayClear(cups_array_t *a)		/* I - Array */
   */
 
   a->num_elements = 0;
-  a->current      = SIZE_T_MAX;
-  a->insert       = SIZE_T_MAX;
+  a->current      = SIZE_MAX;
+  a->insert       = SIZE_MAX;
   a->unique       = true;
   a->num_saved    = 0;
 }
@@ -385,7 +385,7 @@ cupsArrayFind(cups_array_t *a,		/* I - Array */
     if ((hash = (*(a->hashfunc))(e, a->data)) >= a->hashsize)
     {
       current = a->current;
-      hash    = SIZE_T_MAX;
+      hash    = SIZE_MAX;
     }
     else if ((current = a->hash[hash]) >= a->num_elements)
       current = a->current;
@@ -393,7 +393,7 @@ cupsArrayFind(cups_array_t *a,		/* I - Array */
   else
   {
     current = a->current;
-    hash    = SIZE_T_MAX;
+    hash    = SIZE_MAX;
   }
 
   current = cups_array_find(a, e, current, &diff);
@@ -427,7 +427,7 @@ cupsArrayFind(cups_array_t *a,		/* I - Array */
     * No match...
     */
 
-    a->current = SIZE_T_MAX;
+    a->current = SIZE_MAX;
 
     return (NULL);
   }
@@ -488,7 +488,7 @@ cupsArrayGetFirst(cups_array_t *a)	/* I - Array */
 /*
  * 'cupsArrayGetIndex()' - Get the index of the current element.
  *
- * This function returns the index of the current element or `SIZE_T_MAX` if
+ * This function returns the index of the current element or `SIZE_MAX` if
  * there is no current element.  The current element is undefined until you call
  * @link cupsArrayFind@, @link cupsArrayGetElement@, @link cupsArrayGetFirst@,
  * or @link cupsArrayGetLast@.
@@ -497,7 +497,7 @@ cupsArrayGetFirst(cups_array_t *a)	/* I - Array */
 size_t					/* O - Index of the current element, starting at 0 */
 cupsArrayGetIndex(cups_array_t *a)	/* I - Array */
 {
-  return (a ? a->current : SIZE_T_MAX);
+  return (a ? a->current : SIZE_MAX);
 }
 
 
@@ -505,13 +505,13 @@ cupsArrayGetIndex(cups_array_t *a)	/* I - Array */
  * 'cupsArrayGetInsert()' - Get the index of the last added or inserted element.
  *
  * This function returns the index of the last added or inserted element or
- * `SIZE_T_MAX` if no elements have been added or inserted.
+ * `SIZE_MAX` if no elements have been added or inserted.
  */
 
 size_t					/* O - Index of the last added or inserted element, starting at 0 */
 cupsArrayGetInsert(cups_array_t *a)	/* I - Array */
 {
-  return (a ? a->insert : SIZE_T_MAX);
+  return (a ? a->insert : SIZE_MAX);
 }
 
 
@@ -568,7 +568,7 @@ cupsArrayGetNext(cups_array_t *a)	/* I - Array */
 {
   if (!a || a->num_elements == 0)
     return (NULL);
-  else if (a->current == SIZE_T_MAX)
+  else if (a->current == SIZE_MAX)
     return (cupsArrayGetElement(a, 0));
   else
     return (cupsArrayGetElement(a, a->current + 1));
@@ -587,7 +587,7 @@ cupsArrayGetNext(cups_array_t *a)	/* I - Array */
 void *					/* O - Previous element or @code NULL@ */
 cupsArrayGetPrev(cups_array_t *a)	/* I - Array */
 {
-  if (!a || a->num_elements == 0 || a->current == 0 || a->current == SIZE_T_MAX)
+  if (!a || a->num_elements == 0 || a->current == 0 || a->current == SIZE_MAX)
     return (NULL);
   else
     return (cupsArrayGetElement(a, a->current - 1));
@@ -720,8 +720,8 @@ cupsArrayNew(cups_array_cb_t  f,	/* I - Comparison callback function or `NULL` f
 
   a->compare   = f;
   a->data      = d;
-  a->current   = SIZE_T_MAX;
-  a->insert    = SIZE_T_MAX;
+  a->current   = SIZE_MAX;
+  a->insert    = SIZE_MAX;
   a->num_saved = 0;
   a->unique    = true;
 
@@ -817,13 +817,13 @@ cupsArrayRemove(cups_array_t *a,	/* I - Array */
     if (a->current)
       a->current --;
     else
-      a->current = SIZE_T_MAX;
+      a->current = SIZE_MAX;
   }
 
   if (current < a->insert)
     a->insert --;
   else if (current == a->insert)
-    a->insert = SIZE_T_MAX;
+    a->insert = SIZE_MAX;
 
   for (i = 0; i < a->num_saved; i ++)
   {
