@@ -368,7 +368,7 @@ httpCompareCredentials(
   http_credential_t	*temp1, *temp2;	/* Temporary credentials */
 
 
-  for (temp1 = (http_credential_t *)cupsArrayFirst(cred1), temp2 = (http_credential_t *)cupsArrayFirst(cred2); temp1 && temp2; temp1 = (http_credential_t *)cupsArrayNext(cred1), temp2 = (http_credential_t *)cupsArrayNext(cred2))
+  for (temp1 = (http_credential_t *)cupsArrayGetFirst(cred1), temp2 = (http_credential_t *)cupsArrayGetFirst(cred2); temp1 && temp2; temp1 = (http_credential_t *)cupsArrayGetNext(cred1), temp2 = (http_credential_t *)cupsArrayGetNext(cred2))
     if (temp1->datalen != temp2->datalen)
       return (0);
     else if (memcmp(temp1->data, temp2->data, temp1->datalen))
@@ -647,9 +647,9 @@ httpFreeCredentials(
   http_credential_t	*credential;	/* Credential */
 
 
-  for (credential = (http_credential_t *)cupsArrayFirst(credentials);
+  for (credential = (http_credential_t *)cupsArrayGetFirst(credentials);
        credential;
-       credential = (http_credential_t *)cupsArrayNext(credentials))
+       credential = (http_credential_t *)cupsArrayGetNext(credentials))
   {
     cupsArrayRemove(credentials, credential);
     free((void *)credential->data);
@@ -2317,7 +2317,7 @@ int						/* O - Status of call (0 = success) */
 httpSetCredentials(http_t	*http,		/* I - HTTP connection */
 		   cups_array_t *credentials)	/* I - Array of credentials */
 {
-  if (!http || cupsArrayCount(credentials) < 1)
+  if (!http || cupsArrayGetCount(credentials) < 1)
     return (-1);
 
 #ifdef HAVE_TLS

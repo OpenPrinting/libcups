@@ -30,47 +30,32 @@
 static void		cups_add_dconstres(cups_array_t *a, ipp_t *collection);
 static int		cups_collection_contains(ipp_t *test, ipp_t *match);
 static size_t		cups_collection_string(ipp_attribute_t *attr, char *buffer, size_t bufsize) _CUPS_NONNULL((1,2));
-static int		cups_compare_dconstres(_cups_dconstres_t *a,
-			                       _cups_dconstres_t *b);
-static int		cups_compare_media_db(_cups_media_db_t *a,
-			                      _cups_media_db_t *b);
+static int		cups_compare_dconstres(_cups_dconstres_t *a, _cups_dconstres_t *b);
+static int		cups_compare_media_db(_cups_media_db_t *a, _cups_media_db_t *b);
 static _cups_media_db_t	*cups_copy_media_db(_cups_media_db_t *mdb);
-static void		cups_create_cached(http_t *http, cups_dinfo_t *dinfo,
-			                   unsigned flags);
+static void		cups_create_cached(http_t *http, cups_dinfo_t *dinfo, unsigned flags);
 static void		cups_create_constraints(cups_dinfo_t *dinfo);
 static void		cups_create_defaults(cups_dinfo_t *dinfo);
-static void		cups_create_media_db(cups_dinfo_t *dinfo,
-			                     unsigned flags);
+static void		cups_create_media_db(cups_dinfo_t *dinfo, unsigned flags);
 static void		cups_free_media_db(_cups_media_db_t *mdb);
-static int		cups_get_media_db(http_t *http, cups_dinfo_t *dinfo,
-			                  pwg_media_t *pwg, unsigned flags,
-			                  cups_size_t *size);
-static int		cups_is_close_media_db(_cups_media_db_t *a,
-			                       _cups_media_db_t *b);
-static cups_array_t	*cups_test_constraints(cups_dinfo_t *dinfo,
-					       const char *new_option,
-					       const char *new_value,
-					       int num_options,
-					       cups_option_t *options,
-					       int *num_conflicts,
-					       cups_option_t **conflicts);
+static int		cups_get_media_db(http_t *http, cups_dinfo_t *dinfo, pwg_media_t *pwg, unsigned flags, cups_size_t *size);
+static int		cups_is_close_media_db(_cups_media_db_t *a, _cups_media_db_t *b);
+static cups_array_t	*cups_test_constraints(cups_dinfo_t *dinfo, const char *new_option, const char *new_value, size_t num_options, cups_option_t *options, size_t *num_conflicts, cups_option_t **conflicts);
 static void		cups_update_ready(http_t *http, cups_dinfo_t *dinfo);
 
 
 /*
  * 'cupsAddDestMediaOptions()' - Add the option corresponding to the specified media size.
- *
- * @since CUPS 2.3/macOS 10.14@
  */
 
-int					/* O  - New number of options */
+size_t					/* O  - New number of options */
 cupsAddDestMediaOptions(
     http_t        *http,		/* I  - Connection to destination */
     cups_dest_t   *dest,		/* I  - Destination */
     cups_dinfo_t  *dinfo,		/* I  - Destination information */
     unsigned      flags,		/* I  - Media matching flags */
     cups_size_t   *size,		/* I  - Media size */
-    int           num_options,		/* I  - Current number of options */
+    size_t        num_options,		/* I  - Current number of options */
     cups_option_t **options)		/* IO - Options */
 {
   cups_array_t		*db;		/* Media database */
@@ -99,7 +84,7 @@ cupsAddDestMediaOptions(
 
   DEBUG_printf(("1cupsAddDestMediaOptions: size->media=\"%s\"", size->media));
 
-  for (mdb = (_cups_media_db_t *)cupsArrayFirst(db); mdb; mdb = (_cups_media_db_t *)cupsArrayNext(db))
+  for (mdb = (_cups_media_db_t *)cupsArrayGetFirst(db); mdb; mdb = (_cups_media_db_t *)cupsArrayGetNext(db))
   {
     if (mdb->key && !strcmp(mdb->key, size->media))
       break;
@@ -109,7 +94,7 @@ cupsAddDestMediaOptions(
 
   if (!mdb)
   {
-    for (mdb = (_cups_media_db_t *)cupsArrayFirst(db); mdb; mdb = (_cups_media_db_t *)cupsArrayNext(db))
+    for (mdb = (_cups_media_db_t *)cupsArrayGetFirst(db); mdb; mdb = (_cups_media_db_t *)cupsArrayGetNext(db))
     {
       if (mdb->width == size->width && mdb->length == size->length && mdb->bottom == size->bottom && mdb->left == size->left && mdb->right == size->right && mdb->top == size->top)
 	break;
@@ -118,7 +103,7 @@ cupsAddDestMediaOptions(
 
   if (!mdb)
   {
-    for (mdb = (_cups_media_db_t *)cupsArrayFirst(db); mdb; mdb = (_cups_media_db_t *)cupsArrayNext(db))
+    for (mdb = (_cups_media_db_t *)cupsArrayGetFirst(db); mdb; mdb = (_cups_media_db_t *)cupsArrayGetNext(db))
     {
       if (mdb->width == size->width && mdb->length == size->length)
 	break;
@@ -172,7 +157,7 @@ cupsCheckDestSupported(
     const char   *option,		/* I - Option */
     const char   *value)		/* I - Value or @code NULL@ */
 {
-  int			i;		/* Looping var */
+  size_t		i;		/* Looping var */
   char			temp[1024];	/* Temporary string */
   int			int_value;	/* Integer value */
   int			xres_value,	/* Horizontal resolution */
@@ -385,20 +370,20 @@ cupsCopyDestConflicts(
     http_t        *http,		/* I - Connection to destination */
     cups_dest_t   *dest,		/* I - Destination */
     cups_dinfo_t  *dinfo,		/* I - Destination information */
-    int           num_options,		/* I - Number of current options */
+    size_t        num_options,		/* I - Number of current options */
     cups_option_t *options,		/* I - Current options */
     const char    *new_option,		/* I - New option */
     const char    *new_value,		/* I - New value */
-    int           *num_conflicts,	/* O - Number of conflicting options */
+    size_t        *num_conflicts,	/* O - Number of conflicting options */
     cups_option_t **conflicts,		/* O - Conflicting options */
-    int           *num_resolved,	/* O - Number of options to resolve */
+    size_t        *num_resolved,	/* O - Number of options to resolve */
     cups_option_t **resolved)		/* O - Resolved options */
 {
   int		i,			/* Looping var */
 		have_conflicts = 0,	/* Do we have conflicts? */
 		changed,		/* Did we change something? */
-		tries,			/* Number of tries for resolution */
-		num_myconf = 0,		/* My number of conflicting options */
+		tries;			/* Number of tries for resolution */
+  size_t	num_myconf = 0,		/* My number of conflicting options */
 		num_myres = 0;		/* My number of resolved options */
   cups_option_t	*myconf = NULL,		/* My conflicting options */
 		*myres = NULL,		/* My resolved options */
@@ -454,7 +439,7 @@ cupsCopyDestConflicts(
   if (!dinfo->constraints)
     cups_create_constraints(dinfo);
 
-  if (cupsArrayCount(dinfo->constraints) == 0)
+  if (cupsArrayGetCount(dinfo->constraints) == 0)
     return (0);
 
   if (!dinfo->num_defaults)
@@ -483,7 +468,7 @@ cupsCopyDestConflicts(
   */
 
   if (num_resolved)
-    pass = cupsArrayNew((cups_array_func_t)cups_compare_dconstres, NULL);
+    pass = cupsArrayNew((cups_array_cb_t)cups_compare_dconstres, NULL, NULL, 0, NULL, NULL);
 
   for (tries = 0; tries < 100; tries ++)
   {
@@ -497,13 +482,10 @@ cupsCopyDestConflicts(
 
       num_myconf = 0;
       myconf     = NULL;
-      active     = cups_test_constraints(dinfo, new_option, new_value,
-                                         num_myres, myres, &num_myconf,
-                                         &myconf);
+      active     = cups_test_constraints(dinfo, new_option, new_value, num_myres, myres, &num_myconf, &myconf);
     }
     else
-      active = cups_test_constraints(dinfo, new_option, new_value, num_myres,
-				     myres, NULL, NULL);
+      active = cups_test_constraints(dinfo, new_option, new_value, num_myres, myres, NULL, NULL);
 
     have_conflicts = (active != NULL);
 
@@ -515,11 +497,11 @@ cupsCopyDestConflicts(
     */
 
     if (!resolvers)
-      resolvers = cupsArrayNew((cups_array_func_t)cups_compare_dconstres, NULL);
+      resolvers = cupsArrayNew((cups_array_cb_t)cups_compare_dconstres, NULL, NULL, 0, NULL, NULL);
 
-    for (c = (_cups_dconstres_t *)cupsArrayFirst(active), changed = 0;
+    for (c = (_cups_dconstres_t *)cupsArrayGetFirst(active), changed = 0;
          c;
-         c = (_cups_dconstres_t *)cupsArrayNext(active))
+         c = (_cups_dconstres_t *)cupsArrayGetNext(active))
     {
       if (cupsArrayFind(pass, c))
         continue;			/* Already applied this resolver... */
@@ -1024,7 +1006,7 @@ cupsGetDestMediaByIndex(
     http_t       *http,			/* I - Connection to destination */
     cups_dest_t  *dest,			/* I - Destination */
     cups_dinfo_t *dinfo,		/* I - Destination information */
-    int          n,			/* I - Media size number (0-based) */
+    size_t       n,			/* I - Media size number (0-based) */
     unsigned     flags,			/* I - Media flags */
     cups_size_t  *size)			/* O - Media size information */
 {
@@ -1066,7 +1048,7 @@ cupsGetDestMediaByIndex(
   * Copy the size over and return...
   */
 
-  if ((nsize = (_cups_media_db_t *)cupsArrayIndex(dinfo->cached_db, n)) == NULL)
+  if ((nsize = (_cups_media_db_t *)cupsArrayGetElement(dinfo->cached_db, n)) == NULL)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), 0);
     return (0);
@@ -1249,11 +1231,9 @@ cupsGetDestMediaBySize(
  * The @code flags@ parameter determines the set of media sizes that are
  * counted.  For example, passing @code CUPS_MEDIA_FLAGS_BORDERLESS@ will return
  * the number of borderless sizes.
- *
- * @since CUPS 1.7/macOS 10.9@
  */
 
-int					/* O - Number of sizes */
+size_t					/* O - Number of sizes */
 cupsGetDestMediaCount(
     http_t       *http,			/* I - Connection to destination */
     cups_dest_t  *dest,			/* I - Destination */
@@ -1287,7 +1267,7 @@ cupsGetDestMediaCount(
   if (!dinfo->cached_db || dinfo->cached_flags != flags)
     cups_create_cached(http, dinfo, flags);
 
-  return (cupsArrayCount(dinfo->cached_db));
+  return (cupsArrayGetCount(dinfo->cached_db));
 }
 
 
@@ -1394,7 +1374,7 @@ static int				/* O - 1 on a match, 0 on a non-match */
 cups_collection_contains(ipp_t *test,	/* I - Collection to test */
                          ipp_t *match)	/* I - Matching values */
 {
-  int			i, j,		/* Looping vars */
+  size_t		i, j,		/* Looping vars */
 			mcount,		/* Number of match values */
 			tcount;		/* Number of test values */
   ipp_attribute_t	*tattr,		/* Testing attribute */
@@ -1487,7 +1467,7 @@ cups_collection_string(
     char            *buffer,		/* I - String buffer */
     size_t          bufsize)		/* I - Size of buffer */
 {
-  int			i, j,		/* Looping vars */
+  size_t		i, j,		/* Looping vars */
 			count,		/* Number of collection values */
 			mcount;		/* Number of member values */
   ipp_t			*col;		/* Collection */
@@ -1815,7 +1795,7 @@ cups_create_cached(http_t       *http,	/* I - Connection to destination */
   if (dinfo->cached_db)
     cupsArrayDelete(dinfo->cached_db);
 
-  dinfo->cached_db    = cupsArrayNew(NULL, NULL);
+  dinfo->cached_db    = cupsArrayNew(NULL, NULL, NULL, 0, NULL, NULL);
   dinfo->cached_flags = flags;
 
   if (flags & CUPS_MEDIA_FLAGS_READY)
@@ -1835,9 +1815,9 @@ cups_create_cached(http_t       *http,	/* I - Connection to destination */
     db = dinfo->media_db;
   }
 
-  for (mdb = (_cups_media_db_t *)cupsArrayFirst(db), first = mdb;
+  for (mdb = (_cups_media_db_t *)cupsArrayGetFirst(db), first = mdb;
        mdb;
-       mdb = (_cups_media_db_t *)cupsArrayNext(db))
+       mdb = (_cups_media_db_t *)cupsArrayGetNext(db))
   {
     DEBUG_printf(("4cups_create_cached: %p key=\"%s\", type=\"%s\", %dx%d, B%d L%d R%d T%d", (void *)mdb, mdb->key, mdb->type, mdb->width, mdb->length, mdb->bottom, mdb->left, mdb->right, mdb->top));
 
@@ -1884,16 +1864,13 @@ static void
 cups_create_constraints(
     cups_dinfo_t *dinfo)		/* I - Destination information */
 {
-  int			i;		/* Looping var */
+  size_t		i;		/* Looping var */
   ipp_attribute_t	*attr;		/* Attribute */
   _ipp_value_t		*val;		/* Current value */
 
 
-  dinfo->constraints = cupsArrayNew3(NULL, NULL, NULL, 0, NULL,
-                                     (cups_afree_func_t)free);
-  dinfo->resolvers   = cupsArrayNew3((cups_array_func_t)cups_compare_dconstres,
-				     NULL, NULL, 0, NULL,
-                                     (cups_afree_func_t)free);
+  dinfo->constraints = cupsArrayNew(NULL, NULL, NULL, 0, NULL, (cups_afree_cb_t)free);
+  dinfo->resolvers   = cupsArrayNew((cups_array_cb_t)cups_compare_dconstres, NULL, NULL, 0, NULL, (cups_afree_cb_t)free);
 
   if ((attr = ippFindAttribute(dinfo->attrs, "job-constraints-supported",
 			       IPP_TAG_BEGIN_COLLECTION)) != NULL)
@@ -1976,10 +1953,7 @@ cups_create_media_db(
   char			media_key[256];	/* Synthesized media-key value */
 
 
-  db = cupsArrayNew3((cups_array_func_t)cups_compare_media_db,
-		     NULL, NULL, 0,
-		     (cups_acopy_func_t)cups_copy_media_db,
-		     (cups_afree_func_t)cups_free_media_db);
+  db = cupsArrayNew((cups_array_cb_t)cups_compare_media_db, NULL, NULL, 0, (cups_acopy_cb_t)cups_copy_media_db, (cups_afree_cb_t)cups_free_media_db);
 
   if (flags == CUPS_MEDIA_FLAGS_READY)
   {
@@ -2332,9 +2306,9 @@ cups_get_media_db(http_t       *http,	/* I - Connection to destination */
 
       if (best->left != 0 || best->right != 0 || best->top != 0 || best->bottom != 0)
       {
-	for (mdb = (_cups_media_db_t *)cupsArrayNext(db);
+	for (mdb = (_cups_media_db_t *)cupsArrayGetNext(db);
 	     mdb && !cups_compare_media_db(mdb, &key);
-	     mdb = (_cups_media_db_t *)cupsArrayNext(db))
+	     mdb = (_cups_media_db_t *)cupsArrayGetNext(db))
 	{
 	  if (mdb->left <= best->left && mdb->right <= best->right &&
 	      mdb->top <= best->top && mdb->bottom <= best->bottom)
@@ -2362,9 +2336,9 @@ cups_get_media_db(http_t       *http,	/* I - Connection to destination */
       * Look for the largest margins...
       */
 
-      for (mdb = (_cups_media_db_t *)cupsArrayNext(db);
+      for (mdb = (_cups_media_db_t *)cupsArrayGetNext(db);
 	   mdb && !cups_compare_media_db(mdb, &key);
-	   mdb = (_cups_media_db_t *)cupsArrayNext(db))
+	   mdb = (_cups_media_db_t *)cupsArrayGetNext(db))
       {
 	if (mdb->left >= best->left && mdb->right >= best->right &&
 	    mdb->top >= best->top && mdb->bottom >= best->bottom &&
@@ -2378,9 +2352,9 @@ cups_get_media_db(http_t       *http,	/* I - Connection to destination */
       * Look for the smallest non-zero margins...
       */
 
-      for (mdb = (_cups_media_db_t *)cupsArrayNext(db);
+      for (mdb = (_cups_media_db_t *)cupsArrayGetNext(db);
 	   mdb && !cups_compare_media_db(mdb, &key);
-	   mdb = (_cups_media_db_t *)cupsArrayNext(db))
+	   mdb = (_cups_media_db_t *)cupsArrayGetNext(db))
       {
 	if (((mdb->left > 0 && mdb->left <= best->left) || best->left == 0) &&
 	    ((mdb->right > 0 && mdb->right <= best->right) || best->right == 0) &&
@@ -2439,9 +2413,9 @@ cups_get_media_db(http_t       *http,	/* I - Connection to destination */
     * Find a close size...
     */
 
-    for (mdb = (_cups_media_db_t *)cupsArrayFirst(db);
+    for (mdb = (_cups_media_db_t *)cupsArrayGetFirst(db);
          mdb;
-         mdb = (_cups_media_db_t *)cupsArrayNext(db))
+         mdb = (_cups_media_db_t *)cupsArrayGetNext(db))
       if (cups_is_close_media_db(mdb, &key))
         break;
 
@@ -2459,9 +2433,9 @@ cups_get_media_db(http_t       *http,	/* I - Connection to destination */
       if (best->left != 0 || best->right != 0 || best->top != 0 ||
           best->bottom != 0)
       {
-	for (mdb = (_cups_media_db_t *)cupsArrayNext(db);
+	for (mdb = (_cups_media_db_t *)cupsArrayGetNext(db);
 	     mdb && cups_is_close_media_db(mdb, &key);
-	     mdb = (_cups_media_db_t *)cupsArrayNext(db))
+	     mdb = (_cups_media_db_t *)cupsArrayGetNext(db))
 	{
 	  if (mdb->left <= best->left && mdb->right <= best->right &&
 	      mdb->top <= best->top && mdb->bottom <= best->bottom &&
@@ -2481,9 +2455,9 @@ cups_get_media_db(http_t       *http,	/* I - Connection to destination */
       * Look for the largest margins...
       */
 
-      for (mdb = (_cups_media_db_t *)cupsArrayNext(db);
+      for (mdb = (_cups_media_db_t *)cupsArrayGetNext(db);
 	   mdb && cups_is_close_media_db(mdb, &key);
-	   mdb = (_cups_media_db_t *)cupsArrayNext(db))
+	   mdb = (_cups_media_db_t *)cupsArrayGetNext(db))
       {
 	if (mdb->left >= best->left && mdb->right >= best->right &&
 	    mdb->top >= best->top && mdb->bottom >= best->bottom &&
@@ -2497,9 +2471,9 @@ cups_get_media_db(http_t       *http,	/* I - Connection to destination */
       * Look for the smallest non-zero margins...
       */
 
-      for (mdb = (_cups_media_db_t *)cupsArrayNext(db);
+      for (mdb = (_cups_media_db_t *)cupsArrayGetNext(db);
 	   mdb && cups_is_close_media_db(mdb, &key);
-	   mdb = (_cups_media_db_t *)cupsArrayNext(db))
+	   mdb = (_cups_media_db_t *)cupsArrayGetNext(db))
       {
 	if (((mdb->left > 0 && mdb->left <= best->left) || best->left == 0) &&
 	    ((mdb->right > 0 && mdb->right <= best->right) ||
@@ -2570,15 +2544,15 @@ cups_test_constraints(
     cups_dinfo_t  *dinfo,		/* I - Destination information */
     const char    *new_option,		/* I - Newly selected option */
     const char    *new_value,		/* I - Newly selected value */
-    int           num_options,		/* I - Number of options */
+    size_t        num_options,		/* I - Number of options */
     cups_option_t *options,		/* I - Options */
-    int           *num_conflicts,	/* O - Number of conflicting options */
+    size_t        *num_conflicts,	/* O - Number of conflicting options */
     cups_option_t **conflicts)		/* O - Conflicting options */
 {
-  int			i,		/* Looping var */
-			count,		/* Number of values */
-			match;		/* Value matches? */
-  int			num_matching;	/* Number of matching options */
+  size_t		i,		/* Looping var */
+			count;		/* Number of values */
+  bool			match;		/* Value matches? */
+  size_t		num_matching;	/* Number of matching options */
   cups_option_t		*matching;	/* Matching options */
   _cups_dconstres_t	*c;		/* Current constraint */
   cups_array_t		*active = NULL;	/* Active constraints */
@@ -2593,9 +2567,9 @@ cups_test_constraints(
   ipp_res_t		units_value;	/* Resolution units */
 
 
-  for (c = (_cups_dconstres_t *)cupsArrayFirst(dinfo->constraints);
+  for (c = (_cups_dconstres_t *)cupsArrayGetFirst(dinfo->constraints);
        c;
-       c = (_cups_dconstres_t *)cupsArrayNext(dinfo->constraints))
+       c = (_cups_dconstres_t *)cupsArrayGetNext(dinfo->constraints))
   {
     num_matching = 0;
     matching     = NULL;
@@ -2754,7 +2728,7 @@ cups_test_constraints(
     if (!attr)
     {
       if (!active)
-        active = cupsArrayNew(NULL, NULL);
+        active = cupsArrayNew(NULL, NULL, NULL, 0, NULL, NULL);
 
       cupsArrayAdd(active, c);
 
@@ -2762,7 +2736,7 @@ cups_test_constraints(
       {
         cups_option_t	*moption;	/* Matching option */
 
-        for (i = num_matching, moption = matching; i > 0; i --, moption ++)
+        for (i = (size_t)num_matching, moption = matching; i > 0; i --, moption ++)
           *num_conflicts = cupsAddOption(moption->name, moption->value, *num_conflicts, conflicts);
       }
     }

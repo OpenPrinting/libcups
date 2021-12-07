@@ -78,13 +78,13 @@ cupsRasterErrorString(void)
 
 int					/* O - 1 on success, 0 on failure */
 cupsRasterInitPWGHeader(
-    cups_page_header2_t *h,		/* I - Page header */
-    pwg_media_t         *media,		/* I - PWG media information */
-    const char          *type,		/* I - PWG raster type string */
-    int                 xdpi,		/* I - Cross-feed direction (horizontal) resolution */
-    int                 ydpi,		/* I - Feed direction (vertical) resolution */
-    const char          *sides,		/* I - IPP "sides" option value */
-    const char          *sheet_back)	/* I - Transform for back side or @code NULL@ for none */
+    cups_page_header_t *h,		/* I - Page header */
+    pwg_media_t        *media,		/* I - PWG media information */
+    const char         *type,		/* I - PWG raster type string */
+    int                xdpi,		/* I - Cross-feed direction (horizontal) resolution */
+    int                ydpi,		/* I - Feed direction (vertical) resolution */
+    const char         *sides,		/* I - IPP "sides" option value */
+    const char         *sheet_back)	/* I - Transform for back side or @code NULL@ for none */
 {
   return (_cupsRasterInitPWGHeader(h, media, type, xdpi, ydpi, sides, sheet_back));
 }
@@ -181,37 +181,6 @@ cupsRasterReadHeader(
 
 
 /*
- * 'cupsRasterReadHeader2()' - Read a raster page header and store it in a
- *                             version 2 page header structure.
- *
- * @since CUPS 1.2/macOS 10.5@
- */
-
-unsigned				/* O - 1 on success, 0 on failure/end-of-file */
-cupsRasterReadHeader2(
-    cups_raster_t       *r,		/* I - Raster stream */
-    cups_page_header2_t *h)		/* I - Pointer to header data */
-{
- /*
-  * Get the raster header...
-  */
-
-  if (!_cupsRasterReadHeader(r))
-  {
-    memset(h, 0, sizeof(cups_page_header2_t));
-    return (0);
-  }
-
- /*
-  * Copy the header to the user-supplied buffer...
-  */
-
-  memcpy(h, &(r->header), sizeof(cups_page_header2_t));
-  return (1);
-}
-
-
-/*
  * 'cupsRasterReadPixels()' - Read raster pixels.
  *
  * For best performance, filters should read one or more whole lines.
@@ -250,36 +219,7 @@ cupsRasterWriteHeader(
   * Make a copy of the header and write using the private function...
   */
 
-  memset(&(r->header), 0, sizeof(r->header));
-  memcpy(&(r->header), h, sizeof(cups_page_header_t));
-
-  return (_cupsRasterWriteHeader(r));
-}
-
-
-/*
- * 'cupsRasterWriteHeader2()' - Write a raster page header from a version 2
- *                              page header structure.
- *
- * The page header can be initialized using @link cupsRasterInitPWGHeader@.
- *
- * @since CUPS 1.2/macOS 10.5@
- */
-
-unsigned				/* O - 1 on success, 0 on failure */
-cupsRasterWriteHeader2(
-    cups_raster_t       *r,		/* I - Raster stream */
-    cups_page_header2_t *h)		/* I - Raster page header */
-{
-  if (r == NULL || r->mode == CUPS_RASTER_READ)
-    return (0);
-
- /*
-  * Make a copy of the header, and compute the number of raster
-  * lines in the page image...
-  */
-
-  memcpy(&(r->header), h, sizeof(cups_page_header2_t));
+  r->header = *h;
 
   return (_cupsRasterWriteHeader(r));
 }

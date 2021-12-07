@@ -165,7 +165,7 @@ http_tls_credentials_t			/* O - Internal credentials */
 _httpCreateCredentials(
     cups_array_t *credentials)		/* I - Array of credentials */
 {
-  return (http_sspi_create_credential((http_credential_t *)cupsArrayFirst(credentials)));
+  return (http_sspi_create_credential((http_credential_t *)cupsArrayGetFirst(credentials)));
 }
 
 
@@ -181,7 +181,7 @@ httpCredentialsAreValidForName(
     const char   *common_name)		/* I - Name to check */
 {
   int		valid = 1;		/* Valid name? */
-  PCCERT_CONTEXT cert = http_sspi_create_credential((http_credential_t *)cupsArrayFirst(credentials));
+  PCCERT_CONTEXT cert = http_sspi_create_credential((http_credential_t *)cupsArrayGetFirst(credentials));
 					/* Certificate */
   char		cert_name[1024];	/* Name from certificate */
 
@@ -254,7 +254,7 @@ httpCredentialsGetTrust(
   if (!common_name)
     return (HTTP_TRUST_UNKNOWN);
 
-  cert = http_sspi_create_credential((http_credential_t *)cupsArrayFirst(credentials));
+  cert = http_sspi_create_credential((http_credential_t *)cupsArrayGetFirst(credentials));
   if (!cert)
     return (HTTP_TRUST_UNKNOWN);
 
@@ -290,7 +290,7 @@ httpCredentialsGetExpiration(
     cups_array_t *credentials)		/* I - Credentials */
 {
   time_t	expiration_date = 0;	/* Expiration data of credentials */
-  PCCERT_CONTEXT cert = http_sspi_create_credential((http_credential_t *)cupsArrayFirst(credentials));
+  PCCERT_CONTEXT cert = http_sspi_create_credential((http_credential_t *)cupsArrayGetFirst(credentials));
 					/* Certificate */
 
   if (cert)
@@ -328,7 +328,7 @@ httpCredentialsString(
     char         *buffer,		/* I - Buffer or @code NULL@ */
     size_t       bufsize)		/* I - Size of buffer */
 {
-  http_credential_t	*first = (http_credential_t *)cupsArrayFirst(credentials);
+  http_credential_t	*first = (http_credential_t *)cupsArrayGetFirst(credentials);
 					/* First certificate */
   PCCERT_CONTEXT 	cert;		/* Certificate */
 
@@ -564,7 +564,7 @@ httpSaveCredentials(
     return (-1);
   }
 
-  createdContext = http_sspi_create_credential((http_credential_t *)cupsArrayFirst(credentials));
+  createdContext = http_sspi_create_credential((http_credential_t *)cupsArrayGetFirst(credentials));
   if (!createdContext)
   {
     DEBUG_puts("1httpSaveCredentials: Bad credentials, returning -1.");

@@ -62,7 +62,7 @@ _cupsStrAlloc(const char *s)		/* I - String */
   _cupsMutexLock(&sp_mutex);
 
   if (!stringpool)
-    stringpool = cupsArrayNew((cups_array_func_t)compare_sp_items, NULL);
+    stringpool = cupsArrayNew((cups_array_cb_t)compare_sp_items, NULL, NULL, 0, NULL, NULL);
 
   if (!stringpool)
   {
@@ -178,14 +178,11 @@ _cupsStrFlush(void)
   _cups_sp_item_t	*item;		/* Current item */
 
 
-  DEBUG_printf(("4_cupsStrFlush: %d strings in array",
-                cupsArrayCount(stringpool)));
+  DEBUG_printf(("4_cupsStrFlush: %u strings in array", (unsigned)cupsArrayGetCount(stringpool)));
 
   _cupsMutexLock(&sp_mutex);
 
-  for (item = (_cups_sp_item_t *)cupsArrayFirst(stringpool);
-       item;
-       item = (_cups_sp_item_t *)cupsArrayNext(stringpool))
+  for (item = (_cups_sp_item_t *)cupsArrayGetFirst(stringpool); item; item = (_cups_sp_item_t *)cupsArrayGetNext(stringpool))
     free(item);
 
   cupsArrayDelete(stringpool);
@@ -543,9 +540,9 @@ _cupsStrStatistics(size_t *alloc_bytes,	/* O - Allocated bytes */
   _cupsMutexLock(&sp_mutex);
 
   for (count = 0, abytes = 0, tbytes = 0,
-           item = (_cups_sp_item_t *)cupsArrayFirst(stringpool);
+           item = (_cups_sp_item_t *)cupsArrayGetFirst(stringpool);
        item;
-       item = (_cups_sp_item_t *)cupsArrayNext(stringpool))
+       item = (_cups_sp_item_t *)cupsArrayGetNext(stringpool))
   {
    /*
     * Count allocated memory, using a 64-bit aligned buffer as a basis.

@@ -236,9 +236,9 @@ cupsFileEOF(cups_file_t *fp)		/* I - CUPS file */
 const char *				/* O - Full path to file or @code NULL@ if not found */
 cupsFileFind(const char *filename,	/* I - File to find */
              const char *path,		/* I - Colon/semicolon-separated path */
-             int        executable,	/* I - 1 = executable files, 0 = any file/dir */
+             bool       executable,	/* I - `true` = executable files, `false` = any file/dir */
 	     char       *buffer,	/* I - Filename buffer */
-	     int        bufsize)	/* I - Size of filename buffer */
+	     size_t     bufsize)	/* I - Size of filename buffer */
 {
   char	*bufptr,			/* Current position in buffer */
 	*bufend;			/* End of buffer */
@@ -248,7 +248,7 @@ cupsFileFind(const char *filename,	/* I - File to find */
   * Range check input...
   */
 
-  DEBUG_printf(("cupsFileFind(filename=\"%s\", path=\"%s\", executable=%d, buffer=%p, bufsize=%d)", filename, path, executable, (void *)buffer, bufsize));
+  DEBUG_printf(("cupsFileFind(filename=\"%s\", path=\"%s\", executable=%d, buffer=%p, bufsize=%u)", filename, path, executable, (void *)buffer, (unsigned)bufsize));
 
   if (!filename || !buffer || bufsize < 2)
     return (NULL);

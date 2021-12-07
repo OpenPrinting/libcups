@@ -24,13 +24,13 @@ int					/* O - Exit status */
 main(int  argc,				/* I - Number of command-line arguments */
      char *argv[])			/* I - Command-line arguments */
 {
-  int		status = 0,		/* Exit status */
-		num_options;		/* Number of options */
+  int		status = 0;		/* Exit status */
+  size_t	num_options;		/* Number of options */
   cups_option_t	*options;		/* Options */
   const char	*value;			/* Value of an option */
   ipp_t		*request;		/* IPP request */
   ipp_attribute_t *attr;		/* IPP attribute */
-  int		count;			/* Number of attributes */
+  size_t	count;			/* Number of attributes */
 
 
   if (argc == 1)
@@ -55,38 +55,32 @@ main(int  argc,				/* I - Number of command-line arguments */
       testEndMessage(false, "num_options=%d, expected 6", num_options);
       status ++;
     }
-    else if ((value = cupsGetOption("foo", num_options, options)) == NULL ||
-	     strcmp(value, "1234"))
+    else if ((value = cupsGetOption("foo", num_options, options)) == NULL || strcmp(value, "1234"))
     {
       testEndMessage(false, "foo=\"%s\", expected \"1234\"", value);
       status ++;
     }
-    else if ((value = cupsGetOption("bar", num_options, options)) == NULL ||
-	     strcmp(value, "One Fish,Two Fish,Red Fish,Blue Fish"))
+    else if ((value = cupsGetOption("bar", num_options, options)) == NULL || strcmp(value, "One Fish,Two Fish,Red Fish,Blue Fish"))
     {
       testEndMessage(false, "bar=\"%s\", expected \"One Fish,Two Fish,Red Fish,Blue Fish\"", value);
       status ++;
     }
-    else if ((value = cupsGetOption("baz", num_options, options)) == NULL ||
-	     strcmp(value, "{param1=1 param2=2}"))
+    else if ((value = cupsGetOption("baz", num_options, options)) == NULL || strcmp(value, "{param1=1 param2=2}"))
     {
       testEndMessage(false, "baz=\"%s\", expected \"{param1=1 param2=2}\"", value);
       status ++;
     }
-    else if ((value = cupsGetOption("foobar", num_options, options)) == NULL ||
-	     strcmp(value, "FOO BAR"))
+    else if ((value = cupsGetOption("foobar", num_options, options)) == NULL || strcmp(value, "FOO BAR"))
     {
       testEndMessage(false, "foobar=\"%s\", expected \"FOO BAR\"", value);
       status ++;
     }
-    else if ((value = cupsGetOption("barfoo", num_options, options)) == NULL ||
-	     strcmp(value, "\'BAR FOO\'"))
+    else if ((value = cupsGetOption("barfoo", num_options, options)) == NULL || strcmp(value, "\'BAR FOO\'"))
     {
       testEndMessage(false, "barfoo=\"%s\", expected \"\'BAR FOO\'\"", value);
       status ++;
     }
-    else if ((value = cupsGetOption("auth-info", num_options, options)) == NULL ||
-             strcmp(value, "user,pass\\,word\\\\"))
+    else if ((value = cupsGetOption("auth-info", num_options, options)) == NULL || strcmp(value, "user,pass\\,word\\\\"))
     {
       testEndMessage(false, "auth-info=\"%s\", expected \"user,pass\\,word\\\\\"", value);
       status ++;
@@ -155,15 +149,14 @@ main(int  argc,				/* I - Number of command-line arguments */
   }
   else
   {
-    int			i;		/* Looping var */
+    size_t		i;		/* Looping var */
     cups_option_t	*option;	/* Current option */
 
 
     num_options = cupsParseOptions(argv[1], 0, &options);
 
     for (i = 0, option = options; i < num_options; i ++, option ++)
-      printf("options[%d].name=\"%s\", value=\"%s\"\n", i, option->name,
-             option->value);
+      printf("options[%u].name=\"%s\", value=\"%s\"\n", (unsigned)i, option->name, option->value);
   }
 
   exit (status);

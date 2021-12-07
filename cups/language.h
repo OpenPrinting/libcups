@@ -1,22 +1,18 @@
 /*
  * Multi-language support for CUPS.
  *
- * Copyright 2007-2011 by Apple Inc.
- * Copyright 1997-2006 by Easy Software Products.
+ * Copyright © 2021 by OpenPrinting.
+ * Copyright © 2007-2011 by Apple Inc.
+ * Copyright © 1997-2006 by Easy Software Products.
  *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more information.
+ * Licensed under Apache License v2.0.  See the file "LICENSE" for more
+ * information.
  */
 
 #ifndef _CUPS_LANGUAGE_H_
 #  define _CUPS_LANGUAGE_H_
-
-/*
- * Include necessary headers...
- */
-
 #  include <locale.h>
 #  include "array.h"
-
 #  ifdef __cplusplus
 extern "C" {
 #  endif /* __cplusplus */
@@ -66,7 +62,7 @@ typedef enum cups_encoding_e		/**** Language Encodings @exclude all@ ****/
   CUPS_WINDOWS_949,			/* Korean KS C5601-1992 */
   CUPS_WINDOWS_950,			/* Traditional Chinese Big Five */
   CUPS_WINDOWS_1361,			/* Korean Johab */
-  CUPS_BG18030,				/* Chinese GB 18030 @since CUPS 2.4.0@ */
+  CUPS_BG18030,				/* Chinese GB 18030 */
   CUPS_ENCODING_DBCS_END = 127,		/* End of double-byte encodings @private@ */
 
   CUPS_EUC_CN,				/* EUC Simplified Chinese */
@@ -97,8 +93,8 @@ extern void		cupsLangFlush(void) _CUPS_PUBLIC;
 extern void		cupsLangFree(cups_lang_t *lang) _CUPS_PUBLIC;
 extern cups_lang_t	*cupsLangGet(const char *language) _CUPS_PUBLIC;
 
+
 #  ifdef __cplusplus
 }
 #  endif /* __cplusplus */
-
 #endif /* !_CUPS_LANGUAGE_H_ */

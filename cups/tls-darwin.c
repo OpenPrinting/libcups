@@ -447,7 +447,7 @@ httpCopyCredentials(
   {
     DEBUG_printf(("2httpCopyCredentials: Peer provided %d certificates.", (int)SecTrustGetCertificateCount(peerTrust)));
 
-    if ((*credentials = cupsArrayNew(NULL, NULL)) != NULL)
+    if ((*credentials = cupsArrayNew(NULL, NULL, NULL, 0, NULL, NULL)) != NULL)
     {
       count = SecTrustGetCertificateCount(peerTrust);
 
@@ -499,14 +499,12 @@ _httpCreateCredentials(
   if (!credentials)
     return (NULL);
 
-  if ((peerCerts = CFArrayCreateMutable(kCFAllocatorDefault,
-				        cupsArrayCount(credentials),
-				        &kCFTypeArrayCallBacks)) == NULL)
+  if ((peerCerts = CFArrayCreateMutable(kCFAllocatorDefault, (CFIndex)cupsArrayGetCount(credentials), &kCFTypeArrayCallBacks)) == NULL)
     return (NULL);
 
-  for (credential = (http_credential_t *)cupsArrayFirst(credentials);
+  for (credential = (http_credential_t *)cupsArrayGetFirst(credentials);
        credential;
-       credential = (http_credential_t *)cupsArrayNext(credentials))
+       credential = (http_credential_t *)cupsArrayGetNext(credentials))
   {
     if ((secCert = http_cdsa_create_credential(credential)) != NULL)
     {
@@ -537,7 +535,7 @@ httpCredentialsAreValidForName(
   int			valid = 1;	/* Valid name? */
 
 
-  if ((secCert = http_cdsa_create_credential((http_credential_t *)cupsArrayFirst(credentials))) == NULL)
+  if ((secCert = http_cdsa_create_credential((http_credential_t *)cupsArrayGetFirst(credentials))) == NULL)
     return (0);
 
  /*
@@ -607,7 +605,7 @@ httpCredentialsGetTrust(
     return (HTTP_TRUST_UNKNOWN);
   }
 
-  if ((secCert = http_cdsa_create_credential((http_credential_t *)cupsArrayFirst(credentials))) == NULL)
+  if ((secCert = http_cdsa_create_credential((http_credential_t *)cupsArrayGetFirst(credentials))) == NULL)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create credentials from array."), 1);
     return (HTTP_TRUST_UNKNOWN);
@@ -694,7 +692,7 @@ httpCredentialsGetTrust(
 
     if (!httpLoadCredentials(NULL, &tcreds, "site"))
     {
-      if (cupsArrayCount(credentials) != (cupsArrayCount(tcreds) + 1))
+      if (cupsArrayGetCount(credentials) != (cupsArrayGetCount(tcreds) + 1))
       {
        /*
         * Certificate isn't directly generated from the CA cert...
@@ -710,9 +708,9 @@ httpCredentialsGetTrust(
 
         http_credential_t	*a, *b;		/* Certificates */
 
-        for (a = (http_credential_t *)cupsArrayFirst(tcreds), b = (http_credential_t *)cupsArrayIndex(credentials, 1);
+        for (a = (http_credential_t *)cupsArrayGetFirst(tcreds), b = (http_credential_t *)cupsArrayGetElement(credentials, 1);
 	     a && b;
-	     a = (http_credential_t *)cupsArrayNext(tcreds), b = (http_credential_t *)cupsArrayNext(credentials))
+	     a = (http_credential_t *)cupsArrayGetNext(tcreds), b = (http_credential_t *)cupsArrayGetNext(credentials))
 	  if (a->datalen != b->datalen || memcmp(a->data, b->data, a->datalen))
 	    break;
 
@@ -736,7 +734,7 @@ httpCredentialsGetTrust(
     trust = HTTP_TRUST_EXPIRED;
   }
 
-  if (trust == HTTP_TRUST_OK && !cg->any_root && cupsArrayCount(credentials) == 1)
+  if (trust == HTTP_TRUST_OK && !cg->any_root && cupsArrayGetCount(credentials) == 1)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Self-signed credentials are blocked."), 1);
     trust = HTTP_TRUST_INVALID;
@@ -762,7 +760,7 @@ httpCredentialsGetExpiration(
   time_t		expiration;	/* Expiration date */
 
 
-  if ((secCert = http_cdsa_create_credential((http_credential_t *)cupsArrayFirst(credentials))) == NULL)
+  if ((secCert = http_cdsa_create_credential((http_credential_t *)cupsArrayGetFirst(credentials))) == NULL)
     return (0);
 
   expiration = (time_t)(SecCertificateNotValidAfter(secCert) + kCFAbsoluteTimeIntervalSince1970);
@@ -797,7 +795,7 @@ httpCredentialsString(
   if (buffer && bufsize > 0)
     *buffer = '\0';
 
-  if ((first = (http_credential_t *)cupsArrayFirst(credentials)) != NULL &&
+  if ((first = (http_credential_t *)cupsArrayGetFirst(credentials)) != NULL &&
       (secCert = http_cdsa_create_credential(first)) != NULL)
   {
    /*
@@ -999,7 +997,7 @@ httpLoadCredentials(
   {
     DEBUG_printf(("1httpLoadCredentials: Adding %d byte certificate blob.", (int)CFDataGetLength(data)));
 
-    *credentials = cupsArrayNew(NULL, NULL);
+    *credentials = cupsArrayNew(NULL, NULL, NULL, 0, NULL, NULL);
     httpAddCredential(*credentials, CFDataGetBytePtr(data), (size_t)CFDataGetLength(data));
     CFRelease(data);
   }
@@ -1059,7 +1057,7 @@ httpSaveCredentials(
     return (-1);
   }
 
-  if ((cert = http_cdsa_create_credential((http_credential_t *)cupsArrayFirst(credentials))) == NULL)
+  if ((cert = http_cdsa_create_credential((http_credential_t *)cupsArrayGetFirst(credentials))) == NULL)
   {
     DEBUG_puts("1httpSaveCredentials: Unable to create certificate.");
     goto cleanup;
@@ -1665,7 +1663,7 @@ _httpTLSStart(http_t *http)		/* I - HTTP connection */
 	      if (!(error = SSLCopyDistinguishedNames(http->tls, &dn_array)) &&
 		  dn_array)
 	      {
-		if ((names = cupsArrayNew(NULL, NULL)) != NULL)
+		if ((names = cupsArrayNew(NULL, NULL, NULL, 0, NULL, NULL)) != NULL)
 		{
 		  for (i = 0, count = CFArrayGetCount(dn_array); i < count; i++)
 		  {

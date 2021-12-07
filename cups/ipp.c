@@ -25,24 +25,16 @@
  * Local functions...
  */
 
-static ipp_attribute_t	*ipp_add_attr(ipp_t *ipp, const char *name,
-			              ipp_tag_t  group_tag, ipp_tag_t value_tag,
-			              int num_values);
-static void		ipp_free_values(ipp_attribute_t *attr, int element,
-			                int count);
+static ipp_attribute_t	*ipp_add_attr(ipp_t *ipp, const char *name, ipp_tag_t group_tag, ipp_tag_t value_tag, size_t num_values);
+static void		ipp_free_values(ipp_attribute_t *attr, size_t element, size_t count);
 static char		*ipp_get_code(const char *locale, char *buffer, size_t bufsize) _CUPS_NONNULL(1,2);
 static char		*ipp_lang_code(const char *locale, char *buffer, size_t bufsize) _CUPS_NONNULL(1,2);
 static size_t		ipp_length(ipp_t *ipp, int collection);
-static ssize_t		ipp_read_http(http_t *http, ipp_uchar_t *buffer,
-			              size_t length);
-static ssize_t		ipp_read_file(int *fd, ipp_uchar_t *buffer,
-			              size_t length);
-static void		ipp_set_error(ipp_status_t status, const char *format,
-			              ...);
-static _ipp_value_t	*ipp_set_value(ipp_t *ipp, ipp_attribute_t **attr,
-			               int element);
-static ssize_t		ipp_write_file(int *fd, ipp_uchar_t *buffer,
-			               size_t length);
+static ssize_t		ipp_read_http(http_t *http, ipp_uchar_t *buffer, size_t length);
+static ssize_t		ipp_read_file(int *fd, ipp_uchar_t *buffer, size_t length);
+static void		ipp_set_error(ipp_status_t status, const char *format, ...);
+static _ipp_value_t	*ipp_set_value(ipp_t *ipp, ipp_attribute_t **attr, size_t element);
+static ssize_t		ipp_write_file(int *fd, ipp_uchar_t *buffer, size_t length);
 
 
 /*
@@ -113,7 +105,7 @@ ipp_attribute_t *			/* O - New attribute */
 ippAddBoolean(ipp_t      *ipp,		/* I - IPP message */
               ipp_tag_t  group,		/* I - IPP group */
               const char *name,		/* I - Name of attribute */
-              char       value)		/* I - Value of attribute */
+              bool       value)		/* I - Value of attribute */
 {
   ipp_attribute_t	*attr;		/* New attribute */
 
@@ -158,15 +150,15 @@ ipp_attribute_t *			/* O - New attribute */
 ippAddBooleans(ipp_t      *ipp,		/* I - IPP message */
                ipp_tag_t  group,	/* I - IPP group */
 	       const char *name,	/* I - Name of attribute */
-	       int        num_values,	/* I - Number of values */
-	       const char *values)	/* I - Values */
+	       size_t     num_values,	/* I - Number of values */
+	       const bool *values)	/* I - Values */
 {
-  int			i;		/* Looping var */
+  size_t		i;		/* Looping var */
   ipp_attribute_t	*attr;		/* New attribute */
   _ipp_value_t		*value;		/* Current value */
 
 
-  DEBUG_printf(("ippAddBooleans(ipp=%p, group=%02x(%s), name=\"%s\", num_values=%d, values=%p)", (void *)ipp, group, ippTagString(group), name, num_values, (void *)values));
+  DEBUG_printf(("ippAddBooleans(ipp=%p, group=%02x(%s), name=\"%s\", num_values=%u, values=%p)", (void *)ipp, group, ippTagString(group), name, (unsigned)num_values, (void *)values));
 
  /*
   * Range check input...
@@ -186,9 +178,7 @@ ippAddBooleans(ipp_t      *ipp,		/* I - IPP message */
 
   if (values)
   {
-    for (i = num_values, value = attr->values;
-	 i > 0;
-	 i --, value ++)
+    for (i = num_values, value = attr->values; i > 0; i --, value ++)
       value->boolean = *values++;
   }
 
@@ -266,15 +256,15 @@ ippAddCollections(
     ipp_t       *ipp,			/* I - IPP message */
     ipp_tag_t   group,			/* I - IPP group */
     const char  *name,			/* I - Name of attribute */
-    int         num_values,		/* I - Number of values */
+    size_t      num_values,		/* I - Number of values */
     const ipp_t **values)		/* I - Values */
 {
-  int			i;		/* Looping var */
+  size_t		i;		/* Looping var */
   ipp_attribute_t	*attr;		/* New attribute */
   _ipp_value_t		*value;		/* Current value */
 
 
-  DEBUG_printf(("ippAddCollections(ipp=%p, group=%02x(%s), name=\"%s\", num_values=%d, values=%p)", (void *)ipp, group, ippTagString(group), name, num_values, (void *)values));
+  DEBUG_printf(("ippAddCollections(ipp=%p, group=%02x(%s), name=\"%s\", num_values=%u, values=%p)", (void *)ipp, group, ippTagString(group), name, (unsigned)num_values, (void *)values));
 
  /*
   * Range check input...
@@ -289,15 +279,12 @@ ippAddCollections(
   * Create the attribute...
   */
 
-  if ((attr = ipp_add_attr(ipp, name, group, IPP_TAG_BEGIN_COLLECTION,
-                           num_values)) == NULL)
+  if ((attr = ipp_add_attr(ipp, name, group, IPP_TAG_BEGIN_COLLECTION, num_values)) == NULL)
     return (NULL);
 
   if (values)
   {
-    for (i = num_values, value = attr->values;
-	 i > 0;
-	 i --, value ++)
+    for (i = num_values, value = attr->values; i > 0; i --, value ++)
     {
       value->collection = (ipp_t *)*values++;
       value->collection->use ++;
@@ -440,15 +427,15 @@ ippAddIntegers(ipp_t      *ipp,		/* I - IPP message */
                ipp_tag_t  group,	/* I - IPP group */
 	       ipp_tag_t  value_tag,	/* I - Type of attribute */
 	       const char *name,	/* I - Name of attribute */
-	       int        num_values,	/* I - Number of values */
+	       size_t     num_values,	/* I - Number of values */
 	       const int  *values)	/* I - Values */
 {
-  int			i;		/* Looping var */
+  size_t		i;		/* Looping var */
   ipp_attribute_t	*attr;		/* New attribute */
   _ipp_value_t		*value;		/* Current value */
 
 
-  DEBUG_printf(("ippAddIntegers(ipp=%p, group=%02x(%s), type=%02x(%s), name=\"%s\", num_values=%d, values=%p)", (void *)ipp, group, ippTagString(group), value_tag, ippTagString(value_tag), name, num_values, (void *)values));
+  DEBUG_printf(("ippAddIntegers(ipp=%p, group=%02x(%s), type=%02x(%s), name=\"%s\", num_values=%u, values=%p)", (void *)ipp, group, ippTagString(group), value_tag, ippTagString(value_tag), name, (unsigned)num_values, (void *)values));
 
   value_tag &= IPP_TAG_CUPS_MASK;
 
@@ -478,9 +465,7 @@ ippAddIntegers(ipp_t      *ipp,		/* I - IPP message */
 
   if (values)
   {
-    for (i = num_values, value = attr->values;
-	 i > 0;
-	 i --, value ++)
+    for (i = num_values, value = attr->values; i > 0; i --, value ++)
       value->integer = *values++;
   }
 
@@ -666,16 +651,16 @@ ipp_attribute_t *			/* O - New attribute */
 ippAddRanges(ipp_t      *ipp,		/* I - IPP message */
              ipp_tag_t  group,		/* I - IPP group */
 	     const char *name,		/* I - Name of attribute */
-	     int        num_values,	/* I - Number of values */
+	     size_t     num_values,	/* I - Number of values */
 	     const int  *lower,		/* I - Lower values */
 	     const int  *upper)		/* I - Upper values */
 {
-  int			i;		/* Looping var */
+  size_t		i;		/* Looping var */
   ipp_attribute_t	*attr;		/* New attribute */
   _ipp_value_t		*value;		/* Current value */
 
 
-  DEBUG_printf(("ippAddRanges(ipp=%p, group=%02x(%s), name=\"%s\", num_values=%d, lower=%p, upper=%p)", (void *)ipp, group, ippTagString(group), name, num_values, (void *)lower, (void *)upper));
+  DEBUG_printf(("ippAddRanges(ipp=%p, group=%02x(%s), name=\"%s\", num_values=%u, lower=%p, upper=%p)", (void *)ipp, group, ippTagString(group), name, (unsigned)num_values, (void *)lower, (void *)upper));
 
  /*
   * Range check input...
@@ -695,9 +680,7 @@ ippAddRanges(ipp_t      *ipp,		/* I - IPP message */
 
   if (lower && upper)
   {
-    for (i = num_values, value = attr->values;
-	 i > 0;
-	 i --, value ++)
+    for (i = num_values, value = attr->values; i > 0; i --, value ++)
     {
       value->range.lower = *lower++;
       value->range.upper = *upper++;
@@ -777,17 +760,17 @@ ipp_attribute_t *			/* O - New attribute */
 ippAddResolutions(ipp_t      *ipp,	/* I - IPP message */
         	  ipp_tag_t  group,	/* I - IPP group */
 		  const char *name,	/* I - Name of attribute */
-		  int        num_values,/* I - Number of values */
+		  size_t     num_values,/* I - Number of values */
 		  ipp_res_t  units,	/* I - Units for resolution */
 		  const int  *xres,	/* I - X resolutions */
 		  const int  *yres)	/* I - Y resolutions */
 {
-  int			i;		/* Looping var */
+  size_t		i;		/* Looping var */
   ipp_attribute_t	*attr;		/* New attribute */
   _ipp_value_t		*value;		/* Current value */
 
 
-  DEBUG_printf(("ippAddResolutions(ipp=%p, group=%02x(%s), name=\"%s\", num_value=%d, units=%d, xres=%p, yres=%p)", (void *)ipp, group, ippTagString(group), name, num_values, units, (void *)xres, (void *)yres));
+  DEBUG_printf(("ippAddResolutions(ipp=%p, group=%02x(%s), name=\"%s\", num_value=%u, units=%d, xres=%p, yres=%p)", (void *)ipp, group, ippTagString(group), name, (unsigned)num_values, units, (void *)xres, (void *)yres));
 
  /*
   * Range check input...
@@ -808,9 +791,7 @@ ippAddResolutions(ipp_t      *ipp,	/* I - IPP message */
 
   if (xres && yres)
   {
-    for (i = num_values, value = attr->values;
-	 i > 0;
-	 i --, value ++)
+    for (i = num_values, value = attr->values; i > 0; i --, value ++)
     {
       value->resolution.xres  = *xres++;
       value->resolution.yres  = *yres++;
@@ -1207,18 +1188,18 @@ ippAddStrings(
     ipp_tag_t          group,		/* I - IPP group */
     ipp_tag_t          value_tag,	/* I - Type of attribute */
     const char         *name,		/* I - Name of attribute */
-    int                num_values,	/* I - Number of values */
+    size_t             num_values,	/* I - Number of values */
     const char         *language,	/* I - Language code (@code NULL@ for default) */
     const char * const *values)		/* I - Values */
 {
-  int			i;		/* Looping var */
+  size_t		i;		/* Looping var */
   ipp_tag_t		temp_tag;	/* Temporary value tag (masked) */
   ipp_attribute_t	*attr;		/* New attribute */
   _ipp_value_t		*value;		/* Current value */
   char			code[32];	/* Language/charset value buffer */
 
 
-  DEBUG_printf(("ippAddStrings(ipp=%p, group=%02x(%s), value_tag=%02x(%s), name=\"%s\", num_values=%d, language=\"%s\", values=%p)", (void *)ipp, group, ippTagString(group), value_tag, ippTagString(value_tag), name, num_values, language, (void *)values));
+  DEBUG_printf(("ippAddStrings(ipp=%p, group=%02x(%s), value_tag=%02x(%s), name=\"%s\", num_values=%u, language=\"%s\", values=%p)", (void *)ipp, group, ippTagString(group), value_tag, ippTagString(value_tag), name, (unsigned)num_values, language, (void *)values));
 
  /*
   * Range check input...
@@ -1281,9 +1262,7 @@ ippAddStrings(
   * Initialize the attribute data...
   */
 
-  for (i = num_values, value = attr->values;
-       i > 0;
-       i --, value ++)
+  for (i = num_values, value = attr->values; i > 0; i --, value ++)
   {
     if (language)
     {
@@ -1332,7 +1311,7 @@ ippContainsInteger(
     ipp_attribute_t *attr,		/* I - Attribute */
     int             value)		/* I - Integer/enum value */
 {
-  int		i;			/* Looping var */
+  size_t	i;			/* Looping var */
   _ipp_value_t	*avalue;		/* Current attribute value */
 
 
@@ -1383,7 +1362,7 @@ ippContainsString(
     ipp_attribute_t *attr,		/* I - Attribute */
     const char      *value)		/* I - String value */
 {
-  int		i;			/* Looping var */
+  size_t	i;			/* Looping var */
   _ipp_value_t	*avalue;		/* Current attribute value */
 
 
@@ -1403,9 +1382,7 @@ ippContainsString(
   * Compare...
   */
 
-  DEBUG_printf(("1ippContainsString: attr %s, %s with %d values.",
-		attr->name, ippTagString(attr->value_tag),
-		attr->num_values));
+  DEBUG_printf(("1ippContainsString: attr %s, %s with %u values.", attr->name, ippTagString(attr->value_tag), (unsigned)attr->num_values));
 
   switch (attr->value_tag & IPP_TAG_CUPS_MASK)
   {
@@ -1418,8 +1395,7 @@ ippContainsString(
 	     i > 0;
 	     i --, avalue ++)
 	{
-	  DEBUG_printf(("1ippContainsString: value[%d]=\"%s\"",
-	                attr->num_values - i, avalue->string.text));
+	  DEBUG_printf(("1ippContainsString: value[%u]=\"%s\"", (unsigned)(attr->num_values - i), avalue->string.text));
 
 	  if (!strcmp(value, avalue->string.text))
 	  {
@@ -1437,8 +1413,7 @@ ippContainsString(
 	     i > 0;
 	     i --, avalue ++)
 	{
-	  DEBUG_printf(("1ippContainsString: value[%d]=\"%s\"",
-	                attr->num_values - i, avalue->string.text));
+	  DEBUG_printf(("1ippContainsString: value[%u]=\"%s\"", (unsigned)(attr->num_values - i), avalue->string.text));
 
 	  if (!_cups_strcasecmp(value, avalue->string.text))
 	  {
@@ -1475,7 +1450,7 @@ ippCopyAttribute(
     ipp_attribute_t *srcattr,		/* I - Attribute to copy */
     int             quickcopy)		/* I - 1 for a referenced copy, 0 for normal */
 {
-  int			i;		/* Looping var */
+  size_t		i;		/* Looping var */
   ipp_tag_t		srctag;		/* Source value tag */
   ipp_attribute_t	*dstattr;	/* Destination attribute */
   _ipp_value_t		*srcval,	/* Source value */
@@ -1751,7 +1726,7 @@ ippDelete(ipp_t *ipp)			/* I - IPP message */
   {
     next = attr->next;
 
-    DEBUG_printf(("4debug_free: %p %s %s%s (%d values)", (void *)attr, attr->name, attr->num_values > 1 ? "1setOf " : "", ippTagString(attr->value_tag), attr->num_values));
+    DEBUG_printf(("4debug_free: %p %s %s%s (%u values)", (void *)attr, attr->name, attr->num_values > 1 ? "1setOf " : "", ippTagString(attr->value_tag), (unsigned)attr->num_values));
 
     ipp_free_values(attr, 0, attr->num_values);
 
@@ -1789,7 +1764,7 @@ ippDeleteAttribute(
   if (!attr)
     return;
 
-  DEBUG_printf(("4debug_free: %p %s %s%s (%d values)", (void *)attr, attr->name, attr->num_values > 1 ? "1setOf " : "", ippTagString(attr->value_tag), attr->num_values));
+  DEBUG_printf(("4debug_free: %p %s %s%s (%u values)", (void *)attr, attr->name, attr->num_values > 1 ? "1setOf " : "", ippTagString(attr->value_tag), (unsigned)attr->num_values));
 
  /*
   * Find the attribute in the list...
@@ -1851,15 +1826,15 @@ int					/* O  - 1 on success, 0 on failure */
 ippDeleteValues(
     ipp_t           *ipp,		/* I  - IPP message */
     ipp_attribute_t **attr,		/* IO - Attribute */
-    int             element,		/* I  - Index of first value to delete (0-based) */
-    int             count)		/* I  - Number of values to delete */
+    size_t          element,		/* I  - Index of first value to delete (0-based) */
+    size_t          count)		/* I  - Number of values to delete */
 {
  /*
   * Range check input...
   */
 
   if (!ipp || !attr || !*attr ||
-      element < 0 || element >= (*attr)->num_values || count <= 0 ||
+      element >= (*attr)->num_values || !count ||
       (element + count) >= (*attr)->num_values)
     return (0);
 
@@ -2021,7 +1996,7 @@ ippFindNextAttribute(ipp_t      *ipp,	/* I - IPP message */
 
       if (name == parent && attr->value_tag == IPP_TAG_BEGIN_COLLECTION)
       {
-        int i;				/* Looping var */
+        size_t i;			/* Looping var */
 
         for (i = 0; i < attr->num_values; i ++)
         {
@@ -2078,17 +2053,16 @@ ippFirstAttribute(ipp_t *ipp)		/* I - IPP message */
  * @since CUPS 1.6/macOS 10.8@
  */
 
-int					/* O - Boolean value or 0 on error */
+bool					/* O - Boolean value or `false` on error */
 ippGetBoolean(ipp_attribute_t *attr,	/* I - IPP attribute */
-              int             element)	/* I - Value number (0-based) */
+              size_t          element)	/* I - Value number (0-based) */
 {
  /*
   * Range check input...
   */
 
-  if (!attr || attr->value_tag != IPP_TAG_BOOLEAN ||
-      element < 0 || element >= attr->num_values)
-    return (0);
+  if (!attr || attr->value_tag != IPP_TAG_BOOLEAN || element >= attr->num_values)
+    return (false);
 
  /*
   * Return the value...
@@ -2110,14 +2084,13 @@ ippGetBoolean(ipp_attribute_t *attr,	/* I - IPP attribute */
 ipp_t *					/* O - Collection value or @code NULL@ on error */
 ippGetCollection(
     ipp_attribute_t *attr,		/* I - IPP attribute */
-    int             element)		/* I - Value number (0-based) */
+    size_t          element)		/* I - Value number (0-based) */
 {
  /*
   * Range check input...
   */
 
-  if (!attr || attr->value_tag != IPP_TAG_BEGIN_COLLECTION ||
-      element < 0 || element >= attr->num_values)
+  if (!attr || attr->value_tag != IPP_TAG_BEGIN_COLLECTION || element >= attr->num_values)
     return (NULL);
 
  /*
@@ -2134,7 +2107,7 @@ ippGetCollection(
  * @since CUPS 1.6/macOS 10.8@
  */
 
-int					/* O - Number of values or 0 on error */
+size_t					/* O - Number of values or 0 on error */
 ippGetCount(ipp_attribute_t *attr)	/* I - IPP attribute */
 {
  /*
@@ -2163,14 +2136,13 @@ ippGetCount(ipp_attribute_t *attr)	/* I - IPP attribute */
 
 const ipp_uchar_t *			/* O - dateTime value or @code NULL@ */
 ippGetDate(ipp_attribute_t *attr,	/* I - IPP attribute */
-           int             element)	/* I - Value number (0-based) */
+           size_t          element)	/* I - Value number (0-based) */
 {
  /*
   * Range check input...
   */
 
-  if (!attr || attr->value_tag != IPP_TAG_DATE ||
-      element < 0 || element >= attr->num_values)
+  if (!attr || attr->value_tag != IPP_TAG_DATE || element >= attr->num_values)
     return (NULL);
 
  /*
@@ -2214,16 +2186,15 @@ ippGetGroupTag(ipp_attribute_t *attr)	/* I - IPP attribute */
  * @since CUPS 1.6/macOS 10.8@
  */
 
-int					/* O - Value or 0 on error */
+int					/* O - Value or `0` on error */
 ippGetInteger(ipp_attribute_t *attr,	/* I - IPP attribute */
-              int             element)	/* I - Value number (0-based) */
+              size_t          element)	/* I - Value number (0-based) */
 {
  /*
   * Range check input...
   */
 
-  if (!attr || (attr->value_tag != IPP_TAG_INTEGER && attr->value_tag != IPP_TAG_ENUM) ||
-      element < 0 || element >= attr->num_values)
+  if (!attr || (attr->value_tag != IPP_TAG_INTEGER && attr->value_tag != IPP_TAG_ENUM) || element >= attr->num_values)
     return (0);
 
  /*
@@ -2270,15 +2241,14 @@ ippGetName(ipp_attribute_t *attr)	/* I - IPP attribute */
 void *					/* O - Pointer to octetString data */
 ippGetOctetString(
     ipp_attribute_t *attr,		/* I - IPP attribute */
-    int             element,		/* I - Value number (0-based) */
+    size_t          element,		/* I - Value number (0-based) */
     size_t          *datalen)		/* O - Length of octetString data */
 {
  /*
   * Range check input...
   */
 
-  if (!attr || attr->value_tag != IPP_TAG_STRING ||
-      element < 0 || element >= attr->num_values)
+  if (!attr || attr->value_tag != IPP_TAG_STRING || element >= attr->num_values)
   {
     if (datalen)
       *datalen = 0;
@@ -2332,15 +2302,14 @@ ippGetOperation(ipp_t *ipp)		/* I - IPP request message */
 
 int					/* O - Lower value of range or 0 */
 ippGetRange(ipp_attribute_t *attr,	/* I - IPP attribute */
-	    int             element,	/* I - Value number (0-based) */
+	    size_t          element,	/* I - Value number (0-based) */
 	    int             *uppervalue)/* O - Upper value of range */
 {
  /*
   * Range check input...
   */
 
-  if (!attr || attr->value_tag != IPP_TAG_RANGE ||
-      element < 0 || element >= attr->num_values)
+  if (!attr || attr->value_tag != IPP_TAG_RANGE || element >= attr->num_values)
   {
     if (uppervalue)
       *uppervalue = 0;
@@ -2395,7 +2364,7 @@ ippGetRequestId(ipp_t *ipp)		/* I - IPP message */
 int					/* O - Horizontal/cross feed resolution or 0 */
 ippGetResolution(
     ipp_attribute_t *attr,		/* I - IPP attribute */
-    int             element,		/* I - Value number (0-based) */
+    size_t          element,		/* I - Value number (0-based) */
     int             *yres,		/* O - Vertical/feed resolution */
     ipp_res_t       *units)		/* O - Units for resolution */
 {
@@ -2403,8 +2372,7 @@ ippGetResolution(
   * Range check input...
   */
 
-  if (!attr || attr->value_tag != IPP_TAG_RESOLUTION ||
-      element < 0 || element >= attr->num_values)
+  if (!attr || attr->value_tag != IPP_TAG_RESOLUTION || element >= attr->num_values)
   {
     if (yres)
       *yres = 0;
@@ -2488,7 +2456,7 @@ ippGetStatusCode(ipp_t *ipp)		/* I - IPP response or event message */
 
 const char *
 ippGetString(ipp_attribute_t *attr,	/* I - IPP attribute */
-             int             element,	/* I - Value number (0-based) */
+             size_t          element,	/* I - Value number (0-based) */
 	     const char      **language)/* O - Language code (@code NULL@ for don't care) */
 {
   ipp_tag_t	tag;			/* Value tag */
@@ -2500,7 +2468,7 @@ ippGetString(ipp_attribute_t *attr,	/* I - IPP attribute */
 
   tag = ippGetValueTag(attr);
 
-  if (!attr || element < 0 || element >= attr->num_values || (tag != IPP_TAG_TEXTLANG && tag != IPP_TAG_NAMELANG && (tag < IPP_TAG_TEXT || tag > IPP_TAG_MIMETYPE)))
+  if (!attr || element >= attr->num_values || (tag != IPP_TAG_TEXTLANG && tag != IPP_TAG_NAMELANG && (tag < IPP_TAG_TEXT || tag > IPP_TAG_MIMETYPE)))
     return (NULL);
 
  /*
@@ -2546,7 +2514,7 @@ ippGetValueTag(ipp_attribute_t *attr)	/* I - IPP attribute */
 
 int					/* O - Major version number or 0 on error */
 ippGetVersion(ipp_t *ipp,		/* I - IPP message */
-              int   *minor)		/* O - Minor version number or @code NULL@ for don't care */
+              int   *minor)		/* O - Minor version number or `NULL` for don't care */
 {
  /*
   * Range check input...
@@ -2858,7 +2826,7 @@ ippReadFile(int   fd,			/* I - HTTP data */
 ipp_state_t				/* O - Current state */
 ippReadIO(void       *src,		/* I - Data source */
           ipp_iocb_t cb,		/* I - Read callback function */
-	  int        blocking,		/* I - Use blocking IO? */
+	  bool       blocking,		/* I - Use blocking IO? */
 	  ipp_t      *parent,		/* I - Parent request, if any */
           ipp_t      *ipp)		/* I - IPP data */
 {
@@ -3635,8 +3603,8 @@ ippReadIO(void       *src,		/* I - Data source */
 int					/* O  - 1 on success, 0 on failure */
 ippSetBoolean(ipp_t           *ipp,	/* I  - IPP message */
               ipp_attribute_t **attr,	/* IO - IPP attribute */
-              int             element,	/* I  - Value number (0-based) */
-              int             boolvalue)/* I  - Boolean value */
+              size_t          element,	/* I  - Value number (0-based) */
+              bool            boolvalue)/* I  - Boolean value */
 {
   _ipp_value_t	*value;			/* Current value */
 
@@ -3645,8 +3613,7 @@ ippSetBoolean(ipp_t           *ipp,	/* I  - IPP message */
   * Range check input...
   */
 
-  if (!ipp || !attr || !*attr || (*attr)->value_tag != IPP_TAG_BOOLEAN ||
-      element < 0 || element > (*attr)->num_values)
+  if (!ipp || !attr || !*attr || (*attr)->value_tag != IPP_TAG_BOOLEAN || element > (*attr)->num_values)
     return (0);
 
  /*
@@ -3654,7 +3621,7 @@ ippSetBoolean(ipp_t           *ipp,	/* I  - IPP message */
   */
 
   if ((value = ipp_set_value(ipp, attr, element)) != NULL)
-    value->boolean = (char)boolvalue;
+    value->boolean = boolvalue;
 
   return (value != NULL);
 }
@@ -3678,7 +3645,7 @@ int					/* O  - 1 on success, 0 on failure */
 ippSetCollection(
     ipp_t           *ipp,		/* I  - IPP message */
     ipp_attribute_t **attr,		/* IO - IPP attribute */
-    int             element,		/* I  - Value number (0-based) */
+    size_t          element,		/* I  - Value number (0-based) */
     ipp_t           *colvalue)		/* I  - Collection value */
 {
   _ipp_value_t	*value;			/* Current value */
@@ -3688,8 +3655,7 @@ ippSetCollection(
   * Range check input...
   */
 
-  if (!ipp || !attr || !*attr || (*attr)->value_tag != IPP_TAG_BEGIN_COLLECTION ||
-      element < 0 || element > (*attr)->num_values || !colvalue)
+  if (!ipp || !attr || !*attr || (*attr)->value_tag != IPP_TAG_BEGIN_COLLECTION || element > (*attr)->num_values || !colvalue)
     return (0);
 
  /*
@@ -3726,7 +3692,7 @@ ippSetCollection(
 int					/* O  - 1 on success, 0 on failure */
 ippSetDate(ipp_t             *ipp,	/* I  - IPP message */
            ipp_attribute_t   **attr,	/* IO - IPP attribute */
-           int               element,	/* I  - Value number (0-based) */
+           size_t            element,	/* I  - Value number (0-based) */
            const ipp_uchar_t *datevalue)/* I  - dateTime value */
 {
   _ipp_value_t	*value;			/* Current value */
@@ -3736,7 +3702,7 @@ ippSetDate(ipp_t             *ipp,	/* I  - IPP message */
   * Range check input...
   */
 
-  if (!ipp || !attr || !*attr || ((*attr)->value_tag != IPP_TAG_DATE && (*attr)->value_tag != IPP_TAG_NOVALUE && (*attr)->value_tag != IPP_TAG_UNKNOWN) || element < 0 || element > (*attr)->num_values || !datevalue)
+  if (!ipp || !attr || !*attr || ((*attr)->value_tag != IPP_TAG_DATE && (*attr)->value_tag != IPP_TAG_NOVALUE && (*attr)->value_tag != IPP_TAG_UNKNOWN) || element > (*attr)->num_values || !datevalue)
     return (0);
 
  /*
@@ -3809,7 +3775,7 @@ ippSetGroupTag(
 int					/* O  - 1 on success, 0 on failure */
 ippSetInteger(ipp_t           *ipp,	/* I  - IPP message */
               ipp_attribute_t **attr,	/* IO - IPP attribute */
-              int             element,	/* I  - Value number (0-based) */
+              size_t          element,	/* I  - Value number (0-based) */
               int             intvalue)	/* I  - Integer/enum value */
 {
   _ipp_value_t	*value;			/* Current value */
@@ -3819,7 +3785,7 @@ ippSetInteger(ipp_t           *ipp,	/* I  - IPP message */
   * Range check input...
   */
 
-  if (!ipp || !attr || !*attr || ((*attr)->value_tag != IPP_TAG_INTEGER && (*attr)->value_tag != IPP_TAG_ENUM && (*attr)->value_tag != IPP_TAG_NOVALUE && (*attr)->value_tag != IPP_TAG_UNKNOWN) || element < 0 || element > (*attr)->num_values)
+  if (!ipp || !attr || !*attr || ((*attr)->value_tag != IPP_TAG_INTEGER && (*attr)->value_tag != IPP_TAG_ENUM && (*attr)->value_tag != IPP_TAG_NOVALUE && (*attr)->value_tag != IPP_TAG_UNKNOWN) || element > (*attr)->num_values)
     return (0);
 
  /*
@@ -3898,7 +3864,7 @@ int					/* O  - 1 on success, 0 on failure */
 ippSetOctetString(
     ipp_t           *ipp,		/* I  - IPP message */
     ipp_attribute_t **attr,		/* IO - IPP attribute */
-    int             element,		/* I  - Value number (0-based) */
+    size_t          element,		/* I  - Value number (0-based) */
     const void      *data,		/* I  - Pointer to octetString data */
     size_t          datalen)		/* I  - Length of octetString data */
 {
@@ -3909,7 +3875,7 @@ ippSetOctetString(
   * Range check input...
   */
 
-  if (!ipp || !attr || !*attr || ((*attr)->value_tag != IPP_TAG_STRING && (*attr)->value_tag != IPP_TAG_NOVALUE && (*attr)->value_tag != IPP_TAG_UNKNOWN) || element < 0 || element > (*attr)->num_values || datalen < 0 || datalen > IPP_MAX_LENGTH)
+  if (!ipp || !attr || !*attr || ((*attr)->value_tag != IPP_TAG_STRING && (*attr)->value_tag != IPP_TAG_NOVALUE && (*attr)->value_tag != IPP_TAG_UNKNOWN) || element > (*attr)->num_values || datalen < 0 || datalen > IPP_MAX_LENGTH)
     return (0);
 
  /*
@@ -4015,7 +3981,7 @@ ippSetOperation(ipp_t    *ipp,		/* I - IPP request message */
 int					/* O  - 1 on success, 0 on failure */
 ippSetRange(ipp_t           *ipp,	/* I  - IPP message */
             ipp_attribute_t **attr,	/* IO - IPP attribute */
-            int             element,	/* I  - Value number (0-based) */
+            size_t          element,	/* I  - Value number (0-based) */
 	    int             lowervalue,	/* I  - Lower bound for range */
 	    int             uppervalue)	/* I  - Upper bound for range */
 {
@@ -4026,7 +3992,7 @@ ippSetRange(ipp_t           *ipp,	/* I  - IPP message */
   * Range check input...
   */
 
-  if (!ipp || !attr || !*attr || ((*attr)->value_tag != IPP_TAG_RANGE && (*attr)->value_tag != IPP_TAG_NOVALUE && (*attr)->value_tag != IPP_TAG_UNKNOWN) || element < 0 || element > (*attr)->num_values || lowervalue > uppervalue)
+  if (!ipp || !attr || !*attr || ((*attr)->value_tag != IPP_TAG_RANGE && (*attr)->value_tag != IPP_TAG_NOVALUE && (*attr)->value_tag != IPP_TAG_UNKNOWN) || element > (*attr)->num_values || lowervalue > uppervalue)
     return (0);
 
  /*
@@ -4096,7 +4062,7 @@ int					/* O  - 1 on success, 0 on failure */
 ippSetResolution(
     ipp_t           *ipp,		/* I  - IPP message */
     ipp_attribute_t **attr,		/* IO - IPP attribute */
-    int             element,		/* I  - Value number (0-based) */
+    size_t          element,		/* I  - Value number (0-based) */
     ipp_res_t       unitsvalue,		/* I  - Resolution units */
     int             xresvalue,		/* I  - Horizontal/cross feed resolution */
     int             yresvalue)		/* I  - Vertical/feed resolution */
@@ -4108,7 +4074,7 @@ ippSetResolution(
   * Range check input...
   */
 
-  if (!ipp || !attr || !*attr || ((*attr)->value_tag != IPP_TAG_RESOLUTION && (*attr)->value_tag != IPP_TAG_NOVALUE && (*attr)->value_tag != IPP_TAG_UNKNOWN) || element < 0 || element > (*attr)->num_values || xresvalue <= 0 || yresvalue <= 0 || unitsvalue < IPP_RES_PER_INCH || unitsvalue > IPP_RES_PER_CM)
+  if (!ipp || !attr || !*attr || ((*attr)->value_tag != IPP_TAG_RESOLUTION && (*attr)->value_tag != IPP_TAG_NOVALUE && (*attr)->value_tag != IPP_TAG_UNKNOWN) || element > (*attr)->num_values || xresvalue <= 0 || yresvalue <= 0 || unitsvalue < IPP_RES_PER_INCH || unitsvalue > IPP_RES_PER_CM)
     return (0);
 
  /*
@@ -4202,7 +4168,7 @@ ippSetStatusCode(ipp_t        *ipp,	/* I - IPP response or event message */
 int					/* O  - 1 on success, 0 on failure */
 ippSetString(ipp_t           *ipp,	/* I  - IPP message */
              ipp_attribute_t **attr,	/* IO - IPP attribute */
-             int             element,	/* I  - Value number (0-based) */
+             size_t          element,	/* I  - Value number (0-based) */
 	     const char      *strvalue)	/* I  - String value */
 {
   char		*temp;			/* Temporary string */
@@ -4219,7 +4185,7 @@ ippSetString(ipp_t           *ipp,	/* I  - IPP message */
   else
     value_tag = IPP_TAG_ZERO;
 
-  if (!ipp || !attr || !*attr || (value_tag < IPP_TAG_TEXT && value_tag != IPP_TAG_TEXTLANG && value_tag != IPP_TAG_NAMELANG && value_tag != IPP_TAG_NOVALUE && value_tag != IPP_TAG_UNKNOWN) || value_tag > IPP_TAG_MIMETYPE || element < 0 || element > (*attr)->num_values || !strvalue)
+  if (!ipp || !attr || !*attr || (value_tag < IPP_TAG_TEXT && value_tag != IPP_TAG_TEXTLANG && value_tag != IPP_TAG_NAMELANG && value_tag != IPP_TAG_NOVALUE && value_tag != IPP_TAG_UNKNOWN) || value_tag > IPP_TAG_MIMETYPE || element > (*attr)->num_values || !strvalue)
     return (0);
 
  /*
@@ -4273,7 +4239,7 @@ ippSetString(ipp_t           *ipp,	/* I  - IPP message */
 int					/* O  - 1 on success, 0 on failure */
 ippSetStringf(ipp_t           *ipp,	/* I  - IPP message */
               ipp_attribute_t **attr,	/* IO - IPP attribute */
-              int             element,	/* I  - Value number (0-based) */
+              size_t          element,	/* I  - Value number (0-based) */
 	      const char      *format,	/* I  - Printf-style format string */
 	      ...)			/* I  - Additional arguments as needed */
 {
@@ -4311,7 +4277,7 @@ ippSetStringf(ipp_t           *ipp,	/* I  - IPP message */
 int					/* O  - 1 on success, 0 on failure */
 ippSetStringfv(ipp_t           *ipp,	/* I  - IPP message */
                ipp_attribute_t **attr,	/* IO - IPP attribute */
-               int             element,	/* I  - Value number (0-based) */
+               size_t          element,	/* I  - Value number (0-based) */
 	       const char      *format,	/* I  - Printf-style format string */
 	       va_list         ap)	/* I  - Pointer to additional arguments */
 {
@@ -4696,7 +4662,8 @@ int					/* O - 1 if valid, 0 otherwise */
 ippValidateAttribute(
     ipp_attribute_t *attr)		/* I - Attribute */
 {
-  int		i;			/* Looping var */
+  size_t	i;			/* Looping var */
+  int		r;			/* regcomp() error code */
   char		scheme[64],		/* Scheme from URI */
 		userpass[256],		/* Username/password from URI */
 		hostname[256],		/* Hostname from URI */
@@ -5094,7 +5061,7 @@ ippValidateAttribute(
 	* easiest way to check the values...
 	*/
 
-        if ((i = regcomp(&re,
+        if ((r = regcomp(&re,
 			 "^("
 			 "(([a-z]{2,3}(-[a-z][a-z][a-z]){0,3})|[a-z]{4,8})"
 								/* language */
@@ -5112,7 +5079,7 @@ ippValidateAttribute(
         {
           char	temp[256];		/* Temporary error string */
 
-          regerror(i, &re, temp, sizeof(temp));
+          regerror(r, &re, temp, sizeof(temp));
 	  ipp_set_error(IPP_STATUS_ERROR_INTERNAL, _("Unable to compile naturalLanguage regular expression: %s."), temp);
 	  return (0);
         }
@@ -5144,7 +5111,7 @@ ippValidateAttribute(
 	* the easiest way to check the values...
 	*/
 
-        if ((i = regcomp(&re,
+        if ((r = regcomp(&re,
 			 "^"
 			 "[-a-zA-Z0-9!#$&.+^_]{1,127}"		/* type-name */
 			 "/"
@@ -5157,7 +5124,7 @@ ippValidateAttribute(
         {
           char	temp[256];		/* Temporary error string */
 
-          regerror(i, &re, temp, sizeof(temp));
+          regerror(r, &re, temp, sizeof(temp));
 	  ipp_set_error(IPP_STATUS_ERROR_BAD_REQUEST, _("Unable to compile mimeMediaType regular expression: %s."), temp);
 	  return (0);
         }
@@ -5261,11 +5228,11 @@ ippWriteFile(int   fd,			/* I - HTTP data */
 ipp_state_t				/* O - Current state */
 ippWriteIO(void       *dst,		/* I - Destination */
            ipp_iocb_t cb,		/* I - Write callback function */
-	   int        blocking,		/* I - Use blocking IO? */
+	   bool       blocking,		/* I - Use blocking IO? */
 	   ipp_t      *parent,		/* I - Parent IPP message */
            ipp_t      *ipp)		/* I - IPP data */
 {
-  int			i;		/* Looping var */
+  size_t		i;		/* Looping var */
   int			n;		/* Length of data */
   unsigned char		*buffer,	/* Data buffer */
 			*bufptr;	/* Pointer into buffer */
@@ -5498,9 +5465,7 @@ ippWriteIO(void       *dst,		/* I - Destination */
 
 	    case IPP_TAG_INTEGER :
 	    case IPP_TAG_ENUM :
-	        for (i = 0, value = attr->values;
-		     i < attr->num_values;
-		     i ++, value ++)
+	        for (i = 0, value = attr->values; i < attr->num_values; i ++, value ++)
 		{
                   if ((IPP_BUF_SIZE - (bufptr - buffer)) < 9)
 		  {
@@ -6158,13 +6123,13 @@ ipp_add_attr(ipp_t      *ipp,		/* I - IPP message */
              const char *name,		/* I - Attribute name or NULL */
              ipp_tag_t  group_tag,	/* I - Group tag or IPP_TAG_ZERO */
              ipp_tag_t  value_tag,	/* I - Value tag or IPP_TAG_ZERO */
-             int        num_values)	/* I - Number of values */
+             size_t     num_values)	/* I - Number of values */
 {
-  int			alloc_values;	/* Number of values to allocate */
+  size_t		alloc_values;	/* Number of values to allocate */
   ipp_attribute_t	*attr;		/* New attribute */
 
 
-  DEBUG_printf(("4ipp_add_attr(ipp=%p, name=\"%s\", group_tag=0x%x, value_tag=0x%x, num_values=%d)", (void *)ipp, name, group_tag, value_tag, num_values));
+  DEBUG_printf(("4ipp_add_attr(ipp=%p, name=\"%s\", group_tag=0x%x, value_tag=0x%x, num_values=%u)", (void *)ipp, name, group_tag, value_tag, (unsigned)num_values));
 
  /*
   * Range check input...
@@ -6180,7 +6145,7 @@ ipp_add_attr(ipp_t      *ipp,		/* I - IPP message */
   if (num_values <= 1)
     alloc_values = 1;
   else
-    alloc_values = (num_values + IPP_MAX_VALUES - 1) & ~(IPP_MAX_VALUES - 1);
+    alloc_values = (num_values + IPP_MAX_VALUES - 1) & (size_t)~(IPP_MAX_VALUES - 1);
 
   attr = calloc(sizeof(ipp_attribute_t) +
                 (size_t)(alloc_values - 1) * sizeof(_ipp_value_t), 1);
@@ -6191,7 +6156,7 @@ ipp_add_attr(ipp_t      *ipp,		/* I - IPP message */
     * Initialize attribute...
     */
 
-    DEBUG_printf(("4debug_alloc: %p %s %s%s (%d values)", (void *)attr, name, num_values > 1 ? "1setOf " : "", ippTagString(value_tag), num_values));
+    DEBUG_printf(("4debug_alloc: %p %s %s%s (%u values)", (void *)attr, name, num_values > 1 ? "1setOf " : "", ippTagString(value_tag), (unsigned)num_values));
 
     if (name)
       attr->name = _cupsStrAlloc(name);
@@ -6225,14 +6190,14 @@ ipp_add_attr(ipp_t      *ipp,		/* I - IPP message */
 
 static void
 ipp_free_values(ipp_attribute_t *attr,	/* I - Attribute to free values from */
-                int             element,/* I - First value to free */
-                int             count)	/* I - Number of values to free */
+                size_t          element,/* I - First value to free */
+                size_t          count)	/* I - Number of values to free */
 {
-  int		i;			/* Looping var */
+  size_t	i;			/* Looping var */
   _ipp_value_t	*value;			/* Current value */
 
 
-  DEBUG_printf(("4ipp_free_values(attr=%p, element=%d, count=%d)", (void *)attr, element, count));
+  DEBUG_printf(("4ipp_free_values(attr=%p, element=%u, count=%u)", (void *)attr, (unsigned)element, (unsigned)count));
 
   if (!(attr->value_tag & IPP_TAG_CUPS_CONST))
   {
@@ -6244,8 +6209,7 @@ ipp_free_values(ipp_attribute_t *attr,	/* I - Attribute to free values from */
     {
       case IPP_TAG_TEXTLANG :
       case IPP_TAG_NAMELANG :
-	  if (element == 0 && count == attr->num_values &&
-	      attr->values[0].string.language)
+	  if (element == 0 && count == attr->num_values && attr->values[0].string.language)
 	  {
 	    _cupsStrFree(attr->values[0].string.language);
 	    attr->values[0].string.language = NULL;
@@ -6395,7 +6359,7 @@ static size_t				/* O - Size of IPP message */
 ipp_length(ipp_t *ipp,			/* I - IPP message or collection */
            int   collection)		/* I - 1 if a collection, 0 otherwise */
 {
-  int			i;		/* Looping var */
+  size_t		i;		/* Looping var */
   size_t		bytes;		/* Number of bytes */
   ipp_attribute_t	*attr;		/* Current attribute */
   ipp_tag_t		group;		/* Current group */
@@ -6436,8 +6400,7 @@ ipp_length(ipp_t *ipp,			/* I - IPP message or collection */
     if (!attr->name)
       continue;
 
-    DEBUG_printf(("5ipp_length: attr->name=\"%s\", attr->num_values=%d, "
-                  "bytes=" CUPS_LLFMT, attr->name, attr->num_values, CUPS_LLCAST bytes));
+    DEBUG_printf(("5ipp_length: attr->name=\"%s\", attr->num_values=%u, bytes=" CUPS_LLFMT, attr->name, (unsigned)attr->num_values, CUPS_LLCAST bytes));
 
     if ((attr->value_tag & ~IPP_TAG_CUPS_CONST) < IPP_TAG_EXTENSION)
       bytes += (size_t)attr->num_values;/* Value tag for each value */
@@ -6481,11 +6444,11 @@ ipp_length(ipp_t *ipp,			/* I - IPP message or collection */
       case IPP_TAG_CHARSET :
       case IPP_TAG_LANGUAGE :
       case IPP_TAG_MIMETYPE :
-	  for (i = 0, value = attr->values;
-	       i < attr->num_values;
-	       i ++, value ++)
+	  for (i = 0, value = attr->values; i < attr->num_values; i ++, value ++)
+	  {
 	    if (value->string.text)
 	      bytes += strlen(value->string.text);
+	  }
 	  break;
 
       case IPP_TAG_DATE :
@@ -6505,9 +6468,7 @@ ipp_length(ipp_t *ipp,			/* I - IPP message or collection */
           bytes += (size_t)(4 * attr->num_values);
 					/* Charset + text length */
 
-	  for (i = 0, value = attr->values;
-	       i < attr->num_values;
-	       i ++, value ++)
+	  for (i = 0, value = attr->values; i < attr->num_values; i ++, value ++)
 	  {
 	    if (value->string.language)
 	      bytes += strlen(value->string.language);
@@ -6518,16 +6479,12 @@ ipp_length(ipp_t *ipp,			/* I - IPP message or collection */
 	  break;
 
       case IPP_TAG_BEGIN_COLLECTION :
-	  for (i = 0, value = attr->values;
-	       i < attr->num_values;
-	       i ++, value ++)
+	  for (i = 0, value = attr->values; i < attr->num_values; i ++, value ++)
             bytes += ipp_length(value->collection, 1);
 	  break;
 
       default :
-	  for (i = 0, value = attr->values;
-	       i < attr->num_values;
-	       i ++, value ++)
+	  for (i = 0, value = attr->values; i < attr->num_values; i ++, value ++)
             bytes += (size_t)value->unknown.length;
 	  break;
     }
@@ -6686,12 +6643,12 @@ ipp_set_error(ipp_status_t status,	/* I - Status code */
 static _ipp_value_t *			/* O  - IPP value element or NULL on error */
 ipp_set_value(ipp_t           *ipp,	/* IO - IPP message */
               ipp_attribute_t **attr,	/* IO - IPP attribute */
-              int             element)	/* I  - Value number (0-based) */
+              size_t          element)	/* I  - Value number (0-based) */
 {
   ipp_attribute_t	*temp,		/* New attribute pointer */
 			*current,	/* Current attribute in list */
 			*prev;		/* Previous attribute in list */
-  int			alloc_values;	/* Allocated values */
+  size_t		alloc_values;	/* Allocated values */
 
 
  /*
@@ -6703,8 +6660,7 @@ ipp_set_value(ipp_t           *ipp,	/* IO - IPP message */
   if (temp->num_values <= 1)
     alloc_values = 1;
   else
-    alloc_values = (temp->num_values + IPP_MAX_VALUES - 1) &
-                   ~(IPP_MAX_VALUES - 1);
+    alloc_values = (temp->num_values + IPP_MAX_VALUES - 1) & (size_t)~(IPP_MAX_VALUES - 1);
 
   if (element < alloc_values)
   {
@@ -6724,8 +6680,7 @@ ipp_set_value(ipp_t           *ipp,	/* IO - IPP message */
   else
     alloc_values += IPP_MAX_VALUES;
 
-  DEBUG_printf(("4ipp_set_value: Reallocating for up to %d values.",
-                alloc_values));
+  DEBUG_printf(("4ipp_set_value: Reallocating for up to %u values.", (unsigned)alloc_values));
 
  /*
   * Reallocate memory...
@@ -6753,7 +6708,7 @@ ipp_set_value(ipp_t           *ipp,	/* IO - IPP message */
 #ifndef __clang_analyzer__
     DEBUG_printf(("4debug_free: %p %s", (void *)*attr, temp->name));
 #endif /* !__clang_analyzer__ */
-    DEBUG_printf(("4debug_alloc: %p %s %s%s (%d)", (void *)temp, temp->name, temp->num_values > 1 ? "1setOf " : "", ippTagString(temp->value_tag), temp->num_values));
+    DEBUG_printf(("4debug_alloc: %p %s %s%s (%u)", (void *)temp, temp->name, temp->num_values > 1 ? "1setOf " : "", ippTagString(temp->value_tag), (unsigned)temp->num_values));
 
     if (ipp->current == *attr && ipp->prev)
     {

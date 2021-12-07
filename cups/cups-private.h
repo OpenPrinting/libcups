@@ -11,11 +11,6 @@
 
 #ifndef _CUPS_CUPS_PRIVATE_H_
 #  define _CUPS_CUPS_PRIVATE_H_
-
-/*
- * Include necessary headers...
- */
-
 #  include "string-private.h"
 #  include "array-private.h"
 #  include "ipp-private.h"
@@ -28,12 +23,6 @@
 #    include <sys/cdefs.h>
 #    include <CoreFoundation/CoreFoundation.h>
 #  endif /* __APPLE__ */
-
-
-/*
- * C++ magic...
- */
-
 #  ifdef __cplusplus
 extern "C" {
 #  endif /* __cplusplus */
@@ -91,18 +80,6 @@ typedef struct _cups_globals_s		/**** CUPS global state data ****/
 					/* Big buffer for struct passwd buffers */
 #endif
 
-  /* adminutil.c */
-  time_t		cupsd_update;	/* Last time we got or set cupsd.conf */
-  char			cupsd_hostname[HTTP_MAX_HOST];
-					/* Hostname for connection */
-  int			cupsd_num_settings;
-					/* Number of server settings */
-  cups_option_t		*cupsd_settings;/* Server settings */
-
-  /* backend.c */
-  char			resolved_uri[1024];
-					/* Buffer for cupsBackendDeviceURI */
-
   /* debug.c */
 #  ifdef DEBUG
   int			thread_id;	/* Friendly thread ID */
@@ -152,11 +129,6 @@ typedef struct _cups_globals_s		/**** CUPS global state data ****/
   ipp_status_t		last_error;	/* Last IPP error */
   char			*last_status_message;
 					/* Last IPP status-message */
-
-  /* snmp.c */
-  char			snmp_community[255];
-					/* Default SNMP community name */
-  int			snmp_debug;	/* Log SNMP IO to stderr? */
 
   /* tempfile.c */
   char			tempfile[1024];	/* cupsTempFd/File buffer */
@@ -227,7 +199,7 @@ struct _cups_dinfo_s			/* Destination capability and status
   const char		*uri;		/* Printer URI */
   char			*resource;	/* Resource path */
   ipp_t			*attrs;		/* Printer attributes */
-  int			num_defaults;	/* Number of default options */
+  size_t		num_defaults;	/* Number of default options */
   cups_option_t		*defaults;	/* Default options */
   cups_array_t		*constraints;	/* Job constraints */
   cups_array_t		*resolvers;	/* Job resolvers */
@@ -255,30 +227,24 @@ extern void		_cupsAppleSetDefaultPaperID(CFStringRef name) _CUPS_PRIVATE;
 extern void		_cupsAppleSetDefaultPrinter(CFStringRef name) _CUPS_PRIVATE;
 extern void		_cupsAppleSetUseLastPrinter(int uselast) _CUPS_PRIVATE;
 #  endif /* __APPLE__ */
-
 extern char		*_cupsBufferGet(size_t size) _CUPS_PRIVATE;
 extern void		_cupsBufferRelease(char *b) _CUPS_PRIVATE;
-
 extern http_t		*_cupsConnect(void) _CUPS_PRIVATE;
 extern char		*_cupsCreateDest(const char *name, const char *info, const char *device_id, const char *device_uri, char *uri, size_t urisize) _CUPS_PRIVATE;
 extern ipp_attribute_t	*_cupsEncodeOption(ipp_t *ipp, ipp_tag_t group_tag, _ipp_option_t *map, const char *name, const char *value) _CUPS_PRIVATE;
-extern int		_cupsGet1284Values(const char *device_id, cups_option_t **values) _CUPS_PRIVATE;
 extern const char	*_cupsGetDestResource(cups_dest_t *dest, unsigned flags, char *resource, size_t resourcesize) _CUPS_PRIVATE;
 extern int		_cupsGetDests(http_t *http, ipp_op_t op, const char *name, cups_dest_t **dests, cups_ptype_t type, cups_ptype_t mask) _CUPS_PRIVATE;
 extern const char	*_cupsGetPassword(const char *prompt) _CUPS_PRIVATE;
+extern char		*_cupsGetUserDefault(char *name, size_t namesize) _CUPS_INTERNAL;
 extern void		_cupsGlobalLock(void) _CUPS_PRIVATE;
-extern _cups_globals_t	*_cupsGlobals(void) _CUPS_PRIVATE;
 extern void		_cupsGlobalUnlock(void) _CUPS_PRIVATE;
+extern _cups_globals_t	*_cupsGlobals(void) _CUPS_PRIVATE;
+// TODO: Remove _cupsNextDelay
 extern int		_cupsNextDelay(int current, int *previous) _CUPS_PRIVATE;
 extern void		_cupsSetDefaults(void) _CUPS_INTERNAL;
 extern void		_cupsSetError(ipp_status_t status, const char *message, int localize) _CUPS_PRIVATE;
 extern void		_cupsSetHTTPError(http_status_t status) _CUPS_INTERNAL;
-extern char		*_cupsGetUserDefault(char *name, size_t namesize) _CUPS_INTERNAL;
 
-
-/*
- * C++ magic...
- */
 
 #  ifdef __cplusplus
 }

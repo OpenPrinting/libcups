@@ -1,6 +1,7 @@
 /*
  * Private string definitions for CUPS.
  *
+ * Copyright © 2021 by OpenPrinting.
  * Copyright © 2007-2018 by Apple Inc.
  * Copyright © 1997-2006 by Easy Software Products.
  *
@@ -10,12 +11,8 @@
 
 #ifndef _CUPS_STRING_PRIVATE_H_
 #  define _CUPS_STRING_PRIVATE_H_
-
-/*
- * Include necessary headers...
- */
-
 #  include "config.h"
+#  include "versioning.h"
 #  include <stdio.h>
 #  include <stdlib.h>
 #  include <stdarg.h>
@@ -24,22 +21,6 @@
 #  include <errno.h>
 #  include <locale.h>
 #  include <time.h>
-
-#  include <cups/versioning.h>
-
-
-#  if defined(_WIN32) && !defined(__CUPS_SSIZE_T_DEFINED)
-#    define __CUPS_SSIZE_T_DEFINED
-#    include <stddef.h>
-/* Windows does not support the ssize_t type, so map it to __int64... */
-typedef __int64 ssize_t;			/* @private@ */
-#  endif /* _WIN32 && !__CUPS_SSIZE_T_DEFINED */
-
-
-/*
- * C++ magic...
- */
-
 #  ifdef __cplusplus
 extern "C" {
 #  endif /* __cplusplus */
@@ -154,40 +135,17 @@ extern size_t _cups_strlcpy(char *, const char *, size_t) _CUPS_PRIVATE;
 #  endif /* !HAVE_STRLCPY */
 
 
-/*
- * String pool functions...
- */
-
 extern char	*_cupsStrAlloc(const char *s) _CUPS_PRIVATE;
 extern void	_cupsStrFlush(void) _CUPS_PRIVATE;
 extern void	_cupsStrFree(const char *s) _CUPS_PRIVATE;
 extern char	*_cupsStrRetain(const char *s) _CUPS_PRIVATE;
 extern size_t	_cupsStrStatistics(size_t *alloc_bytes, size_t *total_bytes) _CUPS_PRIVATE;
-
-
-/*
- * Floating point number functions...
- */
-
-extern char	*_cupsStrFormatd(char *buf, char *bufend, double number,
-		                 struct lconv *loc) _CUPS_PRIVATE;
-extern double	_cupsStrScand(const char *buf, char **bufptr,
-		              struct lconv *loc) _CUPS_PRIVATE;
-
-
-/*
- * Date function...
- */
-
+extern char	*_cupsStrFormatd(char *buf, char *bufend, double number, struct lconv *loc) _CUPS_PRIVATE;
+extern double	_cupsStrScand(const char *buf, char **bufptr, struct lconv *loc) _CUPS_PRIVATE;
 extern char	*_cupsStrDate(char *buf, size_t bufsize, time_t timeval) _CUPS_PRIVATE;
 
-
-/*
- * C++ magic...
- */
 
 #  ifdef __cplusplus
 }
 #  endif /* __cplusplus */
-
 #endif /* !_CUPS_STRING_H_ */

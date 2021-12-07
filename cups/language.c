@@ -893,8 +893,8 @@ _cupsMessageFree(cups_array_t *a)	/* I - Message array */
   * Release the cups.strings dictionary as needed...
   */
 
-  if (cupsArrayUserData(a))
-    CFRelease((CFDictionaryRef)cupsArrayUserData(a));
+  if (cupsArrayGetUserData(a))
+    CFRelease((CFDictionaryRef)cupsArrayGetUserData(a));
 #endif /* __APPLE__ && CUPS_BUNDLEDIR */
 
  /*
@@ -1138,7 +1138,7 @@ _cupsMessageLoad(const char *filename,	/* I - Message catalog to load */
 
   cupsFileClose(fp);
 
-  DEBUG_printf(("5_cupsMessageLoad: Returning %d messages...", cupsArrayCount(a)));
+  DEBUG_printf(("5_cupsMessageLoad: Returning %u messages...", (unsigned)cupsArrayGetCount(a)));
 
   return (a);
 }
@@ -1167,7 +1167,7 @@ _cupsMessageLookup(cups_array_t *a,	/* I - Message array */
   match   = (_cups_message_t *)cupsArrayFind(a, &key);
 
 #if defined(__APPLE__) && defined(CUPS_BUNDLEDIR)
-  if (!match && cupsArrayUserData(a))
+  if (!match && cupsArrayGetUserData(a))
   {
    /*
     * Try looking the string up in the cups.strings dictionary...
@@ -1177,7 +1177,7 @@ _cupsMessageLookup(cups_array_t *a,	/* I - Message array */
     CFStringRef		cfm,		/* Message as a CF string */
 			cfstr;		/* Localized text as a CF string */
 
-    dict       = (CFDictionaryRef)cupsArrayUserData(a);
+    dict       = (CFDictionaryRef)cupsArrayGetUserData(a);
     cfm        = CFStringCreateWithCString(kCFAllocatorDefault, m, kCFStringEncodingUTF8);
     match      = calloc(1, sizeof(_cups_message_t));
     match->msg = strdup(m);
@@ -1220,10 +1220,7 @@ _cupsMessageLookup(cups_array_t *a,	/* I - Message array */
 cups_array_t *				/* O - Array */
 _cupsMessageNew(void *context)		/* I - User data */
 {
-  return (cupsArrayNew3((cups_array_func_t)cups_message_compare, context,
-                        (cups_ahash_func_t)NULL, 0,
-			(cups_acopy_func_t)NULL,
-			(cups_afree_func_t)cups_message_free));
+  return (cupsArrayNew((cups_array_cb_t)cups_message_compare, context, (cups_ahash_cb_t)NULL, 0, (cups_acopy_cb_t)NULL, (cups_afree_cb_t)cups_message_free));
 }
 
 
@@ -1253,7 +1250,7 @@ _cupsMessageSave(const char   *filename,/* I - Output filename */
 
   if (flags & _CUPS_MESSAGE_STRINGS)
   {
-    for (m = (_cups_message_t *)cupsArrayFirst(a); m; m = (_cups_message_t *)cupsArrayNext(a))
+    for (m = (_cups_message_t *)cupsArrayGetFirst(a); m; m = (_cups_message_t *)cupsArrayGetNext(a))
     {
       cupsFilePuts(fp, "\"");
       cups_message_puts(fp, m->msg);
@@ -1264,7 +1261,7 @@ _cupsMessageSave(const char   *filename,/* I - Output filename */
   }
   else
   {
-    for (m = (_cups_message_t *)cupsArrayFirst(a); m; m = (_cups_message_t *)cupsArrayNext(a))
+    for (m = (_cups_message_t *)cupsArrayGetFirst(a); m; m = (_cups_message_t *)cupsArrayGetNext(a))
     {
       cupsFilePuts(fp, "msgid \"");
       cups_message_puts(fp, m->msg);

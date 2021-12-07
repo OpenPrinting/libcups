@@ -132,7 +132,7 @@ show_supported(http_t       *http,	/* I - Connection to destination */
 	       const char   *value)	/* I - Value, if any */
 {
   ipp_attribute_t	*attr;		/* Attribute */
-  int			i,		/* Looping var */
+  size_t		i,		/* Looping var */
 			count;		/* Number of values */
 
 

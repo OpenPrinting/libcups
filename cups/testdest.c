@@ -21,8 +21,8 @@
 
 static int	enum_cb(void *user_data, unsigned flags, cups_dest_t *dest);
 static void	localize(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, const char *option, const char *value);
-static void	print_file(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, const char *filename, int num_options, cups_option_t *options);
-static void	show_conflicts(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, int num_options, cups_option_t *options);
+static void	print_file(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, const char *filename, size_t num_options, cups_option_t *options);
+static void	show_conflicts(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, size_t num_options, cups_option_t *options);
 static void	show_default(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, const char *option);
 static void	show_media(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, unsigned flags, const char *name);
 static void	show_supported(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, const char *option, const char *value);
@@ -167,7 +167,7 @@ main(int  argc,				/* I - Number of command-line arguments */
   }
   else if (!strcmp(argv[i], "conflicts") && (i + 1) < argc)
   {
-    int			num_options = 0;/* Number of options */
+    size_t		num_options = 0;/* Number of options */
     cups_option_t	*options = NULL;/* Options */
 
     for (i ++; i < argc; i ++)
@@ -215,7 +215,7 @@ main(int  argc,				/* I - Number of command-line arguments */
   }
   else if (!strcmp(argv[i], "print") && (i + 1) < argc)
   {
-    int			num_options = 0;/* Number of options */
+    size_t		num_options = 0;/* Number of options */
     cups_option_t	*options = NULL;/* Options */
     const char		*filename = argv[i + 1];
 
@@ -240,7 +240,7 @@ enum_cb(void        *user_data,		/* I - User data (unused) */
         unsigned    flags,		/* I - Flags */
 	cups_dest_t *dest)		/* I - Destination */
 {
-  int	i;				/* Looping var */
+  size_t	i;			/* Looping var */
 
 
   (void)user_data;
@@ -272,7 +272,7 @@ localize(http_t       *http,		/* I - Connection to destination */
 	 const char   *value)		/* I - Value, if any */
 {
   ipp_attribute_t	*attr;		/* Attribute */
-  int			i,		/* Looping var */
+  size_t		i,		/* Looping var */
 			count;		/* Number of values */
 
 
@@ -405,7 +405,7 @@ print_file(http_t        *http,		/* I - Connection to destination */
            cups_dest_t   *dest,		/* I - Destination */
 	   cups_dinfo_t  *dinfo,	/* I - Destination information */
            const char    *filename,	/* I - File to print */
-	   int           num_options,	/* I - Number of options */
+	   size_t        num_options,	/* I - Number of options */
 	   cups_option_t *options)	/* I - Options */
 {
   cups_file_t	*fp;			/* File to print */
@@ -472,7 +472,7 @@ show_conflicts(
     http_t        *http,		/* I - Connection to destination */
     cups_dest_t   *dest,		/* I - Destination */
     cups_dinfo_t  *dinfo,		/* I - Destination information */
-    int           num_options,		/* I - Number of options */
+    size_t        num_options,		/* I - Number of options */
     cups_option_t *options)		/* I - Options */
 {
   (void)http;
@@ -491,7 +491,7 @@ static void
 show_default(http_t       *http,	/* I - Connection to destination */
 	     cups_dest_t  *dest,	/* I - Destination */
 	     cups_dinfo_t *dinfo,	/* I - Destination information */
-	     const char  *option)	/* I - Option */
+	     const char   *option)	/* I - Option */
 {
   if (!strcmp(option, "media"))
   {
@@ -538,7 +538,7 @@ show_media(http_t       *http,		/* I - Connection to destination */
 	   unsigned     flags,		/* I - Media flags */
 	   const char   *name)		/* I - Size name */
 {
-  int		i,			/* Looping var */
+  size_t	i,			/* Looping var */
 		count;			/* Number of sizes */
   cups_size_t	size;			/* Media size info */
 
@@ -590,7 +590,7 @@ show_media(http_t       *http,		/* I - Connection to destination */
   else
   {
     count = cupsGetDestMediaCount(http, dest, dinfo, flags);
-    printf("%d size%s:\n", count, count == 1 ? "" : "s");
+    printf("%u size%s:\n", (unsigned)count, count == 1 ? "" : "s");
 
     for (i = 0; i < count; i ++)
     {
@@ -615,7 +615,7 @@ show_supported(http_t       *http,	/* I - Connection to destination */
 	       const char   *value)	/* I - Value, if any */
 {
   ipp_attribute_t	*attr;		/* Attribute */
-  int			i,		/* Looping var */
+  size_t		i,		/* Looping var */
 			count;		/* Number of values */
 
 

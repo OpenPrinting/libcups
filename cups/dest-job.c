@@ -73,7 +73,7 @@ cupsCloseDestJob(
     cups_dinfo_t *info, 		/* I - Destination information */
     int          job_id)		/* I - Job ID */
 {
-  int			i;		/* Looping var */
+  size_t		i;		/* Looping var */
   ipp_t			*request = NULL;/* Close-Job/Send-Document request */
   ipp_attribute_t	*attr;		/* operations-supported attribute */
 
@@ -106,11 +106,13 @@ cupsCloseDestJob(
                                IPP_TAG_ENUM)) != NULL)
   {
     for (i = 0; i < attr->num_values; i ++)
+    {
       if (attr->values[i].integer == IPP_OP_CLOSE_JOB)
       {
         request = ippNewRequest(IPP_OP_CLOSE_JOB);
         break;
       }
+    }
   }
 
   if (!request)
@@ -164,7 +166,7 @@ cupsCreateDestJob(
     cups_dinfo_t  *info, 		/* I - Destination information */
     int           *job_id,		/* O - Job ID or 0 on error */
     const char    *title,		/* I - Job name */
-    int           num_options,		/* I - Number of job options */
+    size_t        num_options,		/* I - Number of job options */
     cups_option_t *options)		/* I - Job options */
 {
   ipp_t			*request,	/* Create-Job request */
@@ -173,7 +175,7 @@ cupsCreateDestJob(
 
 
   DEBUG_printf(("cupsCreateDestJob(http=%p, dest=%p(%s/%s), info=%p, "
-                "job_id=%p, title=\"%s\", num_options=%d, options=%p)", (void *)http, (void *)dest, dest ? dest->name : NULL, dest ? dest->instance : NULL, (void *)info, (void *)job_id, title, num_options, (void *)options));
+                "job_id=%p, title=\"%s\", num_options=%u, options=%p)", (void *)http, (void *)dest, dest ? dest->name : NULL, dest ? dest->instance : NULL, (void *)info, (void *)job_id, title, (unsigned)num_options, (void *)options));
 
  /*
   * Get the default connection as needed...
@@ -314,7 +316,7 @@ cupsStartDestDocument(
     int           job_id,		/* I - Job ID */
     const char    *docname,		/* I - Document name */
     const char    *format,		/* I - Document format */
-    int           num_options,		/* I - Number of document options */
+    size_t        num_options,		/* I - Number of document options */
     cups_option_t *options,		/* I - Document options */
     bool          last_document)	/* I - `true` if this is the last document */
 {
@@ -322,7 +324,7 @@ cupsStartDestDocument(
   http_status_t	status;			/* HTTP status */
 
 
-  DEBUG_printf(("cupsStartDestDocument(http=%p, dest=%p(%s/%s), info=%p, job_id=%d, docname=\"%s\", format=\"%s\", num_options=%d, options=%p, last_document=%d)", (void *)http, (void *)dest, dest ? dest->name : NULL, dest ? dest->instance : NULL, (void *)info, job_id, docname, format, num_options, (void *)options, last_document));
+  DEBUG_printf(("cupsStartDestDocument(http=%p, dest=%p(%s/%s), info=%p, job_id=%d, docname=\"%s\", format=\"%s\", num_options=%u, options=%p, last_document=%d)", (void *)http, (void *)dest, dest ? dest->name : NULL, dest ? dest->instance : NULL, (void *)info, job_id, docname, format, (unsigned)num_options, (void *)options, last_document));
 
  /*
   * Get the default connection as needed...

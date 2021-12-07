@@ -90,11 +90,11 @@ typedef struct ippfind_expr_s		/* Expression */
 		*parent,		/* Parent expressions */
 		*child;			/* Child expressions */
   ippfind_op_t	op;			/* Operation code (see above) */
-  int		invert;			/* Invert the result */
+  bool		invert;			/* Invert the result? */
   char		*name;			/* TXT record key or literal name */
   regex_t	re;			/* Regular expression for matching */
   int		range[2];		/* Port number range */
-  int		num_args;		/* Number of arguments for exec */
+  size_t	num_args;		/* Number of arguments for exec */
   char		**args;			/* Arguments for exec */
 } ippfind_expr_t;
 
@@ -112,10 +112,10 @@ typedef struct ippfind_srv_s		/* Service information */
 		*host,			/* Hostname */
 		*resource,		/* Resource path */
 		*uri;			/* URI */
-  int		num_txt;		/* Number of TXT record keys */
+  size_t	num_txt;		/* Number of TXT record keys */
   cups_option_t	*txt;			/* TXT record keys */
-  int		port,			/* Port number */
-		is_local,		/* Is a local service? */
+  int		port;			/* Port number */
+  bool		is_local,		/* Is a local service? */
 		is_processed,		/* Did we process the service? */
 		is_resolved;		/* Got the resolve data? */
 } ippfind_srv_t;
@@ -149,32 +149,18 @@ static int	ipp_version = 20;	/* IPP version for LIST */
 static void DNSSD_API	browse_callback(DNSServiceRef sdRef, DNSServiceFlags flags, uint32_t interfaceIndex, DNSServiceErrorType errorCode, const char *serviceName, const char *regtype, const char *replyDomain, void *context) _CUPS_NONNULL(1,5,6,7,8);
 static void DNSSD_API	browse_local_callback(DNSServiceRef sdRef, DNSServiceFlags flags, uint32_t interfaceIndex, DNSServiceErrorType errorCode, const char *serviceName, const char *regtype, const char *replyDomain, void *context) _CUPS_NONNULL(1,5,6,7,8);
 #elif defined(HAVE_AVAHI)
-static void		browse_callback(AvahiServiceBrowser *browser,
-					AvahiIfIndex interface,
-					AvahiProtocol protocol,
-					AvahiBrowserEvent event,
-					const char *serviceName,
-					const char *regtype,
-					const char *replyDomain,
-					AvahiLookupResultFlags flags,
-					void *context);
-static void		client_callback(AvahiClient *client,
-					AvahiClientState state,
-					void *context);
+static void		browse_callback(AvahiServiceBrowser *browser, AvahiIfIndex interface, AvahiProtocol protocol, AvahiBrowserEvent event, const char *serviceName, const char *regtype, const char *replyDomain, AvahiLookupResultFlags flags, void *context);
+static void		client_callback(AvahiClient *client, AvahiClientState state, void *context);
 #endif /* HAVE_MDNSRESPONDER */
 
 static int		compare_services(ippfind_srv_t *a, ippfind_srv_t *b);
 static const char	*dnssd_error_string(int error);
-static int		eval_expr(ippfind_srv_t *service,
-			          ippfind_expr_t *expressions);
-static int		exec_program(ippfind_srv_t *service, int num_args,
-			             char **args);
+static int		eval_expr(ippfind_srv_t *service, ippfind_expr_t *expressions);
+static int		exec_program(ippfind_srv_t *service, size_t num_args, char **args);
 static ippfind_srv_t	*get_service(cups_array_t *services, const char *serviceName, const char *regtype, const char *replyDomain) _CUPS_NONNULL(1,2,3,4);
 static double		get_time(void);
 static int		list_service(ippfind_srv_t *service);
-static ippfind_expr_t	*new_expr(ippfind_op_t op, int invert,
-			          const char *value, const char *regex,
-			          char **args);
+static ippfind_expr_t	*new_expr(ippfind_op_t op, bool invert, const char *value, const char *regex, char **args);
 #ifdef HAVE_MDNSRESPONDER
 static void DNSSD_API	resolve_callback(DNSServiceRef sdRef, DNSServiceFlags flags, uint32_t interfaceIndex, DNSServiceErrorType errorCode, const char *fullName, const char *hostTarget, uint16_t port, uint16_t txtLen, const unsigned char *txtRecord, void *context) _CUPS_NONNULL(1,5,6,9, 10);
 #elif defined(HAVE_AVAHI)
@@ -269,8 +255,8 @@ main(int  argc,				/* I - Number of command-line args */
   * Create arrays to track services and things we want to browse/resolve...
   */
 
-  searches = cupsArrayNew(NULL, NULL);
-  services = cupsArrayNew((cups_array_func_t)compare_services, NULL);
+  searches = cupsArrayNew(NULL, NULL, NULL, 0, NULL, NULL);
+  services = cupsArrayNew((cups_array_cb_t)compare_services, NULL, NULL, 0, NULL, NULL);
 
  /*
   * Parse command-line...
@@ -1068,7 +1054,7 @@ main(int  argc,				/* I - Number of command-line args */
       expressions = temp;
   }
 
-  if (cupsArrayCount(searches) == 0)
+  if (cupsArrayGetCount(searches) == 0)
   {
    /*
     * Add an implicit browse for IPP printers ("_ipp._tcp")...
@@ -1120,9 +1106,9 @@ main(int  argc,				/* I - Number of command-line args */
     }
 
     puts("\nSearch items:");
-    for (search = (const char *)cupsArrayFirst(searches);
+    for (search = (const char *)cupsArrayGetFirst(searches);
 	 search;
-	 search = (const char *)cupsArrayNext(searches))
+	 search = (const char *)cupsArrayGetNext(searches))
       printf("    %s\n", search);
   }
 
@@ -1158,9 +1144,9 @@ main(int  argc,				/* I - Number of command-line args */
   }
 #endif /* HAVE_MDNSRESPONDER */
 
-  for (search = (const char *)cupsArrayFirst(searches);
+  for (search = (const char *)cupsArrayGetFirst(searches);
        search;
-       search = (const char *)cupsArrayNext(searches))
+       search = (const char *)cupsArrayGetNext(searches))
   {
     char		buf[1024],	/* Full name string */
 			*name = NULL,	/* Service instance name */
@@ -1375,13 +1361,13 @@ main(int  argc,				/* I - Number of command-line args */
       * Process any services that we have found...
       */
 
-      int	active = 0,		/* Number of active resolves */
+      size_t	active = 0,		/* Number of active resolves */
 		resolved = 0,		/* Number of resolved services */
 		processed = 0;		/* Number of processed services */
 
-      for (service = (ippfind_srv_t *)cupsArrayFirst(services);
+      for (service = (ippfind_srv_t *)cupsArrayGetFirst(services);
            service;
-           service = (ippfind_srv_t *)cupsArrayNext(services))
+           service = (ippfind_srv_t *)cupsArrayGetNext(services))
       {
         if (service->is_processed)
           processed ++;
@@ -1452,7 +1438,7 @@ main(int  argc,				/* I - Number of command-line args */
           if (eval_expr(service, expressions))
             status = IPPFIND_EXIT_TRUE;
 
-          service->is_processed = 1;
+          service->is_processed = true;
         }
         else if (service->ref)
           active ++;
@@ -1462,7 +1448,7 @@ main(int  argc,				/* I - Number of command-line args */
       * If we have processed all services we have discovered, then we are done.
       */
 
-      if (processed == cupsArrayCount(services) && bonjour_timeout <= 1.0)
+      if (processed == cupsArrayGetCount(services) && bonjour_timeout <= 1.0)
         break;
     }
   }
@@ -1591,7 +1577,7 @@ browse_callback(
 	service = get_service((cups_array_t *)context, name, type, domain);
 
 	if (flags & AVAHI_LOOKUP_RESULT_LOCAL)
-	  service->is_local = 1;
+	  service->is_local = true;
 	break;
 
     case AVAHI_BROWSER_REMOVE:
@@ -1825,12 +1811,10 @@ eval_expr(ippfind_srv_t  *service,	/* I - Service */
           result = !regexec(&(expression->re), service->resource, 0, NULL, 0);
           break;
       case IPPFIND_OP_TXT_EXISTS :
-          result = cupsGetOption(expression->name, service->num_txt,
-				 service->txt) != NULL;
+          result = cupsGetOption(expression->name, service->num_txt, service->txt) != NULL;
           break;
       case IPPFIND_OP_TXT_REGEX :
-          val = cupsGetOption(expression->name, service->num_txt,
-			      service->txt);
+          val = cupsGetOption(expression->name, service->num_txt, service->txt);
 	  if (val)
 	    result = !regexec(&(expression->re), val, 0, NULL, 0);
 	  else
@@ -1882,7 +1866,7 @@ eval_expr(ippfind_srv_t  *service,	/* I - Service */
 static int				/* O - 1 if program terminated
 					       successfully, 0 otherwise. */
 exec_program(ippfind_srv_t *service,	/* I - Service */
-             int           num_args,	/* I - Number of command-line args */
+             size_t        num_args,	/* I - Number of command-line args */
              char          **args)	/* I - Command-line arguments */
 {
   char		**myargv,		/* Command-line arguments */
@@ -1896,9 +1880,9 @@ exec_program(ippfind_srv_t *service,	/* I - Service */
 		scheme[128],		/* IPPFIND_SERVICE_SCHEME */
 		uri[1024],		/* IPPFIND_SERVICE_URI */
 		txt[100][256];		/* IPPFIND_TXT_foo */
-  int		i,			/* Looping var */
-		myenvc,			/* Number of environment variables */
-		status;			/* Exit status of program */
+  size_t	i,			/* Looping var */
+		myenvc;			/* Number of environment variables */
+  int		status;			/* Exit status of program */
 #ifndef _WIN32
   char		program[1024];		/* Program to execute */
   int		pid;			/* Process ID */
@@ -2157,7 +2141,7 @@ get_service(cups_array_t *services,	/* I - Service array */
 
   for (service = cupsArrayFind(services, &key);
        service;
-       service = cupsArrayNext(services))
+       service = cupsArrayGetNext(services))
     if (_cups_strcasecmp(service->name, key.name))
       break;
     else if (!strcmp(service->regtype, key.regtype))
@@ -2249,10 +2233,10 @@ list_service(ippfind_srv_t *service)	/* I - Service */
     ipp_t		*request,	/* IPP request */
 			*response;	/* IPP response */
     ipp_attribute_t	*attr;		/* IPP attribute */
-    int			i,		/* Looping var */
-			count,		/* Number of values */
-			version,	/* IPP version */
-			paccepting;	/* printer-is-accepting-jobs value */
+    size_t		i,		/* Looping var */
+			count;		/* Number of values */
+    int			version;	/* IPP version */
+    bool		paccepting;	/* printer-is-accepting-jobs value */
     ipp_pstate_t	pstate;		/* printer-state value */
     char		preasons[1024],	/* Comma-delimited printer-state-reasons */
 			*ptr,		/* Pointer into reasons */
@@ -2434,7 +2418,7 @@ list_service(ippfind_srv_t *service)	/* I - Service */
 
 static ippfind_expr_t *			/* O - New expression */
 new_expr(ippfind_op_t op,		/* I - Operation */
-         int          invert,		/* I - Invert result? */
+         bool         invert,		/* I - Invert result? */
          const char   *value,		/* I - TXT key or port range */
 	 const char   *regex,		/* I - Regular expression */
 	 char         **args)		/* I - Pointer to argument strings */
@@ -2445,11 +2429,13 @@ new_expr(ippfind_op_t op,		/* I - Operation */
   if ((temp = calloc(1, sizeof(ippfind_expr_t))) == NULL)
     return (NULL);
 
-  temp->op = op;
+  temp->op     = op;
   temp->invert = invert;
 
   if (op == IPPFIND_OP_TXT_EXISTS || op == IPPFIND_OP_TXT_REGEX || op == IPPFIND_OP_NAME_LITERAL)
+  {
     temp->name = (char *)value;
+  }
   else if (op == IPPFIND_OP_PORT_RANGE)
   {
    /*
@@ -2489,7 +2475,7 @@ new_expr(ippfind_op_t op,		/* I - Operation */
 
   if (args)
   {
-    int	num_args;			/* Number of arguments */
+    size_t	num_args;		/* Number of arguments */
 
     for (num_args = 1; args[num_args]; num_args ++)
     {
@@ -2498,7 +2484,7 @@ new_expr(ippfind_op_t op,		/* I - Operation */
     }
 
     temp->num_args = num_args;
-    if ((temp->args = malloc((size_t)num_args * sizeof(char *))) == NULL)
+    if ((temp->args = malloc(num_args * sizeof(char *))) == NULL)
     {
       regfree(&temp->re);
       free(temp);
@@ -2586,7 +2572,7 @@ resolve_callback(
     return;
   }
 
-  service->is_resolved = 1;
+  service->is_resolved = true;
   service->host        = strdup(hostTarget);
   service->port        = ntohs(port);
 

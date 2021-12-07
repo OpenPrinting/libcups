@@ -59,10 +59,10 @@ main(void)
   * cupsArrayNew()
   */
 
-  testBegin("cupsArrayNew3");
+  testBegin("cupsArrayNew");
 
   data  = (void *)"testarray";
-  array = cupsArrayNew3((cups_array_func_t)strcmp, data, NULL, 0, (cups_acopy_func_t)strdup, (cups_afree_func_t)free);
+  array = cupsArrayNew((cups_array_cb_t)strcmp, data, NULL, 0, (cups_acopy_cb_t)strdup, (cups_afree_cb_t)free);
 
   if (array)
     testEnd(true);
@@ -73,15 +73,15 @@ main(void)
   }
 
  /*
-  * cupsArrayUserData()
+  * cupsArrayGetUserData()
   */
 
-  testBegin("cupsArrayUserData");
-  if (cupsArrayUserData(array) == data)
+  testBegin("cupsArrayGetUserData");
+  if (cupsArrayGetUserData(array) == data)
     testEnd(true);
   else
   {
-    testEndMessage(false, "returned %p instead of %p", cupsArrayUserData(array), data);
+    testEndMessage(false, "returned %p instead of %p", cupsArrayGetUserData(array), data);
     status ++;
   }
 
@@ -124,24 +124,24 @@ main(void)
   }
 
  /*
-  * cupsArrayCount()
+  * cupsArrayGetCount()
   */
 
-  testBegin("cupsArrayCount");
-  if (cupsArrayCount(array) == 4)
+  testBegin("cupsArrayGetCount");
+  if (cupsArrayGetCount(array) == 4)
     testEnd(true);
   else
   {
-    testEndMessage(false, "returned %d, expected 4", cupsArrayCount(array));
+    testEndMessage(false, "returned %d, expected 4", cupsArrayGetCount(array));
     status ++;
   }
 
  /*
-  * cupsArrayFirst()
+  * cupsArrayGetFirst()
   */
 
-  testBegin("cupsArrayFirst");
-  if ((text = (char *)cupsArrayFirst(array)) != NULL && !strcmp(text, "Blue Fish"))
+  testBegin("cupsArrayGetFirst");
+  if ((text = (char *)cupsArrayGetFirst(array)) != NULL && !strcmp(text, "Blue Fish"))
     testEnd(true);
   else
   {
@@ -150,11 +150,11 @@ main(void)
   }
 
  /*
-  * cupsArrayNext()
+  * cupsArrayGetNext()
   */
 
-  testBegin("cupsArrayNext");
-  if ((text = (char *)cupsArrayNext(array)) != NULL && !strcmp(text, "One Fish"))
+  testBegin("cupsArrayGetNext");
+  if ((text = (char *)cupsArrayGetNext(array)) != NULL && !strcmp(text, "One Fish"))
     testEnd(true);
   else
   {
@@ -163,11 +163,11 @@ main(void)
   }
 
  /*
-  * cupsArrayLast()
+  * cupsArrayGetLast()
   */
 
-  testBegin("cupsArrayLast");
-  if ((text = (char *)cupsArrayLast(array)) != NULL && !strcmp(text, "Two Fish"))
+  testBegin("cupsArrayGetLast");
+  if ((text = (char *)cupsArrayGetLast(array)) != NULL && !strcmp(text, "Two Fish"))
     testEnd(true);
   else
   {
@@ -176,11 +176,11 @@ main(void)
   }
 
  /*
-  * cupsArrayPrev()
+  * cupsArrayGetPrev()
   */
 
-  testBegin("cupsArrayPrev");
-  if ((text = (char *)cupsArrayPrev(array)) != NULL && !strcmp(text, "Red Fish"))
+  testBegin("cupsArrayGetPrev");
+  if ((text = (char *)cupsArrayGetPrev(array)) != NULL && !strcmp(text, "Red Fish"))
     testEnd(true);
   else
   {
@@ -202,11 +202,11 @@ main(void)
   }
 
  /*
-  * cupsArrayCurrent()
+  * cupsArrayGetCurrent()
   */
 
-  testBegin("cupsArrayCurrent");
-  if ((text = (char *)cupsArrayCurrent(array)) != NULL && !strcmp(text, "One Fish"))
+  testBegin("cupsArrayGetCurrent");
+  if ((text = (char *)cupsArrayGetCurrent(array)) != NULL && !strcmp(text, "One Fish"))
     testEnd(true);
   else
   {
@@ -219,11 +219,11 @@ main(void)
   */
 
   testBegin("cupsArrayDup");
-  if ((dup_array = cupsArrayDup(array)) != NULL && cupsArrayCount(dup_array) == 4)
+  if ((dup_array = cupsArrayDup(array)) != NULL && cupsArrayGetCount(dup_array) == 4)
     testEnd(true);
   else
   {
-    testEndMessage(false, "returned %p with %d elements, expected pointer with 4 elements", (void *)dup_array, cupsArrayCount(dup_array));
+    testEndMessage(false, "returned %p with %d elements, expected pointer with 4 elements", (void *)dup_array, cupsArrayGetCount(dup_array));
     status ++;
   }
 
@@ -232,11 +232,11 @@ main(void)
   */
 
   testBegin("cupsArrayRemove");
-  if (cupsArrayRemove(array, (void *)"One Fish") && cupsArrayCount(array) == 3)
+  if (cupsArrayRemove(array, (void *)"One Fish") && cupsArrayGetCount(array) == 3)
     testEnd(true);
   else
   {
-    testEndMessage(false, "returned 0 with %d elements, expected 1 with 4 elements", cupsArrayCount(array));
+    testEndMessage(false, "returned 0 with %d elements, expected 1 with 4 elements", cupsArrayGetCount(array));
     status ++;
   }
 
@@ -246,11 +246,11 @@ main(void)
 
   testBegin("cupsArrayClear");
   cupsArrayClear(array);
-  if (cupsArrayCount(array) == 0)
+  if (cupsArrayGetCount(array) == 0)
     testEnd(true);
   else
   {
-    testEndMessage(false, "%d elements, expected 0 elements", cupsArrayCount(array));
+    testEndMessage(false, "%d elements, expected 0 elements", cupsArrayGetCount(array));
     status ++;
   }
 
@@ -291,7 +291,7 @@ main(void)
     {
       end = get_seconds();
 
-      for (text = (char *)cupsArrayFirst(array); text;)
+      for (text = (char *)cupsArrayGetFirst(array); text;)
       {
        /*
 	* Copy this word to the word buffer (safe because we strdup'd from
@@ -304,7 +304,7 @@ main(void)
 	* Grab the next word and compare...
 	*/
 
-	if ((text = (char *)cupsArrayNext(array)) == NULL)
+	if ((text = (char *)cupsArrayGetNext(array)) == NULL)
 	  break;
 
 	if (strcmp(word, text) >= 0)
@@ -317,7 +317,7 @@ main(void)
 	status ++;
       }
       else
-	testEndMessage(true, "%d words in %.3f seconds - %.0f words/sec", cupsArrayCount(array), end - start, cupsArrayCount(array) / (end - start));
+	testEndMessage(true, "%d words in %.3f seconds - %.0f words/sec", cupsArrayGetCount(array), end - start, cupsArrayGetCount(array) / (end - start));
     }
   }
 
@@ -327,13 +327,13 @@ main(void)
 
   testBegin("Delete While Iterating");
 
-  text = (char *)cupsArrayFirst(array);
+  text = (char *)cupsArrayGetFirst(array);
   cupsArrayRemove(array, text);
 
-  text = (char *)cupsArrayNext(array);
+  text = (char *)cupsArrayGetNext(array);
   if (!text)
   {
-    testEndMessage(false, "cupsArrayNext returned NULL");
+    testEndMessage(false, "cupsArrayGetNext returned NULL");
     status ++;
   }
   else
@@ -345,7 +345,7 @@ main(void)
 
   testBegin("cupsArraySave");
 
-  for (i = 0, text = (char *)cupsArrayFirst(array); i < 32; i ++, text = (char *)cupsArrayNext(array))
+  for (i = 0, text = (char *)cupsArrayGetFirst(array); i < 32; i ++, text = (char *)cupsArrayGetNext(array))
   {
     saved[i] = text;
 
@@ -392,27 +392,27 @@ main(void)
     status = 1;
     testEndMessage(false, "unable to create array");
   }
-  else if (cupsArrayCount(array) != 4)
+  else if (cupsArrayGetCount(array) != 4)
   {
     status = 1;
-    testEndMessage(false, "got %d elements, expected 4", cupsArrayCount(array));
+    testEndMessage(false, "got %d elements, expected 4", cupsArrayGetCount(array));
   }
-  else if (strcmp(text = (char *)cupsArrayFirst(array), "bar"))
+  else if (strcmp(text = (char *)cupsArrayGetFirst(array), "bar"))
   {
     status = 1;
     testEndMessage(false, "first element \"%s\", expected \"bar\"", text);
   }
-  else if (strcmp(text = (char *)cupsArrayNext(array), "boo"))
+  else if (strcmp(text = (char *)cupsArrayGetNext(array), "boo"))
   {
     status = 1;
     testEndMessage(false, "first element \"%s\", expected \"boo\"", text);
   }
-  else if (strcmp(text = (char *)cupsArrayNext(array), "far"))
+  else if (strcmp(text = (char *)cupsArrayGetNext(array), "far"))
   {
     status = 1;
     testEndMessage(false, "first element \"%s\", expected \"far\"", text);
   }
-  else if (strcmp(text = (char *)cupsArrayNext(array), "foo"))
+  else if (strcmp(text = (char *)cupsArrayGetNext(array), "foo"))
   {
     status = 1;
     testEndMessage(false, "first element \"%s\", expected \"foo\"", text);
@@ -423,37 +423,37 @@ main(void)
   testBegin("_cupsArrayAddStrings(array, \"foo2,bar2\", ',')");
   _cupsArrayAddStrings(array, "foo2,bar2", ',');
 
-  if (cupsArrayCount(array) != 6)
+  if (cupsArrayGetCount(array) != 6)
   {
     status = 1;
-    testEndMessage(false, "got %d elements, expected 6", cupsArrayCount(array));
+    testEndMessage(false, "got %d elements, expected 6", cupsArrayGetCount(array));
   }
-  else if (strcmp(text = (char *)cupsArrayFirst(array), "bar"))
+  else if (strcmp(text = (char *)cupsArrayGetFirst(array), "bar"))
   {
     status = 1;
     testEndMessage(false, "first element \"%s\", expected \"bar\"", text);
   }
-  else if (strcmp(text = (char *)cupsArrayNext(array), "bar2"))
+  else if (strcmp(text = (char *)cupsArrayGetNext(array), "bar2"))
   {
     status = 1;
     testEndMessage(false, "first element \"%s\", expected \"bar2\"", text);
   }
-  else if (strcmp(text = (char *)cupsArrayNext(array), "boo"))
+  else if (strcmp(text = (char *)cupsArrayGetNext(array), "boo"))
   {
     status = 1;
     testEndMessage(false, "first element \"%s\", expected \"boo\"", text);
   }
-  else if (strcmp(text = (char *)cupsArrayNext(array), "far"))
+  else if (strcmp(text = (char *)cupsArrayGetNext(array), "far"))
   {
     status = 1;
     testEndMessage(false, "first element \"%s\", expected \"far\"", text);
   }
-  else if (strcmp(text = (char *)cupsArrayNext(array), "foo"))
+  else if (strcmp(text = (char *)cupsArrayGetNext(array), "foo"))
   {
     status = 1;
     testEndMessage(false, "first element \"%s\", expected \"foo\"", text);
   }
-  else if (strcmp(text = (char *)cupsArrayNext(array), "foo2"))
+  else if (strcmp(text = (char *)cupsArrayGetNext(array), "foo2"))
   {
     status = 1;
     testEndMessage(false, "first element \"%s\", expected \"foo2\"", text);

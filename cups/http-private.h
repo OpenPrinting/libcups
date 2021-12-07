@@ -11,20 +11,13 @@
 
 #ifndef _CUPS_HTTP_PRIVATE_H_
 #  define _CUPS_HTTP_PRIVATE_H_
-
-/*
- * Include necessary headers...
- */
-
 #  include "config.h"
 #  include <cups/language.h>
 #  include <stddef.h>
 #  include <stdlib.h>
-
 #  ifdef __sun
 #    include <sys/select.h>
 #  endif /* __sun */
-
 #  include <limits.h>
 #  ifdef _WIN32
 #    define _WINSOCK_DEPRECATED_NO_WARNINGS 1
@@ -37,23 +30,11 @@
 #    include <sys/socket.h>
 #    define CUPS_SOCAST
 #  endif /* _WIN32 */
-
-#  ifdef HAVE_AUTHORIZATION_H
-#    include <Security/Authorization.h>
-#  endif /* HAVE_AUTHORIZATION_H */
-
-#  if defined(__APPLE__) && !defined(_SOCKLEN_T)
-/*
- * macOS 10.2.x does not define socklen_t, and in fact uses an int instead of
- * unsigned type for length values...
- */
-
-typedef int socklen_t;
-#  endif /* __APPLE__ && !_SOCKLEN_T */
-
-#  include <cups/http.h>
+//#  if defined(__APPLE__) && !defined(_SOCKLEN_T)
+//typedef int socklen_t;
+//#  endif /* __APPLE__ && !_SOCKLEN_T */
+#  include "http.h"
 #  include "ipp-private.h"
-
 #  ifdef HAVE_GNUTLS
 #    include <gnutls/gnutls.h>
 #    include <gnutls/x509.h>
@@ -76,17 +57,10 @@ typedef int socklen_t;
 #    include <security.h>
 #    include <sspi.h>
 #  endif /* HAVE_GNUTLS */
-
 #  ifndef _WIN32
 #    include <net/if.h>
 #    include <resolv.h>
 #  endif /* !_WIN32 */
-
-
-/*
- * C++ magic...
- */
-
 #  ifdef __cplusplus
 extern "C" {
 #  endif /* __cplusplus */
@@ -187,7 +161,6 @@ typedef enum _http_mode_e		/**** HTTP mode enumeration ****/
   _HTTP_MODE_SERVER			/* Server connected (accepted) from client */
 } _http_mode_t;
 
-#  ifndef _HTTP_NO_PRIVATE
 struct _http_s				/**** HTTP connection structure ****/
 {
   _http_mode_t		mode;		/* _HTTP_MODE_CLIENT or _HTTP_MODE_SERVER */
@@ -245,7 +218,6 @@ struct _http_s				/**** HTTP connection structure ****/
   void			*stream;	/* (De)compression stream */
   unsigned char		*sbuffer;	/* (De)compression buffer */
 };
-#  endif /* !_HTTP_NO_PRIVATE */
 
 
 /*
@@ -282,12 +254,7 @@ extern int		_httpUpdate(http_t *http, http_status_t *status) _CUPS_PRIVATE;
 extern int		_httpWait(http_t *http, int msec, int usessl) _CUPS_PRIVATE;
 
 
-/*
- * C++ magic...
- */
-
 #  ifdef __cplusplus
 }
 #  endif /* __cplusplus */
-
 #endif /* !_CUPS_HTTP_PRIVATE_H_ */

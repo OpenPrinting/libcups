@@ -1,19 +1,15 @@
 /*
  * PWG media API definitions for CUPS.
  *
- * Copyright 2009-2017 by Apple Inc.
+ * Copyright © 2021 by OpenPrinting.
+ * Copyright © 2009-2017 by Apple Inc.
  *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more information.
+ * Licensed under Apache License v2.0.  See the file "LICENSE" for more
+ * information.
  */
 
 #ifndef _CUPS_PWG_H_
 #  define _CUPS_PWG_H_
-
-
-/*
- * C++ magic...
- */
-
 #  ifdef __cplusplus
 extern "C" {
 #  endif /* __cplusplus */
@@ -64,19 +60,15 @@ typedef struct pwg_size_s		/**** Size element - PPD to/from PWG @exclude all@ */
  * Functions...
  */
 
-extern int		pwgFormatSizeName(char *keyword, size_t keysize,
-					  const char *prefix, const char *name,
-					  int width, int length,
-					  const char *units) _CUPS_API_1_7;
-extern int		pwgInitSize(pwg_size_t *size, ipp_t *job,
-				    int *margins_set) _CUPS_API_1_7;
-extern pwg_media_t	*pwgMediaForLegacy(const char *legacy) _CUPS_API_1_7;
-extern pwg_media_t	*pwgMediaForPPD(const char *ppd) _CUPS_API_1_7;
-extern pwg_media_t	*pwgMediaForPWG(const char *pwg) _CUPS_API_1_7;
-extern pwg_media_t	*pwgMediaForSize(int width, int length) _CUPS_API_1_7;
+extern int		pwgFormatSizeName(char *keyword, size_t keysize, const char *prefix, const char *name, int width, int length, const char *units) _CUPS_PUBLIC;
+extern int		pwgInitSize(pwg_size_t *size, ipp_t *job, int *margins_set) _CUPS_PUBLIC;
+extern pwg_media_t	*pwgMediaForLegacy(const char *legacy) _CUPS_PUBLIC;
+extern pwg_media_t	*pwgMediaForPPD(const char *ppd) _CUPS_PUBLIC;
+extern pwg_media_t	*pwgMediaForPWG(const char *pwg) _CUPS_PUBLIC;
+extern pwg_media_t	*pwgMediaForSize(int width, int length) _CUPS_PUBLIC;
+
 
 #  ifdef __cplusplus
 }
 #  endif /* __cplusplus */
-
 #endif /* !_CUPS_PWG_H_ */

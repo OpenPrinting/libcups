@@ -1,6 +1,7 @@
 /*
  * Private image library definitions for CUPS.
  *
+ * Copyright © 2021 by OpenPrinting.
  * Copyright © 2007-2019 by Apple Inc.
  * Copyright © 1993-2006 by Easy Software Products.
  *
@@ -10,11 +11,6 @@
 
 #ifndef _CUPS_RASTER_PRIVATE_H_
 #  define _CUPS_RASTER_PRIVATE_H_
-
-/*
- * Include necessary headers...
- */
-
 #  include "raster.h"
 #  include <cups/cups.h>
 #  include <cups/debug-private.h>
@@ -26,7 +22,6 @@
 #    include <unistd.h>
 #    include <fcntl.h>
 #  endif /* _WIN32 */
-
 #  ifdef __cplusplus
 extern "C" {
 #  endif /* __cplusplus */
@@ -42,7 +37,7 @@ struct _cups_raster_s			/**** Raster stream data ****/
   void			*ctx;		/* File descriptor */
   cups_raster_iocb_t	iocb;		/* IO callback */
   cups_mode_t		mode;		/* Read/write mode */
-  cups_page_header2_t	header;		/* Raster header for current page */
+  cups_page_header_t	header;		/* Raster header for current page */
   unsigned		rowheight,	/* Row height in lines */
 			count,		/* Current row run-length count */
 			remaining,	/* Remaining rows in page image */
@@ -64,20 +59,6 @@ struct _cups_raster_s			/**** Raster stream data ****/
 };
 
 
-#if 0
-/*
- * min/max macros...
- */
-
-#  ifndef max
-#    define 	max(a,b)	((a) > (b) ? (a) : (b))
-#  endif /* !max */
-#  ifndef min
-#    define 	min(a,b)	((a) < (b) ? (a) : (b))
-#  endif /* !min */
-#endif // 0
-
-
 /*
  * Prototypes...
  */
@@ -87,7 +68,7 @@ extern void		_cupsRasterClearError(void) _CUPS_PRIVATE;
 extern const char	*_cupsRasterColorSpaceString(cups_cspace_t cspace) _CUPS_PRIVATE;
 extern void		_cupsRasterDelete(cups_raster_t *r) _CUPS_PRIVATE;
 extern const char	*_cupsRasterErrorString(void) _CUPS_PRIVATE;
-extern int		_cupsRasterInitPWGHeader(cups_page_header2_t *h, pwg_media_t *media, const char *type, int xdpi, int ydpi, const char *sides, const char *sheet_back) _CUPS_PRIVATE;
+extern int		_cupsRasterInitPWGHeader(cups_page_header_t *h, pwg_media_t *media, const char *type, int xdpi, int ydpi, const char *sides, const char *sheet_back) _CUPS_PRIVATE;
 extern cups_raster_t	*_cupsRasterNew(cups_raster_iocb_t iocb, void *ctx, cups_mode_t mode) _CUPS_PRIVATE;
 extern unsigned		_cupsRasterReadHeader(cups_raster_t *r) _CUPS_PRIVATE;
 extern unsigned		_cupsRasterReadPixels(cups_raster_t *r, unsigned char *p, unsigned len) _CUPS_PRIVATE;

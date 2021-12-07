@@ -11,18 +11,7 @@
 
 #ifndef _CUPS_IPP_PRIVATE_H_
 #  define _CUPS_IPP_PRIVATE_H_
-
-/*
- * Include necessary headers...
- */
-
 #  include <cups/cups.h>
-
-
-/*
- * C++ magic...
- */
-
 #  ifdef __cplusplus
 extern "C" {
 #  endif /* __cplusplus */
@@ -64,7 +53,7 @@ typedef union _ipp_request_u		/**** Request Header ****/
   }		status;
 
   /**** New in CUPS 1.1.19 ****/
-  struct				/* Event Header @since CUPS 1.1.19/macOS 10.3@ */
+  struct				/* Event Header */
   {
     ipp_uchar_t	version[2];		/* Protocol version number */
     ipp_status_t status_code;		/* Status code */
@@ -76,7 +65,9 @@ typedef union _ipp_value_u		/**** Attribute Value ****/
 {
   int		integer;		/* Integer/enumerated value */
 
-  char		boolean;		/* Boolean value */
+  bool		boolean;		/* Boolean value */
+
+  ipp_t		*collection;		/* Collection value */
 
   ipp_uchar_t	date[11];		/* Date/time value */
 
@@ -104,9 +95,6 @@ typedef union _ipp_value_u		/**** Attribute Value ****/
     size_t	length;			/* Length of attribute */
     void	*data;			/* Data in attribute */
   }		unknown;		/* Unknown attribute type */
-
-/**** New in CUPS 1.1.19 ****/
-  ipp_t		*collection;		/* Collection value @since CUPS 1.1.19/macOS 10.3@ */
 } _ipp_value_t;
 
 struct _ipp_attribute_s			/**** IPP attribute ****/
@@ -115,7 +103,7 @@ struct _ipp_attribute_s			/**** IPP attribute ****/
   ipp_tag_t	group_tag,		/* Job/Printer/Operation group tag */
 		value_tag;		/* What type of value is it? */
   char		*name;			/* Name of attribute */
-  int		num_values;		/* Number of values */
+  size_t	num_values;		/* Number of values */
   _ipp_value_t	values[1];		/* Values */
 };
 
@@ -128,14 +116,10 @@ struct _ipp_s				/**** IPP Request/Response/Notification ****/
   ipp_attribute_t	*current;	/* Current attribute (for read/write) */
   ipp_tag_t		curtag;		/* Current attribute group tag */
 
-/**** New in CUPS 1.2 ****/
-  ipp_attribute_t	*prev;		/* Previous attribute (for read) @since CUPS 1.2/macOS 10.5@ */
-
-/**** New in CUPS 1.4.4 ****/
-  int			use;		/* Use count @since CUPS 1.4.4/macOS 10.6.?@ */
-/**** New in CUPS 2.0 ****/
-  int			atend,		/* At end of list? */
-			curindex;	/* Current attribute index for hierarchical search */
+  ipp_attribute_t	*prev;		/* Previous attribute (for read) */
+  int			use;		/* Use count @since CUPS 1.4.4.?@ */
+  bool			atend;		/* At end of list? */
+  size_t		curindex;	/* Current attribute index for hierarchical search */
 };
 
 typedef struct _ipp_option_s		/**** Attribute mapping data ****/
@@ -144,8 +128,7 @@ typedef struct _ipp_option_s		/**** Attribute mapping data ****/
   const char	*name;			/* Option/attribute name */
   ipp_tag_t	value_tag;		/* Value tag for this attribute */
   ipp_tag_t	group_tag;		/* Group tag for this attribute */
-  ipp_tag_t	alt_group_tag;		/* Alternate group tag for this
-					 * attribute */
+  ipp_tag_t	alt_group_tag;		/* Alternate group tag for this attribute */
   const ipp_op_t *operations;		/* Allowed operations for this attr */
 } _ipp_option_t;
 
@@ -169,7 +152,7 @@ struct _ipp_vars_s			/**** Variables ****/
 		portstr[32],		/* Port number string */
 		resource[1024];		/* Resource path from URI */
   int 		port;			/* Port number from URI */
-  int		num_vars;		/* Number of variables */
+  size_t	num_vars;		/* Number of variables */
   cups_option_t	*vars;			/* Array of variables */
   int		password_tries;		/* Number of retries for password */
   _ipp_fattr_cb_t attrcb;		/* Attribute (filter) callback */
@@ -209,10 +192,6 @@ extern void		_ippVarsInit(_ipp_vars_t *v, _ipp_fattr_cb_t attrcb, _ipp_ferror_cb
 extern const char	*_ippVarsPasswordCB(const char *prompt, http_t *http, const char *method, const char *resource, void *user_data) _CUPS_PRIVATE;
 extern int		_ippVarsSet(_ipp_vars_t *v, const char *name, const char *value) _CUPS_PRIVATE;
 
-
-/*
- * C++ magic...
- */
 
 #  ifdef __cplusplus
 }

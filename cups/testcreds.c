@@ -74,7 +74,7 @@ main(int  argc,				/* I - Number of command-line arguments */
 
       httpCredentialsString(hcreds, hinfo, sizeof(hinfo));
 
-      printf("    Certificate Count: %d\n", cupsArrayCount(hcreds));
+      printf("    Certificate Count: %u\n", (unsigned)cupsArrayGetCount(hcreds));
       if (trust == HTTP_TRUST_OK)
         puts("    Trust: OK");
       else
@@ -105,7 +105,7 @@ main(int  argc,				/* I - Number of command-line arguments */
   {
     httpCredentialsString(tcreds, tinfo, sizeof(tinfo));
 
-    printf("    Certificate Count: %d\n", cupsArrayCount(tcreds));
+    printf("    Certificate Count: %u\n", (unsigned)cupsArrayGetCount(tcreds));
     printf("    Expiration: %s\n", httpGetDateString(httpCredentialsGetExpiration(tcreds), datestr, sizeof(datestr)));
     printf("    IsValidName: %d\n", httpCredentialsAreValidForName(tcreds, hostname));
     printf("    String: \"%s\"\n", tinfo);

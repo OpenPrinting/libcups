@@ -628,7 +628,7 @@ main(int  argc,				/* I - Number of command-line arguments */
 
         httpCredentialsString(creds, info, sizeof(info));
 
-	printf("Count: %d\n", cupsArrayCount(creds));
+	printf("Count: %u\n", (unsigned)cupsArrayGetCount(creds));
         printf("Trust: %s\n", trusts[trust]);
         printf("Expiration: %s\n", httpGetDateString(httpCredentialsGetExpiration(creds), expstr, sizeof(expstr)));
         printf("IsValidName: %d\n", httpCredentialsAreValidForName(creds, hostname));
@@ -636,16 +636,16 @@ main(int  argc,				/* I - Number of command-line arguments */
 
 	printf("LoadCredentials: %d\n", httpLoadCredentials(NULL, &lcreds, hostname));
 	httpCredentialsString(lcreds, info, sizeof(info));
-	printf("    Count: %d\n", cupsArrayCount(lcreds));
+	printf("    Count: %u\n", (unsigned)cupsArrayGetCount(lcreds));
 	printf("    String: \"%s\"\n", info);
 
-        if (lcreds && cupsArrayCount(creds) == cupsArrayCount(lcreds))
+        if (lcreds && cupsArrayGetCount(creds) == cupsArrayGetCount(lcreds))
         {
           http_credential_t	*cred, *lcred;
 
-          for (i = 1, cred = (http_credential_t *)cupsArrayFirst(creds), lcred = (http_credential_t *)cupsArrayFirst(lcreds);
+          for (i = 1, cred = (http_credential_t *)cupsArrayGetFirst(creds), lcred = (http_credential_t *)cupsArrayGetFirst(lcreds);
                cred && lcred;
-               i ++, cred = (http_credential_t *)cupsArrayNext(creds), lcred = (http_credential_t *)cupsArrayNext(lcreds))
+               i ++, cred = (http_credential_t *)cupsArrayGetNext(creds), lcred = (http_credential_t *)cupsArrayGetNext(lcreds))
           {
             if (cred->datalen != lcred->datalen)
               printf("    Credential #%d: Different lengths (saved=%d, current=%d)\n", i, (int)cred->datalen, (int)lcred->datalen);

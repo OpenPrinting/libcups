@@ -31,9 +31,9 @@ static void	ascii85(const unsigned char *data, int length, int eod);
 static void	dsc_header(int num_pages);
 static void	dsc_page(int page);
 static void	dsc_trailer(int num_pages);
-static int	get_options(cups_option_t **options);
+static size_t	get_options(cups_option_t **options);
 static int	jpeg_to_ps(const char *filename, int copies);
-static int	pdf_to_ps(const char *filename, int copies, int num_options, cups_option_t *options);
+static int	pdf_to_ps(const char *filename, int copies, size_t num_options, cups_option_t *options);
 static int	ps_to_ps(const char *filename, int copies);
 static int	raster_to_ps(const char *filename);
 
@@ -49,7 +49,7 @@ main(int  argc,				/* I - Number of command-line arguments */
   const char	*content_type,		/* Content type to print */
 		*ipp_copies;		/* IPP_COPIES value */
   int		copies;			/* Number of copies */
-  int		num_options;		/* Number of options */
+  size_t	num_options;		/* Number of options */
   cups_option_t	*options;		/* Options */
 
 
@@ -290,13 +290,13 @@ dsc_trailer(int num_pages)		/* I - Number of pages */
  *                   attributes.
  */
 
-static int				/* O - Number of options */
+static size_t				/* O - Number of options */
 get_options(cups_option_t **options)	/* O - Options */
 {
-  int		num_options = 0;	/* Number of options */
+  size_t	num_options = 0;	/* Number of options */
   const char	*value;			/* Option value */
   pwg_media_t	*media = NULL;		/* Media mapping */
-  int		num_media_col = 0;	/* Number of media-col values */
+  size_t	num_media_col = 0;	/* Number of media-col values */
   cups_option_t	*media_col = NULL;	/* media-col values */
 
 
@@ -341,7 +341,7 @@ get_options(cups_option_t **options)	/* O - Options */
   }
   else if ((value = cupsGetOption("media-size", num_media_col, media_col)) != NULL)
   {
-    int		num_media_size;		/* Number of media-size values */
+    size_t	num_media_size;		/* Number of media-size values */
     cups_option_t *media_size;		/* media-size values */
     const char	*x_dimension,		/* x-dimension value */
 		*y_dimension;		/* y-dimension value */
@@ -597,7 +597,7 @@ jpeg_to_ps(const char    *filename,	/* I - Filename */
 static int				/* O - Exit status */
 pdf_to_ps(const char    *filename,	/* I - Filename */
 	  int           copies,		/* I - Number of copies */
-	  int           num_options,	/* I - Number of options */
+	  size_t        num_options,	/* I - Number of options */
 	  cups_option_t *options)	/* I - options */
 {
   int		status;			/* Exit status */
@@ -853,7 +853,7 @@ raster_to_ps(const char *filename)	/* I - Filename */
 {
   int			fd;		/* Input file */
   cups_raster_t		*ras;		/* Raster stream */
-  cups_page_header2_t	header;		/* Page header */
+  cups_page_header_t	header;		/* Page header */
   int			page = 0;	/* Current page */
   unsigned		y;		/* Current line */
   unsigned char		*line;		/* Line buffer */
@@ -890,7 +890,7 @@ raster_to_ps(const char *filename)	/* I - Filename */
 
   dsc_header(0);
 
-  while (cupsRasterReadHeader2(ras, &header))
+  while (cupsRasterReadHeader(ras, &header))
   {
     page ++;
 

@@ -585,8 +585,7 @@ pwgMediaForLegacy(const char *legacy)	/* I - Legacy size name */
     int			i;		/* Looping var */
     pwg_media_t	*size;		/* Current size */
 
-    cg->leg_size_lut = cupsArrayNew((cups_array_func_t)pwg_compare_legacy,
-                                    NULL);
+    cg->leg_size_lut = cupsArrayNew((cups_array_cb_t)pwg_compare_legacy, NULL, NULL, 0, NULL, NULL);
 
     for (i = (int)(sizeof(cups_pwg_media) / sizeof(cups_pwg_media[0])),
              size = (pwg_media_t *)cups_pwg_media;
@@ -643,7 +642,7 @@ pwgMediaForPPD(const char *ppd)		/* I - PPD size name */
   {
     int	i;				/* Looping var */
 
-    cg->ppd_size_lut = cupsArrayNew((cups_array_func_t)pwg_compare_ppd, NULL);
+    cg->ppd_size_lut = cupsArrayNew((cups_array_cb_t)pwg_compare_ppd, NULL, NULL, 0, NULL, NULL);
 
     for (i = (int)(sizeof(cups_pwg_media) / sizeof(cups_pwg_media[0])),
              size = (pwg_media_t *)cups_pwg_media;
@@ -820,7 +819,7 @@ pwgMediaForPWG(const char *pwg)		/* I - PWG size name */
   {
     int	i;				/* Looping var */
 
-    cg->pwg_size_lut = cupsArrayNew((cups_array_func_t)pwg_compare_pwg, NULL);
+    cg->pwg_size_lut = cupsArrayNew((cups_array_cb_t)pwg_compare_pwg, NULL, NULL, 0, NULL, NULL);
 
     for (i = (int)(sizeof(cups_pwg_media) / sizeof(cups_pwg_media[0])),
              size = (pwg_media_t *)cups_pwg_media;

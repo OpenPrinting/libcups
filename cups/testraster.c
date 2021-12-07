@@ -24,7 +24,7 @@
 
 static int	do_ras_file(const char *filename);
 static int	do_raster_tests(cups_mode_t mode);
-static void	print_changes(cups_page_header2_t *header, cups_page_header2_t *expected);
+static void	print_changes(cups_page_header_t *header, cups_page_header_t *expected);
 
 
 /*
@@ -67,7 +67,7 @@ do_ras_file(const char *filename)	/* I - Filename */
   unsigned		y;		/* Looping vars */
   int			fd;		/* File descriptor */
   cups_raster_t		*ras;		/* Raster stream */
-  cups_page_header2_t	header;		/* Page header */
+  cups_page_header_t	header;		/* Page header */
   unsigned char		*data;		/* Raster data */
   int			errors = 0;	/* Number of errors */
   unsigned		pages = 0;	/* Number of pages */
@@ -88,7 +88,7 @@ do_ras_file(const char *filename)	/* I - Filename */
 
   printf("%s:\n", filename);
 
-  while (cupsRasterReadHeader2(ras, &header))
+  while (cupsRasterReadHeader(ras, &header))
   {
     pages ++;
     data = malloc(header.cupsBytesPerLine);
@@ -130,7 +130,7 @@ do_raster_tests(cups_mode_t mode)	/* O - Write mode */
   unsigned		page, x, y, count;/* Looping vars */
   FILE			*fp;		/* Raster file */
   cups_raster_t		*r;		/* Raster stream */
-  cups_page_header2_t	header,		/* Page header */
+  cups_page_header_t	header,		/* Page header */
 			expected;	/* Expected page header */
   unsigned char		data[2048];	/* Raster data */
   int			errors = 0;	/* Number of errors */
@@ -198,9 +198,9 @@ do_raster_tests(cups_mode_t mode)	/* O - Write mode */
       header.cupsBitsPerPixel = (page & 1) ? 32 : 8;
     }
 
-    testBegin("cupsRasterWriteHeader2(page %d)", page + 1);
+    testBegin("cupsRasterWriteHeader(page %d)", page + 1);
 
-    if (cupsRasterWriteHeader2(r, &header))
+    if (cupsRasterWriteHeader(r, &header))
     {
       testEnd(true);
     }
@@ -346,10 +346,10 @@ do_raster_tests(cups_mode_t mode)	/* O - Write mode */
       expected.cupsBitsPerPixel = (page & 1) ? 32 : 8;
     }
 
-    testBegin("cupsRasterReadHeader2(page %d)", page + 1);
+    testBegin("cupsRasterReadHeader(page %d)", page + 1);
     fflush(stdout);
 
-    if (!cupsRasterReadHeader2(r, &header))
+    if (!cupsRasterReadHeader(r, &header))
     {
       testEndMessage(false, "read error");
       errors ++;
@@ -525,8 +525,8 @@ do_raster_tests(cups_mode_t mode)	/* O - Write mode */
 
 static void
 print_changes(
-    cups_page_header2_t *header,	/* I - Actual page header */
-    cups_page_header2_t *expected)	/* I - Expected page header */
+    cups_page_header_t *header,		/* I - Actual page header */
+    cups_page_header_t *expected)	/* I - Expected page header */
 {
   int	i;				/* Looping var */
 

@@ -240,7 +240,7 @@ cupsSetCredentials(
   _cups_globals_t *cg = _cupsGlobals();	/* Pointer to library globals */
 
 
-  if (cupsArrayCount(credentials) < 1)
+  if (cupsArrayGetCount(credentials) < 1)
     return (-1);
 
 #ifdef HAVE_TLS

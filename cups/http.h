@@ -11,11 +11,6 @@
 
 #ifndef _CUPS_HTTP_H_
 #  define _CUPS_HTTP_H_
-
-/*
- * Include necessary headers...
- */
-
 #  include "versioning.h"
 #  include "array.h"
 #  include <string.h>
@@ -51,12 +46,6 @@ typedef __int64 ssize_t;			/* @private@ */
 #      define SO_PEERCRED LOCAL_PEERCRED
 #    endif /* LOCAL_PEERCRED && !SO_PEERCRED */
 #  endif /* _WIN32 */
-
-
-/*
- * C++ magic...
- */
-
 #  ifdef __cplusplus
 extern "C" {
 #  endif /* __cplusplus */
@@ -113,7 +102,7 @@ typedef enum http_auth_e		/**** HTTP authentication types @exclude all@ ****/
   HTTP_AUTH_MD5_SESS,			/* MD5-session authentication in use */
   HTTP_AUTH_MD5_INT,			/* Digest authentication in use for body */
   HTTP_AUTH_MD5_SESS_INT,		/* MD5-session authentication in use for body */
-  HTTP_AUTH_NEGOTIATE			/* GSSAPI authentication in use @since CUPS 1.3@ */
+  HTTP_AUTH_NEGOTIATE			/* GSSAPI authentication in use */
 } http_auth_t;
 
 typedef enum http_encoding_e		/**** HTTP transfer encoding values ****/
@@ -128,7 +117,7 @@ typedef enum http_encryption_e		/**** HTTP encryption values ****/
   HTTP_ENCRYPTION_IF_REQUESTED,		/* Encrypt if requested (TLS upgrade) */
   HTTP_ENCRYPTION_NEVER,		/* Never encrypt */
   HTTP_ENCRYPTION_REQUIRED,		/* Encryption is required (TLS upgrade) */
-  HTTP_ENCRYPTION_ALWAYS		/* Always encrypt (SSL) */
+  HTTP_ENCRYPTION_ALWAYS		/* Always encrypt (HTTPS) */
 } http_encryption_t;
 
 typedef enum http_field_e		/**** HTTP field names ****/
@@ -161,29 +150,29 @@ typedef enum http_field_e		/**** HTTP field names ****/
   HTTP_FIELD_UPGRADE,			/* Upgrade field */
   HTTP_FIELD_USER_AGENT,		/* User-Agent field */
   HTTP_FIELD_WWW_AUTHENTICATE,		/* WWW-Authenticate field */
-  HTTP_FIELD_ACCEPT_ENCODING,		/* Accepting-Encoding field @since CUPS 1.7@ */
-  HTTP_FIELD_ALLOW,			/* Allow field @since CUPS 1.7@ */
-  HTTP_FIELD_SERVER,			/* Server field @since CUPS 1.7@ */
-  HTTP_FIELD_AUTHENTICATION_INFO,	/* Authentication-Info field @since CUPS 2.2.9@ */
+  HTTP_FIELD_ACCEPT_ENCODING,		/* Accepting-Encoding field */
+  HTTP_FIELD_ALLOW,			/* Allow field */
+  HTTP_FIELD_SERVER,			/* Server field */
+  HTTP_FIELD_AUTHENTICATION_INFO,	/* Authentication-Info field */
   HTTP_FIELD_ACCESS_CONTROL_ALLOW_CREDENTIALS,
-					/* CORS/Fetch Access-Control-Allow-Cresdentials field @since CUPS 2.4@ */
+					/* CORS/Fetch Access-Control-Allow-Cresdentials field */
   HTTP_FIELD_ACCESS_CONTROL_ALLOW_HEADERS,
-					/* CORS/Fetch Access-Control-Allow-Headers field @since CUPS 2.4@ */
+					/* CORS/Fetch Access-Control-Allow-Headers field */
   HTTP_FIELD_ACCESS_CONTROL_ALLOW_METHODS,
-					/* CORS/Fetch Access-Control-Allow-Methods field @since CUPS 2.4@ */
+					/* CORS/Fetch Access-Control-Allow-Methods field */
   HTTP_FIELD_ACCESS_CONTROL_ALLOW_ORIGIN,
-					/* CORS/Fetch Access-Control-Allow-Origin field @since CUPS 2.4@ */
+					/* CORS/Fetch Access-Control-Allow-Origin field */
   HTTP_FIELD_ACCESS_CONTROL_EXPOSE_HEADERS,
-					/* CORS/Fetch Access-Control-Expose-Headers field @since CUPS 2.4@ */
-  HTTP_FIELD_ACCESS_CONTROL_MAX_AGE,	/* CORS/Fetch Access-Control-Max-Age field @since CUPS 2.4@ */
+					/* CORS/Fetch Access-Control-Expose-Headers field */
+  HTTP_FIELD_ACCESS_CONTROL_MAX_AGE,	/* CORS/Fetch Access-Control-Max-Age field */
   HTTP_FIELD_ACCESS_CONTROL_REQUEST_HEADERS,
-					/* CORS/Fetch Access-Control-Request-Headers field @since CUPS 2.4@ */
+					/* CORS/Fetch Access-Control-Request-Headers field */
   HTTP_FIELD_ACCESS_CONTROL_REQUEST_METHOD,
-					/* CORS/Fetch Access-Control-Request-Method field @since CUPS 2.4@ */
-  HTTP_FIELD_OPTIONAL_WWW_AUTHENTICATE,	/* RFC 8053 Optional-WWW-Authenticate field @since CUPS 2.4@ */
-  HTTP_FIELD_ORIGIN,			/* RFC 6454 Origin field @since CUPS 2.4@ */
-  HTTP_FIELD_OSCORE,			/* RFC 8613 OSCORE field @since CUPS 2.4@ */
-  HTTP_FIELD_STRICT_TRANSPORT_SECURITY,	/* HSTS Strict-Transport-Security field @since CUPS 2.4@ */
+					/* CORS/Fetch Access-Control-Request-Method field */
+  HTTP_FIELD_OPTIONAL_WWW_AUTHENTICATE,	/* RFC 8053 Optional-WWW-Authenticate field */
+  HTTP_FIELD_ORIGIN,			/* RFC 6454 Origin field */
+  HTTP_FIELD_OSCORE,			/* RFC 8613 OSCORE field */
+  HTTP_FIELD_STRICT_TRANSPORT_SECURITY,	/* HSTS Strict-Transport-Security field */
   HTTP_FIELD_MAX			/* Maximum field index */
 } http_field_t;
 
@@ -193,9 +182,7 @@ typedef enum http_keepalive_e		/**** HTTP keep-alive values ****/
   HTTP_KEEPALIVE_ON			/* Use keep alive */
 } http_keepalive_t;
 
-typedef enum http_state_e		/**** HTTP state values; states
-					 **** are server-oriented...
-					 ****/
+typedef enum http_state_e		/**** HTTP state values; states are server-oriented... ****/
 {
   HTTP_STATE_ERROR = -1,		/* Error on socket */
   HTTP_STATE_WAITING,			/* Waiting for command */
@@ -212,14 +199,14 @@ typedef enum http_state_e		/**** HTTP state values; states
   HTTP_STATE_TRACE,			/* TRACE command, waiting for blank line */
   HTTP_STATE_CONNECT,			/* CONNECT command, waiting for blank line */
   HTTP_STATE_STATUS,			/* Command complete, sending status */
-  HTTP_STATE_UNKNOWN_METHOD,		/* Unknown request method, waiting for blank line @since CUPS 1.7@ */
-  HTTP_STATE_UNKNOWN_VERSION		/* Unknown request method, waiting for blank line @since CUPS 1.7@ */
+  HTTP_STATE_UNKNOWN_METHOD,		/* Unknown request method, waiting for blank line */
+  HTTP_STATE_UNKNOWN_VERSION		/* Unknown request method, waiting for blank line */
 } http_state_t;
 
 typedef enum http_status_e		/**** HTTP status codes ****/
 {
   HTTP_STATUS_ERROR = -1,		/* An error response from httpXxxx() */
-  HTTP_STATUS_NONE = 0,			/* No Expect value @since CUPS 1.7@ */
+  HTTP_STATUS_NONE = 0,			/* No Expect value */
 
   HTTP_STATUS_CONTINUE = 100,		/* Everything OK, keep going... */
   HTTP_STATUS_SWITCHING_PROTOCOLS,	/* HTTP upgrade to TLS/SSL */
@@ -268,12 +255,12 @@ typedef enum http_status_e		/**** HTTP status codes ****/
   HTTP_STATUS_NOT_SUPPORTED,		/* HTTP version not supported */
 
   HTTP_STATUS_CUPS_AUTHORIZATION_CANCELED = 1000,
-					/* User canceled authorization @since CUPS 1.4@ */
-  HTTP_STATUS_CUPS_PKI_ERROR,		/* Error negotiating a secure connection @since CUPS 1.5@ */
+					/* User canceled authorization */
+  HTTP_STATUS_CUPS_PKI_ERROR,		/* Error negotiating a secure connection */
   HTTP_STATUS_CUPS_WEBIF_DISABLED	/* Web interface is disabled @private@ */
 } http_status_t;
 
-typedef enum http_trust_e		/**** Level of trust for credentials @since CUPS 2.0@ */
+typedef enum http_trust_e		/**** Level of trust for credentials */
 {
   HTTP_TRUST_OK = 0,			/* Credentials are OK/trusted */
   HTTP_TRUST_INVALID,			/* Credentials are invalid */
@@ -283,7 +270,7 @@ typedef enum http_trust_e		/**** Level of trust for credentials @since CUPS 2.0@
   HTTP_TRUST_UNKNOWN			/* Credentials are unknown/new */
 } http_trust_t;
 
-typedef enum http_uri_status_e		/**** URI separation status @since CUPS 1.2@ ****/
+typedef enum http_uri_status_e		/**** URI separation status ****/
 {
   HTTP_URI_STATUS_OVERFLOW = -8,	/* URI buffer for httpAssembleURI is too small */
   HTTP_URI_STATUS_BAD_ARGUMENTS = -7,	/* Bad arguments to function (error) */
@@ -331,12 +318,7 @@ typedef union _http_addr_u		/* Socket address union */
   char			pad[256];	/* Padding to ensure binary compatibility @private@ */
 } http_addr_t;
 
-typedef struct http_addrlist_s		/**** Socket address list, which is
-					 **** used to enumerate all of the
-					 **** addresses that are associated
-					 **** with a hostname. @since CUPS 1.2@
-                                         **** @exclude all@
-					 ****/
+typedef struct http_addrlist_s		/**** Socket address list, which is used to enumerate all of the addresses that are associated with a hostname. ****/
 {
   struct http_addrlist_s *next;		/* Pointer to next address in list */
   http_addr_t		addr;		/* Address */
@@ -344,134 +326,120 @@ typedef struct http_addrlist_s		/**** Socket address list, which is
 
 typedef struct _http_s http_t;		/**** HTTP connection type ****/
 
-typedef struct http_credential_s	/**** HTTP credential data @since CUPS 1.5@ @exclude all@ ****/
+typedef struct http_credential_s	/**** HTTP credential data @exclude all@ ****/
 {
   void		*data;			/* Pointer to credential data */
   size_t	datalen;		/* Credential length */
 } http_credential_t;
 
 typedef int (*http_timeout_cb_t)(http_t *http, void *user_data);
-					/**** HTTP timeout callback @since CUPS 1.5@ ****/
+					/**** HTTP timeout callback ****/
 
 
 /*
  * Prototypes...
  */
 
-extern void		httpSetBlocking(http_t *http, bool b) _CUPS_PUBLIC;
-extern int		httpCheck(http_t *http) _CUPS_PUBLIC;
-extern void		httpClearFields(http_t *http) _CUPS_PUBLIC;
-extern void		httpClose(http_t *http) _CUPS_PUBLIC;
-extern int		httpDelete(http_t *http, const char *uri) _CUPS_PUBLIC;
-extern int		httpEncryption(http_t *http, http_encryption_t e) _CUPS_PUBLIC;
-extern int		httpError(http_t *http) _CUPS_PUBLIC;
-extern void		httpFlush(http_t *http) _CUPS_PUBLIC;
-extern int		httpGet(http_t *http, const char *uri) _CUPS_PUBLIC;
-extern char		*httpGets(http_t *http, char *line, size_t length) _CUPS_PUBLIC;
-extern time_t		httpGetDateTime(const char *s) _CUPS_PUBLIC;
-extern const char	*httpGetField(http_t *http, http_field_t field) _CUPS_PUBLIC;
-extern struct hostent	*httpGetHostByName(const char *name) _CUPS_PUBLIC;
-extern int		httpHead(http_t *http, const char *uri) _CUPS_PUBLIC;
-extern void		httpInitialize(void) _CUPS_PUBLIC;
-extern int		httpOptions(http_t *http, const char *uri) _CUPS_PUBLIC;
-extern int		httpPost(http_t *http, const char *uri) _CUPS_PUBLIC;
-extern int		httpPrintf(http_t *http, const char *format, ...) _CUPS_FORMAT(2, 3) _CUPS_PUBLIC;
-extern int		httpPut(http_t *http, const char *uri) _CUPS_PUBLIC;
-extern void		httpSetField(http_t *http, http_field_t field, const char *value) _CUPS_PUBLIC;
-extern const char	*httpStatus(http_status_t status) _CUPS_PUBLIC;
-extern int		httpTrace(http_t *http, const char *uri) _CUPS_PUBLIC;
-extern http_status_t	httpUpdate(http_t *http) _CUPS_PUBLIC;
-
-/**** New in CUPS 1.1.19 ****/
-extern void		httpClearCookie(http_t *http) _CUPS_PUBLIC;
-extern const char	*httpGetCookie(http_t *http) _CUPS_PUBLIC;
-extern void		httpSetCookie(http_t *http, const char *cookie) _CUPS_PUBLIC;
-extern int		httpWait(http_t *http, int msec) _CUPS_PUBLIC;
-
-/**** New in CUPS 1.1.21 ****/
-extern char		*httpDecode64(char *out, size_t *outlen, const char *in) _CUPS_PUBLIC;
-extern char		*httpEncode64(char *out, size_t outlen, const char *in, size_t inlen) _CUPS_PUBLIC;
-
-/**** New in CUPS 1.2 ****/
+extern http_t		*httpAcceptConnection(int fd, int blocking) _CUPS_PUBLIC;
+extern int		httpAddCredential(cups_array_t *credentials, const void *data, size_t datalen) _CUPS_PUBLIC;
 extern int		httpAddrAny(const http_addr_t *addr) _CUPS_PUBLIC;
+extern int		httpAddrClose(http_addr_t *addr, int fd) _CUPS_PUBLIC;
+extern http_addrlist_t	*httpAddrConnect(http_addrlist_t *addrlist, int *sock, int msec, int *cancel) _CUPS_PUBLIC;
+extern http_addrlist_t	*httpAddrCopyList(http_addrlist_t *src) _CUPS_PUBLIC;
 extern int		httpAddrEqual(const http_addr_t *addr1, const http_addr_t *addr2) _CUPS_PUBLIC;
+extern int		httpAddrFamily(http_addr_t *addr) _CUPS_PUBLIC;
 extern void		httpAddrFreeList(http_addrlist_t *addrlist) _CUPS_PUBLIC;
 extern http_addrlist_t	*httpAddrGetList(const char *hostname, int family, const char *service) _CUPS_PUBLIC;
 extern int		httpAddrLength(const http_addr_t *addr) _CUPS_PUBLIC;
+extern int		httpAddrListen(http_addr_t *addr, int port) _CUPS_PUBLIC;
 extern int		httpAddrLocalhost(const http_addr_t *addr) _CUPS_PUBLIC;
 extern char		*httpAddrLookup(const http_addr_t *addr, char *name, int namelen) _CUPS_PUBLIC;
+extern int		httpAddrPort(http_addr_t *addr) _CUPS_PUBLIC;
 extern char		*httpAddrString(const http_addr_t *addr, char *s, int slen) _CUPS_PUBLIC;
 extern http_uri_status_t httpAssembleURI(http_uri_coding_t encoding, char *uri, int urilen, const char *scheme, const char *username, const char *host, int port, const char *resource) _CUPS_PUBLIC;
 extern http_uri_status_t httpAssembleURIf(http_uri_coding_t encoding, char *uri, int urilen, const char *scheme, const char *username, const char *host, int port, const char *resourcef, ...) _CUPS_FORMAT(8, 9) _CUPS_PUBLIC;
-extern int		httpFlushWrite(http_t *http) _CUPS_PUBLIC;
-extern bool		httpGetBlocking(http_t *http) _CUPS_PUBLIC;
-extern const char	*httpGetDateString(time_t t, char *s, size_t slen) _CUPS_PUBLIC;
-extern int		httpGetFd(http_t *http) _CUPS_PUBLIC;
-extern const char	*httpGetHostname(http_t *http, char *s, int slen) _CUPS_PUBLIC;
-extern off_t		httpGetLength(http_t *http) _CUPS_PUBLIC;
-extern http_status_t	httpGetStatus(http_t *http) _CUPS_PUBLIC;
-extern char		*httpGetSubField(http_t *http, http_field_t field, const char *name, char *value, size_t valuelen) _CUPS_PUBLIC;
-extern ssize_t		httpRead(http_t *http, char *buffer, size_t length) _CUPS_PUBLIC;
-extern http_uri_status_t httpSeparateURI(http_uri_coding_t decoding, const char *uri, char *scheme, int schemelen, char *username, int usernamelen, char *host, int hostlen, int *port, char *resource, int resourcelen) _CUPS_PUBLIC;
-extern void		httpSetExpect(http_t *http, http_status_t expect) _CUPS_PUBLIC;
-extern void		httpSetLength(http_t *http, size_t length) _CUPS_PUBLIC;
-extern ssize_t		httpWrite(http_t *http, const char *buffer, size_t length) _CUPS_PUBLIC;
-
-/**** New in CUPS 1.3 ****/
-extern char		*httpGetAuthString(http_t *http) _CUPS_PUBLIC;
-extern void		httpSetAuthString(http_t *http, const char *scheme, const char *data) _CUPS_PUBLIC;
-
-/**** New in CUPS 1.5 ****/
-extern int		httpAddCredential(cups_array_t *credentials, const void *data, size_t datalen) _CUPS_PUBLIC;
-extern int		httpCopyCredentials(http_t *http, cups_array_t **credentials) _CUPS_PUBLIC;
-extern void		httpFreeCredentials(cups_array_t *certs) _CUPS_PUBLIC;
-extern int		httpSetCredentials(http_t *http, cups_array_t *certs) _CUPS_PUBLIC;
-extern void		httpSetTimeout(http_t *http, double timeout, http_timeout_cb_t cb, void *user_data) _CUPS_PUBLIC;
-
-extern http_addrlist_t	*httpAddrConnect(http_addrlist_t *addrlist, int *sock, int msec, int *cancel) _CUPS_PUBLIC;
-extern http_state_t	httpGetState(http_t *http) _CUPS_PUBLIC;
-extern http_version_t	httpGetVersion(http_t *http) _CUPS_PUBLIC;
-extern int		httpReconnect(http_t *http, int msec, int *cancel) _CUPS_PUBLIC;
-extern http_t		*httpAcceptConnection(int fd, int blocking) _CUPS_PUBLIC;
-extern http_addrlist_t	*httpAddrCopyList(http_addrlist_t *src) _CUPS_PUBLIC;
-extern int		httpAddrListen(http_addr_t *addr, int port) _CUPS_PUBLIC;
-extern int		httpAddrPort(http_addr_t *addr) _CUPS_PUBLIC;
 extern char		*httpAssembleUUID(const char *server, int port, const char *name, int number, char *buffer, size_t bufsize) _CUPS_PUBLIC;
-extern http_t		*httpConnect(const char *host, int port, http_addrlist_t *addrlist, int family, http_encryption_t encryption, bool blocking, int msec, int *cancel) _CUPS_PUBLIC;
-extern const char	*httpGetContentEncoding(http_t *http) _CUPS_PUBLIC;
-extern http_status_t	httpGetExpect(http_t *http) _CUPS_PUBLIC;
-extern ssize_t		httpPeek(http_t *http, char *buffer, size_t length) _CUPS_PUBLIC;
-extern http_state_t	httpReadRequest(http_t *http, char *resource, size_t resourcelen) _CUPS_PUBLIC;
-extern void		httpSetDefaultField(http_t *http, http_field_t field, const char *value) _CUPS_PUBLIC;
-extern http_state_t	httpWriteResponse(http_t *http, http_status_t status) _CUPS_PUBLIC;
-extern int		httpAddrClose(http_addr_t *addr, int fd) _CUPS_PUBLIC;
-extern int		httpAddrFamily(http_addr_t *addr) _CUPS_PUBLIC;
+extern int		httpCheck(http_t *http) _CUPS_PUBLIC;
+extern void		httpClearFields(http_t *http) _CUPS_PUBLIC;
+extern void		httpClose(http_t *http) _CUPS_PUBLIC;
+extern void		httpClearCookie(http_t *http) _CUPS_PUBLIC;
 extern int		httpCompareCredentials(cups_array_t *cred1, cups_array_t *cred2) _CUPS_PUBLIC;
+extern http_t		*httpConnect(const char *host, int port, http_addrlist_t *addrlist, int family, http_encryption_t encryption, bool blocking, int msec, int *cancel) _CUPS_PUBLIC;
+extern int		httpCopyCredentials(http_t *http, cups_array_t **credentials) _CUPS_PUBLIC;
 extern int		httpCredentialsAreValidForName(cups_array_t *credentials, const char *common_name);
 extern time_t		httpCredentialsGetExpiration(cups_array_t *credentials) _CUPS_PUBLIC;
 extern http_trust_t	httpCredentialsGetTrust(cups_array_t *credentials, const char *common_name) _CUPS_PUBLIC;
 extern size_t		httpCredentialsString(cups_array_t *credentials, char *buffer, size_t bufsize) _CUPS_PUBLIC;
+extern char		*httpDecode64(char *out, size_t *outlen, const char *in) _CUPS_PUBLIC;
+extern int		httpDelete(http_t *http, const char *uri) _CUPS_PUBLIC;
+extern char		*httpEncode64(char *out, size_t outlen, const char *in, size_t inlen) _CUPS_PUBLIC;
+extern int		httpEncryption(http_t *http, http_encryption_t e) _CUPS_PUBLIC;
+extern int		httpError(http_t *http) _CUPS_PUBLIC;
 extern http_field_t	httpFieldValue(const char *name) _CUPS_PUBLIC;
+extern void		httpFlush(http_t *http) _CUPS_PUBLIC;
+extern int		httpFlushWrite(http_t *http) _CUPS_PUBLIC;
+extern void		httpFreeCredentials(cups_array_t *certs) _CUPS_PUBLIC;
+extern int		httpGet(http_t *http, const char *uri) _CUPS_PUBLIC;
 extern time_t		httpGetActivity(http_t *http) _CUPS_PUBLIC;
 extern http_addr_t	*httpGetAddress(http_t *http) _CUPS_PUBLIC;
+extern char		*httpGetAuthString(http_t *http) _CUPS_PUBLIC;
+extern bool		httpGetBlocking(http_t *http) _CUPS_PUBLIC;
+extern const char	*httpGetContentEncoding(http_t *http) _CUPS_PUBLIC;
+extern const char	*httpGetCookie(http_t *http) _CUPS_PUBLIC;
+extern const char	*httpGetDateString(time_t t, char *s, size_t slen) _CUPS_PUBLIC;
+extern time_t		httpGetDateTime(const char *s) _CUPS_PUBLIC;
 extern http_encryption_t httpGetEncryption(http_t *http) _CUPS_PUBLIC;
+extern http_status_t	httpGetExpect(http_t *http) _CUPS_PUBLIC;
+extern int		httpGetFd(http_t *http) _CUPS_PUBLIC;
+extern const char	*httpGetField(http_t *http, http_field_t field) _CUPS_PUBLIC;
+extern struct hostent	*httpGetHostByName(const char *name) _CUPS_PUBLIC;
+extern const char	*httpGetHostname(http_t *http, char *s, int slen) _CUPS_PUBLIC;
 extern http_keepalive_t	httpGetKeepAlive(http_t *http) _CUPS_PUBLIC;
+extern off_t		httpGetLength(http_t *http) _CUPS_PUBLIC;
 extern size_t		httpGetPending(http_t *http) _CUPS_PUBLIC;
 extern size_t		httpGetReady(http_t *http) _CUPS_PUBLIC;
 extern size_t		httpGetRemaining(http_t *http) _CUPS_PUBLIC;
+extern http_state_t	httpGetState(http_t *http) _CUPS_PUBLIC;
+extern http_status_t	httpGetStatus(http_t *http) _CUPS_PUBLIC;
+extern char		*httpGetSubField(http_t *http, http_field_t field, const char *name, char *value, size_t valuelen) _CUPS_PUBLIC;
+extern http_version_t	httpGetVersion(http_t *http) _CUPS_PUBLIC;
+extern char		*httpGets(http_t *http, char *line, size_t length) _CUPS_PUBLIC;
+extern int		httpHead(http_t *http, const char *uri) _CUPS_PUBLIC;
+extern void		httpInitialize(void) _CUPS_PUBLIC;
 extern int		httpIsChunked(http_t *http) _CUPS_PUBLIC;
 extern int		httpIsEncrypted(http_t *http) _CUPS_PUBLIC;
 extern int		httpLoadCredentials(const char *path, cups_array_t **credentials, const char *common_name) _CUPS_PUBLIC;
+extern int		httpOptions(http_t *http, const char *uri) _CUPS_PUBLIC;
+extern ssize_t		httpPeek(http_t *http, char *buffer, size_t length) _CUPS_PUBLIC;
+extern int		httpPost(http_t *http, const char *uri) _CUPS_PUBLIC;
+extern int		httpPrintf(http_t *http, const char *format, ...) _CUPS_FORMAT(2, 3) _CUPS_PUBLIC;
+extern int		httpPut(http_t *http, const char *uri) _CUPS_PUBLIC;
+extern ssize_t		httpRead(http_t *http, char *buffer, size_t length) _CUPS_PUBLIC;
+extern http_state_t	httpReadRequest(http_t *http, char *resource, size_t resourcelen) _CUPS_PUBLIC;
+extern int		httpReconnect(http_t *http, int msec, int *cancel) _CUPS_PUBLIC;
 extern const char	*httpResolveHostname(http_t *http, char *buffer, size_t bufsize) _CUPS_PUBLIC;
 extern int		httpSaveCredentials(const char *path, cups_array_t *credentials, const char *common_name) _CUPS_PUBLIC;
+extern http_uri_status_t httpSeparateURI(http_uri_coding_t decoding, const char *uri, char *scheme, int schemelen, char *username, int usernamelen, char *host, int hostlen, int *port, char *resource, int resourcelen) _CUPS_PUBLIC;
+extern void		httpSetAuthString(http_t *http, const char *scheme, const char *data) _CUPS_PUBLIC;
+extern void		httpSetBlocking(http_t *http, bool b) _CUPS_PUBLIC;
+extern void		httpSetCookie(http_t *http, const char *cookie) _CUPS_PUBLIC;
+extern int		httpSetCredentials(http_t *http, cups_array_t *certs) _CUPS_PUBLIC;
+extern void		httpSetDefaultField(http_t *http, http_field_t field, const char *value) _CUPS_PUBLIC;
+extern void		httpSetExpect(http_t *http, http_status_t expect) _CUPS_PUBLIC;
+extern void		httpSetField(http_t *http, http_field_t field, const char *value) _CUPS_PUBLIC;
 extern void		httpSetKeepAlive(http_t *http, http_keepalive_t keep_alive) _CUPS_PUBLIC;
+extern void		httpSetLength(http_t *http, size_t length) _CUPS_PUBLIC;
+extern void		httpSetTimeout(http_t *http, double timeout, http_timeout_cb_t cb, void *user_data) _CUPS_PUBLIC;
 extern void		httpShutdown(http_t *http) _CUPS_PUBLIC;
 extern const char	*httpStateString(http_state_t state) _CUPS_PUBLIC;
+extern const char	*httpStatus(http_status_t status) _CUPS_PUBLIC;
+extern int		httpTrace(http_t *http, const char *uri) _CUPS_PUBLIC;
+extern http_status_t	httpUpdate(http_t *http) _CUPS_PUBLIC;
 extern const char	*httpURIStatusString(http_uri_status_t status) _CUPS_PUBLIC;
+extern int		httpWait(http_t *http, int msec) _CUPS_PUBLIC;
+extern ssize_t		httpWrite(http_t *http, const char *buffer, size_t length) _CUPS_PUBLIC;
+extern http_state_t	httpWriteResponse(http_t *http, http_status_t status) _CUPS_PUBLIC;
 
-/*
- * C++ magic...
- */
 
 #  ifdef __cplusplus
 }

@@ -297,7 +297,7 @@ _cupsEncodeOption(
     const char    *name,		/* I - Attribute name */
     const char    *value)		/* I - Value */
 {
-  int			i,		/* Looping var */
+  size_t		i,		/* Looping var */
 			count;		/* Number of values */
   char			*s,		/* Pointer into option value */
 			*val,		/* Pointer to option value */
@@ -307,7 +307,7 @@ _cupsEncodeOption(
   ipp_attribute_t	*attr;		/* IPP attribute */
   ipp_tag_t		value_tag;	/* IPP value tag */
   ipp_t			*collection;	/* Collection value */
-  int			num_cols;	/* Number of collection values */
+  size_t		num_cols;	/* Number of collection values */
   cups_option_t		*cols;		/* Collection values */
 
 
@@ -356,7 +356,7 @@ _cupsEncodeOption(
   else
     count = 1;
 
-  DEBUG_printf(("2_cupsEncodeOption: value_tag=%s, count=%d", ippTagString(value_tag), count));
+  DEBUG_printf(("2_cupsEncodeOption: value_tag=%s, count=%u", ippTagString(value_tag), (unsigned)count));
 
  /*
   * Allocate memory for the attribute values...
@@ -597,28 +597,25 @@ cupsEncodeOption(ipp_t      *ipp,	/* I - IPP request/response */
 /*
  * 'cupsEncodeOptions()' - Encode printer options into IPP attributes for a group.
  *
- * This function only adds attributes for a single group. Call this
- * function multiple times for each group, or use @link cupsEncodeOptions@
- * to add the standard groups.
- *
- * @since CUPS 1.2@
+ * This function encodes options as IPP attributes for a single group. Call this
+ * function multiple times for each group as needed.
  */
 
 void
 cupsEncodeOptions(
     ipp_t         *ipp,			/* I - IPP request/response */
-    int           num_options,		/* I - Number of options */
+    size_t        num_options,		/* I - Number of options */
     cups_option_t *options,		/* I - Options */
     ipp_tag_t     group_tag)		/* I - Group to encode */
 {
-  int			i;		/* Looping var */
+  size_t			i;		/* Looping var */
   char			*val;		/* Pointer to option value */
   cups_option_t		*option;	/* Current option */
   ipp_op_t		op;		/* Operation for this request */
   const ipp_op_t	*ops;		/* List of allowed operations */
 
 
-  DEBUG_printf(("cupsEncodeOptions(ipp=%p(%s), num_options=%d, options=%p, group_tag=%x)", (void *)ipp, ipp ? ippOpString(ippGetOperation(ipp)) : "", num_options, (void *)options, group_tag));
+  DEBUG_printf(("cupsEncodeOptions(ipp=%p(%s), num_options=%u, options=%p, group_tag=%x)", (void *)ipp, ipp ? ippOpString(ippGetOperation(ipp)) : "", (unsigned)num_options, (void *)options, group_tag));
 
  /*
   * Range check input...

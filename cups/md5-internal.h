@@ -1,10 +1,10 @@
 /*
  * Private MD5 definitions for CUPS.
  *
- * Copyright 2007-2010 by Apple Inc.
- * Copyright 2005 by Easy Software Products
- *
- * Copyright (C) 1999 Aladdin Enterprises.  All rights reserved.
+ * Copyright © 2021 by OpenPrinting.
+ * Copyright © 2007-2010 by Apple Inc.
+ * Copyright © 2005 by Easy Software Products
+ * Copyright © 1999 Aladdin Enterprises.  All rights reserved.
  *
  * This software is provided 'as-is', without any express or implied
  * warranty.  In no event will the authors be held liable for any damages
@@ -46,19 +46,20 @@
 
 #ifndef _CUPS_MD5_INTERNAL_H_
 #  define _CUPS_MD5_INTERNAL_H_
-
 #  include <cups/versioning.h>
-
-/* Define the state of the MD5 Algorithm. */
-typedef struct _cups_md5_state_s {
-    unsigned int count[2];		/* message length in bits, lsw first */
-    unsigned int abcd[4];		/* digest buffer */
-    unsigned char buf[64];		/* accumulate block */
-} _cups_md5_state_t;
-
 #  ifdef __cplusplus
 extern "C" {
 #  endif /* __cplusplus */
+
+
+/* Define the state of the MD5 Algorithm. */
+typedef struct _cups_md5_state_s
+{
+  unsigned int count[2];		/* message length in bits, lsw first */
+  unsigned int abcd[4];			/* digest buffer */
+  unsigned char buf[64];		/* accumulate block */
+} _cups_md5_state_t;
+
 
 /* Initialize the algorithm. */
 void _cupsMD5Init(_cups_md5_state_t *pms) _CUPS_INTERNAL;
@@ -68,6 +69,7 @@ void _cupsMD5Append(_cups_md5_state_t *pms, const unsigned char *data, int nbyte
 
 /* Finish the message and return the digest. */
 void _cupsMD5Finish(_cups_md5_state_t *pms, unsigned char digest[16]) _CUPS_INTERNAL;
+
 
 #  ifdef __cplusplus
 }  /* end extern "C" */

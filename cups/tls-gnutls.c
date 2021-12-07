@@ -392,7 +392,7 @@ httpCredentialsAreValidForName(
   int			result = 0;	/* Result */
 
 
-  cert = http_gnutls_create_credential((http_credential_t *)cupsArrayFirst(credentials));
+  cert = http_gnutls_create_credential((http_credential_t *)cupsArrayGetFirst(credentials));
   if (cert)
   {
     result = gnutls_x509_crt_check_hostname(cert, common_name) != 0;
@@ -463,7 +463,7 @@ httpCredentialsGetTrust(
     return (HTTP_TRUST_UNKNOWN);
   }
 
-  if ((cert = http_gnutls_create_credential((http_credential_t *)cupsArrayFirst(credentials))) == NULL)
+  if ((cert = http_gnutls_create_credential((http_credential_t *)cupsArrayGetFirst(credentials))) == NULL)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create credentials from array."), 1);
     return (HTTP_TRUST_UNKNOWN);
@@ -553,7 +553,7 @@ httpCredentialsGetTrust(
 
     if (!httpLoadCredentials(NULL, &tcreds, "site"))
     {
-      if (cupsArrayCount(credentials) != (cupsArrayCount(tcreds) + 1))
+      if (cupsArrayGetCount(credentials) != (cupsArrayGetCount(tcreds) + 1))
       {
        /*
         * Certificate isn't directly generated from the CA cert...
@@ -569,9 +569,9 @@ httpCredentialsGetTrust(
 
         http_credential_t	*a, *b;		/* Certificates */
 
-        for (a = (http_credential_t *)cupsArrayFirst(tcreds), b = (http_credential_t *)cupsArrayIndex(credentials, 1);
+        for (a = (http_credential_t *)cupsArrayGetFirst(tcreds), b = (http_credential_t *)cupsArrayGetElement(credentials, 1);
 	     a && b;
-	     a = (http_credential_t *)cupsArrayNext(tcreds), b = (http_credential_t *)cupsArrayNext(credentials))
+	     a = (http_credential_t *)cupsArrayGetNext(tcreds), b = (http_credential_t *)cupsArrayGetNext(credentials))
 	  if (a->datalen != b->datalen || memcmp(a->data, b->data, a->datalen))
 	    break;
 
@@ -602,7 +602,7 @@ httpCredentialsGetTrust(
     }
   }
 
-  if (trust == HTTP_TRUST_OK && !cg->any_root && cupsArrayCount(credentials) == 1)
+  if (trust == HTTP_TRUST_OK && !cg->any_root && cupsArrayGetCount(credentials) == 1)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Self-signed credentials are blocked."), 1);
     trust = HTTP_TRUST_INVALID;
@@ -628,7 +628,7 @@ httpCredentialsGetExpiration(
   time_t		result = 0;	/* Result */
 
 
-  cert = http_gnutls_create_credential((http_credential_t *)cupsArrayFirst(credentials));
+  cert = http_gnutls_create_credential((http_credential_t *)cupsArrayGetFirst(credentials));
   if (cert)
   {
     result = gnutls_x509_crt_get_expiration_time(cert);
@@ -663,7 +663,7 @@ httpCredentialsString(
   if (bufsize > 0)
     *buffer = '\0';
 
-  if ((first = (http_credential_t *)cupsArrayFirst(credentials)) != NULL &&
+  if ((first = (http_credential_t *)cupsArrayGetFirst(credentials)) != NULL &&
       (cert = http_gnutls_create_credential(first)) != NULL)
   {
     char		name[256],	/* Common name associated with cert */
@@ -871,9 +871,9 @@ httpSaveCredentials(
 
   fchmod(cupsFileNumber(fp), 0600);
 
-  for (cred = (http_credential_t *)cupsArrayFirst(credentials);
+  for (cred = (http_credential_t *)cupsArrayGetFirst(credentials);
        cred;
-       cred = (http_credential_t *)cupsArrayNext(credentials))
+       cred = (http_credential_t *)cupsArrayGetNext(credentials))
   {
     cupsFilePuts(fp, "-----BEGIN CERTIFICATE-----\n");
     for (ptr = cred->data, remaining = (ssize_t)cred->datalen; remaining > 0; remaining -= 45, ptr += 45)

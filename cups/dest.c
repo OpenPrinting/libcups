@@ -1275,7 +1275,7 @@ _cupsGetDests(http_t       *http,	/* I  - Connection to server or
   ipp_attribute_t *attr;		/* Current attribute */
   const char	*printer_name;		/* printer-name attribute */
   char		uri[1024];		/* printer-uri value */
-  int		num_options;		/* Number of options */
+  size_t	num_options;		/* Number of options */
   cups_option_t	*options;		/* Options */
 #ifdef __APPLE__
   char		media_default[41];	/* Default paper size */
@@ -1428,10 +1428,7 @@ _cupsGetDests(http_t       *http,	/* I  - Connection to server or
 	  * Add a printer description attribute...
 	  */
 
-          num_options = cupsAddOption(attr->name,
-	                              cups_make_string(attr, value,
-				                       sizeof(value)),
-				      num_options, &options);
+          num_options = cupsAddOption(attr->name, cups_make_string(attr, value, sizeof(value)), num_options, &options);
 	}
 #ifdef __APPLE__
 	else if (!strcmp(attr->name, "media-supported") && media_default[0])
@@ -1440,15 +1437,17 @@ _cupsGetDests(http_t       *http,	/* I  - Connection to server or
 	  * See if we can set a default media size...
 	  */
 
-          int	i;			/* Looping var */
+          size_t	i;		/* Looping var */
 
 	  for (i = 0; i < attr->num_values; i ++)
+	  {
 	    if (!_cups_strcasecmp(media_default, attr->values[i].string.text))
 	    {
               DEBUG_printf(("1_cupsGetDests: Setting media to '%s'.", media_default));
 	      num_options = cupsAddOption("media", media_default, num_options, &options);
               break;
 	    }
+	  }
 	}
 #endif /* __APPLE__ */
         else if (!strcmp(attr->name, "printer-name") &&
@@ -3259,9 +3258,9 @@ cups_enum_dests(
   cups_option_t	*option;		/* Current option */
   const char	*user_default;		/* Default printer from environment */
 #ifdef HAVE_DNSSD
-  int           count,                  /* Number of queries started */
-                completed,              /* Number of completed queries */
-                remaining;              /* Remainder of timeout */
+  size_t	count,			/* Number of queries started */
+		completed;		/* Number of completed queries */
+  int		remaining;		/* Remainder of timeout */
   struct timeval curtime;               /* Current time */
   _cups_dnssd_data_t data;		/* Data for callback */
   _cups_dnssd_device_t *device;         /* Current device */
@@ -3363,7 +3362,7 @@ cups_enum_dests(
   data.mask      = mask;
   data.cb        = cb;
   data.user_data = user_data;
-  data.devices   = cupsArrayNew3((cups_array_func_t)cups_dnssd_compare_devices, NULL, NULL, 0, NULL, (cups_afree_func_t)cups_dnssd_free_device);
+  data.devices   = cupsArrayNew((cups_array_cb_t)cups_dnssd_compare_devices, NULL, NULL, 0, NULL, (cups_afree_cb_t)cups_dnssd_free_device);
 #endif /* HAVE_DNSSD */
 
   if (!(mask & CUPS_PRINTER_DISCOVERED) || !(type & CUPS_PRINTER_DISCOVERED))
@@ -3616,10 +3615,10 @@ cups_enum_dests(
 
     remaining -= cups_elapsed(&curtime);
 
-    for (device = (_cups_dnssd_device_t *)cupsArrayFirst(data.devices),
+    for (device = (_cups_dnssd_device_t *)cupsArrayGetFirst(data.devices),
              count = 0, completed = 0;
          device;
-         device = (_cups_dnssd_device_t *)cupsArrayNext(data.devices))
+         device = (_cups_dnssd_device_t *)cupsArrayGetNext(data.devices))
     {
       if (device->ref)
         count ++;
@@ -3721,14 +3720,14 @@ cups_enum_dests(
     }
 
 #  ifdef HAVE_AVAHI
-    DEBUG_printf(("1cups_enum_dests: remaining=%d, browsers=%d, completed=%d, count=%d, devices count=%d", remaining, data.browsers, completed, count, cupsArrayCount(data.devices)));
+    DEBUG_printf(("1cups_enum_dests: remaining=%d, browsers=%d, completed=%d, count=%d, devices count=%d", remaining, data.browsers, completed, count, cupsArrayGetCount(data.devices)));
 
-    if (data.browsers == 0 && completed == cupsArrayCount(data.devices))
+    if (data.browsers == 0 && completed == cupsArrayGetCount(data.devices))
       break;
 #  else
-    DEBUG_printf(("1cups_enum_dests: remaining=%d, completed=%d, count=%d, devices count=%d", remaining, completed, count, cupsArrayCount(data.devices)));
+    DEBUG_printf(("1cups_enum_dests: remaining=%d, completed=%u, count=%u, devices count=%u", remaining, (unsigned)completed, (unsigned)count, (unsigned)cupsArrayGetCount(data.devices)));
 
-    if (completed == cupsArrayCount(data.devices))
+    if (completed == cupsArrayGetCount(data.devices))
       break;
 #  endif /* HAVE_AVAHI */
   }
@@ -4138,7 +4137,7 @@ cups_make_string(
     char            *buffer,		/* I - Buffer */
     size_t          bufsize)		/* I - Size of buffer */
 {
-  int		i;			/* Looping var */
+  size_t	i;			/* Looping var */
   char		*ptr,			/* Pointer into buffer */
 		*end,			/* Pointer to end of buffer */
 		*valptr;		/* Pointer into string attribute */

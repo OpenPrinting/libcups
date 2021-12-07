@@ -1,6 +1,7 @@
 /*
  * IPP data file parsing functions.
  *
+ * Copyright © 2021 by OpenPrinting.
  * Copyright © 2007-2019 by Apple Inc.
  * Copyright © 1997-2007 by Easy Software Products.
  *
@@ -22,7 +23,7 @@
  */
 
 static ipp_t	*parse_collection(_ipp_file_t *f, _ipp_vars_t *v, void *user_data);
-static int	parse_value(_ipp_file_t *f, _ipp_vars_t *v, void *user_data, ipp_t *ipp, ipp_attribute_t **attr, int element);
+static int	parse_value(_ipp_file_t *f, _ipp_vars_t *v, void *user_data, ipp_t *ipp, ipp_attribute_t **attr, size_t element);
 static void	report_error(_ipp_file_t *f, _ipp_vars_t *v, void *user_data, const char *message, ...) _CUPS_FORMAT(4, 5);
 
 
@@ -547,7 +548,7 @@ parse_value(_ipp_file_t      *f,	/* I  - IPP data file */
             void             *user_data,/* I  - User data pointer */
             ipp_t            *ipp,	/* I  - IPP message */
             ipp_attribute_t  **attr,	/* IO - IPP attribute */
-            int              element)	/* I  - Element number */
+            size_t           element)	/* I  - Element number */
 {
   char		value[2049],		/* Value string */
 		*valueptr,		/* Pointer into value string */

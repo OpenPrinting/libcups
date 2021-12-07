@@ -1,6 +1,7 @@
 /*
  * Private localization support for CUPS.
  *
+ * Copyright © 2021 by OpenPrinting.
  * Copyright © 2007-2018 by Apple Inc.
  * Copyright © 1997-2006 by Easy Software Products.
  *
@@ -10,18 +11,12 @@
 
 #ifndef _CUPS_LANGUAGE_PRIVATE_H_
 #  define _CUPS_LANGUAGE_PRIVATE_H_
-
-/*
- * Include necessary headers...
- */
-
 #  include "config.h"
 #  include <stdio.h>
 #  include <cups/transcode.h>
 #  ifdef __APPLE__
 #    include <CoreFoundation/CoreFoundation.h>
 #  endif /* __APPLE__ */
-
 #  ifdef __cplusplus
 extern "C" {
 #  endif /* __cplusplus */
@@ -81,5 +76,4 @@ extern void		_cupsSetLocale(char *argv[]) _CUPS_PRIVATE;
 #  ifdef __cplusplus
 }
 #  endif /* __cplusplus */
-
 #endif /* !_CUPS_LANGUAGE_PRIVATE_H_ */

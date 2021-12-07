@@ -20,8 +20,7 @@
  */
 
 static int	cups_compare_options(cups_option_t *a, cups_option_t *b);
-static int	cups_find_option(const char *name, int num_options,
-	                         cups_option_t *option, int prev, int *rdiff);
+static size_t	cups_find_option(const char *name, size_t num_options, cups_option_t *option, int *rdiff);
 
 
 /*
@@ -33,11 +32,11 @@ static int	cups_find_option(const char *name, int num_options,
  * @since CUPS 2.2.4/macOS 10.13@
  */
 
-int					/* O  - Number of options */
+size_t					/* O  - Number of options */
 cupsAddIntegerOption(
     const char    *name,		/* I  - Name of option */
     int           value,		/* I  - Value of option */
-    int           num_options,		/* I  - Number of options */
+    size_t        num_options,		/* I  - Number of options */
     cups_option_t **options)		/* IO - Pointer to options */
 {
   char	strvalue[32];			/* String value */
@@ -56,22 +55,22 @@ cupsAddIntegerOption(
  * "num_options" parameter.
  */
 
-int					/* O  - Number of options */
+size_t					/* O  - Number of options */
 cupsAddOption(const char    *name,	/* I  - Name of option */
               const char    *value,	/* I  - Value of option */
-	      int           num_options,/* I  - Number of options */
+	      size_t        num_options,/* I  - Number of options */
               cups_option_t **options)	/* IO - Pointer to options */
 {
   cups_option_t	*temp;			/* Pointer to new option */
-  int		insert,			/* Insertion point */
-		diff;			/* Result of search */
+  size_t	insert;			/* Insertion point */
+  int		diff;			/* Result of search */
 
 
-  DEBUG_printf(("2cupsAddOption(name=\"%s\", value=\"%s\", num_options=%d, options=%p)", name, value, num_options, (void *)options));
+  DEBUG_printf(("2cupsAddOption(name=\"%s\", value=\"%s\", num_options=%u, options=%p)", name, value, (unsigned)num_options, (void *)options));
 
-  if (!name || !name[0] || !value || !options || num_options < 0)
+  if (!name || !name[0] || !value || !options)
   {
-    DEBUG_printf(("3cupsAddOption: Returning %d", num_options));
+    DEBUG_printf(("3cupsAddOption: Returning %u", (unsigned)num_options));
     return (num_options);
   }
 
@@ -91,8 +90,7 @@ cupsAddOption(const char    *name,	/* I  - Name of option */
   }
   else
   {
-    insert = cups_find_option(name, num_options, *options, num_options - 1,
-                              &diff);
+    insert = cups_find_option(name, num_options, *options, &diff);
 
     if (diff > 0)
       insert ++;
@@ -104,15 +102,9 @@ cupsAddOption(const char    *name,	/* I  - Name of option */
     * No matching option name...
     */
 
-    DEBUG_printf(("4cupsAddOption: New option inserted at index %d...",
-                  insert));
+    DEBUG_printf(("4cupsAddOption: New option inserted at index %u...", (unsigned)insert));
 
-    if (num_options == 0)
-      temp = (cups_option_t *)malloc(sizeof(cups_option_t));
-    else
-      temp = (cups_option_t *)realloc(*options, sizeof(cups_option_t) * (size_t)(num_options + 1));
-
-    if (!temp)
+    if ((temp = (cups_option_t *)realloc(num_options ? *options : NULL, sizeof(cups_option_t) * (num_options + 1))) == NULL)
     {
       DEBUG_puts("3cupsAddOption: Unable to expand option array, returning 0");
       return (0);
@@ -122,9 +114,8 @@ cupsAddOption(const char    *name,	/* I  - Name of option */
 
     if (insert < num_options)
     {
-      DEBUG_printf(("4cupsAddOption: Shifting %d options...",
-                    (int)(num_options - insert)));
-      memmove(temp + insert + 1, temp + insert, (size_t)(num_options - insert) * sizeof(cups_option_t));
+      DEBUG_printf(("4cupsAddOption: Shifting %u options...", (unsigned)(num_options - insert)));
+      memmove(temp + insert + 1, temp + insert, (num_options - insert) * sizeof(cups_option_t));
     }
 
     temp        += insert;
@@ -137,8 +128,7 @@ cupsAddOption(const char    *name,	/* I  - Name of option */
     * Match found; free the old value...
     */
 
-    DEBUG_printf(("4cupsAddOption: Option already exists at index %d...",
-                  insert));
+    DEBUG_printf(("4cupsAddOption: Option already exists at index %u...", (unsigned)insert));
 
     temp = *options + insert;
     _cupsStrFree(temp->value);
@@ -146,7 +136,7 @@ cupsAddOption(const char    *name,	/* I  - Name of option */
 
   temp->value = _cupsStrAlloc(value);
 
-  DEBUG_printf(("3cupsAddOption: Returning %d", num_options));
+  DEBUG_printf(("3cupsAddOption: Returning %u", (unsigned)num_options));
 
   return (num_options);
 }
@@ -158,15 +148,15 @@ cupsAddOption(const char    *name,	/* I  - Name of option */
 
 void
 cupsFreeOptions(
-    int           num_options,		/* I - Number of options */
+    size_t        num_options,		/* I - Number of options */
     cups_option_t *options)		/* I - Pointer to options */
 {
-  int	i;				/* Looping var */
+  size_t	i;			/* Looping var */
 
 
-  DEBUG_printf(("cupsFreeOptions(num_options=%d, options=%p)", num_options, (void *)options));
+  DEBUG_printf(("cupsFreeOptions(num_options=%u, options=%p)", (unsigned)num_options, (void *)options));
 
-  if (num_options <= 0 || !options)
+  if (num_options == 0 || !options)
     return;
 
   for (i = 0; i < num_options; i ++)
@@ -188,10 +178,10 @@ cupsFreeOptions(
  * @since CUPS 2.2.4/macOS 10.13@
  */
 
-int					/* O - Option value or @code INT_MIN@ */
+int					/* O - Option value or `INT_MIN` */
 cupsGetIntegerOption(
     const char    *name,		/* I - Name of option */
-    int           num_options,		/* I - Number of options */
+    size_t        num_options,		/* I - Number of options */
     cups_option_t *options)		/* I - Options */
 {
   const char	*value = cupsGetOption(name, num_options, options);
@@ -217,22 +207,22 @@ cupsGetIntegerOption(
 
 const char *				/* O - Option value or @code NULL@ */
 cupsGetOption(const char    *name,	/* I - Name of option */
-              int           num_options,/* I - Number of options */
+              size_t        num_options,/* I - Number of options */
               cups_option_t *options)	/* I - Options */
 {
-  int	diff,				/* Result of comparison */
-	match;				/* Matching index */
+  int		diff;			/* Result of comparison */
+  size_t	match;			/* Matching index */
 
 
-  DEBUG_printf(("2cupsGetOption(name=\"%s\", num_options=%d, options=%p)", name, num_options, (void *)options));
+  DEBUG_printf(("2cupsGetOption(name=\"%s\", num_options=%u, options=%p)", name, (unsigned)num_options, (void *)options));
 
-  if (!name || num_options <= 0 || !options)
+  if (!name || num_options == 0 || !options)
   {
     DEBUG_puts("3cupsGetOption: Returning NULL");
     return (NULL);
   }
 
-  match = cups_find_option(name, num_options, options, -1, &diff);
+  match = cups_find_option(name, num_options, options, &diff);
 
   if (!diff)
   {
@@ -255,10 +245,10 @@ cupsGetOption(const char    *name,	/* I - Name of option */
  * collection attributes.
  */
 
-int					/* O - Number of options found */
+size_t					/* O - Number of options found */
 cupsParseOptions(
     const char    *arg,			/* I - Argument to parse */
-    int           num_options,		/* I - Number of options */
+    size_t        num_options,		/* I - Number of options */
     cups_option_t **options)		/* O - Options found */
 {
   char	*copyarg,			/* Copy of input string */
@@ -269,7 +259,7 @@ cupsParseOptions(
 	quote;				/* Quote character */
 
 
-  DEBUG_printf(("cupsParseOptions(arg=\"%s\", num_options=%d, options=%p)", arg, num_options, (void *)options));
+  DEBUG_printf(("cupsParseOptions(arg=\"%s\", num_options=%u, options=%p)", arg, (unsigned)num_options, (void *)options));
 
  /*
   * Range check input...
@@ -277,11 +267,11 @@ cupsParseOptions(
 
   if (!arg)
   {
-    DEBUG_printf(("1cupsParseOptions: Returning %d", num_options));
+    DEBUG_printf(("1cupsParseOptions: Returning %u", (unsigned)num_options));
     return (num_options);
   }
 
-  if (!options || num_options < 0)
+  if (!options)
   {
     DEBUG_puts("1cupsParseOptions: Returning 0");
     return (0);
@@ -294,7 +284,7 @@ cupsParseOptions(
   if ((copyarg = strdup(arg)) == NULL)
   {
     DEBUG_puts("1cupsParseOptions: Unable to copy arg string");
-    DEBUG_printf(("1cupsParseOptions: Returning %d", num_options));
+    DEBUG_printf(("1cupsParseOptions: Returning %u", (unsigned)num_options));
     return (num_options);
   }
 
@@ -362,8 +352,7 @@ cupsParseOptions(
       */
 
       if (!_cups_strncasecmp(name, "no", 2))
-        num_options = cupsAddOption(name + 2, "false", num_options,
-	                            options);
+        num_options = cupsAddOption(name + 2, "false", num_options, options);
       else
         num_options = cupsAddOption(name, "true", num_options, options);
 
@@ -467,7 +456,7 @@ cupsParseOptions(
 
   free(copyarg);
 
-  DEBUG_printf(("1cupsParseOptions: Returning %d", num_options));
+  DEBUG_printf(("1cupsParseOptions: Returning %u", (unsigned)num_options));
 
   return (num_options);
 }
@@ -479,25 +468,25 @@ cupsParseOptions(
  * @since CUPS 1.2/macOS 10.5@
  */
 
-int					/* O  - New number of options */
+size_t					/* O  - New number of options */
 cupsRemoveOption(
     const char    *name,		/* I  - Option name */
-    int           num_options,		/* I  - Current number of options */
+    size_t        num_options,		/* I  - Current number of options */
     cups_option_t **options)		/* IO - Options */
 {
-  int		i;			/* Looping var */
+  size_t	i;			/* Looping var */
   cups_option_t	*option;		/* Current option */
 
 
-  DEBUG_printf(("2cupsRemoveOption(name=\"%s\", num_options=%d, options=%p)", name, num_options, (void *)options));
+  DEBUG_printf(("2cupsRemoveOption(name=\"%s\", num_options=%u, options=%p)", name, (unsigned)num_options, (void *)options));
 
  /*
   * Range check input...
   */
 
-  if (!name || num_options < 1 || !options)
+  if (!name || num_options == 0 || !options)
   {
-    DEBUG_printf(("3cupsRemoveOption: Returning %d", num_options));
+    DEBUG_printf(("3cupsRemoveOption: Returning %u", (unsigned)num_options));
     return (num_options);
   }
 
@@ -506,8 +495,10 @@ cupsRemoveOption(
   */
 
   for (i = num_options, option = *options; i > 0; i --, option ++)
+  {
     if (!_cups_strcasecmp(name, option->name))
       break;
+  }
 
   if (i)
   {
@@ -524,97 +515,15 @@ cupsRemoveOption(
     _cupsStrFree(option->value);
 
     if (i > 0)
-      memmove(option, option + 1, (size_t)i * sizeof(cups_option_t));
+      memmove(option, option + 1, i * sizeof(cups_option_t));
   }
 
  /*
   * Return the new number of options...
   */
 
-  DEBUG_printf(("3cupsRemoveOption: Returning %d", num_options));
+  DEBUG_printf(("3cupsRemoveOption: Returning %u", (unsigned)num_options));
   return (num_options);
-}
-
-
-/*
- * '_cupsGet1284Values()' - Get 1284 device ID keys and values.
- *
- * The returned dictionary is a CUPS option array that can be queried with
- * cupsGetOption and freed with cupsFreeOptions.
- */
-
-int					/* O - Number of key/value pairs */
-_cupsGet1284Values(
-    const char *device_id,		/* I - IEEE-1284 device ID string */
-    cups_option_t **values)		/* O - Array of key/value pairs */
-{
-  int		num_values;		/* Number of values */
-  char		key[256],		/* Key string */
-		value[256],		/* Value string */
-		*ptr;			/* Pointer into key/value */
-
-
- /*
-  * Range check input...
-  */
-
-  if (values)
-    *values = NULL;
-
-  if (!device_id || !values)
-    return (0);
-
- /*
-  * Parse the 1284 device ID value into keys and values.  The format is
-  * repeating sequences of:
-  *
-  *   [whitespace]key:value[whitespace];
-  */
-
-  num_values = 0;
-  while (*device_id)
-  {
-    while (_cups_isspace(*device_id))
-      device_id ++;
-
-    if (!*device_id)
-      break;
-
-    for (ptr = key; *device_id && *device_id != ':'; device_id ++)
-      if (ptr < (key + sizeof(key) - 1))
-        *ptr++ = *device_id;
-
-    if (!*device_id)
-      break;
-
-    while (ptr > key && _cups_isspace(ptr[-1]))
-      ptr --;
-
-    *ptr = '\0';
-    device_id ++;
-
-    while (_cups_isspace(*device_id))
-      device_id ++;
-
-    if (!*device_id)
-      break;
-
-    for (ptr = value; *device_id && *device_id != ';'; device_id ++)
-      if (ptr < (value + sizeof(value) - 1))
-        *ptr++ = *device_id;
-
-    while (ptr > value && _cups_isspace(ptr[-1]))
-      ptr --;
-
-    *ptr = '\0';
-    num_values = cupsAddOption(key, value, num_values, values);
-	  
-    if (!*device_id)
-      break;
-    device_id ++;
-  }
-
-  return (num_values);
 }
 
 
@@ -634,72 +543,35 @@ cups_compare_options(cups_option_t *a,	/* I - First option */
  * 'cups_find_option()' - Find an option using a binary search.
  */
 
-static int				/* O - Index of match */
+static size_t				/* O - Index of match */
 cups_find_option(
     const char    *name,		/* I - Option name */
-    int           num_options,		/* I - Number of options */
+    size_t        num_options,		/* I - Number of options */
     cups_option_t *options,		/* I - Options */
-    int           prev,			/* I - Previous index */
     int           *rdiff)		/* O - Difference of match */
 {
-  int		left,			/* Low mark for binary search */
+  size_t	left,			/* Low mark for binary search */
 		right,			/* High mark for binary search */
-		current,		/* Current index */
-		diff;			/* Result of comparison */
+		current;		/* Current index */
+  int		diff;			/* Result of comparison */
   cups_option_t	key;			/* Search key */
 
 
-  DEBUG_printf(("7cups_find_option(name=\"%s\", num_options=%d, options=%p, prev=%d, rdiff=%p)", name, num_options, (void *)options, prev, (void *)rdiff));
+  DEBUG_printf(("7cups_find_option(name=\"%s\", num_options=%u, options=%p, rdiff=%p)", name, (unsigned)num_options, (void *)options, (void *)rdiff));
 
 #ifdef DEBUG
   for (left = 0; left < num_options; left ++)
-    DEBUG_printf(("9cups_find_option: options[%d].name=\"%s\", .value=\"%s\"",
-                  left, options[left].name, options[left].value));
+    DEBUG_printf(("9cups_find_option: options[%u].name=\"%s\", .value=\"%s\"", (unsigned)left, options[left].name, options[left].value));
 #endif /* DEBUG */
 
   key.name = (char *)name;
 
-  if (prev >= 0)
-  {
-   /*
-    * Start search on either side of previous...
-    */
+ /*
+  * Start search in the middle...
+  */
 
-    if ((diff = cups_compare_options(&key, options + prev)) == 0 ||
-        (diff < 0 && prev == 0) ||
-	(diff > 0 && prev == (num_options - 1)))
-    {
-      *rdiff = diff;
-      return (prev);
-    }
-    else if (diff < 0)
-    {
-     /*
-      * Start with previous on right side...
-      */
-
-      left  = 0;
-      right = prev;
-    }
-    else
-    {
-     /*
-      * Start wih previous on left side...
-      */
-
-      left  = prev;
-      right = num_options - 1;
-    }
-  }
-  else
-  {
-   /*
-    * Start search in the middle...
-    */
-
-    left  = 0;
-    right = num_options - 1;
-  }
+  left  = 0;
+  right = num_options - 1;
 
   do
   {

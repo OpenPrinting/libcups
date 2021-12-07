@@ -1,6 +1,7 @@
 /*
  * Internal debugging macros for CUPS.
  *
+ * Copyright © 2021 by OpenPrinting.
  * Copyright © 2007-2018 by Apple Inc.
  * Copyright © 1997-2005 by Easy Software Products.
  *
@@ -10,24 +11,13 @@
 
 #ifndef _CUPS_DEBUG_INTERNAL_H_
 #  define _CUPS_DEBUG_INTERNAL_H_
-
-
-/*
- * Include necessary headers...
- */
-
 #  include "debug-private.h"
-
-
-/*
- * C++ magic...
- */
-
 #  ifdef __cplusplus
 extern "C" {
 #  endif /* __cplusplus */
 
 
+// TODO: Change DEBUG_printf to not require the extra parens now that we don't need to support C89...
 /*
  * The debug macros are used if you compile with DEBUG defined.
  *
@@ -77,8 +67,8 @@ extern void	_cups_debug_printf(const char *format, ...) _CUPS_FORMAT(1,2) _CUPS_
 extern void	_cups_debug_puts(const char *s) _CUPS_INTERNAL;
 #  endif /* DEBUG */
 
+
 #  ifdef __cplusplus
 }
 #  endif /* __cplusplus */
-
 #endif /* !_CUPS_DEBUG_INTERNAL_H_ */

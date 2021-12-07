@@ -1,6 +1,7 @@
 /*
  * Generic HP PCL printer command for ippeveprinter/CUPS.
  *
+ * Copyright © 2021 by OpenPrinting.
  * Copyright © 2019 by Apple Inc.
  *
  * Licensed under Apache License v2.0.  See the file "LICENSE" for more
@@ -32,10 +33,10 @@ static unsigned char	pcl_white,	/* White color */
  * Local functions...
  */
 
-static void	pcl_end_page(cups_page_header2_t *header, unsigned page);
-static void	pcl_start_page(cups_page_header2_t *header, unsigned page);
+static void	pcl_end_page(cups_page_header_t *header, unsigned page);
+static void	pcl_start_page(cups_page_header_t *header, unsigned page);
 static int	pcl_to_pcl(const char *filename);
-static void	pcl_write_line(cups_page_header2_t *header, unsigned y, const unsigned char *line);
+static void	pcl_write_line(cups_page_header_t *header, unsigned y, const unsigned char *line);
 static int	raster_to_pcl(const char *filename);
 
 
@@ -86,7 +87,7 @@ main(int  argc,				/* I - Number of command-line arguments */
 
 static void
 pcl_end_page(
-    cups_page_header2_t *header,	/* I - Page header */
+    cups_page_header_t *header,	/* I - Page header */
     unsigned            page)		/* I - Current page */
 {
  /*
@@ -117,7 +118,7 @@ pcl_end_page(
 
 static void
 pcl_start_page(
-    cups_page_header2_t *header,	/* I - Page header */
+    cups_page_header_t *header,	/* I - Page header */
     unsigned            page)		/* I - Current page */
 {
  /*
@@ -301,7 +302,7 @@ pcl_to_pcl(const char *filename)	/* I - File to print or NULL for stdin */
 
 static void
 pcl_write_line(
-    cups_page_header2_t *header,	/* I - Raster information */
+    cups_page_header_t *header,	/* I - Raster information */
     unsigned            y,		/* I - Line number */
     const unsigned char *line)		/* I - Pixels on line */
 {
@@ -456,7 +457,7 @@ raster_to_pcl(const char *filename)	/* I - File to print (NULL for stdin) */
 {
   int			fd;		/* Input file */
   cups_raster_t		*ras;		/* Raster stream */
-  cups_page_header2_t	header;		/* Page header */
+  cups_page_header_t	header;		/* Page header */
   unsigned		page = 0,	/* Current page */
 			y;		/* Current line */
   unsigned char		*line;		/* Line buffer */
@@ -492,7 +493,7 @@ raster_to_pcl(const char *filename)	/* I - File to print (NULL for stdin) */
 
   fputs("\033E", stdout);
 
-  while (cupsRasterReadHeader2(ras, &header))
+  while (cupsRasterReadHeader(ras, &header))
   {
     page ++;
 

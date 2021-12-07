@@ -1,6 +1,7 @@
 /*
  * Private debugging APIs for CUPS.
  *
+ * Copyright © 2021 by OpenPrinting.
  * Copyright © 2007-2018 by Apple Inc.
  * Copyright © 1997-2005 by Easy Software Products.
  *
@@ -10,19 +11,7 @@
 
 #ifndef _CUPS_DEBUG_PRIVATE_H_
 #  define _CUPS_DEBUG_PRIVATE_H_
-
-
-/*
- * Include necessary headers...
- */
-
 #  include <cups/versioning.h>
-
-
-/*
- * C++ magic...
- */
-
 #  ifdef __cplusplus
 extern "C" {
 #  endif /* __cplusplus */
@@ -58,8 +47,8 @@ extern int	_cups_gettimeofday(struct timeval *tv, void *tz) _CUPS_PRIVATE;
 #    define gettimeofday(a,b) _cups_gettimeofday(a, b)
 #  endif /* _WIN32 */
 
+
 #  ifdef __cplusplus
 }
 #  endif /* __cplusplus */
-
 #endif /* !_CUPS_DEBUG_PRIVATE_H_ */

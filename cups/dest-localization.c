@@ -78,7 +78,7 @@ cupsLocalizeDestMedia(
 
   DEBUG_printf(("1cupsLocalizeDestMedia: size->media=\"%s\"", size->media));
 
-  for (mdb = (_cups_media_db_t *)cupsArrayFirst(db); mdb; mdb = (_cups_media_db_t *)cupsArrayNext(db))
+  for (mdb = (_cups_media_db_t *)cupsArrayGetFirst(db); mdb; mdb = (_cups_media_db_t *)cupsArrayGetNext(db))
   {
     if (mdb->key && !strcmp(mdb->key, size->media))
       break;
@@ -88,7 +88,7 @@ cupsLocalizeDestMedia(
 
   if (!mdb)
   {
-    for (mdb = (_cups_media_db_t *)cupsArrayFirst(db); mdb; mdb = (_cups_media_db_t *)cupsArrayNext(db))
+    for (mdb = (_cups_media_db_t *)cupsArrayGetFirst(db); mdb; mdb = (_cups_media_db_t *)cupsArrayGetNext(db))
     {
       if (mdb->width == size->width && mdb->length == size->length && mdb->bottom == size->bottom && mdb->left == size->left && mdb->right == size->right && mdb->top == size->top)
 	break;
@@ -431,8 +431,7 @@ cups_create_localizations(
     dinfo->localizations = _cupsMessageLoad(tempfile, _CUPS_MESSAGE_STRINGS);
   }
 
-  DEBUG_printf(("4cups_create_localizations: %d messages loaded.",
-                cupsArrayCount(dinfo->localizations)));
+  DEBUG_printf(("4cups_create_localizations: %u messages loaded.", (unsigned)cupsArrayGetCount(dinfo->localizations)));
 
  /*
   * Cleanup...

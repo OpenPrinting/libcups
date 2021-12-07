@@ -9,6 +9,19 @@ minor changes to compile with the new library.  This file describes the changes
 and how to migrate to the new library.
 
 
+General Changes
+---------------
+
+The following general changes have been made to the CUPS API:
+
+- Boolean values now use the C99 `bool` type.
+- Counts, indices, and lengths now use the `size_t` type - this affects the
+  HTTP, IPP, and option APIs in particular.
+- Accessor functions have been renamed (as necessary) to use the "get" and "set"
+  verbs, for example `cupsServer` is now `cupsGetServer` and `httpEncryption` is
+  now `httpSetEncryption`.
+
+
 Removed Functions
 -----------------
 
@@ -34,32 +47,42 @@ The following CUPS 2.x API functions have been removed from the CUPS library:
   `cupsCreateJob`, `cupsCloseJob`, `cupsFinishDocument`, `cupsGetDefault`, `cupsGetDefault2`,
   `cupsPrintFile`, `cupsPrintFile2`, `cupsPrintFiles`, `cupsPrintFiles2`,
   `cupsSendDocument`
+- Raster functions: `cupsRasterReadHeader2` and `cupsRasterWriteHeader2`
 
 
 Renamed Functions
 -----------------
 
-| Old Name             | New Name            |
-+----------------------+---------------------+
-| `cupsEncryption`     | `cupsGetEncryption` |
-| `cupsTempFile2`      | `cupsTempFile`      |
-| `cupsGetDests2`      | `cupsGetDests`      |
-| `cupsServer`         | `cupsGetServer`     |
-| `cupsGetPassword2`   | `cupsGetPassword`   |
-| `cupsUser`           | `cupsGetUser`       |
-| `cupsUserAgent`      | `cupsGetUserAgent`  |
-| `cupsSetPasswordCB2` | `cupsSetPasswordCB` |
-| `httpConnect2`       | `httpConnect`       |
-| `httpReconnect2`     | `httpReconnect`     |
-| `httpGetLength2`     | `httpGetLength`     |
-| `httpDecode64_2`     | `httpDecode64`      |
-| `httpEncode64_2`     | `httpEncode64`      |
-| `httpRead2`          | `httpRead`          |
-| `httpWrite2`         | `httpWrite`         |
-| `httpGetDateString2` | `httpGetDateString` |
-| `httpBlocking`       | `httpSetBlocking`   |
-| `http` | `http` |
-| `http` | `http` |
+| Old Name                 | New Name                |
++--------------------------+-------------------------+
+| `cupsEncryption`         | `cupsGetEncryption`     |
+| `cupsGetDests2`          | `cupsGetDests`          |
+| `cupsGetPassword2`       | `cupsGetPassword`       |
+| `cupsServer`             | `cupsGetServer`         |
+| `cupsSetPasswordCB2`     | `cupsSetPasswordCB`     |
+| `cupsTempFile2`          | `cupsTempFile`          |
+| `cupsUser`               | `cupsGetUser`           |
+| `cupsUserAgent`          | `cupsGetUserAgent`      |
+| `httpBlocking`           | `httpSetBlocking`       |
+| `httpConnect2`           | `httpConnect`           |
+| `httpDecode64_2`         | `httpDecode64`          |
+| `httpEncode64_2`         | `httpEncode64`          |
+| `httpGetDateString2`     | `httpGetDateString`     |
+| `httpGetLength2`         | `httpGetLength`         |
+| `httpRead2`              | `httpRead`              |
+| `httpReconnect2`         | `httpReconnect`         |
+| `httpWrite2`             | `httpWrite`             |
+| `cupsRasterReadHeader2`  | `cupsRasterReadHeader`  |
+| `cupsRasterWriteHeader2` | `cupsRasterWriteHeader` |
+
+
+Renamed Types
+-------------
+
+| Old Name              | New Name             |
++-----------------------+----------------------+
+| `cups_password_cb2_t` | `cups_password_cb_t` |
+| `cups_page_header2_t` | `cups_page_header_t` |
 
 
 API Changes

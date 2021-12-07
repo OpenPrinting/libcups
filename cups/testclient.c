@@ -282,8 +282,8 @@ make_raster_file(ipp_t      *response,  /* I - Printer attributes */
                  size_t     tempsize,   /* I - Size of temp file buffer */
                  const char **format)   /* O - Print format */
 {
-  int                   i,              /* Looping var */
-                        count;          /* Number of values */
+  size_t		i,		/* Looping var */
+			count;		/* Number of values */
   ipp_attribute_t       *attr;          /* Printer attribute */
   const char            *type = NULL;   /* Raster type (colorspace + bits) */
   pwg_media_t           *media = NULL;  /* Media size */
@@ -292,7 +292,7 @@ make_raster_file(ipp_t      *response,  /* I - Printer attributes */
   int                   fd;             /* Temporary file */
   cups_mode_t           mode;           /* Raster mode */
   cups_raster_t         *ras;           /* Raster stream */
-  cups_page_header2_t   header;         /* Page header */
+  cups_page_header_t	header;		/* Page header */
   unsigned char         *line,          /* Line of raster data */
                         *lineptr;       /* Pointer into line */
   unsigned              y,              /* Current position on page */
@@ -529,7 +529,7 @@ make_raster_file(ipp_t      *response,  /* I - Printer attributes */
   * Write a single page consisting of the template dots repeated over the page.
   */
 
-  cupsRasterWriteHeader2(ras, &header);
+  cupsRasterWriteHeader(ras, &header);
 
   memset(line, 0xff, header.cupsBytesPerLine);
 

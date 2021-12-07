@@ -1,10 +1,12 @@
 /*
  * Raster benchmark program for CUPS.
  *
- * Copyright 2007-2016 by Apple Inc.
- * Copyright 1997-2006 by Easy Software Products.
+ * Copyright © 2021 by OpenPrinting.
+ * Copyright © 2007-2016 by Apple Inc.
+ * Copyright © 1997-2006 by Easy Software Products.
  *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more information.
+ * Licensed under Apache License v2.0.  See the file "LICENSE" for more
+ * information.
  */
 
 /*
@@ -169,7 +171,7 @@ read_test(int fd)			/* I - File descriptor to read from */
 {
   unsigned		y;		/* Looping var */
   cups_raster_t		*r;		/* Raster stream */
-  cups_page_header2_t	header;		/* Page header */
+  cups_page_header_t	header;		/* Page header */
   unsigned char		buffer[8 * TEST_WIDTH];
 					/* Read buffer */
 
@@ -184,7 +186,7 @@ read_test(int fd)			/* I - File descriptor to read from */
     return;
   }
 
-  while (cupsRasterReadHeader2(r, &header))
+  while (cupsRasterReadHeader(r, &header))
   {
     for (y = 0; y < header.cupsHeight; y ++)
       cupsRasterReadPixels(r, buffer, header.cupsBytesPerLine);
@@ -252,7 +254,7 @@ write_test(int         fd,		/* I - File descriptor to write to */
   unsigned		page, x, y;	/* Looping vars */
   unsigned		count;		/* Number of bytes to set */
   cups_raster_t		*r;		/* Raster stream */
-  cups_page_header2_t	header;		/* Page header */
+  cups_page_header_t	header;		/* Page header */
   unsigned char		data[32][8 * TEST_WIDTH];
 					/* Raster data to write */
 
@@ -326,7 +328,7 @@ write_test(int         fd,		/* I - File descriptor to write to */
       header.cupsBitsPerPixel = (page & 1) ? 32 : 8;
     }
 
-    cupsRasterWriteHeader2(r, &header);
+    cupsRasterWriteHeader(r, &header);
 
     for (y = 0; y < TEST_HEIGHT; y ++)
       cupsRasterWritePixels(r, data[y & 31], header.cupsBytesPerLine);

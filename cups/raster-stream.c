@@ -196,13 +196,13 @@ _cupsRasterDelete(cups_raster_t *r)	/* I - Stream to free */
 
 int					/* O - 1 on success, 0 on failure */
 _cupsRasterInitPWGHeader(
-    cups_page_header2_t *h,		/* I - Page header */
-    pwg_media_t         *media,		/* I - PWG media information */
-    const char          *type,		/* I - PWG raster type string */
-    int                 xdpi,		/* I - Cross-feed direction (horizontal) resolution */
-    int                 ydpi,		/* I - Feed direction (vertical) resolution */
-    const char          *sides,		/* I - IPP "sides" option value */
-    const char          *sheet_back)	/* I - Transform for back side or @code NULL@ for none */
+    cups_page_header_t *h,		/* I - Page header */
+    pwg_media_t        *media,		/* I - PWG media information */
+    const char         *type,		/* I - PWG raster type string */
+    int                xdpi,		/* I - Cross-feed direction (horizontal) resolution */
+    int                ydpi,		/* I - Feed direction (vertical) resolution */
+    const char         *sides,		/* I - IPP "sides" option value */
+    const char         *sheet_back)	/* I - Transform for back side or @code NULL@ for none */
 {
   if (!h || !media || !type || xdpi <= 0 || ydpi <= 0)
   {
@@ -214,7 +214,7 @@ _cupsRasterInitPWGHeader(
   * Initialize the page header...
   */
 
-  memset(h, 0, sizeof(cups_page_header2_t));
+  memset(h, 0, sizeof(cups_page_header_t));
 
   strlcpy(h->cupsPageSizeName, media->pwg, sizeof(h->cupsPageSizeName));
 
@@ -602,9 +602,9 @@ _cupsRasterReadHeader(
 	*/
 
 	if (r->sync == CUPS_RASTER_SYNCv1 || r->sync == CUPS_RASTER_REVSYNCv1)
-	  len = sizeof(cups_page_header_t);
+	  len = offsetof(cups_page_header_t, cupsNumColors);
 	else
-	  len = sizeof(cups_page_header2_t);
+	  len = sizeof(cups_page_header_t);
 
 	DEBUG_printf(("4_cupsRasterReadHeader: len=%d", (int)len));
 
@@ -1043,7 +1043,7 @@ _cupsRasterWriteHeader(
     * zeroed.
     */
 
-    cups_page_header2_t	fh;		/* File page header */
+    cups_page_header_t	fh;		/* File page header */
 
     memset(&fh, 0, sizeof(fh));
     strlcpy(fh.MediaClass, "PwgRaster", sizeof(fh.MediaClass));
