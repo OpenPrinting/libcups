@@ -3720,7 +3720,7 @@ cups_enum_dests(
     }
 
 #  ifdef HAVE_AVAHI
-    DEBUG_printf(("1cups_enum_dests: remaining=%d, browsers=%d, completed=%d, count=%d, devices count=%d", remaining, data.browsers, completed, count, cupsArrayGetCount(data.devices)));
+    DEBUG_printf(("1cups_enum_dests: remaining=%d, browsers=%d, completed=%u, count=%u, devices count=%u", remaining, data.browsers, (unsigned)completed, (unsigned)count, (unsigned)cupsArrayGetCount(data.devices)));
 
     if (data.browsers == 0 && completed == cupsArrayGetCount(data.devices))
       break;

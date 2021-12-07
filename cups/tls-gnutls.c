@@ -332,7 +332,7 @@ httpCopyCredentials(
   if (!http || !http->tls || !credentials)
     return (-1);
 
-  *credentials = cupsArrayNew(NULL, NULL);
+  *credentials = cupsArrayNew(NULL, NULL, NULL, 0, NULL, NULL);
   certs        = gnutls_certificate_get_peers(http->tls, &count);
 
   DEBUG_printf(("1httpCopyCredentials: certs=%p, count=%u", certs, count));
@@ -770,7 +770,7 @@ httpLoadCredentials(
       }
 
       if (!*credentials)
-        *credentials = cupsArrayNew(NULL, NULL);
+        *credentials = cupsArrayNew(NULL, NULL, NULL, 0, NULL, NULL);
 
       if (httpAddCredential(*credentials, data, num_data))
       {
