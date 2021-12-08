@@ -218,7 +218,7 @@ static void	print_xml_trailer(ipptool_test_t *data, int success, const char *mes
 #ifndef _WIN32
 static void	sigterm_handler(int sig);
 #endif /* _WIN32 */
-static int	timeout_cb(http_t *http, void *user_data);
+static bool	timeout_cb(http_t *http, void *user_data);
 static int	token_cb(_ipp_file_t *f, _ipp_vars_t *vars, ipptool_test_t *data, const char *token);
 static void	usage(void) _CUPS_NORETURN;
 static int	with_distinct_values(cups_array_t *errors, ipp_attribute_t *attr);
@@ -4169,7 +4169,7 @@ sigterm_handler(int sig)		/* I - Signal number (unused) */
  * 'timeout_cb()' - Handle HTTP timeouts.
  */
 
-static int				/* O - 1 to continue, 0 to cancel */
+static bool				/* O - `true` to continue, `false` to cancel */
 timeout_cb(http_t *http,		/* I - Connection to server */
            void   *user_data)		/* I - User data (unused) */
 {
