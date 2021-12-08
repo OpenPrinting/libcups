@@ -150,7 +150,7 @@ httpCopyCredentials(
     return (-1);
   }
 
-  *credentials = cupsArrayNew(NULL, NULL);
+  *credentials = cupsArrayNew(NULL, NULL, NULL, 0, NULL, NULL);
   httpAddCredential(*credentials, http->tls->remoteCert->pbCertEncoded, http->tls->remoteCert->cbCertEncoded);
 
   return (0);
@@ -501,7 +501,7 @@ httpLoadCredentials(
     goto cleanup;
   }
 
-  *credentials = cupsArrayNew(NULL, NULL);
+  *credentials = cupsArrayNew(NULL, NULL, NULL, 0, NULL, NULL);
   httpAddCredential(*credentials, storedContext->pbCertEncoded, storedContext->cbCertEncoded);
 
 cleanup:
