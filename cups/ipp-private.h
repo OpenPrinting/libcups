@@ -11,7 +11,7 @@
 
 #ifndef _CUPS_IPP_PRIVATE_H_
 #  define _CUPS_IPP_PRIVATE_H_
-#  include <cups/cups.h>
+#  include "cups.h"
 #  ifdef __cplusplus
 extern "C" {
 #  endif /* __cplusplus */

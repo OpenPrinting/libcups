@@ -581,7 +581,7 @@ _cupsEncodeOption(
 /*
  * 'cupsEncodeOption()' - Encode a single option into an IPP attribute.
  *
- * @since CUPS 2.3@
+ *
  */
 
 ipp_attribute_t	*			/* O - New attribute or @code NULL@ on error */

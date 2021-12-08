@@ -86,6 +86,7 @@ OBJS	=	\
 
 HEADERS	=	\
 		array.h \
+		base.h \
 		cups.h \
 		dir.h \
 		file.h \
@@ -94,8 +95,7 @@ HEADERS	=	\
 		language.h \
 		pwg.h \
 		raster.h \
-		transcode.h \
-		versioning.h
+		transcode.h
 
 
 #

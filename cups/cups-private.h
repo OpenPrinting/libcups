@@ -18,7 +18,7 @@
 #  include "language-private.h"
 #  include "pwg-private.h"
 #  include "thread-private.h"
-#  include <cups/cups.h>
+#  include "cups.h"
 #  ifdef __APPLE__
 #    include <sys/cdefs.h>
 #    include <CoreFoundation/CoreFoundation.h>

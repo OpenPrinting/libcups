@@ -15,7 +15,7 @@
 
 #ifndef _CUPS_FILE_H_
 #  define _CUPS_FILE_H_
-#  include "versioning.h"
+#  include "base.h"
 #  include <stddef.h>
 #  include <sys/types.h>
 #  if defined(_WIN32) && !defined(__CUPS_SSIZE_T_DEFINED)

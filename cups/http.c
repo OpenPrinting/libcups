@@ -118,7 +118,7 @@ static const char * const http_fields[] =
  * 'httpAcceptConnection()' - Accept a new HTTP client connection from the
  *                            specified listening socket.
  *
- * @since CUPS 1.7@
+ *
  */
 
 http_t *				/* O - HTTP connection or @code NULL@ */
@@ -207,7 +207,7 @@ httpAcceptConnection(int fd,		/* I - Listen socket file descriptor */
  *
  * Use @code cupsArrayNew(NULL, NULL)@ to create a credentials array.
  *
- * @since CUPS 1.5@
+ *
  */
 
 int					/* O - 0 on success, -1 on error */
@@ -267,7 +267,7 @@ httpCheck(http_t *http)			/* I - HTTP connection */
 /*
  * 'httpClearCookie()' - Clear the cookie value(s).
  *
- * @since CUPS 1.1.19@
+ *
  */
 
 void
@@ -381,7 +381,7 @@ httpCompareCredentials(
 /*
  * 'httpConnect()' - Connect to a HTTP server.
  *
- * @since CUPS 1.7@
+ *
  */
 
 http_t *				/* O - New HTTP connection */
@@ -605,7 +605,7 @@ httpFlush(http_t *http)			/* I - HTTP connection */
 /*
  * 'httpFlushWrite()' - Flush data written to a HTTP connection.
  *
- * @since CUPS 1.2@
+ *
  */
 
 int					/* O - Bytes written or -1 on error */
@@ -695,7 +695,7 @@ httpGetActivity(http_t *http)		/* I - HTTP connection */
  * string to use with @link httpSetField@ for the
  * @code HTTP_FIELD_AUTHORIZATION@ value.
  *
- * @since CUPS 1.3@
+ *
  */
 
 char *					/* O - Authorization string */
@@ -711,7 +711,7 @@ httpGetAuthString(http_t *http)		/* I - HTTP connection */
 /*
  * 'httpGetBlocking()' - Get the blocking/non-blocking state of a connection.
  *
- * @since CUPS 1.2@
+ *
  */
 
 bool					/* O - `true` if blocking, `false` if non-blocking */
@@ -730,7 +730,7 @@ httpGetBlocking(http_t *http)		/* I - HTTP connection */
  * client.  The value returned can be use in subsequent requests (for clients)
  * or in the response (for servers) in order to compress the content stream.
  *
- * @since CUPS 1.7@
+ *
  */
 
 const char *				/* O - Content-Coding value or
@@ -810,7 +810,7 @@ httpGetContentEncoding(http_t *http)	/* I - HTTP connection */
 /*
  * 'httpGetCookie()' - Get any cookie data from the response.
  *
- * @since CUPS 1.1.19@
+ *
  */
 
 const char *				/* O - Cookie data or @code NULL@ */
@@ -843,7 +843,7 @@ httpGetEncryption(http_t *http)		/* I - HTTP connection */
  * Returns @code HTTP_STATUS_NONE@ if there is no Expect header, otherwise
  * returns the expected HTTP status code, typically @code HTTP_STATUS_CONTINUE@.
  *
- * @since CUPS 1.7@
+ *
  */
 
 http_status_t				/* O - Expect: status, if any */
@@ -859,7 +859,7 @@ httpGetExpect(http_t *http)		/* I - HTTP connection */
 /*
  * 'httpGetFd()' - Get the file descriptor associated with a connection.
  *
- * @since CUPS 1.2@
+ *
  */
 
 int					/* O - File descriptor or -1 if none */
@@ -906,7 +906,7 @@ httpGetKeepAlive(http_t *http)		/* I - HTTP connection */
  * This function returns the complete content length, even for content larger
  * than 2^31 - 1.
  *
- * @since CUPS 1.2@
+ *
  */
 
 off_t					/* O - Content length */
@@ -1205,7 +1205,7 @@ httpGetState(http_t *http)		/* I - HTTP connection */
 /*
  * 'httpGetStatus()' - Get the status of the last HTTP request.
  *
- * @since CUPS 1.2@
+ *
  */
 
 http_status_t				/* O - HTTP status */
@@ -1218,7 +1218,7 @@ httpGetStatus(http_t *http)		/* I - HTTP connection */
 /*
  * 'httpGetSubField()' - Get a sub-field value.
  *
- * @since CUPS 1.2@
+ *
  */
 
 char *					/* O - Value or @code NULL@ */
@@ -1470,7 +1470,7 @@ httpOptions(http_t     *http,		/* I - HTTP connection */
  *
  * For non-blocking connections the usual timeouts apply.
  *
- * @since CUPS 1.7@
+ *
  */
 
 ssize_t					/* O - Number of bytes copied */
@@ -1775,7 +1775,7 @@ httpPut(http_t     *http,		/* I - HTTP connection */
 /*
  * 'httpRead()' - Read data from a HTTP connection.
  *
- * @since CUPS 1.2@
+ *
  */
 
 ssize_t					/* O - Number of bytes read */
@@ -1970,7 +1970,7 @@ httpRead(http_t *http,			/* I - HTTP connection */
 /*
  * 'httpReadRequest()' - Read a HTTP request from a connection.
  *
- * @since CUPS 1.7@
+ *
  */
 
 http_state_t				/* O - New state of connection */
@@ -2262,7 +2262,7 @@ httpReconnect(http_t *http,		/* I - HTTP connection */
  * @link httpGet@, @link httpHead@, @link httpOptions@, @link httpPost@, or
  * @link httpPut@.
  *
- * @since CUPS 1.3@
+ *
  */
 
 void
@@ -2310,7 +2310,7 @@ httpSetAuthString(http_t     *http,	/* I - HTTP connection */
  * 'httpSetCredentials()' - Set the credentials associated with an encrypted
  *			    connection.
  *
- * @since CUPS 1.5@
+ *
  */
 
 int						/* O - Status of call (0 = success) */
@@ -2333,7 +2333,7 @@ httpSetCredentials(http_t	*http,		/* I - HTTP connection */
 /*
  * 'httpSetCookie()' - Set the cookie value(s).
  *
- * @since CUPS 1.1.19@
+ *
  */
 
 void
@@ -2359,7 +2359,7 @@ httpSetCookie(http_t     *http,		/* I - Connection */
  * Currently only @code HTTP_FIELD_ACCEPT_ENCODING@, @code HTTP_FIELD_SERVER@,
  * and @code HTTP_FIELD_USER_AGENT@ can be set.
  *
- * @since CUPS 1.7@
+ *
  */
 
 void
@@ -2385,7 +2385,7 @@ httpSetDefaultField(http_t       *http,	/* I - HTTP connection */
  * Currently only @code HTTP_STATUS_CONTINUE@ is supported for the "expect"
  * argument.
  *
- * @since CUPS 1.2@
+ *
  */
 
 void
@@ -2437,7 +2437,7 @@ httpSetKeepAlive(
 /*
  * 'httpSetLength()' - Set the content-length and content-encoding.
  *
- * @since CUPS 1.2@
+ *
  */
 
 void
@@ -2472,7 +2472,7 @@ httpSetLength(http_t *http,		/* I - HTTP connection */
  * The optional timeout callback receives both the HTTP connection and a user
  * data pointer and must return 1 to continue or 0 to error (time) out.
  *
- * @since CUPS 1.5@
+ *
  */
 
 void
@@ -2839,7 +2839,7 @@ _httpWait(http_t *http,			/* I - HTTP connection */
 /*
  * 'httpWait()' - Wait for data available on a connection.
  *
- * @since CUPS 1.1.19@
+ *
  */
 
 int					/* O - 1 if data is available, 0 otherwise */
@@ -2890,7 +2890,7 @@ httpWait(http_t *http,			/* I - HTTP connection */
 /*
  * 'httpWrite()' - Write data to a HTTP connection.
  *
- * @since CUPS 1.2@
+ *
  */
 
 ssize_t					/* O - Number of bytes written */
@@ -3076,7 +3076,7 @@ httpWrite(http_t     *http,		/* I - HTTP connection */
 /*
  * 'httpWriteResponse()' - Write a HTTP response to a client connection.
  *
- * @since CUPS 1.7@
+ *
  */
 
 int					/* O - 0 on success, -1 on error */

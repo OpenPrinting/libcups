@@ -12,7 +12,7 @@
 #ifndef _CUPS_STRING_PRIVATE_H_
 #  define _CUPS_STRING_PRIVATE_H_
 #  include "config.h"
-#  include "versioning.h"
+#  include "base.h"
 #  include <stdio.h>
 #  include <stdlib.h>
 #  include <stdarg.h>

@@ -11,17 +11,10 @@
 
 #ifndef _CUPS_HTTP_H_
 #  define _CUPS_HTTP_H_
-#  include "versioning.h"
 #  include "array.h"
 #  include <string.h>
 #  include <time.h>
-#  include <sys/types.h>
 #  ifdef _WIN32
-#    ifndef __CUPS_SSIZE_T_DEFINED
-#      define __CUPS_SSIZE_T_DEFINED
-/* Windows does not support the ssize_t type, so map it to __int64... */
-typedef __int64 ssize_t;			/* @private@ */
-#    endif /* !__CUPS_SSIZE_T_DEFINED */
 #    include <winsock2.h>
 #    include <ws2tcpip.h>
 #  else

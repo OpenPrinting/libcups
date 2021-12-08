@@ -13,7 +13,7 @@
 #  define _CUPS_LANGUAGE_PRIVATE_H_
 #  include "config.h"
 #  include <stdio.h>
-#  include <cups/transcode.h>
+#  include "transcode.h"
 #  ifdef __APPLE__
 #    include <CoreFoundation/CoreFoundation.h>
 #  endif /* __APPLE__ */

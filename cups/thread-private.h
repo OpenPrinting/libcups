@@ -10,24 +10,11 @@
 
 #ifndef _CUPS_THREAD_PRIVATE_H_
 #  define _CUPS_THREAD_PRIVATE_H_
-
-/*
- * Include necessary headers...
- */
-
 #  include "config.h"
-#  include <cups/versioning.h>
-
-
-/*
- * C++ magic...
- */
-
+#  include "base.h"
 #  ifdef __cplusplus
 extern "C" {
 #  endif /* __cplusplus */
-
-
 #  if _WIN32				/* Windows threading */
 #    include <winsock2.h>
 #    include <windows.h>
@@ -48,7 +35,6 @@ typedef DWORD	_cups_threadkey_t;
 #    define _CUPS_THREADKEY_INITIALIZER 0
 #    define _cupsThreadGetData(k) TlsGetValue(k)
 #    define _cupsThreadSetData(k,p) TlsSetValue(k,p)
-
 #  else					/* POSIX threading */
 #    include <pthread.h>
 typedef void *(*_cups_thread_func_t)(void *arg);
@@ -84,6 +70,7 @@ extern void	_cupsThreadCancel(_cups_thread_t thread) _CUPS_PRIVATE;
 extern _cups_thread_t _cupsThreadCreate(_cups_thread_func_t func, void *arg) _CUPS_PRIVATE;
 extern void     _cupsThreadDetach(_cups_thread_t thread) _CUPS_PRIVATE;
 extern void	*_cupsThreadWait(_cups_thread_t thread) _CUPS_PRIVATE;
+
 
 #  ifdef __cplusplus
 }

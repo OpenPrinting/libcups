@@ -299,7 +299,7 @@ cupsSetEncryption(http_encryption_t e)	/* I - New encryption preference */
  * program. Multi-threaded programs that override the callback need to do so in
  * each thread for the same callback to be used.
  *
- * @since CUPS 2.4@
+ *
  */
 
 void

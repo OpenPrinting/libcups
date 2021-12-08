@@ -46,7 +46,7 @@ static int	cups_local_auth(http_t *http);
  * This function should be called in response to a @code HTTP_STATUS_UNAUTHORIZED@
  * status, prior to resubmitting your request.
  *
- * @since CUPS 1.1.20@
+ *
  */
 
 int					/* O - 0 on success, -1 on error */

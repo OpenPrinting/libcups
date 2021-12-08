@@ -13,12 +13,10 @@
 #  define _CUPS_HTTP_PRIVATE_H_
 #  include "config.h"
 #  include <cups/language.h>
-#  include <stddef.h>
 #  include <stdlib.h>
 #  ifdef __sun
 #    include <sys/select.h>
 #  endif /* __sun */
-#  include <limits.h>
 #  ifdef _WIN32
 #    define _WINSOCK_DEPRECATED_NO_WARNINGS 1
 #    include <io.h>
@@ -30,9 +28,6 @@
 #    include <sys/socket.h>
 #    define CUPS_SOCAST
 #  endif /* _WIN32 */
-//#  if defined(__APPLE__) && !defined(_SOCKLEN_T)
-//typedef int socklen_t;
-//#  endif /* __APPLE__ && !_SOCKLEN_T */
 #  include "http.h"
 #  include "ipp-private.h"
 #  ifdef HAVE_GNUTLS

@@ -9,13 +9,7 @@
 
 #ifndef _CUPS_TRANSCODE_H_
 #  define _CUPS_TRANSCODE_H_
-
-/*
- * Include necessary headers...
- */
-
 #  include "language.h"
-
 #  ifdef __cplusplus
 extern "C" {
 #  endif /* __cplusplus */
@@ -46,23 +40,13 @@ typedef unsigned long  cups_vbcs_t;	/* VBCS Legacy 32-bit unit */
  * Prototypes...
  */
 
-extern int	cupsCharsetToUTF8(cups_utf8_t *dest,
-				  const char *src,
-				  const int maxout,
-				  const cups_encoding_t encoding) _CUPS_PUBLIC;
-extern int	cupsUTF8ToCharset(char *dest,
-				  const cups_utf8_t *src,
-				  const int maxout,
-				  const cups_encoding_t encoding) _CUPS_PUBLIC;
-extern int	cupsUTF8ToUTF32(cups_utf32_t *dest,
-				const cups_utf8_t *src,
-				const int maxout) _CUPS_PUBLIC;
-extern int	cupsUTF32ToUTF8(cups_utf8_t *dest,
-				const cups_utf32_t *src,
-				const int maxout) _CUPS_PUBLIC;
+extern int	cupsCharsetToUTF8(cups_utf8_t *dest, const char *src, const int maxout, const cups_encoding_t encoding) _CUPS_PUBLIC;
+extern int	cupsUTF8ToCharset(char *dest, const cups_utf8_t *src, const int maxout, const cups_encoding_t encoding) _CUPS_PUBLIC;
+extern int	cupsUTF8ToUTF32(cups_utf32_t *dest, const cups_utf8_t *src, const int maxout) _CUPS_PUBLIC;
+extern int	cupsUTF32ToUTF8(cups_utf8_t *dest, const cups_utf32_t *src, const int maxout) _CUPS_PUBLIC;
+
 
 #  ifdef __cplusplus
 }
 #  endif /* __cplusplus */
-
 #endif /* !_CUPS_TRANSCODE_H_ */

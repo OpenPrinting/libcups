@@ -11,7 +11,7 @@
 
 #ifndef _CUPS_ARRAY_H_
 #  define _CUPS_ARRAY_H_
-#  include "versioning.h"
+#  include "base.h"
 #  include <stdlib.h>
 #  include <limits.h>
 #  ifdef __cplusplus

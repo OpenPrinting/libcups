@@ -146,7 +146,7 @@ static void	http_resolve_cb(AvahiServiceResolver *resolver,
  * place of traditional string functions whenever you need to create a
  * URI string.
  *
- * @since CUPS 1.2@
+ *
  */
 
 http_uri_status_t			/* O - URI status */
@@ -426,7 +426,7 @@ httpAssembleURI(
  * this function in place of traditional string functions whenever
  * you need to create a URI string.
  *
- * @since CUPS 1.2@
+ *
  */
 
 http_uri_status_t			/* O - URI status */
@@ -486,7 +486,7 @@ httpAssembleURIf(
  *
  * The buffer needs to be at least 46 bytes in size.
  *
- * @since CUPS 1.7@
+ *
  */
 
 char *					/* I - UUID string */
@@ -537,7 +537,7 @@ httpAssembleUUID(const char *server,	/* I - Server name */
  * string before calling @code httpDecode64_2@.  On return "outlen" contains the
  * decoded length of the string.
  *
- * @since CUPS 1.1.21@
+ *
  */
 
 char *					/* O  - Decoded string */
@@ -639,7 +639,7 @@ httpDecode64(char       *out,		/* I  - String to write to */
 /*
  * 'httpEncode64()' - Base64-encode a string.
  *
- * @since CUPS 1.1.21@
+ *
  */
 
 char *					/* O - Encoded string */
@@ -732,7 +732,7 @@ httpEncode64(char       *out,		/* I - String to write to */
 /*
  * 'httpGetDateString()' - Get a formatted date/time string from a time value.
  *
- * @since CUPS 1.2@
+ *
  */
 
 const char *				/* O - Date/time string */
@@ -829,7 +829,7 @@ httpGetDateTime(const char *s)		/* I - Date/time string */
  * 'httpSeparateURI()' - Separate a Universal Resource Identifier into its
  *                       components.
  *
- * @since CUPS 1.2@
+ *
  */
 
 http_uri_status_t			/* O - Result of separation */

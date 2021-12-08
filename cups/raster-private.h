@@ -12,9 +12,9 @@
 #ifndef _CUPS_RASTER_PRIVATE_H_
 #  define _CUPS_RASTER_PRIVATE_H_
 #  include "raster.h"
-#  include <cups/cups.h>
-#  include <cups/debug-private.h>
-#  include <cups/string-private.h>
+#  include "cups.h"
+#  include "debug-private.h"
+#  include "string-private.h"
 #  ifdef _WIN32
 #    include <io.h>
 #    include <winsock2.h>		/* for htonl() definition */

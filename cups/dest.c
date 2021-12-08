@@ -574,7 +574,7 @@ _cupsAppleSetUseLastPrinter(
  * the destination.  Otherwise, the connection is made to the CUPS scheduler
  * associated with the destination.
  *
- * @since CUPS 1.6@
+ *
  */
 
 http_t *				/* O - Connection to destination or @code NULL@ */
@@ -754,7 +754,7 @@ cupsConnectDest(
  * copy) - for use with the cupsEnumDests* functions. The caller is responsible
  * for calling cupsFreeDests() on the returned object(s).
  *
- * @since CUPS 1.6@
+ *
  */
 
 int                                     /* O  - New number of destinations */
@@ -920,7 +920,7 @@ _cupsCreateDest(const char *name,	/* I - Printer name */
  * Note: The callback function will likely receive multiple updates for the same
  * destinations - it is up to the caller to suppress any duplicate destinations.
  *
- * @since CUPS 1.6@
+ *
  */
 
 int					/* O - 1 on success, 0 on failure */
@@ -1134,7 +1134,7 @@ _cupsGetDestResource(
  *
  * "uri" is the "ipp" or "ipps" URI for the printer.
  *
- * @since CUPS 2.0@
+ *
  */
 
 cups_dest_t *				/* O - Destination or @code NULL@ */
@@ -1532,7 +1532,7 @@ _cupsGetDests(http_t       *http,	/* I  - Connection to server or
  * Use the @link cupsFreeDests@ function to free the destination list and
  * the @link cupsGetDest@ function to find a particular destination.
  *
- * @since CUPS 1.1.21@
+ *
  */
 
 int					/* O - Number of destinations */
@@ -1628,7 +1628,7 @@ cupsGetDests(http_t      *http,		/* I - Connection to server or @code CUPS_HTTP_
  * The returned destination must be freed using @link cupsFreeDests@ with a
  * "num_dests" value of 1.
  *
- * @since CUPS 1.4@
+ *
  */
 
 cups_dest_t *				/* O - Destination or @code NULL@ */
@@ -1816,7 +1816,7 @@ cupsGetNamedDest(http_t     *http,	/* I - Connection to server or @code CUPS_HTT
  * queue, merely the lpoptions for that destination/instance.  Use the
  * @link cupsSetDests@ function to save the new options for the user.
  *
- * @since CUPS 1.3@
+ *
  */
 
 int					/* O  - New number of destinations */
@@ -1862,7 +1862,7 @@ cupsRemoveDest(const char  *name,	/* I  - Destination name */
 /*
  * 'cupsSetDefaultDest()' - Set the default destination.
  *
- * @since CUPS 1.3@
+ *
  */
 
 void
@@ -1902,7 +1902,7 @@ cupsSetDefaultDest(
  * This function saves the destinations to /etc/cups/lpoptions when run
  * as root and ~/.cups/lpoptions when run as a normal user.
  *
- * @since CUPS 1.1.21@
+ *
  */
 
 int					/* O - 0 on success, -1 on error */

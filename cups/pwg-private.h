@@ -10,7 +10,7 @@
 
 #ifndef _CUPS_PWG_PRIVATE_H_
 #  define _CUPS_PWG_PRIVATE_H_
-#  include <cups/cups.h>
+#  include "cups.h"
 #  ifdef __cplusplus
 extern "C" {
 #  endif /* __cplusplus */

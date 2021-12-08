@@ -61,7 +61,7 @@ cupsFreeJobs(int        num_jobs,	/* I - Number of jobs */
  * functions to get the user-defined default printer, as this function does
  * not support the lpoptions-defined default printer.
  *
- * @since CUPS 1.1.21@
+ *
  */
 
 const char *				/* O - Default printer or `NULL` for none */
@@ -128,7 +128,7 @@ cupsGetDefault(http_t *http)		/* I - Connection to server or `CUPS_HTTP_DEFAULT`
  * pending, processing, or held and @code CUPS_WHICHJOBS_COMPLETED@ returns
  * jobs that are stopped, canceled, aborted, or completed.
  *
- * @since CUPS 1.1.21@
+ *
  */
 
 int					/* O - Number of jobs */

@@ -162,7 +162,7 @@ cupsTempFd(char   *filename,		/* I - Pointer to buffer */
  * The temporary filename is returned in the filename buffer.
  * The temporary file is opened for writing.
  *
- * @since CUPS 1.2@
+ *
  */
 
 cups_file_t *				/* O - CUPS file or @code NULL@ on error */

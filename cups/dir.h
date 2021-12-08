@@ -13,7 +13,7 @@
 
 #ifndef _CUPS_DIR_H_
 #  define _CUPS_DIR_H_
-#  include "versioning.h"
+#  include "base.h"
 #  include <sys/stat.h>
 #  ifdef __cplusplus
 extern "C" {

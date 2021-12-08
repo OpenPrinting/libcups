@@ -8,8 +8,8 @@
  * information.
  */
 
-#ifndef _CUPS_VERSIONING_H_
-#  define _CUPS_VERSIONING_H_
+#ifndef _CUPS_BASE_H_
+#  define _CUPS_BASE_H_
 #  include <stdbool.h>
 #  include <stddef.h>
 #  include <stdint.h>
@@ -198,4 +198,4 @@ typedef int64_t ssize_t;			/* @private@ */
 #  endif /* _CUPS_HAS_NORETURN */
 
 
-#endif /* !_CUPS_VERSIONING_H_ */
+#endif /* !_CUPS_BASE_H_ */
