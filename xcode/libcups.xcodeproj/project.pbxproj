@@ -109,7 +109,7 @@
 		270696511CADF3E200FFE5FB /* ipp.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220EE7133305BB00FCA411 /* ipp.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		270696521CADF3E200FFE5FB /* language.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220EEB133305BB00FCA411 /* language.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		270696551CADF3E200FFE5FB /* transcode.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220F07133305BB00FCA411 /* transcode.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		270696561CADF3E200FFE5FB /* versioning.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220F0A133305BB00FCA411 /* versioning.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		270696561CADF3E200FFE5FB /* base.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220F0A133305BB00FCA411 /* base.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		2706965B1CAE1A9A00FFE5FB /* util.c in Sources */ = {isa = PBXBuildFile; fileRef = 72220F09133305BB00FCA411 /* util.c */; };
 		270D02191D707E0200EA9403 /* libcups_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 72A4332F155844CF002E172D /* libcups_static.a */; };
 		270D021A1D707E0200EA9403 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 278C58E5136B64AF00836530 /* CoreFoundation.framework */; };
@@ -251,7 +251,7 @@
 		72220F41133305BB00FCA411 /* transcode.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220F07133305BB00FCA411 /* transcode.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		72220F42133305BB00FCA411 /* usersys.c in Sources */ = {isa = PBXBuildFile; fileRef = 72220F08133305BB00FCA411 /* usersys.c */; };
 		72220F43133305BB00FCA411 /* util.c in Sources */ = {isa = PBXBuildFile; fileRef = 72220F09133305BB00FCA411 /* util.c */; };
-		72220F44133305BB00FCA411 /* versioning.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220F0A133305BB00FCA411 /* versioning.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		72220F44133305BB00FCA411 /* base.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220F0A133305BB00FCA411 /* base.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		72220F481333063D00FCA411 /* config.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220F471333063D00FCA411 /* config.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		722A24EF2178D00D000CAB20 /* debug-internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 722A24EE2178D00C000CAB20 /* debug-internal.h */; };
 		722A24F02178D00D000CAB20 /* debug-internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 722A24EE2178D00C000CAB20 /* debug-internal.h */; };
@@ -959,7 +959,7 @@
 		72220F07133305BB00FCA411 /* transcode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = transcode.h; path = ../cups/transcode.h; sourceTree = "<group>"; };
 		72220F08133305BB00FCA411 /* usersys.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = usersys.c; path = ../cups/usersys.c; sourceTree = "<group>"; };
 		72220F09133305BB00FCA411 /* util.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = util.c; path = ../cups/util.c; sourceTree = "<group>"; };
-		72220F0A133305BB00FCA411 /* versioning.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = versioning.h; path = ../cups/versioning.h; sourceTree = "<group>"; };
+		72220F0A133305BB00FCA411 /* base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = base.h; path = ../cups/base.h; sourceTree = "<group>"; };
 		72220F471333063D00FCA411 /* config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = config.h; sourceTree = "<group>"; };
 		7226369D18AE73BB004ED309 /* config.h.in */ = {isa = PBXFileReference; lastKnownFileType = text; name = config.h.in; path = ../config.h.in; sourceTree = "<group>"; };
 		722A24EE2178D00C000CAB20 /* debug-internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "debug-internal.h"; path = "../cups/debug-internal.h"; sourceTree = "<group>"; };
@@ -1392,6 +1392,7 @@
 				72220EB91333056300FCA411 /* array.h */,
 				7234F41F1378A16F00D3E9C9 /* array-private.h */,
 				72220EBB1333056300FCA411 /* auth.c */,
+				72220F0A133305BB00FCA411 /* base.h */,
 				72220F471333063D00FCA411 /* config.h */,
 				72220EC11333056300FCA411 /* cups.h */,
 				72220EC01333056300FCA411 /* cups-private.h */,
@@ -1455,7 +1456,6 @@
 				72220F07133305BB00FCA411 /* transcode.h */,
 				72220F08133305BB00FCA411 /* usersys.c */,
 				72220F09133305BB00FCA411 /* util.c */,
-				72220F0A133305BB00FCA411 /* versioning.h */,
 			);
 			name = libcups;
 			sourceTree = "<group>";
@@ -1562,7 +1562,7 @@
 				270696521CADF3E200FFE5FB /* language.h in Headers */,
 				7253C470216ED69400494ADD /* pwg.h in Headers */,
 				270696551CADF3E200FFE5FB /* transcode.h in Headers */,
-				270696561CADF3E200FFE5FB /* versioning.h in Headers */,
+				270696561CADF3E200FFE5FB /* base.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1590,7 +1590,7 @@
 				72220F25133305BB00FCA411 /* language.h in Headers */,
 				722A24F32178D091000CAB20 /* debug-private.h in Headers */,
 				72220F41133305BB00FCA411 /* transcode.h in Headers */,
-				72220F44133305BB00FCA411 /* versioning.h in Headers */,
+				72220F44133305BB00FCA411 /* base.h in Headers */,
 				7234F4201378A16F00D3E9C9 /* array-private.h in Headers */,
 				72220ECD1333056300FCA411 /* cups-private.h in Headers */,
 				72220F11133305BB00FCA411 /* file-private.h in Headers */,

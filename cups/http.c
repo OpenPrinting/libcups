@@ -2256,13 +2256,11 @@ httpReconnect(http_t *http,		/* I - HTTP connection */
 /*
  * 'httpSetAuthString()' - Set the current authorization string.
  *
- * This function just stores a copy of the current authorization string in
- * the HTTP connection object.  You must still call @link httpSetField@ to set
- * @code HTTP_FIELD_AUTHORIZATION@ prior to issuing a HTTP request using
+ * This function stores a copy of the current authorization string in the HTTP
+ * connection object.  You must still call @link httpSetField@ to set
+ * `HTTP_FIELD_AUTHORIZATION` prior to issuing a HTTP request using
  * @link httpGet@, @link httpHead@, @link httpOptions@, @link httpPost@, or
  * @link httpPut@.
- *
- *
  */
 
 void
@@ -2309,8 +2307,6 @@ httpSetAuthString(http_t     *http,	/* I - HTTP connection */
 /*
  * 'httpSetCredentials()' - Set the credentials associated with an encrypted
  *			    connection.
- *
- *
  */
 
 int						/* O - Status of call (0 = success) */
@@ -2332,8 +2328,6 @@ httpSetCredentials(http_t	*http,		/* I - HTTP connection */
 
 /*
  * 'httpSetCookie()' - Set the cookie value(s).
- *
- *
  */
 
 void
@@ -2343,8 +2337,7 @@ httpSetCookie(http_t     *http,		/* I - Connection */
   if (!http)
     return;
 
-  if (http->cookie)
-    free(http->cookie);
+  free(http->cookie);
 
   if (cookie)
     http->cookie = strdup(cookie);
@@ -2356,10 +2349,10 @@ httpSetCookie(http_t     *http,		/* I - Connection */
 /*
  * 'httpSetDefaultField()' - Set the default value of an HTTP header.
  *
- * Currently only @code HTTP_FIELD_ACCEPT_ENCODING@, @code HTTP_FIELD_SERVER@,
- * and @code HTTP_FIELD_USER_AGENT@ can be set.
+ * This function sets the default value for an HTTP header.
  *
- *
+ * > *Note:* Currently only the `HTTP_FIELD_ACCEPT_ENCODING`,
+ * > `HTTP_FIELD_SERVER`, and `HTTP_FIELD_USER_AGENT` fields can be set.
  */
 
 void
@@ -2372,8 +2365,7 @@ httpSetDefaultField(http_t       *http,	/* I - HTTP connection */
   if (!http || field <= HTTP_FIELD_UNKNOWN || field >= HTTP_FIELD_MAX)
     return;
 
-  if (http->default_fields[field])
-    free(http->default_fields[field]);
+  free(http->default_fields[field]);
 
   http->default_fields[field] = value ? strdup(value) : NULL;
 }
@@ -2382,16 +2374,13 @@ httpSetDefaultField(http_t       *http,	/* I - HTTP connection */
 /*
  * 'httpSetExpect()' - Set the Expect: header in a request.
  *
- * Currently only @code HTTP_STATUS_CONTINUE@ is supported for the "expect"
- * argument.
- *
- *
+ * This function sets the `Expect:` header in a request.  Currently only
+ * `HTTP_STATUS_CONTINUE` is supported for the "expect" argument.
  */
 
 void
 httpSetExpect(http_t        *http,	/* I - HTTP connection */
-              http_status_t expect)	/* I - HTTP status to expect
-              				       (@code HTTP_STATUS_CONTINUE@) */
+              http_status_t expect)	/* I - HTTP status to expect (`HTTP_STATUS_CONTINUE`) */
 {
   DEBUG_printf(("httpSetExpect(http=%p, expect=%d)", (void *)http, expect));
 
@@ -2420,8 +2409,6 @@ httpSetField(http_t       *http,	/* I - HTTP connection */
 
 /*
  * 'httpSetKeepAlive()' - Set the current Keep-Alive state of a connection.
- *
- * @since CUPS 2.0/OS 10.10@
  */
 
 void
@@ -2435,14 +2422,16 @@ httpSetKeepAlive(
 
 
 /*
- * 'httpSetLength()' - Set the content-length and content-encoding.
+ * 'httpSetLength()' - Set the `Content-Length` and `Transfer-Encoding` fields.
  *
- *
+ * This function sets the `Content-Length` and `Transfer-Encoding` fields.
+ * Passing `0` to the "length" argument specifies a chunked transfer encoding
+ * while other values specify a fixed `Content-Length`.
  */
 
 void
 httpSetLength(http_t *http,		/* I - HTTP connection */
-              size_t length)		/* I - Length (0 for chunked) */
+              size_t length)		/* I - Length (`0` for chunked) */
 {
   DEBUG_printf(("httpSetLength(http=%p, length=" CUPS_LLFMT ")", (void *)http, CUPS_LLCAST length));
 
@@ -2458,7 +2447,6 @@ httpSetLength(http_t *http,		/* I - HTTP connection */
   {
     char len[32];			/* Length string */
 
-
     snprintf(len, sizeof(len), CUPS_LLFMT, CUPS_LLCAST length);
     httpSetField(http, HTTP_FIELD_TRANSFER_ENCODING, "");
     httpSetField(http, HTTP_FIELD_CONTENT_LENGTH, len);
@@ -2469,18 +2457,26 @@ httpSetLength(http_t *http,		/* I - HTTP connection */
 /*
  * 'httpSetTimeout()' - Set read/write timeouts and an optional callback.
  *
- * The optional timeout callback receives both the HTTP connection and a user
- * data pointer and must return 1 to continue or 0 to error (time) out.
+ * This function sets the read/write timeouts for an HTTP connection with an
+ * optional timeout callback.  The timeout callback receives both the HTTP
+ * connection pointer and a user data pointer, and returns `true` to continue or
+ * `false` to error (time) out.
  *
- *
+ * ```
+ * bool                           // true to continue, false to stop
+ * timeout_cb(http_t *http,       // HTTP connection
+ *            void   *user_data)  // User data pointer
+ * {
+ *   ...
+ * }
+ * ```
  */
 
 void
 httpSetTimeout(
     http_t            *http,		/* I - HTTP connection */
-    double            timeout,		/* I - Number of seconds for timeout,
-                                               must be greater than 0 */
-    http_timeout_cb_t cb,		/* I - Callback function or @code NULL@ */
+    double            timeout,		/* I - Number of seconds for timeout, must be greater than `0` */
+    http_timeout_cb_t cb,		/* I - Callback function or `NULL` for none */
     void              *user_data)	/* I - User data pointer */
 {
   if (!http || timeout <= 0.0)
@@ -2499,8 +2495,6 @@ httpSetTimeout(
 
 /*
  * 'httpShutdown()' - Shutdown one side of an HTTP connection.
- *
- * @since CUPS 2.0/OS 10.10@
  */
 
 void

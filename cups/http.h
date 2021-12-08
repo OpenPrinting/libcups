@@ -325,7 +325,7 @@ typedef struct http_credential_s	/**** HTTP credential data @exclude all@ ****/
   size_t	datalen;		/* Credential length */
 } http_credential_t;
 
-typedef int (*http_timeout_cb_t)(http_t *http, void *user_data);
+typedef bool (*http_timeout_cb_t)(http_t *http, void *user_data);
 					/**** HTTP timeout callback ****/
 
 

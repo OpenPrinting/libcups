@@ -46,7 +46,7 @@
 
 #ifndef _CUPS_MD5_INTERNAL_H_
 #  define _CUPS_MD5_INTERNAL_H_
-#  include <cups/versioning.h>
+#  include "base.h"
 #  ifdef __cplusplus
 extern "C" {
 #  endif /* __cplusplus */
