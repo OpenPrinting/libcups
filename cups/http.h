@@ -116,37 +116,11 @@ typedef enum http_encryption_e		/**** HTTP encryption values ****/
 typedef enum http_field_e		/**** HTTP field names ****/
 {
   HTTP_FIELD_UNKNOWN = -1,		/* Unknown field */
+  HTTP_FIELD_ACCEPT,			/* Accept field */
+  HTTP_FIELD_ACCEPT_CH,			/* RFC 8942 Accept-CH field */
+  HTTP_FIELD_ACCEPT_ENCODING,		/* Accept-Encoding field */
   HTTP_FIELD_ACCEPT_LANGUAGE,		/* Accept-Language field */
   HTTP_FIELD_ACCEPT_RANGES,		/* Accept-Ranges field */
-  HTTP_FIELD_AUTHORIZATION,		/* Authorization field */
-  HTTP_FIELD_CONNECTION,		/* Connection field */
-  HTTP_FIELD_CONTENT_ENCODING,		/* Content-Encoding field */
-  HTTP_FIELD_CONTENT_LANGUAGE,		/* Content-Language field */
-  HTTP_FIELD_CONTENT_LENGTH,		/* Content-Length field */
-  HTTP_FIELD_CONTENT_LOCATION,		/* Content-Location field */
-  HTTP_FIELD_CONTENT_MD5,		/* Content-MD5 field */
-  HTTP_FIELD_CONTENT_RANGE,		/* Content-Range field */
-  HTTP_FIELD_CONTENT_TYPE,		/* Content-Type field */
-  HTTP_FIELD_CONTENT_VERSION,		/* Content-Version field */
-  HTTP_FIELD_DATE,			/* Date field */
-  HTTP_FIELD_HOST,			/* Host field */
-  HTTP_FIELD_IF_MODIFIED_SINCE,		/* If-Modified-Since field */
-  HTTP_FIELD_IF_UNMODIFIED_SINCE,	/* If-Unmodified-Since field */
-  HTTP_FIELD_KEEP_ALIVE,		/* Keep-Alive field */
-  HTTP_FIELD_LAST_MODIFIED,		/* Last-Modified field */
-  HTTP_FIELD_LINK,			/* Link field */
-  HTTP_FIELD_LOCATION,			/* Location field */
-  HTTP_FIELD_RANGE,			/* Range field */
-  HTTP_FIELD_REFERER,			/* Referer field */
-  HTTP_FIELD_RETRY_AFTER,		/* Retry-After field */
-  HTTP_FIELD_TRANSFER_ENCODING,		/* Transfer-Encoding field */
-  HTTP_FIELD_UPGRADE,			/* Upgrade field */
-  HTTP_FIELD_USER_AGENT,		/* User-Agent field */
-  HTTP_FIELD_WWW_AUTHENTICATE,		/* WWW-Authenticate field */
-  HTTP_FIELD_ACCEPT_ENCODING,		/* Accepting-Encoding field */
-  HTTP_FIELD_ALLOW,			/* Allow field */
-  HTTP_FIELD_SERVER,			/* Server field */
-  HTTP_FIELD_AUTHENTICATION_INFO,	/* Authentication-Info field */
   HTTP_FIELD_ACCESS_CONTROL_ALLOW_CREDENTIALS,
 					/* CORS/Fetch Access-Control-Allow-Cresdentials field */
   HTTP_FIELD_ACCESS_CONTROL_ALLOW_HEADERS,
@@ -162,10 +136,88 @@ typedef enum http_field_e		/**** HTTP field names ****/
 					/* CORS/Fetch Access-Control-Request-Headers field */
   HTTP_FIELD_ACCESS_CONTROL_REQUEST_METHOD,
 					/* CORS/Fetch Access-Control-Request-Method field */
+  HTTP_FIELD_AGE,			/* Age field */
+  HTTP_FIELD_ALLOW,			/* Allow field */
+  HTTP_FIELD_AUTHENTICATION_CONTROL,	/* RFC 8053 Authentication-Control field */
+  HTTP_FIELD_AUTHENTICATION_INFO,	/* Authentication-Info field */
+  HTTP_FIELD_AUTHORIZATION,		/* Authorization field */
+  HTTP_FIELD_CACHE_CONTROL,		/* Cache-Control field */
+  HTTP_FIELD_CACHE_STATUS,		/* Cache-Status field */
+  HTTP_FIELD_CERT_NOT_AFTER,		/* RFC 8739 (ACME) Cert-Not-After field */
+  HTTP_FIELD_CERT_NOT_BEFORE,		/* RFC 8739 (ACME) Cert-Not-Before field */
+  HTTP_FIELD_CONNECTION,		/* Connection field */
+  HTTP_FIELD_CONTENT_DISPOSITION,	/* RFC 6266 Content-Disposition field */
+  HTTP_FIELD_CONTENT_ENCODING,		/* Content-Encoding field */
+  HTTP_FIELD_CONTENT_LANGUAGE,		/* Content-Language field */
+  HTTP_FIELD_CONTENT_LENGTH,		/* Content-Length field */
+  HTTP_FIELD_CONTENT_LOCATION,		/* Content-Location field */
+  HTTP_FIELD_CONTENT_RANGE,		/* Content-Range field */
+  HTTP_FIELD_CONTENT_SECURITY_POLICY,	/* CSPL3 Content-Security-Policy field */
+  HTTP_FIELD_CONTENT_SECURITY_POLICY_REPORT_ONLY,
+					/* CSPL3 Content-Security-Policy-Report-Only field */
+  HTTP_FIELD_CONTENT_TYPE,		/* Content-Type field */
+  HTTP_FIELD_CROSS_ORIGIN_EMBEDDER_POLICY,
+					/* WHATWG Cross-Origin-Embedder-Policy field */
+  HTTP_FIELD_CROSS_ORIGIN_EMBEDDER_POLICY_REPORT_ONLY,
+					/* WHATWG Cross-Origin-Embedder-Policy-Report-Only field */
+  HTTP_FIELD_CROSS_ORIGIN_OPENER_POLICY,/* WHATWG Cross-Origin-Opener-Policy field */
+  HTTP_FIELD_CROSS_ORIGIN_OPENER_POLICY_REPORT_ONLY,
+					/* WHATWG Cross-Origin-Opener-Policy-Report-Only field */
+  HTTP_FIELD_CROSS_ORIGIN_RESOURCE_POLICY,
+					/* WHATWG Cross-Origin-Resource-Policy field */
+  HTTP_FIELD_DASL,			/* RFC 5323 (WebDAV) DASL field */
+  HTTP_FIELD_DATE,			/* Date field */
+  HTTP_FIELD_DAV,			/* RFC 4918 (WebDAV) DAV field */
+  HTTP_FIELD_DEPTH,			/* RFC 4918 (WebDAV) Depth field */
+  HTTP_FIELD_DESTINATION,		/* RFC 4918 (WebDAV) Destination field */
+  HTTP_FIELD_ETAG,			/* ETag field */
+  HTTP_FIELD_EXPIRES,			/* Expires field */
+  HTTP_FIELD_FORWARDED,			/* RFC 7239 Forwarded field */
+  HTTP_FIELD_FROM,			/* From field */
+  HTTP_FIELD_HOST,			/* Host field */
+  HTTP_FIELD_IF,			/* RFC 4918 (WebDAV) If field */
+  HTTP_FIELD_IF_MATCH,			/* If-Match field */
+  HTTP_FIELD_IF_MODIFIED_SINCE,		/* If-Modified-Since field */
+  HTTP_FIELD_IF_NONE_MATCH,		/* If-None-Match field */
+  HTTP_FIELD_IF_RANGE,			/* If-Range field */
+  HTTP_FIELD_IF_SCHEDULE_TAG_MATCH,	/* RFC 6638 (CalDAV) If-Schedule-Tag-Match field */
+  HTTP_FIELD_IF_UNMODIFIED_SINCE,	/* If-Unmodified-Since field */
+  HTTP_FIELD_KEEP_ALIVE,		/* Keep-Alive field */
+  HTTP_FIELD_LAST_MODIFIED,		/* Last-Modified field */
+  HTTP_FIELD_LINK,			/* Link field */
+  HTTP_FIELD_LOCATION,			/* Location field */
+  HTTP_FIELD_LOCK_TOKEN,		/* RFC 4918 (WebDAV) Lock-Token field */
+  HTTP_FIELD_MAX_FORWARDS,		/* Max-Forwards field */
   HTTP_FIELD_OPTIONAL_WWW_AUTHENTICATE,	/* RFC 8053 Optional-WWW-Authenticate field */
   HTTP_FIELD_ORIGIN,			/* RFC 6454 Origin field */
   HTTP_FIELD_OSCORE,			/* RFC 8613 OSCORE field */
+  HTTP_FIELD_OVERWRITE,			/* RFC 4918 (WebDAV) Overwrite field */
+  HTTP_FIELD_PRAGMA,			/* Pragma field */
+  HTTP_FIELD_PROXY_AUTHENTICATE,	/* Proxy-Authenticate field */
+  HTTP_FIELD_PROXY_AUTHENTICATION_INFO,	/* Proxy-Authentication-Info field */
+  HTTP_FIELD_PROXY_AUTHORIZATION,	/* Proxy-Authorization field */
+  HTTP_FIELD_PROXY_STATUS,		/* Proxy-Status field */
+  HTTP_FIELD_PUBLIC,			/* Public field */
+  HTTP_FIELD_RANGE,			/* Range field */
+  HTTP_FIELD_REFERER,			/* Referer field */
+  HTTP_FIELD_REFRESH,			/* WHATWG Refresh field */
+  HTTP_FIELD_REPLAY_NONCE,		/* RFC 8555 (ACME) Replay-Nonce field */
+  HTTP_FIELD_RETRY_AFTER,		/* Retry-After field */
+  HTTP_FIELD_SCHEDULE_REPLY,		/* RFC 6638 (CalDAV) Schedule-Reply field */
+  HTTP_FIELD_SCHEDULE_TAG,		/* RFC 6638 (CalDAV) Schedule-Tag field */
+  HTTP_FIELD_SERVER,			/* Server field */
   HTTP_FIELD_STRICT_TRANSPORT_SECURITY,	/* HSTS Strict-Transport-Security field */
+  HTTP_FIELD_TE,			/* TE field */
+  HTTP_FIELD_TIMEOUT,			/* RFC 4918 Timeout field */
+  HTTP_FIELD_TRAILER,			/* Trailer field */
+  HTTP_FIELD_TRANSFER_ENCODING,		/* Transfer-Encoding field */
+  HTTP_FIELD_UPGRADE,			/* Upgrade field */
+  HTTP_FIELD_USER_AGENT,		/* User-Agent field */
+  HTTP_FIELD_VARY,			/* Vary field */
+  HTTP_FIELD_VIA,			/* Via field */
+  HTTP_FIELD_WWW_AUTHENTICATE,		/* WWW-Authenticate field */
+  HTTP_FIELD_X_CONTENT_OPTIONS,		/* WHATWG X-Content-Options */
+  HTTP_FIELD_X_FRAME_OPTIONS,		/* WHATWG X-Frame-Options */
   HTTP_FIELD_MAX			/* Maximum field index */
 } http_field_t;
 
