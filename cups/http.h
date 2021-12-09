@@ -216,8 +216,8 @@ typedef enum http_field_e		/**** HTTP field names ****/
   HTTP_FIELD_VARY,			/* Vary field */
   HTTP_FIELD_VIA,			/* Via field */
   HTTP_FIELD_WWW_AUTHENTICATE,		/* WWW-Authenticate field */
-  HTTP_FIELD_X_CONTENT_OPTIONS,		/* WHATWG X-Content-Options */
-  HTTP_FIELD_X_FRAME_OPTIONS,		/* WHATWG X-Frame-Options */
+  HTTP_FIELD_X_CONTENT_OPTIONS,		/* WHATWG X-Content-Options field */
+  HTTP_FIELD_X_FRAME_OPTIONS,		/* WHATWG X-Frame-Options field */
   HTTP_FIELD_MAX			/* Maximum field index */
 } http_field_t;
 
