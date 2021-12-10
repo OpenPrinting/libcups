@@ -86,7 +86,7 @@ _httpEncodeURI
 _httpFreeCredentials
 _httpResolveURI
 _httpSetDigestAuthString
-_httpStatus
+_httpStatusString
 _httpTLSInitialize
 _httpTLSPending
 _httpTLSRead
@@ -350,7 +350,7 @@ httpSetLength
 httpSetTimeout
 httpShutdown
 httpStateString
-httpStatus
+httpStatusString
 httpTrace
 httpURIStatusString
 httpUpdate
