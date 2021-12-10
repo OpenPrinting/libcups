@@ -3203,7 +3203,7 @@ httpWriteResponse(http_t        *http,	/* I - HTTP connection */
   old_remaining       = http->data_remaining;
   http->data_encoding = HTTP_ENCODING_FIELDS;
 
-  if (httpPrintf(http, "HTTP/%d.%d %d %s\r\n", http->version / 100, http->version % 100, (int)status, httpStatus(status)) < 0)
+  if (httpPrintf(http, "HTTP/%d.%d %d %s\r\n", http->version / 100, http->version % 100, (int)status, httpStatusString(status)) < 0)
   {
     http->status = HTTP_STATUS_ERROR;
     return (-1);

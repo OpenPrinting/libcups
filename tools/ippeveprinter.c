@@ -2652,7 +2652,7 @@ finish_document_uri(
 
     if (status != HTTP_STATUS_OK)
     {
-      respond_ipp(client, IPP_STATUS_ERROR_DOCUMENT_ACCESS, "Unable to GET URI: %s", httpStatus(status));
+      respond_ipp(client, IPP_STATUS_ERROR_DOCUMENT_ACCESS, "Unable to GET URI: %s", httpStatusString(status));
 
       close(job->fd);
       job->fd = -1;
@@ -6770,7 +6770,7 @@ respond_http(
   char	message[1024];			/* Text message */
 
 
-  fprintf(stderr, "%s %s\n", client->hostname, httpStatus(code));
+  fprintf(stderr, "%s %s\n", client->hostname, httpStatusString(code));
 
   if (code == HTTP_STATUS_CONTINUE)
   {
@@ -6787,7 +6787,7 @@ respond_http(
 
   if (!type && !length && code != HTTP_STATUS_OK && code != HTTP_STATUS_SWITCHING_PROTOCOLS)
   {
-    snprintf(message, sizeof(message), "%d - %s\n", code, httpStatus(code));
+    snprintf(message, sizeof(message), "%d - %s\n", code, httpStatusString(code));
 
     type   = "text/plain";
     length = strlen(message);

@@ -1364,16 +1364,19 @@ httpStateString(http_state_t state)	/* I - HTTP state value */
 
 
 /*
- * '_httpStatus()' - Return the localized string describing a HTTP status code.
+ * '_httpStatusString()' - Return the localized string describing a HTTP
+ *                         status code.
  *
  * The returned string is localized using the passed message catalog.
  */
 
 const char *				/* O - Localized status string */
-_httpStatus(cups_lang_t   *lang,	/* I - Language */
-            http_status_t status)	/* I - HTTP status code */
+_httpStatusString(
+    cups_lang_t   *lang,		/* I - Language */
+    http_status_t status)		/* I - HTTP status code */
 {
   const char	*s;			/* Status string */
+  _cups_globals_t *cg = _cupsGlobals();	/* Global data */
 
 
   switch (status)
@@ -1396,8 +1399,27 @@ _httpStatus(cups_lang_t   *lang,	/* I - Language */
     case HTTP_STATUS_ACCEPTED :
         s = _("Accepted");
 	break;
+    case HTTP_STATUS_NOT_AUTHORITATIVE :
+        s = _("Not Authoritative");
+	break;
     case HTTP_STATUS_NO_CONTENT :
         s = _("No Content");
+	break;
+    case HTTP_STATUS_RESET_CONTENT :
+        s = _("Reset Content");
+	break;
+    case HTTP_STATUS_PARTIAL_CONTENT :
+        s = _("Partial Content");
+	break;
+    case HTTP_STATUS_MULTI_STATUS :
+        s = _("Multi-Status");
+	break;
+    case HTTP_STATUS_ALREADY_REPORTED :
+        s = _("Already Reported");
+	break;
+
+    case HTTP_STATUS_MULTIPLE_CHOICES :
+        s = _("Multiple Choices");
 	break;
     case HTTP_STATUS_MOVED_PERMANENTLY :
         s = _("Moved Permanently");
@@ -1411,6 +1433,16 @@ _httpStatus(cups_lang_t   *lang,	/* I - Language */
     case HTTP_STATUS_NOT_MODIFIED :
         s = _("Not Modified");
 	break;
+    case HTTP_STATUS_USE_PROXY :
+        s = _("Use Proxy");
+	break;
+    case HTTP_STATUS_TEMPORARY_REDIRECT :
+        s = _("Temporary Redirect");
+	break;
+    case HTTP_STATUS_PERMANENT_REDIRECT :
+        s = _("Permanent Redirect");
+	break;
+
     case HTTP_STATUS_BAD_REQUEST :
         s = _("Bad Request");
 	break;
@@ -1418,46 +1450,117 @@ _httpStatus(cups_lang_t   *lang,	/* I - Language */
     case HTTP_STATUS_CUPS_AUTHORIZATION_CANCELED :
         s = _("Unauthorized");
 	break;
+    case HTTP_STATUS_PAYMENT_REQUIRED :
+        s = _("Payment Required");
+	break;
     case HTTP_STATUS_FORBIDDEN :
         s = _("Forbidden");
 	break;
     case HTTP_STATUS_NOT_FOUND :
         s = _("Not Found");
 	break;
-    case HTTP_STATUS_REQUEST_TOO_LARGE :
-        s = _("Request Entity Too Large");
+    case HTTP_STATUS_METHOD_NOT_ALLOWED :
+        s = _("Method Now Allowed");
+	break;
+    case HTTP_STATUS_NOT_ACCEPTABLE :
+        s = _("Not Acceptable");
+	break;
+    case HTTP_STATUS_PROXY_AUTHENTICATION_REQUIRED :
+        s = _("Proxy Authentication Required");
+	break;
+    case HTTP_STATUS_REQUEST_TIMEOUT :
+        s = _("Request Timeout");
+	break;
+    case HTTP_STATUS_CONFLICT :
+        s = _("Conflict");
+	break;
+    case HTTP_STATUS_GONE :
+        s = _("Gone");
+	break;
+    case HTTP_STATUS_LENGTH_REQUIRED :
+        s = _("Length Required");
+	break;
+    case HTTP_STATUS_PRECONDITION_FAILED :
+        s = _("Precondition Failed");
+	break;
+    case HTTP_STATUS_CONTENT_TOO_LARGE :
+        s = _("Content Too Large");
 	break;
     case HTTP_STATUS_URI_TOO_LONG :
         s = _("URI Too Long");
 	break;
-    case HTTP_STATUS_UPGRADE_REQUIRED :
-        s = _("Upgrade Required");
+    case HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE :
+        s = _("Unsupported Media Type");
 	break;
-    case HTTP_STATUS_NOT_IMPLEMENTED :
-        s = _("Not Implemented");
-	break;
-    case HTTP_STATUS_NOT_SUPPORTED :
-        s = _("Not Supported");
+    case HTTP_STATUS_RANGE_NOT_SATISFIABLE :
+        s = _("Range Not Satisfiable");
 	break;
     case HTTP_STATUS_EXPECTATION_FAILED :
         s = _("Expectation Failed");
 	break;
+    case HTTP_STATUS_MISDIRECTED_REQUEST :
+        s = _("Misdirected Request");
+	break;
+    case HTTP_STATUS_UNPROCESSABLE_CONTENT :
+        s = _("Unprocessable Content");
+	break;
+    case HTTP_STATUS_LOCKED :
+        s = _("Locked");
+	break;
+    case HTTP_STATUS_FAILED_DEPENDENCY :
+        s = _("Failed Dependency");
+	break;
+    case HTTP_STATUS_TOO_EARLY :
+        s = _("Too Early");
+	break;
+    case HTTP_STATUS_UPGRADE_REQUIRED :
+        s = _("Upgrade Required");
+	break;
+    case HTTP_STATUS_PRECONDITION_REQUIRED :
+        s = _("Precondition Required");
+	break;
+    case HTTP_STATUS_TOO_MANY_REQUESTS :
+        s = _("Too Many Requests");
+	break;
+    case HTTP_STATUS_REQUEST_HEADER_FIELDS_TOO_LARGE :
+        s = _("Request Header Fields Too Large");
+	break;
+    case HTTP_STATUS_UNAVAILABLE_FOR_LEGAL_REASONS :
+        s = _("Unavailable for Legal Reasons");
+	break;
+    case HTTP_STATUS_SERVER_ERROR :
+        s = _("Server Error");
+	break;
+    case HTTP_STATUS_NOT_IMPLEMENTED :
+        s = _("Not Implemented");
+	break;
+    case HTTP_STATUS_BAD_GATEWAY :
+        s = _("Bad Gateway");
+	break;
     case HTTP_STATUS_SERVICE_UNAVAILABLE :
         s = _("Service Unavailable");
 	break;
-    case HTTP_STATUS_SERVER_ERROR :
-        s = _("Internal Server Error");
+    case HTTP_STATUS_GATEWAY_TIMEOUT :
+        s = _("Gateway Timeout");
 	break;
+    case HTTP_STATUS_HTTP_VERSION_NOT_SUPPORTED :
+        s = _("HTTP Version Not Supported");
+        break;
+    case HTTP_STATUS_INSUFFICIENT_STORAGE :
+        s = _("Insufficient Storage");
+        break;
+    case HTTP_STATUS_LOOP_DETECTED :
+        s = _("Loop Detected");
+        break;
+    case HTTP_STATUS_NETWORK_AUTHENTICATION_REQUIRED :
+        s = _("Network Authentication Required");
+        break;
     case HTTP_STATUS_CUPS_PKI_ERROR :
-        s = _("SSL/TLS Negotiation Error");
+        s = _("TLS Negotiation Error");
 	break;
-    case HTTP_STATUS_CUPS_WEBIF_DISABLED :
-        s = _("Web Interface is Disabled");
-	break;
-
     default :
-        s = _("Unknown");
-	break;
+        snprintf(cg->http_status, sizeof(cg->http_status), "%d", (int)status);
+        return (cg->http_status);
   }
 
   return (_cupsLangString(lang, s));
@@ -1465,14 +1568,14 @@ _httpStatus(cups_lang_t   *lang,	/* I - Language */
 
 
 /*
- * 'httpStatus()' - Return a short string describing a HTTP status code.
+ * 'httpStatusString()' - Return a short string describing a HTTP status code.
  *
- * The returned string is localized to the current POSIX locale and is based
- * on the status strings defined in RFC 7231.
+ * This function returns a short (localized) string describing a HTTP status
+ * code.  The strings are taken from the IANA HTTP Status Code registry.
  */
 
 const char *				/* O - Localized status string */
-httpStatus(http_status_t status)	/* I - HTTP status code */
+httpStatusString(http_status_t status)	/* I - HTTP status code */
 {
   _cups_globals_t *cg = _cupsGlobals();	/* Global data */
 
@@ -1480,7 +1583,7 @@ httpStatus(http_status_t status)	/* I - HTTP status code */
   if (!cg->lang_default)
     cg->lang_default = cupsLangDefault();
 
-  return (_httpStatus(cg->lang_default, status));
+  return (_httpStatusString(cg->lang_default, status));
 }
 
 /*

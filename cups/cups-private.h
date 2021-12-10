@@ -98,6 +98,10 @@ typedef struct _cups_globals_s		/**** CUPS global state data ****/
   char			hostname[1024];	/* Hostname */
   int			need_res_init;	/* Need to reinitialize resolver? */
 
+  /* http-support.c */
+  char			http_status[256];
+					/* Unknown HTTP statuses */
+
   /* ipp.c */
   ipp_uchar_t		ipp_date[11];	/* RFC-2579 date/time data */
   _cups_buffer_t	*cups_buffers;	/* Buffer list */

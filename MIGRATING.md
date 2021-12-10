@@ -71,6 +71,7 @@ Renamed Functions
 | `httpGetLength2`         | `httpGetLength`         |
 | `httpRead2`              | `httpRead`              |
 | `httpReconnect2`         | `httpReconnect`         |
+| `httpStatus`             | `httpStatusString`      |
 | `httpWrite2`             | `httpWrite`             |
 | `cupsRasterReadHeader2`  | `cupsRasterReadHeader`  |
 | `cupsRasterWriteHeader2` | `cupsRasterWriteHeader` |

@@ -1121,43 +1121,43 @@ _cupsSetHTTPError(http_status_t status)	/* I - HTTP status code */
   switch (status)
   {
     case HTTP_STATUS_NOT_FOUND :
-	_cupsSetError(IPP_STATUS_ERROR_NOT_FOUND, httpStatus(status), 0);
+	_cupsSetError(IPP_STATUS_ERROR_NOT_FOUND, httpStatusString(status), 0);
 	break;
 
     case HTTP_STATUS_UNAUTHORIZED :
-	_cupsSetError(IPP_STATUS_ERROR_NOT_AUTHENTICATED, httpStatus(status), 0);
+	_cupsSetError(IPP_STATUS_ERROR_NOT_AUTHENTICATED, httpStatusString(status), 0);
 	break;
 
     case HTTP_STATUS_CUPS_AUTHORIZATION_CANCELED :
-	_cupsSetError(IPP_STATUS_ERROR_CUPS_AUTHENTICATION_CANCELED, httpStatus(status), 0);
+	_cupsSetError(IPP_STATUS_ERROR_CUPS_AUTHENTICATION_CANCELED, httpStatusString(status), 0);
 	break;
 
     case HTTP_STATUS_FORBIDDEN :
-	_cupsSetError(IPP_STATUS_ERROR_FORBIDDEN, httpStatus(status), 0);
+	_cupsSetError(IPP_STATUS_ERROR_FORBIDDEN, httpStatusString(status), 0);
 	break;
 
     case HTTP_STATUS_BAD_REQUEST :
-	_cupsSetError(IPP_STATUS_ERROR_BAD_REQUEST, httpStatus(status), 0);
+	_cupsSetError(IPP_STATUS_ERROR_BAD_REQUEST, httpStatusString(status), 0);
 	break;
 
-    case HTTP_STATUS_REQUEST_TOO_LARGE :
-	_cupsSetError(IPP_STATUS_ERROR_REQUEST_VALUE, httpStatus(status), 0);
+    case HTTP_STATUS_CONTENT_TOO_LARGE :
+	_cupsSetError(IPP_STATUS_ERROR_REQUEST_VALUE, httpStatusString(status), 0);
 	break;
 
     case HTTP_STATUS_NOT_IMPLEMENTED :
-	_cupsSetError(IPP_STATUS_ERROR_OPERATION_NOT_SUPPORTED, httpStatus(status), 0);
+	_cupsSetError(IPP_STATUS_ERROR_OPERATION_NOT_SUPPORTED, httpStatusString(status), 0);
 	break;
 
-    case HTTP_STATUS_NOT_SUPPORTED :
-	_cupsSetError(IPP_STATUS_ERROR_VERSION_NOT_SUPPORTED, httpStatus(status), 0);
+    case HTTP_STATUS_HTTP_VERSION_NOT_SUPPORTED :
+	_cupsSetError(IPP_STATUS_ERROR_VERSION_NOT_SUPPORTED, httpStatusString(status), 0);
 	break;
 
     case HTTP_STATUS_UPGRADE_REQUIRED :
-	_cupsSetError(IPP_STATUS_ERROR_CUPS_UPGRADE_REQUIRED, httpStatus(status), 0);
+	_cupsSetError(IPP_STATUS_ERROR_CUPS_UPGRADE_REQUIRED, httpStatusString(status), 0);
         break;
 
     case HTTP_STATUS_CUPS_PKI_ERROR :
-	_cupsSetError(IPP_STATUS_ERROR_CUPS_PKI, httpStatus(status), 0);
+	_cupsSetError(IPP_STATUS_ERROR_CUPS_PKI, httpStatusString(status), 0);
         break;
 
     case HTTP_STATUS_ERROR :
@@ -1167,7 +1167,7 @@ _cupsSetHTTPError(http_status_t status)	/* I - HTTP status code */
     default :
 	DEBUG_printf(("4_cupsSetHTTPError: HTTP error %d mapped to "
 	              "IPP_STATUS_ERROR_SERVICE_UNAVAILABLE!", status));
-	_cupsSetError(IPP_STATUS_ERROR_SERVICE_UNAVAILABLE, httpStatus(status), 0);
+	_cupsSetError(IPP_STATUS_ERROR_SERVICE_UNAVAILABLE, httpStatusString(status), 0);
 	break;
   }
 }

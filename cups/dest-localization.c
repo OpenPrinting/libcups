@@ -420,7 +420,7 @@ cups_create_localizations(
   status = cupsGetFd(http2, resource, cupsFileNumber(temp));
   cupsFileClose(temp);
 
-  DEBUG_printf(("4cups_create_localizations: GET %s = %s", resource, httpStatus(status)));
+  DEBUG_printf(("4cups_create_localizations: GET %s = %s", resource, httpStatusString(status)));
 
   if (status == HTTP_STATUS_OK)
   {

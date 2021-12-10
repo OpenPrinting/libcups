@@ -263,6 +263,8 @@ typedef enum http_status_e		/**** HTTP status codes ****/
   HTTP_STATUS_NO_CONTENT,		/* Successful command, no new data */
   HTTP_STATUS_RESET_CONTENT,		/* Content was reset/recreated */
   HTTP_STATUS_PARTIAL_CONTENT,		/* Only a partial file was received/sent */
+  HTTP_STATUS_MULTI_STATUS,		/* Multiple status codes (WebDAV) */
+  HTTP_STATUS_ALREADY_REPORTED,		/* Already reported (WebDAV) */
 
   HTTP_STATUS_MULTIPLE_CHOICES = 300,	/* Multiple files match request */
   HTTP_STATUS_MOVED_PERMANENTLY,	/* Document has moved permanently */
@@ -271,6 +273,7 @@ typedef enum http_status_e		/**** HTTP status codes ****/
   HTTP_STATUS_NOT_MODIFIED,		/* File not modified */
   HTTP_STATUS_USE_PROXY,		/* Must use a proxy to access this URI */
   HTTP_STATUS_TEMPORARY_REDIRECT = 307,	/* Temporary redirection */
+  HTTP_STATUS_PERMANENT_REDIRECT,	/* Permanent redirection */
 
   HTTP_STATUS_BAD_REQUEST = 400,	/* Bad request */
   HTTP_STATUS_UNAUTHORIZED,		/* Unauthorized to access host */
@@ -279,30 +282,48 @@ typedef enum http_status_e		/**** HTTP status codes ****/
   HTTP_STATUS_NOT_FOUND,		/* URI was not found */
   HTTP_STATUS_METHOD_NOT_ALLOWED,	/* Method is not allowed */
   HTTP_STATUS_NOT_ACCEPTABLE,		/* Not Acceptable */
-  HTTP_STATUS_PROXY_AUTHENTICATION,	/* Proxy Authentication is Required */
+  HTTP_STATUS_PROXY_AUTHENTICATION_REQUIRED,
+					/* Proxy Authentication is Required */
   HTTP_STATUS_REQUEST_TIMEOUT,		/* Request timed out */
   HTTP_STATUS_CONFLICT,			/* Request is self-conflicting */
   HTTP_STATUS_GONE,			/* Server has gone away */
   HTTP_STATUS_LENGTH_REQUIRED,		/* A content length or encoding is required */
-  HTTP_STATUS_PRECONDITION,		/* Precondition failed */
-  HTTP_STATUS_REQUEST_TOO_LARGE,	/* Request entity too large */
+  HTTP_STATUS_PRECONDITION_FAILED,	/* Precondition failed */
+  HTTP_STATUS_CONTENT_TOO_LARGE,	/* Content too large */
   HTTP_STATUS_URI_TOO_LONG,		/* URI too long */
-  HTTP_STATUS_UNSUPPORTED_MEDIATYPE,	/* The requested media type is unsupported */
-  HTTP_STATUS_REQUESTED_RANGE,		/* The requested range is not satisfiable */
+  HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE,	/* The requested media type is unsupported */
+  HTTP_STATUS_RANGE_NOT_SATISFIABLE,	/* The requested range is not satisfiable */
   HTTP_STATUS_EXPECTATION_FAILED,	/* The expectation given in an Expect header field was not met */
-  HTTP_STATUS_UPGRADE_REQUIRED = 426,	/* Upgrade to SSL/TLS required */
+  HTTP_STATUS_MISDIRECTED_REQUEST = 421,/* Misdirected request */
+  HTTP_STATUS_UNPROCESSABLE_CONTENT,	/* Unprocessable content */
+  HTTP_STATUS_LOCKED,			/* Locked (WebDAV) */
+  HTTP_STATUS_FAILED_DEPENDENCY,	/* Failed dependency (WebDAV) */
+  HTTP_STATUS_TOO_EARLY,		/* Too early (WebDAV) */
+  HTTP_STATUS_UPGRADE_REQUIRED,		/* Upgrade to SSL/TLS required */
+  HTTP_STATUS_PRECONDITION_REQUIRED = 428,
+					/* Precondition required (WebDAV) */
+  HTTP_STATUS_TOO_MANY_REQUESTS,	/* Too many requests (WebDAV) */
+  HTTP_STATUS_REQUEST_HEADER_FIELDS_TOO_LARGE = 431,
+					/* Request Header Fields Too Large (WebDAV) */
+  HTTP_STATUS_UNAVAILABLE_FOR_LEGAL_REASONS = 451,
+					/* Unavailable For Legal Reasons (RFC 7725) */
 
   HTTP_STATUS_SERVER_ERROR = 500,	/* Internal server error */
   HTTP_STATUS_NOT_IMPLEMENTED,		/* Feature not implemented */
   HTTP_STATUS_BAD_GATEWAY,		/* Bad gateway */
   HTTP_STATUS_SERVICE_UNAVAILABLE,	/* Service is unavailable */
   HTTP_STATUS_GATEWAY_TIMEOUT,		/* Gateway connection timed out */
-  HTTP_STATUS_NOT_SUPPORTED,		/* HTTP version not supported */
+  HTTP_STATUS_HTTP_VERSION_NOT_SUPPORTED,
+					/* HTTP version not supported */
+  HTTP_STATUS_INSUFFICIENT_STORAGE = 507,
+					/* Insufficient storage (WebDAV) */
+  HTTP_STATUS_LOOP_DETECTED,		/* Loop detected (WebDAV) */
+  HTTP_STATUS_NETWORK_AUTHENTICATION_REQUIRED = 511,
+					/* Network Authentication Required (WebDAV) */
 
   HTTP_STATUS_CUPS_AUTHORIZATION_CANCELED = 1000,
 					/* User canceled authorization */
-  HTTP_STATUS_CUPS_PKI_ERROR,		/* Error negotiating a secure connection */
-  HTTP_STATUS_CUPS_WEBIF_DISABLED	/* Web interface is disabled @private@ */
+  HTTP_STATUS_CUPS_PKI_ERROR		/* Error negotiating a secure connection */
 } http_status_t;
 
 typedef enum http_trust_e		/**** Level of trust for credentials */
@@ -477,7 +498,7 @@ extern void		httpSetLength(http_t *http, size_t length) _CUPS_PUBLIC;
 extern void		httpSetTimeout(http_t *http, double timeout, http_timeout_cb_t cb, void *user_data) _CUPS_PUBLIC;
 extern void		httpShutdown(http_t *http) _CUPS_PUBLIC;
 extern const char	*httpStateString(http_state_t state) _CUPS_PUBLIC;
-extern const char	*httpStatus(http_status_t status) _CUPS_PUBLIC;
+extern const char	*httpStatusString(http_status_t status) _CUPS_PUBLIC;
 extern int		httpTrace(http_t *http, const char *uri) _CUPS_PUBLIC;
 extern http_status_t	httpUpdate(http_t *http) _CUPS_PUBLIC;
 extern const char	*httpURIStatusString(http_uri_status_t status) _CUPS_PUBLIC;

@@ -237,7 +237,7 @@ extern char		*_httpEncodeURI(char *dst, const char *src, size_t dstsize) _CUPS_P
 extern void		_httpFreeCredentials(http_tls_credentials_t credentials) _CUPS_PRIVATE;
 extern const char	*_httpResolveURI(const char *uri, char *resolved_uri, size_t resolved_size, int options, int (*cb)(void *context), void *context) _CUPS_PRIVATE;
 extern int		_httpSetDigestAuthString(http_t *http, const char *nonce, const char *method, const char *resource) _CUPS_PRIVATE;
-extern const char	*_httpStatus(cups_lang_t *lang, http_status_t status) _CUPS_PRIVATE;
+extern const char	*_httpStatusString(cups_lang_t *lang, http_status_t status) _CUPS_PRIVATE;
 extern void		_httpTLSInitialize(void) _CUPS_PRIVATE;
 extern size_t		_httpTLSPending(http_t *http) _CUPS_PRIVATE;
 extern int		_httpTLSRead(http_t *http, char *buf, int len) _CUPS_PRIVATE;
