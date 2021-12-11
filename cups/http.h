@@ -231,21 +231,38 @@ typedef enum http_state_e		/**** HTTP state values; states are server-oriented..
 {
   HTTP_STATE_ERROR = -1,		/* Error on socket */
   HTTP_STATE_WAITING,			/* Waiting for command */
-  HTTP_STATE_OPTIONS,			/* OPTIONS command, waiting for blank line */
+  HTTP_STATE_CONNECT,			/* CONNECT command, waiting for blank line */
+  HTTP_STATE_COPY,			/* COPY command, waiting for blank line */
+  HTTP_STATE_COPY_SEND,			/* COPY command, sending data */
+  HTTP_STATE_DELETE,			/* DELETE command, waiting for blank line */
+  HTTP_STATE_DELETE_SEND,		/* DELETE command, sending data */
   HTTP_STATE_GET,			/* GET command, waiting for blank line */
   HTTP_STATE_GET_SEND,			/* GET command, sending data */
   HTTP_STATE_HEAD,			/* HEAD command, waiting for blank line */
+  HTTP_STATE_LOCK,			/* LOCK command, waiting for blank line */
+  HTTP_STATE_LOCK_RECV,			/* LOCK command, receiving data */
+  HTTP_STATE_LOCK_SEND,			/* LOCK command, sending data */
+  HTTP_STATE_MKCOL,			/* MKCOL command, waiting for blank line */
+  HTTP_STATE_MOVE,			/* MOVE command, waiting for blank line */
+  HTTP_STATE_MOVE_SEND,			/* MOVE command, sending data */
+  HTTP_STATE_OPTIONS,			/* OPTIONS command, waiting for blank line */
   HTTP_STATE_POST,			/* POST command, waiting for blank line */
   HTTP_STATE_POST_RECV,			/* POST command, receiving data */
   HTTP_STATE_POST_SEND,			/* POST command, sending data */
+  HTTP_STATE_PROPFIND,			/* PROPFIND command, waiting for blank line */
+  HTTP_STATE_PROPFIND_RECV,		/* PROPFIND command, receiving data */
+  HTTP_STATE_PROPFIND_SEND,		/* PROPFIND command, sending data */
+  HTTP_STATE_PROPPATCH,			/* PROPPATCH command, waiting for blank line */
+  HTTP_STATE_PROPPATCH_RECV,		/* PROPPATCH command, receiving data */
+  HTTP_STATE_PROPPATCH_SEND,		/* PROPPATCH command, sending data */
   HTTP_STATE_PUT,			/* PUT command, waiting for blank line */
   HTTP_STATE_PUT_RECV,			/* PUT command, receiving data */
-  HTTP_STATE_DELETE,			/* DELETE command, waiting for blank line */
   HTTP_STATE_TRACE,			/* TRACE command, waiting for blank line */
-  HTTP_STATE_CONNECT,			/* CONNECT command, waiting for blank line */
+  HTTP_STATE_UNLOCK,			/* UNLOCK command, waiting for blank line */
   HTTP_STATE_STATUS,			/* Command complete, sending status */
   HTTP_STATE_UNKNOWN_METHOD,		/* Unknown request method, waiting for blank line */
-  HTTP_STATE_UNKNOWN_VERSION		/* Unknown request method, waiting for blank line */
+  HTTP_STATE_UNKNOWN_VERSION,		/* Unknown request method, waiting for blank line */
+  HTTP_STATE_MAX			/* Number of possible states @private@ */
 } http_state_t;
 
 typedef enum http_status_e		/**** HTTP status codes ****/

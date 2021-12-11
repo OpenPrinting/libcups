@@ -1585,13 +1585,12 @@ httpPeek(http_t *http,			/* I - HTTP connection */
     if (http->data_encoding == HTTP_ENCODING_CHUNKED)
       httpGets(http, len, sizeof(len));
 
-    if (http->state == HTTP_STATE_POST_RECV)
+    if (http->state == HTTP_STATE_LOCK_RECV || http->state == HTTP_STATE_POST_RECV || http->state == HTTP_STATE_PROPFIND_RECV || http->state == HTTP_STATE_PROPPATCH_RECV)
       http->state ++;
     else
       http->state = HTTP_STATE_STATUS;
 
-    DEBUG_printf(("1httpPeek: 0-length chunk, set state to %s.",
-                  httpStateString(http->state)));
+    DEBUG_printf(("1httpPeek: 0-length chunk, set state to %s.", httpStateString(http->state)));
 
    /*
     * Prevent future reads for this request...
@@ -1997,10 +1996,9 @@ httpRead(http_t *http,			/* I - HTTP connection */
     if (http->coding >= _HTTP_CODING_GUNZIP)
       http_content_coding_finish(http);
 
-    if (http->state == HTTP_STATE_POST_RECV)
+    if (http->state == HTTP_STATE_LOCK_RECV || http->state == HTTP_STATE_POST_RECV || http->state == HTTP_STATE_PROPFIND_RECV || http->state == HTTP_STATE_PROPPATCH_RECV)
       http->state ++;
-    else if (http->state == HTTP_STATE_GET_SEND ||
-             http->state == HTTP_STATE_POST_SEND)
+    else if (http->state == HTTP_STATE_COPY_SEND || http->state == HTTP_STATE_DELETE_SEND || http->state == HTTP_STATE_GET_SEND || http->state == HTTP_STATE_LOCK_SEND || http->state == HTTP_STATE_MOVE_SEND || http->state == HTTP_STATE_POST_SEND || http->state == HTTP_STATE_PROPFIND_SEND || http->state == HTTP_STATE_PROPPATCH_SEND)
       http->state = HTTP_STATE_WAITING;
     else
       http->state = HTTP_STATE_STATUS;
@@ -2654,17 +2652,32 @@ _httpUpdate(http_t        *http,	/* I - HTTP connection */
 
     switch (http->state)
     {
+      case HTTP_STATE_COPY :
+      case HTTP_STATE_DELETE :
       case HTTP_STATE_GET :
+      case HTTP_STATE_LOCK :
+      case HTTP_STATE_LOCK_RECV :
       case HTTP_STATE_POST :
       case HTTP_STATE_POST_RECV :
+      case HTTP_STATE_PROPFIND :
+      case HTTP_STATE_PROPFIND_RECV :
+      case HTTP_STATE_PROPPATCH :
+      case HTTP_STATE_PROPPATCH_RECV :
       case HTTP_STATE_PUT :
 	  http->state ++;
 
 	  DEBUG_printf(("1_httpUpdate: Set state to %s.",
 	                httpStateString(http->state)));
 
-      case HTTP_STATE_POST_SEND :
+      case HTTP_STATE_CONNECT :
       case HTTP_STATE_HEAD :
+      case HTTP_STATE_LOCK_SEND :
+      case HTTP_STATE_MKCOL :
+      case HTTP_STATE_POST_SEND :
+      case HTTP_STATE_PROPFIND_SEND :
+      case HTTP_STATE_PROPPATCH_SEND :
+      case HTTP_STATE_TRACE :
+      case HTTP_STATE_UNLOCK :
 	  break;
 
       default :
@@ -3095,10 +3108,9 @@ httpWrite(http_t     *http,		/* I - HTTP connection */
       http->data_remaining = 0;
     }
 
-    if (http->state == HTTP_STATE_POST_RECV)
+    if (http->state == HTTP_STATE_LOCK_RECV || http->state == HTTP_STATE_POST_RECV || http->state == HTTP_STATE_PROPFIND_RECV || http->state == HTTP_STATE_PROPPATCH_RECV)
       http->state ++;
-    else if (http->state == HTTP_STATE_POST_SEND ||
-             http->state == HTTP_STATE_GET_SEND)
+    else if (http->state == HTTP_STATE_COPY_SEND || http->state == HTTP_STATE_DELETE_SEND || http->state == HTTP_STATE_GET_SEND || http->state ==  HTTP_STATE_LOCK_SEND || http->state == HTTP_STATE_MOVE_SEND || http->state == HTTP_STATE_POST_SEND || http->state == HTTP_STATE_PROPFIND_SEND || http->state == HTTP_STATE_PROPPATCH_SEND)
       http->state = HTTP_STATE_WAITING;
     else
       http->state = HTTP_STATE_STATUS;
@@ -3309,7 +3321,7 @@ httpWriteResponse(http_t        *http,	/* I - HTTP connection */
       return (0);
     }
 
-    if (http->state == HTTP_STATE_POST_RECV || http->state == HTTP_STATE_GET)
+    if (http->state == HTTP_STATE_COPY || http->state == HTTP_STATE_DELETE || http->state == HTTP_STATE_GET || http->state == HTTP_STATE_LOCK_RECV || http->state == HTTP_STATE_MOVE || http->state == HTTP_STATE_POST_RECV || http->state == HTTP_STATE_PROPFIND_RECV || http->state == HTTP_STATE_PROPPATCH_RECV)
       http->state ++;
 
    /*
@@ -4025,24 +4037,41 @@ http_send(http_t       *http,		/* I - HTTP connection */
   int		i;			/* Looping var */
   char		buf[1024];		/* Encoded URI buffer */
   const char	*value;			/* Field value */
-  static const char * const codes[] =	/* Request code strings */
-		{
-		  NULL,
-		  "OPTIONS",
-		  "GET",
-		  NULL,
-		  "HEAD",
-		  "POST",
-		  NULL,
-		  NULL,
-		  "PUT",
-		  NULL,
-		  "DELETE",
-		  "TRACE",
-		  "CLOSE",
-		  NULL,
-		  NULL
-		};
+  static const char * const codes[HTTP_STATE_MAX] =
+  {					/* Request code strings */
+    NULL,	// WAITING
+    "CONNECT",
+    "COPY",
+    NULL,
+    "DELETE",
+    NULL,
+    "GET",
+    NULL,
+    "HEAD",
+    "LOCK",
+    NULL,
+    NULL,
+    "MKCOL",
+    "MOVE",
+    NULL,
+    "OPTIONS",
+    "POST",
+    NULL,
+    NULL,
+    "PROPFIND",
+    NULL,
+    NULL,
+    "PROPPATCH",
+    NULL,
+    NULL,
+    "PUT",
+    NULL,
+    "TRACE",
+    "UNLOCK",
+    NULL,
+    NULL,
+    NULL
+  };
 
 
   DEBUG_printf(("4http_send(http=%p, request=HTTP_%s, uri=\"%s\")", (void *)http, codes[request], uri));
@@ -4106,7 +4135,7 @@ http_send(http_t       *http,		/* I - HTTP connection */
   http->state         = request;
   http->data_encoding = HTTP_ENCODING_FIELDS;
 
-  if (request == HTTP_STATE_POST || request == HTTP_STATE_PUT)
+  if (request == HTTP_STATE_LOCK || request == HTTP_STATE_POST || request == HTTP_STATE_PROPFIND || request == HTTP_STATE_PROPPATCH || request == HTTP_STATE_PUT)
     http->state ++;
 
   http->status = HTTP_STATUS_CONTINUE;
