@@ -80,18 +80,34 @@ static const char * const http_states[] =
 			{		/* HTTP state strings */
 			  "HTTP_STATE_ERROR",
 			  "HTTP_STATE_WAITING",
-			  "HTTP_STATE_OPTIONS",
+			  "HTTP_STATE_CONNECT",
+			  "HTTP_STATE_COPY",
+			  "HTTP_STATE_COPY_SEND",
+			  "HTTP_STATE_DELETE",
+			  "HTTP_STATE_DELETE_SEND",
 			  "HTTP_STATE_GET",
 			  "HTTP_STATE_GET_SEND",
 			  "HTTP_STATE_HEAD",
+			  "HTTP_STATE_LOCK",
+			  "HTTP_STATE_LOCK_RECV",
+			  "HTTP_STATE_LOCK_SEND",
+			  "HTTP_STATE_MKCOL",
+			  "HTTP_STATE_MOVE",
+			  "HTTP_STATE_MOVE_SEND",
+			  "HTTP_STATE_OPTIONS",
 			  "HTTP_STATE_POST",
 			  "HTTP_STATE_POST_RECV",
 			  "HTTP_STATE_POST_SEND",
+			  "HTTP_STATE_PROPFIND",
+			  "HTTP_STATE_PROPFIND_RECV",
+			  "HTTP_STATE_PROPFIND_SEND",
+			  "HTTP_STATE_PROPPATCH",
+			  "HTTP_STATE_PROPPATCH_RECV",
+			  "HTTP_STATE_PROPPATCH_SEND",
 			  "HTTP_STATE_PUT",
 			  "HTTP_STATE_PUT_RECV",
-			  "HTTP_STATE_DELETE",
 			  "HTTP_STATE_TRACE",
-			  "HTTP_STATE_CONNECT",
+			  "HTTP_STATE_UNLOCK",
 			  "HTTP_STATE_STATUS",
 			  "HTTP_STATE_UNKNOWN_METHOD",
 			  "HTTP_STATE_UNKNOWN_VERSION"
@@ -1349,14 +1365,12 @@ _httpSetDigestAuthString(
 
 /*
  * 'httpStateString()' - Return the string describing a HTTP state value.
- *
- * @since CUPS 2.0/OS 10.10@
  */
 
 const char *				/* O - State string */
 httpStateString(http_state_t state)	/* I - HTTP state value */
 {
-  if (state < HTTP_STATE_ERROR || state > HTTP_STATE_UNKNOWN_VERSION)
+  if (state < HTTP_STATE_ERROR || state >= HTTP_STATE_MAX)
     return ("HTTP_STATE_???");
   else
     return (http_states[state - HTTP_STATE_ERROR]);
@@ -1587,14 +1601,15 @@ httpStatusString(http_status_t status)	/* I - HTTP status code */
 }
 
 /*
- * 'httpURIStatusString()' - Return a string describing a URI status code.
+ * 'httpURIStatusString()' - Return a string describing a URI status value.
  *
- * @since CUPS 2.0/OS 10.10@
+ * This function returns a short (localized) string describing a URI status
+ * value.
  */
 
 const char *				/* O - Localized status string */
 httpURIStatusString(
-    http_uri_status_t status)		/* I - URI status code */
+    http_uri_status_t status)		/* I - URI status value */
 {
   const char	*s;			/* Status string */
   _cups_globals_t *cg = _cupsGlobals();	/* Global data */

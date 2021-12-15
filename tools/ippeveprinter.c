@@ -2900,7 +2900,7 @@ html_header(ippeve_client_t *client,	/* I - Client */
 
 static void
 html_printf(ippeve_client_t *client,	/* I - Client */
-	    const char    *format,	/* I - Printf-style format string */
+	    const char      *format,	/* I - Printf-style format string */
 	    ...)			/* I - Additional arguments as needed */
 {
   va_list	ap;			/* Pointer to arguments */
@@ -2927,14 +2927,19 @@ html_printf(ippeve_client_t *client,	/* I - Client */
     if (*format == '%')
     {
       if (format > start)
-        httpWrite(client->http, start, (size_t)(format - start));
+      {
+        if (httpWrite(client->http, start, (size_t)(format - start)) < 0)
+	  goto error;
+      }
 
       tptr    = tformat;
       *tptr++ = *format++;
 
       if (*format == '%')
       {
-        httpWrite(client->http, "%", 1);
+        if (httpWrite(client->http, "%", 1) < 0)
+	  goto error;
+
         format ++;
 	start = format;
 	continue;
@@ -3022,7 +3027,6 @@ html_printf(ippeve_client_t *client,	/* I - Client */
       else
         size = 0;
 
-
       if (!*format)
       {
         start = format;
@@ -3048,7 +3052,8 @@ html_printf(ippeve_client_t *client,	/* I - Client */
 
 	    snprintf(temp, sizeof(temp), tformat, va_arg(ap, double));
 
-            httpWrite(client->http, temp, strlen(temp));
+            if (httpWrite(client->http, temp, strlen(temp)) < 0)
+	      goto error;
 	    break;
 
         case 'B' : /* Integer formats */
@@ -3072,7 +3077,8 @@ html_printf(ippeve_client_t *client,	/* I - Client */
 	    else
 	      snprintf(temp, sizeof(temp), tformat, va_arg(ap, int));
 
-            httpWrite(client->http, temp, strlen(temp));
+            if (httpWrite(client->http, temp, strlen(temp)) < 0)
+	      goto error;
 	    break;
 
 	case 'p' : /* Pointer value */
@@ -3081,7 +3087,8 @@ html_printf(ippeve_client_t *client,	/* I - Client */
 
 	    snprintf(temp, sizeof(temp), tformat, va_arg(ap, void *));
 
-            httpWrite(client->http, temp, strlen(temp));
+            if (httpWrite(client->http, temp, strlen(temp)) < 0)
+	      goto error;
 	    break;
 
         case 'c' : /* Character or character array */
@@ -3108,7 +3115,12 @@ html_printf(ippeve_client_t *client,	/* I - Client */
   }
 
   if (format > start)
-    httpWrite(client->http, start, (size_t)(format - start));
+  {
+    if (httpWrite(client->http, start, (size_t)(format - start)) < 0)
+      goto error;
+  }
+
+  error:
 
   va_end(ap);
 }

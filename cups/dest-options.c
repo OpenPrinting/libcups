@@ -1028,7 +1028,7 @@ cupsGetDestMediaByIndex(
   if (size)
     memset(size, 0, sizeof(cups_size_t));
 
-  if (!http || !dest || !dinfo || n < 0 || !size)
+  if (!http || !dest || !dinfo || !size)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), 0);
     return (0);

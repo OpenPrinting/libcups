@@ -498,9 +498,7 @@ ippAddOctetString(ipp_t      *ipp,	/* I - IPP message */
   ipp_attribute_t	*attr;		/* New attribute */
 
 
-  if (!ipp || !name || group < IPP_TAG_ZERO ||
-      group == IPP_TAG_END || group >= IPP_TAG_UNSUPPORTED_VALUE ||
-      datalen < 0 || datalen > IPP_MAX_LENGTH)
+  if (!ipp || !name || group < IPP_TAG_ZERO || group == IPP_TAG_END || group >= IPP_TAG_UNSUPPORTED_VALUE || datalen > IPP_MAX_LENGTH)
     return (NULL);
 
   if ((attr = ipp_add_attr(ipp, name, group, IPP_TAG_STRING, 1)) == NULL)
@@ -3875,7 +3873,7 @@ ippSetOctetString(
   * Range check input...
   */
 
-  if (!ipp || !attr || !*attr || ((*attr)->value_tag != IPP_TAG_STRING && (*attr)->value_tag != IPP_TAG_NOVALUE && (*attr)->value_tag != IPP_TAG_UNKNOWN) || element > (*attr)->num_values || datalen < 0 || datalen > IPP_MAX_LENGTH)
+  if (!ipp || !attr || !*attr || ((*attr)->value_tag != IPP_TAG_STRING && (*attr)->value_tag != IPP_TAG_NOVALUE && (*attr)->value_tag != IPP_TAG_UNKNOWN) || element > (*attr)->num_values || datalen > IPP_MAX_LENGTH)
     return (0);
 
  /*
@@ -6135,7 +6133,7 @@ ipp_add_attr(ipp_t      *ipp,		/* I - IPP message */
   * Range check input...
   */
 
-  if (!ipp || num_values < 0)
+  if (!ipp)
     return (NULL);
 
  /*

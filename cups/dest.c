@@ -1961,7 +1961,13 @@ cupsSetDests(http_t      *http,		/* I - Connection to server or @code CUPS_HTTP_
     snprintf(filename, sizeof(filename), "%s/.cups", cg->home);
 #endif // _WIN32
     if (access(filename, 0))
-      mkdir(filename, 0700);
+    {
+      if (mkdir(filename, 0700) && errno != EEXIST)
+      {
+	cupsFreeDests(num_temps, temps);
+        return (-1);
+      }
+    }
 
 #if _WIN32
     snprintf(filename, sizeof(filename), "%s/AppData/Local/cups/lpoptions", cg->home);

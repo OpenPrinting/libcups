@@ -29,8 +29,6 @@
 /*
  * 'httpAddrConnect()' - Connect to any of the addresses in the list with a
  *                       timeout and optional cancel.
- *
- * @since CUPS 1.7/macOS 10.9@
  */
 
 http_addrlist_t *			/* O - Connected address or NULL on failure */

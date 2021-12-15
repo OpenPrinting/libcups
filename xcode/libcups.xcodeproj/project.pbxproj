@@ -27,8 +27,6 @@
 				271284BF1CC11FA500E517C7 /* PBXTargetDependency */,
 				274770E42345347D0089BC31 /* PBXTargetDependency */,
 				271286E01CC13EF400E517C7 /* PBXTargetDependency */,
-				726AD704135E8AA1002C930D /* PBXTargetDependency */,
-				2767FC5419267469000F61D3 /* PBXTargetDependency */,
 			);
 			name = Tests;
 			productName = Tests;
@@ -520,13 +518,6 @@
 			remoteGlobalIDString = 274FF6891333B1C400317ECB;
 			remoteInfo = libcups_static;
 		};
-		2767FC5319267469000F61D3 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 72BF96371333042100B1EAD7 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 276683EF1337F78E000D33D0;
-			remoteInfo = ipptool;
-		};
 		2767FC5519267469000F61D3 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 72BF96371333042100B1EAD7 /* Project object */;
@@ -617,13 +608,6 @@
 			proxyType = 1;
 			remoteGlobalIDString = 274FF6891333B1C400317ECB;
 			remoteInfo = libcups_static;
-		};
-		726AD703135E8AA1002C930D /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 72BF96371333042100B1EAD7 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 726AD6F6135E88F0002C930D;
-			remoteInfo = ippserver;
 		};
 		729181B0201155C1005E7560 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -2517,11 +2501,6 @@
 			target = 274FF6891333B1C400317ECB /* libcups_static */;
 			targetProxy = 2767FC4819266A0D000F61D3 /* PBXContainerItemProxy */;
 		};
-		2767FC5419267469000F61D3 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 276683EF1337F78E000D33D0 /* ipptool */;
-			targetProxy = 2767FC5319267469000F61D3 /* PBXContainerItemProxy */;
-		};
 		2767FC5619267469000F61D3 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 2767FC4619266A0D000F61D3 /* testdest */;
@@ -2586,11 +2565,6 @@
 			isa = PBXTargetDependency;
 			target = 274FF6891333B1C400317ECB /* libcups_static */;
 			targetProxy = 724FA60D1CC0382B0092477B /* PBXContainerItemProxy */;
-		};
-		726AD704135E8AA1002C930D /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 726AD6F6135E88F0002C930D /* ippeveprinter */;
-			targetProxy = 726AD703135E8AA1002C930D /* PBXContainerItemProxy */;
 		};
 		729181AF201155C1005E7560 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
