@@ -1157,8 +1157,7 @@ _httpTLSRead(http_t *http,		/* I - HTTP connection */
 
 
   error = SSLRead(http->tls, buf, (size_t)len, &processed);
-  DEBUG_printf(("6_httpTLSRead: error=%d, processed=%d", (int)error,
-                (int)processed));
+  DEBUG_printf(("5_httpTLSRead: error=%d, processed=%d", (int)error, (int)processed));
   switch (error)
   {
     case 0 :
@@ -1473,14 +1472,12 @@ _httpTLSStart(http_t *http)		/* I - HTTP connection */
     {
       error = SSLSetSessionOption(http->tls,
 				  kSSLSessionOptionBreakOnCertRequested, true);
-      DEBUG_printf(("4_httpTLSStart: kSSLSessionOptionBreakOnCertRequested, "
-                    "error=%d", (int)error));
+      DEBUG_printf(("4_httpTLSStart: kSSLSessionOptionBreakOnCertRequested, error=%d", (int)error));
     }
     else
     {
       error = http_cdsa_set_credentials(http);
-      DEBUG_printf(("4_httpTLSStart: http_cdsa_set_credentials, error=%d",
-                    (int)error));
+      DEBUG_printf(("4_httpTLSStart: http_cdsa_set_credentials, error=%d", (int)error));
     }
   }
   else if (!error)
@@ -1649,8 +1646,7 @@ _httpTLSStart(http_t *http)		/* I - HTTP connection */
 		httpFreeCredentials(credentials);
 	      }
 
-	      DEBUG_printf(("4_httpTLSStart: Server certificate callback "
-	                    "returned %d.", (int)error));
+	      DEBUG_printf(("4_httpTLSStart: Server certificate callback returned %d.", (int)error));
 	    }
 	    break;
 
@@ -1692,8 +1688,7 @@ _httpTLSStart(http_t *http)		/* I - HTTP connection */
 		error = (cg->client_cert_cb)(http, http->tls, names,
 					     cg->client_cert_data);
 
-		DEBUG_printf(("4_httpTLSStart: Client certificate callback "
-		              "returned %d.", (int)error));
+		DEBUG_printf(("4_httpTLSStart: Client certificate callback returned %d.", (int)error));
 	      }
 
 	      httpFreeCredentials(names);
@@ -1701,38 +1696,31 @@ _httpTLSStart(http_t *http)		/* I - HTTP connection */
 	    break;
 
 	case errSSLUnknownRootCert :
-	    message = _("Unable to establish a secure connection to host "
-	                "(untrusted certificate).");
+	    message = _("Unable to establish a secure connection to host (untrusted certificate).");
 	    break;
 
 	case errSSLNoRootCert :
-	    message = _("Unable to establish a secure connection to host "
-	                "(self-signed certificate).");
+	    message = _("Unable to establish a secure connection to host (self-signed certificate).");
 	    break;
 
 	case errSSLCertExpired :
-	    message = _("Unable to establish a secure connection to host "
-	                "(expired certificate).");
+	    message = _("Unable to establish a secure connection to host (expired certificate).");
 	    break;
 
 	case errSSLCertNotYetValid :
-	    message = _("Unable to establish a secure connection to host "
-	                "(certificate not yet valid).");
+	    message = _("Unable to establish a secure connection to host (certificate not yet valid).");
 	    break;
 
 	case errSSLHostNameMismatch :
-	    message = _("Unable to establish a secure connection to host "
-	                "(host name mismatch).");
+	    message = _("Unable to establish a secure connection to host (host name mismatch).");
 	    break;
 
 	case errSSLXCertChainInvalid :
-	    message = _("Unable to establish a secure connection to host "
-	                "(certificate chain invalid).");
+	    message = _("Unable to establish a secure connection to host (certificate chain invalid).");
 	    break;
 
 	case errSSLConnectionRefused :
-	    message = _("Unable to establish a secure connection to host "
-	                "(peer dropped connection before responding).");
+	    message = _("Unable to establish a secure connection to host (peer dropped connection before responding).");
 	    break;
 
  	default :
@@ -1812,7 +1800,7 @@ _httpTLSWrite(http_t     *http,		/* I - HTTP connection */
   size_t	processed;		/* Number of bytes processed */
 
 
-  DEBUG_printf(("2_httpTLSWrite(http=%p, buf=%p, len=%d)", (void *)http, (void *)buf, len));
+  DEBUG_printf(("4_httpTLSWrite(http=%p, buf=%p, len=%d)", (void *)http, (void *)buf, len));
 
   error = SSLWrite(http->tls, buf, (size_t)len, &processed);
 
@@ -1848,7 +1836,7 @@ _httpTLSWrite(http_t     *http,		/* I - HTTP connection */
 	break;
   }
 
-  DEBUG_printf(("3_httpTLSWrite: Returning %d.", (int)result));
+  DEBUG_printf(("5_httpTLSWrite: Returning %d.", (int)result));
 
   return ((int)result);
 }

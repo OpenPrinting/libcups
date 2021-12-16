@@ -761,13 +761,13 @@ _httpTLSRead(http_t *http,		/* I - HTTP connection */
       if (sspi->decryptBufferLength >= 262144)
       {
 	WSASetLastError(E_OUTOFMEMORY);
-        DEBUG_puts("_httpTLSRead: Decryption buffer too large (>256k)");
+        DEBUG_puts("5_httpTLSRead: Decryption buffer too large (>256k)");
 	return (-1);
       }
 
       if ((temp = realloc(sspi->decryptBuffer, sspi->decryptBufferLength + 4096)) == NULL)
       {
-	DEBUG_printf(("_httpTLSRead: Unable to allocate %d byte decryption buffer.", sspi->decryptBufferLength + 4096));
+	DEBUG_printf(("5_httpTLSRead: Unable to allocate %d byte decryption buffer.", sspi->decryptBufferLength + 4096));
 	WSASetLastError(E_OUTOFMEMORY);
 	return (-1);
       }
@@ -775,7 +775,7 @@ _httpTLSRead(http_t *http,		/* I - HTTP connection */
       sspi->decryptBufferLength += 4096;
       sspi->decryptBuffer       = temp;
 
-      DEBUG_printf(("_httpTLSRead: Resized decryption buffer to %d bytes.", sspi->decryptBufferLength));
+      DEBUG_printf(("5_httpTLSRead: Resized decryption buffer to %d bytes.", sspi->decryptBufferLength));
     }
 
     buffers[0].pvBuffer	  = sspi->decryptBuffer;
@@ -866,7 +866,7 @@ _httpTLSRead(http_t *http,		/* I - HTTP connection */
 
         if ((temp = realloc(sspi->readBuffer, sspi->readBufferUsed + bytesToSave)) == NULL)
 	{
-	  DEBUG_printf(("_httpTLSRead: Unable to allocate %d bytes.", sspi->readBufferUsed + bytesToSave));
+	  DEBUG_printf(("5_httpTLSRead: Unable to allocate %d bytes.", sspi->readBufferUsed + bytesToSave));
 	  WSASetLastError(E_OUTOFMEMORY);
 	  return (-1);
 	}
@@ -884,7 +884,7 @@ _httpTLSRead(http_t *http,		/* I - HTTP connection */
   }
   else
   {
-    DEBUG_puts("_httpTLSRead: Unable to find data buffer.");
+    DEBUG_puts("5_httpTLSRead: Unable to find data buffer.");
     WSASetLastError(WSASYSCALLFAILURE);
     return (-1);
   }
@@ -1095,7 +1095,7 @@ _httpTLSStop(http_t *http)		/* I - HTTP connection */
           if ((cbData == SOCKET_ERROR) || (cbData == 0))
           {
             status = WSAGetLastError();
-            DEBUG_printf(("_httpTLSStop: sending close notify failed: %d", status));
+            DEBUG_printf(("4_httpTLSStop: sending close notify failed: %d", status));
           }
           else
           {
@@ -1105,12 +1105,12 @@ _httpTLSStop(http_t *http)		/* I - HTTP connection */
       }
       else
       {
-        DEBUG_printf(("_httpTLSStop: AcceptSecurityContext failed: %s", http_sspi_strerror(sspi->error, sizeof(sspi->error), status)));
+        DEBUG_printf(("4_httpTLSStop: AcceptSecurityContext failed: %s", http_sspi_strerror(sspi->error, sizeof(sspi->error), status)));
       }
     }
     else
     {
-      DEBUG_printf(("_httpTLSStop: ApplyControlToken failed: %s", http_sspi_strerror(sspi->error, sizeof(sspi->error), status)));
+      DEBUG_printf(("4_httpTLSStop: ApplyControlToken failed: %s", http_sspi_strerror(sspi->error, sizeof(sspi->error), status)));
     }
   }
 
@@ -1146,7 +1146,7 @@ _httpTLSWrite(http_t     *http,		/* I - HTTP connection */
 
     if ((temp = (BYTE *)realloc(sspi->writeBuffer, bufferLen)) == NULL)
     {
-      DEBUG_printf(("_httpTLSWrite: Unable to allocate buffer of %d bytes.", bufferLen));
+      DEBUG_printf(("5_httpTLSWrite: Unable to allocate buffer of %d bytes.", bufferLen));
       WSASetLastError(E_OUTOFMEMORY);
       return (-1);
     }
@@ -1197,7 +1197,7 @@ _httpTLSWrite(http_t     *http,		/* I - HTTP connection */
 
     if (FAILED(scRet))
     {
-      DEBUG_printf(("_httpTLSWrite: EncryptMessage failed: %s", http_sspi_strerror(sspi->error, sizeof(sspi->error), scRet)));
+      DEBUG_printf(("5_httpTLSWrite: EncryptMessage failed: %s", http_sspi_strerror(sspi->error, sizeof(sspi->error), scRet)));
       WSASetLastError(WSASYSCALLFAILURE);
       return (-1);
     }
@@ -1212,7 +1212,7 @@ _httpTLSWrite(http_t     *http,		/* I - HTTP connection */
 
     if (num <= 0)
     {
-      DEBUG_printf(("_httpTLSWrite: send failed: %ld", WSAGetLastError()));
+      DEBUG_printf(("5_httpTLSWrite: send failed: %ld", WSAGetLastError()));
       return (num);
     }
 
@@ -2405,7 +2405,7 @@ http_sspi_verify(
   {
     status = GetLastError();
 
-    DEBUG_printf(("CertGetCertificateChain returned: %s", http_sspi_strerror(error, sizeof(error), status)));
+    DEBUG_printf(("5http_sspi_verify: CertGetCertificateChain returned: %s", http_sspi_strerror(error, sizeof(error), status)));
 
     LocalFree(commonNameUnicode);
     return (status);
@@ -2432,7 +2432,7 @@ http_sspi_verify(
   {
     status = GetLastError();
 
-    DEBUG_printf(("CertVerifyCertificateChainPolicy returned %s", http_sspi_strerror(error, sizeof(error), status)));
+    DEBUG_printf(("5http_sspi_verify: CertVerifyCertificateChainPolicy returned %s", http_sspi_strerror(error, sizeof(error), status)));
   }
   else if (policyStatus.dwError)
     status = policyStatus.dwError;
