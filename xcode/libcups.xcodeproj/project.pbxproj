@@ -2793,6 +2793,7 @@
 				EXECUTABLE_EXTENSION = a;
 				EXECUTABLE_PREFIX = "";
 				INSTALL_PATH = /usr/local/lib;
+				MACH_O_TYPE = staticlib;
 				PRIVATE_HEADERS_FOLDER_PATH = /usr/local/include/cups;
 				PRODUCT_NAME = libcups_static;
 				PUBLIC_HEADERS_FOLDER_PATH = /usr/include/cups;
@@ -2808,6 +2809,7 @@
 				EXECUTABLE_EXTENSION = a;
 				EXECUTABLE_PREFIX = "";
 				INSTALL_PATH = /usr/local/lib;
+				MACH_O_TYPE = staticlib;
 				PRIVATE_HEADERS_FOLDER_PATH = /usr/local/include/cups;
 				PRODUCT_NAME = libcups_static;
 				PUBLIC_HEADERS_FOLDER_PATH = /usr/include/cups;
@@ -3156,6 +3158,7 @@
 					.,
 					..,
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = (
 					"-D_CUPS_SOURCE",
@@ -3221,6 +3224,7 @@
 					.,
 					..,
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				OTHER_CFLAGS = (
 					"-D_CUPS_SOURCE",
 					"-Wno-shorten-64-to-32",
