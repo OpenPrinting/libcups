@@ -16,7 +16,7 @@ The following general changes have been made to the CUPS API:
 
 - Boolean values now use the C99 `bool` type.
 - Counts, indices, and lengths now use the `size_t` type - this affects the
-  HTTP, IPP, and option APIs in particular.
+  array, HTTP, IPP, and option APIs in particular.
 - Accessor functions have been renamed (as necessary) to use the "get" and "set"
   verbs, for example `cupsServer` is now `cupsGetServer` and `httpEncryption` is
   now `httpSetEncryption`.
@@ -28,7 +28,8 @@ Removed Functions
 The following CUPS 2.x API functions have been removed from the CUPS library:
 
 - Old class/printer functions: `cupsGetClasses` and `cupsGetPrinters`.
-- Old HTTP functions: `httpConnect` and `httpConnectEncrypt`.
+- HTTP functions: `httpConnect2`, `httpConnectEncrypt`, `httpDecode64_2`, and
+  `httpEncode64_2`.
 - PPD file functions: `ppdClose`, `ppdCollect`, `ppdCollect2`, `ppdConflicts`,
   `ppdEmit`, `ppdEmitAfterOrder`, `ppdEmitFd`, `ppdEmitJCL`, `ppdEmitJCLEnd`,
   `ppdEmitString`, `ppdErrorString`, `ppdFindAttr`, `ppdFindChoice`,
@@ -44,10 +45,11 @@ The following CUPS 2.x API functions have been removed from the CUPS library:
   `cupsRasterInterpretPPD`, and `cupsResolveConflicts`.
 - Deprecated functions: `cupsTempFile`.
 - Non-destination print functions: `cupsCancelJob`, `cupsCancelJob2`,
-  `cupsCreateJob`, `cupsCloseJob`, `cupsFinishDocument`, `cupsGetDefault`, `cupsGetDefault2`,
-  `cupsPrintFile`, `cupsPrintFile2`, `cupsPrintFiles`, `cupsPrintFiles2`,
-  `cupsSendDocument`
-- Raster functions: `cupsRasterReadHeader2` and `cupsRasterWriteHeader2`
+  `cupsCreateJob`, `cupsCloseJob`, `cupsFinishDocument`, `cupsGetDefault`,
+  `cupsGetDefault2`, `cupsPrintFile`, `cupsPrintFile2`, `cupsPrintFiles`,
+  `cupsPrintFiles2`, and `cupsSendDocument`.
+- Array functions: `cupsArrayNew2` and `cupsArrayNew3`.
+- Raster functions: `cupsRasterReadHeader2` and `cupsRasterWriteHeader2`.
 
 
 Renamed Functions
@@ -55,6 +57,13 @@ Renamed Functions
 
 | Old Name                 | New Name                |
 +--------------------------+-------------------------+
+| `cupsArrayCount`         | `cupsArrayGetCount`     |
+| `cupsArrayFirst`         | `cupsArrayGetFirst`     |
+| `cupsArrayIndex`         | `cupsArrayGetElement`   |
+| `cupsArrayLast`          | `cupsArrayGetLast`      |
+| `cupsArrayNew3`          | `cupsArrayNew`          |
+| `cupsArrayNext`          | `cupsArrayGetNext`      |
+| `cupsArrayPrev`          | `cupsArrayGetPrev`      |
 | `cupsEncryption`         | `cupsGetEncryption`     |
 | `cupsGetDests2`          | `cupsGetDests`          |
 | `cupsGetPassword2`       | `cupsGetPassword`       |
@@ -82,6 +91,9 @@ Renamed Types
 
 | Old Name              | New Name             |
 +-----------------------+----------------------+
+| `cups_acopy_func_t`   | `cups_acopy_cb_t`    |
+| `cups_afree_func_t`   | `cups_afree_cb_t`    |
+| `cups_array_func_t`   | `cups_array_cb_t`    |
 | `cups_password_cb2_t` | `cups_password_cb_t` |
 | `cups_page_header2_t` | `cups_page_header_t` |
 
@@ -90,5 +102,5 @@ API Changes
 -----------
 
 - `httpGets` now has the `http_t` pointer as the first argument.
-- `ippAddOctetString`, `ippGetOctetString`, and `ippSetOctetString` now use the
-  `size_t` type for lengths.
+- The `cups_size_t` structure now includes `source` and `type` members to allow
+  specification of media source (input tray/roll) and type.

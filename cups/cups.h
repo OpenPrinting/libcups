@@ -222,30 +222,32 @@ typedef struct cups_dest_s		/**** Destination ****/
 typedef struct _cups_dinfo_s cups_dinfo_t;
 					/* Destination capability and status information */
 
-typedef struct cups_job_s		/**** Job ****/
+typedef struct cups_job_s		// Job
 {
-  int		id;			/* The job ID */
-  char		*dest;			/* Printer or class name */
-  char		*title;			/* Title/job name */
-  char		*user;			/* User that submitted the job */
-  char		*format;		/* Document format */
-  ipp_jstate_t	state;			/* Job state */
-  int		size;			/* Size in kilobytes */
-  int		priority;		/* Priority (1-100) */
-  time_t	completed_time;		/* Time the job was completed */
-  time_t	creation_time;		/* Time the job was created */
-  time_t	processing_time;	/* Time the job was processed */
+  int		id;			// The job ID
+  char		*dest;			// Printer or class name
+  char		*title;			// Title/job name
+  char		*user;			// User that submitted the job
+  char		*format;		// Document format
+  ipp_jstate_t	state;			// Job state
+  int		size;			// Size in kilobytes
+  int		priority;		// Priority (1-100)
+  time_t	completed_time;		// Time the job was completed
+  time_t	creation_time;		// Time the job was created
+  time_t	processing_time;	// Time the job was processed
 } cups_job_t;
 
-typedef struct cups_size_s		/**** Media Size ****/
+typedef struct cups_size_s		//// Media Size
 {
-  char		media[128];		/* Media name to use */
-  int		width,			/* Width in hundredths of millimeters */
-		length,			/* Length in hundredths of millimeters */
-		bottom,			/* Bottom margin in hundredths of millimeters */
-		left,			/* Left margin in hundredths of millimeters */
-		right,			/* Right margin in hundredths of millimeters */
-		top;			/* Top margin in hundredths of millimeters */
+  char		media[128],		// Media name to use
+		source[128],		// Media source (blank for any/auto)
+		type[128];		// Media type (blank for any/auto)
+  int		width,			// Width in hundredths of millimeters */
+		length,			// Length in hundredths of millimeters */
+		bottom,			// Bottom margin in hundredths of millimeters
+		left,			// Left margin in hundredths of millimeters
+		right,			// Right margin in hundredths of millimeters
+		top;			// Top margin in hundredths of millimeters
 } cups_size_t;
 
 typedef int (*cups_client_cert_cb_t)(http_t *http, void *tls, cups_array_t *distinguished_names, void *user_data);
@@ -268,60 +270,10 @@ typedef int (*cups_server_cert_cb_t)(http_t *http, void *tls, cups_array_t *cert
  * Functions...
  */
 
-extern ipp_t		*cupsDoFileRequest(http_t *http, ipp_t *request, const char *resource, const char *filename) _CUPS_PUBLIC;
-extern ipp_t		*cupsDoRequest(http_t *http, ipp_t *request, const char *resource) _CUPS_PUBLIC;
-extern http_encryption_t cupsGetEncryption(void) _CUPS_PUBLIC;
-extern void		cupsFreeJobs(int num_jobs, cups_job_t *jobs) _CUPS_PUBLIC;
-extern int		cupsGetJobs(http_t *http, cups_job_t **jobs, const char *name, bool myjobs, cups_whichjobs_t whichjobs) _CUPS_PUBLIC;
-extern ipp_status_t	cupsLastError(void) _CUPS_PUBLIC;
-extern int		cupsTempFd(char *filename, size_t len) _CUPS_PUBLIC;
-
 extern int		cupsAddDest(const char *name, const char *instance, int num_dests, cups_dest_t **dests) _CUPS_PUBLIC;
-extern void		cupsFreeDests(int num_dests, cups_dest_t *dests) _CUPS_PUBLIC;
-extern const char	*cupsGetDefault(http_t *http) _CUPS_PUBLIC;
-extern cups_dest_t	*cupsGetDest(const char *name, const char *instance, int num_dests, cups_dest_t *dests) _CUPS_PUBLIC;
-extern int		cupsGetDests(http_t *http, cups_dest_t **dests) _CUPS_PUBLIC;
-extern int		cupsSetDests(http_t *http, int num_dests, cups_dest_t *dests) _CUPS_PUBLIC;
-
+extern size_t		cupsAddDestMediaOptions(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, unsigned flags, cups_size_t *size, size_t num_options, cups_option_t **options) _CUPS_PUBLIC;
+extern size_t		cupsAddIntegerOption(const char *name, int value, size_t num_options, cups_option_t **options) _CUPS_PUBLIC;
 extern size_t		cupsAddOption(const char *name, const char *value, size_t num_options, cups_option_t **options) _CUPS_PUBLIC;
-extern void		cupsFreeOptions(size_t num_options, cups_option_t *options) _CUPS_PUBLIC;
-extern const char	*cupsGetOption(const char *name, size_t num_options, cups_option_t *options) _CUPS_PUBLIC;
-extern size_t		cupsParseOptions(const char *arg, size_t num_options, cups_option_t **options) _CUPS_PUBLIC;
-
-extern const char	*cupsGetServer(void) _CUPS_PUBLIC;
-extern void		cupsSetEncryption(http_encryption_t e) _CUPS_PUBLIC;
-extern void		cupsSetServer(const char *server) _CUPS_PUBLIC;
-extern void		cupsSetUser(const char *user) _CUPS_PUBLIC;
-extern const char	*cupsGetUser(void) _CUPS_PUBLIC;
-
-extern int		cupsDoAuthentication(http_t *http, const char *method, const char *resource) _CUPS_PUBLIC;
-extern http_status_t	cupsGetFile(http_t *http, const char *resource, const char *filename) _CUPS_PUBLIC;
-extern http_status_t	cupsGetFd(http_t *http, const char *resource, int fd) _CUPS_PUBLIC;
-extern http_status_t	cupsPutFile(http_t *http, const char *resource, const char *filename) _CUPS_PUBLIC;
-extern http_status_t	cupsPutFd(http_t *http, const char *resource, int fd) _CUPS_PUBLIC;
-
-extern void		cupsEncodeOptions(ipp_t *ipp, size_t num_options, cups_option_t *options, ipp_tag_t group_tag) _CUPS_PUBLIC;
-extern const char	*cupsLastErrorString(void) _CUPS_PUBLIC;
-extern char		*cupsNotifySubject(cups_lang_t *lang, ipp_t *event) _CUPS_PUBLIC;
-extern char		*cupsNotifyText(cups_lang_t *lang, ipp_t *event) _CUPS_PUBLIC;
-extern size_t		cupsRemoveOption(const char *name, size_t num_options, cups_option_t **options) _CUPS_PUBLIC;
-extern cups_file_t	*cupsTempFile(char *filename, size_t len) _CUPS_PUBLIC;
-
-extern ipp_t		*cupsDoIORequest(http_t *http, ipp_t *request, const char *resource, int infile, int outfile) _CUPS_PUBLIC;
-extern int		cupsRemoveDest(const char *name, const char *instance, int num_dests, cups_dest_t **dests) _CUPS_PUBLIC;
-extern void		cupsSetDefaultDest(const char *name, const char *instance, int num_dests, cups_dest_t *dests) _CUPS_PUBLIC;
-
-extern cups_dest_t	*cupsGetNamedDest(http_t *http, const char *name, const char *instance) _CUPS_PUBLIC;
-extern const char	*cupsGetPassword(const char *prompt, http_t *http, const char *method, const char *resource) _CUPS_PUBLIC;
-extern ipp_t		*cupsGetResponse(http_t *http, const char *resource) _CUPS_PUBLIC;
-extern ssize_t		cupsReadResponseData(http_t *http, char *buffer, size_t length) _CUPS_PUBLIC;
-extern http_status_t	cupsSendRequest(http_t *http, ipp_t *request, const char *resource, size_t length) _CUPS_PUBLIC;
-extern void		cupsSetPasswordCB(cups_password_cb_t cb, void *user_data) _CUPS_PUBLIC;
-extern http_status_t	cupsWriteRequestData(http_t *http, const char *buffer, size_t length) _CUPS_PUBLIC;
-
-extern void		cupsSetClientCertCB(cups_client_cert_cb_t cb, void *user_data) _CUPS_PUBLIC;
-extern int		cupsSetCredentials(cups_array_t *certs) _CUPS_PUBLIC;
-extern void		cupsSetServerCertCB(cups_server_cert_cb_t cb, void *user_data) _CUPS_PUBLIC;
 
 extern ipp_status_t	cupsCancelDestJob(http_t *http, cups_dest_t *dest, int job_id) _CUPS_PUBLIC;
 extern int		cupsCheckDestSupported(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, const char *option, const char *value) _CUPS_PUBLIC;
@@ -331,41 +283,88 @@ extern int		cupsCopyDest(cups_dest_t *dest, int num_dests, cups_dest_t **dests) 
 extern cups_dinfo_t	*cupsCopyDestInfo(http_t *http, cups_dest_t *dest) _CUPS_PUBLIC;
 extern int		cupsCopyDestConflicts(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, size_t num_options, cups_option_t *options, const char *new_option, const char *new_value, size_t *num_conflicts, cups_option_t **conflicts, size_t *num_resolved, cups_option_t **resolved) _CUPS_PUBLIC;
 extern ipp_status_t	cupsCreateDestJob(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, int *job_id, const char *title, size_t num_options, cups_option_t *options) _CUPS_PUBLIC;
+
+extern int		cupsDoAuthentication(http_t *http, const char *method, const char *resource) _CUPS_PUBLIC;
+extern ipp_t		*cupsDoFileRequest(http_t *http, ipp_t *request, const char *resource, const char *filename) _CUPS_PUBLIC;
+extern ipp_t		*cupsDoIORequest(http_t *http, ipp_t *request, const char *resource, int infile, int outfile) _CUPS_PUBLIC;
+extern ipp_t		*cupsDoRequest(http_t *http, ipp_t *request, const char *resource) _CUPS_PUBLIC;
+
+extern ipp_attribute_t	*cupsEncodeOption(ipp_t *ipp, ipp_tag_t group_tag, const char *name, const char *value) _CUPS_PUBLIC;
+extern void		cupsEncodeOptions(ipp_t *ipp, size_t num_options, cups_option_t *options, ipp_tag_t group_tag) _CUPS_PUBLIC;
 extern int		cupsEnumDests(unsigned flags, int msec, int *cancel, cups_ptype_t type, cups_ptype_t mask, cups_dest_cb_t cb, void *user_data) _CUPS_PUBLIC;
-extern ipp_status_t	cupsFinishDestDocument(http_t *http, cups_dest_t *dest, cups_dinfo_t *info) _CUPS_PUBLIC;
-extern void		cupsFreeDestInfo(cups_dinfo_t *dinfo) _CUPS_PUBLIC;
-extern int		cupsGetDestMediaByName(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, const char *media, unsigned flags, cups_size_t *size) _CUPS_PUBLIC;
-extern int		cupsGetDestMediaBySize(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, int width, int length, unsigned flags, cups_size_t *size) _CUPS_PUBLIC;
-extern const char	*cupsLocalizeDestOption(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, const char *option) _CUPS_PUBLIC;
-extern const char	*cupsLocalizeDestValue(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, const char *option, const char *value) _CUPS_PUBLIC;
-extern http_status_t	cupsStartDestDocument(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, int job_id, const char *docname, const char *format, size_t num_options, cups_option_t *options, bool last_document) _CUPS_PUBLIC;
 
 extern ipp_attribute_t	*cupsFindDestDefault(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, const char *option) _CUPS_PUBLIC;
 extern ipp_attribute_t	*cupsFindDestReady(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, const char *option) _CUPS_PUBLIC;
-extern ipp_attribute_t	*cupsFindDestSupported(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo,
-			                       const char *option) _CUPS_PUBLIC;
+extern ipp_attribute_t	*cupsFindDestSupported(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, const char *option) _CUPS_PUBLIC;
+extern ipp_status_t	cupsFinishDestDocument(http_t *http, cups_dest_t *dest, cups_dinfo_t *info) _CUPS_PUBLIC;
+extern void		cupsFreeDestInfo(cups_dinfo_t *dinfo) _CUPS_PUBLIC;
+extern void		cupsFreeDests(int num_dests, cups_dest_t *dests) _CUPS_PUBLIC;
+extern void		cupsFreeJobs(int num_jobs, cups_job_t *jobs) _CUPS_PUBLIC;
+extern void		cupsFreeOptions(size_t num_options, cups_option_t *options) _CUPS_PUBLIC;
+
+extern const char	*cupsGetDefault(http_t *http) _CUPS_PUBLIC;
+extern cups_dest_t	*cupsGetDest(const char *name, const char *instance, int num_dests, cups_dest_t *dests) _CUPS_PUBLIC;
 extern int		cupsGetDestMediaByIndex(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, size_t n, unsigned flags, cups_size_t *size) _CUPS_PUBLIC;
+extern int		cupsGetDestMediaByName(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, const char *media, unsigned flags, cups_size_t *size) _CUPS_PUBLIC;
+extern int		cupsGetDestMediaBySize(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, int width, int length, unsigned flags, cups_size_t *size) _CUPS_PUBLIC;
 extern size_t		cupsGetDestMediaCount(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, unsigned flags) _CUPS_PUBLIC;
 extern int		cupsGetDestMediaDefault(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, unsigned flags, cups_size_t *size) _CUPS_PUBLIC;
-extern void		cupsSetUserAgent(const char *user_agent) _CUPS_PUBLIC;
+extern cups_dest_t	*cupsGetDestWithURI(const char *name, const char *uri) _CUPS_PUBLIC;
+extern int		cupsGetDests(http_t *http, cups_dest_t **dests) _CUPS_PUBLIC;
+extern http_encryption_t cupsGetEncryption(void) _CUPS_PUBLIC;
+extern http_status_t	cupsGetFd(http_t *http, const char *resource, int fd) _CUPS_PUBLIC;
+extern http_status_t	cupsGetFile(http_t *http, const char *resource, const char *filename) _CUPS_PUBLIC;
+extern int		cupsGetIntegerOption(const char *name, size_t num_options, cups_option_t *options) _CUPS_PUBLIC;
+extern int		cupsGetJobs(http_t *http, cups_job_t **jobs, const char *name, bool myjobs, cups_whichjobs_t whichjobs) _CUPS_PUBLIC;
+extern cups_dest_t	*cupsGetNamedDest(http_t *http, const char *name, const char *instance) _CUPS_PUBLIC;
+extern const char	*cupsGetOption(const char *name, size_t num_options, cups_option_t *options) _CUPS_PUBLIC;
+extern const char	*cupsGetPassword(const char *prompt, http_t *http, const char *method, const char *resource) _CUPS_PUBLIC;
+extern ipp_t		*cupsGetResponse(http_t *http, const char *resource) _CUPS_PUBLIC;
+extern const char	*cupsGetServer(void) _CUPS_PUBLIC;
+extern const char	*cupsGetUser(void) _CUPS_PUBLIC;
 extern const char	*cupsGetUserAgent(void) _CUPS_PUBLIC;
 
-extern cups_dest_t	*cupsGetDestWithURI(const char *name, const char *uri) _CUPS_PUBLIC;
-extern const char	*cupsLocalizeDestMedia(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, unsigned flags, cups_size_t *size) _CUPS_PUBLIC;
-extern int		cupsMakeServerCredentials(const char *path, const char *common_name, int num_alt_names, const char **alt_names, time_t expiration_date) _CUPS_PUBLIC;
-extern int		cupsSetServerCredentials(const char *path, const char *common_name, int auto_create) _CUPS_PUBLIC;
-
 extern ssize_t		cupsHashData(const char *algorithm, const void *data, size_t datalen, unsigned char *hash, size_t hashsize) _CUPS_PUBLIC;
-
-extern size_t		cupsAddIntegerOption(const char *name, int value, size_t num_options, cups_option_t **options) _CUPS_PUBLIC;
-extern int		cupsGetIntegerOption(const char *name, size_t num_options, cups_option_t *options) _CUPS_PUBLIC;
-
 extern const char	*cupsHashString(const unsigned char *hash, size_t hashsize, char *buffer, size_t bufsize) _CUPS_PUBLIC;
 
-extern size_t		cupsAddDestMediaOptions(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, unsigned flags, cups_size_t *size, size_t num_options, cups_option_t **options) _CUPS_PUBLIC;
-extern ipp_attribute_t	*cupsEncodeOption(ipp_t *ipp, ipp_tag_t group_tag, const char *name, const char *value) _CUPS_PUBLIC;
+extern ipp_status_t	cupsLastError(void) _CUPS_PUBLIC;
+extern const char	*cupsLastErrorString(void) _CUPS_PUBLIC;
+extern const char	*cupsLocalizeDestMedia(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, unsigned flags, cups_size_t *size) _CUPS_PUBLIC;
+extern const char	*cupsLocalizeDestOption(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, const char *option) _CUPS_PUBLIC;
+extern const char	*cupsLocalizeDestValue(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, const char *option, const char *value) _CUPS_PUBLIC;
 
+extern int		cupsMakeServerCredentials(const char *path, const char *common_name, int num_alt_names, const char **alt_names, time_t expiration_date) _CUPS_PUBLIC;
+
+extern char		*cupsNotifySubject(cups_lang_t *lang, ipp_t *event) _CUPS_PUBLIC;
+extern char		*cupsNotifyText(cups_lang_t *lang, ipp_t *event) _CUPS_PUBLIC;
+
+extern size_t		cupsParseOptions(const char *arg, size_t num_options, cups_option_t **options) _CUPS_PUBLIC;
+extern http_status_t	cupsPutFd(http_t *http, const char *resource, int fd) _CUPS_PUBLIC;
+extern http_status_t	cupsPutFile(http_t *http, const char *resource, const char *filename) _CUPS_PUBLIC;
+
+extern ssize_t		cupsReadResponseData(http_t *http, char *buffer, size_t length) _CUPS_PUBLIC;
+extern int		cupsRemoveDest(const char *name, const char *instance, int num_dests, cups_dest_t **dests) _CUPS_PUBLIC;
+extern size_t		cupsRemoveOption(const char *name, size_t num_options, cups_option_t **options) _CUPS_PUBLIC;
+
+extern http_status_t	cupsSendRequest(http_t *http, ipp_t *request, const char *resource, size_t length) _CUPS_PUBLIC;
 extern void		cupsSetOAuthCB(cups_oauth_cb_t cb, void *data) _CUPS_PUBLIC;
+extern void		cupsSetClientCertCB(cups_client_cert_cb_t cb, void *user_data) _CUPS_PUBLIC;
+extern int		cupsSetCredentials(cups_array_t *certs) _CUPS_PUBLIC;
+extern void		cupsSetDefaultDest(const char *name, const char *instance, int num_dests, cups_dest_t *dests) _CUPS_PUBLIC;
+extern int		cupsSetDests(http_t *http, int num_dests, cups_dest_t *dests) _CUPS_PUBLIC;
+extern void		cupsSetEncryption(http_encryption_t e) _CUPS_PUBLIC;
+extern void		cupsSetPasswordCB(cups_password_cb_t cb, void *user_data) _CUPS_PUBLIC;
+extern void		cupsSetServer(const char *server) _CUPS_PUBLIC;
+extern void		cupsSetServerCertCB(cups_server_cert_cb_t cb, void *user_data) _CUPS_PUBLIC;
+extern int		cupsSetServerCredentials(const char *path, const char *common_name, int auto_create) _CUPS_PUBLIC;
+extern void		cupsSetUser(const char *user) _CUPS_PUBLIC;
+extern void		cupsSetUserAgent(const char *user_agent) _CUPS_PUBLIC;
+extern http_status_t	cupsStartDestDocument(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, int job_id, const char *docname, const char *format, size_t num_options, cups_option_t *options, bool last_document) _CUPS_PUBLIC;
+
+extern int		cupsTempFd(char *filename, size_t len) _CUPS_PUBLIC;
+extern cups_file_t	*cupsTempFile(char *filename, size_t len) _CUPS_PUBLIC;
+
+extern http_status_t	cupsWriteRequestData(http_t *http, const char *buffer, size_t length) _CUPS_PUBLIC;
 
 
 #  ifdef __cplusplus
