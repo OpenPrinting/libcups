@@ -27,7 +27,6 @@ all:
 	echo Using CC="$(CC)"
 	echo Using CFLAGS="-I.. -D_CUPS_SOURCE $(CPPFLAGS) $(CFLAGS) $(OPTIM) $(WARNINGS)"
 	echo Using CPPFLAGS="-I.. -D_CUPS_SOURCE $(CPPFLAGS) $(OPTIONS)"
-	echo Using DSO="$(DSO)"
 	echo Using DSOFLAGS="$(DSOFLAGS)"
 	echo Using LDFLAGS="$(LDFLAGS)"
 	echo Using LIBS="$(LIBS)"
