@@ -1,7 +1,7 @@
 /*
  * ipptool command for CUPS.
  *
- * Copyright © 2021 by OpenPrinting.
+ * Copyright © 2021-2022 by OpenPrinting.
  * Copyright © 2020 by The Printer Working Group.
  * Copyright © 2007-2021 by Apple Inc.
  * Copyright © 1997-2007 by Easy Software Products.
@@ -96,6 +96,18 @@ typedef struct ipptool_expect_s		/**** Expected attribute info ****/
   size_t	count;			/* Expected count if > 0 */
   ipp_tag_t	in_group;		/* IN-GROUP value */
 } ipptool_expect_t;
+
+typedef struct ipptool_generate_s	//// GENERATE-FILE parameters
+{
+  const char	*media;			// Media
+  const char	*type;			// Raster type/color mode
+  int		xdpi,			// Horizontal resolution
+		ydpi;			// Vertical resolution
+  const char	*sides;			// Duplex mode
+  int		copies,			// Number of copies
+		num_pages;		// Number of pages
+  const char	*format;		// Document format
+} ipptool_generate_t;
 
 typedef struct ipptool_status_s		/**** Status info ****/
 {
@@ -198,6 +210,7 @@ static int	do_test(_ipp_file_t *f, ipptool_test_t *data);
 static int	do_tests(const char *testfile, ipptool_test_t *data);
 static int	error_cb(_ipp_file_t *f, ipptool_test_t *data, const char *error);
 static int      expect_matches(ipptool_expect_t *expect, ipp_attribute_t *attr);
+static http_status_t generate_file(http_t *http, ipp_t *supported, ipptool_generate_t *params);
 static char	*get_filename(const char *testfile, char *dst, const char *src, size_t dstsize);
 static const char *get_string(ipp_attribute_t *attr, size_t element, int flags, char *buffer, size_t bufsize);
 static void	init_data(ipptool_test_t *data);
@@ -2470,6 +2483,19 @@ expect_matches(
   }
 
   return (match);
+}
+
+
+//
+// 'generate_file()' - Generate a print file.
+//
+
+static http_status_t
+generate_file(
+    http_t             *http,		// I - HTTP connection
+    ipp_t              *supported,	// I - Supported attributes
+    ipptool_generate_t *params)		// I - GENERATE-FILE parameters
+{
 }
 
 
