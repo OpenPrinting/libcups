@@ -2496,6 +2496,106 @@ generate_file(
     ipp_t              *supported,	// I - Supported attributes
     ipptool_generate_t *params)		// I - GENERATE-FILE parameters
 {
+  static unsigned char	digits[10][7] =	// 5x7 bitmaps for numbers
+  {
+    {
+      0x70,				// .XXX.
+      0x88,				// X...X
+      0x88,				// X...X
+      0xA8,				// X.X.X
+      0x88,				// X...X
+      0x88,				// X...X
+      0x70				// .XXX.
+    },
+    {
+      0x20,				// ..X..
+      0x68,				// .XX..
+      0x20,				// ..X..
+      0x20,				// ..X..
+      0x20,				// ..X..
+      0x20,				// ..X..
+      0x70				// .XXX.
+    },
+    {
+      0x70,				// .XXX.
+      0x88,				// X...X
+      0x08,				// ....X
+      0x30,				// ..XX.
+      0x40,				// .X...
+      0x80,				// X....
+      0xF8				// XXXXX
+    },
+    {
+      0x70,				// .XXX.
+      0x88,				// X...X
+      0x98,				// ....X
+      0x30,				// ..XX.
+      0x08,				// ....X
+      0x88,				// X...X
+      0x70				// .XXX.
+    },
+    {
+      0x10,				// ...X.
+      0x90,				// X..X.
+      0x90,				// X..X.
+      0xF8,				// XXXXX
+      0x10,				// ...X.
+      0x10,				// ...X.
+      0x10				// ...X.
+    },
+    {
+      0xF8,				// XXXXX
+      0x80,				// X....
+      0x80,				// X....
+      0x70,				// .XXX.
+      0x08,				// ....X
+      0x88,				// X...X
+      0x70				// .XXX.
+    },
+    {
+      0x70,				// .XXX.
+      0x80,				// X....
+      0x80,				// X....
+      0xF0,				// XXXX.
+      0x88,				// X...X
+      0x88,				// X...X
+      0x70				// .XXX.
+    },
+    {
+      0x70,				// XXXXX
+      0x08,				// ....X
+      0x10,				// ...X.
+      0x20,				// ..X..
+      0x40,				// .X...
+      0x80,				// X....
+      0x80				// X....
+    },
+    {
+      0x70,				// .XXX.
+      0x88,				// X...X
+      0x88,				// X...X
+      0x70,				// .XXX.
+      0x88,				// X...X
+      0x88,				// X...X
+      0x70				// .XXX.
+    },
+    {
+      0x70,				// .XXX.
+      0x88,				// X...X
+      0x88,				// X...X
+      0x78,				// .XXXX
+      0x08,				// ....X
+      0x08,				// ....X
+      0x70				// .XXX.
+    }
+  };
+
+
+  (void)http;
+  (void)supported;
+  (void)params;
+
+  return (HTTP_STATUS_CONTINUE);
 }
 
 

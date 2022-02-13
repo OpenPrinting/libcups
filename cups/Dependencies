@@ -105,7 +105,7 @@ language.o: language.c cups-private.h string-private.h ../config.h base.h \
   http.h array.h language.h pwg.h http-private.h ../cups/language.h \
   language-private.h transcode.h pwg-private.h thread-private.h \
   debug-internal.h debug-private.h
-md5.o: md5.c md5-internal.h string-private.h ../config.h base.h
+md5.o: md5.c md5-internal.h base.h string-private.h ../config.h
 notify.o: notify.c cups-private.h string-private.h ../config.h base.h \
   array-private.h ../cups/array.h ipp-private.h cups.h file.h ipp.h \
   http.h array.h language.h pwg.h http-private.h ../cups/language.h \
@@ -211,6 +211,8 @@ testoptions.o: testoptions.c cups-private.h string-private.h ../config.h \
 testraster.o: testraster.c raster-private.h raster.h cups.h file.h base.h \
   ipp.h http.h array.h language.h pwg.h debug-private.h string-private.h \
   ../config.h test-internal.h
+testtestpage.o: testtestpage.c raster-testpage.h raster.h cups.h file.h \
+  base.h ipp.h http.h array.h language.h pwg.h
 testthreads.o: testthreads.c ../cups/cups.h file.h base.h ipp.h http.h \
   array.h language.h pwg.h ../cups/thread-private.h ../config.h
 tlscheck.o: tlscheck.c cups-private.h string-private.h ../config.h base.h \
