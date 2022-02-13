@@ -25,6 +25,15 @@ main(int  argc,				// I - Number of command-line arguments
   cups_raster_t		*ras;		// Raster stream
   cups_page_header_t	header;		// Page header
   pwg_media_t		*media;		// Media information
+  ipp_orient_t		orientation;	// Output orientation
+  size_t		i;		// Looping var
+  static const char * const sheet_backs[4] =
+  {					// Back side values
+    "normal",
+    "flipped",
+    "manual-tumble",
+    "rotated"
+  };
 
 
   (void)argc;
@@ -45,32 +54,55 @@ main(int  argc,				// I - Number of command-line arguments
 
   media = pwgMediaForPWG("na_letter_8.5x11in");
 
-  cupsRasterInitPWGHeader(&header, media, "black_1", 300, 300, "two-sided-long-edge", "normal");
-  cupsRasterWriteTest(ras, &header, "normal", IPP_ORIENT_PORTRAIT, 2, 2);
+  for (orientation = IPP_ORIENT_PORTRAIT; orientation <= IPP_ORIENT_REVERSE_PORTRAIT; orientation ++)
+  {
+    cupsRasterInitPWGHeader(&header, media, "black_1", 300, 300, "one-sided", "normal");
+    if (orientation == IPP_ORIENT_PORTRAIT)
+      cupsRasterWriteTest(ras, &header, "normal", orientation, 2, 3);
+    else
+      cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1);
 
-  cupsRasterInitPWGHeader(&header, media, "black_8", 300, 300, "two-sided-long-edge", "normal");
-  cupsRasterWriteTest(ras, &header, "normal", IPP_ORIENT_PORTRAIT, 2, 2);
+    cupsRasterInitPWGHeader(&header, media, "black_8", 300, 300, "one-sided", "normal");
+    cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1);
 
-  cupsRasterInitPWGHeader(&header, media, "black_16", 300, 300, "two-sided-long-edge", "normal");
-  cupsRasterWriteTest(ras, &header, "normal", IPP_ORIENT_PORTRAIT, 2, 2);
+    cupsRasterInitPWGHeader(&header, media, "black_16", 300, 300, "one-sided", "normal");
+    cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1);
 
-  cupsRasterInitPWGHeader(&header, media, "srgb_8", 300, 300, "two-sided-long-edge", "normal");
-  cupsRasterWriteTest(ras, &header, "normal", IPP_ORIENT_PORTRAIT, 2, 2);
+    cupsRasterInitPWGHeader(&header, media, "srgb_8", 300, 300, "one-sided", "normal");
+    cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1);
 
-  cupsRasterInitPWGHeader(&header, media, "srgb_16", 300, 300, "two-sided-long-edge", "normal");
-  cupsRasterWriteTest(ras, &header, "normal", IPP_ORIENT_PORTRAIT, 2, 2);
+    cupsRasterInitPWGHeader(&header, media, "srgb_16", 300, 300, "one-sided", "normal");
+    cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1);
 
-  cupsRasterInitPWGHeader(&header, media, "sgray_8", 300, 300, "two-sided-long-edge", "normal");
-  cupsRasterWriteTest(ras, &header, "normal", IPP_ORIENT_PORTRAIT, 2, 2);
+    cupsRasterInitPWGHeader(&header, media, "sgray_8", 300, 300, "one-sided", "normal");
+    cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1);
 
-  cupsRasterInitPWGHeader(&header, media, "sgray_8", 300, 300, "two-sided-long-edge", "normal");
-  cupsRasterWriteTest(ras, &header, "normal", IPP_ORIENT_PORTRAIT, 2, 2);
+    cupsRasterInitPWGHeader(&header, media, "sgray_8", 300, 300, "one-sided", "normal");
+    cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1);
 
-  cupsRasterInitPWGHeader(&header, media, "cmyk_8", 300, 300, "two-sided-long-edge", "normal");
-  cupsRasterWriteTest(ras, &header, "normal", IPP_ORIENT_PORTRAIT, 2, 2);
+    cupsRasterInitPWGHeader(&header, media, "cmyk_8", 300, 300, "one-sided", "normal");
+    cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1);
 
-  cupsRasterInitPWGHeader(&header, media, "cmyk_16", 300, 300, "two-sided-long-edge", "normal");
-  cupsRasterWriteTest(ras, &header, "normal", IPP_ORIENT_PORTRAIT, 2, 2);
+    cupsRasterInitPWGHeader(&header, media, "cmyk_16", 300, 300, "one-sided", "normal");
+    cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1);
+  }
 
+  for (i = 0; i < 4; i ++)
+  {
+    for (orientation = IPP_ORIENT_PORTRAIT; orientation <= IPP_ORIENT_REVERSE_PORTRAIT; orientation ++)
+    {
+      cupsRasterInitPWGHeader(&header, media, "black_1", 300, 300, "two-sided-long-edge", "normal");
+      cupsRasterWriteTest(ras, &header, sheet_backs[i], orientation, 1, 2);
+
+      cupsRasterInitPWGHeader(&header, media, "black_8", 300, 300, "two-sided-long-edge", sheet_backs[i]);
+      cupsRasterWriteTest(ras, &header, sheet_backs[i], orientation, 1, 2);
+
+      cupsRasterInitPWGHeader(&header, media, "srgb_8", 300, 300, "two-sided-long-edge", sheet_backs[i]);
+      cupsRasterWriteTest(ras, &header, sheet_backs[i], orientation, 1, 2);
+
+      cupsRasterInitPWGHeader(&header, media, "cmyk_8", 300, 300, "two-sided-long-edge", sheet_backs[i]);
+      cupsRasterWriteTest(ras, &header, sheet_backs[i], orientation, 1, 2);
+    }
+  }
   cupsRasterClose(ras);
 }

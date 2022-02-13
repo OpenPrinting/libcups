@@ -71,12 +71,13 @@ cupsRasterWriteTest(
     { 191, 191, 191 },
     { 255,   0,   0 },
     { 255, 127,   0 },
+    { 255, 191,   0 },
     { 255, 255,   0 },
-    { 127, 255,   0 },
+    { 191, 255,   0 },
     {   0, 255,   0 },
-    {   0, 255, 127 },
+    {   0, 255, 191 },
     {   0, 255, 255 },
-    {   0, 127, 255 },
+    {   0, 191, 255 },
     {   0,   0, 255 },
     { 127,   0, 255 },
     { 255,   0, 255 }
@@ -175,8 +176,6 @@ cupsRasterWriteTest(
 
   bpp     = header->cupsBitsPerPixel / 8;
   lineend = line + header->cupsBytesPerLine;
-
-  printf("bpp=%d, black=%02X, white=%02X, xrep=%u, yrep=%u\n", bpp, black, white, xrep, yrep);
 
   // Loop to create all copies and pages...
   for (copy = 0; copy < num_copies; copy ++)
@@ -351,22 +350,13 @@ cupsRasterWriteTest(
 	switch (porientation)
 	{
 	  case IPP_ORIENT_PORTRAIT :
-	      break;
-	  case IPP_ORIENT_LANDSCAPE :
-	      break;
-	  case IPP_ORIENT_REVERSE_PORTRAIT :
-	      break;
-	  case IPP_ORIENT_REVERSE_LANDSCAPE :
-	      break;
-	}
-      }
-      else
-      {
-        // Draw the test image from top to bottom
-	switch (porientation)
-	{
-	  case IPP_ORIENT_PORTRAIT :
-	      for (row = 0, color = 0; y < yend;)
+	      color = rows - 1;
+	      if (bpp <= 2)
+		color &= 3;
+	      else
+		color &= 15;
+
+	      for (row = 7; y < yend;)
 	      {
                 // Write N scan lines...
 	        for (ycount = yrep; ycount > 0 && y < yend; ycount --, y ++)
@@ -400,8 +390,334 @@ cupsRasterWriteTest(
 			  }
 			  else if (y & 1)
 			  {
-			    x += xrep;
-			    continue;
+			    break;
+			  }
+			  else
+			  {
+			    pattern = 0xaa;
+			  }
+
+			  lineptr = line + x / 8;
+			  bit     = 0x80 >> (x & 7);
+
+			  for (xcount = xrep; xcount > 0; xcount --)
+                          {
+                            *lineptr |= bit & pattern;
+                            if (bit > 1)
+                            {
+                              bit /= 2;
+                            }
+                            else
+                            {
+                              bit = 0x80;
+                              lineptr ++;
+                            }
+                          }
+			  break;
+		      case 1 : // 8-bit grayscale/black
+		          if (black)
+			    memset(line + x, 255 - *colorptr, xrep);
+			  else
+			    memset(line + x, *colorptr, xrep);
+		          break;
+		      case 2 : // 16-bit grayscale/black
+		          if (black)
+			    memset(line + 2 * x, 255 - *colorptr, 2 * xrep);
+			  else
+			    memset(line + 2 * x, *colorptr, 2 * xrep);
+		          break;
+		      case 3 : // 24-bit RGB
+		          for (lineptr = line + 3 * x, xcount = xrep; xcount > 0; xcount --)
+		          {
+		            *lineptr++ = colorptr[0];
+		            *lineptr++ = colorptr[1];
+		            *lineptr++ = colorptr[2];
+		          }
+		          break;
+		      case 4 : // 32-bit CMYK
+		          for (lineptr = line + 4 * x, xcount = xrep; xcount > 0; xcount --)
+		          {
+		            if (color < 4)
+		            {
+			      *lineptr++ = 0;
+			      *lineptr++ = 0;
+			      *lineptr++ = 0;
+			      *lineptr++ = 255 - colorptr[0];
+		            }
+		            else
+		            {
+			      *lineptr++ = 255 - colorptr[0];
+			      *lineptr++ = 255 - colorptr[1];
+			      *lineptr++ = 255 - colorptr[2];
+			      *lineptr++ = 0;
+		            }
+		          }
+		          break;
+		      case 6 : // 24-bit RGB
+		          for (lineptr = line + 6 * x, xcount = xrep; xcount > 0; xcount --)
+		          {
+		            *lineptr++ = colorptr[0];
+		            *lineptr++ = colorptr[0];
+		            *lineptr++ = colorptr[1];
+		            *lineptr++ = colorptr[1];
+		            *lineptr++ = colorptr[2];
+		            *lineptr++ = colorptr[2];
+		          }
+		          break;
+		      case 8 : // 64-bit CMYK
+		          for (lineptr = line + 8 * x, xcount = xrep; xcount > 0; xcount --)
+		          {
+		            if (color < 4)
+		            {
+			      *lineptr++ = 0;
+			      *lineptr++ = 0;
+			      *lineptr++ = 0;
+			      *lineptr++ = 0;
+			      *lineptr++ = 0;
+			      *lineptr++ = 0;
+			      *lineptr++ = 255 - colorptr[0];
+			      *lineptr++ = 255 - colorptr[0];
+		            }
+		            else
+		            {
+			      *lineptr++ = 255 - colorptr[0];
+			      *lineptr++ = 255 - colorptr[0];
+			      *lineptr++ = 255 - colorptr[1];
+			      *lineptr++ = 255 - colorptr[1];
+			      *lineptr++ = 255 - colorptr[2];
+			      *lineptr++ = 255 - colorptr[2];
+			      *lineptr++ = 0;
+			      *lineptr++ = 0;
+		            }
+		          }
+		          break;
+                    }
+		  }
+
+	          cupsRasterWritePixels(ras, line, header->cupsBytesPerLine);
+	        }
+
+		// Next row in the output image...
+		row --;
+		if (row < 0)
+		{
+		  // New row of text with a new color/gray shade...
+		  row = 7;
+		  color --;
+		  if (color < 0)
+		  {
+		    if (bpp > 2)
+		      color = 15;
+		    else
+		      color = 3;
+		  }
+		}
+	      }
+	      break;
+
+	  case IPP_ORIENT_LANDSCAPE :
+	      for (col = 99; col >= 0; col --)
+	      {
+		// Write N scan lines...
+		for (ycount = yrep; ycount > 0 && y < yend; ycount --, y ++)
+		{
+		  memcpy(line, bline, header->cupsBytesPerLine);
+
+		  color = rows - 1;
+		  if (bpp <= 2)
+		    color &= 3;
+		  else
+		    color &= 15;
+
+		  for (row = (rows - 1) & 7, x = xoff; x < xend; x += xrep)
+		  {
+		    // Format the current line in the output row...
+		    unsigned char bit,	// Current bit
+				pattern;// Shading pattern
+
+		    colorptr = colors[color];
+
+                    if (output[row][col] != ' ')
+                    {
+		      switch (bpp)
+		      {
+			case 0 : // 1-bit bitmap output
+			    if (*colorptr < 63)
+			    {
+			      pattern = 0xff;
+			    }
+			    else if (*colorptr < 127)
+			    {
+			      pattern = (y & 1) ? 0x55 : 0xff;
+			    }
+			    else if (*colorptr < 191)
+			    {
+			      pattern = (y & 1) ? 0x55 : 0xaa;
+			    }
+			    else if (y & 1)
+			    {
+			      break;
+			    }
+			    else
+			    {
+			      pattern = 0xaa;
+			    }
+
+			    lineptr = line + x / 8;
+			    bit     = 0x80 >> (x & 7);
+
+			    for (xcount = xrep; xcount > 0; xcount --)
+			    {
+			      *lineptr |= bit & pattern;
+			      if (bit > 1)
+			      {
+				bit /= 2;
+			      }
+			      else
+			      {
+				bit = 0x80;
+				lineptr ++;
+			      }
+			    }
+			    break;
+			case 1 : // 8-bit grayscale/black
+			    if (black)
+			      memset(line + x, 255 - *colorptr, xrep);
+			    else
+			      memset(line + x, *colorptr, xrep);
+			    break;
+			case 2 : // 16-bit grayscale/black
+			    if (black)
+			      memset(line + 2 * x, 255 - *colorptr, 2 * xrep);
+			    else
+			      memset(line + 2 * x, *colorptr, 2 * xrep);
+			    break;
+			case 3 : // 24-bit RGB
+			    for (lineptr = line + 3 * x, xcount = xrep; xcount > 0; xcount --)
+			    {
+			      *lineptr++ = colorptr[0];
+			      *lineptr++ = colorptr[1];
+			      *lineptr++ = colorptr[2];
+			    }
+			    break;
+			case 4 : // 32-bit CMYK
+			    for (lineptr = line + 4 * x, xcount = xrep; xcount > 0; xcount --)
+			    {
+			      if (color < 4)
+			      {
+				*lineptr++ = 0;
+				*lineptr++ = 0;
+				*lineptr++ = 0;
+				*lineptr++ = 255 - colorptr[0];
+			      }
+			      else
+			      {
+				*lineptr++ = 255 - colorptr[0];
+				*lineptr++ = 255 - colorptr[1];
+				*lineptr++ = 255 - colorptr[2];
+				*lineptr++ = 0;
+			      }
+			    }
+			    break;
+			case 6 : // 24-bit RGB
+			    for (lineptr = line + 6 * x, xcount = xrep; xcount > 0; xcount --)
+			    {
+			      *lineptr++ = colorptr[0];
+			      *lineptr++ = colorptr[0];
+			      *lineptr++ = colorptr[1];
+			      *lineptr++ = colorptr[1];
+			      *lineptr++ = colorptr[2];
+			      *lineptr++ = colorptr[2];
+			    }
+			    break;
+			case 8 : // 64-bit CMYK
+			    for (lineptr = line + 8 * x, xcount = xrep; xcount > 0; xcount --)
+			    {
+			      if (color < 4)
+			      {
+				*lineptr++ = 0;
+				*lineptr++ = 0;
+				*lineptr++ = 0;
+				*lineptr++ = 0;
+				*lineptr++ = 0;
+				*lineptr++ = 0;
+				*lineptr++ = 255 - colorptr[0];
+				*lineptr++ = 255 - colorptr[0];
+			      }
+			      else
+			      {
+				*lineptr++ = 255 - colorptr[0];
+				*lineptr++ = 255 - colorptr[0];
+				*lineptr++ = 255 - colorptr[1];
+				*lineptr++ = 255 - colorptr[1];
+				*lineptr++ = 255 - colorptr[2];
+				*lineptr++ = 255 - colorptr[2];
+				*lineptr++ = 0;
+				*lineptr++ = 0;
+			      }
+			    }
+			    break;
+		      }
+		    }
+
+		    // Next row in the output image...
+		    row --;
+		    if (row < 0)
+		    {
+		      // New row of text with a new color/gray shade...
+		      row = 7;
+		      color --;
+		      if (color < 0)
+		      {
+			if (bpp > 2)
+			  color = 15;
+			else
+			  color = 3;
+		      }
+		    }
+		  }
+
+		  cupsRasterWritePixels(ras, line, header->cupsBytesPerLine);
+		}
+	      }
+	      break;
+
+	  case IPP_ORIENT_REVERSE_PORTRAIT :
+	      for (row = 0, color = 0; y < yend;)
+	      {
+                // Write N scan lines...
+	        for (ycount = yrep; ycount > 0 && y < yend; ycount --, y ++)
+	        {
+		  // Format the current line in the output row...
+		  memcpy(line, bline, header->cupsBytesPerLine);
+		  colorptr = colors[color];
+
+		  for (outptr = output[row] + 99, x = xoff; outptr >= output[row]; outptr --, x += xrep)
+		  {
+		    unsigned char	bit,	// Current bit
+					pattern;// Shading pattern
+
+		    if (*outptr == ' ')
+		      continue;
+
+                    switch (bpp)
+                    {
+                      case 0 : // 1-bit bitmap output
+			  if (*colorptr < 63)
+			  {
+			    pattern = 0xff;
+			  }
+			  else if (*colorptr < 127)
+			  {
+			    pattern = (y & 1) ? 0x55 : 0xff;
+			  }
+			  else if (*colorptr < 191)
+			  {
+			    pattern = (y & 1) ? 0x55 : 0xaa;
+			  }
+			  else if (y & 1)
+			  {
+			    break;
 			  }
 			  else
 			  {
@@ -515,82 +831,821 @@ cupsRasterWriteTest(
                   // New row of text with a new color/gray shade...
                   row = 0;
                   color ++;
-                  if ((bpp > 2 && color >= 15) || (bpp <= 2 && color >= 4))
+                  if ((bpp > 2 && color >= 16) || (bpp <= 2 && color >= 4))
                     color = 0;
                 }
 	      }
 	      break;
-	  case IPP_ORIENT_LANDSCAPE :
+	  case IPP_ORIENT_REVERSE_LANDSCAPE :
+	      for (col = 0; col < 100; col ++)
+	      {
+		// Write N scan lines...
+		for (ycount = yrep; ycount > 0 && y < yend; ycount --, y ++)
+		{
+		  memcpy(line, bline, header->cupsBytesPerLine);
+
+		  color = 0;
+
+		  for (row = 0, x = xoff; x < xend; x += xrep)
+		  {
+		    // Format the current line in the output row...
+		    unsigned char bit,	// Current bit
+				pattern;// Shading pattern
+
+		    colorptr = colors[color];
+
+                    if (output[row][col] != ' ')
+                    {
+		      switch (bpp)
+		      {
+			case 0 : // 1-bit bitmap output
+			    if (*colorptr < 63)
+			    {
+			      pattern = 0xff;
+			    }
+			    else if (*colorptr < 127)
+			    {
+			      pattern = (y & 1) ? 0x55 : 0xff;
+			    }
+			    else if (*colorptr < 191)
+			    {
+			      pattern = (y & 1) ? 0x55 : 0xaa;
+			    }
+			    else if (y & 1)
+			    {
+			      break;
+			    }
+			    else
+			    {
+			      pattern = 0xaa;
+			    }
+
+			    lineptr = line + x / 8;
+			    bit     = 0x80 >> (x & 7);
+
+			    for (xcount = xrep; xcount > 0; xcount --)
+			    {
+			      *lineptr |= bit & pattern;
+			      if (bit > 1)
+			      {
+				bit /= 2;
+			      }
+			      else
+			      {
+				bit = 0x80;
+				lineptr ++;
+			      }
+			    }
+			    break;
+			case 1 : // 8-bit grayscale/black
+			    if (black)
+			      memset(line + x, 255 - *colorptr, xrep);
+			    else
+			      memset(line + x, *colorptr, xrep);
+			    break;
+			case 2 : // 16-bit grayscale/black
+			    if (black)
+			      memset(line + 2 * x, 255 - *colorptr, 2 * xrep);
+			    else
+			      memset(line + 2 * x, *colorptr, 2 * xrep);
+			    break;
+			case 3 : // 24-bit RGB
+			    for (lineptr = line + 3 * x, xcount = xrep; xcount > 0; xcount --)
+			    {
+			      *lineptr++ = colorptr[0];
+			      *lineptr++ = colorptr[1];
+			      *lineptr++ = colorptr[2];
+			    }
+			    break;
+			case 4 : // 32-bit CMYK
+			    for (lineptr = line + 4 * x, xcount = xrep; xcount > 0; xcount --)
+			    {
+			      if (color < 4)
+			      {
+				*lineptr++ = 0;
+				*lineptr++ = 0;
+				*lineptr++ = 0;
+				*lineptr++ = 255 - colorptr[0];
+			      }
+			      else
+			      {
+				*lineptr++ = 255 - colorptr[0];
+				*lineptr++ = 255 - colorptr[1];
+				*lineptr++ = 255 - colorptr[2];
+				*lineptr++ = 0;
+			      }
+			    }
+			    break;
+			case 6 : // 24-bit RGB
+			    for (lineptr = line + 6 * x, xcount = xrep; xcount > 0; xcount --)
+			    {
+			      *lineptr++ = colorptr[0];
+			      *lineptr++ = colorptr[0];
+			      *lineptr++ = colorptr[1];
+			      *lineptr++ = colorptr[1];
+			      *lineptr++ = colorptr[2];
+			      *lineptr++ = colorptr[2];
+			    }
+			    break;
+			case 8 : // 64-bit CMYK
+			    for (lineptr = line + 8 * x, xcount = xrep; xcount > 0; xcount --)
+			    {
+			      if (color < 4)
+			      {
+				*lineptr++ = 0;
+				*lineptr++ = 0;
+				*lineptr++ = 0;
+				*lineptr++ = 0;
+				*lineptr++ = 0;
+				*lineptr++ = 0;
+				*lineptr++ = 255 - colorptr[0];
+				*lineptr++ = 255 - colorptr[0];
+			      }
+			      else
+			      {
+				*lineptr++ = 255 - colorptr[0];
+				*lineptr++ = 255 - colorptr[0];
+				*lineptr++ = 255 - colorptr[1];
+				*lineptr++ = 255 - colorptr[1];
+				*lineptr++ = 255 - colorptr[2];
+				*lineptr++ = 255 - colorptr[2];
+				*lineptr++ = 0;
+				*lineptr++ = 0;
+			      }
+			    }
+			    break;
+		      }
+		    }
+
+		    // Next row in the output image...
+		    row ++;
+		    if (row > 7)
+		    {
+		      // New row of text with a new color/gray shade...
+		      row = 0;
+		      color ++;
+		      if ((bpp > 2 && color >= 16) || (bpp <= 2 && color >= 4))
+			color = 0;
+		    }
+		  }
+
+		  cupsRasterWritePixels(ras, line, header->cupsBytesPerLine);
+		}
+	      }
 	      break;
+	}
+      }
+      else
+      {
+        // Draw the test image from top to bottom
+	switch (porientation)
+	{
+	  case IPP_ORIENT_PORTRAIT :
+	      for (row = 0, color = 0; y < yend;)
+	      {
+                // Write N scan lines...
+	        for (ycount = yrep; ycount > 0 && y < yend; ycount --, y ++)
+	        {
+		  // Format the current line in the output row...
+		  memcpy(line, bline, header->cupsBytesPerLine);
+		  colorptr = colors[color];
+
+		  for (outptr = output[row], x = xoff; *outptr; outptr ++, x += xrep)
+		  {
+		    unsigned char	bit,	// Current bit
+					pattern;// Shading pattern
+
+		    if (*outptr == ' ')
+		      continue;
+
+                    switch (bpp)
+                    {
+                      case 0 : // 1-bit bitmap output
+			  if (*colorptr < 63)
+			  {
+			    pattern = 0xff;
+			  }
+			  else if (*colorptr < 127)
+			  {
+			    pattern = (y & 1) ? 0x55 : 0xff;
+			  }
+			  else if (*colorptr < 191)
+			  {
+			    pattern = (y & 1) ? 0x55 : 0xaa;
+			  }
+			  else if (y & 1)
+			  {
+			    break;
+			  }
+			  else
+			  {
+			    pattern = 0xaa;
+			  }
+
+			  lineptr = line + x / 8;
+			  bit     = 0x80 >> (x & 7);
+
+			  for (xcount = xrep; xcount > 0; xcount --)
+                          {
+                            *lineptr |= bit & pattern;
+                            if (bit > 1)
+                            {
+                              bit /= 2;
+                            }
+                            else
+                            {
+                              bit = 0x80;
+                              lineptr ++;
+                            }
+                          }
+			  break;
+		      case 1 : // 8-bit grayscale/black
+		          if (black)
+			    memset(line + x, 255 - *colorptr, xrep);
+			  else
+			    memset(line + x, *colorptr, xrep);
+		          break;
+		      case 2 : // 16-bit grayscale/black
+		          if (black)
+			    memset(line + 2 * x, 255 - *colorptr, 2 * xrep);
+			  else
+			    memset(line + 2 * x, *colorptr, 2 * xrep);
+		          break;
+		      case 3 : // 24-bit RGB
+		          for (lineptr = line + 3 * x, xcount = xrep; xcount > 0; xcount --)
+		          {
+		            *lineptr++ = colorptr[0];
+		            *lineptr++ = colorptr[1];
+		            *lineptr++ = colorptr[2];
+		          }
+		          break;
+		      case 4 : // 32-bit CMYK
+		          for (lineptr = line + 4 * x, xcount = xrep; xcount > 0; xcount --)
+		          {
+		            if (color < 4)
+		            {
+			      *lineptr++ = 0;
+			      *lineptr++ = 0;
+			      *lineptr++ = 0;
+			      *lineptr++ = 255 - colorptr[0];
+		            }
+		            else
+		            {
+			      *lineptr++ = 255 - colorptr[0];
+			      *lineptr++ = 255 - colorptr[1];
+			      *lineptr++ = 255 - colorptr[2];
+			      *lineptr++ = 0;
+		            }
+		          }
+		          break;
+		      case 6 : // 24-bit RGB
+		          for (lineptr = line + 6 * x, xcount = xrep; xcount > 0; xcount --)
+		          {
+		            *lineptr++ = colorptr[0];
+		            *lineptr++ = colorptr[0];
+		            *lineptr++ = colorptr[1];
+		            *lineptr++ = colorptr[1];
+		            *lineptr++ = colorptr[2];
+		            *lineptr++ = colorptr[2];
+		          }
+		          break;
+		      case 8 : // 64-bit CMYK
+		          for (lineptr = line + 8 * x, xcount = xrep; xcount > 0; xcount --)
+		          {
+		            if (color < 4)
+		            {
+			      *lineptr++ = 0;
+			      *lineptr++ = 0;
+			      *lineptr++ = 0;
+			      *lineptr++ = 0;
+			      *lineptr++ = 0;
+			      *lineptr++ = 0;
+			      *lineptr++ = 255 - colorptr[0];
+			      *lineptr++ = 255 - colorptr[0];
+		            }
+		            else
+		            {
+			      *lineptr++ = 255 - colorptr[0];
+			      *lineptr++ = 255 - colorptr[0];
+			      *lineptr++ = 255 - colorptr[1];
+			      *lineptr++ = 255 - colorptr[1];
+			      *lineptr++ = 255 - colorptr[2];
+			      *lineptr++ = 255 - colorptr[2];
+			      *lineptr++ = 0;
+			      *lineptr++ = 0;
+		            }
+		          }
+		          break;
+                    }
+		  }
+
+	          cupsRasterWritePixels(ras, line, header->cupsBytesPerLine);
+	        }
+
+		// Next row in the output image...
+                row ++;
+                if (row >= 8)
+                {
+                  // New row of text with a new color/gray shade...
+                  row = 0;
+                  color ++;
+                  if ((bpp > 2 && color >= 16) || (bpp <= 2 && color >= 4))
+                    color = 0;
+                }
+	      }
+	      break;
+
+	  case IPP_ORIENT_LANDSCAPE :
+	      for (col = 0; col < 100; col ++)
+	      {
+		// Write N scan lines...
+		for (ycount = yrep; ycount > 0 && y < yend; ycount --, y ++)
+		{
+		  memcpy(line, bline, header->cupsBytesPerLine);
+
+		  color = rows - 1;
+		  if (bpp <= 2)
+		    color &= 3;
+		  else
+		    color &= 15;
+
+		  for (row = 7, x = xoff; x < xend; x += xrep)
+		  {
+		    // Format the current line in the output row...
+		    unsigned char bit,	// Current bit
+				pattern;// Shading pattern
+
+		    colorptr = colors[color];
+
+                    if (output[row][col] != ' ')
+                    {
+		      switch (bpp)
+		      {
+			case 0 : // 1-bit bitmap output
+			    if (*colorptr < 63)
+			    {
+			      pattern = 0xff;
+			    }
+			    else if (*colorptr < 127)
+			    {
+			      pattern = (y & 1) ? 0x55 : 0xff;
+			    }
+			    else if (*colorptr < 191)
+			    {
+			      pattern = (y & 1) ? 0x55 : 0xaa;
+			    }
+			    else if (y & 1)
+			    {
+			      break;
+			    }
+			    else
+			    {
+			      pattern = 0xaa;
+			    }
+
+			    lineptr = line + x / 8;
+			    bit     = 0x80 >> (x & 7);
+
+			    for (xcount = xrep; xcount > 0; xcount --)
+			    {
+			      *lineptr |= bit & pattern;
+			      if (bit > 1)
+			      {
+				bit /= 2;
+			      }
+			      else
+			      {
+				bit = 0x80;
+				lineptr ++;
+			      }
+			    }
+			    break;
+			case 1 : // 8-bit grayscale/black
+			    if (black)
+			      memset(line + x, 255 - *colorptr, xrep);
+			    else
+			      memset(line + x, *colorptr, xrep);
+			    break;
+			case 2 : // 16-bit grayscale/black
+			    if (black)
+			      memset(line + 2 * x, 255 - *colorptr, 2 * xrep);
+			    else
+			      memset(line + 2 * x, *colorptr, 2 * xrep);
+			    break;
+			case 3 : // 24-bit RGB
+			    for (lineptr = line + 3 * x, xcount = xrep; xcount > 0; xcount --)
+			    {
+			      *lineptr++ = colorptr[0];
+			      *lineptr++ = colorptr[1];
+			      *lineptr++ = colorptr[2];
+			    }
+			    break;
+			case 4 : // 32-bit CMYK
+			    for (lineptr = line + 4 * x, xcount = xrep; xcount > 0; xcount --)
+			    {
+			      if (color < 4)
+			      {
+				*lineptr++ = 0;
+				*lineptr++ = 0;
+				*lineptr++ = 0;
+				*lineptr++ = 255 - colorptr[0];
+			      }
+			      else
+			      {
+				*lineptr++ = 255 - colorptr[0];
+				*lineptr++ = 255 - colorptr[1];
+				*lineptr++ = 255 - colorptr[2];
+				*lineptr++ = 0;
+			      }
+			    }
+			    break;
+			case 6 : // 24-bit RGB
+			    for (lineptr = line + 6 * x, xcount = xrep; xcount > 0; xcount --)
+			    {
+			      *lineptr++ = colorptr[0];
+			      *lineptr++ = colorptr[0];
+			      *lineptr++ = colorptr[1];
+			      *lineptr++ = colorptr[1];
+			      *lineptr++ = colorptr[2];
+			      *lineptr++ = colorptr[2];
+			    }
+			    break;
+			case 8 : // 64-bit CMYK
+			    for (lineptr = line + 8 * x, xcount = xrep; xcount > 0; xcount --)
+			    {
+			      if (color < 4)
+			      {
+				*lineptr++ = 0;
+				*lineptr++ = 0;
+				*lineptr++ = 0;
+				*lineptr++ = 0;
+				*lineptr++ = 0;
+				*lineptr++ = 0;
+				*lineptr++ = 255 - colorptr[0];
+				*lineptr++ = 255 - colorptr[0];
+			      }
+			      else
+			      {
+				*lineptr++ = 255 - colorptr[0];
+				*lineptr++ = 255 - colorptr[0];
+				*lineptr++ = 255 - colorptr[1];
+				*lineptr++ = 255 - colorptr[1];
+				*lineptr++ = 255 - colorptr[2];
+				*lineptr++ = 255 - colorptr[2];
+				*lineptr++ = 0;
+				*lineptr++ = 0;
+			      }
+			    }
+			    break;
+		      }
+		    }
+
+		    // Next row in the output image...
+		    row --;
+		    if (row < 0)
+		    {
+		      // New row of text with a new color/gray shade...
+		      row = 7;
+		      color --;
+		      if (color < 0)
+		      {
+			if (bpp > 2)
+			  color = 15;
+			else
+			  color = 3;
+		      }
+		    }
+		  }
+
+		  cupsRasterWritePixels(ras, line, header->cupsBytesPerLine);
+		}
+	      }
+	      break;
+
 	  case IPP_ORIENT_REVERSE_PORTRAIT :
+	      color = rows - 1;
+	      if (bpp <= 2)
+	        color &= 3;
+	      else
+	        color &= 15;
+
+	      for (row = 7; y < yend;)
+	      {
+                // Write N scan lines...
+	        for (ycount = yrep; ycount > 0 && y < yend; ycount --, y ++)
+	        {
+		  // Format the current line in the output row...
+		  memcpy(line, bline, header->cupsBytesPerLine);
+		  colorptr = colors[color];
+
+		  for (outptr = output[row] + 99, x = xoff; outptr >= output[row]; outptr --, x += xrep)
+		  {
+		    unsigned char	bit,	// Current bit
+					pattern;// Shading pattern
+
+		    if (*outptr == ' ')
+		      continue;
+
+                    switch (bpp)
+                    {
+                      case 0 : // 1-bit bitmap output
+			  if (*colorptr < 63)
+			  {
+			    pattern = 0xff;
+			  }
+			  else if (*colorptr < 127)
+			  {
+			    pattern = (y & 1) ? 0x55 : 0xff;
+			  }
+			  else if (*colorptr < 191)
+			  {
+			    pattern = (y & 1) ? 0x55 : 0xaa;
+			  }
+			  else if (y & 1)
+			  {
+			    break;
+			  }
+			  else
+			  {
+			    pattern = 0xaa;
+			  }
+
+			  lineptr = line + x / 8;
+			  bit     = 0x80 >> (x & 7);
+
+			  for (xcount = xrep; xcount > 0; xcount --)
+                          {
+                            *lineptr |= bit & pattern;
+                            if (bit > 1)
+                            {
+                              bit /= 2;
+                            }
+                            else
+                            {
+                              bit = 0x80;
+                              lineptr ++;
+                            }
+                          }
+			  break;
+		      case 1 : // 8-bit grayscale/black
+		          if (black)
+			    memset(line + x, 255 - *colorptr, xrep);
+			  else
+			    memset(line + x, *colorptr, xrep);
+		          break;
+		      case 2 : // 16-bit grayscale/black
+		          if (black)
+			    memset(line + 2 * x, 255 - *colorptr, 2 * xrep);
+			  else
+			    memset(line + 2 * x, *colorptr, 2 * xrep);
+		          break;
+		      case 3 : // 24-bit RGB
+		          for (lineptr = line + 3 * x, xcount = xrep; xcount > 0; xcount --)
+		          {
+		            *lineptr++ = colorptr[0];
+		            *lineptr++ = colorptr[1];
+		            *lineptr++ = colorptr[2];
+		          }
+		          break;
+		      case 4 : // 32-bit CMYK
+		          for (lineptr = line + 4 * x, xcount = xrep; xcount > 0; xcount --)
+		          {
+		            if (color < 4)
+		            {
+			      *lineptr++ = 0;
+			      *lineptr++ = 0;
+			      *lineptr++ = 0;
+			      *lineptr++ = 255 - colorptr[0];
+		            }
+		            else
+		            {
+			      *lineptr++ = 255 - colorptr[0];
+			      *lineptr++ = 255 - colorptr[1];
+			      *lineptr++ = 255 - colorptr[2];
+			      *lineptr++ = 0;
+		            }
+		          }
+		          break;
+		      case 6 : // 24-bit RGB
+		          for (lineptr = line + 6 * x, xcount = xrep; xcount > 0; xcount --)
+		          {
+		            *lineptr++ = colorptr[0];
+		            *lineptr++ = colorptr[0];
+		            *lineptr++ = colorptr[1];
+		            *lineptr++ = colorptr[1];
+		            *lineptr++ = colorptr[2];
+		            *lineptr++ = colorptr[2];
+		          }
+		          break;
+		      case 8 : // 64-bit CMYK
+		          for (lineptr = line + 8 * x, xcount = xrep; xcount > 0; xcount --)
+		          {
+		            if (color < 4)
+		            {
+			      *lineptr++ = 0;
+			      *lineptr++ = 0;
+			      *lineptr++ = 0;
+			      *lineptr++ = 0;
+			      *lineptr++ = 0;
+			      *lineptr++ = 0;
+			      *lineptr++ = 255 - colorptr[0];
+			      *lineptr++ = 255 - colorptr[0];
+		            }
+		            else
+		            {
+			      *lineptr++ = 255 - colorptr[0];
+			      *lineptr++ = 255 - colorptr[0];
+			      *lineptr++ = 255 - colorptr[1];
+			      *lineptr++ = 255 - colorptr[1];
+			      *lineptr++ = 255 - colorptr[2];
+			      *lineptr++ = 255 - colorptr[2];
+			      *lineptr++ = 0;
+			      *lineptr++ = 0;
+		            }
+		          }
+		          break;
+                    }
+		  }
+
+	          cupsRasterWritePixels(ras, line, header->cupsBytesPerLine);
+	        }
+
+		// Next row in the output image...
+                row --;
+                if (row < 0)
+                {
+                  // New row of text with a new color/gray shade...
+                  row = 7;
+                  color --;
+                  if (color < 0)
+                  {
+                    if (bpp > 2)
+                      color = 15;
+                    else
+                      color = 3;
+                  }
+                }
+	      }
 	      break;
 	  case IPP_ORIENT_REVERSE_LANDSCAPE :
+	      for (col = 99; col >= 0; col --)
+	      {
+		// Write N scan lines...
+		for (ycount = yrep; ycount > 0 && y < yend; ycount --, y ++)
+		{
+		  memcpy(line, bline, header->cupsBytesPerLine);
+
+		  color = 0;
+
+		  for (row = 0, x = xoff; x < xend; x += xrep)
+		  {
+		    // Format the current line in the output row...
+		    unsigned char bit,	// Current bit
+				pattern;// Shading pattern
+
+		    colorptr = colors[color];
+
+                    if (output[row][col] != ' ')
+                    {
+		      switch (bpp)
+		      {
+			case 0 : // 1-bit bitmap output
+			    if (*colorptr < 63)
+			    {
+			      pattern = 0xff;
+			    }
+			    else if (*colorptr < 127)
+			    {
+			      pattern = (y & 1) ? 0x55 : 0xff;
+			    }
+			    else if (*colorptr < 191)
+			    {
+			      pattern = (y & 1) ? 0x55 : 0xaa;
+			    }
+			    else if (y & 1)
+			    {
+			      break;
+			    }
+			    else
+			    {
+			      pattern = 0xaa;
+			    }
+
+			    lineptr = line + x / 8;
+			    bit     = 0x80 >> (x & 7);
+
+			    for (xcount = xrep; xcount > 0; xcount --)
+			    {
+			      *lineptr |= bit & pattern;
+			      if (bit > 1)
+			      {
+				bit /= 2;
+			      }
+			      else
+			      {
+				bit = 0x80;
+				lineptr ++;
+			      }
+			    }
+			    break;
+			case 1 : // 8-bit grayscale/black
+			    if (black)
+			      memset(line + x, 255 - *colorptr, xrep);
+			    else
+			      memset(line + x, *colorptr, xrep);
+			    break;
+			case 2 : // 16-bit grayscale/black
+			    if (black)
+			      memset(line + 2 * x, 255 - *colorptr, 2 * xrep);
+			    else
+			      memset(line + 2 * x, *colorptr, 2 * xrep);
+			    break;
+			case 3 : // 24-bit RGB
+			    for (lineptr = line + 3 * x, xcount = xrep; xcount > 0; xcount --)
+			    {
+			      *lineptr++ = colorptr[0];
+			      *lineptr++ = colorptr[1];
+			      *lineptr++ = colorptr[2];
+			    }
+			    break;
+			case 4 : // 32-bit CMYK
+			    for (lineptr = line + 4 * x, xcount = xrep; xcount > 0; xcount --)
+			    {
+			      if (color < 4)
+			      {
+				*lineptr++ = 0;
+				*lineptr++ = 0;
+				*lineptr++ = 0;
+				*lineptr++ = 255 - colorptr[0];
+			      }
+			      else
+			      {
+				*lineptr++ = 255 - colorptr[0];
+				*lineptr++ = 255 - colorptr[1];
+				*lineptr++ = 255 - colorptr[2];
+				*lineptr++ = 0;
+			      }
+			    }
+			    break;
+			case 6 : // 24-bit RGB
+			    for (lineptr = line + 6 * x, xcount = xrep; xcount > 0; xcount --)
+			    {
+			      *lineptr++ = colorptr[0];
+			      *lineptr++ = colorptr[0];
+			      *lineptr++ = colorptr[1];
+			      *lineptr++ = colorptr[1];
+			      *lineptr++ = colorptr[2];
+			      *lineptr++ = colorptr[2];
+			    }
+			    break;
+			case 8 : // 64-bit CMYK
+			    for (lineptr = line + 8 * x, xcount = xrep; xcount > 0; xcount --)
+			    {
+			      if (color < 4)
+			      {
+				*lineptr++ = 0;
+				*lineptr++ = 0;
+				*lineptr++ = 0;
+				*lineptr++ = 0;
+				*lineptr++ = 0;
+				*lineptr++ = 0;
+				*lineptr++ = 255 - colorptr[0];
+				*lineptr++ = 255 - colorptr[0];
+			      }
+			      else
+			      {
+				*lineptr++ = 255 - colorptr[0];
+				*lineptr++ = 255 - colorptr[0];
+				*lineptr++ = 255 - colorptr[1];
+				*lineptr++ = 255 - colorptr[1];
+				*lineptr++ = 255 - colorptr[2];
+				*lineptr++ = 255 - colorptr[2];
+				*lineptr++ = 0;
+				*lineptr++ = 0;
+			      }
+			    }
+			    break;
+		      }
+		    }
+
+		    // Next row in the output image...
+		    row ++;
+		    if (row > 7)
+		    {
+		      // New row of text with a new color/gray shade...
+		      row = 0;
+		      color ++;
+		      if ((bpp > 2 && color >= 16) || (bpp <= 2 && color >= 4))
+			color = 0;
+		    }
+		  }
+
+		  cupsRasterWritePixels(ras, line, header->cupsBytesPerLine);
+		}
+	      }
 	      break;
 	}
       }
-#if 0
-      for (temprow = 0, tempcolor = 0; y < yend;)
-      {
-	template = templates[temprow];
-	color    = colors[tempcolor];
-
-	temprow ++;
-	if (temprow >= (int)(sizeof(templates) / sizeof(templates[0])))
-	{
-	  temprow = 0;
-	  tempcolor ++;
-	  if (tempcolor >= (int)(sizeof(colors) / sizeof(colors[0])))
-	    tempcolor = 0;
-	  else if (tempcolor > 3 && header->cupsColorSpace == CUPS_CSPACE_SW)
-	    tempcolor = 0;
-	}
-
-	memset(line, 0xff, header->cupsBytesPerLine);
-
-	if (header->cupsColorSpace == CUPS_CSPACE_SW)
-	{
-	 /*
-	  * Do grayscale output...
-	  */
-
-	  for (lineptr = line + xoff; *template; template ++)
-	  {
-	    if (*template != ' ')
-	    {
-	      for (xcount = xrep; xcount > 0; xcount --)
-		*lineptr++ = *color;
-	    }
-	    else
-	    {
-	      lineptr += xrep;
-	    }
-	  }
-	}
-	else
-	{
-	 /*
-	  * Do color output...
-	  */
-
-	  for (lineptr = line + 3 * xoff; *template; template ++)
-	  {
-	    if (*template != ' ')
-	    {
-	      for (xcount = xrep; xcount > 0; xcount --, lineptr += 3)
-		memcpy(lineptr, color, 3);
-	    }
-	    else
-	    {
-	      lineptr += 3 * xrep;
-	    }
-	  }
-	}
-
-	for (ycount = yrep; ycount > 0 && y < yend; ycount --, y ++)
-	  cupsRasterWritePixels(ras, line, header->cupsBytesPerLine);
-      }
-
-#endif // 0
 
       // Write out the last of the border lines
       for (; y < yend2; y ++)
