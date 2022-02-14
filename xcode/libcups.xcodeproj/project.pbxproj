@@ -25,6 +25,7 @@
 				271284B11CC11FA500E517C7 /* PBXTargetDependency */,
 				271284B91CC11FA500E517C7 /* PBXTargetDependency */,
 				271284BF1CC11FA500E517C7 /* PBXTargetDependency */,
+				27D3967927BA8224003D3D8E /* PBXTargetDependency */,
 				274770E42345347D0089BC31 /* PBXTargetDependency */,
 				271286E01CC13EF400E517C7 /* PBXTargetDependency */,
 			);
@@ -200,6 +201,13 @@
 		2778BBDB275DA0D80070DA11 /* fuzzipp.c in Sources */ = {isa = PBXBuildFile; fileRef = 2778BBDA275DA0D80070DA11 /* fuzzipp.c */; };
 		278C58E3136B647200836530 /* testhttp.c in Sources */ = {isa = PBXBuildFile; fileRef = 278C58E2136B647200836530 /* testhttp.c */; };
 		279AE6F52395B80F004DD600 /* libpam.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 279AE6F42395B80F004DD600 /* libpam.tbd */; };
+		27D3966527BA81C6003D3D8E /* raster-testpage.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D3966427BA81C6003D3D8E /* raster-testpage.h */; };
+		27D3966627BA81C6003D3D8E /* raster-testpage.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D3966427BA81C6003D3D8E /* raster-testpage.h */; };
+		27D3966727BA81C6003D3D8E /* raster-testpage.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D3966427BA81C6003D3D8E /* raster-testpage.h */; };
+		27D3966E27BA81D3003D3D8E /* libcups_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 72A4332F155844CF002E172D /* libcups_static.a */; };
+		27D3966F27BA81D3003D3D8E /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 278C58E5136B64AF00836530 /* CoreFoundation.framework */; };
+		27D3967027BA81D3003D3D8E /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 278C58E7136B64B000836530 /* Security.framework */; };
+		27D3967727BA8206003D3D8E /* testtestpage.c in Sources */ = {isa = PBXBuildFile; fileRef = 27D3967627BA8206003D3D8E /* testtestpage.c */; };
 		720E854320164E7B00C6C411 /* ipp-file.c in Sources */ = {isa = PBXBuildFile; fileRef = 720E854120164E7A00C6C411 /* ipp-file.c */; };
 		720E854420164E7B00C6C411 /* ipp-file.c in Sources */ = {isa = PBXBuildFile; fileRef = 720E854120164E7A00C6C411 /* ipp-file.c */; };
 		720E854520164E7B00C6C411 /* ipp-vars.c in Sources */ = {isa = PBXBuildFile; fileRef = 720E854220164E7A00C6C411 /* ipp-vars.c */; };
@@ -553,6 +561,20 @@
 			remoteGlobalIDString = 274FF6891333B1C400317ECB;
 			remoteInfo = libcups_static;
 		};
+		27D3966A27BA81D3003D3D8E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 72BF96371333042100B1EAD7 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 274FF6891333B1C400317ECB;
+			remoteInfo = libcups_static;
+		};
+		27D3967827BA8224003D3D8E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 72BF96371333042100B1EAD7 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 27D3966827BA81D3003D3D8E;
+			remoteInfo = testtestpage;
+		};
 		724FA5391CC037370092477B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 72BF96371333042100B1EAD7 /* Project object */;
@@ -744,6 +766,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
+		27D3967127BA81D3003D3D8E /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
 		724FA5441CC037370092477B /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -893,6 +924,9 @@
 		278C58E8136B64B000836530 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = /System/Library/Frameworks/SystemConfiguration.framework; sourceTree = "<absolute>"; };
 		279AE6F42395B80F004DD600 /* libpam.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libpam.tbd; path = usr/lib/libpam.tbd; sourceTree = SDKROOT; };
 		27D3037D134148CB00F022B1 /* libcups3.def */ = {isa = PBXFileReference; lastKnownFileType = text; name = libcups3.def; path = ../cups/libcups3.def; sourceTree = "<group>"; };
+		27D3966427BA81C6003D3D8E /* raster-testpage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "raster-testpage.h"; path = "../cups/raster-testpage.h"; sourceTree = "<group>"; };
+		27D3967527BA81D3003D3D8E /* testtestpage */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = testtestpage; sourceTree = BUILT_PRODUCTS_DIR; };
+		27D3967627BA8206003D3D8E /* testtestpage.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = testtestpage.c; path = ../cups/testtestpage.c; sourceTree = "<group>"; };
 		27F89DA21B3AC43B00E5A4B7 /* testraster.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = testraster.c; path = ../cups/testraster.c; sourceTree = "<group>"; };
 		720E854120164E7A00C6C411 /* ipp-file.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "ipp-file.c"; path = "../cups/ipp-file.c"; sourceTree = "<group>"; };
 		720E854220164E7A00C6C411 /* ipp-vars.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "ipp-vars.c"; path = "../cups/ipp-vars.c"; sourceTree = "<group>"; };
@@ -1147,6 +1181,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		27D3966D27BA81D3003D3D8E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				27D3966E27BA81D3003D3D8E /* libcups_static.a in Frameworks */,
+				27D3966F27BA81D3003D3D8E /* CoreFoundation.framework in Frameworks */,
+				27D3967027BA81D3003D3D8E /* Security.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		72220EAB1333047D00FCA411 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -1318,6 +1362,7 @@
 				727EF049192E3544001EF690 /* testoptions.c */,
 				727EF04B192E3544001EF690 /* testpwg.c */,
 				27F89DA21B3AC43B00E5A4B7 /* testraster.c */,
+				27D3967627BA8206003D3D8E /* testtestpage.c */,
 				274770E1234534660089BC31 /* testthreads.c */,
 				271286681CC130BD00E517C7 /* tlscheck.c */,
 			);
@@ -1365,6 +1410,7 @@
 				273B1EBB226B3E5200428143 /* ippeveps */,
 				274770E02345342B0089BC31 /* testthreads */,
 				2778BBD9275DA09B0070DA11 /* fuzzipp */,
+				27D3967527BA81D3003D3D8E /* testtestpage */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1426,6 +1472,7 @@
 				2767FC76192696A0000F61D3 /* raster-private.h */,
 				72F75A6B1336FA8A004BB496 /* raster-stream.c */,
 				7253C45D216ED51500494ADD /* raster-stubs.c */,
+				27D3966427BA81C6003D3D8E /* raster-testpage.h */,
 				72220EFB133305BB00FCA411 /* request.c */,
 				72220F02133305BB00FCA411 /* string.c */,
 				72220F01133305BB00FCA411 /* string-private.h */,
@@ -1540,6 +1587,7 @@
 				2706964D1CADF3E200FFE5FB /* cups.h in Headers */,
 				722A24F02178D00D000CAB20 /* debug-internal.h in Headers */,
 				2706964E1CADF3E200FFE5FB /* dir.h in Headers */,
+				27D3966627BA81C6003D3D8E /* raster-testpage.h in Headers */,
 				2706964F1CADF3E200FFE5FB /* file.h in Headers */,
 				270696501CADF3E200FFE5FB /* http.h in Headers */,
 				270696511CADF3E200FFE5FB /* ipp.h in Headers */,
@@ -1556,6 +1604,7 @@
 			files = (
 				722A24F52178D091000CAB20 /* debug-private.h in Headers */,
 				274FF6C61333B1C400317ECB /* dir.h in Headers */,
+				27D3966727BA81C6003D3D8E /* raster-testpage.h in Headers */,
 				722A24F12178D00D000CAB20 /* debug-internal.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1582,6 +1631,7 @@
 				72220F1E133305BB00FCA411 /* ipp-private.h in Headers */,
 				72220F23133305BB00FCA411 /* language-private.h in Headers */,
 				7253C46F216ED69200494ADD /* pwg.h in Headers */,
+				27D3966527BA81C6003D3D8E /* raster-testpage.h in Headers */,
 				72220F28133305BB00FCA411 /* md5-internal.h in Headers */,
 				72220F33133305BB00FCA411 /* pwg-private.h in Headers */,
 				72220F3B133305BB00FCA411 /* string-private.h in Headers */,
@@ -1807,6 +1857,24 @@
 			name = testhttp;
 			productName = testhttp;
 			productReference = 278C58CB136B640300836530 /* testhttp */;
+			productType = "com.apple.product-type.tool";
+		};
+		27D3966827BA81D3003D3D8E /* testtestpage */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 27D3967227BA81D3003D3D8E /* Build configuration list for PBXNativeTarget "testtestpage" */;
+			buildPhases = (
+				27D3966B27BA81D3003D3D8E /* Sources */,
+				27D3966D27BA81D3003D3D8E /* Frameworks */,
+				27D3967127BA81D3003D3D8E /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				27D3966927BA81D3003D3D8E /* PBXTargetDependency */,
+			);
+			name = testtestpage;
+			productName = testmime;
+			productReference = 27D3967527BA81D3003D3D8E /* testtestpage */;
 			productType = "com.apple.product-type.tool";
 		};
 		72220EAD1333047D00FCA411 /* libcups */ = {
@@ -2075,6 +2143,7 @@
 				724FA5CF1CC037F00092477B /* testoptions */,
 				724FA5F71CC038190092477B /* testpwg */,
 				724FA60B1CC0382B0092477B /* testraster */,
+				27D3966827BA81D3003D3D8E /* testtestpage */,
 				274770D12345342B0089BC31 /* testthreads */,
 				271286571CC1309000E517C7 /* tlscheck */,
 			);
@@ -2247,6 +2316,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				278C58E3136B647200836530 /* testhttp.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		27D3966B27BA81D3003D3D8E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				27D3967727BA8206003D3D8E /* testtestpage.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2525,6 +2602,16 @@
 			isa = PBXTargetDependency;
 			target = 274FF6891333B1C400317ECB /* libcups_static */;
 			targetProxy = 278C58D7136B642F00836530 /* PBXContainerItemProxy */;
+		};
+		27D3966927BA81D3003D3D8E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 274FF6891333B1C400317ECB /* libcups_static */;
+			targetProxy = 27D3966A27BA81D3003D3D8E /* PBXContainerItemProxy */;
+		};
+		27D3967927BA8224003D3D8E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 27D3966827BA81D3003D3D8E /* testtestpage */;
+			targetProxy = 27D3967827BA8224003D3D8E /* PBXContainerItemProxy */;
 		};
 		724FA5381CC037370092477B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -2883,6 +2970,24 @@
 			name = Debug;
 		};
 		278C58D2136B640300836530 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "-";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		27D3967327BA81D3003D3D8E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "-";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		27D3967427BA81D3003D3D8E /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
@@ -3380,6 +3485,15 @@
 			buildConfigurations = (
 				278C58D1136B640300836530 /* Debug */,
 				278C58D2136B640300836530 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		27D3967227BA81D3003D3D8E /* Build configuration list for PBXNativeTarget "testtestpage" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				27D3967327BA81D3003D3D8E /* Debug */,
+				27D3967427BA81D3003D3D8E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

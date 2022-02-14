@@ -107,7 +107,7 @@ cupsRasterWriteTest(
 
 
   // Update the page header->..
-  header->cupsInteger[CUPS_RASTER_PWG_TotalPageCount] = num_copies * num_pages;
+  header->cupsInteger[CUPS_RASTER_PWG_TotalPageCount] = (unsigned)(num_copies * num_pages);
 
   // Calculate the border sizes and offsets...
   if (header->cupsWidth > (2 * header->HWResolution[0]) && header->cupsHeight > (2 * header->HWResolution[1]))
@@ -349,8 +349,9 @@ cupsRasterWriteTest(
         // Draw the test image from bottom to top
 	switch (porientation)
 	{
+	  default :
 	  case IPP_ORIENT_PORTRAIT :
-	      color = rows - 1;
+	      color = (int)rows - 1;
 	      if (bpp <= 2)
 		color &= 3;
 	      else
@@ -523,7 +524,7 @@ cupsRasterWriteTest(
 		{
 		  memcpy(line, bline, header->cupsBytesPerLine);
 
-		  color = rows - 1;
+		  color = (int)rows - 1;
 		  if (bpp <= 2)
 		    color &= 3;
 		  else
@@ -1000,6 +1001,7 @@ cupsRasterWriteTest(
         // Draw the test image from top to bottom
 	switch (porientation)
 	{
+	  default :
 	  case IPP_ORIENT_PORTRAIT :
 	      for (row = 0, color = 0; y < yend;)
 	      {
@@ -1163,7 +1165,7 @@ cupsRasterWriteTest(
 		{
 		  memcpy(line, bline, header->cupsBytesPerLine);
 
-		  color = rows - 1;
+		  color = (int)rows - 1;
 		  if (bpp <= 2)
 		    color &= 3;
 		  else
@@ -1323,7 +1325,7 @@ cupsRasterWriteTest(
 	      break;
 
 	  case IPP_ORIENT_REVERSE_PORTRAIT :
-	      color = rows - 1;
+	      color = (int)rows - 1;
 	      if (bpp <= 2)
 	        color &= 3;
 	      else
