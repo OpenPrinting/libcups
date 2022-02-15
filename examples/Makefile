@@ -1,7 +1,7 @@
 #
 # Example files makefile for CUPS.
 #
-# Copyright © 2021 by OpenPrinting.
+# Copyright © 2021-2022 by OpenPrinting.
 # Copyright © 2007-2019 by Apple Inc.
 # Copyright © 2002-2005 by Easy Software Products.
 #
@@ -20,18 +20,6 @@ include ../Makedefs
 # Examples...
 #
 
-DRVFILES 	=	\
-			color.drv \
-			constraint.drv \
-			custom.drv \
-			grouping.drv \
-			laserjet-basic.drv \
-			laserjet-pjl.drv \
-			minimum.drv \
-			postscript.drv \
-			r300-basic.drv \
-			r300-colorman.drv \
-			r300-remote.drv
 DATAFILES	=	\
 			color.jpg \
 			document-a4.pdf \
@@ -98,6 +86,7 @@ TESTFILES	=	\
 			print-job-media-col.test \
 			print-job-media-needed.test \
 			print-job-password.test \
+			print-job-raster.test \
 			print-uri.test \
 			set-attrs-hold.test \
 			validate-job.test
@@ -150,11 +139,6 @@ install:	all install-data install-headers install-libs install-exec
 #
 
 install-data:
-	echo Installing sample PPD compiler files in $(DATADIR)/examples...
-	$(INSTALL_DIR) $(DATADIR)/examples
-	for file in $(DRVFILES); do \
-		$(INSTALL_DATA) $$file $(DATADIR)/examples; \
-	done
 	echo Installing sample ipptool files in $(DATADIR)/ipptool...
 	$(INSTALL_DIR) -m 755 $(DATADIR)/ipptool
 	for file in $(DATAFILES); do \
@@ -191,11 +175,6 @@ install-libs:
 #
 
 uninstall:
-	echo Uninstalling sample PPD compiler files from $(DATADIR)/examples...
-	for file in $(DRVFILES); do \
-		$(RM) $(DATADIR)/examples/$$file; \
-	done
-	-$(RMDIR) $(DATADIR)/examples
 	echo Uninstalling sample ipptool files from $(DATADIR)/ipptool...
 	for file in $(DATAFILES); do \
 		$(RM) $(DATADIR)/ipptool/$$file; \
