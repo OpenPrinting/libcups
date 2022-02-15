@@ -161,6 +161,7 @@ test:		$(UNITTARGETS)
 	./testoptions 2>>test.log
 	echo Running raster API tests...
 	./testraster 2>>test.log
+	./testtestpage 2>>test.log
 
 
 #

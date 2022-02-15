@@ -9,6 +9,7 @@
 //
 
 #include "raster-testpage.h"
+#include "test-internal.h"
 #include <string.h>
 #include <ctype.h>
 #include <errno.h>
@@ -32,6 +33,7 @@ main(int  argc,				// I - Number of command-line arguments
      char *argv[])			// I - Command-line arguments
 {
   int			i;		// Looping var
+  int			ret = 0;	// Exit status
   const char		*opt;		// Current option
   const char		*filename = NULL,
   					// Output filename
@@ -277,78 +279,339 @@ main(int  argc,				// I - Number of command-line arguments
   else
   {
     // Do unit tests...
+    testBegin("open(test.pwg)");
     if ((fd = open("test.pwg", O_WRONLY | O_CREAT | O_TRUNC, 0666)) < 0)
     {
-      perror("test.pwg");
+      testEndMessage(false, "%s", strerror(errno));
       return (1);
     }
+    testEnd(true);
 
+    testBegin("cupsRasterOpen");
     if ((ras = cupsRasterOpen(fd, CUPS_RASTER_WRITE_PWG)) == NULL)
     {
-      fprintf(stderr, "test.pwg: %s\n", cupsLastErrorString());
+      testEndMessage(false, "%s", cupsRasterErrorString());
       close(fd);
       return (1);
     }
+    testEnd(true);
 
     media = pwgMediaForPWG("na_letter_8.5x11in");
 
     for (orientation = IPP_ORIENT_PORTRAIT; orientation <= IPP_ORIENT_REVERSE_PORTRAIT; orientation ++)
     {
-      cupsRasterInitPWGHeader(&header, media, "black_1", 300, 300, "one-sided", "normal");
-      if (orientation == IPP_ORIENT_PORTRAIT)
-	cupsRasterWriteTest(ras, &header, "normal", orientation, 2, 3);
+      testBegin("cupsRasterInitPWGHeader(black_1)");
+      if (cupsRasterInitPWGHeader(&header, media, "black_1", 300, 300, "one-sided", "normal"))
+      {
+        testEnd(true);
+      }
       else
-	cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1);
+      {
+        testEndMessage(false, "%s", cupsRasterErrorString());
+        ret = 1;
+      }
 
-      cupsRasterInitPWGHeader(&header, media, "black_8", 300, 300, "one-sided", "normal");
-      cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1);
+      if (orientation == IPP_ORIENT_PORTRAIT)
+      {
+        testBegin("cupsRasterWriteTest(2,3)");
+	if (cupsRasterWriteTest(ras, &header, "normal", orientation, 2, 3))
+	{
+	  testEnd(true);
+	}
+	else
+	{
+	  testEndMessage(false, "%s", cupsRasterErrorString());
+	  ret = 1;
+	}
+      }
+      else
+      {
+        testBegin("cupsRasterWriteTest(1,1)");
+	if (cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1))
+	{
+	  testEnd(true);
+	}
+	else
+	{
+	  testEndMessage(false, "%s", cupsRasterErrorString());
+	  ret = 1;
+	}
+      }
 
-      cupsRasterInitPWGHeader(&header, media, "black_16", 300, 300, "one-sided", "normal");
-      cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1);
+      testBegin("cupsRasterInitPWGHeader(black_8)");
+      if (cupsRasterInitPWGHeader(&header, media, "black_8", 300, 300, "one-sided", "normal"))
+      {
+        testEnd(true);
+      }
+      else
+      {
+        testEndMessage(false, "%s", cupsRasterErrorString());
+        ret = 1;
+      }
 
-      cupsRasterInitPWGHeader(&header, media, "srgb_8", 300, 300, "one-sided", "normal");
-      cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1);
+      testBegin("cupsRasterWriteTest(1,1)");
+      if (cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1))
+      {
+	testEnd(true);
+      }
+      else
+      {
+	testEndMessage(false, "%s", cupsRasterErrorString());
+	ret = 1;
+      }
 
-      cupsRasterInitPWGHeader(&header, media, "srgb_16", 300, 300, "one-sided", "normal");
-      cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1);
+      testBegin("cupsRasterInitPWGHeader(black_16)");
+      if (cupsRasterInitPWGHeader(&header, media, "black_16", 300, 300, "one-sided", "normal"))
+      {
+        testEnd(true);
+      }
+      else
+      {
+        testEndMessage(false, "%s", cupsRasterErrorString());
+        ret = 1;
+      }
 
-      cupsRasterInitPWGHeader(&header, media, "sgray_8", 300, 300, "one-sided", "normal");
-      cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1);
+      testBegin("cupsRasterWriteTest(1,1)");
+      if (cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1))
+      {
+	testEnd(true);
+      }
+      else
+      {
+	testEndMessage(false, "%s", cupsRasterErrorString());
+	ret = 1;
+      }
 
-      cupsRasterInitPWGHeader(&header, media, "sgray_1", 300, 300, "one-sided", "normal");
-      cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1);
+      testBegin("cupsRasterInitPWGHeader(srgb_8)");
+      if (cupsRasterInitPWGHeader(&header, media, "srgb_8", 300, 300, "one-sided", "normal"))
+      {
+        testEnd(true);
+      }
+      else
+      {
+        testEndMessage(false, "%s", cupsRasterErrorString());
+        ret = 1;
+      }
 
-      cupsRasterInitPWGHeader(&header, media, "sgray_8", 300, 300, "one-sided", "normal");
-      cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1);
+      testBegin("cupsRasterWriteTest(1,1)");
+      if (cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1))
+      {
+	testEnd(true);
+      }
+      else
+      {
+	testEndMessage(false, "%s", cupsRasterErrorString());
+	ret = 1;
+      }
 
-      cupsRasterInitPWGHeader(&header, media, "cmyk_8", 300, 300, "one-sided", "normal");
-      cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1);
+      testBegin("cupsRasterInitPWGHeader(srgb_16)");
+      if (cupsRasterInitPWGHeader(&header, media, "srgb_16", 300, 300, "one-sided", "normal"))
+      {
+        testEnd(true);
+      }
+      else
+      {
+        testEndMessage(false, "%s", cupsRasterErrorString());
+        ret = 1;
+      }
 
-      cupsRasterInitPWGHeader(&header, media, "cmyk_16", 300, 300, "one-sided", "normal");
-      cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1);
+      testBegin("cupsRasterWriteTest(1,1)");
+      if (cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1))
+      {
+	testEnd(true);
+      }
+      else
+      {
+	testEndMessage(false, "%s", cupsRasterErrorString());
+	ret = 1;
+      }
+
+      testBegin("cupsRasterInitPWGHeader(sgray_1)");
+      if (cupsRasterInitPWGHeader(&header, media, "sgray_1", 300, 300, "one-sided", "normal"))
+      {
+        testEnd(true);
+      }
+      else
+      {
+        testEndMessage(false, "%s", cupsRasterErrorString());
+        ret = 1;
+      }
+
+      testBegin("cupsRasterWriteTest(1,1)");
+      if (cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1))
+      {
+	testEnd(true);
+      }
+      else
+      {
+	testEndMessage(false, "%s", cupsRasterErrorString());
+	ret = 1;
+      }
+
+      testBegin("cupsRasterInitPWGHeader(sgray_8)");
+      if (cupsRasterInitPWGHeader(&header, media, "sgray_8", 300, 300, "one-sided", "normal"))
+      {
+        testEnd(true);
+      }
+      else
+      {
+        testEndMessage(false, "%s", cupsRasterErrorString());
+        ret = 1;
+      }
+
+      testBegin("cupsRasterWriteTest(1,1)");
+      if (cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1))
+      {
+	testEnd(true);
+      }
+      else
+      {
+	testEndMessage(false, "%s", cupsRasterErrorString());
+	ret = 1;
+      }
+
+      testBegin("cupsRasterInitPWGHeader(cmyk_8)");
+      if (cupsRasterInitPWGHeader(&header, media, "cmyk_8", 300, 300, "one-sided", "normal"))
+      {
+        testEnd(true);
+      }
+      else
+      {
+        testEndMessage(false, "%s", cupsRasterErrorString());
+        ret = 1;
+      }
+
+      testBegin("cupsRasterWriteTest(1,1)");
+      if (cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1))
+      {
+	testEnd(true);
+      }
+      else
+      {
+	testEndMessage(false, "%s", cupsRasterErrorString());
+	ret = 1;
+      }
+
+      testBegin("cupsRasterInitPWGHeader(cmyk_16)");
+      if (cupsRasterInitPWGHeader(&header, media, "cmyk_16", 300, 300, "one-sided", "normal"))
+      {
+        testEnd(true);
+      }
+      else
+      {
+        testEndMessage(false, "%s", cupsRasterErrorString());
+        ret = 1;
+      }
+
+      testBegin("cupsRasterWriteTest(1,1)");
+      if (cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1))
+      {
+	testEnd(true);
+      }
+      else
+      {
+	testEndMessage(false, "%s", cupsRasterErrorString());
+	ret = 1;
+      }
     }
 
     for (i = 0; i < 4; i ++)
     {
       for (orientation = IPP_ORIENT_PORTRAIT; orientation <= IPP_ORIENT_REVERSE_PORTRAIT; orientation ++)
       {
-	cupsRasterInitPWGHeader(&header, media, "black_1", 300, 300, "two-sided-long-edge", "normal");
-	cupsRasterWriteTest(ras, &header, sheet_backs[i], orientation, 1, 2);
+        testBegin("cupsRasterInitPWGHeader(black_1, %d, %s)", (int)orientation, sheet_backs[i]);
+	if (cupsRasterInitPWGHeader(&header, media, "black_1", 300, 300, "two-sided-long-edge", "normal"))
+	{
+	  testEnd(true);
+	}
+	else
+	{
+	  testEndMessage(false, "%s", cupsRasterErrorString());
+	  ret = 1;
+	}
 
-	cupsRasterInitPWGHeader(&header, media, "black_8", 300, 300, "two-sided-long-edge", sheet_backs[i]);
-	cupsRasterWriteTest(ras, &header, sheet_backs[i], orientation, 1, 2);
+	testBegin("cupsRasterWriteTest(1,2)");
+	if (cupsRasterWriteTest(ras, &header, sheet_backs[i], orientation, 1, 2))
+	{
+	  testEnd(true);
+	}
+	else
+	{
+	  testEndMessage(false, "%s", cupsRasterErrorString());
+	  ret = 1;
+	}
 
-	cupsRasterInitPWGHeader(&header, media, "srgb_8", 300, 300, "two-sided-long-edge", sheet_backs[i]);
-	cupsRasterWriteTest(ras, &header, sheet_backs[i], orientation, 1, 2);
+	testBegin("cupsRasterInitPWGHeader(black_1, %d, %s)", (int)orientation, sheet_backs[i]);
+	if (cupsRasterInitPWGHeader(&header, media, "black_8", 300, 300, "two-sided-long-edge", sheet_backs[i]))
+	{
+	  testEnd(true);
+	}
+	else
+	{
+	  testEndMessage(false, "%s", cupsRasterErrorString());
+	  ret = 1;
+	}
 
-	cupsRasterInitPWGHeader(&header, media, "cmyk_8", 300, 300, "two-sided-long-edge", sheet_backs[i]);
-	cupsRasterWriteTest(ras, &header, sheet_backs[i], orientation, 1, 2);
+	testBegin("cupsRasterWriteTest(1,2)");
+	if (cupsRasterWriteTest(ras, &header, sheet_backs[i], orientation, 1, 2))
+	{
+	  testEnd(true);
+	}
+	else
+	{
+	  testEndMessage(false, "%s", cupsRasterErrorString());
+	  ret = 1;
+	}
+
+	testBegin("cupsRasterInitPWGHeader(black_1, %d, %s)", (int)orientation, sheet_backs[i]);
+	if (cupsRasterInitPWGHeader(&header, media, "srgb_8", 300, 300, "two-sided-long-edge", sheet_backs[i]))
+	{
+	  testEnd(true);
+	}
+	else
+	{
+	  testEndMessage(false, "%s", cupsRasterErrorString());
+	  ret = 1;
+	}
+
+	testBegin("cupsRasterWriteTest(1,2)");
+	if (cupsRasterWriteTest(ras, &header, sheet_backs[i], orientation, 1, 2))
+	{
+	  testEnd(true);
+	}
+	else
+	{
+	  testEndMessage(false, "%s", cupsRasterErrorString());
+	  ret = 1;
+	}
+
+	testBegin("cupsRasterInitPWGHeader(black_1, %d, %s)", (int)orientation, sheet_backs[i]);
+	if (cupsRasterInitPWGHeader(&header, media, "cmyk_8", 300, 300, "two-sided-long-edge", sheet_backs[i]))
+	{
+	  testEnd(true);
+	}
+	else
+	{
+	  testEndMessage(false, "%s", cupsRasterErrorString());
+	  ret = 1;
+	}
+
+	testBegin("cupsRasterWriteTest(1,2)");
+	if (cupsRasterWriteTest(ras, &header, sheet_backs[i], orientation, 1, 2))
+	{
+	  testEnd(true);
+	}
+	else
+	{
+	  testEndMessage(false, "%s", cupsRasterErrorString());
+	  ret = 1;
+	}
       }
     }
     cupsRasterClose(ras);
   }
 
-  return (0);
+  return (ret);
 }
 
 
