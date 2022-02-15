@@ -2509,7 +2509,7 @@ generate_file(
     http_t             *http,		// I - HTTP connection
     ipptool_generate_t *params)		// I - GENERATE-FILE parameters
 {
-  cups_mode_t		mode;		// Raster output mode
+  cups_raster_mode_t	mode;		// Raster output mode
   cups_raster_t		*ras;		// Raster stream
   cups_page_header_t	header;		// Raster page header
   pwg_media_t		*media;		// Media information
@@ -2545,7 +2545,7 @@ generate_file(
 #endif // 0
 
   // Create the raster stream...
-  if ((ras = cupsRasterOpenIO((cups_raster_iocb_t)httpWrite, http, mode)) == NULL)
+  if ((ras = cupsRasterOpenIO((cups_raster_cb_t)httpWrite, http, mode)) == NULL)
     return (HTTP_STATUS_SERVER_ERROR);
 
   // Write it...

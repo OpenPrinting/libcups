@@ -1,7 +1,7 @@
 /*
  * Raster benchmark program for CUPS.
  *
- * Copyright © 2021 by OpenPrinting.
+ * Copyright © 2021-2022 by OpenPrinting.
  * Copyright © 2007-2016 by Apple Inc.
  * Copyright © 1997-2006 by Easy Software Products.
  *
@@ -41,7 +41,7 @@ static double	compute_median(double *secs);
 static double	get_time(void);
 static void	read_test(int fd);
 static int	run_read_test(void);
-static void	write_test(int fd, cups_mode_t mode);
+static void	write_test(int fd, cups_raster_mode_t mode);
 
 
 /*
@@ -59,7 +59,7 @@ main(int  argc,				/* I - Number of command-line args */
 		write_secs,		/* Write time */
 		read_secs,		/* Read time */
 		pass_secs[TEST_PASSES];	/* Total test times */
-  cups_mode_t	mode;			/* Write mode */
+  cups_raster_mode_t mode;		/* Write mode */
 
 
  /*
@@ -248,8 +248,8 @@ run_read_test(void)
  */
 
 static void
-write_test(int         fd,		/* I - File descriptor to write to */
-           cups_mode_t mode)		/* I - Write mode */
+write_test(int                fd,	/* I - File descriptor to write to */
+           cups_raster_mode_t mode)	/* I - Write mode */
 {
   unsigned		page, x, y;	/* Looping vars */
   unsigned		count;		/* Number of bytes to set */

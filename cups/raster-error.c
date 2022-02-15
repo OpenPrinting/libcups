@@ -1,6 +1,7 @@
 /*
  * Raster error handling for CUPS.
  *
+ * Copyright © 2022 by OpenPrinting.
  * Copyright © 2007-2018 by Apple Inc.
  * Copyright © 2007 by Easy Software Products.
  *
@@ -109,15 +110,13 @@ _cupsRasterClearError(void)
 
 
 /*
- * '_cupsRasterErrorString()' - Return the last error from a raster function.
+ * 'cupsRasterErrorString()' - Return the last error from a raster function.
  *
- * If there are no recent errors, NULL is returned.
- *
- * @since CUPS 1.3/macOS 10.5@
+ * If there are no recent errors, `NULL` is returned.
  */
 
 const char *				/* O - Last error */
-_cupsRasterErrorString(void)
+cupsRasterErrorString(void)
 {
   _cups_globals_t	*cg = _cupsGlobals();
 					/* Thread globals */

@@ -1,7 +1,7 @@
 /*
  * Raster test program routines for CUPS.
  *
- * Copyright © 2021 by OpenPrinting.
+ * Copyright © 2021-2022 by OpenPrinting.
  * Copyright © 2007-2019 by Apple Inc.
  * Copyright © 1997-2007 by Easy Software Products.
  *
@@ -23,7 +23,7 @@
  */
 
 static int	do_ras_file(const char *filename);
-static int	do_raster_tests(cups_mode_t mode);
+static int	do_raster_tests(cups_raster_mode_t mode);
 static void	print_changes(cups_page_header_t *header, cups_page_header_t *expected);
 
 
@@ -125,7 +125,7 @@ do_ras_file(const char *filename)	/* I - Filename */
  */
 
 static int				/* O - Number of errors */
-do_raster_tests(cups_mode_t mode)	/* O - Write mode */
+do_raster_tests(cups_raster_mode_t mode)/* O - Write mode */
 {
   unsigned		page, x, y, count;/* Looping vars */
   FILE			*fp;		/* Raster file */

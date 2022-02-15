@@ -46,7 +46,6 @@ LIBOBJS		= \
 		pwg-media.o \
 		raster-error.o \
 		raster-stream.o \
-		raster-stubs.o \
 		request.o \
 		string.o \
 		tempfile.o \
