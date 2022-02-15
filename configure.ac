@@ -1,7 +1,7 @@
 dnl
 dnl Configuration script for libcups.
 dnl
-dnl Copyright © 2020-2021 by OpenPrinting
+dnl Copyright © 2020-2022 by OpenPrinting
 dnl Copyright © 2007-2020 by Apple Inc.
 dnl Copyright © 1997-2007 by Easy Software Products, all rights reserved.
 dnl
@@ -81,6 +81,7 @@ AC_SUBST([INSTALL])
 AC_MSG_RESULT([using $INSTALL])
 AC_PATH_PROG([MKDIR], [mkdir])
 AC_PATH_PROG([RM], [rm])
+AC_PATH_PROG([RMDIR], [rmdir])
 AC_PATH_PROG([LN], [ln])
 
 

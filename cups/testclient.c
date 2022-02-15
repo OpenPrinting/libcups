@@ -290,7 +290,7 @@ make_raster_file(ipp_t      *response,  /* I - Printer attributes */
   int                   xdpi = 0,       /* Horizontal resolution */
                         ydpi = 0;       /* Vertical resolution */
   int                   fd;             /* Temporary file */
-  cups_mode_t           mode;           /* Raster mode */
+  cups_raster_mode_t	mode;		/* Raster mode */
   cups_raster_t         *ras;           /* Raster stream */
   cups_page_header_t	header;		/* Page header */
   unsigned char         *line,          /* Line of raster data */
@@ -599,7 +599,7 @@ make_raster_file(ipp_t      *response,  /* I - Printer attributes */
 
   memset(line, 0xff, header.cupsBytesPerLine);
 
-  for (y = 0; y < header.cupsHeight; y ++)
+  for (; y < header.cupsHeight; y ++)
     cupsRasterWritePixels(ras, line, header.cupsBytesPerLine);
 
   free(line);

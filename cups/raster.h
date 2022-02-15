@@ -1,7 +1,7 @@
 /*
  * Raster file definitions for CUPS.
  *
- * Copyright © 2021 by OpenPrinting.
+ * Copyright © 2021-2022 by OpenPrinting.
  * Copyright © 2007-2018 by Apple Inc.
  * Copyright © 1997-2006 by Easy Software Products.
  *
@@ -18,16 +18,6 @@
 extern "C" {
 #  endif /* __cplusplus */
 
-
-/*
- * Every non-PostScript printer driver that supports raster images
- * should use the application/vnd.cups-raster image file format.
- * Since both the PostScript RIP (pstoraster, based on GNU/GPL
- * Ghostscript) and Image RIP (imagetoraster, located in the filter
- * directory) use it, using this format saves you a lot of work.
- * Also, the PostScript RIP passes any printer options that are in
- * a PS file to your driver this way as well...
- */
 
 /*
  * Constants...
@@ -195,16 +185,14 @@ typedef enum cups_jog_e			/**** Jog attribute values ****/
   CUPS_JOG_SET = 3			/* Move pages after this set */
 } cups_jog_t;
 
-enum cups_mode_e			/**** cupsRasterOpen modes ****/
+typedef enum cups_raster_mode_e		/**** cupsRasterOpen modes ****/
 {
   CUPS_RASTER_READ = 0,			/* Open stream for reading */
   CUPS_RASTER_WRITE = 1,		/* Open stream for writing */
   CUPS_RASTER_WRITE_COMPRESSED = 2,	/* Open stream for compressed writing */
   CUPS_RASTER_WRITE_PWG = 3,		/* Open stream for compressed writing in PWG Raster mode */
   CUPS_RASTER_WRITE_APPLE = 4		/* Open stream for compressed writing in AppleRaster mode (beta) @private@ */
-};
-
-typedef enum cups_mode_e cups_mode_t;	/**** cupsRasterOpen modes ****/
+} cups_raster_mode_t;
 
 typedef enum cups_order_e		/**** cupsColorOrder attribute values ****/
 {
@@ -295,7 +283,7 @@ typedef struct cups_page_header_s	/**** Version 2 page header ****/
 typedef struct _cups_raster_s cups_raster_t;
 					/**** Raster stream data ****/
 
-typedef ssize_t (*cups_raster_iocb_t)(void *ctx, unsigned char *buffer, size_t length);
+typedef ssize_t (*cups_raster_cb_t)(void *ctx, unsigned char *buffer, size_t length);
 					/**** cupsRasterOpenIO callback function
 					 *
 					 * This function is specified when
@@ -314,12 +302,12 @@ typedef ssize_t (*cups_raster_iocb_t)(void *ctx, unsigned char *buffer, size_t l
 
 extern void		cupsRasterClose(cups_raster_t *r) _CUPS_PUBLIC;
 extern const char	*cupsRasterErrorString(void) _CUPS_PUBLIC;
-extern int		cupsRasterInitPWGHeader(cups_page_header_t *h, pwg_media_t *media, const char *type, int xdpi, int ydpi, const char *sides, const char *sheet_back) _CUPS_PUBLIC;
-extern cups_raster_t	*cupsRasterOpen(int fd, cups_mode_t mode) _CUPS_PUBLIC;
-extern cups_raster_t	*cupsRasterOpenIO(cups_raster_iocb_t iocb, void *ctx, cups_mode_t mode) _CUPS_PUBLIC;
-extern unsigned		cupsRasterReadHeader(cups_raster_t *r, cups_page_header_t *h) _CUPS_DEPRECATED_MSG("Use cupsRasterReadHeader2 instead.") _CUPS_PUBLIC;
+extern bool		cupsRasterInitPWGHeader(cups_page_header_t *h, pwg_media_t *media, const char *type, int xdpi, int ydpi, const char *sides, const char *sheet_back) _CUPS_PUBLIC;
+extern cups_raster_t	*cupsRasterOpen(int fd, cups_raster_mode_t mode) _CUPS_PUBLIC;
+extern cups_raster_t	*cupsRasterOpenIO(cups_raster_cb_t iocb, void *ctx, cups_raster_mode_t mode) _CUPS_PUBLIC;
+extern bool		cupsRasterReadHeader(cups_raster_t *r, cups_page_header_t *h) _CUPS_PUBLIC;
 extern unsigned		cupsRasterReadPixels(cups_raster_t *r, unsigned char *p, unsigned len) _CUPS_PUBLIC;
-extern unsigned		cupsRasterWriteHeader(cups_raster_t *r, cups_page_header_t *h) _CUPS_DEPRECATED_MSG("Use cupsRasterWriteHeader2 instead.") _CUPS_PUBLIC;
+extern bool		cupsRasterWriteHeader(cups_raster_t *r, cups_page_header_t *h) _CUPS_PUBLIC;
 extern unsigned		cupsRasterWritePixels(cups_raster_t *r, unsigned char *p, unsigned len) _CUPS_PUBLIC;
 
 

@@ -1,7 +1,7 @@
 #
 # Library Makefile for libcups.
 #
-# Copyright © 2021 by OpenPrinting.
+# Copyright © 2021-2022 by OpenPrinting.
 # Copyright © 2007-2021 by Apple Inc.
 # Copyright © 1997-2006 by Easy Software Products, all rights reserved.
 #
@@ -46,7 +46,6 @@ LIBOBJS		= \
 		pwg-media.o \
 		raster-error.o \
 		raster-stream.o \
-		raster-stubs.o \
 		request.o \
 		string.o \
 		tempfile.o \
@@ -69,6 +68,7 @@ TESTOBJS	= \
 		testipp.o \
 		testoptions.o \
 		testraster.o \
+		testtestpage.o \
 		testthreads.o \
 		tlscheck.o
 OBJS	=	\
@@ -120,6 +120,7 @@ UNITTARGETS =	\
 		testipp \
 		testoptions \
 		testraster \
+		testtestpage \
 		testthreads \
 		tlscheck
 
@@ -160,6 +161,7 @@ test:		$(UNITTARGETS)
 	./testoptions 2>>test.log
 	echo Running raster API tests...
 	./testraster 2>>test.log
+	./testtestpage 2>>test.log
 
 
 #
@@ -452,6 +454,16 @@ testpwg:	testpwg.o libcups.a test.ppd
 testraster:	testraster.o libcups.a
 	echo Linking $@...
 	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testraster.o libcups.a $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
+
+
+#
+# testtestpage (dependency on static CUPS library is intentional)
+#
+
+testtestpage:	testtestpage.o libcups.a
+	echo Compiling $@...
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testtestpage.o libcups.a $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 

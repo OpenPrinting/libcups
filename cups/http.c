@@ -141,6 +141,7 @@ static const char * const http_fields[HTTP_FIELD_MAX] =
 			  "Range",
 			  "Referer",
 			  "Refresh",
+			  "Replay-Nonce",
 			  "Retry-After",
 			  "Schedule-Reply",
 			  "Schedule-Tag",
@@ -154,9 +155,9 @@ static const char * const http_fields[HTTP_FIELD_MAX] =
 			  "User-Agent",
 			  "Vary",
 			  "Via",
+			  "WWW-Authenticate",
 			  "X-Content-Options",
-			  "X-Frame-Options",
-			  "WWW-Authenticate"
+			  "X-Frame-Options"
 			};
 
 

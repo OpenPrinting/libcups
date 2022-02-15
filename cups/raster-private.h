@@ -1,7 +1,7 @@
 /*
  * Private image library definitions for CUPS.
  *
- * Copyright © 2021 by OpenPrinting.
+ * Copyright © 2021-2022 by OpenPrinting.
  * Copyright © 2007-2019 by Apple Inc.
  * Copyright © 1993-2006 by Easy Software Products.
  *
@@ -35,8 +35,8 @@ struct _cups_raster_s			/**** Raster stream data ****/
 {
   unsigned		sync;		/* Sync word from start of stream */
   void			*ctx;		/* File descriptor */
-  cups_raster_iocb_t	iocb;		/* IO callback */
-  cups_mode_t		mode;		/* Read/write mode */
+  cups_raster_cb_t	iocb;		/* IO callback */
+  cups_raster_mode_t	mode;		/* Read/write mode */
   cups_page_header_t	header;		/* Raster header for current page */
   unsigned		rowheight,	/* Row height in lines */
 			count,		/* Current row run-length count */
@@ -66,14 +66,7 @@ struct _cups_raster_s			/**** Raster stream data ****/
 extern void		_cupsRasterAddError(const char *f, ...) _CUPS_FORMAT(1,2) _CUPS_PRIVATE;
 extern void		_cupsRasterClearError(void) _CUPS_PRIVATE;
 extern const char	*_cupsRasterColorSpaceString(cups_cspace_t cspace) _CUPS_PRIVATE;
-extern void		_cupsRasterDelete(cups_raster_t *r) _CUPS_PRIVATE;
-extern const char	*_cupsRasterErrorString(void) _CUPS_PRIVATE;
-extern int		_cupsRasterInitPWGHeader(cups_page_header_t *h, pwg_media_t *media, const char *type, int xdpi, int ydpi, const char *sides, const char *sheet_back) _CUPS_PRIVATE;
-extern cups_raster_t	*_cupsRasterNew(cups_raster_iocb_t iocb, void *ctx, cups_mode_t mode) _CUPS_PRIVATE;
-extern unsigned		_cupsRasterReadHeader(cups_raster_t *r) _CUPS_PRIVATE;
-extern unsigned		_cupsRasterReadPixels(cups_raster_t *r, unsigned char *p, unsigned len) _CUPS_PRIVATE;
-extern unsigned		_cupsRasterWriteHeader(cups_raster_t *r) _CUPS_PRIVATE;
-extern unsigned		_cupsRasterWritePixels(cups_raster_t *r, unsigned char *p, unsigned len) _CUPS_PRIVATE;
+extern cups_raster_t	*_cupsRasterNew(cups_raster_cb_t iocb, void *ctx, cups_raster_mode_t mode) _CUPS_PRIVATE;
 
 #  ifdef __cplusplus
 }

@@ -12,3 +12,4 @@ libcups v3.0b1 (Month DD, YYYY)
 - The `poll` function (`WSAPoll` on Windows) is now required
 - Threading support is now required
 - Removed (obsolete) Kerberos support
+- Added new `GENERATE-FILE` directive for `ipptool` test files

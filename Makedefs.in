@@ -34,7 +34,6 @@ CC		=	@CC@
 INSTALL		=	@INSTALL@
 LN		=	@LN@ -sf
 MKDIR           =       @MKDIR@ -p
-MV		=	@MV@ -f
 RANLIB		=	@RANLIB@
 RM		=	@RM@ -f
 RMDIR		=	@RMDIR@
@@ -45,10 +44,10 @@ SHELL		=	/bin/sh
 # Installation programs...
 #
 
-INSTALL_BIN	=	@LIBTOOL_INSTALL@ $(INSTALL) -c -m @CUPS_EXE_FILE_PERM@
+INSTALL_BIN	=	$(INSTALL) -c -m @CUPS_EXE_FILE_PERM@
 INSTALL_DATA	=	$(INSTALL) -c -m 444
 INSTALL_DIR	=	$(INSTALL) -d
-INSTALL_LIB	=	@LIBTOOL_INSTALL@ $(INSTALL) -c -m @CUPS_EXE_FILE_PERM@
+INSTALL_LIB	=	$(INSTALL) -c -m @CUPS_EXE_FILE_PERM@
 INSTALL_MAN	=	$(INSTALL) -c -m 444
 
 

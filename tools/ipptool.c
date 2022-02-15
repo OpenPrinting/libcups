@@ -1,7 +1,7 @@
 /*
  * ipptool command for CUPS.
  *
- * Copyright © 2021 by OpenPrinting.
+ * Copyright © 2021-2022 by OpenPrinting.
  * Copyright © 2020 by The Printer Working Group.
  * Copyright © 2007-2021 by Apple Inc.
  * Copyright © 1997-2007 by Easy Software Products.
@@ -15,6 +15,7 @@
  */
 
 #include <cups/cups-private.h>
+#include <cups/raster-testpage.h>
 #include <regex.h>
 #include <sys/stat.h>
 #ifdef _WIN32
@@ -97,6 +98,20 @@ typedef struct ipptool_expect_s		/**** Expected attribute info ****/
   ipp_tag_t	in_group;		/* IN-GROUP value */
 } ipptool_expect_t;
 
+typedef struct ipptool_generate_s	//// GENERATE-FILE parameters
+{
+  char		media[128],		// Media size name
+		type[128];		// Raster type/color mode
+  int		xdpi,			// Horizontal resolution
+		ydpi;			// Vertical resolution
+  ipp_orient_t	orientation;		// Orientation
+  char		sides[128];		// Duplex mode
+  int		num_copies,		// Number of copies
+		num_pages;		// Number of pages
+  char		format[128];		// Document format
+  char		sheet_back[128];	// "pwg-raster-document-sheet-back" value
+} ipptool_generate_t;
+
 typedef struct ipptool_status_s		/**** Status info ****/
 {
   ipp_status_t	status;			/* Expected status code */
@@ -176,6 +191,7 @@ typedef struct ipptool_test_s		/**** Test Data ****/
   size_t	num_monitor_expects;	/* Number MONITOR-PRINTER-STATE EXPECTs */
   ipptool_expect_t monitor_expects[MAX_MONITOR];
 					/* MONITOR-PRINTER-STATE EXPECTs */
+  ipptool_generate_t *generate_params;	/* GENERATE-FILE parameters */
 } ipptool_test_t;
 
 
@@ -198,10 +214,12 @@ static int	do_test(_ipp_file_t *f, ipptool_test_t *data);
 static int	do_tests(const char *testfile, ipptool_test_t *data);
 static int	error_cb(_ipp_file_t *f, ipptool_test_t *data, const char *error);
 static int      expect_matches(ipptool_expect_t *expect, ipp_attribute_t *attr);
+static http_status_t generate_file(http_t *http, ipptool_generate_t *params);
 static char	*get_filename(const char *testfile, char *dst, const char *src, size_t dstsize);
 static const char *get_string(ipp_attribute_t *attr, size_t element, int flags, char *buffer, size_t bufsize);
 static void	init_data(ipptool_test_t *data);
 static char	*iso_date(const ipp_uchar_t *date);
+static int	parse_generate_file(_ipp_file_t *f, ipptool_test_t *data);
 static int	parse_monitor_printer_state(_ipp_file_t *f, ipptool_test_t *data);
 static void	pause_message(const char *message);
 static void	print_attr(cups_file_t *outfile, ipptool_output_t output, ipp_attribute_t *attr, ipp_tag_t *group);
@@ -1321,7 +1339,7 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
 
     status = HTTP_STATUS_OK;
 
-    if (data->transfer == IPPTOOL_TRANSFER_CHUNKED || (data->transfer == IPPTOOL_TRANSFER_AUTO && data->file[0]))
+    if (data->transfer == IPPTOOL_TRANSFER_CHUNKED || (data->transfer == IPPTOOL_TRANSFER_AUTO && (data->file[0] || data->generate_params)))
     {
      /*
       * Send request using chunking - a 0 length means "chunk".
@@ -1371,6 +1389,7 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
 
 	if (!Cancel && status == HTTP_STATUS_CONTINUE && ippGetState(request) == IPP_STATE_DATA && data->file[0])
 	{
+	  // Send attached file...
 	  if ((reqfile = cupsFileOpen(data->file, "r")) != NULL)
 	  {
 	    while (!Cancel && (bytes = cupsFileRead(reqfile, buffer, sizeof(buffer))) > 0)
@@ -1388,6 +1407,11 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
 
 	    status = HTTP_STATUS_ERROR;
 	  }
+	}
+	else if (!Cancel && status == HTTP_STATUS_CONTINUE && ippGetState(request) == IPP_STATE_DATA && data->generate_params)
+	{
+	  // Generate attached file...
+	  status = generate_file(data->http, data->generate_params);
 	}
 
        /*
@@ -2198,6 +2222,9 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
   }
   data->num_monitor_expects = 0;
 
+  free(data->generate_params);
+  data->generate_params = NULL;
+
   return (data->ignore_errors || data->prev_pass);
 }
 
@@ -2473,6 +2500,64 @@ expect_matches(
 }
 
 
+//
+// 'generate_file()' - Generate a print file.
+//
+
+static http_status_t
+generate_file(
+    http_t             *http,		// I - HTTP connection
+    ipptool_generate_t *params)		// I - GENERATE-FILE parameters
+{
+  cups_raster_mode_t	mode;		// Raster output mode
+  cups_raster_t		*ras;		// Raster stream
+  cups_page_header_t	header;		// Raster page header
+  pwg_media_t		*media;		// Media information
+  
+
+  // Set the output mode...
+  if (!strcmp(params->format, "image/pwg-raster"))
+    mode = CUPS_RASTER_WRITE_PWG;
+  else if (!strcmp(params->format, "image/urf"))
+    mode = CUPS_RASTER_WRITE_APPLE;
+  else
+    mode = CUPS_RASTER_WRITE_COMPRESSED;
+
+  // Create the raster header...
+  if ((media = pwgMediaForPWG(params->media)) == NULL)
+  {
+    fprintf(stderr, "ipptool: Unable to parse media size '%s'.\n", params->media);
+    return (HTTP_STATUS_SERVER_ERROR);
+  }
+
+  cupsRasterInitPWGHeader(&header, media, params->type, params->xdpi, params->ydpi, params->sides, params->sheet_back);
+
+#if 0
+  fprintf(stderr, "ipptool: media='%s'\n", params->media);
+  fprintf(stderr, "ipptool: type='%s'\n", params->type);
+  fprintf(stderr, "ipptool: resolution=%dx%d\n", params->xdpi, params->ydpi);
+  fprintf(stderr, "ipptool: orientation=%d\n", params->orientation);
+  fprintf(stderr, "ipptool: sides='%s'\n", params->sides);
+  fprintf(stderr, "ipptool: num_copies=%d\n", params->num_copies);
+  fprintf(stderr, "ipptool: num_pages=%d\n", params->num_pages);
+  fprintf(stderr, "ipptool: format='%s'\n", params->format);
+  fprintf(stderr, "ipptool: sheet_back='%s'\n", params->sheet_back);
+#endif // 0
+
+  // Create the raster stream...
+  if ((ras = cupsRasterOpenIO((cups_raster_cb_t)httpWrite, http, mode)) == NULL)
+    return (HTTP_STATUS_SERVER_ERROR);
+
+  // Write it...
+  if (!cupsRasterWriteTest(ras, &header, params->sheet_back, params->orientation, params->num_copies, params->num_pages))
+    return (HTTP_STATUS_SERVER_ERROR);
+
+  cupsRasterClose(ras);
+
+  return (HTTP_STATUS_CONTINUE);
+}
+
+
 /*
  * 'get_filename()' - Get a filename based on the current test file.
  */
@@ -2666,6 +2751,678 @@ iso_date(const ipp_uchar_t *date)	/* I - IPP (RFC 1903) date/time value */
 	   utcdate.tm_hour, utcdate.tm_min, utcdate.tm_sec);
 
   return (buffer);
+}
+
+
+/*
+ * 'parse_generate_file()' - Parse the GENERATE-FILE directive.
+ *
+ * GENERATE-FILE {
+ *     MEDIA "media size name, default, ready"
+ *     COLORSPACE "colorspace_bits, auto, color, monochrome, bi-level"
+ *     RESOLUTION "resolution, min, max, default"
+ *     ORIENTATION "portrait, landscape, reverse-landscape, reverse-portrait"
+ *     SIDES "one-sided, two-sided-long-edge, two-sided-short-edge"
+ *     NUM-COPIES "copies"
+ *     NUM-PAGES "pages, min"
+ *     FORMAT "image/pwg-raster, image/urf"
+ * }
+ */
+
+static int				// O - 1 to continue, 0 to stop
+parse_generate_file(
+    _ipp_file_t    *f,			// I - IPP file data
+    ipptool_test_t *data)		// I - Test data
+{
+  size_t		i;		// Looping var
+  ipptool_generate_t	*params = NULL;	// Generation parameters
+  http_t		*http;		// Connection to printer
+  ipp_t			*request,	// Get-Printer-Attributes request
+			*response = NULL;// Get-Printer-Attributes response
+  ipp_attribute_t	*attr;		// Current attribute
+  const char		*keyword;	// Keyword value
+  char			token[256],	// Token string
+			temp[1024],	// Temporary string
+			value[1024],	// Value string
+			*ptr;		// Pointer into value
+  static const char *autos[][2] =	// Automatic color/monochrome keywords
+  {
+    { "SRGB24",     "srgb_8" },
+    { "ADOBERGB24", "adobe-rgb_8" },
+    { "DEVRGB24",   "rgb_8" },
+    { "DEVCMYK32",  "cmyk_8" },
+    { "ADOBERGB48", "adobe-rgb_16" },
+    { "DEVRGB48",   "rgb_16" },
+    { "DEVCMYK64",  "cmyk_16" },
+    { "W8",         "sgray_8" },
+    { NULL,         "black_8" },
+    { "W16",        "sgray_16" },
+    { NULL,         "black_16" },
+    { NULL,         "sgray_1" },
+    { NULL,         "black_1" }
+  };
+  static const char *bi_levels[][2] =	// Bi-level keywords
+  {
+    { NULL,         "sgray_1" },
+    { NULL,         "black_1" }
+  };
+  static const char *colors[][2] =	// Color keywords
+  {
+    { "SRGB24",     "srgb_8" },
+    { "ADOBERGB24", "adobe-rgb_8" },
+    { "DEVRGB24",   "rgb_8" },
+    { "DEVCMYK32",  "cmyk_8" },
+    { "ADOBERGB48", "adobe-rgb_16" },
+    { "DEVRGB48",   "rgb_16" },
+    { "DEVCMYK64",  "cmyk_16" }
+  };
+  static const char *monochromes[][2] =	// Monochrome keywords
+  {
+    { "W8",         "sgray_8" },
+    { NULL,         "black_8" },
+    { "W16",        "sgray_16" },
+    { NULL,         "black_16" },
+    { NULL,         "sgray_1" },
+    { NULL,         "black_1" }
+  };
+
+
+  // Make sure we have an open brace after the GENERATE-FILE...
+  if (!_ippFileReadToken(f, token, sizeof(token)) || strcmp(token, "{"))
+  {
+    print_fatal_error(data, "Missing open brace on line %d of \"%s\".", f->linenum, f->filename);
+    return (0);
+  }
+
+  // Get printer attributes...
+  if ((http = httpConnect(data->vars->host, data->vars->port, NULL, data->family, data->encryption, 1, 30000, NULL)) == NULL)
+  {
+    print_fatal_error(data, "Unable to connect to printer for GENERATE-FILE on line %d of \"%s\".", f->linenum, f->filename);
+    print_fatal_error(data, "Error: %s", cupsLastErrorString());
+    return (0);
+  }
+
+  request = ippNewRequest(IPP_OP_GET_PRINTER_ATTRIBUTES);
+  ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, data->vars->uri);
+
+  response = cupsDoRequest(http, request, data->vars->resource);
+
+  httpClose(http);
+
+  if (cupsLastError() >= IPP_STATUS_ERROR_BAD_REQUEST)
+  {
+    print_fatal_error(data, "Unable to get printer attributes for GENERATE-FILE on line %d of \"%s\".", f->linenum, f->filename);
+    print_fatal_error(data, "Error: %s", cupsLastErrorString());
+    ippDelete(response);
+    return (0);
+  }
+
+  // Allocate parameters...
+  if ((params = calloc(1, sizeof(ipptool_generate_t))) == NULL)
+  {
+    print_fatal_error(data, "Unable to allocate memory for GENERATE-FILE on line %d of \"%s\".", f->linenum, f->filename);
+    return (0);
+  }
+
+  // Loop until we get a closing brace...
+  while (_ippFileReadToken(f, token, sizeof(token)))
+  {
+    if (!strcmp(token, "}"))
+    {
+      // Update the raster type as needed...
+      if (!params->type[0])
+      {
+        // Get request/printer default value for print-color-mode, default to "auto"...
+        if ((attr = ippFindAttribute(f->attrs, "print-color-mode", IPP_TAG_KEYWORD)) == NULL)
+	  attr = ippFindAttribute(response, "print-color-mode-default", IPP_TAG_KEYWORD);
+
+        if (attr)
+          strlcpy(params->type, ippGetString(attr, 0, NULL), sizeof(params->type));
+	else
+          strlcpy(params->type, "auto", sizeof(params->type));
+      }
+
+      if (!strcmp(params->type, "auto"))
+      {
+        // Find auto keyword...
+        params->type[0] = '\0';
+
+        if ((attr = ippFindAttribute(response, "pwg-raster-types-supported", IPP_TAG_KEYWORD)) == NULL)
+          attr = ippFindAttribute(response, "urf-supported", IPP_TAG_KEYWORD);
+
+	for (i = 0; i < (sizeof(autos) / sizeof(autos[0])); i ++)
+	{
+	  if (ippContainsString(attr, autos[i][0]) || ippContainsString(attr, autos[i][1]))
+	  {
+	    strlcpy(params->type, autos[i][1], sizeof(params->type));
+	    break;
+	  }
+	}
+
+        if (!params->type[0])
+        {
+	  print_fatal_error(data, "Printer does not support COLORSPACE \"auto\" on line %d of \"%s\".", f->linenum, f->filename);
+	  goto fail;
+        }
+      }
+      else if (!strcmp(params->type, "bi-level"))
+      {
+        // Find bi-level keyword...
+        params->type[0] = '\0';
+
+        attr = ippFindAttribute(response, "pwg-raster-types-supported", IPP_TAG_KEYWORD);
+
+	for (i = 0; i < (sizeof(bi_levels) / sizeof(bi_levels[0])); i ++)
+	{
+	  if (ippContainsString(attr, bi_levels[i][1]))
+	  {
+	    strlcpy(params->type, bi_levels[i][1], sizeof(params->type));
+	    break;
+	  }
+	}
+
+	if (!params->type[0])
+	{
+	  print_fatal_error(data, "Printer does not support COLORSPACE \"bi-level\" on line %d of \"%s\".", f->linenum, f->filename);
+	  goto fail;
+	}
+      }
+      else if (!strcmp(params->type, "color"))
+      {
+        // Find color keyword...
+        params->type[0] = '\0';
+
+        if ((attr = ippFindAttribute(response, "pwg-raster-types-supported", IPP_TAG_KEYWORD)) != NULL)
+          attr = ippFindAttribute(response, "urf-supported", IPP_TAG_KEYWORD);
+
+	for (i = 0; i < (sizeof(colors) / sizeof(colors[0])); i ++)
+	{
+	  if (ippContainsString(attr, colors[i][0]) || ippContainsString(attr, colors[i][1]))
+	  {
+	    strlcpy(params->type, colors[i][1], sizeof(params->type));
+	    break;
+	  }
+	}
+
+        if (!params->type[0])
+        {
+	  print_fatal_error(data, "Printer does not support COLORSPACE \"color\" on line %d of \"%s\".", f->linenum, f->filename);
+	  goto fail;
+        }
+      }
+      else if (!strcmp(params->type, "monochrome"))
+      {
+        // Find grayscale keyword...
+        params->type[0] = '\0';
+
+        if ((attr = ippFindAttribute(response, "pwg-raster-types-supported", IPP_TAG_KEYWORD)) == NULL)
+          attr = ippFindAttribute(response, "urf-supported", IPP_TAG_KEYWORD);
+
+	for (i = 0; i < (sizeof(monochromes) / sizeof(monochromes[0])); i ++)
+	{
+	  if (ippContainsString(attr, monochromes[i][0]) || ippContainsString(attr, monochromes[i][1]))
+	  {
+	    strlcpy(params->type, monochromes[i][1], sizeof(params->type));
+	    break;
+	  }
+	}
+
+        if (!params->type[0])
+        {
+	  print_fatal_error(data, "Printer does not support COLORSPACE \"monochrome\" on line %d of \"%s\".", f->linenum, f->filename);
+	  goto fail;
+        }
+      }
+
+      // Make sure we have an output format...
+      if (!params->format[0])
+      {
+        // Check the supported formats and choose a suitable one...
+        if ((keyword = ippGetString(ippFindAttribute(f->attrs, "document-format", IPP_TAG_MIMETYPE), 0, NULL)) != NULL)
+        {
+          if (strcmp(keyword, "image/pwg-raster") && strcmp(keyword, "image/urf"))
+          {
+	    print_fatal_error(data, "Unsupported \"document-format\" value on line %d of \"%s\".", f->linenum, f->filename);
+	    goto fail;
+          }
+
+          strlcpy(params->format, keyword, sizeof(params->format));
+        }
+        else if ((attr = ippFindAttribute(response, "document-format-supported", IPP_TAG_MIMETYPE)) != NULL)
+        {
+          // Default to Apple Raster unless sending bitmaps, which are only
+          // supported by PWG Raster...
+          if (ippContainsString(attr, "image/urf") && strncmp(params->type, "black_", 6) && strcmp(params->type, "srgb_1"))
+            strlcpy(params->format, "image/urf", sizeof(params->format));
+	  else if (ippContainsString(attr, "image/pwg-raster"))
+            strlcpy(params->format, "image/pwg-raster", sizeof(params->format));
+        }
+
+        if (!params->format[0])
+        {
+	  print_fatal_error(data, "Printer does not support a compatible FORMAT on line %d of \"%s\".", f->linenum, f->filename);
+	  goto fail;
+        }
+      }
+
+      // Get default/ready media...
+      if (!params->media[0] || !strcmp(params->media, "default"))
+      {
+        // Use job ticket or default media...
+        if (!params->media[0] && (keyword = ippGetString(ippFindAttribute(f->attrs, "media", IPP_TAG_ZERO), 0, NULL)) != NULL)
+        {
+          strlcpy(params->media, keyword, sizeof(params->media));
+        }
+        else if ((keyword = ippGetString(ippFindAttribute(response, "media-default", IPP_TAG_ZERO), 0, NULL)) != NULL)
+        {
+          strlcpy(params->media, keyword, sizeof(params->media));
+        }
+        else
+        {
+	  print_fatal_error(data, "Printer does not report a default MEDIA size name on line %d of \"%s\".", f->linenum, f->filename);
+	  goto fail;
+        }
+      }
+      else if (!strcmp(params->media, "ready"))
+      {
+        // Use ready media
+        if ((keyword = ippGetString(ippFindAttribute(response, "media-ready", IPP_TAG_ZERO), 0, NULL)) != NULL)
+        {
+          strlcpy(params->media, keyword, sizeof(params->media));
+        }
+        else
+        {
+	  print_fatal_error(data, "Printer does not report a ready MEDIA size name on line %d of \"%s\".", f->linenum, f->filename);
+	  goto fail;
+        }
+      }
+
+      // Default resolution
+      if (!params->xdpi || !params->ydpi)
+      {
+	if ((attr = ippFindAttribute(response, "pwg-raster-document-resolution-supported", IPP_TAG_RESOLUTION)) != NULL)
+	{
+	  ipp_res_t	units;			// Resolution units
+
+          // Use the middle resolution in the list...
+          params->xdpi = ippGetResolution(attr, ippGetCount(attr) / 2, &params->ydpi, &units);
+
+          if (units == IPP_RES_PER_CM)
+          {
+            params->xdpi = (int)(params->xdpi * 2.54);
+            params->ydpi = (int)(params->ydpi * 2.54);
+	  }
+        }
+        else if ((attr = ippFindAttribute(response, "urf-supported", IPP_TAG_KEYWORD)) != NULL)
+        {
+          size_t count = ippGetCount(attr);	// Number of values
+
+          for (i = 0; i < count; i ++)
+          {
+            keyword = ippGetString(attr, i, NULL);
+            if (!strncmp(keyword, "RS", 2))
+	    {
+	      // Use the first resolution in the list...
+	      params->xdpi = params->ydpi = atoi(keyword + 2);
+	      break;
+	    }
+          }
+	}
+
+	if (!params->xdpi || !params->ydpi)
+	{
+	  print_fatal_error(data, "Printer does not report a supported RESOLUTION on line %d of \"%s\".", f->linenum, f->filename);
+	  goto fail;
+	}
+      }
+
+      // Default duplex/sides
+      if (!params->sides[0])
+      {
+        if ((keyword = ippGetString(ippFindAttribute(f->attrs, "sides", IPP_TAG_ZERO), 0, NULL)) != NULL)
+        {
+          // Use the setting from the job ticket...
+          strlcpy(params->sides, keyword, sizeof(params->sides));
+	}
+	else if (params->num_pages != 1 && (attr = ippFindAttribute(response, "sides-supported", IPP_TAG_KEYWORD)) != NULL && ippGetCount(attr) > 1)
+	{
+	  // Default to two-sided for capable printers...
+	  if (params->orientation == IPP_ORIENT_LANDSCAPE || params->orientation == IPP_ORIENT_REVERSE_LANDSCAPE)
+	    strlcpy(params->sides, "two-sided-short-edge", sizeof(params->sides));
+	  else
+	    strlcpy(params->sides, "two-sided-long-edge", sizeof(params->sides));
+	}
+	else
+	{
+	  // Fall back to 1-sided output...
+	  strlcpy(params->sides, "one-sided", sizeof(params->sides));
+	}
+      }
+
+      // Default orientation
+      if (!params->orientation)
+      {
+        // Use the job ticket value, otherwise use landscape for short-edge duplex
+        if ((attr = ippFindAttribute(f->attrs, "orientation-requested", IPP_TAG_ENUM)) != NULL)
+          params->orientation = (ipp_orient_t)ippGetInteger(attr, 0);
+	else
+	  params->orientation = !strcmp(params->sides, "two-sided-short-edge") ? IPP_ORIENT_LANDSCAPE : IPP_ORIENT_PORTRAIT;
+      }
+
+      // Default number of copies and pages...
+      if (!params->num_copies)
+        params->num_copies = 1;
+
+      if (!params->num_pages)
+        params->num_pages = !strncmp(params->sides, "two-sided-", 10) ? 2 : 1;
+
+      // Back side transform, if any
+      if (!params->sheet_back[0])
+      {
+        if ((attr = ippFindAttribute(response, "pwg-raster-document-sheet-back", IPP_TAG_KEYWORD)) != NULL)
+        {
+          strlcpy(params->sheet_back, ippGetString(attr, 0, NULL), sizeof(params->sheet_back));
+	}
+	else if ((attr = ippFindAttribute(response, "urf-supported", IPP_TAG_KEYWORD)) != NULL)
+	{
+	  if (ippContainsString(attr, "DM1"))
+	    strlcpy(params->sheet_back, "flip", sizeof(params->sheet_back));
+	  else if (ippContainsString(attr, "DM2"))
+	    strlcpy(params->sheet_back, "manual-tumble", sizeof(params->sheet_back));
+	  else if (ippContainsString(attr, "DM3"))
+	    strlcpy(params->sheet_back, "rotated", sizeof(params->sheet_back));
+	  else
+	    strlcpy(params->sheet_back, "normal", sizeof(params->sheet_back));
+	}
+	else
+        {
+          strlcpy(params->sheet_back, "normal", sizeof(params->sheet_back));
+	}
+      }
+
+      // Everything is good, save the parameters and return...
+      data->generate_params = params;
+      ippDelete(response);
+
+      return (1);
+    }
+    else if (!_cups_strcasecmp(token, "COLORSPACE"))
+    {
+      if (params->type[0])
+      {
+	print_fatal_error(data, "Unexpected extra COLORSPACE on line %d of \"%s\".", f->linenum, f->filename);
+	goto fail;
+      }
+
+      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      {
+	print_fatal_error(data, "Missing COLORSPACE value on line %d of \"%s\".", f->linenum, f->filename);
+	goto fail;
+      }
+
+      _ippVarsExpand(data->vars, value, temp, sizeof(value));
+
+      if (!strcmp(value, "auto") || !strcmp(value, "bi-level") || !strcmp(value, "color") || !strcmp(value, "monochrome") || !strcmp(value, "adobe-rgb_8") || !strcmp(value, "adobe-rgb_16") || !strcmp(value, "black_1") || !strcmp(value, "black_8") || !strcmp(value, "black_16") || !strcmp(value, "cmyk_8") || !strcmp(value, "cmyk_16") || !strcmp(value, "rgb_8") || !strcmp(value, "rgb_16") || !strcmp(value, "sgray_1") || !strcmp(value, "sgray_8") || !strcmp(value, "sgray_16") || !strcmp(value, "srgb_8") || !strcmp(value, "srgb_16"))
+      {
+        // Use "print-color-mode" or "pwg-raster-document-types-supported" keyword...
+        strlcpy(params->type, value, sizeof(params->type));
+      }
+      else
+      {
+	print_fatal_error(data, "Bad COLORSPACE \"%s\" on line %d of \"%s\".", value, f->linenum, f->filename);
+	goto fail;
+      }
+    }
+    else if (!_cups_strcasecmp(token, "FORMAT"))
+    {
+      if (params->format[0])
+      {
+	print_fatal_error(data, "Unexpected extra FORMAT on line %d of \"%s\".", f->linenum, f->filename);
+	goto fail;
+      }
+
+      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      {
+	print_fatal_error(data, "Missing FORMAT MIME media type on line %d of \"%s\".", f->linenum, f->filename);
+	goto fail;
+      }
+
+      _ippVarsExpand(data->vars, value, temp, sizeof(value));
+
+      if (!strcmp(value, "image/pwg-raster") || !strcmp(value, "image/urf"))
+      {
+        strlcpy(params->format, value, sizeof(params->format));
+      }
+      else
+      {
+	print_fatal_error(data, "Bad FORMAT \"%s\" on line %d of \"%s\".", value, f->linenum, f->filename);
+	goto fail;
+      }
+    }
+    else if (!_cups_strcasecmp(token, "MEDIA"))
+    {
+      if (params->media[0])
+      {
+	print_fatal_error(data, "Unexpected extra MEDIA on line %d of \"%s\".", f->linenum, f->filename);
+	goto fail;
+      }
+
+      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      {
+	print_fatal_error(data, "Missing MEDIA size name on line %d of \"%s\".", f->linenum, f->filename);
+	goto fail;
+      }
+
+      _ippVarsExpand(data->vars, value, temp, sizeof(value));
+
+      if (!strcmp(value, "default") || !strcmp(value, "ready") || pwgMediaForPWG(value) != NULL)
+      {
+        strlcpy(params->media, value, sizeof(params->media));
+      }
+      else
+      {
+	print_fatal_error(data, "Bad MEDIA \"%s\" on line %d of \"%s\".", value, f->linenum, f->filename);
+	goto fail;
+      }
+    }
+    else if (!_cups_strcasecmp(token, "NUM-COPIES"))
+    {
+      size_t	intvalue;		// Number of copies value
+
+      if (params->num_copies)
+      {
+	print_fatal_error(data, "Unexpected extra NUM-COPIES on line %d of \"%s\".", f->linenum, f->filename);
+	goto fail;
+      }
+
+      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      {
+	print_fatal_error(data, "Missing NUM-COPIES number on line %d of \"%s\".", f->linenum, f->filename);
+	goto fail;
+      }
+
+      _ippVarsExpand(data->vars, value, temp, sizeof(value));
+
+      if ((intvalue = strtoul(value, NULL, 10)) == ULONG_MAX || intvalue < 1)
+      {
+	print_fatal_error(data, "Bad NUM-COPIES \"%s\" on line %d of \"%s\".", value, f->linenum, f->filename);
+	goto fail;
+      }
+
+      params->num_copies = (int)intvalue;
+    }
+    else if (!_cups_strcasecmp(token, "NUM-PAGES"))
+    {
+      size_t	intvalue;		// Number of pages value
+
+      if (params->num_pages)
+      {
+	print_fatal_error(data, "Unexpected extra NUM-PAGES on line %d of \"%s\".", f->linenum, f->filename);
+	goto fail;
+      }
+
+      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      {
+	print_fatal_error(data, "Missing NUM-PAGES number on line %d of \"%s\".", f->linenum, f->filename);
+	goto fail;
+      }
+
+      _ippVarsExpand(data->vars, value, temp, sizeof(value));
+
+      if ((intvalue = strtoul(value, NULL, 10)) == ULONG_MAX || intvalue < 1)
+      {
+	print_fatal_error(data, "Bad NUM-PAGES \"%s\" on line %d of \"%s\".", value, f->linenum, f->filename);
+	goto fail;
+      }
+
+      params->num_pages = (int)intvalue;
+    }
+    else if (!_cups_strcasecmp(token, "ORIENTATION"))
+    {
+      if (params->orientation)
+      {
+	print_fatal_error(data, "Unexpected extra ORIENTATION on line %d of \"%s\".", f->linenum, f->filename);
+	goto fail;
+      }
+
+      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      {
+	print_fatal_error(data, "Missing ORIENTATION on line %d of \"%s\".", f->linenum, f->filename);
+	goto fail;
+      }
+
+      _ippVarsExpand(data->vars, value, temp, sizeof(value));
+
+      if (!strcmp(value, "portrait"))
+        params->orientation = IPP_ORIENT_PORTRAIT;
+      else if (!strcmp(value, "landscape"))
+        params->orientation = IPP_ORIENT_LANDSCAPE;
+      else if (!strcmp(value, "reverse-landscape"))
+        params->orientation = IPP_ORIENT_REVERSE_LANDSCAPE;
+      else if (!strcmp(value, "reverse-portrait"))
+        params->orientation = IPP_ORIENT_REVERSE_PORTRAIT;
+      else
+      {
+	print_fatal_error(data, "Bad ORIENTATION \"%s\" on line %d of \"%s\".", value, f->linenum, f->filename);
+	goto fail;
+      }
+    }
+    else if (!_cups_strcasecmp(token, "RESOLUTION"))
+    {
+      if (params->xdpi || params->ydpi)
+      {
+	print_fatal_error(data, "Unexpected extra RESOLUTION on line %d of \"%s\".", f->linenum, f->filename);
+	goto fail;
+      }
+
+      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      {
+	print_fatal_error(data, "Missing RESOLUTION on line %d of \"%s\".", f->linenum, f->filename);
+	goto fail;
+      }
+
+      _ippVarsExpand(data->vars, value, temp, sizeof(value));
+
+      if (!strcmp(value, "min") || !strcmp(value, "max"))
+      {
+	if ((attr = ippFindAttribute(response, "pwg-raster-document-resolution-supported", IPP_TAG_RESOLUTION)) != NULL)
+	{
+	  ipp_res_t	units;			// Resolution units
+
+          // Use the first or last resolution in the list...
+          params->xdpi = ippGetResolution(attr, !strcmp(value, "min") ? 0 : ippGetCount(attr) - 1, &params->ydpi, &units);
+
+          if (units == IPP_RES_PER_CM)
+          {
+            params->xdpi = (int)(params->xdpi * 2.54);
+            params->ydpi = (int)(params->ydpi * 2.54);
+	  }
+        }
+        else if ((attr = ippFindAttribute(response, "urf-supported", IPP_TAG_KEYWORD)) != NULL)
+        {
+          size_t count = ippGetCount(attr);	// Number of values
+
+          for (i = 0; i < count; i ++)
+          {
+            keyword = ippGetString(attr, i, NULL);
+            if (!strncmp(keyword, "RS", 2))
+	    {
+	      if (!strcmp(value, "min"))
+	      {
+		// Use the first resolution in the list...
+		params->xdpi = params->ydpi = atoi(keyword + 2);
+	      }
+	      else
+	      {
+	        // Use the last resolution in the list...
+	        params->xdpi = params->ydpi = (int)strtol(keyword + 2, &ptr, 10);
+	        while (ptr && *ptr && *ptr == '-')
+		  params->xdpi = params->ydpi = (int)strtol(ptr + 1, &ptr, 10);
+	      }
+	      break;
+	    }
+          }
+	}
+      }
+      else if (strcmp(value, "default"))
+      {
+        char	units[8] = "";		// Resolution units (dpi or dpcm)
+
+	if (sscanf(value, "%dx%d%7s", &params->xdpi, &params->ydpi, units) == 1)
+	{
+	  sscanf(value, "%d%7s", &params->xdpi, units);
+	  params->ydpi = params->xdpi;
+	}
+
+	if (!strcmp(units, "dpcm"))
+	{
+	  params->xdpi = (int)(params->xdpi * 2.54);
+	  params->ydpi = (int)(params->ydpi * 2.54);
+	}
+	else if (strcmp(units, "dpi"))
+	  params->xdpi = params->ydpi = 0;
+      }
+
+      if (strcmp(value, "default") && (params->xdpi <= 0 || params->ydpi <= 0))
+      {
+	print_fatal_error(data, "Bad RESOLUTION \"%s\" on line %d of \"%s\".", value, f->linenum, f->filename);
+	goto fail;
+      }
+    }
+    else if (!_cups_strcasecmp(token, "SIDES"))
+    {
+      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      {
+	print_fatal_error(data, "Missing SIDES on line %d of \"%s\".", f->linenum, f->filename);
+	goto fail;
+      }
+
+      _ippVarsExpand(data->vars, value, temp, sizeof(value));
+
+      if (!strcmp(value, "one-sided") || !strcmp(value, "two-sided-long-edge") || !strcmp(value, "two-sided-short-edge"))
+      {
+        strlcpy(params->sides, value, sizeof(params->sides));
+      }
+      else
+      {
+	print_fatal_error(data, "Bad SIDES \"%s\" on line %d of \"%s\".", value, f->linenum, f->filename);
+	goto fail;
+      }
+    }
+    else
+    {
+      print_fatal_error(data, "Unknown %s on line %d of \"%s\".", token, f->linenum, f->filename);
+      goto fail;
+    }
+  }
+
+  print_fatal_error(data, "Missing closing brace on line %d of \"%s\".", f->linenum, f->filename);
+
+  fail:
+
+  free(params);
+  ippDelete(response);
+  return (0);
 }
 
 
@@ -4270,6 +5027,21 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
     {
       return (do_test(f, data));
     }
+    else if (!strcmp(token, "GENERATE-FILE"))
+    {
+      if (data->generate_params)
+      {
+	print_fatal_error(data, "Extra GENERATE-FILE seen on line %d of \"%s\".", f->linenum, f->filename);
+	return (0);
+      }
+      else if (data->file[0])
+      {
+	print_fatal_error(data, "Cannot use GENERATE-FILE on line %d of \"%s\" with FILE.", f->linenum, f->filename);
+	return (0);
+      }
+
+      return (parse_generate_file(f, data));
+    }
     else if (!strcmp(token, "MONITOR-PRINTER-STATE"))
     {
       if (data->monitor_uri)
@@ -4701,6 +5473,17 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
      /*
       * File...
       */
+
+      if (data->file[0])
+      {
+	print_fatal_error(data, "Extra FILE seen on line %d of \"%s\".", f->linenum, f->filename);
+	return (0);
+      }
+      else if (data->generate_params)
+      {
+	print_fatal_error(data, "Cannot use FILE on line %d of \"%s\" with GENERATE-FILE.", f->linenum, f->filename);
+	return (0);
+      }
 
       if (!_ippFileReadToken(f, temp, sizeof(temp)))
       {
