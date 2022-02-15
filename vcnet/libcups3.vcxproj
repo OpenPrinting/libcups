@@ -141,7 +141,6 @@ xcopy /I/Y "$(TargetPath)"                                                      
     <ClCompile Include="..\cups\pwg-media.c" />
     <ClCompile Include="..\cups\raster-error.c" />
     <ClCompile Include="..\cups\raster-stream.c" />
-    <ClCompile Include="..\cups\raster-stubs.c" />
     <ClCompile Include="..\cups\request.c" />
     <ClCompile Include="..\cups\string.c" />
     <ClCompile Include="..\cups\tempfile.c" />
