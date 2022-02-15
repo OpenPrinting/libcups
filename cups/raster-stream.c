@@ -1,10 +1,9 @@
 /*
  * Raster file routines for CUPS.
  *
- * Copyright 2007-2019 by Apple Inc.
- * Copyright 1997-2006 by Easy Software Products.
- *
- * This file is part of the CUPS Imaging library.
+ * Copyright © 2022 by OpenPrinting.
+ * Copyright © 2007-2019 by Apple Inc.
+ * Copyright © 1997-2006 by Easy Software Products.
  *
  * Licensed under Apache License v2.0.  See the file "LICENSE" for more
  * information.
@@ -187,9 +186,7 @@ cupsRasterClose(cups_raster_t *r)	/* I - Stream to free */
  * inch.
  *
  * The "sheet_back" argument specifies a "pwg-raster-document-sheet-back" value
- * to apply for the back side of a page.  Pass @code NULL@ for the front side.
- *
- * @since CUPS 2.2/macOS 10.12@
+ * to apply for the back side of a page.  Pass `NULL` for the front side.
  */
 
 bool					/* O - `true` on success, `false` on failure */
@@ -200,7 +197,7 @@ cupsRasterInitPWGHeader(
     int                xdpi,		/* I - Cross-feed direction (horizontal) resolution */
     int                ydpi,		/* I - Feed direction (vertical) resolution */
     const char         *sides,		/* I - IPP "sides" option value */
-    const char         *sheet_back)	/* I - Transform for back side or @code NULL@ for none */
+    const char         *sheet_back)	/* I - Transform for back side or `NULL` for none */
 {
   if (!h || !media || !type || xdpi <= 0 || ydpi <= 0)
   {
@@ -442,8 +439,7 @@ _cupsRasterNew(
 
   if ((r = calloc(sizeof(cups_raster_t), 1)) == NULL)
   {
-    _cupsRasterAddError("Unable to allocate memory for raster stream: %s\n",
-                        strerror(errno));
+    _cupsRasterAddError("Unable to allocate memory for raster stream: %s", strerror(errno));
     DEBUG_puts("1_cupsRasterNwq: Returning NULL.");
     return (NULL);
   }
@@ -458,11 +454,9 @@ _cupsRasterNew(
     * Open for read - get sync word...
     */
 
-    if (cups_raster_io(r, (unsigned char *)&(r->sync), sizeof(r->sync)) !=
-            sizeof(r->sync))
+    if (cups_raster_io(r, (unsigned char *)&(r->sync), sizeof(r->sync)) != sizeof(r->sync))
     {
-      _cupsRasterAddError("Unable to read header from raster stream: %s\n",
-                          strerror(errno));
+      _cupsRasterAddError("Unable to read header from raster stream: %s", strerror(errno));
       free(r);
       DEBUG_puts("1_cupsRasterNew: Unable to read header, returning NULL.");
       return (NULL);
@@ -477,7 +471,7 @@ _cupsRasterNew(
         r->sync != CUPS_RASTER_SYNCapple &&
         r->sync != CUPS_RASTER_REVSYNCapple)
     {
-      _cupsRasterAddError("Unknown raster format %08x.\n", r->sync);
+      _cupsRasterAddError("Unknown raster format %08x.", r->sync);
       free(r);
       DEBUG_puts("1_cupsRasterNew: Unknown format, returning NULL.");
       return (NULL);
@@ -505,8 +499,7 @@ _cupsRasterNew(
       if (cups_raster_io(r, (unsigned char *)header, sizeof(header)) !=
 	      sizeof(header))
       {
-	_cupsRasterAddError("Unable to read header from raster stream: %s\n",
-			    strerror(errno));
+	_cupsRasterAddError("Unable to read header from raster stream: %s", strerror(errno));
 	free(r);
 	DEBUG_puts("1_cupsRasterNew: Unable to read header, returning NULL.");
 	return (NULL);
@@ -551,8 +544,7 @@ _cupsRasterNew(
 
     if (cups_raster_io(r, (unsigned char *)&(r->sync), sizeof(r->sync)) < (ssize_t)sizeof(r->sync))
     {
-      _cupsRasterAddError("Unable to write raster stream header: %s\n",
-                          strerror(errno));
+      _cupsRasterAddError("Unable to write raster stream header: %s", strerror(errno));
       free(r);
       DEBUG_puts("1_cupsRasterNew: Unable to write header, returning NULL.");
       return (NULL);
@@ -1422,10 +1414,6 @@ cups_raster_io(cups_raster_t *r,	/* I - Raster stream */
     DEBUG_printf(("6cups_raster_io: count=%d, total=%d", (int)count, (int)total));
     if (count == 0)
       break;
-//    {
-//      DEBUG_puts("6cups_raster_io: Returning 0.");
-//      return (0);
-//    }
     else if (count < 0)
     {
       DEBUG_puts("6cups_raster_io: Returning -1 on error.");

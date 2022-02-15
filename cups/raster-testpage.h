@@ -8,7 +8,7 @@
 // information.
 //
 
-#include "raster.h"
+#include "raster-private.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -152,10 +152,14 @@ cupsRasterWriteTest(
 
   // Allocate memory for the raster output...
   if ((line = malloc(header->cupsBytesPerLine)) == NULL)
+  {
+    _cupsRasterAddError("Unable to allocate %u bytes for line: %s", header->cupsBytesPerLine, strerror(errno));
     return (false);
+  }
 
   if ((bline = malloc(header->cupsBytesPerLine)) == NULL)
   {
+    _cupsRasterAddError("Unable to allocate %u bytes for line: %s", header->cupsBytesPerLine, strerror(errno));
     free(line);
     return (false);
   }
@@ -296,8 +300,8 @@ cupsRasterWriteTest(
         if (xborder & 7)
         {
           // Capture partial pixels
-          bline[xborder / 8] = (0xff << (xborder & 7)) & 0xff;
-          bline[header->cupsBytesPerLine - xborder / 8 - 1] = 0xff >> (xborder & 7);
+          bline[xborder / 8] ^= (0xff << (xborder & 7)) & 0xff;
+          bline[header->cupsBytesPerLine - xborder / 8 - 1] ^= 0xff >> (xborder & 7);
         }
       }
 
@@ -403,7 +407,7 @@ cupsRasterWriteTest(
 
 			  for (xcount = xrep; xcount > 0; xcount --)
                           {
-                            *lineptr |= bit & pattern;
+                            *lineptr ^= bit & pattern;
                             if (bit > 1)
                             {
                               bit /= 2;
@@ -569,7 +573,7 @@ cupsRasterWriteTest(
 
 			    for (xcount = xrep; xcount > 0; xcount --)
 			    {
-			      *lineptr |= bit & pattern;
+			      *lineptr ^= bit & pattern;
 			      if (bit > 1)
 			      {
 				bit /= 2;
@@ -730,7 +734,7 @@ cupsRasterWriteTest(
 
 			  for (xcount = xrep; xcount > 0; xcount --)
                           {
-                            *lineptr |= bit & pattern;
+                            *lineptr ^= bit & pattern;
                             if (bit > 1)
                             {
                               bit /= 2;
@@ -886,7 +890,7 @@ cupsRasterWriteTest(
 
 			    for (xcount = xrep; xcount > 0; xcount --)
 			    {
-			      *lineptr |= bit & pattern;
+			      *lineptr ^= bit & pattern;
 			      if (bit > 1)
 			      {
 				bit /= 2;
@@ -1049,7 +1053,7 @@ cupsRasterWriteTest(
 
 			  for (xcount = xrep; xcount > 0; xcount --)
                           {
-                            *lineptr |= bit & pattern;
+                            *lineptr ^= bit & pattern;
                             if (bit > 1)
                             {
                               bit /= 2;
@@ -1210,7 +1214,7 @@ cupsRasterWriteTest(
 
 			    for (xcount = xrep; xcount > 0; xcount --)
 			    {
-			      *lineptr |= bit & pattern;
+			      *lineptr ^= bit & pattern;
 			      if (bit > 1)
 			      {
 				bit /= 2;
@@ -1377,7 +1381,7 @@ cupsRasterWriteTest(
 
 			  for (xcount = xrep; xcount > 0; xcount --)
                           {
-                            *lineptr |= bit & pattern;
+                            *lineptr ^= bit & pattern;
                             if (bit > 1)
                             {
                               bit /= 2;
@@ -1538,7 +1542,7 @@ cupsRasterWriteTest(
 
 			    for (xcount = xrep; xcount > 0; xcount --)
 			    {
-			      *lineptr |= bit & pattern;
+			      *lineptr ^= bit & pattern;
 			      if (bit > 1)
 			      {
 				bit /= 2;

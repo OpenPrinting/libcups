@@ -277,15 +277,15 @@ main(int  argc,				// I - Number of command-line arguments
   else
   {
     // Do unit tests...
-    if ((fd = open("test.ras", O_WRONLY | O_CREAT | O_TRUNC, 0666)) < 0)
+    if ((fd = open("test.pwg", O_WRONLY | O_CREAT | O_TRUNC, 0666)) < 0)
     {
-      perror("test.ras");
+      perror("test.pwg");
       return (1);
     }
 
     if ((ras = cupsRasterOpen(fd, CUPS_RASTER_WRITE_PWG)) == NULL)
     {
-      fprintf(stderr, "test.ras: %s\n", cupsLastErrorString());
+      fprintf(stderr, "test.pwg: %s\n", cupsLastErrorString());
       close(fd);
       return (1);
     }
@@ -313,6 +313,9 @@ main(int  argc,				// I - Number of command-line arguments
       cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1);
 
       cupsRasterInitPWGHeader(&header, media, "sgray_8", 300, 300, "one-sided", "normal");
+      cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1);
+
+      cupsRasterInitPWGHeader(&header, media, "sgray_1", 300, 300, "one-sided", "normal");
       cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1);
 
       cupsRasterInitPWGHeader(&header, media, "sgray_8", 300, 300, "one-sided", "normal");
