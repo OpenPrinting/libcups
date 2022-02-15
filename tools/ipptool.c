@@ -2525,9 +2525,24 @@ generate_file(
 
   // Create the raster header...
   if ((media = pwgMediaForPWG(params->media)) == NULL)
+  {
+    fprintf(stderr, "ipptool: Unable to parse media size '%s'.\n", params->media);
     return (HTTP_STATUS_SERVER_ERROR);
+  }
 
   cupsRasterInitPWGHeader(&header, media, params->type, params->xdpi, params->ydpi, params->sides, params->sheet_back);
+
+#if 0
+  fprintf(stderr, "ipptool: media='%s'\n", params->media);
+  fprintf(stderr, "ipptool: type='%s'\n", params->type);
+  fprintf(stderr, "ipptool: resolution=%dx%d\n", params->xdpi, params->ydpi);
+  fprintf(stderr, "ipptool: orientation=%d\n", params->orientation);
+  fprintf(stderr, "ipptool: sides='%s'\n", params->sides);
+  fprintf(stderr, "ipptool: num_copies=%d\n", params->num_copies);
+  fprintf(stderr, "ipptool: num_pages=%d\n", params->num_pages);
+  fprintf(stderr, "ipptool: format='%s'\n", params->format);
+  fprintf(stderr, "ipptool: sheet_back='%s'\n", params->sheet_back);
+#endif // 0
 
   // Create the raster stream...
   if ((ras = cupsRasterOpenIO((cups_raster_iocb_t)httpWrite, http, mode)) == NULL)
@@ -2779,15 +2794,17 @@ parse_generate_file(
     { "ADOBERGB48", "adobe-rgb_16" },
     { "DEVRGB48",   "rgb_16" },
     { "DEVCMYK64",  "cmyk_16" },
-    { "SGRAY8",     "sgray_8" },
-    { "DEVW8",      "black_8" },
-    { "SGRAY16",    "sgray_16" },
-    { "DEVW16",     "black_16" }
+    { "W8",         "sgray_8" },
+    { NULL,         "black_8" },
+    { "W16",        "sgray_16" },
+    { NULL,         "black_16" },
+    { NULL,         "sgray_1" },
+    { NULL,         "black_1" }
   };
   static const char *bi_levels[][2] =	// Bi-level keywords
   {
-    { NULL, "sgray_1" },
-    { NULL, "black_1" }
+    { NULL,         "sgray_1" },
+    { NULL,         "black_1" }
   };
   static const char *colors[][2] =	// Color keywords
   {
@@ -2801,10 +2818,12 @@ parse_generate_file(
   };
   static const char *monochromes[][2] =	// Monochrome keywords
   {
-    { "SGRAY8",     "sgray_8" },
-    { "DEVW8",      "black_8" },
-    { "SGRAY16",    "sgray_16" },
-    { "DEVW16",     "black_16" }
+    { "W8",         "sgray_8" },
+    { NULL,         "black_8" },
+    { "W16",        "sgray_16" },
+    { NULL,         "black_16" },
+    { NULL,         "sgray_1" },
+    { NULL,         "black_1" }
   };
 
 
@@ -2973,7 +2992,7 @@ parse_generate_file(
         {
           // Default to Apple Raster unless sending bitmaps, which are only
           // supported by PWG Raster...
-          if (ippContainsString(attr, "image/urf") && strcmp(params->type, "black_1") && strcmp(params->type, "srgb_1"))
+          if (ippContainsString(attr, "image/urf") && strncmp(params->type, "black_", 6) && strcmp(params->type, "srgb_1"))
             strlcpy(params->format, "image/urf", sizeof(params->format));
 	  else if (ippContainsString(attr, "image/pwg-raster"))
             strlcpy(params->format, "image/pwg-raster", sizeof(params->format));
@@ -3096,6 +3115,30 @@ parse_generate_file(
 
       if (!params->num_pages)
         params->num_pages = !strncmp(params->sides, "two-sided-", 10) ? 2 : 1;
+
+      // Back side transform, if any
+      if (!params->sheet_back[0])
+      {
+        if ((attr = ippFindAttribute(response, "pwg-raster-document-sheet-back", IPP_TAG_KEYWORD)) != NULL)
+        {
+          strlcpy(params->sheet_back, ippGetString(attr, 0, NULL), sizeof(params->sheet_back));
+	}
+	else if ((attr = ippFindAttribute(response, "urf-supported", IPP_TAG_KEYWORD)) != NULL)
+	{
+	  if (ippContainsString(attr, "DM1"))
+	    strlcpy(params->sheet_back, "flip", sizeof(params->sheet_back));
+	  else if (ippContainsString(attr, "DM2"))
+	    strlcpy(params->sheet_back, "manual-tumble", sizeof(params->sheet_back));
+	  else if (ippContainsString(attr, "DM3"))
+	    strlcpy(params->sheet_back, "rotated", sizeof(params->sheet_back));
+	  else
+	    strlcpy(params->sheet_back, "normal", sizeof(params->sheet_back));
+	}
+	else
+        {
+          strlcpy(params->sheet_back, "normal", sizeof(params->sheet_back));
+	}
+      }
 
       // Everything is good, save the parameters and return...
       data->generate_params = params;
