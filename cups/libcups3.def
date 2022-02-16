@@ -21,8 +21,6 @@ _cupsGetUserDefault
 _cupsGlobalLock
 _cupsGlobalUnlock
 _cupsGlobals
-_cupsLangPrintError
-_cupsLangPrintFilter
 _cupsLangPrintf
 _cupsLangPuts
 _cupsLangString
