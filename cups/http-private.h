@@ -67,7 +67,6 @@ extern "C" {
 
 #  define _HTTP_MAX_SBUFFER	65536	/* Size of (de)compression buffer */
 #  define _HTTP_RESOLVE_DEFAULT	0	/* Just resolve with default options */
-#  define _HTTP_RESOLVE_STDERR	1	/* Log resolve progress to stderr */
 #  define _HTTP_RESOLVE_FQDN	2	/* Resolve to a FQDN */
 #  define _HTTP_RESOLVE_FAXOUT	4	/* Resolve FaxOut service? */
 

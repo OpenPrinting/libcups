@@ -159,7 +159,7 @@ _cupsStrDate(char   *buf,		/* I - Buffer */
   if (cg->lang_default->encoding != CUPS_UTF8)
   {
     strftime(temp, sizeof(temp), "%c", &date);
-    cupsCharsetToUTF8((cups_utf8_t *)buf, temp, (int)bufsize, cg->lang_default->encoding);
+    cupsCharsetToUTF8((cups_utf8_t *)buf, temp, bufsize, cg->lang_default->encoding);
   }
   else
     strftime(buf, bufsize, "%c", &date);

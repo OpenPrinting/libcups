@@ -1,10 +1,12 @@
 /*
  * Localized printf/puts functions for CUPS.
  *
- * Copyright 2007-2014 by Apple Inc.
- * Copyright 2002-2007 by Easy Software Products.
+ * Copyright © 2022 by OpenPrinting.
+ * Copyright © 2007-2014 by Apple Inc.
+ * Copyright © 2002-2007 by Easy Software Products.
  *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more information.
+ * Licensed under Apache License v2.0.  See the file "LICENSE" for more
+ * information.
  */
 
 /*
@@ -16,137 +18,10 @@
 
 
 /*
- * '_cupsLangPrintError()' - Print a message followed by a standard error.
- */
-
-void
-_cupsLangPrintError(const char *prefix,	/* I - Non-localized message prefix */
-                    const char *message)/* I - Message */
-{
-  ssize_t	bytes;			/* Number of bytes formatted */
-  int		last_errno;		/* Last error */
-  char		buffer[2048],		/* Message buffer */
-		*bufptr,		/* Pointer into buffer */
-		output[8192];		/* Output buffer */
-  _cups_globals_t *cg;			/* Global data */
-
-
- /*
-  * Range check...
-  */
-
-  if (!message)
-    return;
-
- /*
-  * Save the errno value...
-  */
-
-  last_errno = errno;
-
- /*
-  * Get the message catalog...
-  */
-
-  cg = _cupsGlobals();
-
-  if (!cg->lang_default)
-    cg->lang_default = cupsLangDefault();
-
- /*
-  * Format the message...
-  */
-
-  if (prefix)
-  {
-    snprintf(buffer, sizeof(buffer), "%s:", prefix);
-    bufptr = buffer + strlen(buffer);
-  }
-  else
-    bufptr = buffer;
-
-  snprintf(bufptr, sizeof(buffer) - (size_t)(bufptr - buffer),
-	   /* TRANSLATORS: Message is "subject: error" */
-	   _cupsLangString(cg->lang_default, _("%s: %s")),
-	   _cupsLangString(cg->lang_default, message), strerror(last_errno));
-  strlcat(buffer, "\n", sizeof(buffer));
-
- /*
-  * Convert and write to stderr...
-  */
-
-  bytes = cupsUTF8ToCharset(output, (cups_utf8_t *)buffer, sizeof(output),
-                            cg->lang_default->encoding);
-
-  if (bytes > 0)
-    fwrite(output, 1, (size_t)bytes, stderr);
-}
-
-
-/*
- * '_cupsLangPrintFilter()' - Print a formatted filter message string to a file.
- */
-
-int					/* O - Number of bytes written */
-_cupsLangPrintFilter(
-    FILE       *fp,			/* I - File to write to */
-    const char *prefix,			/* I - Non-localized message prefix */
-    const char *message,		/* I - Message string to use */
-    ...)				/* I - Additional arguments as needed */
-{
-  ssize_t	bytes;			/* Number of bytes formatted */
-  char		temp[2048],		/* Temporary format buffer */
-		buffer[2048],		/* Message buffer */
-		output[8192];		/* Output buffer */
-  va_list 	ap;			/* Pointer to additional arguments */
-  _cups_globals_t *cg;			/* Global data */
-
-
- /*
-  * Range check...
-  */
-
-  if (!fp || !message)
-    return (-1);
-
-  cg = _cupsGlobals();
-
-  if (!cg->lang_default)
-    cg->lang_default = cupsLangDefault();
-
- /*
-  * Format the string...
-  */
-
-  va_start(ap, message);
-  snprintf(temp, sizeof(temp), "%s: %s\n", prefix,
-	   _cupsLangString(cg->lang_default, message));
-  vsnprintf(buffer, sizeof(buffer), temp, ap);
-  va_end(ap);
-
- /*
-  * Transcode to the destination charset...
-  */
-
-  bytes = cupsUTF8ToCharset(output, (cups_utf8_t *)buffer, sizeof(output),
-                            cg->lang_default->encoding);
-
- /*
-  * Write the string and return the number of bytes written...
-  */
-
-  if (bytes > 0)
-    return ((int)fwrite(output, 1, (size_t)bytes, fp));
-  else
-    return ((int)bytes);
-}
-
-
-/*
  * '_cupsLangPrintf()' - Print a formatted message string to a file.
  */
 
-int					/* O - Number of bytes written */
+ssize_t					/* O - Number of bytes written */
 _cupsLangPrintf(FILE       *fp,		/* I - File to write to */
 		const char *message,	/* I - Message string to use */
 	        ...)			/* I - Additional arguments as needed */
@@ -175,8 +50,7 @@ _cupsLangPrintf(FILE       *fp,		/* I - File to write to */
   */
 
   va_start(ap, message);
-  vsnprintf(buffer, sizeof(buffer) - 1,
-	    _cupsLangString(cg->lang_default, message), ap);
+  vsnprintf(buffer, sizeof(buffer) - 1, _cupsLangString(cg->lang_default, message), ap);
   va_end(ap);
 
   strlcat(buffer, "\n", sizeof(buffer));
@@ -185,17 +59,16 @@ _cupsLangPrintf(FILE       *fp,		/* I - File to write to */
   * Transcode to the destination charset...
   */
 
-  bytes = cupsUTF8ToCharset(output, (cups_utf8_t *)buffer, sizeof(output),
-                            cg->lang_default->encoding);
+  bytes = cupsUTF8ToCharset(output, (cups_utf8_t *)buffer, sizeof(output), cg->lang_default->encoding);
 
  /*
   * Write the string and return the number of bytes written...
   */
 
   if (bytes > 0)
-    return ((int)fwrite(output, 1, (size_t)bytes, fp));
+    return ((ssize_t)fwrite(output, 1, (size_t)bytes, fp));
   else
-    return ((int)bytes);
+    return (bytes);
 }
 
 
@@ -203,7 +76,7 @@ _cupsLangPrintf(FILE       *fp,		/* I - File to write to */
  * '_cupsLangPuts()' - Print a static message string to a file.
  */
 
-int					/* O - Number of bytes written */
+ssize_t					/* O - Number of bytes written */
 _cupsLangPuts(FILE       *fp,		/* I - File to write to */
               const char *message)	/* I - Message string to use */
 {
@@ -228,20 +101,17 @@ _cupsLangPuts(FILE       *fp,		/* I - File to write to */
   * Transcode to the destination charset...
   */
 
-  bytes = cupsUTF8ToCharset(output,
-			    (cups_utf8_t *)_cupsLangString(cg->lang_default,
-							   message),
-			    sizeof(output) - 4, cg->lang_default->encoding);
-  bytes += cupsUTF8ToCharset(output + bytes, (cups_utf8_t *)"\n", (int)(sizeof(output) - (size_t)bytes), cg->lang_default->encoding);
+  bytes = cupsUTF8ToCharset(output, (cups_utf8_t *)_cupsLangString(cg->lang_default, message), sizeof(output) - 4, cg->lang_default->encoding);
+  bytes += cupsUTF8ToCharset(output + bytes, (cups_utf8_t *)"\n", sizeof(output) - (size_t)bytes, cg->lang_default->encoding);
 
  /*
   * Write the string and return the number of bytes written...
   */
 
   if (bytes > 0)
-    return ((int)fwrite(output, 1, (size_t)bytes, fp));
+    return ((ssize_t)fwrite(output, 1, (size_t)bytes, fp));
   else
-    return ((int)bytes);
+    return (bytes);
 }
 
 

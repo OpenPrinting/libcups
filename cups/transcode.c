@@ -1,10 +1,12 @@
 /*
  * Transcoding support for CUPS.
  *
- * Copyright 2007-2014 by Apple Inc.
- * Copyright 1997-2007 by Easy Software Products.
+ * Copyright © 2022 by OpenPrinting.
+ * Copyright © 2007-2014 by Apple Inc.
+ * Copyright © 1997-2007 by Easy Software Products.
  *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more information.
+ * Licensed under Apache License v2.0.  See the file "LICENSE" for more
+ * information.
  */
 
 /*
@@ -65,11 +67,11 @@ _cupsCharmapFlush(void)
  * 'cupsCharsetToUTF8()' - Convert legacy character set to UTF-8.
  */
 
-int					/* O - Count or -1 on error */
+ssize_t					/* O - Count or `-1` on error */
 cupsCharsetToUTF8(
     cups_utf8_t           *dest,	/* O - Target string */
     const char            *src,		/* I - Source string */
-    const int             maxout,	/* I - Max output */
+    const size_t          maxout,	/* I - Max output */
     const cups_encoding_t encoding)	/* I - Encoding */
 {
   cups_utf8_t	*destptr;		/* Pointer into UTF-8 buffer */
@@ -83,7 +85,7 @@ cupsCharsetToUTF8(
   * Check for valid arguments...
   */
 
-  DEBUG_printf(("2cupsCharsetToUTF8(dest=%p, src=\"%s\", maxout=%d, encoding=%d)", (void *)dest, src, maxout, encoding));
+  DEBUG_printf(("2cupsCharsetToUTF8(dest=%p, src=\"%s\", maxout=%u, encoding=%d)", (void *)dest, src, (unsigned)maxout, encoding));
 
   if (!dest || !src || maxout < 1)
   {
@@ -98,11 +100,10 @@ cupsCharsetToUTF8(
   * Handle identity conversions...
   */
 
-  if (encoding == CUPS_UTF8 || encoding <= CUPS_US_ASCII ||
-      encoding >= CUPS_ENCODING_VBCS_END)
+  if (encoding == CUPS_UTF8 || encoding <= CUPS_US_ASCII || encoding >= CUPS_ENCODING_VBCS_END)
   {
-    strlcpy((char *)dest, src, (size_t)maxout);
-    return ((int)strlen((char *)dest));
+    strlcpy((char *)dest, src, maxout);
+    return ((ssize_t)strlen((char *)dest));
   }
 
  /*
@@ -134,7 +135,7 @@ cupsCharsetToUTF8(
 
     *destptr = '\0';
 
-    return ((int)(destptr - dest));
+    return ((ssize_t)(destptr - dest));
   }
 
  /*
@@ -162,14 +163,14 @@ cupsCharsetToUTF8(
     char *altdestptr = (char *)dest;	/* Silence bogus GCC type-punned */
 
     srclen       = strlen(src);
-    outBytesLeft = (size_t)maxout - 1;
+    outBytesLeft = maxout - 1;
 
     iconv(map_to_utf8, (char **)&src, &srclen, &altdestptr, &outBytesLeft);
     *altdestptr = '\0';
 
     _cupsMutexUnlock(&map_mutex);
 
-    return ((int)(altdestptr - (char *)dest));
+    return ((ssize_t)(altdestptr - (char *)dest));
   }
 
   _cupsMutexUnlock(&map_mutex);
@@ -189,11 +190,11 @@ cupsCharsetToUTF8(
  * 'cupsUTF8ToCharset()' - Convert UTF-8 to legacy character set.
  */
 
-int					/* O - Count or -1 on error */
+ssize_t					/* O - Count or `-1` on error */
 cupsUTF8ToCharset(
-    char		  *dest,	/* O - Target string */
-    const cups_utf8_t	  *src,		/* I - Source string */
-    const int		  maxout,	/* I - Max output */
+    char                  *dest,	/* O - Target string */
+    const cups_utf8_t     *src,		/* I - Source string */
+    const size_t          maxout,	/* I - Max output */
     const cups_encoding_t encoding)	/* I - Encoding */
 {
   char		*destptr;		/* Pointer into destination */
@@ -222,8 +223,8 @@ cupsUTF8ToCharset(
   if (encoding == CUPS_UTF8 ||
       encoding >= CUPS_ENCODING_VBCS_END)
   {
-    strlcpy(dest, (char *)src, (size_t)maxout);
-    return ((int)strlen(dest));
+    strlcpy(dest, (char *)src, maxout);
+    return ((ssize_t)strlen(dest));
   }
 
  /*
@@ -263,7 +264,7 @@ cupsUTF8ToCharset(
 
     *destptr = '\0';
 
-    return ((int)(destptr - dest));
+    return ((ssize_t)(destptr - dest));
   }
 
 #ifdef HAVE_ICONV_H
@@ -291,14 +292,14 @@ cupsUTF8ToCharset(
     char *altsrc = (char *)src;		/* Silence bogus GCC type-punned */
 
     srclen       = strlen((char *)src);
-    outBytesLeft = (size_t)maxout - 1;
+    outBytesLeft = maxout - 1;
 
     iconv(map_from_utf8, &altsrc, &srclen, &destptr, &outBytesLeft);
     *destptr = '\0';
 
     _cupsMutexUnlock(&map_mutex);
 
-    return ((int)(destptr - dest));
+    return ((ssize_t)(destptr - dest));
   }
 
   _cupsMutexUnlock(&map_mutex);
@@ -327,16 +328,16 @@ cupsUTF8ToCharset(
  *	   > 65535 = 11110xxx 10yyyyyy 10zzzzzz 10xxxxxx
  *
  * UTF-32 prohibits chars beyond Plane 16 (> 0x10ffff) in UCS-4,
- * which would convert to five- or six-octet UTF-8 sequences...
+ * which would convert to five- or six-octet UTF-8 sequences.
  */
 
-int					/* O - Count or -1 on error */
+ssize_t					/* O - Count or `-1` on error */
 cupsUTF8ToUTF32(
     cups_utf32_t      *dest,		/* O - Target string */
     const cups_utf8_t *src,		/* I - Source string */
-    const int         maxout)		/* I - Max output */
+    const size_t      maxout)		/* I - Max output */
 {
-  int		i;			/* Looping variable */
+  size_t	i;			/* Looping variable */
   cups_utf8_t	ch;			/* Character value */
   cups_utf8_t	next;			/* Next character value */
   cups_utf32_t	ch32;			/* UTF-32 character value */
@@ -346,7 +347,7 @@ cupsUTF8ToUTF32(
   * Check for valid arguments and clear output...
   */
 
-  DEBUG_printf(("2cupsUTF8ToUTF32(dest=%p, src=\"%s\", maxout=%d)", (void *)dest, src, maxout));
+  DEBUG_printf(("2cupsUTF8ToUTF32(dest=%p, src=\"%s\", maxout=%u)", (void *)dest, src, (unsigned)maxout));
 
   if (dest)
     *dest = 0;
@@ -410,8 +411,7 @@ cupsUTF8ToUTF32(
 
       *dest++ = ch32;
 
-      DEBUG_printf(("4cupsUTF8ToUTF32: %02x %02x => %08X",
-                    src[-2], src[-1], (unsigned)ch32));
+      DEBUG_printf(("4cupsUTF8ToUTF32: %02x %02x => %08X", src[-2], src[-1], (unsigned)ch32));
     }
     else if ((ch & 0xf0) == 0xe0)
     {
@@ -452,8 +452,7 @@ cupsUTF8ToUTF32(
 
       *dest++ = ch32;
 
-      DEBUG_printf(("4cupsUTF8ToUTF32: %02x %02x %02x => %08X",
-                    src[-3], src[-2], src[-1], (unsigned)ch32));
+      DEBUG_printf(("4cupsUTF8ToUTF32: %02x %02x %02x => %08X", src[-3], src[-2], src[-1], (unsigned)ch32));
     }
     else if ((ch & 0xf8) == 0xf0)
     {
@@ -504,8 +503,7 @@ cupsUTF8ToUTF32(
 
       *dest++ = ch32;
 
-      DEBUG_printf(("4cupsUTF8ToUTF32: %02x %02x %02x %02x => %08X",
-                    src[-4], src[-3], src[-2], src[-1], (unsigned)ch32));
+      DEBUG_printf(("4cupsUTF8ToUTF32: %02x %02x %02x %02x => %08X", src[-4], src[-3], src[-2], src[-1], (unsigned)ch32));
     }
     else
     {
@@ -528,9 +526,9 @@ cupsUTF8ToUTF32(
 
   *dest = 0;
 
-  DEBUG_printf(("3cupsUTF8ToUTF32: Returning %d characters", maxout - 1 - i));
+  DEBUG_printf(("3cupsUTF8ToUTF32: Returning %u characters", (unsigned)(maxout - 1 - i)));
 
-  return (maxout - 1 - i);
+  return ((ssize_t)(maxout - 1 - i));
 }
 
 
@@ -547,17 +545,17 @@ cupsUTF8ToUTF32(
  *	   > 65535 = 11110xxx 10yyyyyy 10zzzzzz 10xxxxxx
  *
  * UTF-32 prohibits chars beyond Plane 16 (> 0x10ffff) in UCS-4,
- * which would convert to five- or six-octet UTF-8 sequences...
+ * which would convert to five- or six-octet UTF-8 sequences.
  */
 
-int					/* O - Count or -1 on error */
+ssize_t					/* O - Count or `-1` on error */
 cupsUTF32ToUTF8(
     cups_utf8_t        *dest,		/* O - Target string */
     const cups_utf32_t *src,		/* I - Source string */
-    const int          maxout)		/* I - Max output */
+    const size_t       maxout)		/* I - Max output */
 {
   cups_utf8_t	*start;			/* Start of destination string */
-  int		i;			/* Looping variable */
+  size_t	i;			/* Looping variable */
   int		swap;			/* Byte-swap input to output */
   cups_utf32_t	ch;			/* Character value */
 
@@ -566,7 +564,7 @@ cupsUTF32ToUTF8(
   * Check for valid arguments and clear output...
   */
 
-  DEBUG_printf(("2cupsUTF32ToUTF8(dest=%p, src=%p, maxout=%d)", (void *)dest, (void *)src, maxout));
+  DEBUG_printf(("2cupsUTF32ToUTF8(dest=%p, src=%p, maxout=%u)", (void *)dest, (void *)src, (unsigned)maxout));
 
   if (dest)
     *dest = '\0';
@@ -649,8 +647,7 @@ cupsUTF32ToUTF8(
       *dest++ = (cups_utf8_t)(0x80 | (ch & 0x3f));
       i -= 2;
 
-      DEBUG_printf(("4cupsUTF32ToUTF8: %08x => %02x %02x", (unsigned)ch,
-                    dest[-2], dest[-1]));
+      DEBUG_printf(("4cupsUTF32ToUTF8: %08x => %02x %02x", (unsigned)ch, dest[-2], dest[-1]));
     }
     else if (ch < 0x10000)
     {
@@ -670,8 +667,7 @@ cupsUTF32ToUTF8(
       *dest++ = (cups_utf8_t)(0x80 | (ch & 0x3f));
       i -= 3;
 
-      DEBUG_printf(("4cupsUTF32ToUTF8: %08x => %02x %02x %02x", (unsigned)ch,
-                    dest[-3], dest[-2], dest[-1]));
+      DEBUG_printf(("4cupsUTF32ToUTF8: %08x => %02x %02x %02x", (unsigned)ch, dest[-3], dest[-2], dest[-1]));
     }
     else
     {
@@ -692,8 +688,7 @@ cupsUTF32ToUTF8(
       *dest++ = (cups_utf8_t)(0x80 | (ch & 0x3f));
       i -= 4;
 
-      DEBUG_printf(("4cupsUTF32ToUTF8: %08x => %02x %02x %02x %02x",
-                    (unsigned)ch, dest[-4], dest[-3], dest[-2], dest[-1]));
+      DEBUG_printf(("4cupsUTF32ToUTF8: %08x => %02x %02x %02x %02x", (unsigned)ch, dest[-4], dest[-3], dest[-2], dest[-1]));
     }
   }
 
@@ -701,5 +696,5 @@ cupsUTF32ToUTF8(
 
   DEBUG_printf(("3cupsUTF32ToUTF8: Returning %d", (int)(dest - start)));
 
-  return ((int)(dest - start));
+  return ((ssize_t)(dest - start));
 }

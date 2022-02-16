@@ -1,7 +1,7 @@
 /*
  * IPP Everywhere printer application for CUPS.
  *
- * Copyright © 2021 by OpenPrinting.
+ * Copyright © 2021-2022 by OpenPrinting.
  * Copyright © 2020 by the IEEE-ISTO Printer Working Group.
  * Copyright © 2010-2021 by Apple Inc.
  *
@@ -1601,7 +1601,7 @@ create_printer(
 
   if ((printer = calloc(1, sizeof(ippeve_printer_t))) == NULL)
   {
-    _cupsLangPrintError(NULL, _("Unable to allocate memory for printer"));
+    _cupsLangPrintf(stderr, _("Unable to allocate memory for printer: %s"), strerror(errno));
     return (NULL);
   }
 

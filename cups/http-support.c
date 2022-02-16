@@ -1763,9 +1763,6 @@ _httpResolveURI(
 		      sizeof(resource)) < HTTP_URI_STATUS_OK)
 #endif /* DEBUG */
   {
-    if (options & _HTTP_RESOLVE_STDERR)
-      _cupsLangPrintFilter(stderr, "ERROR", _("Bad device-uri \"%s\"."), uri);
-
     DEBUG_printf(("2_httpResolveURI: httpSeparateURI returned %d!", status));
     DEBUG_puts("2_httpResolveURI: Returning NULL");
     return (NULL);
@@ -1783,7 +1780,6 @@ _httpResolveURI(
 			*uuid,		/* Pointer to UUID in URI */
 			*uuidend;	/* Pointer to end of UUID in URI */
     _http_uribuf_t	uribuf;		/* URI buffer */
-    int			offline = 0;	/* offline-report state set? */
 #  ifdef HAVE_MDNSRESPONDER
     DNSServiceRef	ref,		/* DNS-SD master service reference */
 			domainref = NULL,/* DNS-SD service reference for domain */
@@ -1796,9 +1792,6 @@ _httpResolveURI(
     AvahiClient		*client;	/* Client information */
     int			error;		/* Status */
 #  endif /* HAVE_MDNSRESPONDER */
-
-    if (options & _HTTP_RESOLVE_STDERR)
-      fprintf(stderr, "DEBUG: Resolving \"%s\"...\n", hostname);
 
    /*
     * Separate the hostname into service name, registration type, and domain...
@@ -1850,12 +1843,6 @@ _httpResolveURI(
 
     DEBUG_printf(("2_httpResolveURI: Resolving hostname=\"%s\", regtype=\"%s\", "
                   "domain=\"%s\"\n", hostname, regtype, domain));
-    if (options & _HTTP_RESOLVE_STDERR)
-    {
-      fputs("STATE: +connecting-to-device\n", stderr);
-      fprintf(stderr, "DEBUG: Resolving \"%s\", regtype=\"%s\", "
-                      "domain=\"local.\"...\n", hostname, regtype);
-    }
 
     uri = NULL;
 
@@ -1882,9 +1869,6 @@ _httpResolveURI(
 
 	while (time(NULL) < end_time)
 	{
-	  if (options & _HTTP_RESOLVE_STDERR)
-	    _cupsLangPrintFilter(stderr, "INFO", _("Looking for printer."));
-
 	  if (cb && !(*cb)(context))
 	  {
 	    DEBUG_puts("2_httpResolveURI: callback returned 0 (stop)");
@@ -1918,12 +1902,6 @@ _httpResolveURI(
 
 	    if (extrasent == 0 && domain && _cups_strcasecmp(domain, "local."))
 	    {
-	      if (options & _HTTP_RESOLVE_STDERR)
-		fprintf(stderr,
-		        "DEBUG: Resolving \"%s\", regtype=\"%s\", "
-			"domain=\"%s\"...\n", hostname, regtype,
-			domain ? domain : "");
-
 	      domainref = ref;
 	      if (DNSServiceResolve(&domainref,
 	                            kDNSServiceFlagsShareConnection,
@@ -1934,9 +1912,6 @@ _httpResolveURI(
 	    }
 	    else if (extrasent == 0 && !strcmp(scheme, "ippusb"))
 	    {
-	      if (options & _HTTP_RESOLVE_STDERR)
-		fprintf(stderr, "DEBUG: Resolving \"%s\", regtype=\"_ipps._tcp\", domain=\"local.\"...\n", hostname);
-
 	      ippsref = ref;
 	      if (DNSServiceResolve(&ippsref,
 	                            kDNSServiceFlagsShareConnection,
@@ -1947,9 +1922,6 @@ _httpResolveURI(
 	    }
 	    else if (extrasent == 1 && !strcmp(scheme, "ippusb"))
 	    {
-	      if (options & _HTTP_RESOLVE_STDERR)
-		fprintf(stderr, "DEBUG: Resolving \"%s\", regtype=\"_ipp._tcp\", domain=\"local.\"...\n", hostname);
-
 	      ippref = ref;
 	      if (DNSServiceResolve(&ippref,
 	                            kDNSServiceFlagsShareConnection,
@@ -1957,18 +1929,6 @@ _httpResolveURI(
 	                            "_ipp._tcp", domain, http_resolve_cb,
 				    &uribuf) == kDNSServiceErr_NoError)
 		extrasent = 2;
-	    }
-
-	   /*
-	    * If it hasn't resolved within 5 seconds set the offline-report
-	    * printer-state-reason...
-	    */
-
-	    if ((options & _HTTP_RESOLVE_STDERR) && offline == 0 &&
-	        time(NULL) > (start_time + 5))
-	    {
-	      fputs("STATE: +offline-report\n", stderr);
-	      offline = 1;
 	    }
 	  }
 	  else
@@ -2037,18 +1997,6 @@ _httpResolveURI(
           {
   	    if ((pstatus = avahi_simple_poll_iterate(uribuf.poll, 2000)) != 0)
   	      break;
-
-	   /*
-	    * If it hasn't resolved within 5 seconds set the offline-report
-	    * printer-state-reason...
-	    */
-
-	    if ((options & _HTTP_RESOLVE_STDERR) && offline == 0 &&
-	        time(NULL) > (start_time + 5))
-	    {
-	      fputs("STATE: +offline-report\n", stderr);
-	      offline = 1;
-	    }
           }
 
 	 /*
@@ -2065,21 +2013,6 @@ _httpResolveURI(
       avahi_simple_poll_free(uribuf.poll);
     }
 #  endif /* HAVE_MDNSRESPONDER */
-
-    if (options & _HTTP_RESOLVE_STDERR)
-    {
-      if (uri)
-      {
-        fprintf(stderr, "DEBUG: Resolved as \"%s\"...\n", uri);
-	fputs("STATE: -connecting-to-device,offline-report\n", stderr);
-      }
-      else
-      {
-        fputs("DEBUG: Unable to resolve URI\n", stderr);
-	fputs("STATE: -connecting-to-device\n", stderr);
-      }
-    }
-
 #else /* !HAVE_DNSSD */
    /*
     * No DNS-SD support...
@@ -2087,9 +2020,6 @@ _httpResolveURI(
 
     uri = NULL;
 #endif /* HAVE_DNSSD */
-
-    if ((options & _HTTP_RESOLVE_STDERR) && !uri)
-      _cupsLangPrintFilter(stderr, "INFO", _("Unable to find printer."));
   }
   else
   {
@@ -2305,10 +2235,6 @@ http_resolve_cb(
 
     if (_cups_strcasecmp(uuid, uribuf->uuid))
     {
-      if (uribuf->options & _HTTP_RESOLVE_STDERR)
-	fprintf(stderr, "DEBUG: Found UUID %s, looking for %s.", uuid,
-		uribuf->uuid);
-
       DEBUG_printf(("5http_resolve_cb: Found UUID %s, looking for %s.", uuid,
                     uribuf->uuid));
       return;
@@ -2535,10 +2461,6 @@ http_resolve_cb(
 
     if (_cups_strcasecmp(uuid, uribuf->uuid))
     {
-      if (uribuf->options & _HTTP_RESOLVE_STDERR)
-	fprintf(stderr, "DEBUG: Found UUID %s, looking for %s.", uuid,
-		uribuf->uuid);
-
       DEBUG_printf(("5http_resolve_cb: Found UUID %s, looking for %s.", uuid,
                     uribuf->uuid));
       return;
@@ -2626,8 +2548,6 @@ http_resolve_cb(
 
   if (!if_indextoname((unsigned int)interface, ifname))
   {
-    if (uribuf->options & _HTTP_RESOLVE_STDERR)
-      fprintf(stderr, "DEBUG: Unable to find interface name for interface %d: %s\n", interface, strerror(errno));
     DEBUG_printf(("Unable to find interface name for interface %d: %s\n", interface, strerror(errno)));
     ifname[0] = '\0';
   }
@@ -2639,8 +2559,6 @@ http_resolve_cb(
     * name to "localhost"...
     */
 
-    if (uribuf->options & _HTTP_RESOLVE_STDERR)
-      fputs("DEBUG: Service comes from loopback interface \"lo\", setting \"localhost\" as host name.\n", stderr);
     DEBUG_puts("Service comes from loopback interface \"lo\", setting \"localhost\" as host name.");
     hostTarget = "localhost";
   }

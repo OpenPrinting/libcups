@@ -1,10 +1,12 @@
 /*
  * Transcoding definitions for CUPS.
  *
- * Copyright 2007-2011 by Apple Inc.
- * Copyright 1997-2006 by Easy Software Products.
+ * Copyright © 2022 by OpenPrinting.
+ * Copyright © 2007-2011 by Apple Inc.
+ * Copyright © 1997-2006 by Easy Software Products.
  *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more information.
+ * Licensed under Apache License v2.0.  See the file "LICENSE" for more
+ * information.
  */
 
 #ifndef _CUPS_TRANSCODE_H_
@@ -40,10 +42,10 @@ typedef unsigned long  cups_vbcs_t;	/* VBCS Legacy 32-bit unit */
  * Prototypes...
  */
 
-extern int	cupsCharsetToUTF8(cups_utf8_t *dest, const char *src, const int maxout, const cups_encoding_t encoding) _CUPS_PUBLIC;
-extern int	cupsUTF8ToCharset(char *dest, const cups_utf8_t *src, const int maxout, const cups_encoding_t encoding) _CUPS_PUBLIC;
-extern int	cupsUTF8ToUTF32(cups_utf32_t *dest, const cups_utf8_t *src, const int maxout) _CUPS_PUBLIC;
-extern int	cupsUTF32ToUTF8(cups_utf8_t *dest, const cups_utf32_t *src, const int maxout) _CUPS_PUBLIC;
+extern ssize_t	cupsCharsetToUTF8(cups_utf8_t *dest, const char *src, const size_t maxout, const cups_encoding_t encoding) _CUPS_PUBLIC;
+extern ssize_t	cupsUTF8ToCharset(char *dest, const cups_utf8_t *src, const size_t maxout, const cups_encoding_t encoding) _CUPS_PUBLIC;
+extern ssize_t	cupsUTF8ToUTF32(cups_utf32_t *dest, const cups_utf8_t *src, const size_t maxout) _CUPS_PUBLIC;
+extern ssize_t	cupsUTF32ToUTF8(cups_utf8_t *dest, const cups_utf32_t *src, const size_t maxout) _CUPS_PUBLIC;
 
 
 #  ifdef __cplusplus

@@ -1,7 +1,7 @@
 /*
  * Private localization support for CUPS.
  *
- * Copyright © 2021 by OpenPrinting.
+ * Copyright © 2021-2022 by OpenPrinting.
  * Copyright © 2007-2018 by Apple Inc.
  * Copyright © 1997-2006 by Easy Software Products.
  *
@@ -60,10 +60,8 @@ extern const char	*_cupsAppleLocale(CFStringRef languageName, char *locale, size
 #  endif /* __APPLE__ */
 extern void		_cupsCharmapFlush(void) _CUPS_INTERNAL;
 extern const char	*_cupsEncodingName(cups_encoding_t encoding) _CUPS_PRIVATE;
-extern void		_cupsLangPrintError(const char *prefix, const char *message) _CUPS_PRIVATE;
-extern int		_cupsLangPrintFilter(FILE *fp, const char *prefix, const char *message, ...) _CUPS_FORMAT(3, 4) _CUPS_PRIVATE;
-extern int		_cupsLangPrintf(FILE *fp, const char *message, ...) _CUPS_FORMAT(2, 3) _CUPS_PRIVATE;
-extern int		_cupsLangPuts(FILE *fp, const char *message) _CUPS_PRIVATE;
+extern ssize_t		_cupsLangPrintf(FILE *fp, const char *message, ...) _CUPS_FORMAT(2, 3) _CUPS_PRIVATE;
+extern ssize_t		_cupsLangPuts(FILE *fp, const char *message) _CUPS_PRIVATE;
 extern const char	*_cupsLangString(cups_lang_t *lang, const char *message) _CUPS_PRIVATE;
 extern void		_cupsMessageFree(cups_array_t *a) _CUPS_PRIVATE;
 extern cups_array_t	*_cupsMessageLoad(const char *filename, int flags) _CUPS_PRIVATE;
