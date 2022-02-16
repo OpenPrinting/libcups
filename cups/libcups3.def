@@ -42,14 +42,7 @@ _cupsRWUnlock
 _cupsRasterAddError
 _cupsRasterClearError
 _cupsRasterColorSpaceString
-_cupsRasterDelete
-_cupsRasterErrorString
-_cupsRasterInitPWGHeader
 _cupsRasterNew
-_cupsRasterReadHeader
-_cupsRasterReadPixels
-_cupsRasterWriteHeader
-_cupsRasterWritePixels
 _cupsSetDefaults
 _cupsSetError
 _cupsSetHTTPError
