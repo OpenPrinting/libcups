@@ -2887,7 +2887,7 @@ parse_generate_file(
         // Find auto keyword...
         params->type[0] = '\0';
 
-        if ((attr = ippFindAttribute(response, "pwg-raster-types-supported", IPP_TAG_KEYWORD)) == NULL)
+        if ((attr = ippFindAttribute(response, "pwg-raster-document-type-supported", IPP_TAG_KEYWORD)) == NULL)
           attr = ippFindAttribute(response, "urf-supported", IPP_TAG_KEYWORD);
 
 	for (i = 0; i < (sizeof(autos) / sizeof(autos[0])); i ++)
@@ -2910,7 +2910,7 @@ parse_generate_file(
         // Find bi-level keyword...
         params->type[0] = '\0';
 
-        attr = ippFindAttribute(response, "pwg-raster-types-supported", IPP_TAG_KEYWORD);
+        attr = ippFindAttribute(response, "pwg-raster-document-type-supported", IPP_TAG_KEYWORD);
 
 	for (i = 0; i < (sizeof(bi_levels) / sizeof(bi_levels[0])); i ++)
 	{
@@ -2932,7 +2932,7 @@ parse_generate_file(
         // Find color keyword...
         params->type[0] = '\0';
 
-        if ((attr = ippFindAttribute(response, "pwg-raster-types-supported", IPP_TAG_KEYWORD)) != NULL)
+        if ((attr = ippFindAttribute(response, "pwg-raster-document-type-supported", IPP_TAG_KEYWORD)) != NULL)
           attr = ippFindAttribute(response, "urf-supported", IPP_TAG_KEYWORD);
 
 	for (i = 0; i < (sizeof(colors) / sizeof(colors[0])); i ++)
@@ -2955,7 +2955,7 @@ parse_generate_file(
         // Find grayscale keyword...
         params->type[0] = '\0';
 
-        if ((attr = ippFindAttribute(response, "pwg-raster-types-supported", IPP_TAG_KEYWORD)) == NULL)
+        if ((attr = ippFindAttribute(response, "pwg-raster-document-type-supported", IPP_TAG_KEYWORD)) == NULL)
           attr = ippFindAttribute(response, "urf-supported", IPP_TAG_KEYWORD);
 
 	for (i = 0; i < (sizeof(monochromes) / sizeof(monochromes[0])); i ++)
@@ -3164,7 +3164,7 @@ parse_generate_file(
 
       if (!strcmp(value, "auto") || !strcmp(value, "bi-level") || !strcmp(value, "color") || !strcmp(value, "monochrome") || !strcmp(value, "adobe-rgb_8") || !strcmp(value, "adobe-rgb_16") || !strcmp(value, "black_1") || !strcmp(value, "black_8") || !strcmp(value, "black_16") || !strcmp(value, "cmyk_8") || !strcmp(value, "cmyk_16") || !strcmp(value, "rgb_8") || !strcmp(value, "rgb_16") || !strcmp(value, "sgray_1") || !strcmp(value, "sgray_8") || !strcmp(value, "sgray_16") || !strcmp(value, "srgb_8") || !strcmp(value, "srgb_16"))
       {
-        // Use "print-color-mode" or "pwg-raster-document-types-supported" keyword...
+        // Use "print-color-mode" or "pwg-raster-document-type-supported" keyword...
         strlcpy(params->type, value, sizeof(params->type));
       }
       else
