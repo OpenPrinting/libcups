@@ -5215,7 +5215,7 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
 
       if (_ippFileReadToken(f, name, sizeof(name)))
       {
-	if (_ippVarsGet(vars, name))
+	if (_ippVarsGet(vars, name) || getenv(name))
 	  data->skip_test = 1;
       }
       else
@@ -5254,7 +5254,7 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
 
       if (_ippFileReadToken(f, name, sizeof(name)))
       {
-	if (!_ippVarsGet(vars, name))
+	if (!_ippVarsGet(vars, name) && !getenv(name))
 	  data->skip_test = 1;
       }
       else
@@ -6273,7 +6273,7 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
 
       if (_ippFileReadToken(f, name, sizeof(name)))
       {
-        if (_ippVarsGet(vars, name))
+        if (_ippVarsGet(vars, name) || getenv(name))
           data->skip_test = 1;
       }
       else
@@ -6290,7 +6290,7 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
 
       if (_ippFileReadToken(f, name, sizeof(name)))
       {
-        if (!_ippVarsGet(vars, name))
+        if (!_ippVarsGet(vars, name) && !getenv(name))
           data->skip_test = 1;
       }
       else
