@@ -6,7 +6,7 @@
  * our own file functions allows us to provide transparent support of
  * different line endings, gzip'd print files, PPD files, etc.
  *
- * Copyright © 2021 by OpenPrinting.
+ * Copyright © 2021-2022 by OpenPrinting.
  * Copyright © 2007-2018 by Apple Inc.
  * Copyright © 1997-2007 by Easy Software Products, all rights reserved.
  *
@@ -40,7 +40,7 @@ extern "C" {
  * Prototypes...
  */
 
-extern int	_cupsFilePeekAhead(cups_file_t *fp, int ch);
+extern bool	_cupsFilePeekAhead(cups_file_t *fp, int ch);
 
 
 #  ifdef __cplusplus

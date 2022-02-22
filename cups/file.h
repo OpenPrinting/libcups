@@ -6,6 +6,7 @@
  * our own file functions allows us to provide transparent support of
  * different line endings, gzip'd print files, PPD files, etc.
  *
+ * Copyright © 2022 by OpenPrinting.
  * Copyright © 2007-2018 by Apple Inc.
  * Copyright © 1997-2007 by Easy Software Products, all rights reserved.
  *
@@ -49,7 +50,7 @@ typedef struct _cups_file_s cups_file_t;/**** CUPS file type ****/
 
 extern int		cupsFileClose(cups_file_t *fp) _CUPS_PUBLIC;
 extern int		cupsFileCompression(cups_file_t *fp) _CUPS_PUBLIC;
-extern int		cupsFileEOF(cups_file_t *fp) _CUPS_PUBLIC;
+extern bool		cupsFileEOF(cups_file_t *fp) _CUPS_PUBLIC;
 extern const char	*cupsFileFind(const char *filename, const char *path, bool executable, char *buffer, size_t bufsize) _CUPS_PUBLIC;
 extern int		cupsFileFlush(cups_file_t *fp) _CUPS_PUBLIC;
 extern int		cupsFileGetChar(cups_file_t *fp) _CUPS_PUBLIC;

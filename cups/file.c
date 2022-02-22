@@ -4,9 +4,9 @@
  * Since stdio files max out at 256 files on many systems, we have to
  * write similar functions without this limit.  At the same time, using
  * our own file functions allows us to provide transparent support of
- * different line endings, gzip'd print files, PPD files, etc.
+ * different line endings, gzip'd print files, etc.
  *
- * Copyright © 2021 by OpenPrinting.
+ * Copyright © 2021-2022 by OpenPrinting.
  * Copyright © 2007-2019 by Apple Inc.
  * Copyright © 1997-2007 by Easy Software Products, all rights reserved.
  *
@@ -34,11 +34,11 @@ struct _cups_file_s			/**** CUPS file structure... ****/
   int		fd;			/* File descriptor */
   char		mode,			/* Mode ('r' or 'w') */
 		compressed,		/* Compression used? */
-		is_stdio,		/* stdin/out/err? */
-		eof,			/* End of file? */
 		buf[4096],		/* Buffer */
 		*ptr,			/* Pointer into buffer */
 		*end;			/* End of buffer data */
+  bool		is_stdio,		/* stdin/out/err? */
+		eof;			/* End of file? */
   off_t		pos,			/* Position in file */
 		bufpos;			/* File position for start of buffer */
 
@@ -64,8 +64,6 @@ static ssize_t	cups_write(cups_file_t *fp, const char *buf, size_t bytes);
 
 /*
  * 'cupsFileClose()' - Close a CUPS file.
- *
- * @since CUPS 1.2/macOS 10.5@
  */
 
 int					/* O - 0 on success, -1 on error */
@@ -197,11 +195,9 @@ cupsFileClose(cups_file_t *fp)		/* I - CUPS file */
 
 /*
  * 'cupsFileCompression()' - Return whether a file is compressed.
- *
- * @since CUPS 1.2/macOS 10.5@
  */
 
-int					/* O - @code CUPS_FILE_NONE@ or @code CUPS_FILE_GZIP@ */
+int					/* O - `CUPS_FILE_NONE` or `CUPS_FILE_GZIP` */
 cupsFileCompression(cups_file_t *fp)	/* I - CUPS file */
 {
   return (fp ? fp->compressed : CUPS_FILE_NONE);
@@ -210,14 +206,12 @@ cupsFileCompression(cups_file_t *fp)	/* I - CUPS file */
 
 /*
  * 'cupsFileEOF()' - Return the end-of-file status.
- *
- * @since CUPS 1.2/macOS 10.5@
  */
 
-int					/* O - 1 on end of file, 0 otherwise */
+bool					/* O - `true` on end of file, `false` otherwise */
 cupsFileEOF(cups_file_t *fp)		/* I - CUPS file */
 {
-  return (fp ? fp->eof : 1);
+  return (fp ? fp->eof : true);
 }
 
 
@@ -225,15 +219,13 @@ cupsFileEOF(cups_file_t *fp)		/* I - CUPS file */
  * 'cupsFileFind()' - Find a file using the specified path.
  *
  * This function allows the paths in the path string to be separated by
- * colons (UNIX standard) or semicolons (Windows standard) and stores the
+ * colons (POSIX standard) or semicolons (Windows standard) and stores the
  * result in the buffer supplied.  If the file cannot be found in any of
- * the supplied paths, @code NULL@ is returned. A @code NULL@ path only
- * matches the current directory.
- *
- * @since CUPS 1.2/macOS 10.5@
+ * the supplied paths, `NULL` is returned.  A `NULL` path only matches the
+ * current directory.
  */
 
-const char *				/* O - Full path to file or @code NULL@ if not found */
+const char *				/* O - Full path to file or `NULL` if not found */
 cupsFileFind(const char *filename,	/* I - File to find */
              const char *path,		/* I - Colon/semicolon-separated path */
              bool       executable,	/* I - `true` = executable files, `false` = any file/dir */
@@ -330,8 +322,6 @@ cupsFileFind(const char *filename,	/* I - File to find */
 
 /*
  * 'cupsFileFlush()' - Flush pending output.
- *
- * @since CUPS 1.2/macOS 10.5@
  */
 
 int					/* O - 0 on success, -1 on error */
@@ -376,8 +366,6 @@ cupsFileFlush(cups_file_t *fp)		/* I - CUPS file */
 
 /*
  * 'cupsFileGetChar()' - Get a single character from a file.
- *
- * @since CUPS 1.2/macOS 10.5@
  */
 
 int					/* O - Character or -1 on end of file */
@@ -434,7 +422,7 @@ cupsFileGetChar(cups_file_t *fp)	/* I - CUPS file */
  * @since CUPS 1.2/macOS 10.5@
  */
 
-char *					/* O  - Line read or @code NULL@ on end of file or error */
+char *					/* O  - Line read or `NULL` on end of file or error */
 cupsFileGetConf(cups_file_t *fp,	/* I  - CUPS file */
                 char        *buf,	/* O  - String buffer */
 		size_t      buflen,	/* I  - Size of string buffer */
@@ -651,7 +639,7 @@ cupsFileGetLine(cups_file_t *fp,	/* I - File to read from */
  * @since CUPS 1.2/macOS 10.5@
  */
 
-char *					/* O - Line read or @code NULL@ on end of file or error */
+char *					/* O - Line read or `NULL` on end of file or error */
 cupsFileGets(cups_file_t *fp,		/* I - CUPS file */
              char        *buf,		/* O - String buffer */
 	     size_t      buflen)	/* I - Size of string buffer */
@@ -790,7 +778,7 @@ cupsFileNumber(cups_file_t *fp)		/* I - CUPS file */
  * @since CUPS 1.2/macOS 10.5@
  */
 
-cups_file_t *				/* O - CUPS file or @code NULL@ if the file or socket cannot be opened */
+cups_file_t *				/* O - CUPS file or `NULL` if the file or socket cannot be opened */
 cupsFileOpen(const char *filename,	/* I - Name of file */
              const char *mode)		/* I - Open mode */
 {
@@ -910,7 +898,7 @@ cupsFileOpen(const char *filename,	/* I - Name of file */
  * @since CUPS 1.2/macOS 10.5@
  */
 
-cups_file_t *				/* O - CUPS file or @code NULL@ if the file could not be opened */
+cups_file_t *				/* O - CUPS file or `NULL` if the file could not be opened */
 cupsFileOpenFd(int        fd,		/* I - File descriptor */
 	       const char *mode)	/* I - Open mode */
 {
@@ -923,9 +911,7 @@ cupsFileOpenFd(int        fd,		/* I - File descriptor */
   * Range check input...
   */
 
-  if (fd < 0 || !mode ||
-      (*mode != 'r' && *mode != 'w' && *mode != 'a' && *mode != 's') ||
-      (*mode == 'a' && isdigit(mode[1] & 255)))
+  if (fd < 0 || !mode || (*mode != 'r' && *mode != 'w' && *mode != 'a' && *mode != 's') || (*mode == 'a' && isdigit(mode[1] & 255)))
     return (NULL);
 
  /*
@@ -1021,7 +1007,7 @@ cupsFileOpenFd(int        fd,		/* I - File descriptor */
  * '_cupsFilePeekAhead()' - See if the requested character is buffered up.
  */
 
-int					/* O - 1 if present, 0 otherwise */
+bool					/* O - `true` if present, `false` otherwise */
 _cupsFilePeekAhead(cups_file_t *fp,	/* I - CUPS file */
                    int         ch)	/* I - Character */
 {
@@ -1031,8 +1017,6 @@ _cupsFilePeekAhead(cups_file_t *fp,	/* I - CUPS file */
 
 /*
  * 'cupsFilePeekChar()' - Peek at the next character from a file.
- *
- * @since CUPS 1.2/macOS 10.5@
  */
 
 int					/* O - Character or -1 on end of file */
@@ -1063,8 +1047,6 @@ cupsFilePeekChar(cups_file_t *fp)	/* I - CUPS file */
 
 /*
  * 'cupsFilePrintf()' - Write a formatted string.
- *
- * @since CUPS 1.2/macOS 10.5@
  */
 
 int					/* O - Number of bytes written or -1 on error */
@@ -1162,8 +1144,6 @@ cupsFilePrintf(cups_file_t *fp,		/* I - CUPS file */
 
 /*
  * 'cupsFilePutChar()' - Write a character.
- *
- * @since CUPS 1.2/macOS 10.5@
  */
 
 int					/* O - 0 on success, -1 on error */
@@ -1216,8 +1196,6 @@ cupsFilePutChar(cups_file_t *fp,	/* I - CUPS file */
  * 'cupsFilePutConf()' - Write a configuration line.
  *
  * This function handles any comment escaping of the value.
- *
- * @since CUPS 1.4/macOS 10.6@
  */
 
 ssize_t					/* O - Number of bytes written or -1 on error */
@@ -1276,9 +1254,7 @@ cupsFilePutConf(cups_file_t *fp,	/* I - CUPS file */
 /*
  * 'cupsFilePuts()' - Write a string.
  *
- * Like the @code fputs@ function, no newline is appended to the string.
- *
- * @since CUPS 1.2/macOS 10.5@
+ * Like the `fputs` function, no newline is appended to the string.
  */
 
 int					/* O - Number of bytes written or -1 on error */
@@ -1343,8 +1319,6 @@ cupsFilePuts(cups_file_t *fp,		/* I - CUPS file */
 
 /*
  * 'cupsFileRead()' - Read from a file.
- *
- * @since CUPS 1.2/macOS 10.5@
  */
 
 ssize_t					/* O - Number of bytes read or -1 on error */
@@ -1423,10 +1397,7 @@ cupsFileRead(cups_file_t *fp,		/* I - CUPS file */
 
 
 /*
- * 'cupsFileRewind()' - Set the current file position to the beginning of the
- *                      file.
- *
- * @since CUPS 1.2/macOS 10.5@
+ * 'cupsFileRewind()' - Set the current file position to the beginning of the file.
  */
 
 off_t					/* O - New file position or -1 on error */
@@ -1458,7 +1429,7 @@ cupsFileRewind(cups_file_t *fp)		/* I - CUPS file */
     if (fp->ptr)
     {
       fp->ptr = fp->buf;
-      fp->eof = 0;
+      fp->eof = false;
     }
 
     DEBUG_printf(("2cupsFileRewind: pos=" CUPS_LLFMT, CUPS_LLCAST fp->pos));
@@ -1486,7 +1457,7 @@ cupsFileRewind(cups_file_t *fp)		/* I - CUPS file */
   fp->pos    = 0;
   fp->ptr    = NULL;
   fp->end    = NULL;
-  fp->eof    = 0;
+  fp->eof    = false;
 
   DEBUG_printf(("2cupsFileRewind: pos=" CUPS_LLFMT, CUPS_LLCAST fp->pos));
 
@@ -1496,8 +1467,6 @@ cupsFileRewind(cups_file_t *fp)		/* I - CUPS file */
 
 /*
  * 'cupsFileSeek()' - Seek in a file.
- *
- * @since CUPS 1.2/macOS 10.5@
  */
 
 off_t					/* O - New file position or -1 on error */
@@ -1540,7 +1509,7 @@ cupsFileSeek(cups_file_t *fp,		/* I - CUPS file */
 
       fp->pos = pos;
       fp->ptr = fp->buf + pos - fp->bufpos;
-      fp->eof = 0;
+      fp->eof = false;
 
       return (pos);
     }
@@ -1560,7 +1529,7 @@ cupsFileSeek(cups_file_t *fp,		/* I - CUPS file */
   * Seek forwards or backwards...
   */
 
-  fp->eof = 0;
+  fp->eof = false;
 
   if (pos < fp->bufpos)
   {
@@ -1643,8 +1612,6 @@ cupsFileSeek(cups_file_t *fp,		/* I - CUPS file */
 
 /*
  * 'cupsFileStderr()' - Return a CUPS file associated with stderr.
- *
- * @since CUPS 1.2/macOS 10.5@
  */
 
 cups_file_t *				/* O - CUPS file */
@@ -1670,7 +1637,7 @@ cupsFileStderr(void)
     */
 
     if ((cg->stdio_files[2] = cupsFileOpenFd(2, "w")) != NULL)
-      cg->stdio_files[2]->is_stdio = 1;
+      cg->stdio_files[2]->is_stdio = true;
   }
 
   return (cg->stdio_files[2]);
@@ -1679,8 +1646,6 @@ cupsFileStderr(void)
 
 /*
  * 'cupsFileStdin()' - Return a CUPS file associated with stdin.
- *
- * @since CUPS 1.2/macOS 10.5@
  */
 
 cups_file_t *				/* O - CUPS file */
@@ -1700,7 +1665,7 @@ cupsFileStdin(void)
     */
 
     if ((cg->stdio_files[0] = cupsFileOpenFd(0, "r")) != NULL)
-      cg->stdio_files[0]->is_stdio = 1;
+      cg->stdio_files[0]->is_stdio = true;
   }
 
   return (cg->stdio_files[0]);
@@ -1709,8 +1674,6 @@ cupsFileStdin(void)
 
 /*
  * 'cupsFileStdout()' - Return a CUPS file associated with stdout.
- *
- * @since CUPS 1.2/macOS 10.5@
  */
 
 cups_file_t *				/* O - CUPS file */
@@ -1736,7 +1699,7 @@ cupsFileStdout(void)
     */
 
     if ((cg->stdio_files[1] = cupsFileOpenFd(1, "w")) != NULL)
-      cg->stdio_files[1]->is_stdio = 1;
+      cg->stdio_files[1]->is_stdio = true;
   }
 
   return (cg->stdio_files[1]);
@@ -1745,8 +1708,6 @@ cupsFileStdout(void)
 
 /*
  * 'cupsFileTell()' - Return the current file position.
- *
- * @since CUPS 1.2/macOS 10.5@
  */
 
 off_t					/* O - File position */
@@ -1761,8 +1722,6 @@ cupsFileTell(cups_file_t *fp)		/* I - CUPS file */
 
 /*
  * 'cupsFileUnlock()' - Unlock access to a file.
- *
- * @since CUPS 1.2/macOS 10.5@
  */
 
 int					/* O - 0 on success, -1 on error */
@@ -1791,8 +1750,6 @@ cupsFileUnlock(cups_file_t *fp)		/* I - CUPS file */
 
 /*
  * 'cupsFileWrite()' - Write to a file.
- *
- * @since CUPS 1.2/macOS 10.5@
  */
 
 ssize_t					/* O - Number of bytes written or -1 on error */
@@ -1955,7 +1912,7 @@ cups_fill(cups_file_t *fp)		/* I - CUPS file */
         DEBUG_printf(("9cups_fill: cups_read() returned " CUPS_LLFMT,
 	              CUPS_LLCAST bytes));
 
-        fp->eof = 1;
+        fp->eof = true;
 
 	return (-1);
       }
@@ -1998,7 +1955,7 @@ cups_fill(cups_file_t *fp)		/* I - CUPS file */
 
 	  DEBUG_puts("9cups_fill: Extra gzip header data missing, returning -1.");
 
-          fp->eof = 1;
+          fp->eof = true;
 	  errno   = EIO;
 
 	  return (-1);
@@ -2015,7 +1972,7 @@ cups_fill(cups_file_t *fp)		/* I - CUPS file */
 
 	  DEBUG_puts("9cups_fill: Extra gzip header data does not fit in initial buffer, returning -1.");
 
-          fp->eof = 1;
+          fp->eof = true;
 	  errno   = EIO;
 
 	  return (-1);
@@ -2041,7 +1998,7 @@ cups_fill(cups_file_t *fp)		/* I - CUPS file */
 
 	  DEBUG_puts("9cups_fill: Original filename in gzip header data does not fit in initial buffer, returning -1.");
 
-          fp->eof = 1;
+          fp->eof = true;
 	  errno   = EIO;
 
 	  return (-1);
@@ -2067,7 +2024,7 @@ cups_fill(cups_file_t *fp)		/* I - CUPS file */
 
 	  DEBUG_puts("9cups_fill: Comment in gzip header data does not fit in initial buffer, returning -1.");
 
-          fp->eof = 1;
+          fp->eof = true;
 	  errno   = EIO;
 
 	  return (-1);
@@ -2090,7 +2047,7 @@ cups_fill(cups_file_t *fp)		/* I - CUPS file */
 
 	  DEBUG_puts("9cups_fill: Header CRC in gzip header data does not fit in initial buffer, returning -1.");
 
-          fp->eof = 1;
+          fp->eof = true;
 	  errno   = EIO;
 
 	  return (-1);
@@ -2121,7 +2078,7 @@ cups_fill(cups_file_t *fp)		/* I - CUPS file */
       {
 	DEBUG_printf(("9cups_fill: inflateInit2 returned %d, returning -1.", status));
 
-        fp->eof = 1;
+        fp->eof = true;
         errno   = EIO;
 
 	return (-1);
@@ -2153,7 +2110,7 @@ cups_fill(cups_file_t *fp)		/* I - CUPS file */
 	{
 	  DEBUG_printf(("9cups_fill: cups_read error, returning %d.", (int)bytes));
 
-	  fp->eof = 1;
+	  fp->eof = true;
 
           return (bytes);
 	}
@@ -2207,7 +2164,7 @@ cups_fill(cups_file_t *fp)		/* I - CUPS file */
 
 	    DEBUG_puts("9cups_fill: Unable to read gzip CRC trailer, returning -1.");
 
-	    fp->eof = 1;
+	    fp->eof = true;
 	    errno   = EIO;
 
 	    return (-1);
@@ -2225,7 +2182,7 @@ cups_fill(cups_file_t *fp)		/* I - CUPS file */
 
 	  DEBUG_printf(("9cups_fill: tcrc=%08x != fp->crc=%08x, returning -1.", (unsigned int)tcrc, (unsigned int)fp->crc));
 
-	  fp->eof = 1;
+	  fp->eof = true;
 	  errno   = EIO;
 
 	  return (-1);
@@ -2244,7 +2201,7 @@ cups_fill(cups_file_t *fp)		/* I - CUPS file */
       {
 	DEBUG_printf(("9cups_fill: inflate returned %d, returning -1.", status));
 
-        fp->eof = 1;
+        fp->eof = true;
         errno   = EIO;
 
 	return (-1);
@@ -2277,7 +2234,7 @@ cups_fill(cups_file_t *fp)		/* I - CUPS file */
     * Can't read from file!
     */
 
-    fp->eof = 1;
+    fp->eof = true;
     fp->ptr = fp->buf;
     fp->end = fp->buf;
   }
@@ -2287,7 +2244,7 @@ cups_fill(cups_file_t *fp)		/* I - CUPS file */
     * Return the bytes we read...
     */
 
-    fp->eof = 0;
+    fp->eof = false;
     fp->ptr = fp->buf;
     fp->end = fp->buf + bytes;
   }
