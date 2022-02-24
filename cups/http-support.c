@@ -1,7 +1,7 @@
 /*
  * HTTP support routines for CUPS.
  *
- * Copyright © 2020-2021 by OpenPrinting
+ * Copyright © 2020-2022 by OpenPrinting
  * Copyright © 2007-2019 by Apple Inc.
  * Copyright © 1997-2007 by Easy Software Products, all rights reserved.
  *
@@ -78,39 +78,39 @@ static const char * const http_months[12] =
 			};
 static const char * const http_states[] =
 			{		/* HTTP state strings */
-			  "HTTP_STATE_ERROR",
-			  "HTTP_STATE_WAITING",
-			  "HTTP_STATE_CONNECT",
-			  "HTTP_STATE_COPY",
-			  "HTTP_STATE_COPY_SEND",
-			  "HTTP_STATE_DELETE",
-			  "HTTP_STATE_DELETE_SEND",
-			  "HTTP_STATE_GET",
-			  "HTTP_STATE_GET_SEND",
-			  "HTTP_STATE_HEAD",
-			  "HTTP_STATE_LOCK",
-			  "HTTP_STATE_LOCK_RECV",
-			  "HTTP_STATE_LOCK_SEND",
-			  "HTTP_STATE_MKCOL",
-			  "HTTP_STATE_MOVE",
-			  "HTTP_STATE_MOVE_SEND",
-			  "HTTP_STATE_OPTIONS",
-			  "HTTP_STATE_POST",
-			  "HTTP_STATE_POST_RECV",
-			  "HTTP_STATE_POST_SEND",
-			  "HTTP_STATE_PROPFIND",
-			  "HTTP_STATE_PROPFIND_RECV",
-			  "HTTP_STATE_PROPFIND_SEND",
-			  "HTTP_STATE_PROPPATCH",
-			  "HTTP_STATE_PROPPATCH_RECV",
-			  "HTTP_STATE_PROPPATCH_SEND",
-			  "HTTP_STATE_PUT",
-			  "HTTP_STATE_PUT_RECV",
-			  "HTTP_STATE_TRACE",
-			  "HTTP_STATE_UNLOCK",
-			  "HTTP_STATE_STATUS",
-			  "HTTP_STATE_UNKNOWN_METHOD",
-			  "HTTP_STATE_UNKNOWN_VERSION"
+			  "ERROR",
+			  "WAITING",
+			  "CONNECT",
+			  "COPY",
+			  "COPY-send",
+			  "DELETE",
+			  "DELETE-send",
+			  "GET",
+			  "GET-send",
+			  "HEAD",
+			  "LOCK",
+			  "LOCK-recv",
+			  "LOCK-send",
+			  "MKCOL",
+			  "MOVE",
+			  "MOVE-send",
+			  "OPTIONS",
+			  "POST",
+			  "POST-recv",
+			  "POST-send",
+			  "PROPFIND",
+			  "PROPFIND-recv",
+			  "PROPFIND-send",
+			  "PROPPATCH",
+			  "PROPPATCH-recv",
+			  "PROPPATCH-send",
+			  "PUT",
+			  "PUT-recv",
+			  "TRACE",
+			  "UNLOCK",
+			  "STATUS",
+			  "UNKNOWN_METHOD",
+			  "UNKNOWN_VERSION"
 			};
 
 

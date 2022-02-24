@@ -1,7 +1,7 @@
 /*
  * HTTP routines for CUPS.
  *
- * Copyright © 2021 by OpenPrinting.
+ * Copyright © 2021-2022 by OpenPrinting.
  * Copyright © 2007-2021 by Apple Inc.
  * Copyright © 1997-2007 by Easy Software Products, all rights reserved.
  *
@@ -2124,22 +2124,36 @@ httpReadRequest(http_t *http,		/* I - HTTP connection */
   * Validate...
   */
 
-  if (!strcmp(req_method, "OPTIONS"))
-    http->state = HTTP_STATE_OPTIONS;
+  if (!strcmp(req_method, "CONNECT"))
+    http->state = HTTP_STATE_CONNECT;
+  else if (!strcmp(req_method, "COPY"))
+    http->state = HTTP_STATE_COPY;
+  else if (!strcmp(req_method, "DELETE"))
+    http->state = HTTP_STATE_DELETE;
   else if (!strcmp(req_method, "GET"))
     http->state = HTTP_STATE_GET;
   else if (!strcmp(req_method, "HEAD"))
     http->state = HTTP_STATE_HEAD;
+  else if (!strcmp(req_method, "LOCK"))
+    http->state = HTTP_STATE_LOCK;
+  else if (!strcmp(req_method, "MKCOL"))
+    http->state = HTTP_STATE_MKCOL;
+  else if (!strcmp(req_method, "MOVE"))
+    http->state = HTTP_STATE_MOVE;
+  else if (!strcmp(req_method, "OPTIONS"))
+    http->state = HTTP_STATE_OPTIONS;
   else if (!strcmp(req_method, "POST"))
     http->state = HTTP_STATE_POST;
+  else if (!strcmp(req_method, "PROPFIND"))
+    http->state = HTTP_STATE_PROPFIND;
+  else if (!strcmp(req_method, "PROPPATCH"))
+    http->state = HTTP_STATE_PROPPATCH;
   else if (!strcmp(req_method, "PUT"))
     http->state = HTTP_STATE_PUT;
-  else if (!strcmp(req_method, "DELETE"))
-    http->state = HTTP_STATE_DELETE;
   else if (!strcmp(req_method, "TRACE"))
     http->state = HTTP_STATE_TRACE;
-  else if (!strcmp(req_method, "CONNECT"))
-    http->state = HTTP_STATE_CONNECT;
+  else if (!strcmp(req_method, "UNLOCK"))
+    http->state = HTTP_STATE_UNLOCK;
   else
   {
     DEBUG_printf(("1httpReadRequest: Unknown method \"%s\".", req_method));
