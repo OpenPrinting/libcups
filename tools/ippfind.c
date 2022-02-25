@@ -2882,7 +2882,7 @@ win32_escape_dup(const char *s)		// I - Original string
     {
       if (sptr[1] == '\"' || sptr[1] == '\\')
       {
-        // \" and \\ need to be converted to \\\" or \\\\
+        // \" and \\ need to be converted to \\\" or \\\\...
         dlen += 4;
         sptr ++;
       }
@@ -2916,7 +2916,7 @@ win32_escape_dup(const char *s)		// I - Original string
     {
       if (sptr[1] == '\"' || sptr[1] == '\\')
       {
-        // \" and \\ need to be converted to \\\" or \\\\
+        // \" and \\ need to be converted to \\\" or \\\\...
         sptr ++;
 
         *dptr++ = '\\';
