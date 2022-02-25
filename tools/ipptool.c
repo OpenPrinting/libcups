@@ -192,6 +192,7 @@ typedef struct ipptool_test_s		/**** Test Data ****/
   ipptool_expect_t monitor_expects[MAX_MONITOR];
 					/* MONITOR-PRINTER-STATE EXPECTs */
   ipptool_generate_t *generate_params;	/* GENERATE-FILE parameters */
+  char		buffer[1024 * 1024];	/* Output buffer */
 } ipptool_test_t;
 
 
@@ -265,7 +266,7 @@ main(int  argc,				/* I - Number of command-line args */
   int			interval,	/* Test interval in microseconds */
 			repeat;		/* Repeat count */
   _ipp_vars_t		vars;		/* Variables */
-  ipptool_test_t	data;		/* Test data */
+  ipptool_test_t	*data;		/* Test data */
   _cups_globals_t	*cg = _cupsGlobals();
 					/* Global data */
 
@@ -285,12 +286,18 @@ main(int  argc,				/* I - Number of command-line args */
 
   _cupsSetLocale(argv);
 
-  init_data(&data);
+  if ((data = (ipptool_test_t *)calloc(1, sizeof(ipptool_test_t))) == NULL)
+  {
+    perror("ipptool: Unable to allocate memory for tests");
+    return (1);
+  }
+
+  init_data(data);
 
   _ippVarsInit(&vars, NULL, (_ipp_ferror_cb_t)error_cb, (_ipp_ftoken_cb_t)token_cb);
-  data.vars = &vars;
+  data->vars = &vars;
 
-  _ippVarsSet(data.vars, "date-start", iso_date(ippTimeToDate(time(NULL))));
+  _ippVarsSet(data->vars, "date-start", iso_date(ippTimeToDate(time(NULL))));
 
  /*
   * We need at least:
@@ -319,20 +326,20 @@ main(int  argc,				/* I - Number of command-line args */
 	usage();
       }
 
-      if (data.outfile != cupsFileStdout())
+      if (data->outfile != cupsFileStdout())
 	usage();
 
-      if ((data.outfile = cupsFileOpen(argv[i], "w")) == NULL)
+      if ((data->outfile = cupsFileOpen(argv[i], "w")) == NULL)
       {
 	_cupsLangPrintf(stderr, _("%s: Unable to open \"%s\": %s"), "ipptool", argv[i], strerror(errno));
 	exit(1);
       }
 
-      data.output = IPPTOOL_OUTPUT_IPPSERVER;
+      data->output = IPPTOOL_OUTPUT_IPPSERVER;
     }
     else if (!strcmp(argv[i], "--stop-after-include-error"))
     {
-      data.stop_after_include_error = 1;
+      data->stop_after_include_error = 1;
     }
     else if (!strcmp(argv[i], "--version"))
     {
@@ -346,22 +353,22 @@ main(int  argc,				/* I - Number of command-line args */
         switch (*opt)
         {
 	  case '4' : /* Connect using IPv4 only */
-	      data.family = AF_INET;
+	      data->family = AF_INET;
 	      break;
 
 #ifdef AF_INET6
 	  case '6' : /* Connect using IPv6 only */
-	      data.family = AF_INET6;
+	      data->family = AF_INET6;
 	      break;
 #endif /* AF_INET6 */
 
           case 'C' : /* Enable HTTP chunking */
-              data.def_transfer = IPPTOOL_TRANSFER_CHUNKED;
+              data->def_transfer = IPPTOOL_TRANSFER_CHUNKED;
               break;
 
 	  case 'E' : /* Encrypt with TLS */
 #ifdef HAVE_TLS
-	      data.encryption = HTTP_ENCRYPTION_REQUIRED;
+	      data->encryption = HTTP_ENCRYPTION_REQUIRED;
 #else
 	      _cupsLangPrintf(stderr, _("%s: Sorry, no encryption support."),
 			      argv[0]);
@@ -369,11 +376,11 @@ main(int  argc,				/* I - Number of command-line args */
 	      break;
 
           case 'I' : /* Ignore errors */
-	      data.def_ignore_errors = 1;
+	      data->def_ignore_errors = 1;
 	      break;
 
           case 'L' : /* Disable HTTP chunking */
-              data.def_transfer = IPPTOOL_TRANSFER_LENGTH;
+              data->def_transfer = IPPTOOL_TRANSFER_LENGTH;
               break;
 
           case 'P' : /* Output to plist file */
@@ -385,16 +392,16 @@ main(int  argc,				/* I - Number of command-line args */
 		usage();
               }
 
-              if (data.outfile != cupsFileStdout())
+              if (data->outfile != cupsFileStdout())
                 usage();
 
-              if ((data.outfile = cupsFileOpen(argv[i], "w")) == NULL)
+              if ((data->outfile = cupsFileOpen(argv[i], "w")) == NULL)
               {
                 _cupsLangPrintf(stderr, _("%s: Unable to open \"%s\": %s"), "ipptool", argv[i], strerror(errno));
                 exit(1);
               }
 
-	      data.output = IPPTOOL_OUTPUT_PLIST;
+	      data->output = IPPTOOL_OUTPUT_PLIST;
 
               if (interval || repeat)
 	      {
@@ -404,12 +411,12 @@ main(int  argc,				/* I - Number of command-line args */
               break;
 
           case 'R' : /* Repeat on server-error-busy */
-              data.repeat_on_busy = 1;
+              data->repeat_on_busy = 1;
               break;
 
 	  case 'S' : /* Encrypt with SSL */
 #ifdef HAVE_TLS
-	      data.encryption = HTTP_ENCRYPTION_ALWAYS;
+	      data->encryption = HTTP_ENCRYPTION_ALWAYS;
 #else
 	      _cupsLangPrintf(stderr, _("%s: Sorry, no encryption support."), "ipptool");
 #endif /* HAVE_TLS */
@@ -424,7 +431,7 @@ main(int  argc,				/* I - Number of command-line args */
 		usage();
               }
 
-	      data.timeout = _cupsStrScand(argv[i], NULL, localeconv());
+	      data->timeout = _cupsStrScand(argv[i], NULL, localeconv());
 	      break;
 
 	  case 'V' : /* Set IPP version */
@@ -438,23 +445,23 @@ main(int  argc,				/* I - Number of command-line args */
 
 	      if (!strcmp(argv[i], "1.0"))
 	      {
-	        data.def_version = 10;
+	        data->def_version = 10;
 	      }
 	      else if (!strcmp(argv[i], "1.1"))
 	      {
-	        data.def_version = 11;
+	        data->def_version = 11;
 	      }
 	      else if (!strcmp(argv[i], "2.0"))
 	      {
-	        data.def_version = 20;
+	        data->def_version = 20;
 	      }
 	      else if (!strcmp(argv[i], "2.1"))
 	      {
-	        data.def_version = 21;
+	        data->def_version = 21;
 	      }
 	      else if (!strcmp(argv[i], "2.2"))
 	      {
-	        data.def_version = 22;
+	        data->def_version = 22;
 	      }
 	      else
 	      {
@@ -464,7 +471,7 @@ main(int  argc,				/* I - Number of command-line args */
 	      break;
 
           case 'X' : /* Produce XML output */
-	      data.output = IPPTOOL_OUTPUT_PLIST;
+	      data->output = IPPTOOL_OUTPUT_PLIST;
 
               if (interval || repeat)
 	      {
@@ -474,7 +481,7 @@ main(int  argc,				/* I - Number of command-line args */
 	      break;
 
           case 'c' : /* CSV output */
-              data.output = IPPTOOL_OUTPUT_CSV;
+              data->output = IPPTOOL_OUTPUT_CSV;
               break;
 
           case 'd' : /* Define a variable */
@@ -492,7 +499,7 @@ main(int  argc,				/* I - Number of command-line args */
 	      else
 	        value = name + strlen(name);
 
-	      _ippVarsSet(data.vars, name, value);
+	      _ippVarsSet(data->vars, name, value);
 	      break;
 
           case 'f' : /* Set the default test filename */
@@ -529,7 +536,7 @@ main(int  argc,				/* I - Number of command-line args */
               else
 		strlcpy(filename, argv[i], sizeof(filename));
 
-	      _ippVarsSet(data.vars, "filename", filename);
+	      _ippVarsSet(data->vars, "filename", filename);
 
               if ((ext = strrchr(filename, '.')) != NULL)
               {
@@ -538,43 +545,43 @@ main(int  argc,				/* I - Number of command-line args */
                 */
 
                 if (!_cups_strcasecmp(ext, ".gif"))
-                  _ippVarsSet(data.vars, "filetype", "image/gif");
+                  _ippVarsSet(data->vars, "filetype", "image/gif");
                 else if (!_cups_strcasecmp(ext, ".htm") ||
                          !_cups_strcasecmp(ext, ".htm.gz") ||
                          !_cups_strcasecmp(ext, ".html") ||
                          !_cups_strcasecmp(ext, ".html.gz"))
-                  _ippVarsSet(data.vars, "filetype", "text/html");
+                  _ippVarsSet(data->vars, "filetype", "text/html");
                 else if (!_cups_strcasecmp(ext, ".jpg") ||
                          !_cups_strcasecmp(ext, ".jpeg"))
-                  _ippVarsSet(data.vars, "filetype", "image/jpeg");
+                  _ippVarsSet(data->vars, "filetype", "image/jpeg");
                 else if (!_cups_strcasecmp(ext, ".pcl") ||
                          !_cups_strcasecmp(ext, ".pcl.gz"))
-                  _ippVarsSet(data.vars, "filetype", "application/vnd.hp-PCL");
+                  _ippVarsSet(data->vars, "filetype", "application/vnd.hp-PCL");
                 else if (!_cups_strcasecmp(ext, ".pdf"))
-                  _ippVarsSet(data.vars, "filetype", "application/pdf");
+                  _ippVarsSet(data->vars, "filetype", "application/pdf");
                 else if (!_cups_strcasecmp(ext, ".png"))
-                  _ippVarsSet(data.vars, "filetype", "image/png");
+                  _ippVarsSet(data->vars, "filetype", "image/png");
                 else if (!_cups_strcasecmp(ext, ".ps") ||
                          !_cups_strcasecmp(ext, ".ps.gz"))
-                  _ippVarsSet(data.vars, "filetype", "application/postscript");
+                  _ippVarsSet(data->vars, "filetype", "application/postscript");
                 else if (!_cups_strcasecmp(ext, ".pwg") ||
                          !_cups_strcasecmp(ext, ".pwg.gz") ||
                          !_cups_strcasecmp(ext, ".ras") ||
                          !_cups_strcasecmp(ext, ".ras.gz"))
-                  _ippVarsSet(data.vars, "filetype", "image/pwg-raster");
+                  _ippVarsSet(data->vars, "filetype", "image/pwg-raster");
                 else if (!_cups_strcasecmp(ext, ".tif") ||
                          !_cups_strcasecmp(ext, ".tiff"))
-                  _ippVarsSet(data.vars, "filetype", "image/tiff");
+                  _ippVarsSet(data->vars, "filetype", "image/tiff");
                 else if (!_cups_strcasecmp(ext, ".txt") ||
                          !_cups_strcasecmp(ext, ".txt.gz"))
-                  _ippVarsSet(data.vars, "filetype", "text/plain");
+                  _ippVarsSet(data->vars, "filetype", "text/plain");
                 else if (!_cups_strcasecmp(ext, ".urf") ||
                          !_cups_strcasecmp(ext, ".urf.gz"))
-                  _ippVarsSet(data.vars, "filetype", "image/urf");
+                  _ippVarsSet(data->vars, "filetype", "image/urf");
                 else if (!_cups_strcasecmp(ext, ".xps"))
-                  _ippVarsSet(data.vars, "filetype", "application/openxps");
+                  _ippVarsSet(data->vars, "filetype", "application/openxps");
                 else
-		  _ippVarsSet(data.vars, "filetype", "application/octet-stream");
+		  _ippVarsSet(data->vars, "filetype", "application/octet-stream");
               }
               else
               {
@@ -582,12 +589,12 @@ main(int  argc,				/* I - Number of command-line args */
                 * Use the "auto-type" MIME media type...
                 */
 
-		_ippVarsSet(data.vars, "filetype", "application/octet-stream");
+		_ippVarsSet(data->vars, "filetype", "application/octet-stream");
               }
 	      break;
 
           case 'h' : /* Validate response headers */
-              data.validate_headers = 1;
+              data->validate_headers = 1;
               break;
 
           case 'i' : /* Test every N seconds */
@@ -608,7 +615,7 @@ main(int  argc,				/* I - Number of command-line args */
 		}
               }
 
-              if ((data.output == IPPTOOL_OUTPUT_PLIST || data.output == IPPTOOL_OUTPUT_IPPSERVER) && interval)
+              if ((data->output == IPPTOOL_OUTPUT_PLIST || data->output == IPPTOOL_OUTPUT_IPPSERVER) && interval)
 	      {
 	        _cupsLangPuts(stderr, _("ipptool: \"-i\" and \"-n\" are incompatible with \"--ippserver\", \"-P\", and \"-X\"."));
 		usage();
@@ -616,11 +623,11 @@ main(int  argc,				/* I - Number of command-line args */
 	      break;
 
           case 'j' : /* JSON output */
-              data.output = IPPTOOL_OUTPUT_JSON;
+              data->output = IPPTOOL_OUTPUT_JSON;
               break;
 
           case 'l' : /* List as a table */
-              data.output = IPPTOOL_OUTPUT_LIST;
+              data->output = IPPTOOL_OUTPUT_LIST;
               break;
 
           case 'n' : /* Repeat count */
@@ -634,7 +641,7 @@ main(int  argc,				/* I - Number of command-line args */
 	      else
 		repeat = atoi(argv[i]);
 
-              if ((data.output == IPPTOOL_OUTPUT_PLIST || data.output == IPPTOOL_OUTPUT_IPPSERVER) && repeat)
+              if ((data->output == IPPTOOL_OUTPUT_PLIST || data->output == IPPTOOL_OUTPUT_IPPSERVER) && repeat)
 	      {
 	        _cupsLangPuts(stderr, _("ipptool: \"-i\" and \"-n\" are incompatible with \"--ippserver\", \"-P\", and \"-X\"."));
 		usage();
@@ -642,15 +649,15 @@ main(int  argc,				/* I - Number of command-line args */
 	      break;
 
           case 'q' : /* Be quiet */
-              data.output = IPPTOOL_OUTPUT_QUIET;
+              data->output = IPPTOOL_OUTPUT_QUIET;
               break;
 
           case 't' : /* CUPS test output */
-              data.output = IPPTOOL_OUTPUT_TEST;
+              data->output = IPPTOOL_OUTPUT_TEST;
               break;
 
           case 'v' : /* Be verbose */
-	      data.verbosity ++;
+	      data->verbosity ++;
 	      break;
 
 	  default :
@@ -669,7 +676,7 @@ main(int  argc,				/* I - Number of command-line args */
       * Set URI...
       */
 
-      if (data.vars->uri)
+      if (data->vars->uri)
       {
         _cupsLangPuts(stderr, _("ipptool: May only specify a single URI."));
         usage();
@@ -677,17 +684,17 @@ main(int  argc,				/* I - Number of command-line args */
 
 #ifdef HAVE_TLS
       if (!strncmp(argv[i], "ipps://", 7) || !strncmp(argv[i], "https://", 8))
-        data.encryption = HTTP_ENCRYPTION_ALWAYS;
+        data->encryption = HTTP_ENCRYPTION_ALWAYS;
 #endif /* HAVE_TLS */
 
-      if (!_ippVarsSet(data.vars, "uri", argv[i]))
+      if (!_ippVarsSet(data->vars, "uri", argv[i]))
       {
         _cupsLangPrintf(stderr, _("ipptool: Bad URI \"%s\"."), argv[i]);
         return (1);
       }
 
-      if (data.vars->username[0] && data.vars->password)
-	cupsSetPasswordCB(_ippVarsPasswordCB, data.vars);
+      if (data->vars->username[0] && data->vars->password)
+	cupsSetPasswordCB(_ippVarsPasswordCB, data->vars);
     }
     else
     {
@@ -695,7 +702,7 @@ main(int  argc,				/* I - Number of command-line args */
       * Run test...
       */
 
-      if (!data.vars->uri)
+      if (!data->vars->uri)
       {
         _cupsLangPuts(stderr, _("ipptool: URI required before test file."));
         _cupsLangPuts(stderr, argv[i]);
@@ -722,26 +729,26 @@ main(int  argc,				/* I - Number of command-line args */
         _cupsLangPrintf(stderr, _("%s: Unable to open \"%s\": %s"), "ipptool", testfile, strerror(errno));
         status = 1;
       }
-      else if (!do_tests(testfile, &data))
+      else if (!do_tests(testfile, data))
         status = 1;
     }
   }
 
-  if (!data.vars->uri || !testfile)
+  if (!data->vars->uri || !testfile)
     usage();
 
  /*
   * Loop if the interval is set...
   */
 
-  if (data.output == IPPTOOL_OUTPUT_PLIST)
-    print_xml_trailer(&data, !status, NULL);
+  if (data->output == IPPTOOL_OUTPUT_PLIST)
+    print_xml_trailer(data, !status, NULL);
   else if (interval > 0 && repeat > 0)
   {
     while (repeat > 1)
     {
       usleep((useconds_t)interval);
-      do_tests(testfile, &data);
+      do_tests(testfile, data);
       repeat --;
     }
   }
@@ -750,20 +757,20 @@ main(int  argc,				/* I - Number of command-line args */
     for (;;)
     {
       usleep((useconds_t)interval);
-      do_tests(testfile, &data);
+      do_tests(testfile, data);
     }
   }
 
-  if ((data.output == IPPTOOL_OUTPUT_TEST || (data.output == IPPTOOL_OUTPUT_PLIST && data.outfile)) && data.test_count > 1)
+  if ((data->output == IPPTOOL_OUTPUT_TEST || (data->output == IPPTOOL_OUTPUT_PLIST && data->outfile)) && data->test_count > 1)
   {
    /*
     * Show a summary report if there were multiple tests...
     */
 
-    cupsFilePrintf(cupsFileStdout(), "\nSummary: %d tests, %d passed, %d failed, %d skipped\nScore: %d%%\n", data.test_count, data.pass_count, data.fail_count, data.skip_count, 100 * (data.pass_count + data.skip_count) / data.test_count);
+    cupsFilePrintf(cupsFileStdout(), "\nSummary: %d tests, %d passed, %d failed, %d skipped\nScore: %d%%\n", data->test_count, data->pass_count, data->fail_count, data->skip_count, 100 * (data->pass_count + data->skip_count) / data->test_count);
   }
 
-  cupsFileClose(data.outfile);
+  cupsFileClose(data->outfile);
 
  /*
   * Exit...
@@ -962,6 +969,9 @@ do_monitor_printer_state(
   size_t	num_pattrs;		// Number of printer attributes
   const char	*pattrs[100];		// Printer attributes we care about
 
+
+  if (getenv("IPPTOOL_DEBUG"))
+    fprintf(stderr, "ipptool: Monitoring printer '%s' in the background.\n", data->monitor_uri);
 
   // Connect to the printer...
   if (httpSeparateURI(HTTP_URI_CODING_ALL, data->monitor_uri, scheme, sizeof(scheme), userpass, sizeof(userpass), host, sizeof(host), &port, resource, sizeof(resource)) < HTTP_URI_STATUS_OK)
@@ -1197,13 +1207,15 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
   char		temp[1024];		/* Temporary string */
   cups_file_t	*reqfile;		/* File to send */
   ssize_t	bytes;			/* Bytes read/written */
-  char		buffer[1024 * 1024];	/* Copy buffer */
   size_t	widths[200];		/* Width of columns */
   const char	*error;			/* Current error */
 
 
   if (Cancel)
     return (0);
+
+  if (getenv("IPPTOOL_DEBUG"))
+    fprintf(stderr, "ipptool: Doing test '%s', num_expects=%u, num_statuses=%u.\n", data->name, (unsigned)data->num_expects, (unsigned)data->num_statuses);
 
  /*
   * Show any PAUSE message, as needed...
@@ -1334,6 +1346,9 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
     if (data->delay > 0)
       usleep(data->delay);
 
+    if (getenv("IPPTOOL_DEBUG"))
+      fprintf(stderr, "ipptool: Sending %s request to '%s'.\n", ippOpString(ippGetOperation(request)), data->resource);
+
     data->delay = data->repeat_interval;
     repeat_count ++;
 
@@ -1361,7 +1376,7 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
 	* Read the file to get the uncompressed file size...
 	*/
 
-	while ((bytes = cupsFileRead(reqfile, buffer, sizeof(buffer))) > 0)
+	while ((bytes = cupsFileRead(reqfile, data->buffer, sizeof(data->buffer))) > 0)
 	  length += (size_t)bytes;
 
 	cupsFileClose(reqfile);
@@ -1392,9 +1407,9 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
 	  // Send attached file...
 	  if ((reqfile = cupsFileOpen(data->file, "r")) != NULL)
 	  {
-	    while (!Cancel && (bytes = cupsFileRead(reqfile, buffer, sizeof(buffer))) > 0)
+	    while (!Cancel && (bytes = cupsFileRead(reqfile, data->buffer, sizeof(data->buffer))) > 0)
 	    {
-	      if ((status = cupsWriteRequestData(data->http, buffer, (size_t)bytes)) != HTTP_STATUS_CONTINUE)
+	      if ((status = cupsWriteRequestData(data->http, data->buffer, (size_t)bytes)) != HTTP_STATUS_CONTINUE)
 		break;
             }
 
@@ -1402,8 +1417,8 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
 	  }
 	  else
 	  {
-	    snprintf(buffer, sizeof(buffer), "%s: %s", data->file, strerror(errno));
-	    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, buffer, 0);
+	    snprintf(data->buffer, sizeof(data->buffer), "%s: %s", data->file, strerror(errno));
+	    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, data->buffer, 0);
 
 	    status = HTTP_STATUS_ERROR;
 	  }
@@ -1793,9 +1808,9 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
 	  }
 
 	  if (found)
-	    ippAttributeString(found, buffer, sizeof(buffer));
+	    ippAttributeString(found, data->buffer, sizeof(data->buffer));
 
-	  if (found && expect->with_value_from && !with_value_from(NULL, ippFindAttribute(response, expect->with_value_from, IPP_TAG_ZERO), found, buffer, sizeof(buffer)))
+	  if (found && expect->with_value_from && !with_value_from(NULL, ippFindAttribute(response, expect->with_value_from, IPP_TAG_ZERO), found, data->buffer, sizeof(data->buffer)))
 	  {
 	    if (expect->define_no_match)
 	      _ippVarsSet(data->vars, expect->define_no_match, "1");
@@ -1803,7 +1818,7 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
 	    {
 	      add_stringf(data->errors, "EXPECTED: %s WITH-VALUES-FROM %s", expect->name, expect->with_value_from);
 
-	      with_value_from(data->errors, ippFindAttribute(response, expect->with_value_from, IPP_TAG_ZERO), found, buffer, sizeof(buffer));
+	      with_value_from(data->errors, ippFindAttribute(response, expect->with_value_from, IPP_TAG_ZERO), found, data->buffer, sizeof(data->buffer));
 	    }
 
 	    if (expect->repeat_no_match && repeat_count < expect->repeat_limit)
@@ -1811,7 +1826,7 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
 
 	    break;
 	  }
-	  else if (found && !with_value(data, NULL, expect->with_value, expect->with_flags, found, buffer, sizeof(buffer)))
+	  else if (found && !with_value(data, NULL, expect->with_value, expect->with_flags, found, data->buffer, sizeof(data->buffer)))
 	  {
 	    if (expect->define_no_match)
 	      _ippVarsSet(data->vars, expect->define_no_match, "1");
@@ -1823,7 +1838,7 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
 	      else
 		add_stringf(data->errors, "EXPECTED: %s %s \"%s\"", expect->name, with_flags_string(expect->with_flags), expect->with_value);
 
-	      with_value(data, data->errors, expect->with_value, expect->with_flags, found, buffer, sizeof(buffer));
+	      with_value(data, data->errors, expect->with_value, expect->with_flags, found, data->buffer, sizeof(data->buffer));
 	    }
 
 	    if (expect->repeat_no_match && repeat_count < expect->repeat_limit)
@@ -1888,14 +1903,14 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
 	      {
 		case IPP_TAG_ENUM :
 		case IPP_TAG_INTEGER :
-		    snprintf(buffer, sizeof(buffer), "%d", ippGetInteger(found, last));
+		    snprintf(data->buffer, sizeof(data->buffer), "%d", ippGetInteger(found, last));
 		    break;
 
 		case IPP_TAG_BOOLEAN :
 		    if (ippGetBoolean(found, last))
-		      strlcpy(buffer, "true", sizeof(buffer));
+		      strlcpy(data->buffer, "true", sizeof(data->buffer));
 		    else
-		      strlcpy(buffer, "false", sizeof(buffer));
+		      strlcpy(data->buffer, "false", sizeof(data->buffer));
 		    break;
 
 		case IPP_TAG_RESOLUTION :
@@ -1907,9 +1922,9 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
 		      xres = ippGetResolution(found, last, &yres, &units);
 
 		      if (xres == yres)
-			snprintf(buffer, sizeof(buffer), "%d%s", xres, units == IPP_RES_PER_INCH ? "dpi" : "dpcm");
+			snprintf(data->buffer, sizeof(data->buffer), "%d%s", xres, units == IPP_RES_PER_INCH ? "dpi" : "dpcm");
 		      else
-			snprintf(buffer, sizeof(buffer), "%dx%d%s", xres, yres, units == IPP_RES_PER_INCH ? "dpi" : "dpcm");
+			snprintf(data->buffer, sizeof(data->buffer), "%dx%d%s", xres, yres, units == IPP_RES_PER_INCH ? "dpi" : "dpcm");
 		    }
 		    break;
 
@@ -1923,16 +1938,16 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
 		case IPP_TAG_TEXTLANG :
 		case IPP_TAG_URI :
 		case IPP_TAG_URISCHEME :
-		    strlcpy(buffer, ippGetString(found, last, NULL), sizeof(buffer));
+		    strlcpy(data->buffer, ippGetString(found, last, NULL), sizeof(data->buffer));
 		    break;
 
 		default :
-		    ippAttributeString(found, buffer, sizeof(buffer));
+		    ippAttributeString(found, data->buffer, sizeof(data->buffer));
 		    break;
 	      }
 	    }
 
-	    _ippVarsSet(data->vars, expect->define_value, buffer);
+	    _ippVarsSet(data->vars, expect->define_value, data->buffer);
 	  }
 
 	  if (found && expect->repeat_match &&
@@ -2513,7 +2528,7 @@ generate_file(
   cups_raster_t		*ras;		// Raster stream
   cups_page_header_t	header;		// Raster page header
   pwg_media_t		*media;		// Media information
-  
+
 
   // Set the output mode...
   if (!strcmp(params->format, "image/pwg-raster"))
@@ -4974,6 +4989,9 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
 	value[1024],			/* Value string */
 	*ptr;				/* Pointer into value */
 
+
+  if (getenv("IPPTOOL_DEBUG"))
+    fprintf(stderr, "ipptool: token='%s'\n", token);
 
   if (!token)
   {

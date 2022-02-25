@@ -184,6 +184,9 @@ static void		resolve_callback(AvahiServiceResolver *res,
 static void		set_service_uri(ippfind_srv_t *service);
 static void		show_usage(void) _CUPS_NORETURN;
 static void		show_version(void) _CUPS_NORETURN;
+#if _WIN32
+static char		*win32_escape_dup(const char *s);
+#endif // _WIN32
 
 
 /*
@@ -2015,13 +2018,20 @@ exec_program(ippfind_srv_t *service,	/* I - Service */
       }
 
       *tptr = '\0';
+#if _WIN32
+      myargv[i] = win32_escape_dup(temp);
+    }
+    else
+      myargv[i] = win32_escape_dup(args[i]);
+#else
       myargv[i] = strdup(temp);
     }
     else
       myargv[i] = strdup(args[i]);
+#endif // _WIN32
   }
 
-#ifdef _WIN32
+#if _WIN32
   if (getenv("IPPFIND_DEBUG"))
   {
     printf("\nProgram:\n    %s\n", args[0]);
@@ -2846,3 +2856,96 @@ show_version(void)
 
   exit(IPPFIND_EXIT_TRUE);
 }
+
+
+//
+// 'win32_escape_dup()' - Escape and duplicate a string.
+//
+// This function puts the string in double quotes, escaping characters in the
+// string as needed using Windows' insane command-line argument parsing rules.
+//
+
+#if _WIN32
+static char *				// O - Duplicated string
+win32_escape_dup(const char *s)		// I - Original string
+{
+  char		*d,			// Output string
+		*dptr;			// Pointer into output string
+  size_t	dlen;			// Length of output string
+  const char	*sptr;			// Pointer into original string
+
+
+  // Figure out the length of the escaped string...
+  for (dlen = 2, sptr = s; *sptr; sptr ++)
+  {
+    if (*sptr == '\\')
+    {
+      if (sptr[1] == '\"' || sptr[1] == '\\')
+      {
+        // \" and \\ need to be converted to \\\" or \\\\
+        dlen += 4;
+        sptr ++;
+      }
+      else
+      {
+        // A lone \ can stand on its own...
+        dlen ++;
+      }
+    }
+    else if (*sptr == '\"')
+    {
+      // Need to replace " with ""...
+      dlen += 2;
+    }
+    else
+    {
+      // Not a special character so it is fine on its own...
+      dlen ++;
+    }
+  }
+
+  // Allocate memory (plus nul)...
+  if ((d = calloc(1, dlen + 1)) == NULL)
+    return (NULL);
+
+  // Copy and escape...
+  *d = '\"';
+  for (dptr = d + 1, sptr = s; *sptr; sptr ++)
+  {
+    if (*sptr == '\\')
+    {
+      if (sptr[1] == '\"' || sptr[1] == '\\')
+      {
+        // \" and \\ need to be converted to \\\" or \\\\
+        sptr ++;
+
+        *dptr++ = '\\';
+        *dptr++ = '\\';
+        *dptr++ = '\\';
+        *dptr++ = *sptr;
+      }
+      else
+      {
+        // A lone \ can stand on its own...
+        *dptr++ = '\\';
+      }
+    }
+    else if (*sptr == '\"')
+    {
+      // Need to replace " with ""...
+      *dptr++ = '\"';
+      *dptr++ = '\"';
+    }
+    else
+    {
+      // Not a special character so it is fine on its own...
+      *dptr++ = *sptr;
+    }
+  }
+
+  *dptr++ = '\"';
+  *dptr   = '\0';
+
+  return (d);
+}
+#endif // _WIN32
