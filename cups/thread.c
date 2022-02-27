@@ -252,7 +252,7 @@ cupsThreadCreate(
   thread->arg  = arg;
   thread->h    = (HANDLE)_beginthreadex(NULL, 0, (LPTHREAD_START_ROUTINE)win32_wrapper, thread, 0, NULL);
 
-  if (thread->h == 0 || t->h == (HANDLE)-1)
+  if (thread->h == 0 || thread->h == (HANDLE)-1)
   {
     free(thread);
     return (NULL);
