@@ -21,6 +21,9 @@
 //
 
 #if _WIN32
+#  include <setjmp.h>
+
+
 //
 // Private structures...
 //
