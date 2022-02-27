@@ -1,7 +1,7 @@
 /*
  * TLS support code for CUPS on macOS.
  *
- * Copyright © 2021 by OpenPrinting
+ * Copyright © 2021-2022 by OpenPrinting
  * Copyright © 2007-2021 by Apple Inc.
  * Copyright © 1997-2007 by Easy Software Products, all rights reserved.
  *
@@ -45,7 +45,7 @@ static SecIdentityRef	tls_selfsigned = NULL;
 #endif /* TARGET_OS_OSX */
 static char		*tls_keypath = NULL;
 					/* Server cert keychain path */
-static _cups_mutex_t	tls_mutex = _CUPS_MUTEX_INITIALIZER;
+static cups_mutex_t	tls_mutex = CUPS_MUTEX_INITIALIZER;
 					/* Mutex for keychain/certs */
 static int		tls_options = -1,/* Options for TLS connections */
 			tls_min_version = _HTTP_TLS_1_0,
@@ -285,14 +285,14 @@ cupsMakeServerCredentials(
 
   if (ident)
   {
-    _cupsMutexLock(&tls_mutex);
+    cupsMutexLock(&tls_mutex);
 
     if (tls_selfsigned)
       CFRelease(ident);
     else
       tls_selfsigned = ident;
 
-    _cupsMutexUnlock(&tls_mutex);
+    cupsMutexUnlock(&tls_mutex);
 
 #  if 0 /* Someday perhaps SecItemCopyMatching will work for identities, at which point  */
     CFTypeRef itemKeys[] = { kSecClass, kSecAttrLabel, kSecValueRef };
@@ -371,7 +371,7 @@ cupsSetServerCredentials(
     return (0);
   }
 
-  _cupsMutexLock(&tls_mutex);
+  cupsMutexLock(&tls_mutex);
 
  /*
   * Close any keychain that is currently open...
@@ -395,7 +395,7 @@ cupsSetServerCredentials(
   tls_auto_create = auto_create;
   tls_common_name = _cupsStrAlloc(common_name);
 
-  _cupsMutexUnlock(&tls_mutex);
+  cupsMutexUnlock(&tls_mutex);
 
   DEBUG_puts("1cupsSetServerCredentials: Opened keychain, returning 1.");
   return (1);
@@ -1882,7 +1882,7 @@ http_cdsa_copy_server(
     goto cleanup;
   }
 
-  _cupsMutexLock(&tls_mutex);
+  cupsMutexLock(&tls_mutex);
 
   err = SecKeychainGetStatus(tls_keychain, &status);
 
@@ -1910,7 +1910,7 @@ http_cdsa_copy_server(
 
   err = SecItemCopyMatching(query, (CFTypeRef *)&identity);
 
-  _cupsMutexUnlock(&tls_mutex);
+  cupsMutexUnlock(&tls_mutex);
 
   if (err != noErr)
   {

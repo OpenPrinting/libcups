@@ -179,7 +179,7 @@ xcopy /I/Y "$(TargetPath)"                                                      
     <ClInclude Include="..\cups\raster-private.h" />
     <ClInclude Include="..\cups\raster.h" />
     <ClInclude Include="..\cups\string-private.h" />
-    <ClInclude Include="..\cups\thread-private.h" />
+    <ClInclude Include="..\cups\thread.h" />
     <ClInclude Include="..\cups\transcode.h" />
     <ClInclude Include="..\cups\versioning.h" />
     <ClInclude Include="config.h" />

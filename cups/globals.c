@@ -1,7 +1,7 @@
 /*
  * Global variable access routines for CUPS.
  *
- * Copyright © 2021 by OpenPrinting.
+ * Copyright © 2021-2022 by OpenPrinting.
  * Copyright © 2007-2019 by Apple Inc.
  * Copyright © 1997-2007 by Easy Software Products, all rights reserved.
  *
@@ -27,13 +27,13 @@
 static int		cups_global_index = 0;
 					/* Next thread number */
 #endif /* DEBUG */
-static _cups_threadkey_t cups_globals_key = _CUPS_THREADKEY_INITIALIZER;
+static cups_threadkey_t cups_globals_key = CUPS_THREADKEY_INITIALIZER;
 					/* Thread local storage key */
 #ifndef _WIN32
 static pthread_once_t	cups_globals_key_once = PTHREAD_ONCE_INIT;
 					/* One-time initialization object */
 #endif /* !_WIN32 */
-static _cups_mutex_t	cups_global_mutex = _CUPS_MUTEX_INITIALIZER;
+static cups_mutex_t	cups_global_mutex = CUPS_MUTEX_INITIALIZER;
 					/* Global critical section */
 
 
@@ -58,7 +58,7 @@ static void		cups_globals_init(void);
 void
 _cupsGlobalLock(void)
 {
-  _cupsMutexLock(&cups_global_mutex);
+  cupsMutexLock(&cups_global_mutex);
 }
 
 
@@ -84,14 +84,14 @@ _cupsGlobals(void)
   * See if we have allocated the data yet...
   */
 
-  if ((cg = (_cups_globals_t *)_cupsThreadGetData(cups_globals_key)) == NULL)
+  if ((cg = (_cups_globals_t *)cupsThreadGetData(cups_globals_key)) == NULL)
   {
    /*
     * No, allocate memory as set the pointer for the key...
     */
 
     if ((cg = cups_globals_alloc()) != NULL)
-      _cupsThreadSetData(cups_globals_key, cg);
+      cupsThreadSetData(cups_globals_key, cg);
   }
 
  /*
@@ -109,7 +109,7 @@ _cupsGlobals(void)
 void
 _cupsGlobalUnlock(void)
 {
-  _cupsMutexUnlock(&cups_global_mutex);
+  cupsMutexUnlock(&cups_global_mutex);
 }
 
 

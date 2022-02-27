@@ -1,236 +1,461 @@
-/*
- * Threading primitives for CUPS.
- *
- * Copyright © 2021 by OpenPrinting.
- * Copyright © 2009-2018 by Apple Inc.
- *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more
- * information.
- */
+//
+// Threading primitives for CUPS.
+//
+// Copyright © 2021-2022 by OpenPrinting.
+// Copyright © 2009-2018 by Apple Inc.
+//
+// Licensed under Apache License v2.0.  See the file "LICENSE" for more
+// information.
+//
 
-/*
- * Include necessary headers...
- */
+//
+// Include necessary headers...
+//
 
 #include "cups-private.h"
-#include "thread-private.h"
+#include "thread.h"
 
+
+//
+// Windows threading...
+//
 
 #if _WIN32
-#  include <process.h>
+//
+// Private structures...
+//
+
+struct _cups_thread_s
+{
+  HANDLE	h;			// Thread handle
+  void		*(*func)(void *);	// Thread start function
+  void		*arg;			// Argument to pass to function
+  void		*retval;		// Return value from function
+  bool		canceled;		// Is the thread canceled?
+  jmp_buf	jumpbuf;		// Jump buffer for error recovery
+};
 
 
-/*
- * '_cupsCondBroadcast()' - Wake up waiting threads.
- */
+//
+// Local functions...
+//
+
+static cups_thread_t	win32_self(void);
+static void		win32_testcancel(void);
+static DWORD		win32_tls(void);
+static int		win32_wrapper(cups_thread_t thread);
+
+
+//
+// 'cupsCondBroadcast()' - Wake up waiting threads.
+//
 
 void
-_cupsCondBroadcast(_cups_cond_t *cond)	/* I - Condition */
+cupsCondBroadcast(cups_cond_t *cond)	// I - Condition variable
 {
-  // TODO: Implement me
+  if (cond)
+    WakeAllConditionVariable(cond);
 }
 
 
-/*
- * '_cupsCondInit()' - Initialize a condition variable.
- */
+//
+// 'cupsCondDestroy()' - Destroy a condition variable.
+//
 
 void
-_cupsCondInit(_cups_cond_t *cond)	/* I - Condition */
+cupsCondDestroy(cups_cond_t *cond)	// I - Condition variable
 {
-  // TODO: Implement me
+  (void)cond;
 }
 
 
-/*
- * '_cupsCondWait()' - Wait for a condition with optional timeout.
- */
+//
+// 'cupsCondInit()' - Initialize a condition variable.
+//
 
 void
-_cupsCondWait(_cups_cond_t  *cond,	/* I - Condition */
-              _cups_mutex_t *mutex,	/* I - Mutex */
-	      double        timeout)	/* I - Timeout in seconds (0 or negative for none) */
+cupsCondInit(cups_cond_t *cond)		// I - Condition variable
 {
-  // TODO: Implement me
+  if (cond)
+    InitializeConditionVariable(cond);
 }
 
 
-/*
- * '_cupsMutexInit()' - Initialize a mutex.
- */
+//
+// 'cupsCondWait()' - Wait for a condition with optional timeout.
+//
 
 void
-_cupsMutexInit(_cups_mutex_t *mutex)	/* I - Mutex */
+cupsCondWait(cups_cond_t  *cond,	// I - Condition
+	     cups_mutex_t *mutex,	// I - Mutex
+	     double       timeout)	// I - Timeout in seconds (`0` or negative for none)
 {
-  InitializeCriticalSection(&mutex->m_criticalSection);
-  mutex->m_init = 1;
-}
+  win32_testcancel();
 
-
-/*
- * '_cupsMutexLock()' - Lock a mutex.
- */
-
-void
-_cupsMutexLock(_cups_mutex_t *mutex)	/* I - Mutex */
-{
-  if (!mutex->m_init)
+  if (cond && mutex)
   {
-    _cupsGlobalLock();
+    if (timeout > 0.0)
+      SleepConditionVariableCS(cond, mutex, (int)(1000.0 * timeout));
+    else
+      SleepConditionVariableCS(cond, mutex, INFINITE);
+  }
+}
 
-    if (!mutex->m_init)
-    {
-      InitializeCriticalSection(&mutex->m_criticalSection);
-      mutex->m_init = 1;
-    }
 
-    _cupsGlobalUnlock();
+//
+// 'cupsMutexDestroy()' - Destroy a mutex.
+//
+
+void
+cupsMutexDestroy(cups_mutex_t *mutex)	// I - Mutex
+{
+  (void)mutex;
+}
+
+
+//
+// 'cupsMutexInit()' - Initialize a mutex.
+//
+
+void
+cupsMutexInit(cups_mutex_t *mutex)	// I - Mutex
+{
+  if (mutex)
+    InitializeCriticalSection(mutex);
+}
+
+
+//
+// 'cupsMutexLock()' - Lock a mutex.
+//
+
+void
+cupsMutexLock(cups_mutex_t *mutex)	// I - Mutex
+{
+  if (mutex)
+    EnterCriticalSection(mutex);
+}
+
+
+//
+// 'cupsMutexUnlock()' - Unlock a mutex.
+//
+
+void
+cupsMutexUnlock(cups_mutex_t *mutex)	// I - Mutex
+{
+  if (mutex)
+    LeaveCriticalSection(mutex);
+}
+
+
+//
+// 'cupsRWDestroy()' - Destroy a reader/writer lock.
+//
+
+void
+cupsRWDestroy(cups_rwlock_t *rwlock)	// I - Reader/writer lock
+{
+  (void)rwlock;
+}
+
+
+//
+// 'cupsRWInit()' - Initialize a reader/writer lock.
+//
+
+void
+cupsRWInit(cups_rwlock_t *rwlock)	// I - Reader/writer lock
+{
+  if (rwlock)
+    InitializeSRWLock(rwlock);
+}
+
+
+//
+// 'cupsRWLockRead()' - Acquire a reader/writer lock for reading.
+//
+
+void
+cupsRWLockRead(cups_rwlock_t *rwlock)	// I - Reader/writer lock
+{
+  if (rwlock)
+    AcquireSRWLockShared(rwlock);
+}
+
+
+//
+// 'cupsRWLockWrite()' - Acquire a reader/writer lock for writing.
+//
+
+void
+cupsRWLockWrite(cups_rwlock_t *rwlock)// I - Reader/writer lock
+{
+  if (rwlock)
+    AcquireSRWLockExclusive(rwlock);
+}
+
+
+//
+// 'cupsRWUnlock()' - Release a reader/writer lock.
+//
+
+void
+cupsRWUnlock(cups_rwlock_t *rwlock)	// I - Reader/writer lock
+{
+  if (rwlock)
+  {
+    void	*val = *(void **)rwlock;// Lock value
+
+    if (val == (void *)1)
+      ReleaseSRWLockExclusive(rwlock);
+    else
+      ReleaseSRWLockShared(rwlock);
+  }
+}
+
+
+//
+// 'cupsThreadCancel()' - Cancel (kill) a thread.
+//
+
+void
+cupsThreadCancel(cups_thread_t thread)// I - Thread ID
+{
+  if (thread)
+    thread->canceled = true;
+}
+
+
+//
+// 'cupsThreadCreate()' - Create a thread.
+//
+
+cups_thread_t				// O - Thread ID
+cupsThreadCreate(
+    cups_thread_func_t func,		// I - Entry point
+    void               *arg)		// I - Entry point context
+{
+  cups_thread_t	thread;			// Thread data
+
+
+  if (!func)
+    return (NULL);
+
+  if ((thread = (cups_thread_t)calloc(1, sizeof(struct _cups_thread_s))) == NULL)
+    return (NULL);
+
+  thread->func = func;
+  thread->arg  = arg;
+  thread->h    = (HANDLE)_beginthreadex(NULL, 0, (LPTHREAD_START_ROUTINE)win32_wrapper, thread, 0, NULL);
+
+  if (thread->h == 0 || t->h == (HANDLE)-1)
+  {
+    free(thread);
+    return (NULL);
   }
 
-  EnterCriticalSection(&mutex->m_criticalSection);
+  return (thread);
 }
 
 
-/*
- * '_cupsMutexUnlock()' - Unlock a mutex.
- */
+//
+// 'cupsThreadDetach()' - Tell the OS that the thread is running independently.
+//
 
 void
-_cupsMutexUnlock(_cups_mutex_t *mutex)	/* I - Mutex */
+cupsThreadDetach(cups_thread_t thread)// I - Thread ID
 {
-  LeaveCriticalSection(&mutex->m_criticalSection);
+  if (thread)
+  {
+    CloseHandle(thread->h);
+    thread->h = 0;
+  }
 }
 
 
-/*
- * '_cupsRWInit()' - Initialize a reader/writer lock.
- */
+//
+// 'cupsThreadWait()' - Wait for a thread to exit.
+//
+
+void *					// O - Return value
+cupsThreadWait(cups_thread_t thread)	// I - Thread ID
+{
+  void	*retval;			// Return value
+
+
+  if (!thread)
+    return (NULL);
+
+  win32_testcancel();
+
+  if (thread->h)
+  {
+    WaitForSingleObject(thread->h, INFINITE);
+    CloseHandle(thread->h);
+  }
+
+  retval = thread->retval;
+
+  free(thread);
+
+  return (retval);
+}
+
+
+//
+// 'win32_self()' - Return the current thread.
+//
+
+cups_thread_t				// O - Thread
+win32_self(void)
+{
+  cups_thread_t	thread;			// Thread
+
+
+  if ((thread = TlsGetValue(win32_tls())) == NULL)
+  {
+    // Main thread, so create the info we need...
+    if ((thread = (cups_thread_t)calloc(1, sizeof(struct _cups_thread_s))) != NULL)
+    {
+      thread->h = GetCurrentThread();
+      TlsSetValue(win32_tls(), thread);
+
+      if (setjmp(thread->jumpbuf))
+      {
+        if (!thread->h)
+          free(thread);
+
+        _endthreadex(0);
+      }
+    }
+  }
+
+  return (thread);
+}
+
+
+//
+// 'win32_testcancel()' - Mark a safe cancellation point.
+//
 
 void
-_cupsRWInit(_cups_rwlock_t *rwlock)	/* I - Reader/writer lock */
+win32_testcancel(void)
 {
-  _cupsMutexInit((_cups_mutex_t *)rwlock);
+  cups_thread_t	thread;			// Current thread
+
+
+  // Go to the thread's exit handler if we've been canceled...
+  if ((thread = win32_self()) != NULL && thread->canceled)
+    longjmp(thread->jumpbuf, 1);
 }
 
 
-/*
- * '_cupsRWLockRead()' - Acquire a reader/writer lock for reading.
- */
+//
+// 'win32_tls()' - Get the thread local storage key.
+//
 
-void
-_cupsRWLockRead(_cups_rwlock_t *rwlock)	/* I - Reader/writer lock */
+static DWORD				// O - Key
+win32_tls(void)
 {
-  _cupsMutexLock((_cups_mutex_t *)rwlock);
+  static DWORD	tls = 0;		// Thread local storage key
+  static CRITICAL_SECTION tls_mutex = { (void*)-1, -1, 0, 0, 0, 0 };
+					// Lock for thread local storage access
+
+
+  EnterCriticalSection(&tls_mutex);
+  if (!tls)
+  {
+    if ((tls = TlsAlloc()) == TLS_OUT_OF_INDEXES)
+      abort();
+  }
+  LeaveCriticalSection(&tls_mutex);
+
+  return (tls);
 }
 
 
-/*
- * '_cupsRWLockWrite()' - Acquire a reader/writer lock for writing.
- */
+//
+// 'win32_wrapper()' - Wrapper function for a POSIX thread.
+//
 
-void
-_cupsRWLockWrite(_cups_rwlock_t *rwlock)/* I - Reader/writer lock */
+static int				// O - Exit status
+win32_wrapper(cups_thread_t thread)	// I - Thread
 {
-  _cupsMutexLock((_cups_mutex_t *)rwlock);
-}
+  TlsSetValue(win32_tls(), thread);
 
+  if (!setjmp(thread->jumpbuf))
+  {
+    // Call function in thread...
+    thread->retval = (thread->func)(thread->arg);
+  }
 
-/*
- * '_cupsRWUnlock()' - Release a reader/writer lock.
- */
+  // Clean up...
+  while (thread->h == (HANDLE)-1)
+  {
+    // win32_create hasn't finished initializing the handle...
+    YieldProcessor();
+    _ReadWriteBarrier();
+  }
 
-void
-_cupsRWUnlock(_cups_rwlock_t *rwlock)	/* I - Reader/writer lock */
-{
-  _cupsMutexUnlock((_cups_mutex_t *)rwlock);
-}
+  // Free if detached...
+  if (!thread->h)
+    free(thread);
 
-
-/*
- * '_cupsThreadCancel()' - Cancel (kill) a thread.
- */
-
-void
-_cupsThreadCancel(_cups_thread_t thread)/* I - Thread ID */
-{
-  // TODO: Implement me
-}
-
-
-/*
- * '_cupsThreadCreate()' - Create a thread.
- */
-
-_cups_thread_t				/* O - Thread ID */
-_cupsThreadCreate(
-    _cups_thread_func_t func,		/* I - Entry point */
-    void                *arg)		/* I - Entry point context */
-{
-  return (_beginthreadex(NULL, 0, (LPTHREAD_START_ROUTINE)func, arg, 0, NULL));
-}
-
-
-/*
- * '_cupsThreadDetach()' - Tell the OS that the thread is running independently.
- */
-
-void
-_cupsThreadDetach(_cups_thread_t thread)/* I - Thread ID */
-{
-  // TODO: Implement me
-  (void)thread;
-}
-
-
-/*
- * '_cupsThreadWait()' - Wait for a thread to exit.
- */
-
-void *					/* O - Return value */
-_cupsThreadWait(_cups_thread_t thread)	/* I - Thread ID */
-{
-  // TODO: Implement me
-  (void)thread;
-
-  return (NULL);
+  return (0);
 }
 
 
 #else
-/*
- * '_cupsCondBroadcast()' - Wake up waiting threads.
- */
+//
+// POSIX threading...
+//
+
+//
+// 'cupsCondBroadcast()' - Wake up waiting threads.
+//
 
 void
-_cupsCondBroadcast(_cups_cond_t *cond)	/* I - Condition */
+cupsCondBroadcast(cups_cond_t *cond)	// I - Condition
 {
   pthread_cond_broadcast(cond);
 }
 
 
-/*
- * '_cupsCondInit()' - Initialize a condition variable.
- */
+//
+// 'cupsCondDestroy()' - Destroy a condition variable.
+//
 
 void
-_cupsCondInit(_cups_cond_t *cond)	/* I - Condition */
+cupsCondDestroy(cups_cond_t *cond)	// I - Condition
+{
+  pthread_cond_destroy(cond);
+}
+
+
+//
+// 'cupsCondInit()' - Initialize a condition variable.
+//
+
+void
+cupsCondInit(cups_cond_t *cond)		// I - Condition
 {
   pthread_cond_init(cond, NULL);
 }
 
 
-/*
- * '_cupsCondWait()' - Wait for a condition with optional timeout.
- */
+//
+// 'cupsCondWait()' - Wait for a condition with optional timeout.
+//
 
 void
-_cupsCondWait(_cups_cond_t  *cond,	/* I - Condition */
-              _cups_mutex_t *mutex,	/* I - Mutex */
-	      double        timeout)	/* I - Timeout in seconds (0 or negative for none) */
+cupsCondWait(cups_cond_t  *cond,	// I - Condition
+	     cups_mutex_t *mutex,	// I - Mutex
+	     double       timeout)	// I - Timeout in seconds (`0` or negative for none)
 {
   if (timeout > 0.0)
   {
-    struct timespec abstime;		/* Timeout */
+    struct timespec abstime;		// Timeout
 
     clock_gettime(CLOCK_REALTIME, &abstime);
 
@@ -250,104 +475,127 @@ _cupsCondWait(_cups_cond_t  *cond,	/* I - Condition */
 }
 
 
-/*
- * '_cupsMutexInit()' - Initialize a mutex.
- */
+//
+// 'cupsMutexDestroy()' - Destroy a mutex.
+//
 
 void
-_cupsMutexInit(_cups_mutex_t *mutex)	/* I - Mutex */
+cupsMutexDestroy(cups_mutex_t *mutex)	// I - Mutex
+{
+  pthread_mutex_destroy(mutex);
+}
+
+
+//
+// 'cupsMutexInit()' - Initialize a mutex.
+//
+
+void
+cupsMutexInit(cups_mutex_t *mutex)	// I - Mutex
 {
   pthread_mutex_init(mutex, NULL);
 }
 
 
-/*
- * '_cupsMutexLock()' - Lock a mutex.
- */
+//
+// 'cupsMutexLock()' - Lock a mutex.
+//
 
 void
-_cupsMutexLock(_cups_mutex_t *mutex)	/* I - Mutex */
+cupsMutexLock(cups_mutex_t *mutex)	// I - Mutex
 {
   pthread_mutex_lock(mutex);
 }
 
 
-/*
- * '_cupsMutexUnlock()' - Unlock a mutex.
- */
+//
+// 'cupsMutexUnlock()' - Unlock a mutex.
+//
 
 void
-_cupsMutexUnlock(_cups_mutex_t *mutex)	/* I - Mutex */
+cupsMutexUnlock(cups_mutex_t *mutex)	// I - Mutex
 {
   pthread_mutex_unlock(mutex);
 }
 
 
-/*
- * '_cupsRWInit()' - Initialize a reader/writer lock.
- */
+//
+// 'cupsRWDestroy()' - Destroy a reader/writer lock.
+//
 
 void
-_cupsRWInit(_cups_rwlock_t *rwlock)	/* I - Reader/writer lock */
+cupsRWDestroy(cups_rwlock_t *rwlock)	// I - Reader/writer lock
+{
+  pthread_rwlock_destroy(rwlock);
+}
+
+
+//
+// 'cupsRWInit()' - Initialize a reader/writer lock.
+//
+
+void
+cupsRWInit(cups_rwlock_t *rwlock)	// I - Reader/writer lock
 {
   pthread_rwlock_init(rwlock, NULL);
 }
 
 
-/*
- * '_cupsRWLockRead()' - Acquire a reader/writer lock for reading.
- */
+//
+// 'cupsRWLockRead()' - Acquire a reader/writer lock for reading.
+//
 
 void
-_cupsRWLockRead(_cups_rwlock_t *rwlock)	/* I - Reader/writer lock */
+cupsRWLockRead(cups_rwlock_t *rwlock)	// I - Reader/writer lock
 {
   pthread_rwlock_rdlock(rwlock);
 }
 
 
-/*
- * '_cupsRWLockWrite()' - Acquire a reader/writer lock for writing.
- */
+//
+// 'cupsRWLockWrite()' - Acquire a reader/writer lock for writing.
+//
 
 void
-_cupsRWLockWrite(_cups_rwlock_t *rwlock)/* I - Reader/writer lock */
+cupsRWLockWrite(cups_rwlock_t *rwlock)// I - Reader/writer lock
 {
   pthread_rwlock_wrlock(rwlock);
 }
 
 
-/*
- * '_cupsRWUnlock()' - Release a reader/writer lock.
- */
+//
+// 'cupsRWUnlock()' - Release a reader/writer lock.
+//
 
 void
-_cupsRWUnlock(_cups_rwlock_t *rwlock)	/* I - Reader/writer lock */
+cupsRWUnlock(cups_rwlock_t *rwlock)	// I - Reader/writer lock
 {
   pthread_rwlock_unlock(rwlock);
 }
 
 
-/*
- * '_cupsThreadCancel()' - Cancel (kill) a thread.
- */
+//
+// 'cupsThreadCancel()' - Cancel (kill) a thread.
+//
 
 void
-_cupsThreadCancel(_cups_thread_t thread)/* I - Thread ID */
+cupsThreadCancel(cups_thread_t thread)// I - Thread ID
 {
   pthread_cancel(thread);
 }
 
 
-/*
- * '_cupsThreadCreate()' - Create a thread.
- */
+//
+// 'cupsThreadCreate()' - Create a thread.
+//
 
-_cups_thread_t				/* O - Thread ID */
-_cupsThreadCreate(
-    _cups_thread_func_t func,		/* I - Entry point */
-    void                *arg)		/* I - Entry point context */
+cups_thread_t				// O - Thread
+cupsThreadCreate(
+    cups_thread_func_t func,		// I - Entry point
+    void               *arg)		// I - Entry point context
 {
-  pthread_t thread;
+  pthread_t thread;			// Thread
+
 
   if (pthread_create(&thread, NULL, (void *(*)(void *))func, arg))
     return (0);
@@ -356,25 +604,25 @@ _cupsThreadCreate(
 }
 
 
-/*
- * '_cupsThreadDetach()' - Tell the OS that the thread is running independently.
- */
+//
+// 'cupsThreadDetach()' - Tell the OS that the thread is running independently.
+//
 
 void
-_cupsThreadDetach(_cups_thread_t thread)/* I - Thread ID */
+cupsThreadDetach(cups_thread_t thread)// I - Thread ID
 {
   pthread_detach(thread);
 }
 
 
-/*
- * '_cupsThreadWait()' - Wait for a thread to exit.
- */
+//
+// 'cupsThreadWait()' - Wait for a thread to exit.
+//
 
-void *					/* O - Return value */
-_cupsThreadWait(_cups_thread_t thread)	/* I - Thread ID */
+void *					// O - Return value
+cupsThreadWait(cups_thread_t thread)	// I - Thread ID
 {
-  void	*ret;				/* Return value */
+  void	*ret;				// Return value
 
 
   if (pthread_join(thread, &ret))

@@ -1,10 +1,12 @@
 /*
  * I18N/language support for CUPS.
  *
- * Copyright 2007-2017 by Apple Inc.
- * Copyright 1997-2007 by Easy Software Products.
+ * Copyright © 2022 by OpenPrinting.
+ * Copyright © 2007-2017 by Apple Inc.
+ * Copyright © 1997-2007 by Easy Software Products.
  *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more information.
+ * Licensed under Apache License v2.0.  See the file "LICENSE" for more
+ * information.
  */
 
 /*
@@ -30,7 +32,7 @@
  * Local globals...
  */
 
-static _cups_mutex_t	lang_mutex = _CUPS_MUTEX_INITIALIZER;
+static cups_mutex_t	lang_mutex = CUPS_MUTEX_INITIALIZER;
 					/* Mutex to control access to cache */
 static cups_lang_t	*lang_cache = NULL;
 					/* Language string cache */
@@ -396,7 +398,7 @@ cupsLangFlush(void)
   * Free all languages in the cache...
   */
 
-  _cupsMutexLock(&lang_mutex);
+  cupsMutexLock(&lang_mutex);
 
   for (lang = lang_cache; lang != NULL; lang = next)
   {
@@ -416,7 +418,7 @@ cupsLangFlush(void)
 
   lang_cache = NULL;
 
-  _cupsMutexUnlock(&lang_mutex);
+  cupsMutexUnlock(&lang_mutex);
 }
 
 
@@ -429,12 +431,12 @@ cupsLangFlush(void)
 void
 cupsLangFree(cups_lang_t *lang)		/* I - Language to free */
 {
-  _cupsMutexLock(&lang_mutex);
+  cupsMutexLock(&lang_mutex);
 
   if (lang != NULL && lang->used > 0)
     lang->used --;
 
-  _cupsMutexUnlock(&lang_mutex);
+  cupsMutexUnlock(&lang_mutex);
 }
 
 
@@ -773,11 +775,11 @@ cupsLangGet(const char *language)	/* I - Language or locale */
   else
     strlcpy(real, langname, sizeof(real));
 
-  _cupsMutexLock(&lang_mutex);
+  cupsMutexLock(&lang_mutex);
 
   if ((lang = cups_cache_lookup(real, encoding)) != NULL)
   {
-    _cupsMutexUnlock(&lang_mutex);
+    cupsMutexUnlock(&lang_mutex);
 
     DEBUG_printf(("3cupsLangGet: Using cached copy of \"%s\"...", real));
 
@@ -801,7 +803,7 @@ cupsLangGet(const char *language)	/* I - Language or locale */
 
     if ((lang = calloc(sizeof(cups_lang_t), 1)) == NULL)
     {
-      _cupsMutexUnlock(&lang_mutex);
+      cupsMutexUnlock(&lang_mutex);
 
       return (NULL);
     }
@@ -835,7 +837,7 @@ cupsLangGet(const char *language)	/* I - Language or locale */
   * Return...
   */
 
-  _cupsMutexUnlock(&lang_mutex);
+  cupsMutexUnlock(&lang_mutex);
 
   return (lang);
 }
@@ -864,7 +866,7 @@ _cupsLangString(cups_lang_t *lang,	/* I - Language */
   if (!lang || !message || !*message)
     return (message);
 
-  _cupsMutexLock(&lang_mutex);
+  cupsMutexLock(&lang_mutex);
 
  /*
   * Load the message catalog if needed...
@@ -875,7 +877,7 @@ _cupsLangString(cups_lang_t *lang,	/* I - Language */
 
   s = _cupsMessageLookup(lang->strings, message);
 
-  _cupsMutexUnlock(&lang_mutex);
+  cupsMutexUnlock(&lang_mutex);
 
   return (s);
 }

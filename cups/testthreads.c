@@ -1,6 +1,7 @@
 /*
  * Threaded test program for CUPS.
  *
+ * Copyright © 2022 by OpenPrinting.
  * Copyright © 2012-2019 by Apple Inc.
  *
  * Licensed under Apache License v2.0.  See the file "LICENSE" for more
@@ -14,7 +15,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <cups/cups.h>
-#include <cups/thread-private.h>
+#include <cups/thread.h>
 
 
 /*
@@ -74,7 +75,7 @@ enum_dests_cb(void        *_name,	/* I - Printer name, if any */
   */
 
   cupsCopyDest(dest, 0, &cdest);
-  _cupsThreadWait(_cupsThreadCreate((_cups_thread_func_t)run_query, cdest));
+  cupsThreadWait(cupsThreadCreate((cups_thread_func_t)run_query, cdest));
 
   cupsFreeDests(1, cdest);
 

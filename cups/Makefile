@@ -95,6 +95,7 @@ HEADERS	=	\
 		language.h \
 		pwg.h \
 		raster.h \
+		thread.h \
 		transcode.h
 
 
