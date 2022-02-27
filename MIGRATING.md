@@ -1,8 +1,8 @@
-Migrating CUPS 2.x Code to the CUPS Library (libcups)
-=====================================================
+Migrating CUPS 2.x Code to the CUPS Library v3 (libcups)
+========================================================
 
-The CUPS Library (libcups) removes all of the deprecated and obsolete APIs from
-CUPS 2.x and earlier and makes other naming changes for consistency.  As a
+The CUPS Library v3 (libcups) removes all of the deprecated and obsolete APIs
+from CUPS 2.x and earlier and makes other naming changes for consistency.  As a
 result, the CUPS 3.x library is no longer binary compatible with programs
 compiled against the CUPS 2.x library and earlier, and some source code may need
 minor changes to compile with the new library.  This file describes the changes
@@ -56,7 +56,7 @@ Renamed Functions
 -----------------
 
 | Old Name                 | New Name                |
-+--------------------------+-------------------------+
+|--------------------------|-------------------------|
 | `cupsArrayCount`         | `cupsArrayGetCount`     |
 | `cupsArrayFirst`         | `cupsArrayGetFirst`     |
 | `cupsArrayIndex`         | `cupsArrayGetElement`   |
@@ -90,7 +90,7 @@ Renamed Types
 -------------
 
 | Old Name              | New Name             |
-+-----------------------+----------------------+
+|-----------------------|----------------------|
 | `cups_acopy_func_t`   | `cups_acopy_cb_t`    |
 | `cups_afree_func_t`   | `cups_afree_cb_t`    |
 | `cups_array_func_t`   | `cups_array_cb_t`    |
