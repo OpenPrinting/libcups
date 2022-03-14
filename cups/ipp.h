@@ -298,6 +298,13 @@ typedef enum ipp_op_e			/**** IPP operations ****/
   IPP_OP_SET_SYSTEM_ATTRIBUTES,         /* Set-System-Attributes: Set system object attributes. */
   IPP_OP_SHUTDOWN_ALL_PRINTERS,         /* Shutdown-All-Printers: Shutdown all services. */
   IPP_OP_STARTUP_ALL_PRINTERS,          /* Startup-All-Printers: Startup all services. */
+  IPP_OP_GET_PRINTER_RESOURCES,		/* Get-Printer-Resources: Get a list of resources for a printer */
+  IPP_OP_GET_USER_PRINTER_ATTRIBUTES,	/* Get-User-Printer-Attributes: Get printer capabilities with authentication */
+  IPP_OP_RESTART_ONE_PRINTER,		/* Restart-One-Printer: Restart a single printer/service */
+  IPP_OP_ACKNOWLEDGE_ENCRYPTED_JOB_ATTRIBUTES,
+					/* Acknowledge-Encrypted-Job-Attributes: Acknowledge receipt of encrypted job attributes */
+  IPP_OP_FETCH_ENCRYPTED_JOB_ATTRIBUTES,/* Fetch-Encrypted-Job-Attributes: Download encrypted job attributes */
+  IPP_OP_GET_ENCRYPTED_JOB_ATTRIBUTES,	/* Get-Encrypted-Job-Attributes: Query job attributes and return in an encrypted form */
 
   IPP_OP_PRIVATE = 0x4000,		/* Reserved @private@ */
   IPP_OP_CUPS_GET_DEFAULT,		/* CUPS-Get-Default: Get the default printer */
@@ -430,15 +437,6 @@ typedef enum ipp_status_e		/**** IPP status code values ****/
   IPP_STATUS_ERROR_ACCOUNT_AUTHORIZATION_FAILED,
 					/* client-error-account-authorization-failed */
   IPP_STATUS_ERROR_NOT_FETCHABLE,	/* client-error-not-fetchable */
-
-  /* Legacy status codes for paid printing */
-  IPP_STATUS_ERROR_CUPS_ACCOUNT_INFO_NEEDED = 0x049C,
-					/* cups-error-account-info-needed @deprecated@ */
-  IPP_STATUS_ERROR_CUPS_ACCOUNT_CLOSED,	/* cups-error-account-closed @deprecate@ */
-  IPP_STATUS_ERROR_CUPS_ACCOUNT_LIMIT_REACHED,
-					/* cups-error-account-limit-reached @deprecated@ */
-  IPP_STATUS_ERROR_CUPS_ACCOUNT_AUTHORIZATION_FAILED,
-					/* cups-error-account-authorization-failed @deprecated@ */
 
   IPP_STATUS_ERROR_INTERNAL = 0x0500,	/* server-error-internal-error */
   IPP_STATUS_ERROR_OPERATION_NOT_SUPPORTED,

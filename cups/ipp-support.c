@@ -1,6 +1,7 @@
 /*
  * Internet Printing Protocol support functions for CUPS.
  *
+ * Copyright © 2022 by OpenPrinting.
  * Copyright © 2007-2018 by Apple Inc.
  * Copyright © 1997-2007 by Easy Software Products, all rights reserved.
  *
@@ -74,43 +75,6 @@ static const char * const ipp_status_oks[] =	/* "OK" status codes */
 		  "client-error-account-limit-reached",
 		  "client-error-account-authorization-failed",
 		  "client-error-not-fetchable"
-		},
-		* const ipp_status_480s[] =	/* Vendor client errors */
-		{
-		  /* 0x0480 - 0x048F */
-		  "0x0480",
-		  "0x0481",
-		  "0x0482",
-		  "0x0483",
-		  "0x0484",
-		  "0x0485",
-		  "0x0486",
-		  "0x0487",
-		  "0x0488",
-		  "0x0489",
-		  "0x048A",
-		  "0x048B",
-		  "0x048C",
-		  "0x048D",
-		  "0x048E",
-		  "0x048F",
-		  /* 0x0490 - 0x049F */
-		  "0x0490",
-		  "0x0491",
-		  "0x0492",
-		  "0x0493",
-		  "0x0494",
-		  "0x0495",
-		  "0x0496",
-		  "0x0497",
-		  "0x0498",
-		  "0x0499",
-		  "0x049A",
-		  "0x049B",
-		  "cups-error-account-info-needed",
-		  "cups-error-account-closed",
-		  "cups-error-account-limit-reached",
-		  "cups-error-account-authorization-failed"
 		},
 		* const ipp_status_500s[] =		/* Server errors */
 		{
@@ -199,12 +163,12 @@ static const char * const ipp_std_ops[] =
 		  "Get-Documents",				/* IPP DocObject */
 		  "Delete-Document",				/* IPP DocObject */
 		  "Set-Document-Attributes",			/* IPP DocObject */
-		  "Cancel-Jobs",				/* IPP JPS2 */
-		  "Cancel-My-Jobs",				/* IPP JPS2 */
-		  "Resubmit-Job",				/* IPP JPS2 */
-		  "Close-Job",					/* IPP JPS2 */
-		  "Identify-Printer",				/* IPP JPS3 */
-		  "Validate-Document",				/* IPP JPS3 */
+		  "Cancel-Jobs",				/* IPP Job Extensions */
+		  "Cancel-My-Jobs",				/* IPP Job Extensions */
+		  "Resubmit-Job",				/* IPP Job Extensions */
+		  "Close-Job",					/* IPP Job Extensions */
+		  "Identify-Printer",				/* IPP Driverless */
+		  "Validate-Document",				/* IPP Driverless */
 		  "Add-Document-Images",			/* IPP Scan */
 		  "Acknowledge-Document",			/* IPP INFRA */
 
@@ -220,7 +184,7 @@ static const char * const ipp_std_ops[] =
 		  "Update-Job-Status",				/* IPP INFRA */
 		  "Update-Output-Device-Attributes",		/* IPP INFRA */
 		  "Get-Next-Document-Data",			/* IPP Scan */
-                  "Allocate-Printer-Resources",		/* IPP System */
+                  "Allocate-Printer-Resources",			/* IPP System */
                   "Create-Printer",				/* IPP System */
                   "Deallocate-Printer-Resources",		/* IPP System */
                   "Delete-Printer",				/* IPP System */
@@ -232,7 +196,7 @@ static const char * const ipp_std_ops[] =
                   "Cancel-Resource",				/* IPP System */
                   "Create-Resource",				/* IPP System */
                   "Install-Resource",				/* IPP System */
-                  "Send-Resource-Data",			/* IPP System */
+                  "Send-Resource-Data",				/* IPP System */
                   "Set-Resource-Attributes",			/* IPP System */
                   "Create-Resource-Subscriptions",		/* IPP System */
                   "Create-System-Subscriptions",		/* IPP System */
@@ -240,16 +204,22 @@ static const char * const ipp_std_ops[] =
                   "Enable-All-Printers",			/* IPP System */
                   "Get-System-Attributes",			/* IPP System */
                   "Get-System-Supported-Values",		/* IPP System */
-                  "Pause-All-Printers",			/* IPP System */
+                  "Pause-All-Printers",				/* IPP System */
                   "Pause-All-Printers-After-Current-Job",	/* IPP System */
                   "Register-Output-Device",			/* IPP System */
 
-                  /* 0x0060 - 0x0064 */
+                  /* 0x0060 - 0x006a */
                   "Restart-System",				/* IPP System */
                   "Resume-All-Printers",			/* IPP System */
                   "Set-System-Attributes",			/* IPP System */
                   "Shutdown-All-Printers",			/* IPP System */
                   "Startup-All-Printers"			/* IPP System */
+                  "Get-Printer-Resources",			/* IPP System */
+                  "Get-User-Printer-Attributes",		/* IPP Enterprise */
+                  "Restart-One-Printer",			/* IPP System */
+                  "Acknowledge-Encrypted-Job-Attributes",	/* IPP TRUSTNOONE */
+                  "Fetch-Encrypted-Job-Attributes",		/* IPP TRUSTNOONE */
+                  "Get-Encrypted-Job-Attributes"		/* IPP TRUSTNOONE */
 		},
 		* const ipp_cups_ops[] =
 		{
@@ -649,8 +619,6 @@ static size_t	ipp_col_string(ipp_t *col, char *buffer, size_t bufsize);
  * Returns the number of bytes that would be written, not including the
  * trailing nul. The buffer pointer can be NULL to get the required length,
  * just like (v)snprintf.
- *
- * @since CUPS 1.6/macOS 10.8@
  */
 
 size_t					/* O - Number of bytes less nul */
@@ -876,15 +844,13 @@ ippAttributeString(
  * The @code request@ parameter specifies the request message that was read from
  * the client.
  *
- * @code NULL@ is returned if all attributes should be returned.  Otherwise, the
+ * `NULL` is returned if all attributes should be returned.  Otherwise, the
  * result is a sorted array of attribute names, where @code cupsArrayFind(array,
  * "attribute-name")@ will return a non-NULL pointer.  The array must be freed
  * using the @code cupsArrayDelete@ function.
- *
- * @since CUPS 1.7/macOS 10.9@
  */
 
-cups_array_t *				/* O - CUPS array or @code NULL@ if all */
+cups_array_t *				/* O - CUPS array or `NULL` if all */
 ippCreateRequestedArray(ipp_t *request)	/* I - IPP request */
 {
   size_t		i, j,		/* Looping vars */
@@ -908,12 +874,9 @@ ippCreateRequestedArray(ipp_t *request)	/* I - IPP request */
     "detailed-status-messages",
     "document-access-errors",
     "document-charset",
-    "document-digital-signature",
     "document-format",
-    "document-format-details",
-    "document-format-detected",
-    "document-format-version",
-    "document-format-version-detected",
+    "document-format-details",		/* IPP JobExt */
+    "document-format-detected",		/* IPP JobExt */
     "document-job-id",
     "document-job-uri",
     "document-message",
@@ -927,7 +890,7 @@ ippCreateRequestedArray(ipp_t *request)	/* I - IPP request */
     "document-state-reasons",
     "document-uri",
     "document-uuid",			/* IPP JPS3 */
-    "errors-count",
+    "errors-count",			/* IPP JobExt */
     "finishings-actual",
     "finishings-col-actual",
     "force-front-side-actual",
@@ -969,7 +932,7 @@ ippCreateRequestedArray(ipp_t *request)	/* I - IPP request */
     "print-accuracy-actual",		/* IPP 3D */
     "print-base-actual",		/* IPP 3D */
     "print-color-mode-actual",
-    "print-content-optimize-actual",
+    "print-content-optimize-actual",	/* IPP JobExt */
     "print-objects-actual",		/* IPP 3D */
     "print-quality-actual",
     "print-rendering-intent-actual",
@@ -983,6 +946,7 @@ ippCreateRequestedArray(ipp_t *request)	/* I - IPP request */
     "time-at-completed",
     "time-at-creation",
     "time-at-processing",
+    "warnings-count",			/* IPP JobExt */
     "x-image-position-actual",
     "x-image-shift-actual",
     "x-side1-image-shift-actual",
@@ -994,56 +958,63 @@ ippCreateRequestedArray(ipp_t *request)	/* I - IPP request */
   };
   static const char * const document_template[] =
   {					/* document-template group */
+    "baling-type-supported",		/* IPP FIN */
+    "baling-when-supported",		/* IPP FIN */
+    "binding-reference-edge-supported",	/* IPP FIN */
+    "binding-type-supported",		/* IPP FIN */
     "chamber-humidity",			/* IPP 3D */
     "chamber-humidity-default",		/* IPP 3D */
     "chamber-humidity-supported",	/* IPP 3D */
     "chamber-temperature",		/* IPP 3D */
     "chamber-temperature-default",	/* IPP 3D */
     "chamber-temperature-supported",	/* IPP 3D */
+    "coating-sides-supported",		/* IPP FIN */
+    "coating-type-supported",		/* IPP FIN */
     "copies",
     "copies-default",
     "copies-supported",
-    "cover-back",
-    "cover-back-default",
-    "cover-back-supported",
-    "cover-front",
-    "cover-front-default",
-    "cover-front-supported",
+    "cover-back",			/* IPP PPX */
+    "cover-back-default",		/* IPP PPX */
+    "cover-back-supported",		/* IPP PPX */
+    "cover-front",			/* IPP PPX */
+    "cover-front-default",		/* IPP PPX */
+    "cover-front-supported",		/* IPP PPX */
+    "covering-name-supported",		/* IPP FIN */
     "feed-orientation",
     "feed-orientation-default",
     "feed-orientation-supported",
+    "finishing-template-supported",	/* IPP FIN */
     "finishings",
-    "finishings-col",
-    "finishings-col-database",
-    "finishings-col-default",
-    "finishings-col-ready",
-    "finishings-col-supported",
+    "finishings-col",			/* IPP FIN */
+    "finishings-col-database",		/* IPP FIN */
+    "finishings-col-default",		/* IPP FIN */
+    "finishings-col-ready",		/* IPP FIN */
+    "finishings-col-supported",		/* IPP FIN */
     "finishings-default",
     "finishings-ready",
     "finishings-supported",
-    "font-name-requested",
-    "font-name-requested-default",
-    "font-name-requested-supported",
-    "font-size-requested",
-    "font-size-requested-default",
-    "font-size-requested-supported",
-    "force-front-side",
-    "force-front-side-default",
-    "force-front-side-supported",
-    "imposition-template",
-    "imposition-template-default",
-    "imposition-template-supported",
-    "insert-after-page-number-supported",
-    "insert-count-supported",
-    "insert-sheet",
-    "insert-sheet-default",
-    "insert-sheet-supported",
+    "folding-direction-supported",	/* IPP FIN */
+    "folding-offset-supported",		/* IPP FIN */
+    "folding-reference-edge-supported",	/* IPP FIN */
+    "force-front-side",			/* IPP PPX */
+    "force-front-side-default",		/* IPP PPX */
+    "force-front-side-supported",	/* IPP PPX */
+    "imposition-template",		/* IPP PPX */
+    "imposition-template-default",	/* IPP PPX */
+    "imposition-template-supported",	/* IPP PPX */
+    "insert-count-supported",		/* IPP PPX */
+    "insert-sheet",			/* IPP PPX */
+    "insert-sheet-default",		/* IPP PPX */
+    "insert-sheet-supported",		/* IPP PPX */
+    "laminating-sides-supported",	/* IPP FIN */
+    "laminating-type-supported",	/* IPP FIN */
     "material-amount-units-supported",	/* IPP 3D */
     "material-diameter-supported",	/* IPP 3D */
     "material-purpose-supported",	/* IPP 3D */
     "material-rate-supported",		/* IPP 3D */
     "material-rate-units-supported",	/* IPP 3D */
-    "material-shell-thickness-supported",/* IPP 3D */
+    "material-shell-thickness-supported",
+					/* IPP 3D */
     "material-temperature-supported",	/* IPP 3D */
     "material-type-supported",		/* IPP 3D */
     "materials-col",			/* IPP 3D */
@@ -1052,142 +1023,150 @@ ippCreateRequestedArray(ipp_t *request)	/* I - IPP request */
     "materials-col-ready",		/* IPP 3D */
     "materials-col-supported",		/* IPP 3D */
     "max-materials-col-supported",	/* IPP 3D */
-    "max-stitching-locations-supported",
+    "max-page-ranges-supported",
+    "max-stitching-locations-supported",/* IPP FIN */
     "media",
-    "media-back-coating-supported",
-    "media-bottom-margin-supported",
-    "media-col",
-    "media-col-default",
-    "media-col-ready",
-    "media-col-supported",
-    "media-color-supported",
+    "media-back-coating-supported",	/* IPP JobExt */
+    "media-bottom-margin-supported",	/* IPP JobExt */
+    "media-col",			/* IPP JobExt */
+    "media-col-default",		/* IPP JobExt */
+    "media-col-ready",			/* IPP JobExt */
+    "media-col-supported",		/* IPP JobExt */
+    "media-color-supported",		/* IPP JobExt */
     "media-default",
-    "media-front-coating-supported",
-    "media-grain-supported",
-    "media-hole-count-supported",
-    "media-info-supported",
-    "media-input-tray-check",
-    "media-input-tray-check-default",
-    "media-input-tray-check-supported",
-    "media-key-supported",
-    "media-left-margin-supported",
-    "media-order-count-supported",
-    "media-pre-printed-supported",
+    "media-front-coating-supported",	/* IPP JobExt */
+    "media-grain-supported",		/* IPP JobExt */
+    "media-hole-count-supported",	/* IPP JobExt */
+    "media-info-supported",		/* IPP JobExt */
+    "media-input-tray-check",		/* IPP PPX */
+    "media-input-tray-check-default",	/* IPP PPX */
+    "media-input-tray-check-supported",	/* IPP PPX */
+    "media-key-supported",		/* IPP JobExt */
+    "media-left-margin-supported",	/* IPP JobExt */
+    "media-order-count-supported",	/* IPP JobExt */
+    "media-overprint",			/* IPP NODRIVER */
+    "media-overprint-distance-supported",
+					/* IPP NODRIVER */
+    "media-overprint-method-supported",	/* IPP NODRIVER */
+    "media-overprint-supported",	/* IPP NODRIVER */
+    "media-pre-printed-supported",	/* IPP JobExt */
     "media-ready",
-    "media-recycled-supported",
-    "media-right-margin-supported",
-    "media-size-supported",
-    "media-source-supported",
+    "media-recycled-supported",		/* IPP JobExt */
+    "media-right-margin-supported",	/* IPP JobExt */
+    "media-size-supported",		/* IPP JobExt */
+    "media-source-supported",		/* IPP JobExt */
     "media-supported",
-    "media-thickness-supported",
-    "media-top-margin-supported",
-    "media-type-supported",
-    "media-weight-metric-supported",
+    "media-thickness-supported",	/* IPP JobExt */
+    "media-top-margin-supported",	/* IPP JobExt */
+    "media-type-supported",		/* IPP JobExt */
+    "media-weight-metric-supported",	/* IPP JobExt */
     "multiple-document-handling",
     "multiple-document-handling-default",
     "multiple-document-handling-supported",
     "multiple-object-handling",		/* IPP 3D */
     "multiple-object-handling-default",	/* IPP 3D */
-    "multiple-object-handling-supported",/* IPP 3D */
+    "multiple-object-handling-supported",
+					/* IPP 3D */
     "number-up",
     "number-up-default",
     "number-up-supported",
     "orientation-requested",
     "orientation-requested-default",
     "orientation-requested-supported",
+    "output-device",			/* IPP JobExt */
+    "output-device-supported",		/* IPP JobExt */
     "output-mode",			/* CUPS extension */
     "output-mode-default",		/* CUPS extension */
     "output-mode-supported",		/* CUPS extension */
     "overrides",
     "overrides-supported",
-    "page-delivery",
-    "page-delivery-default",
-    "page-delivery-supported",
-    "page-order-received",
-    "page-order-received-default",
-    "page-order-received-supported",
+    "page-delivery",			/* IPP PPX */
+    "page-delivery-default",		/* IPP PPX */
+    "page-delivery-supported",		/* IPP PPX */
     "page-ranges",
     "page-ranges-supported",
-    "pages-per-subset",
-    "pages-per-subset-supported",
-    "pdl-init-file",
-    "pdl-init-file-default",
-    "pdl-init-file-entry-supported",
-    "pdl-init-file-location-supported",
-    "pdl-init-file-name-subdirectory-supported",
-    "pdl-init-file-name-supported",
-    "pdl-init-file-supported",
     "platform-temperature",		/* IPP 3D */
     "platform-temperature-default",	/* IPP 3D */
     "platform-temperature-supported",	/* IPP 3D */
-    "presentation-direction-number-up",
+    "preferred-attributes-supported",	/* IPP NODRIVER */
+    "presentation-direction-number-up",	/* IPP PPX */
     "presentation-direction-number-up-default",
+					/* IPP PPX */
     "presentation-direction-number-up-supported",
+					/* IPP PPX */
     "print-accuracy",			/* IPP 3D */
     "print-accuracy-default",		/* IPP 3D */
     "print-accuracy-supported",		/* IPP 3D */
     "print-base",			/* IPP 3D */
     "print-base-default",		/* IPP 3D */
     "print-base-supported",		/* IPP 3D */
-    "print-color-mode",
-    "print-color-mode-default",
-    "print-color-mode-supported",
-    "print-content-optimize",
-    "print-content-optimize-default",
-    "print-content-optimize-supported",
+    "print-color-mode",			/* IPP NODRIVER */
+    "print-color-mode-default",		/* IPP NODRIVER */
+    "print-color-mode-supported",	/* IPP NODRIVER */
+    "print-content-optimize",		/* IPP JobExt */
+    "print-content-optimize-default",	/* IPP JobExt */
+    "print-content-optimize-supported",	/* IPP JobExt */
     "print-objects",			/* IPP 3D */
     "print-objects-default",		/* IPP 3D */
     "print-objects-supported",		/* IPP 3D */
+    "print-processing-attributes-supported",
+					/* IPP NODRIVER */
     "print-quality",
     "print-quality-default",
     "print-quality-supported",
-    "print-rendering-intent",
-    "print-rendering-intent-default",
-    "print-rendering-intent-supported",
-    "print-scaling",			/* IPP Paid Printing */
-    "print-scaling-default",		/* IPP Paid Printing */
-    "print-scaling-supported",		/* IPP Paid Printing */
+    "print-rendering-intent",		/* IPP NODRIVER */
+    "print-rendering-intent-default",	/* IPP NODRIVER */
+    "print-rendering-intent-supported",	/* IPP NODRIVER */
+    "print-scaling",			/* IPP NODRIVER */
+    "print-scaling-default",		/* IPP NODRIVER */
+    "print-scaling-supported",		/* IPP NODRIVER */
     "print-supports",			/* IPP 3D */
     "print-supports-default",		/* IPP 3D */
     "print-supports-supported",		/* IPP 3D */
     "printer-resolution",
     "printer-resolution-default",
     "printer-resolution-supported",
-    "separator-sheets",
-    "separator-sheets-default",
-    "separator-sheets-supported",
-    "sheet-collate",
-    "sheet-collate-default",
-    "sheet-collate-supported",
+    "punching-hold-diameter-configured",/* IPP FIN */
+    "punching-locations-supported",	/* IPP FIN */
+    "punching-offset-supported",	/* IPP FIN */
+    "punching-reference-edge-supported",/* IPP FIN */
+    "separator-sheets",		/* IPP PPX */
+    "separator-sheets-default",		/* IPP PPX */
+    "separator-sheets-supported",	/* IPP PPX */
+    "separator-sheets-type-supported",	/* IPP PPX */
     "sides",
     "sides-default",
     "sides-supported",
-    "stitching-locations-supported",
-    "stitching-offset-supported",
-    "x-image-position",
-    "x-image-position-default",
-    "x-image-position-supported",
-    "x-image-shift",
-    "x-image-shift-default",
-    "x-image-shift-supported",
-    "x-side1-image-shift",
-    "x-side1-image-shift-default",
-    "x-side1-image-shift-supported",
-    "x-side2-image-shift",
-    "x-side2-image-shift-default",
-    "x-side2-image-shift-supported",
-    "y-image-position",
-    "y-image-position-default",
-    "y-image-position-supported",
-    "y-image-shift",
-    "y-image-shift-default",
-    "y-image-shift-supported",
-    "y-side1-image-shift",
-    "y-side1-image-shift-default",
-    "y-side1-image-shift-supported",
-    "y-side2-image-shift",
-    "y-side2-image-shift-default",
-    "y-side2-image-shift-supported"
+    "stitching-angle-supported",	/* IPP FIN */
+    "stitching-locations-supported",	/* IPP FIN */
+    "stitching-method-supported",	/* IPP FIN */
+    "stitching-offset-supported",	/* IPP FIN */
+    "stitching-reference-edge-supported",
+					/* IPP FIN */
+    "x-image-position",			/* IPP PPX */
+    "x-image-position-default",		/* IPP PPX */
+    "x-image-position-supported",	/* IPP PPX */
+    "x-image-shift",			/* IPP PPX */
+    "x-image-shift-default",		/* IPP PPX */
+    "x-image-shift-supported",		/* IPP PPX */
+    "x-side1-image-shift",		/* IPP PPX */
+    "x-side1-image-shift-default",	/* IPP PPX */
+    "x-side1-image-shift-supported",	/* IPP PPX */
+    "x-side2-image-shift",		/* IPP PPX */
+    "x-side2-image-shift-default",	/* IPP PPX */
+    "x-side2-image-shift-supported",	/* IPP PPX */
+    "y-image-position",			/* IPP PPX */
+    "y-image-position-default",		/* IPP PPX */
+    "y-image-position-supported",	/* IPP PPX */
+    "y-image-shift",			/* IPP PPX */
+    "y-image-shift-default",		/* IPP PPX */
+    "y-image-shift-supported",		/* IPP PPX */
+    "y-side1-image-shift",		/* IPP PPX */
+    "y-side1-image-shift-default",	/* IPP PPX */
+    "y-side1-image-shift-supported",	/* IPP PPX */
+    "y-side2-image-shift",		/* IPP PPX */
+    "y-side2-image-shift-default",	/* IPP PPX */
+    "y-side2-image-shift-supported"	/* IPP PPX */
   };
   static const char * const job_description[] =
   {					/* job-description group */
@@ -1199,8 +1178,10 @@ ippCreateRequestedArray(ipp_t *request)	/* I - IPP request */
     "cover-front-actual",
     "current-page-order",
     "date-time-at-completed",
+    "date-time-at-completed-estimated",	/* IPP PPX */
     "date-time-at-creation",
     "date-time-at-processing",
+    "date-time-at-processing-estimated",/* IPP PPX */
     "destination-statuses",
     "document-charset-supplied",
     "document-digital-signature-supplied",
@@ -1271,6 +1252,7 @@ ippCreateRequestedArray(ipp_t *request)	/* I - IPP request */
     "job-state",
     "job-state-message",
     "job-state-reasons",
+    "job-storage",			/* IPP EPX */
     "job-uri",
     "job-uuid",				/* IPP JPS3 */
     "materials-col-actual",		/* IPP 3D */
@@ -1294,6 +1276,8 @@ ippCreateRequestedArray(ipp_t *request)	/* I - IPP request */
     "page-delivery-actual",
     "page-order-received-actual",
     "page-ranges-actual",
+    "parent-job-id",			/* IPP EPX */
+    "parent-job-uuid",			/* IPP EPX */
     "platform-temperature-actual",	/* IPP 3D */
     "presentation-direction-number-up-actual",
     "print-accuracy-actual",		/* IPP 3D */
@@ -1312,8 +1296,10 @@ ippCreateRequestedArray(ipp_t *request)	/* I - IPP request */
     "sheet-completed-document-number",
     "sides-actual",
     "time-at-completed",
+    "time-at-completed-estimated",	/* IPP PPX */
     "time-at-creation",
     "time-at-processing",
+    "time-at-processing-estimated",	/* IPP PPX */
     "warnings-count",
     "x-image-position-actual",
     "x-image-shift-actual",
@@ -1327,26 +1313,33 @@ ippCreateRequestedArray(ipp_t *request)	/* I - IPP request */
   static const char * const job_template[] =
   {					/* job-template group */
     "accuracy-units-supported",		/* IPP 3D */
+    "baling-type-supported",		/* IPP FIN */
+    "baling-when-supported",		/* IPP FIN */
+    "binding-reference-edge-supported",	/* IPP FIN */
+    "binding-type-supported",		/* IPP FIN */
     "chamber-humidity",			/* IPP 3D */
     "chamber-humidity-default",		/* IPP 3D */
     "chamber-humidity-supported",	/* IPP 3D */
     "chamber-temperature",		/* IPP 3D */
     "chamber-temperature-default",	/* IPP 3D */
     "chamber-temperature-supported",	/* IPP 3D */
+    "coating-sides-supported",		/* IPP FIN */
+    "coating-type-supported",		/* IPP FIN */
     "confirmation-sheet-print",		/* IPP FaxOut */
     "confirmation-sheet-print-default",
     "copies",
     "copies-default",
     "copies-supported",
-    "cover-back",
-    "cover-back-default",
-    "cover-back-supported",
-    "cover-front",
-    "cover-front-default",
-    "cover-front-supported",
+    "cover-back",			/* IPP PPX */
+    "cover-back-default",		/* IPP PPX */
+    "cover-back-supported",		/* IPP PPX */
+    "cover-front",			/* IPP PPX */
+    "cover-front-default",		/* IPP PPX */
+    "cover-front-supported",		/* IPP PPX */
     "cover-sheet-info",			/* IPP FaxOut */
-    "cover-sheet-info-default",
-    "cover-sheet-info-supported",
+    "cover-sheet-info-default",		/* IPP FaxOut */
+    "cover-sheet-info-supported",	/* IPP FaxOut */
+    "covering-name-supported",		/* IPP FIN */
     "destination-uri-schemes-supported",/* IPP FaxOut */
     "destination-uris",			/* IPP FaxOut */
     "destination-uris-supported",
@@ -1354,101 +1347,107 @@ ippCreateRequestedArray(ipp_t *request)	/* I - IPP request */
     "feed-orientation-default",
     "feed-orientation-supported",
     "finishings",
-    "finishings-col",
-    "finishings-col-database",
-    "finishings-col-default",
-    "finishings-col-ready",
-    "finishings-col-supported",
+    "finishings-col",			/* IPP FIN */
+    "finishings-col-database",		/* IPP FIN */
+    "finishings-col-default",		/* IPP FIN */
+    "finishings-col-ready",		/* IPP FIN */
+    "finishings-col-supported",		/* IPP FIN */
     "finishings-default",
     "finishings-ready",
     "finishings-supported",
-    "font-name-requested",
-    "font-name-requested-default",
-    "font-name-requested-supported",
-    "font-size-requested",
-    "font-size-requested-default",
-    "font-size-requested-supported",
-    "force-front-side",
-    "force-front-side-default",
-    "force-front-side-supported",
-    "imposition-template",
-    "imposition-template-default",
-    "imposition-template-supported",
-    "insert-after-page-number-supported",
-    "insert-count-supported",
-    "insert-sheet",
-    "insert-sheet-default",
-    "insert-sheet-supported",
-    "job-account-id",
-    "job-account-id-default",
-    "job-account-id-supported",
-    "job-accounting-sheets"
-    "job-accounting-sheets-default"
-    "job-accounting-sheets-supported"
-    "job-accounting-user-id",
-    "job-accounting-user-id-default",
-    "job-accounting-user-id-supported",
-    "job-copies",
-    "job-copies-default",
-    "job-copies-supported",
-    "job-cover-back",
-    "job-cover-back-default",
-    "job-cover-back-supported",
-    "job-cover-front",
-    "job-cover-front-default",
-    "job-cover-front-supported",
-    "job-delay-output-until",
-    "job-delay-output-until-default",
-    "job-delay-output-until-supported",
-    "job-delay-output-until-time",
+    "folding-direction-supported",	/* IPP FIN */
+    "folding-offset-supported",		/* IPP FIN */
+    "folding-reference-edge-supported",	/* IPP FIN */
+    "force-front-side",			/* IPP PPX */
+    "force-front-side-default",		/* IPP PPX */
+    "force-front-side-supported",	/* IPP PPX */
+    "imposition-template",		/* IPP PPX */
+    "imposition-template-default",	/* IPP PPX */
+    "imposition-template-supported",	/* IPP PPX */
+    "insert-count-supported",		/* IPP PPX */
+    "insert-sheet",			/* IPP PPX */
+    "insert-sheet-default",		/* IPP PPX */
+    "insert-sheet-supported",		/* IPP PPX */
+    "job-account-id",			/* IPP JobExt */
+    "job-account-id-default",		/* IPP JobExt */
+    "job-account-id-supported",		/* IPP JobExt */
+    "job-accounting-output-bin-supported",
+					/* IPP PPX */
+    "job-accounting-sheets",		/* IPP PPX */
+    "job-accounting-sheets-default",	/* IPP PPX */
+    "job-accounting-sheets-supported",	/* IPP PPX */
+    "job-accounting-sheets-type-supported",
+					/* IPP PPX */
+    "job-accounting-user-id",		/* IPP JobExt */
+    "job-accounting-user-id-default",	/* IPP JobExt */
+    "job-accounting-user-id-supported",	/* IPP JobExt */
+    "job-cancel-after",			/* IPP EPX */
+    "job-cancel-after-default",		/* IPP EPX */
+    "job-cancel-after-supported",	/* IPP EPX */
+    "job-complete-before",		/* IPP PPX */
+    "job-complete-before-supported",	/* IPP PPX */
+    "job-complete-before-time",		/* IPP PPX */
+    "job-complete-before-time-supported",
+					/* IPP PPX */
+    "job-delay-output-until",		/* IPP JobExt */
+    "job-delay-output-until-default",	/* IPP JobExt */
+    "job-delay-output-until-supported",	/* IPP JobExt */
+    "job-delay-output-until-time",	/* IPP JobExt */
     "job-delay-output-until-time-default",
+					/* IPP JobExt */
     "job-delay-output-until-time-supported",
-    "job-error-action",
-    "job-error-action-default",
-    "job-error-action-supported",
-    "job-error-sheet",
-    "job-error-sheet-default",
-    "job-error-sheet-supported",
-    "job-finishings",
-    "job-finishings-col",
-    "job-finishings-col-default",
-    "job-finishings-col-supported",
-    "job-finishings-default",
-    "job-finishings-supported",
+					/* IPP JobExt */
+    "job-error-action",			/* IPP NODRIVER */
+    "job-error-action-default",		/* IPP NODRIVER */
+    "job-error-action-supported",	/* IPP NODRIVER */
+    "job-error-sheet",			/* IPP PPX */
+    "job-error-sheet-default",		/* IPP PPX */
+    "job-error-sheet-supported",	/* IPP PPX */
+    "job-error-sheet-type-supported",	/* IPP PPX */
+    "job-error-sheet-when-supported",	/* IPP PPX */
     "job-hold-until",
     "job-hold-until-default",
     "job-hold-until-supported",
-    "job-hold-until-time",
-    "job-hold-until-time-default",
-    "job-hold-until-time-supported",
-    "job-message-to-operator",
-    "job-message-to-operator-default",
-    "job-message-to-operator-supported",
-    "job-phone-number",
-    "job-phone-number-default",
-    "job-phone-number-supported",
+    "job-hold-until-time",		/* IPP JobExt */
+    "job-hold-until-time-default",	/* IPP JobExt */
+    "job-hold-until-time-supported",	/* IPP JobExt */
+    "job-message-to-operator",		/* IPP PPX */
+    "job-message-to-operator-supported",/* IPP PPX */
+    "job-phone-number",			/* IPP PPX */
+    "job-phone-number-default",		/* IPP PPX */
+    "job-phone-number-supported",	/* IPP PPX */
     "job-priority",
     "job-priority-default",
     "job-priority-supported",
-    "job-recipient-name",
-    "job-recipient-name-default",
-    "job-recipient-name-supported",
-    "job-save-disposition",
-    "job-save-disposition-default",
-    "job-save-disposition-supported",
+    "job-recipient-name",		/* IPP PPX */
+    "job-recipient-name-supported",	/* IPP PPX */
+    "job-retain-until",			/* IPP JobExt */
+    "job-retain-until-default",		/* IPP JobExt */
+    "job-retain-until-interval",	/* IPP JobExt */
+    "job-retain-until=interval-default",/* IPP JobExt */
+    "job-retain-until-interval-supported",
+					/* IPP JobExt */
+    "job-retain-until-supported",	/* IPP JobExt */
+    "job-retain-until-time",		/* IPP JobExt */
+    "job-retain-until-time-supported",	/* IPP JobExt */
+    "job-sheet-message",		/* IPP PPX */
+    "job-sheet-message-supported",	/* IPP PPX */
     "job-sheets",
-    "job-sheets-col",
-    "job-sheets-col-default",
-    "job-sheets-col-supported",
+    "job-sheets-col",			/* IPP JobExt */
+    "job-sheets-col-default",		/* IPP JobExt */
+    "job-sheets-col-supported",		/* IPP JobExt */
     "job-sheets-default",
     "job-sheets-supported",
-    "logo-uri-schemes-supported",
+    "laminating-sides-supported",	/* IPP FIN */
+    "laminating-type-supported",	/* IPP FIN */
+    "logo-uri-schemes-supported",	/* IPP FaxOut */
     "material-amount-units-supported",	/* IPP 3D */
     "material-diameter-supported",	/* IPP 3D */
     "material-purpose-supported",	/* IPP 3D */
     "material-rate-supported",		/* IPP 3D */
     "material-rate-units-supported",	/* IPP 3D */
-    "material-shell-thickness-supported",/* IPP 3D */
+    "material-shell-thickness-supported",
+					/* IPP 3D */
     "material-temperature-supported",	/* IPP 3D */
     "material-type-supported",		/* IPP 3D */
     "materials-col",			/* IPP 3D */
@@ -1457,44 +1456,50 @@ ippCreateRequestedArray(ipp_t *request)	/* I - IPP request */
     "materials-col-ready",		/* IPP 3D */
     "materials-col-supported",		/* IPP 3D */
     "max-materials-col-supported",	/* IPP 3D */
-    "max-save-info-supported",
-    "max-stitching-locations-supported",
+    "max-page-ranges-supported",
+    "max-stitching-locations-supported",/* IPP FIN */
     "media",
-    "media-back-coating-supported",
-    "media-bottom-margin-supported",
-    "media-col",
-    "media-col-default",
-    "media-col-ready",
-    "media-col-supported",
-    "media-color-supported",
+    "media-back-coating-supported",	/* IPP JobExt */
+    "media-bottom-margin-supported",	/* IPP JobExt */
+    "media-col",			/* IPP JobExt */
+    "media-col-default",		/* IPP JobExt */
+    "media-col-ready",			/* IPP JobExt */
+    "media-col-supported",		/* IPP JobExt */
+    "media-color-supported",		/* IPP JobExt */
     "media-default",
-    "media-front-coating-supported",
-    "media-grain-supported",
-    "media-hole-count-supported",
-    "media-info-supported",
-    "media-input-tray-check",
-    "media-input-tray-check-default",
-    "media-input-tray-check-supported",
-    "media-key-supported",
-    "media-left-margin-supported",
-    "media-order-count-supported",
-    "media-pre-printed-supported",
+    "media-front-coating-supported",	/* IPP JobExt */
+    "media-grain-supported",		/* IPP JobExt */
+    "media-hole-count-supported",	/* IPP JobExt */
+    "media-info-supported",		/* IPP JobExt */
+    "media-input-tray-check",		/* IPP PPX */
+    "media-input-tray-check-default",	/* IPP PPX */
+    "media-input-tray-check-supported",	/* IPP PPX */
+    "media-key-supported",		/* IPP JobExt */
+    "media-left-margin-supported",	/* IPP JobExt */
+    "media-order-count-supported",	/* IPP JobExt */
+    "media-overprint",			/* IPP NODRIVER */
+    "media-overprint-distance-supported",
+					/* IPP NODRIVER */
+    "media-overprint-method-supported",	/* IPP NODRIVER */
+    "media-overprint-supported",	/* IPP NODRIVER */
+    "media-pre-printed-supported",	/* IPP JobExt */
     "media-ready",
-    "media-recycled-supported",
-    "media-right-margin-supported",
-    "media-size-supported",
-    "media-source-supported",
+    "media-recycled-supported",		/* IPP JobExt */
+    "media-right-margin-supported",	/* IPP JobExt */
+    "media-size-supported",		/* IPP JobExt */
+    "media-source-supported",		/* IPP JobExt */
     "media-supported",
-    "media-thickness-supported",
-    "media-top-margin-supported",
-    "media-type-supported",
-    "media-weight-metric-supported",
+    "media-thickness-supported",	/* IPP JobExt */
+    "media-top-margin-supported",	/* IPP JobExt */
+    "media-type-supported",		/* IPP JobExt */
+    "media-weight-metric-supported",	/* IPP JobExt */
     "multiple-document-handling",
     "multiple-document-handling-default",
     "multiple-document-handling-supported",
     "multiple-object-handling",		/* IPP 3D */
     "multiple-object-handling-default",	/* IPP 3D */
-    "multiple-object-handling-supported",/* IPP 3D */
+    "multiple-object-handling-supported",
+					/* IPP 3D */
     "number-of-retries",		/* IPP FaxOut */
     "number-of-retries-default",
     "number-of-retries-supported",
@@ -1507,118 +1512,111 @@ ippCreateRequestedArray(ipp_t *request)	/* I - IPP request */
     "output-bin",
     "output-bin-default",
     "output-bin-supported",
-    "output-device",
-    "output-device-supported",
-    "output-device-uuid-supported",	/* IPP INFRA */
+    "output-device",			/* IPP JobExt */
+    "output-device-supported",		/* IPP JobExt */
     "output-mode",			/* CUPS extension */
     "output-mode-default",		/* CUPS extension */
     "output-mode-supported",		/* CUPS extension */
     "overrides",
     "overrides-supported",
-    "page-delivery",
-    "page-delivery-default",
-    "page-delivery-supported",
-    "page-order-received",
-    "page-order-received-default",
-    "page-order-received-supported",
+    "page-delivery",			/* IPP PPX */
+    "page-delivery-default",		/* IPP PPX */
+    "page-delivery-supported",		/* IPP PPX */
     "page-ranges",
     "page-ranges-supported",
-    "pages-per-subset",
-    "pages-per-subset-supported",
-    "pdl-init-file",
-    "pdl-init-file-default",
-    "pdl-init-file-entry-supported",
-    "pdl-init-file-location-supported",
-    "pdl-init-file-name-subdirectory-supported",
-    "pdl-init-file-name-supported",
-    "pdl-init-file-supported",
     "platform-temperature",		/* IPP 3D */
     "platform-temperature-default",	/* IPP 3D */
     "platform-temperature-supported",	/* IPP 3D */
-    "presentation-direction-number-up",
+    "preferred-attributes-supported",	/* IPP NODRIVER */
+    "presentation-direction-number-up",	/* IPP PPX */
     "presentation-direction-number-up-default",
+					/* IPP PPX */
     "presentation-direction-number-up-supported",
+					/* IPP PPX */
     "print-accuracy",			/* IPP 3D */
     "print-accuracy-default",		/* IPP 3D */
     "print-accuracy-supported",		/* IPP 3D */
     "print-base",			/* IPP 3D */
     "print-base-default",		/* IPP 3D */
     "print-base-supported",		/* IPP 3D */
-    "print-color-mode",
-    "print-color-mode-default",
-    "print-color-mode-supported",
-    "print-content-optimize",
-    "print-content-optimize-default",
-    "print-content-optimize-supported",
+    "print-color-mode",			/* IPP NODRIVER */
+    "print-color-mode-default",		/* IPP NODRIVER */
+    "print-color-mode-supported",	/* IPP NODRIVER */
+    "print-content-optimize",		/* IPP JobExt */
+    "print-content-optimize-default",	/* IPP JobExt */
+    "print-content-optimize-supported",	/* IPP JobExt */
     "print-objects",			/* IPP 3D */
     "print-objects-default",		/* IPP 3D */
     "print-objects-supported",		/* IPP 3D */
+    "print-processing-attributes-supported",
+					/* IPP NODRIVER */
     "print-quality",
     "print-quality-default",
     "print-quality-supported",
-    "print-rendering-intent",
-    "print-rendering-intent-default",
-    "print-rendering-intent-supported",
-    "print-scaling",			/* IPP Paid Printing */
-    "print-scaling-default",		/* IPP Paid Printing */
-    "print-scaling-supported",		/* IPP Paid Printing */
+    "print-rendering-intent",		/* IPP NODRIVER */
+    "print-rendering-intent-default",	/* IPP NODRIVER */
+    "print-rendering-intent-supported",	/* IPP NODRIVER */
+    "print-scaling",			/* IPP NODRIVER */
+    "print-scaling-default",		/* IPP NODRIVER */
+    "print-scaling-supported",		/* IPP NODRIVER */
     "print-supports",			/* IPP 3D */
     "print-supports-default",		/* IPP 3D */
     "print-supports-supported",		/* IPP 3D */
     "printer-resolution",
     "printer-resolution-default",
     "printer-resolution-supported",
-    "proof-print",
-    "proof-print-default",
-    "proof-print-supported",
+    "proof-copies",			/* IPP EPX */
+    "proof-copies-supported",		/* IPP EPX */
+    "proof-print",			/* IPP EPX */
+    "proof-print-default",		/* IPP EPX */
+    "proof-print-supported"		/* IPP EPX */
+    "punching-hold-diameter-configured",/* IPP FIN */
+    "punching-locations-supported",	/* IPP FIN */
+    "punching-offset-supported",	/* IPP FIN */
+    "punching-reference-edge-supported",/* IPP FIN */
     "retry-interval",			/* IPP FaxOut */
     "retry-interval-default",
     "retry-interval-supported",
     "retry-timeout",			/* IPP FaxOut */
     "retry-timeout-default",
     "retry-timeout-supported",
-    "save-disposition-supported",
-    "save-document-format-default",
-    "save-document-format-supported",
-    "save-location-default",
-    "save-location-supported",
-    "save-name-subdirectory-supported",
-    "save-name-supported",
-    "separator-sheets",
-    "separator-sheets-default",
-    "separator-sheets-supported",
-    "sheet-collate",
-    "sheet-collate-default",
-    "sheet-collate-supported",
+    "separator-sheets",			/* IPP PPX */
+    "separator-sheets-default",		/* IPP PPX */
+    "separator-sheets-supported",	/* IPP PPX */
+    "separator-sheets-type-supported",	/* IPP PPX */
     "sides",
     "sides-default",
     "sides-supported",
-    "stitching-locations-supported",
-    "stitching-offset-supported",
-    "x-image-position",
-    "x-image-position-default",
-    "x-image-position-supported",
-    "x-image-shift",
-    "x-image-shift-default",
-    "x-image-shift-supported",
-    "x-side1-image-shift",
-    "x-side1-image-shift-default",
-    "x-side1-image-shift-supported",
-    "x-side2-image-shift",
-    "x-side2-image-shift-default",
-    "x-side2-image-shift-supported",
-    "y-image-position",
-    "y-image-position-default",
-    "y-image-position-supported",
-    "y-image-shift",
-    "y-image-shift-default",
-    "y-image-shift-supported",
-    "y-side1-image-shift",
-    "y-side1-image-shift-default",
-    "y-side1-image-shift-supported",
-    "y-side2-image-shift",
-    "y-side2-image-shift-default",
-    "y-side2-image-shift-supported"
+    "stitching-angle-supported",	/* IPP FIN */
+    "stitching-locations-supported",	/* IPP FIN */
+    "stitching-method-supported",	/* IPP FIN */
+    "stitching-offset-supported",	/* IPP FIN */
+    "stitching-reference-edge-supported",
+					/* IPP FIN */
+    "x-image-position",			/* IPP PPX */
+    "x-image-position-default",		/* IPP PPX */
+    "x-image-position-supported",	/* IPP PPX */
+    "x-image-shift",			/* IPP PPX */
+    "x-image-shift-default",		/* IPP PPX */
+    "x-image-shift-supported",		/* IPP PPX */
+    "x-side1-image-shift",		/* IPP PPX */
+    "x-side1-image-shift-default",	/* IPP PPX */
+    "x-side1-image-shift-supported",	/* IPP PPX */
+    "x-side2-image-shift",		/* IPP PPX */
+    "x-side2-image-shift-default",	/* IPP PPX */
+    "x-side2-image-shift-supported",	/* IPP PPX */
+    "y-image-position",			/* IPP PPX */
+    "y-image-position-default",		/* IPP PPX */
+    "y-image-position-supported",	/* IPP PPX */
+    "y-image-shift",			/* IPP PPX */
+    "y-image-shift-default",		/* IPP PPX */
+    "y-image-shift-supported",		/* IPP PPX */
+    "y-side1-image-shift",		/* IPP PPX */
+    "y-side1-image-shift-default",	/* IPP PPX */
+    "y-side1-image-shift-supported",	/* IPP PPX */
+    "y-side2-image-shift",		/* IPP PPX */
+    "y-side2-image-shift-default",	/* IPP PPX */
+    "y-side2-image-shift-supported"	/* IPP PPX */
   };
   static const char * const printer_description[] =
   {					/* printer-description group */
@@ -1632,51 +1630,60 @@ ippCreateRequestedArray(ipp_t *request)	/* I - IPP request */
     "device-service-count",
     "device-uri",			/* CUPS extension */
     "device-uuid",
-    "document-charset-default",
-    "document-charset-supported",
+    "document-charset-default",		/* IPP JobExt */
+    "document-charset-supported",	/* IPP JobExt */
     "document-creation-attributes-supported",
-    "document-digital-signature-default",
-    "document-digital-signature-supported",
     "document-format-default",
-    "document-format-details-default",
-    "document-format-details-supported",
+    "document-format-details-supported",/* IPP JobExt */
     "document-format-preferred",	/* AirPrint extension */
     "document-format-supported",
     "document-format-varying-attributes",
-    "document-format-version-default",
-    "document-format-version-supported",
-    "document-natural-language-default",
+    "document-natural-language-default",/* IPP JobExt */
     "document-natural-language-supported",
-    "document-password-supported",
+					/* IPP JobExt */
+    "document-password-supported",	/* IPP NODRIVER */
     "document-privacy-attributes",	/* IPP Privacy Attributes */
     "document-privacy-scope",		/* IPP Privacy Attributes */
     "generated-natural-language-supported",
-    "identify-actions-default",
-    "identify-actions-supported",
-    "input-source-supported",
-    "ipp-features-supported",
+    "identify-actions-default",		/* IPP NODRIVER */
+    "identify-actions-supported",	/* IPP NODRIVER */
+    "input-source-supported",		/* IPP FaxOut */
+    "ipp-features-supported",		/* IPP NODRIVER */
     "ipp-versions-supported",
-    "ippget-event-life",
+    "ippget-event-life",		/* RFC 3995 */
     "job-authorization-uri-supported",	/* CUPS extension */
-    "job-constraints-supported",
-    "job-creation-attributes-supported",
-    "job-finishings-col-ready",
-    "job-finishings-ready",
-    "job-ids-supported",
+    "job-constraints-supported",	/* IPP NODRIVER */
+    "job-creation-attributes-supported",/* IPP JobExt */
+    "job-history-attributes-configured",/* IPP JobExt */
+    "job-history-attributes-supported",	/* IPP JobExt */
+    "job-ids-supported",		/* IPP JobExt */
     "job-impressions-supported",
     "job-k-limit",			/* CUPS extension */
     "job-k-octets-supported",
+    "job-mandatory-attributes-supported",
+					/* IPP JobExt */
     "job-media-sheets-supported",
     "job-page-limit",			/* CUPS extension */
-    "job-password-encryption-supported",
-    "job-password-supported",
+    "job-pages-per-set-supported",	/* IPP FIN */
+    "job-password-encryption-supported",/* IPP EPX */
+    "job-password-length-supported",	/* IPP EPX */
+    "job-password-repertoire-configured",
+					/* IPP EPX */
+    "job-password-repertoire-supported",/* IPP EPX */
+    "job-password-supported",		/* IPP EPX */
     "job-presets-supported",		/* IPP Presets */
     "job-privacy-attributes",		/* IPP Privacy Attributes */
     "job-privacy-scope",		/* IPP Privacy Attributes */
     "job-quota-period",			/* CUPS extension */
-    "job-resolvers-supported",
+    "job-release-action-default",	/* IPP EPX */
+    "job-release-action-supported",	/* IPP EPX */
+    "job-resolvers-supported",		/* IPP NODRIVER */
     "job-settable-attributes-supported",
-    "job-spooling-supported",
+    "job-spooling-supported",		/* IPP JobExt */
+    "job-storage-access-supported",	/* IPP EPX */
+    "job-storage-disposition-supported",/* IPP EPX */
+    "job-storage-group-supported",	/* IPP EPX */
+    "job-storage-supported",		/* IPP EPX */
     "job-triggers-supported",		/* IPP Presets */
     "jpeg-k-octets-supported",		/* CUPS extension */
     "jpeg-x-dimension-supported",	/* CUPS extension */
@@ -1698,8 +1705,10 @@ ippCreateRequestedArray(ipp_t *request)	/* I - IPP request */
     "multiple-document-jobs-supported",
     "multiple-operation-time-out",
     "multiple-operation-time-out-action",
+					/* IPP NODRIVER */
     "natural-language-configured",
     "operations-supported",
+    "output-device-uuid-supported",	/* IPP INFRA */
     "pages-per-minute",
     "pages-per-minute-color",
     "pdf-k-octets-supported",		/* CUPS extension */
@@ -1707,6 +1716,7 @@ ippCreateRequestedArray(ipp_t *request)	/* I - IPP request */
     "pdf-versions-supported",		/* CUPS extension */
     "pdl-override-supported",
     "platform-shape",			/* IPP 3D */
+    "pkcs7-document-format-supported",	/* IPP TRUSTNOONE */
     "port-monitor",			/* CUPS extension */
     "port-monitor-supported",		/* CUPS extension */
     "preferred-attributes-supported",
@@ -1721,7 +1731,7 @@ ippCreateRequestedArray(ipp_t *request)	/* I - IPP request */
     "printer-config-changes",		/* IPP System */
     "printer-contact-col",		/* IPP System */
     "printer-current-time",
-    "printer-detailed-status-messages",
+    "printer-detailed-status-messages",	/* IPP EPX */
     "printer-device-id",
     "printer-dns-sd-name",		/* CUPS extension */
     "printer-driver-installer",
@@ -1729,6 +1739,11 @@ ippCreateRequestedArray(ipp_t *request)	/* I - IPP request */
     "printer-fax-modem-info",		/* IPP FaxOut */
     "printer-fax-modem-name",		/* IPP FaxOut */
     "printer-fax-modem-number",		/* IPP FaxOut */
+    "printer-finisher",			/* IPP FIN */
+    "printer-finisher-description",	/* IPP FIN */
+    "printer-finisher-supplies",	/* IPP FIN */
+    "printer-finisher-supplies-description",
+					/* IPP FIN */
     "printer-firmware-name",		/* PWG 5110.1 */
     "printer-firmware-patches",		/* PWG 5110.1 */
     "printer-firmware-string-version",	/* PWG 5110.1 */
@@ -1757,13 +1772,21 @@ ippCreateRequestedArray(ipp_t *request)	/* I - IPP request */
     "printer-organization",
     "printer-organizational-unit",
     "printer-output-tray",		/* IPP JPS3 */
+    "printer-pkcs7-public-key",		/* IPP TRUSTNOONE */
+    "printer-pkcs7-repertoire-configured",
+					/* IPP TRUSTNOONE */
+    "printer-pkcs7-repertoire-supported",
+					/* IPP TRUSTNOONE */
     "printer-service-type",		/* IPP System */
     "printer-settable-attributes-supported",
+    "printer-service-contact-col",	/* IPP EPX */
     "printer-state",
     "printer-state-change-date-time",
     "printer-state-change-time",
     "printer-state-message",
     "printer-state-reasons",
+    "printer-storage",			/* IPP EPX */
+    "printer-storage-description",	/* IPP EPX */
     "printer-supply",
     "printer-supply-description",
     "printer-supply-info-uri",
@@ -1774,9 +1797,13 @@ ippCreateRequestedArray(ipp_t *request)	/* I - IPP request */
     "printer-wifi-ssid",		/* AirPrint extension */
     "printer-wifi-state",		/* AirPrint extension */
     "printer-xri-supported",
+    "proof-copies-supported",		/* IPP EPX */
+    "proof-print-copies-supported",	/* IPP EPX */
     "pwg-raster-document-resolution-supported",
-    "pwg-raster-document-sheet-back",
+					/* PWG Raster */
+    "pwg-raster-document-sheet-back",	/* PWG Raster */
     "pwg-raster-document-type-supported",
+					/* PWG Raster */
     "queued-job-count",
     "reference-uri-schemes-supported",
     "repertoire-supported",
@@ -1792,11 +1819,14 @@ ippCreateRequestedArray(ipp_t *request)	/* I - IPP request */
     "subordinate-printers-supported",
     "subscription-privacy-attributes",	/* IPP Privacy Attributes */
     "subscription-privacy-scope",	/* IPP Privacy Attributes */
-    "urf-supported",			/* CUPS extension */
+    "trimming-offset-supported",	/* IPP FIN */
+    "trimming-reference-edge-supported",/* IPP FIN */
+    "trimming-type-supported",		/* IPP FIN */
+    "trimming-when-supported",		/* IPP FIN */
+    "urf-supported",			/* AirPrint */
     "uri-authentication-supported",
     "uri-security-supported",
-    "user-defined-value-supported",
-    "which-jobs-supported",
+    "which-jobs-supported",		/* IPP JobExt */
     "xri-authentication-supported",
     "xri-security-supported",
     "xri-uri-scheme-supported"
@@ -2251,9 +2281,6 @@ ippErrorString(ipp_status_t error)	/* I - Error status */
   else if (error >= IPP_STATUS_ERROR_BAD_REQUEST &&
            error <= IPP_STATUS_ERROR_ACCOUNT_AUTHORIZATION_FAILED)
     return (ipp_status_400s[error - IPP_STATUS_ERROR_BAD_REQUEST]);
-  else if (error >= 0x480 &&
-           error <= IPP_STATUS_ERROR_CUPS_ACCOUNT_AUTHORIZATION_FAILED)
-    return (ipp_status_480s[error - 0x0480]);
   else if (error >= IPP_STATUS_ERROR_INTERNAL &&
            error <= IPP_STATUS_ERROR_TOO_MANY_DOCUMENTS)
     return (ipp_status_500s[error - IPP_STATUS_ERROR_INTERNAL]);
@@ -2274,8 +2301,6 @@ ippErrorString(ipp_status_t error)	/* I - Error status */
 
 /*
  * 'ippErrorValue()' - Return a status code for the given name.
- *
- * @since CUPS 1.2/macOS 10.5@
  */
 
 ipp_status_t				/* O - IPP status code */
@@ -2298,10 +2323,6 @@ ippErrorValue(const char *name)		/* I - Name */
     if (!_cups_strcasecmp(name, ipp_status_400s[i]))
       return ((ipp_status_t)(i + 0x400));
 
-  for (i = 0; i < (sizeof(ipp_status_480s) / sizeof(ipp_status_480s[0])); i ++)
-    if (!_cups_strcasecmp(name, ipp_status_480s[i]))
-      return ((ipp_status_t)(i + 0x480));
-
   for (i = 0; i < (sizeof(ipp_status_500s) / sizeof(ipp_status_500s[0])); i ++)
     if (!_cups_strcasecmp(name, ipp_status_500s[i]))
       return ((ipp_status_t)(i + 0x500));
@@ -2316,8 +2337,6 @@ ippErrorValue(const char *name)		/* I - Name */
 
 /*
  * 'ippOpString()' - Return a name for the given operation id.
- *
- * @since CUPS 1.2/macOS 10.5@
  */
 
 const char *				/* O - Name */
@@ -2351,8 +2370,6 @@ ippOpString(ipp_op_t op)		/* I - Operation ID */
 
 /*
  * 'ippOpValue()' - Return an operation id for the given name.
- *
- * @since CUPS 1.2/macOS 10.5@
  */
 
 ipp_op_t				/* O - Operation ID */
@@ -2431,8 +2448,6 @@ ippSetPort(int p)			/* I - Port number to use */
 
 /*
  * 'ippStateString()' - Return the name corresponding to a state value.
- *
- * @since CUPS 2.0/OS 10.10@
  */
 
 const char *				/* O - State name */
@@ -2449,8 +2464,6 @@ ippStateString(ipp_state_t state)	/* I - State value */
  * 'ippTagString()' - Return the tag name corresponding to a tag value.
  *
  * The returned names are defined in RFC 8011 and the IANA IPP Registry.
- *
- * @since CUPS 1.4/macOS 10.6@
  */
 
 const char *				/* O - Tag name */
@@ -2469,8 +2482,6 @@ ippTagString(ipp_tag_t tag)		/* I - Tag value */
  * 'ippTagValue()' - Return the tag value corresponding to a tag name.
  *
  * The tag names are defined in RFC 8011 and the IANA IPP Registry.
- *
- * @since CUPS 1.4/macOS 10.6@
  */
 
 ipp_tag_t				/* O - Tag value */
