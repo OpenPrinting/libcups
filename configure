@@ -735,6 +735,7 @@ ac_subst_files=''
 ac_user_opts='
 enable_option_checking
 with_dnssd
+with_tls
 enable_static
 enable_shared
 enable_debug
@@ -1383,6 +1384,7 @@ Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-dnssd=LIBRARY    set DNS-SD library (auto, avahi, mdnsresponder)
+  --with-tls=...          use gnutls or openssl/libressl for TLS support
   --with-dsoflags=...     Specify additional DSOFLAGS
   --with-ldflags=...      Specify additional LDFLAGS
 
@@ -5003,86 +5005,111 @@ fi
 
 
 
-if test $host_os_name = darwin
+
+# Check whether --with-tls was given.
+if test ${with_tls+y}
+then :
+  withval=$with_tls;
+fi
+
+if test "x$with_tls" = x
 then :
 
-    ac_fn_c_check_header_compile "$LINENO" "Security/SecureTransport.h" "ac_cv_header_Security_SecureTransport_h" "$ac_includes_default"
-if test "x$ac_cv_header_Security_SecureTransport_h" = xyes
+    with_tls="yes"
+
+elif test "$with_tls" != gnutls -a "$with_tls" != libressl -a "$with_tls" != openssl -a "$with_tls" != yes
 then :
 
-
-printf "%s\n" "#define HAVE_TLS 1" >>confdefs.h
-
-
-printf "%s\n" "#define HAVE_CDSASSL 1" >>confdefs.h
-
-	LIBS="$LIBS -framework Security"
-
-		ac_fn_c_check_header_compile "$LINENO" "Security/SecCertificate.h" "ac_cv_header_Security_SecCertificate_h" "$ac_includes_default"
-if test "x$ac_cv_header_Security_SecCertificate_h" = xyes
-then :
-
-
-printf "%s\n" "#define HAVE_SECCERTIFICATE_H 1" >>confdefs.h
-
+    as_fn_error $? "Unsupported --with-tls value \"$with_tls\" specified." "$LINENO" 5
 
 fi
 
-	ac_fn_c_check_header_compile "$LINENO" "Security/SecItem.h" "ac_cv_header_Security_SecItem_h" "$ac_includes_default"
-if test "x$ac_cv_header_Security_SecItem_h" = xyes
+have_tls="0"
+
+if test $with_tls = yes -o $with_tls = libressl -o $with_tls = openssl
 then :
-
-
-printf "%s\n" "#define HAVE_SECITEM_H 1" >>confdefs.h
-
-
-fi
-
-	ac_fn_c_check_header_compile "$LINENO" "Security/SecPolicy.h" "ac_cv_header_Security_SecPolicy_h" "$ac_includes_default"
-if test "x$ac_cv_header_Security_SecPolicy_h" = xyes
-then :
-
-
-printf "%s\n" "#define HAVE_SECPOLICY_H 1" >>confdefs.h
-
-
-fi
-
-
-fi
-
-
-else $as_nop
 
     if test "x$PKGCONFIG" != x
 then :
 
-	if $PKGCONFIG --exists gnutls
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for OpenSSL/LibreSSL package" >&5
+printf %s "checking for OpenSSL/LibreSSL package... " >&6; }
+	if $PKGCONFIG --exists openssl
 then :
 
+	    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf "%s\n" "yes" >&6; }
+	    have_tls="1"
+
+printf "%s\n" "#define HAVE_TLS 1" >>confdefs.h
+
+
+printf "%s\n" "#define HAVE_OPENSSL 1" >>confdefs.h
+
+	    CPPFLAGS="$CPPFLAGS $($PKGCONFIG --cflags openssl)"
+	    LIBS="$LIBS $($PKGCONFIG --libs openssl)"
+	    PKGCONFIG_LIBS_PRIVATE="$($PKGCONFIG --libs openssl) $PKGCONFIG_LIBS_PRIVATE"
+	    PKGCONFIG_REQUIRES_PRIVATE="openssl, $PKGCONFIG_REQUIRES"
+
+else $as_nop
+
+	    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+
+fi
+
+fi
+
+fi
+
+if test $have_tls = 0
+then :
+
+    if test $with_tls = yes -o $with_tls = gnutls
+then :
+
+	if test "x$PKGCONFIG" != x
+then :
+
+	    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for GNU TLS package" >&5
+printf %s "checking for GNU TLS package... " >&6; }
+	    if $PKGCONFIG --exists gnutls
+then :
+
+		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf "%s\n" "yes" >&6; }
+	        have_tls="1"
 
 printf "%s\n" "#define HAVE_TLS 1" >>confdefs.h
 
 
 printf "%s\n" "#define HAVE_GNUTLS 1" >>confdefs.h
 
-	    CPPFLAGS="$CPPFLAGS `$PKGCONFIG --cflags gnutls`"
-	    LIBS="$LIBS `$PKGCONFIG --libs gnutls`"
-	    PKGCONFIG_LIBS_PRIVATE="$($PKGCONFIG --libs gnutls) $PKGCONFIG_LIBS_PRIVATE"
-	    PKGCONFIG_REQUIRES_PRIVATE="gnutls >= 3.0, $PKGCONFIG_REQUIRES_PRIVATE"
-
-printf "%s\n" "#define HAVE_GNUTLS 1" >>confdefs.h
-
+		CPPFLAGS="$CPPFLAGS `$PKGCONFIG --cflags gnutls`"
+		LIBS="$LIBS `$PKGCONFIG --libs gnutls`"
+		PKGCONFIG_LIBS_PRIVATE="$($PKGCONFIG --libs gnutls) $PKGCONFIG_LIBS_PRIVATE"
+		PKGCONFIG_REQUIRES_PRIVATE="gnutls >= 3.0, $PKGCONFIG_REQUIRES_PRIVATE"
 
 else $as_nop
 
-	    as_fn_error $? "Sorry, this software requires GNU TLS or the corresponding platform TLS support." "$LINENO" 5
+		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
 
 fi
 
 fi
 
 fi
+
+fi
+
+if test $have_tls = 0
+then :
+
+    as_fn_error $? "TLS support is required." "$LINENO" 5
+
+fi
+
 
 ac_fn_c_check_header_compile "$LINENO" "sys/random.h" "ac_cv_header_sys_random_h" "$ac_includes_default"
 if test "x$ac_cv_header_sys_random_h" = xyes

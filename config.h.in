@@ -1,7 +1,7 @@
 /*
  * Configuration file for libcups.
  *
- * Copyright © 2020-2021 by OpenPrinting
+ * Copyright © 2020-2022 by OpenPrinting
  * Copyright © 2007-2019 by Apple Inc.
  * Copyright © 1997-2007 by Easy Software Products.
  *
@@ -109,9 +109,8 @@
  */
 
 #undef HAVE_TLS
-#undef HAVE_CDSASSL
+#undef HAVE_OPENSSL
 #undef HAVE_GNUTLS
-#undef HAVE_SSPISSL
 
 
 /*
@@ -126,15 +125,6 @@
  */
 
 #undef HAVE_GNUTLS_PRIORITY_SET_DIRECT
-
-
-/*
- * What Security framework headers do we have?
- */
-
-#undef HAVE_SECCERTIFICATE_H
-#undef HAVE_SECITEM_H
-#undef HAVE_SECPOLICY_H
 
 
 /*

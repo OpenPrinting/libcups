@@ -1,7 +1,7 @@
 /*
  * TLS routines for CUPS.
  *
- * Copyright © 2021 by OpenPrinting.
+ * Copyright © 2021-2022 by OpenPrinting.
  * Copyright @ 2007-2014 by Apple Inc.
  * Copyright @ 1997-2007 by Easy Software Products, all rights reserved.
  *
@@ -32,11 +32,9 @@
  */
 
 #ifdef HAVE_TLS
-#  ifdef HAVE_GNUTLS
+#  ifdef HAVE_OPENSSL
+#    include "tls-openssl.c"
+#  elif defined(HAVE_GNUTLS)
 #    include "tls-gnutls.c"
-#  elif defined(HAVE_CDSASSL)
-#    include "tls-darwin.c"
-#  else
-#    include "tls-sspi.c"
-#  endif /* HAVE_GNUTLS */
+#  endif /* HAVE_OPENSSL */
 #endif /* HAVE_TLS */

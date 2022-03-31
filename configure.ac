@@ -310,38 +310,58 @@ AC_SUBST([PKGCONFIG_AVAHI])
 
 
 dnl TLS support...
-AS_IF([test $host_os_name = darwin], [
-    AC_CHECK_HEADER([Security/SecureTransport.h], [
-	AC_DEFINE([HAVE_TLS], [1], [Do we support TLS?])
-	AC_DEFINE([HAVE_CDSASSL], [1], [Do we have the macOS SecureTransport API?])
-	LIBS="$LIBS -framework Security"
+AC_ARG_WITH([tls], AS_HELP_STRING([--with-tls=...], [use gnutls or openssl/libressl for TLS support]))
+AS_IF([test "x$with_tls" = x], [
+    with_tls="yes"
+], [test "$with_tls" != gnutls -a "$with_tls" != libressl -a "$with_tls" != openssl -a "$with_tls" != yes], [
+    AC_MSG_ERROR([Unsupported --with-tls value "$with_tls" specified.])
+])
 
-	dnl Check for the various security headers...
-	AC_CHECK_HEADER([Security/SecCertificate.h], [
-	    AC_DEFINE([HAVE_SECCERTIFICATE_H], [1], [Have the <Security/SecCertificate.h> header?])
-	])
-	AC_CHECK_HEADER([Security/SecItem.h], [
-	    AC_DEFINE([HAVE_SECITEM_H], [1], [Have the <Security/SecItem.h> header?])
-	])
-	AC_CHECK_HEADER([Security/SecPolicy.h], [
-	    AC_DEFINE([HAVE_SECPOLICY_H], [1], [Have the <Security/SecPolicy.h header?])
-	])
-    ])
-], [
+have_tls="0"
+
+dnl First look for OpenSSL/LibreSSL...
+AS_IF([test $with_tls = yes -o $with_tls = libressl -o $with_tls = openssl], [
     AS_IF([test "x$PKGCONFIG" != x], [
-	AS_IF([$PKGCONFIG --exists gnutls], [
+        AC_MSG_CHECKING([for OpenSSL/LibreSSL package])
+	AS_IF([$PKGCONFIG --exists openssl], [
+	    AC_MSG_RESULT([yes])
+	    have_tls="1"
 	    AC_DEFINE([HAVE_TLS], [1], [Do we support TLS?])
-	    AC_DEFINE([HAVE_GNUTLS], [1], [Do we have the GNU TLS library?])
-	    CPPFLAGS="$CPPFLAGS `$PKGCONFIG --cflags gnutls`"
-	    LIBS="$LIBS `$PKGCONFIG --libs gnutls`"
-	    PKGCONFIG_LIBS_PRIVATE="$($PKGCONFIG --libs gnutls) $PKGCONFIG_LIBS_PRIVATE"
-	    PKGCONFIG_REQUIRES_PRIVATE="gnutls >= 3.0, $PKGCONFIG_REQUIRES_PRIVATE"
-	    AC_DEFINE(HAVE_GNUTLS, 1, [Have GNU TLS?])
+	    AC_DEFINE([HAVE_OPENSSL], [1], [Do we have the OpenSSL/LibreSSL library?])
+	    CPPFLAGS="$CPPFLAGS $($PKGCONFIG --cflags openssl)"
+	    LIBS="$LIBS $($PKGCONFIG --libs openssl)"
+	    PKGCONFIG_LIBS_PRIVATE="$($PKGCONFIG --libs openssl) $PKGCONFIG_LIBS_PRIVATE"
+	    PKGCONFIG_REQUIRES_PRIVATE="openssl, $PKGCONFIG_REQUIRES"
 	], [
-	    AC_MSG_ERROR([Sorry, this software requires GNU TLS or the corresponding platform TLS support.])
+	    AC_MSG_RESULT([no])
 	])
     ])
 ])
+
+AS_IF([test $have_tls = 0], [
+    AS_IF([test $with_tls = yes -o $with_tls = gnutls], [
+	AS_IF([test "x$PKGCONFIG" != x], [
+	    AC_MSG_CHECKING([for GNU TLS package])
+	    AS_IF([$PKGCONFIG --exists gnutls], [
+		AC_MSG_RESULT([yes])
+	        have_tls="1"
+		AC_DEFINE([HAVE_TLS], [1], [Do we support TLS?])
+		AC_DEFINE([HAVE_GNUTLS], [1], [Do we have the GNU TLS library?])
+		CPPFLAGS="$CPPFLAGS `$PKGCONFIG --cflags gnutls`"
+		LIBS="$LIBS `$PKGCONFIG --libs gnutls`"
+		PKGCONFIG_LIBS_PRIVATE="$($PKGCONFIG --libs gnutls) $PKGCONFIG_LIBS_PRIVATE"
+		PKGCONFIG_REQUIRES_PRIVATE="gnutls >= 3.0, $PKGCONFIG_REQUIRES_PRIVATE"
+	    ], [
+		AC_MSG_RESULT([no])
+	    ])
+	])
+    ])
+])
+
+AS_IF([test $have_tls = 0], [
+    AC_MSG_ERROR([TLS support is required.])
+])
+
 
 dnl Random number support...
 AC_CHECK_HEADER([sys/random.h], [

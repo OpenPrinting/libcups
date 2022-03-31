@@ -1,7 +1,7 @@
 /*
  * Configuration file for libcups on Windows.
  *
- * Copyright © 2021 by OpenPrinting
+ * Copyright © 2021-2022 by OpenPrinting
  * Copyright © 2007-2019 by Apple Inc.
  * Copyright © 1997-2007 by Easy Software Products.
  *
@@ -193,9 +193,8 @@ typedef unsigned long useconds_t;
  */
 
 #define HAVE_TLS 1
-/* #undef HAVE_CDSASSL */
+#define HAVE_OPENSSL 1
 /* #undef HAVE_GNUTLS */
-#define HAVE_SSPISSL 1
 
 
 /*
@@ -210,15 +209,6 @@ typedef unsigned long useconds_t;
  */
 
 /* #undef HAVE_GNUTLS_PRIORITY_SET_DIRECT */
-
-
-/*
- * What Security framework headers do we have?
- */
-
-/* #undef HAVE_SECCERTIFICATE_H */
-/* #undef HAVE_SECITEM_H */
-/* #undef HAVE_SECPOLICY_H */
 
 
 /*
