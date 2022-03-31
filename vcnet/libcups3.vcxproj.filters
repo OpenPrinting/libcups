@@ -78,9 +78,6 @@
     <ClCompile Include="..\cups\md5.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\cups\md5passwd.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\cups\notify.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -121,9 +118,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\cups\raster-stream.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\cups\raster-stubs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\cups\ipp-file.c">
