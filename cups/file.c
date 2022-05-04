@@ -808,7 +808,7 @@ cupsFileOpen(const char *filename,	/* I - Name of file */
   switch (*mode)
   {
     case 'a' : /* Append file */
-        fd = cups_open(filename, O_RDWR | O_CREAT | O_APPEND | O_LARGEFILE | O_BINARY);
+        fd = cups_open(filename, O_WRONLY | O_CREAT | O_APPEND | O_LARGEFILE | O_BINARY);
         break;
 
     case 'r' : /* Read file */
