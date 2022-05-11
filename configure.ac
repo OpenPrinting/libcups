@@ -535,6 +535,11 @@ AS_IF([test "$prefix" = NONE], [
 ])
 
 
+dnl Clean up pkg-config "requires" content...
+[PKGCONFIG_REQUIRES="$(echo $PKGCONFIG_REQUIRES | sed -e '1,$s/,$//')"]
+[PKGCONFIG_REQUIRES_PRIVATE="$(echo $PKGCONFIG_REQUIRES_PRIVATE | sed -e '1,$s/,$//')"]
+
+
 dnl Provide autoconf with a list of files to generate and output them...
 AC_CONFIG_FILES([Makedefs cups.pc packaging/libcups.list])
 AC_OUTPUT

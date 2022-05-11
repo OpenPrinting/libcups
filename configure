@@ -5457,6 +5457,10 @@ else $as_nop
 fi
 
 
+PKGCONFIG_REQUIRES="$(echo $PKGCONFIG_REQUIRES | sed -e '1,$s/,$//')"
+PKGCONFIG_REQUIRES_PRIVATE="$(echo $PKGCONFIG_REQUIRES_PRIVATE | sed -e '1,$s/,$//')"
+
+
 ac_config_files="$ac_config_files Makedefs cups.pc packaging/libcups.list"
 
 cat >confcache <<\_ACEOF
