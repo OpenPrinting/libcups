@@ -3292,6 +3292,7 @@
 				HEADER_SEARCH_PATHS = (
 					.,
 					..,
+					/usr/local/include,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				ONLY_ACTIVE_ARCH = YES;
@@ -3358,6 +3359,7 @@
 				HEADER_SEARCH_PATHS = (
 					.,
 					..,
+					/usr/local/include,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				OTHER_CFLAGS = (

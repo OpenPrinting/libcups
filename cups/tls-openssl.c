@@ -81,7 +81,6 @@ cupsMakeServerCredentials(
   char		temp[1024],		// Temporary directory name
  		crtfile[1024],		// Certificate filename
 		keyfile[1024];		// Private key filename
-  const char	*common_ptr;		// Pointer into common name
 
 
   DEBUG_printf(("cupsMakeServerCredentials(path=\"%s\", common_name=\"%s\", num_alt_names=%d, alt_names=%p, expiration_date=%d)", path, common_name, num_alt_names, alt_names, (int)expiration_date));
@@ -148,7 +147,7 @@ cupsMakeServerCredentials(
   X509_set_issuer_name(cert, name);
 
   http_x509_add_san(cert, common_name);
-  if ((common_ptr = strstr(common_name, ".local")) == NULL)
+  if (!strstr(common_name, ".local"))
   {
     // Add common_name.local to the list, too...
     char	localname[256],		// hostname.local
@@ -326,7 +325,7 @@ httpCopyCredentials(
 	if (PEM_write_bio_X509(bio, cert))
 	{
 	  bytes = BIO_get_mem_data(bio, &buffer);
-	  httpAddCredential(*credentials, buffer, (int)bytes);
+	  httpAddCredential(*credentials, buffer, (size_t)bytes);
 	}
 
 	BIO_free(bio);
@@ -817,7 +816,7 @@ httpSaveCredentials(
     cupsFilePuts(fp, "-----BEGIN CERTIFICATE-----\n");
     for (ptr = cred->data, remaining = (ssize_t)cred->datalen; remaining > 0; remaining -= 45, ptr += 45)
     {
-      httpEncode64(line, sizeof(line), (char *)ptr, remaining > 45 ? 45 : remaining);
+      httpEncode64(line, sizeof(line), (char *)ptr, remaining > 45 ? 45 : (size_t)remaining);
       cupsFilePrintf(fp, "%s\n", line);
     }
     cupsFilePuts(fp, "-----END CERTIFICATE-----\n");
@@ -894,7 +893,7 @@ _httpTLSStart(http_t *http)		// I - Connection to server
   char		hostname[256],		// Hostname
 		cipherlist[256];	// List of cipher suites
   unsigned long	error;			// Error code, if any
-  static const int versions[] =		// SSL/TLS versions
+  static const uint16_t versions[] =	// SSL/TLS versions
   {
     TLS1_VERSION,			// No more SSL support in OpenSSL
     TLS1_VERSION,			// TLS/1.0
@@ -1161,6 +1160,8 @@ http_bio_ctrl(BIO  *h,			// I - BIO data
 	      long arg1,		// I - First argument
 	      void *arg2)		// I - Second argument
 {
+  (void)arg1;
+
   switch (cmd)
   {
     default :
@@ -1286,7 +1287,7 @@ http_bio_write(BIO        *h,		// I - BIO data
                const char *buf,		// I - Buffer to write
 	       int        num)		// I - Number of bytes to write
 {
-  return (send(((http_t *)BIO_get_data(h))->fd, buf, num, 0));
+  return (send(((http_t *)BIO_get_data(h))->fd, buf, (size_t)num, 0));
 }
 
 
