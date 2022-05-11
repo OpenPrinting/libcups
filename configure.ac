@@ -116,23 +116,39 @@ AC_SUBST([PKGCONFIG_REQUIRES])
 AC_SUBST([PKGCONFIG_REQUIRES_PRIVATE])
 
 
-dnl Functions...
+dnl String functions...
 AC_CHECK_FUNCS([strlcat strlcpy])
+
+
+dnl DNS resolver functions...
+SAVELIBS="$LIBS"
+LIBS=""
 AC_SEARCH_LIBS([hstrerror], [nsl socket resolv], [
     AC_DEFINE([HAVE_HSTRERROR], [1], [Have the hstrerror function?])
+    PKGCONFIG_LIBS_PRIVATE="$LIBS $PKGCONFIG_LIBS_PRIVATE"
+    SAVELIBS="$SAVELIBS $LIBS"
 ])
 AC_SEARCH_LIBS([__res_init], [resolv bind], [
     AC_DEFINE([HAVE_RES_INIT], [1], [Have res_init function?])
+    PKGCONFIG_LIBS_PRIVATE="$LIBS $PKGCONFIG_LIBS_PRIVATE"
+    SAVELIBS="$SAVELIBS $LIBS"
 ], [
     AC_SEARCH_LIBS([res_9_init], [resolv bind], [
         AC_DEFINE([HAVE_RES_INIT], [1], [Have res_init function?])
+	PKGCONFIG_LIBS_PRIVATE="$LIBS $PKGCONFIG_LIBS_PRIVATE"
+	SAVELIBS="$SAVELIBS $LIBS"
     ], [
 	AC_SEARCH_LIBS([res_init], [resolv bind], [
 	    AC_DEFINE([HAVE_RES_INIT], [1], [Have res_init function?])
+	    PKGCONFIG_LIBS_PRIVATE="$LIBS $PKGCONFIG_LIBS_PRIVATE"
+	    SAVELIBS="$SAVELIBS $LIBS"
 	])
     ])
 ])
+LIBS="$SAVELIBS"
 
+
+dnl macOS system configuration functions...
 SAVELIBS="$LIBS"
 LIBS="-framework SystemConfiguration $LIBS"
 AC_CHECK_FUNCS([SCDynamicStoreCopyComputerName], [
@@ -243,10 +259,12 @@ AC_CHECK_HEADER([iconv.h], [
     LIBS=""
     AC_SEARCH_LIBS([iconv_open], [iconv], [
         AC_DEFINE([HAVE_ICONV_H], [1], [Have <iconv.h> header?])
+	PKGCONFIG_LIBS_PRIVATE="$LIBS $PKGCONFIG_LIBS_PRIVATE"
 	SAVELIBS="$SAVELIBS $LIBS"
     ])
     AC_SEARCH_LIBS([libiconv_open], [iconv], [
 	AC_DEFINE([HAVE_ICONV_H], [1], [Have <iconv.h> header?])
+	PKGCONFIG_LIBS_PRIVATE="$LIBS $PKGCONFIG_LIBS_PRIVATE"
 	SAVELIBS="$SAVELIBS $LIBS"
     ])
     LIBS="$SAVELIBS"

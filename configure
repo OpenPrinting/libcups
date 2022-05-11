@@ -4162,6 +4162,10 @@ then :
 
 fi
 
+
+
+SAVELIBS="$LIBS"
+LIBS=""
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for library containing hstrerror" >&5
 printf %s "checking for library containing hstrerror... " >&6; }
 if test ${ac_cv_search_hstrerror+y}
@@ -4222,6 +4226,8 @@ then :
 
 printf "%s\n" "#define HAVE_HSTRERROR 1" >>confdefs.h
 
+    PKGCONFIG_LIBS_PRIVATE="$LIBS $PKGCONFIG_LIBS_PRIVATE"
+    SAVELIBS="$SAVELIBS $LIBS"
 
 fi
 
@@ -4285,6 +4291,8 @@ then :
 
 printf "%s\n" "#define HAVE_RES_INIT 1" >>confdefs.h
 
+    PKGCONFIG_LIBS_PRIVATE="$LIBS $PKGCONFIG_LIBS_PRIVATE"
+    SAVELIBS="$SAVELIBS $LIBS"
 
 else $as_nop
 
@@ -4348,6 +4356,8 @@ then :
 
 printf "%s\n" "#define HAVE_RES_INIT 1" >>confdefs.h
 
+	PKGCONFIG_LIBS_PRIVATE="$LIBS $PKGCONFIG_LIBS_PRIVATE"
+	SAVELIBS="$SAVELIBS $LIBS"
 
 else $as_nop
 
@@ -4411,6 +4421,8 @@ then :
 
 printf "%s\n" "#define HAVE_RES_INIT 1" >>confdefs.h
 
+	    PKGCONFIG_LIBS_PRIVATE="$LIBS $PKGCONFIG_LIBS_PRIVATE"
+	    SAVELIBS="$SAVELIBS $LIBS"
 
 fi
 
@@ -4419,6 +4431,8 @@ fi
 
 
 fi
+
+LIBS="$SAVELIBS"
 
 
 SAVELIBS="$LIBS"
@@ -4806,6 +4820,7 @@ then :
 
 printf "%s\n" "#define HAVE_ICONV_H 1" >>confdefs.h
 
+	PKGCONFIG_LIBS_PRIVATE="$LIBS $PKGCONFIG_LIBS_PRIVATE"
 	SAVELIBS="$SAVELIBS $LIBS"
 
 fi
@@ -4870,6 +4885,7 @@ then :
 
 printf "%s\n" "#define HAVE_ICONV_H 1" >>confdefs.h
 
+	PKGCONFIG_LIBS_PRIVATE="$LIBS $PKGCONFIG_LIBS_PRIVATE"
 	SAVELIBS="$SAVELIBS $LIBS"
 
 fi
