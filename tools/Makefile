@@ -75,12 +75,12 @@ depend:
 
 install:	all
 	echo Installing IPP tools in $(BUILDROOT)$(bindir)...
-	$(INSTALL_DIR) -m 755 $(BUILDROOT)$(bindir)
+	$(INSTALL_DIR) $(BUILDROOT)$(bindir)
 	for file in $(IPPTOOLS); do \
 		$(INSTALL_BIN) $$file $(BUILDROOT)$(bindir); \
 	done
 	echo Installing printer commands in $(BUILDROOT)$(libexecdir)/ippeveprinter...
-	$(INSTALL_DIR) -m 755 $(BUILDROOT)$(libexecdir)/ippeveprinter
+	$(INSTALL_DIR) $(BUILDROOT)$(libexecdir)/ippeveprinter
 	for file in $(IPPEVECOMMANDS); do \
 		$(INSTALL_BIN) $$file $(BUILDROOT)$(libexecdir)/ippeveprinter; \
 	done

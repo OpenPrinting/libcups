@@ -1,9 +1,7 @@
 #
 # Top-level Makefile for libcups.
 #
-# Copyright © 2020-2021 by OpenPrinting
-# Copyright © 2007-2019 by Apple Inc.
-# Copyright © 1997-2007 by Easy Software Products, all rights reserved.
+# Copyright © 2020-2022 by OpenPrinting
 #
 # Licensed under Apache License v2.0.  See the file "LICENSE" for more
 # information.
@@ -79,7 +77,7 @@ install:
 		(cd $$dir; $(MAKE) $(MFLAGS) install) || exit 1;\
 	done
 	echo Installing cups.pc file...
-	$(INSTALL_DIR) -m 755 $(BUILDROOT)$(libdir)/pkgconfig
+	$(INSTALL_DIR) $(BUILDROOT)$(libdir)/pkgconfig
 	$(INSTALL_DATA) cups.pc $(BUILDROOT)$(libdir)/pkgconfig/cups.pc
 
 

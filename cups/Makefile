@@ -2,8 +2,6 @@
 # Library Makefile for libcups.
 #
 # Copyright © 2021-2022 by OpenPrinting.
-# Copyright © 2007-2021 by Apple Inc.
-# Copyright © 1997-2006 by Easy Software Products, all rights reserved.
 #
 # Licensed under Apache License v2.0.  See the file "LICENSE" for more
 # information.
@@ -188,12 +186,12 @@ depend:
 
 install:	all $(INSTALLSTATIC)
 	echo Installing header files into $(BUILDROOT)$(includedir)/cups...
-	$(INSTALL_DIR) -m 755 $(BUILDROOT)$(includedir)/cups
+	$(INSTALL_DIR) $(BUILDROOT)$(includedir)/cups
 	for file in $(HEADERS); do \
 		$(INSTALL_DATA) $$file $(BUILDROOT)$(includedir)/cups; \
 	done
 	echo Installing libraries in $(BUILDROOT)$(libdir)...
-	$(INSTALL_DIR) -m 755 $(BUILDROOT)$(libdir)
+	$(INSTALL_DIR) $(BUILDROOT)$(libdir)
 	$(INSTALL_LIB) $(LIBCUPS) $(BUILDROOT)$(libdir)
 	if test $(LIBCUPS) = "libcups.so.3"; then \
 		$(RM) $(BUILDROOT)$(libdir)/`basename $(LIBCUPS) .3`; \
@@ -210,10 +208,10 @@ install:	all $(INSTALLSTATIC)
 	fi
 
 installstatic:
-	$(INSTALL_DIR) -m 755 $(BUILDROOT)$(libdir)
-	$(INSTALL_LIB) -m 755 libcups.a $(BUILDROOT)$(libdir)
+	echo Installing static libraries in $(BUILDROOT)$(libdir)...
+	$(INSTALL_DIR) $(BUILDROOT)$(libdir)
+	$(INSTALL_LIB) libcups.a $(BUILDROOT)$(libdir)
 	$(RANLIB) $(BUILDROOT)$(libdir)/libcups.a
-	$(CHMOD) 555 $(BUILDROOT)$(libdir)/libcups.a
 
 
 #

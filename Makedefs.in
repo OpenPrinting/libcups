@@ -1,9 +1,7 @@
 #
 # Common makefile definitions for libcups.
 #
-# Copyright © 2021 by OpenPrinting.
-# Copyright © 2007-2019 by Apple Inc.
-# Copyright © 1997-2007 by Easy Software Products, all rights reserved.
+# Copyright © 2021-2022 by OpenPrinting.
 #
 # Licensed under Apache License v2.0.  See the file "LICENSE" for more
 # information.
@@ -44,10 +42,10 @@ SHELL		=	/bin/sh
 # Installation programs...
 #
 
-INSTALL_BIN	=	$(INSTALL) -c -m @CUPS_EXE_FILE_PERM@
+INSTALL_BIN	=	$(INSTALL) -c -m 755
 INSTALL_DATA	=	$(INSTALL) -c -m 444
-INSTALL_DIR	=	$(INSTALL) -d
-INSTALL_LIB	=	$(INSTALL) -c -m @CUPS_EXE_FILE_PERM@
+INSTALL_DIR	=	$(INSTALL) -d -m 755
+INSTALL_LIB	=	$(INSTALL) -c -m 755
 INSTALL_MAN	=	$(INSTALL) -c -m 444
 
 
