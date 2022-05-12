@@ -371,7 +371,7 @@ cupsSetServer(const char *server)	/* I - Server name */
 
   if (server)
   {
-    strlcpy(cg->server, server, sizeof(cg->server));
+    cupsCopyString(cg->server, server, sizeof(cg->server));
 
     if (cg->server[0] != '/' && (options = strrchr(cg->server, '/')) != NULL)
     {
@@ -407,9 +407,9 @@ cupsSetServer(const char *server)	/* I - Server name */
       cups_set_default_ipp_port(cg);
 
     if (cg->server[0] == '/')
-      strlcpy(cg->servername, "localhost", sizeof(cg->servername));
+      cupsCopyString(cg->servername, "localhost", sizeof(cg->servername));
     else
-      strlcpy(cg->servername, cg->server, sizeof(cg->servername));
+      cupsCopyString(cg->servername, cg->server, sizeof(cg->servername));
   }
   else
   {
@@ -469,7 +469,7 @@ cupsSetUser(const char *user)		/* I - User name */
 
 
   if (user)
-    strlcpy(cg->user, user, sizeof(cg->user));
+    cupsCopyString(cg->user, user, sizeof(cg->user));
   else
     cg->user[0] = '\0';
 }
@@ -504,7 +504,7 @@ cupsSetUserAgent(const char *user_agent)/* I - User-Agent string or @code NULL@ 
 
   if (user_agent)
   {
-    strlcpy(cg->user_agent, user_agent, sizeof(cg->user_agent));
+    cupsCopyString(cg->user_agent, user_agent, sizeof(cg->user_agent));
     return;
   }
 
@@ -517,7 +517,7 @@ cupsSetUserAgent(const char *user_agent)/* I - User-Agent string or @code NULL@ 
 	  cg->user_agent[0] = '\0';
 	  break;
       case _CUPS_UATOKENS_PRODUCT_ONLY :
-	  strlcpy(cg->user_agent, "CUPS IPP", sizeof(cg->user_agent));
+	  cupsCopyString(cg->user_agent, "CUPS IPP", sizeof(cg->user_agent));
 	  break;
       case _CUPS_UATOKENS_MAJOR :
 	  snprintf(cg->user_agent, sizeof(cg->user_agent), "CUPS/%d IPP/2", LIBCUPS_VERSION_MAJOR);
@@ -526,7 +526,7 @@ cupsSetUserAgent(const char *user_agent)/* I - User-Agent string or @code NULL@ 
 	  snprintf(cg->user_agent, sizeof(cg->user_agent), "CUPS/%d.%d IPP/2.1", LIBCUPS_VERSION_MAJOR, LIBCUPS_VERSION_MINOR);
 	  break;
       case _CUPS_UATOKENS_MINIMAL :
-	  strlcpy(cg->user_agent, "CUPS/" LIBCUPS_VERSION " IPP/2.0", sizeof(cg->user_agent));
+	  cupsCopyString(cg->user_agent, "CUPS/" LIBCUPS_VERSION " IPP/2.0", sizeof(cg->user_agent));
 	  break;
     }
   }
@@ -579,7 +579,7 @@ cupsSetUserAgent(const char *user_agent)/* I - User-Agent string or @code NULL@ 
   if (!sysctlbyname("kern.osproductversion", version, &len, NULL, 0))
     version[len] = '\0';
   else
-    strlcpy(version, "unknown", sizeof(version));
+    cupsCopyString(version, "unknown", sizeof(version));
 
 #  if TARGET_OS_OSX
   if (cg->uatokens == _CUPS_UATOKENS_OS)
@@ -997,7 +997,7 @@ _cupsSetDefaults(void)
     cups_set_default_ipp_port(cg);
 
   if (!cg->user[0])
-    strlcpy(cg->user, cc.user, sizeof(cg->user));
+    cupsCopyString(cg->user, cc.user, sizeof(cg->user));
 
   if (cg->trust_first < 0)
     cg->trust_first = cc.trust_first;
@@ -1186,7 +1186,7 @@ cups_finalize_client_conf(
       getpwuid_r(getuid(), &pw, cg->pw_buf, PW_BUF_SIZE, &result);
 
     if (result)
-      strlcpy(cc->user, pw.pw_name, sizeof(cc->user));
+      cupsCopyString(cc->user, pw.pw_name, sizeof(cc->user));
     else
 #endif /* _WIN32 */
     {
@@ -1194,7 +1194,7 @@ cups_finalize_client_conf(
       * Use the default "unknown" user name...
       */
 
-      strlcpy(cc->user, "unknown", sizeof(cc->user));
+      cupsCopyString(cc->user, "unknown", sizeof(cc->user));
     }
   }
 
@@ -1261,11 +1261,11 @@ cups_init_client_conf(
     sval[0] = '\0';
 
     if (cups_apple_get_boolean(kAllowRC4, &bval) && bval)
-      strlcat(sval, " AllowRC4", sizeof(sval));
+      cupsConcatString(sval, " AllowRC4", sizeof(sval));
     if (cups_apple_get_boolean(kAllowSSL3, &bval) && bval)
-      strlcat(sval, " AllowSSL3", sizeof(sval));
+      cupsConcatString(sval, " AllowSSL3", sizeof(sval));
     if (cups_apple_get_boolean(kAllowDH, &bval) && bval)
-      strlcat(sval, " AllowDH", sizeof(sval));
+      cupsConcatString(sval, " AllowDH", sizeof(sval));
 
     if (sval[0])
       cups_set_ssl_options(cc, sval);
@@ -1282,7 +1282,7 @@ cups_init_client_conf(
     cups_set_digestoptions(cc, sval);
 
   if (cups_apple_get_string(kUserKey, sval, sizeof(sval)))
-    strlcpy(cc->user, sval, sizeof(cc->user));
+    cupsCopyString(cc->user, sval, sizeof(cc->user));
 
   if (cups_apple_get_string(kUserAgentTokensKey, sval, sizeof(sval)))
     cups_set_uatokens(cc, sval);
@@ -1414,7 +1414,7 @@ cups_set_server_name(
     _cups_client_conf_t *cc,		/* I - client.conf values */
     const char          *value)		/* I - Value */
 {
-  strlcpy(cc->server_name, value, sizeof(cc->server_name));
+  cupsCopyString(cc->server_name, value, sizeof(cc->server_name));
 }
 
 
@@ -1440,7 +1440,7 @@ cups_set_ssl_options(
 	*end;				/* End of option */
 
 
-  strlcpy(temp, value, sizeof(temp));
+  cupsCopyString(temp, value, sizeof(temp));
 
   for (start = temp; *start; start = end)
   {
@@ -1539,5 +1539,5 @@ cups_set_user(
     _cups_client_conf_t *cc,		/* I - client.conf values */
     const char          *value)		/* I - Value */
 {
-  strlcpy(cc->user, value, sizeof(cc->user));
+  cupsCopyString(cc->user, value, sizeof(cc->user));
 }

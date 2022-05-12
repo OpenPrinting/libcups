@@ -96,7 +96,7 @@ main(int  argc,				/* I - Number of command-line arguments */
     * Load stored credentials...
     */
 
-    strlcpy(hostname, argv[1], sizeof(hostname));
+    cupsCopyString(hostname, argv[1], sizeof(hostname));
   }
 
   printf("Trust Store for \"%s\":\n", hostname);

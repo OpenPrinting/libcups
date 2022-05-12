@@ -495,7 +495,7 @@ _cups_safe_vsnprintf(
 
             if (bufptr)
 	    {
-	      strlcpy(bufptr, temp, (size_t)(bufend - bufptr));
+	      cupsCopyString(bufptr, temp, (size_t)(bufend - bufptr));
 	      bufptr += strlen(bufptr);
 	    }
 	    break;
@@ -525,7 +525,7 @@ _cups_safe_vsnprintf(
 
 	    if (bufptr)
 	    {
-	      strlcpy(bufptr, temp, (size_t)(bufend - bufptr));
+	      cupsCopyString(bufptr, temp, (size_t)(bufend - bufptr));
 	      bufptr += strlen(bufptr);
 	    }
 	    break;
@@ -540,7 +540,7 @@ _cups_safe_vsnprintf(
 
 	    if (bufptr)
 	    {
-	      strlcpy(bufptr, temp, (size_t)(bufend - bufptr));
+	      cupsCopyString(bufptr, temp, (size_t)(bufend - bufptr));
 	      bufptr += strlen(bufptr);
 	    }
 	    break;

@@ -1,7 +1,7 @@
 /*
  * Internationalization test for CUPS.
  *
- * Copyright © 2021 by OpenPrinting.
+ * Copyright © 2021-2022 by OpenPrinting.
  * Copyright © 2007-2014 by Apple Inc.
  * Copyright © 1997-2006 by Easy Software Products.
  *
@@ -16,6 +16,7 @@
 #include "string-private.h"
 #include "language-private.h"
 #include "test-internal.h"
+#include "cups.h"
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
@@ -273,7 +274,7 @@ main(int  argc,				/* I - Argument Count */
 
   testBegin("cupsCharsetToUTF8(CUPS_ISO8859_1)");
 
-  strlcpy(legsrc, legdest, sizeof(legsrc));
+  cupsCopyString(legsrc, legdest, sizeof(legsrc));
 
   len = cupsCharsetToUTF8(utf8dest, legsrc, 1024, CUPS_ISO8859_1);
   if ((size_t)len != strlen((char *)utf8latin))
@@ -324,7 +325,7 @@ main(int  argc,				/* I - Argument Count */
 
   testBegin("cupsCharsetToUTF8(CUPS_ISO8859_7)");
 
-  strlcpy(legsrc, legdest, sizeof(legsrc));
+  cupsCopyString(legsrc, legdest, sizeof(legsrc));
 
   len = cupsCharsetToUTF8(utf8dest, legsrc, 1024, CUPS_ISO8859_7);
   if ((size_t)len != strlen((char *)utf8greek))
@@ -370,7 +371,7 @@ main(int  argc,				/* I - Argument Count */
 
   testBegin("cupsCharsetToUTF8(CUPS_WINDOWS_932)");
 
-  strlcpy(legsrc, legdest, sizeof(legsrc));
+  cupsCopyString(legsrc, legdest, sizeof(legsrc));
 
   len = cupsCharsetToUTF8(utf8dest, legsrc, 1024, CUPS_WINDOWS_932);
   if ((size_t)len != strlen((char *)utf8japan))
@@ -417,7 +418,7 @@ main(int  argc,				/* I - Argument Count */
 #if !defined(__linux__) && !defined(__GLIBC__)
   testBegin("cupsCharsetToUTF8(CUPS_EUC_JP)");
 
-  strlcpy(legsrc, legdest, sizeof(legsrc));
+  cupsCopyString(legsrc, legdest, sizeof(legsrc));
 
   len = cupsCharsetToUTF8(utf8dest, legsrc, 1024, CUPS_EUC_JP);
   if ((size_t)len != strlen((char *)utf8japan))
@@ -464,7 +465,7 @@ main(int  argc,				/* I - Argument Count */
 
   testBegin("cupsCharsetToUTF8(CUPS_WINDOWS_950)");
 
-  strlcpy(legsrc, legdest, sizeof(legsrc));
+  cupsCopyString(legsrc, legdest, sizeof(legsrc));
 
   len = cupsCharsetToUTF8(utf8dest, legsrc, 1024, CUPS_WINDOWS_950);
   if ((size_t)len != strlen((char *)utf8taiwan))
@@ -510,7 +511,7 @@ main(int  argc,				/* I - Argument Count */
 
   testBegin("cupsCharsetToUTF8(CUPS_EUC_TW)");
 
-  strlcpy(legsrc, legdest, sizeof(legsrc));
+  cupsCopyString(legsrc, legdest, sizeof(legsrc));
 
   len = cupsCharsetToUTF8(utf8dest, legsrc, 1024, CUPS_EUC_TW);
   if ((size_t)len != strlen((char *)utf8taiwan))

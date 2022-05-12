@@ -36,7 +36,7 @@ main(int  argc,				/* I - Number of command-line arguments */
      char *argv[])			/* I - Command-line arguments */
 {
   int		i;			/* Looping var */
-  http_t	*http;			/* HTTP connection */
+  http_t	*http = NULL;		/* HTTP connection */
   const char	*server = NULL;		/* Hostname from command-line */
   int		port = 0;		/* Port number */
   cups_array_t	*creds;			/* Server credentials */
@@ -141,7 +141,7 @@ main(int  argc,				/* I - Number of command-line arguments */
       else
       {
         server = argv[i];
-        strlcpy(resource, "/ipp/print", sizeof(resource));
+        cupsCopyString(resource, "/ipp/print", sizeof(resource));
       }
     }
     else if (!port && (argv[i][0] == '=' || isdigit(argv[i][0] & 255)))
@@ -180,12 +180,12 @@ main(int  argc,				/* I - Number of command-line arguments */
 
   if (httpCopyCredentials(http, &creds))
   {
-    strlcpy(creds_str, "Unable to get server X.509 credentials.", sizeof(creds_str));
+    cupsCopyString(creds_str, "Unable to get server X.509 credentials.", sizeof(creds_str));
   }
   else
   {
     if (!httpCredentialsString(creds, creds_str, sizeof(creds_str)))
-      strlcpy(creds_str, "Unable to convert X.509 credential to string.", sizeof(creds_str));
+      cupsCopyString(creds_str, "Unable to convert X.509 credential to string.", sizeof(creds_str));
     httpFreeCredentials(creds);
   }
 

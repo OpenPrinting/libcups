@@ -127,7 +127,7 @@ cupsNotifySubject(cups_lang_t *lang,	/* I - Language data */
     snprintf(buffer, sizeof(buffer), "%s %s %s", prefix, printer_name->values[0].string.text, state);
   }
   else if (subscribed)
-    strlcpy(buffer, subscribed->values[0].string.text, sizeof(buffer));
+    cupsCopyString(buffer, subscribed->values[0].string.text, sizeof(buffer));
   else
     return (NULL);
 

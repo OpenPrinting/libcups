@@ -345,7 +345,7 @@ httpAddrLookup(
 #ifdef AF_LOCAL
   if (addr->addr.sa_family == AF_LOCAL)
   {
-    strlcpy(name, addr->un.sun_path, (size_t)namelen);
+    cupsCopyString(name, addr->un.sun_path, (size_t)namelen);
     return (name);
   }
 #endif /* AF_LOCAL */
@@ -356,7 +356,7 @@ httpAddrLookup(
 
   if (httpAddrLocalhost(addr))
   {
-    strlcpy(name, "localhost", (size_t)namelen);
+    cupsCopyString(name, "localhost", (size_t)namelen);
     return (name);
   }
 
@@ -491,9 +491,9 @@ httpAddrString(const http_addr_t *addr,	/* I - Address to convert */
   if (addr->addr.sa_family == AF_LOCAL)
   {
     if (addr->un.sun_path[0] == '/')
-      strlcpy(s, addr->un.sun_path, (size_t)slen);
+      cupsCopyString(s, addr->un.sun_path, (size_t)slen);
     else
-      strlcpy(s, "localhost", (size_t)slen);
+      cupsCopyString(s, "localhost", (size_t)slen);
   }
   else
 #endif /* AF_LOCAL */
@@ -540,7 +540,7 @@ httpAddrString(const http_addr_t *addr,	/* I - Address to convert */
   }
 #endif /* AF_INET6 */
   else
-    strlcpy(s, "UNKNOWN", (size_t)slen);
+    cupsCopyString(s, "UNKNOWN", (size_t)slen);
 
   DEBUG_printf(("1httpAddrString: returning \"%s\"...", s));
 
@@ -706,9 +706,9 @@ httpGetHostname(http_t *http,		/* I - HTTP connection or NULL */
 	return (http->hostname);
     }
     else if (http->hostname[0] == '/')
-      strlcpy(s, "localhost", (size_t)slen);
+      cupsCopyString(s, "localhost", (size_t)slen);
     else
-      strlcpy(s, http->hostname, (size_t)slen);
+      cupsCopyString(s, http->hostname, (size_t)slen);
   }
   else
   {
@@ -720,7 +720,7 @@ httpGetHostname(http_t *http,		/* I - HTTP connection or NULL */
       return (NULL);
 
     if (gethostname(s, (size_t)slen) < 0)
-      strlcpy(s, "localhost", (size_t)slen);
+      cupsCopyString(s, "localhost", (size_t)slen);
 
     if (!strchr(s, '.'))
     {
@@ -765,7 +765,7 @@ httpGetHostname(http_t *http,		/* I - HTTP connection or NULL */
         * Use the resolved hostname...
 	*/
 
-	strlcpy(s, host->h_name, (size_t)slen);
+	cupsCopyString(s, host->h_name, (size_t)slen);
       }
 #endif /* HAVE_SCDYNAMICSTORECOPYCOMPUTERNAME */
     }
@@ -775,7 +775,7 @@ httpGetHostname(http_t *http,		/* I - HTTP connection or NULL */
     */
 
     if (strlen(s) > 6 && !strcmp(s + strlen(s) - 6, ".local"))
-      strlcat(s, ".", (size_t)slen);
+      cupsConcatString(s, ".", (size_t)slen);
   }
 
  /*
@@ -818,7 +818,7 @@ httpResolveHostname(http_t *http,	/* I - HTTP connection */
     char	temp[1024];		/* Temporary string */
 
     if (httpAddrLookup(http->hostaddr, temp, sizeof(temp)))
-      strlcpy(http->hostname, temp, sizeof(http->hostname));
+      cupsCopyString(http->hostname, temp, sizeof(http->hostname));
     else
       return (NULL);
   }
@@ -826,9 +826,9 @@ httpResolveHostname(http_t *http,	/* I - HTTP connection */
   if (buffer)
   {
     if (http->hostname[0] == '/')
-      strlcpy(buffer, "localhost", bufsize);
+      cupsCopyString(buffer, "localhost", bufsize);
     else
-      strlcpy(buffer, http->hostname, bufsize);
+      cupsCopyString(buffer, http->hostname, bufsize);
 
     return (buffer);
   }

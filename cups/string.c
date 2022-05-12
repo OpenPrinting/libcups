@@ -137,35 +137,90 @@ _cupsStrAlloc(const char *s)		/* I - String */
 
 
 /*
- * '_cupsStrDate()' - Return a localized date for a given time value.
- *
- * This function works around the locale encoding issues of strftime...
+ * 'cupsConcatString()' - Safely concatenate two strings.
  */
 
-char *					/* O - Buffer */
-_cupsStrDate(char   *buf,		/* I - Buffer */
-             size_t bufsize,		/* I - Size of buffer */
-	     time_t timeval)		/* I - Time value */
+size_t					/* O - Length of string */
+cupsConcatString(char       *dst,	/* O - Destination string */
+                 const char *src,	/* I - Source string */
+	         size_t     dstsize)	/* I - Size of destination string buffer */
 {
-  struct tm	date;			/* Local date/time */
-  char		temp[1024];		/* Temporary buffer */
-  _cups_globals_t *cg = _cupsGlobals();	/* Per-thread globals */
+#ifdef HAVE_STRLCAT
+  return (strlcat(dst, src, dstsize));
+
+#else
+  size_t	srclen;			/* Length of source string */
+  size_t	dstlen;			/* Length of destination string */
 
 
-  if (!cg->lang_default)
-    cg->lang_default = cupsLangDefault();
+ /*
+  * Figure out how much room is left...
+  */
 
-  localtime_r(&timeval, &date);
+  dstlen = strlen(dst);
 
-  if (cg->lang_default->encoding != CUPS_UTF8)
-  {
-    strftime(temp, sizeof(temp), "%c", &date);
-    cupsCharsetToUTF8((cups_utf8_t *)buf, temp, bufsize, cg->lang_default->encoding);
-  }
-  else
-    strftime(buf, bufsize, "%c", &date);
+  if (dstsize < (dstlen + 1))
+    return (dstlen);		        /* No room, return immediately... */
 
-  return (buf);
+  dstsize -= dstlen + 1;
+
+ /*
+  * Figure out how much room is needed...
+  */
+
+  srclen = strlen(src);
+
+ /*
+  * Copy the appropriate amount...
+  */
+
+  if (srclen > dstsize)
+    srclen = dstsize;
+
+  memmove(dst + dstlen, src, srclen);
+  dst[dstlen + srclen] = '\0';
+
+  return (dstlen + srclen);
+#endif /* HAVE_STRLCAT */
+}
+
+
+/*
+ * 'cupsCopyString()' - Safely copy two strings.
+ */
+
+size_t					/* O - Length of string */
+cupsCopyString(char       *dst,		/* O - Destination string */
+               const char *src,		/* I - Source string */
+	       size_t     dstsize)	/* I - Size of destination string buffer */
+{
+#ifdef HAVE_STRLCPY
+  return (strlcpy(dst, src, dstsize));
+
+#else
+  size_t	srclen;			/* Length of source string */
+
+
+ /*
+  * Figure out how much room is needed...
+  */
+
+  dstsize --;
+
+  srclen = strlen(src);
+
+ /*
+  * Copy the appropriate amount...
+  */
+
+  if (srclen > dstsize)
+    srclen = dstsize;
+
+  memmove(dst, src, srclen);
+  dst[srclen] = '\0';
+
+  return (srclen);
+#endif /* HAVE_STRLCPY */
 }
 
 
@@ -265,7 +320,7 @@ _cupsStrFormatd(char         *buf,	/* I - String */
   }
   else
   {
-    strlcpy(buf, temp, (size_t)(bufend - buf + 1));
+    cupsCopyString(buf, temp, (size_t)(bufend - buf + 1));
     bufptr = buf + strlen(buf);
   }
 
@@ -440,7 +495,7 @@ _cupsStrScand(const char   *buf,	/* I - Pointer to number */
 
     if (loc && loc->decimal_point)
     {
-      strlcpy(tempptr, loc->decimal_point, sizeof(temp) - (size_t)(tempptr - temp));
+      cupsCopyString(tempptr, loc->decimal_point, sizeof(temp) - (size_t)(tempptr - temp));
       tempptr += strlen(tempptr);
     }
     else if (tempptr < (temp + sizeof(temp) - 1))
@@ -643,88 +698,6 @@ _cups_strncasecmp(const char *s,	/* I - First string */
   else
     return (-1);
 }
-
-
-#ifndef HAVE_STRLCAT
-/*
- * '_cups_strlcat()' - Safely concatenate two strings.
- */
-
-size_t					/* O - Length of string */
-_cups_strlcat(char       *dst,		/* O - Destination string */
-              const char *src,		/* I - Source string */
-	      size_t     size)		/* I - Size of destination string buffer */
-{
-  size_t	srclen;			/* Length of source string */
-  size_t	dstlen;			/* Length of destination string */
-
-
- /*
-  * Figure out how much room is left...
-  */
-
-  dstlen = strlen(dst);
-
-  if (size < (dstlen + 1))
-    return (dstlen);		        /* No room, return immediately... */
-
-  size -= dstlen + 1;
-
- /*
-  * Figure out how much room is needed...
-  */
-
-  srclen = strlen(src);
-
- /*
-  * Copy the appropriate amount...
-  */
-
-  if (srclen > size)
-    srclen = size;
-
-  memmove(dst + dstlen, src, srclen);
-  dst[dstlen + srclen] = '\0';
-
-  return (dstlen + srclen);
-}
-#endif /* !HAVE_STRLCAT */
-
-
-#ifndef HAVE_STRLCPY
-/*
- * '_cups_strlcpy()' - Safely copy two strings.
- */
-
-size_t					/* O - Length of string */
-_cups_strlcpy(char       *dst,		/* O - Destination string */
-              const char *src,		/* I - Source string */
-	      size_t      size)		/* I - Size of destination string buffer */
-{
-  size_t	srclen;			/* Length of source string */
-
-
- /*
-  * Figure out how much room is needed...
-  */
-
-  size --;
-
-  srclen = strlen(src);
-
- /*
-  * Copy the appropriate amount...
-  */
-
-  if (srclen > size)
-    srclen = size;
-
-  memmove(dst, src, srclen);
-  dst[srclen] = '\0';
-
-  return (srclen);
-}
-#endif /* !HAVE_STRLCPY */
 
 
 /*

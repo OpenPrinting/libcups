@@ -1,7 +1,7 @@
 /*
  * Array test program for CUPS.
  *
- * Copyright © 2021 by OpenPrinting.
+ * Copyright © 2021-2022 by OpenPrinting.
  * Copyright © 2007-2014 by Apple Inc.
  * Copyright © 1997-2006 by Easy Software Products.
  *
@@ -16,6 +16,7 @@
 #include "string-private.h"
 #include "debug-private.h"
 #include "array-private.h"
+#include "cups.h"
 #include "dir.h"
 #include "test-internal.h"
 
@@ -298,7 +299,7 @@ main(void)
 	* the same buffer in the first place... :)
 	*/
 
-	strlcpy(word, text, sizeof(word));
+	cupsCopyString(word, text, sizeof(word));
 
        /*
 	* Grab the next word and compare...

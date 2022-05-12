@@ -183,15 +183,15 @@ _cupsAppleLanguage(const char *locale,	/* I - Locale ID */
 	 * Invalid locale...
 	 */
 
-	 strlcpy(language, "en", langsize);
+	 cupsCopyString(language, "en", langsize);
 	 break;
 
     case 2 :
-        strlcpy(language, locale, langsize);
+        cupsCopyString(language, locale, langsize);
         break;
 
     case 5 :
-        strlcpy(language, locale, langsize);
+        cupsCopyString(language, locale, langsize);
 
 	if (language[2] == '-')
 	{
@@ -212,7 +212,7 @@ _cupsAppleLanguage(const char *locale,	/* I - Locale ID */
        i ++)
     if (!strcmp(locale, apple_language_locale[i].locale))
     {
-      strlcpy(language, apple_language_locale[i].language, sizeof(language));
+      cupsCopyString(language, apple_language_locale[i].language, sizeof(language));
       break;
     }
 
@@ -292,7 +292,7 @@ _cupsAppleLocale(CFStringRef languageName,	/* I - Apple language ID */
           (!strncmp(locale, apple_language_locale[i].language, len) && (locale[len] == '_' || locale[len] == '-')))
       {
         DEBUG_printf(("_cupsAppleLocale: Updating locale to \"%s\".", apple_language_locale[i].locale));
-	strlcpy(locale, apple_language_locale[i].locale, localesize);
+	cupsCopyString(locale, apple_language_locale[i].locale, localesize);
 	break;
       }
     }
@@ -323,7 +323,7 @@ _cupsAppleLocale(CFStringRef languageName,	/* I - Apple language ID */
     locale[3] = '_';
 
   if (!strchr(locale, '.'))
-    strlcat(locale, ".UTF-8", localesize);
+    cupsConcatString(locale, ".UTF-8", localesize);
 
   DEBUG_printf(("_cupsAppleLocale: Returning \"%s\".", locale));
 
@@ -509,7 +509,7 @@ cupsLangGet(const char *language)	/* I - Language or locale */
   * Set the character set to UTF-8...
   */
 
-  strlcpy(charset, "UTF8", sizeof(charset));
+  cupsCopyString(charset, "UTF8", sizeof(charset));
 
  /*
   * Apple's setlocale doesn't give us the user's localization
@@ -588,7 +588,7 @@ cupsLangGet(const char *language)	/* I - Language or locale */
 
     if (ptr)
     {
-      strlcpy(locale, ptr, sizeof(locale));
+      cupsCopyString(locale, ptr, sizeof(locale));
       language = locale;
 
      /*
@@ -645,7 +645,7 @@ cupsLangGet(const char *language)	/* I - Language or locale */
   */
 
   if (!charset[0])
-    strlcpy(charset, "UTF8", sizeof(charset));
+    cupsCopyString(charset, "UTF8", sizeof(charset));
 
  /*
   * Parse the language string passed in to a locale string. "C" is the
@@ -660,7 +660,7 @@ cupsLangGet(const char *language)	/* I - Language or locale */
 
   if (language == NULL || !language[0] ||
       !strcmp(language, "POSIX"))
-    strlcpy(langname, "C", sizeof(langname));
+    cupsCopyString(langname, "C", sizeof(langname));
   else
   {
    /*
@@ -694,9 +694,9 @@ cupsLangGet(const char *language)	/* I - Language or locale */
       */
 
       if (!strcmp(language, "zh") && !strcmp(country, "HANS"))
-        strlcpy(country, "CN", sizeof(country));
+        cupsCopyString(country, "CN", sizeof(country));
       if (!strcmp(language, "zh") && !strcmp(country, "HANT"))
-        strlcpy(country, "TW", sizeof(country));
+        cupsCopyString(country, "TW", sizeof(country));
     }
 
     if (*language == '.' && !charset[0])
@@ -718,7 +718,7 @@ cupsLangGet(const char *language)	/* I - Language or locale */
 
     if (strlen(langname) != 2 && strlen(langname) != 3)
     {
-      strlcpy(langname, "C", sizeof(langname));
+      cupsCopyString(langname, "C", sizeof(langname));
       country[0] = '\0';
       charset[0] = '\0';
     }
@@ -773,7 +773,7 @@ cupsLangGet(const char *language)	/* I - Language or locale */
   if (country[0])
     snprintf(real, sizeof(real), "%s_%s", langname, country);
   else
-    strlcpy(real, langname, sizeof(real));
+    cupsCopyString(real, langname, sizeof(real));
 
   cupsMutexLock(&lang_mutex);
 
@@ -826,7 +826,7 @@ cupsLangGet(const char *language)	/* I - Language or locale */
   */
 
   lang->used ++;
-  strlcpy(lang->language, real, sizeof(lang->language));
+  cupsCopyString(lang->language, real, sizeof(lang->language));
 
   if (encoding != CUPS_AUTO_ENCODING)
     lang->encoding = encoding;
@@ -1306,7 +1306,7 @@ appleLangDefault(void)
     if (getenv("SOFTWARE") != NULL && (lang = getenv("LANG")) != NULL)
     {
       DEBUG_printf(("3appleLangDefault: Using LANG=%s", lang));
-      strlcpy(cg->language, lang, sizeof(cg->language));
+      cupsCopyString(cg->language, lang, sizeof(cg->language));
       return (cg->language);
     }
     else if ((bundle = CFBundleGetMainBundle()) != NULL &&
@@ -1329,7 +1329,7 @@ appleLangDefault(void)
 
 	  CFStringGetCString(cfpath, path, sizeof(path), kCFStringEncodingUTF8);
 	  DEBUG_printf(("3appleLangDefault: Got a resource URL (\"%s\")", path));
-	  strlcat(path, "Contents/Info.plist", sizeof(path));
+	  cupsConcatString(path, "Contents/Info.plist", sizeof(path));
 
           if (!access(path, R_OK))
 	    localizationList = CFBundleCopyPreferredLocalizationsFromArray(bundleList);
@@ -1392,7 +1392,7 @@ appleLangDefault(void)
     if (!cg->language[0])
     {
       DEBUG_puts("3appleLangDefault: Defaulting to en_US.");
-      strlcpy(cg->language, "en_US.UTF-8", sizeof(cg->language));
+      cupsCopyString(cg->language, "en_US.UTF-8", sizeof(cg->language));
     }
   }
   else
@@ -1437,7 +1437,7 @@ appleMessageLoad(const char *locale)	/* I - Locale ID */
   if (cups_strings)
   {
     DEBUG_puts("1appleMessageLoad: Using debug CUPS_STRINGS file.");
-    strlcpy(filename, cups_strings, sizeof(filename));
+    cupsCopyString(filename, cups_strings, sizeof(filename));
   }
   else
 #endif /* DEBUG */
@@ -1468,7 +1468,7 @@ appleMessageLoad(const char *locale)	/* I - Locale ID */
 
     DEBUG_printf(("1appleMessageLoad: \"%s\": %s", filename, strerror(errno)));
 
-    strlcpy(baselang, locale, sizeof(baselang));
+    cupsCopyString(baselang, locale, sizeof(baselang));
     if (baselang[3] == '-' || baselang[3] == '_')
       baselang[3] = '\0';
 
@@ -1519,7 +1519,7 @@ appleMessageLoad(const char *locale)	/* I - Locale ID */
       * Drop country code, just try language...
       */
 
-      strlcpy(baselang, locale, sizeof(baselang));
+      cupsCopyString(baselang, locale, sizeof(baselang));
       if (baselang[2] == '-' || baselang[2] == '_')
         baselang[2] = '\0';
 

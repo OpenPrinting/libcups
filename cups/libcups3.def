@@ -36,7 +36,6 @@ _cupsSetError
 _cupsSetHTTPError
 _cupsSetLocale
 _cupsStrAlloc
-_cupsStrDate
 _cupsStrFlush
 _cupsStrFormatd
 _cupsStrFree
@@ -52,8 +51,6 @@ _cups_safe_vsnprintf
 _cups_strcasecmp
 _cups_strcpy
 _cups_strcpy
-_cups_strlcat
-_cups_strlcpy
 _cups_strncasecmp
 _httpAddrSetPort
 _httpCreateCredentials
@@ -113,6 +110,7 @@ cupsCancelDestJob
 cupsCharsetToUTF8
 cupsCheckDestSupported
 cupsCloseDestJob
+cupsConcatString
 cupsCondBroadcast
 cupsCondDestroy
 cupsCondInit
@@ -121,6 +119,7 @@ cupsConnectDest
 cupsCopyDest
 cupsCopyDestConflicts
 cupsCopyDestInfo
+cupsCopyString
 cupsCreateDestJob
 cupsDirClose
 cupsDirOpen

@@ -153,10 +153,10 @@ cupsMakeServerCredentials(
     char	localname[256],		// hostname.local
 		*localptr;		// Pointer into localname
 
-    strlcpy(localname, common_name, sizeof(localname));
+    cupsCopyString(localname, common_name, sizeof(localname));
     if ((localptr = strchr(localname, '.')) != NULL)
       *localptr = '\0';
-    strlcat(localname, ".local", sizeof(localname));
+    cupsConcatString(localname, ".local", sizeof(localname));
 
     http_x509_add_san(cert, localname);
   }
@@ -948,7 +948,7 @@ _httpTLSStart(http_t *http)		// I - Connection to server
     if (http->fields[HTTP_FIELD_HOST])
     {
       // Use hostname for TLS upgrade...
-      strlcpy(hostname, http->fields[HTTP_FIELD_HOST], sizeof(hostname));
+      cupsCopyString(hostname, http->fields[HTTP_FIELD_HOST], sizeof(hostname));
     }
     else
     {
@@ -1012,8 +1012,8 @@ _httpTLSStart(http_t *http)		// I - Connection to server
         if (!access(cacrtfile, R_OK) && !access(cakeyfile, R_OK))
         {
           // Use the CA certs...
-          strlcpy(crtfile, cacrtfile, sizeof(crtfile));
-          strlcpy(keyfile, cakeyfile, sizeof(keyfile));
+          cupsCopyString(crtfile, cacrtfile, sizeof(crtfile));
+          cupsCopyString(keyfile, cakeyfile, sizeof(keyfile));
         }
       }
 
@@ -1041,14 +1041,14 @@ _httpTLSStart(http_t *http)		// I - Connection to server
   }
 
   // Set TLS options...
-  strlcpy(cipherlist, "HIGH:!DH:+DHE", sizeof(cipherlist));
+  cupsCopyString(cipherlist, "HIGH:!DH:+DHE", sizeof(cipherlist));
   if ((tls_options & _HTTP_TLS_ALLOW_RC4) && http->mode == _HTTP_MODE_CLIENT)
-    strlcat(cipherlist, ":+RC4", sizeof(cipherlist));
+    cupsConcatString(cipherlist, ":+RC4", sizeof(cipherlist));
   else
-    strlcat(cipherlist, ":!RC4", sizeof(cipherlist));
+    cupsConcatString(cipherlist, ":!RC4", sizeof(cipherlist));
   if (tls_options & _HTTP_TLS_DENY_CBC)
-    strlcat(cipherlist, ":!SHA1:!SHA256:!SHA384", sizeof(cipherlist));
-  strlcat(cipherlist, ":@STRENGTH", sizeof(cipherlist));
+    cupsConcatString(cipherlist, ":!SHA1:!SHA256:!SHA384", sizeof(cipherlist));
+  cupsConcatString(cipherlist, ":@STRENGTH", sizeof(cipherlist));
 
   SSL_CTX_set_min_proto_version(context, versions[tls_min_version]);
   SSL_CTX_set_max_proto_version(context, versions[tls_max_version]);
@@ -1359,7 +1359,7 @@ http_default_path(
     }
   }
   else
-    strlcpy(buffer, CUPS_SERVERROOT "/ssl", bufsize);
+    cupsCopyString(buffer, CUPS_SERVERROOT "/ssl", bufsize);
 
   DEBUG_printf(("1http_default_path: Using default path \"%s\".", buffer));
 
@@ -1541,7 +1541,7 @@ http_make_path(
   if (bufptr < bufend && filename[-1] != '.')
     *bufptr++ = '.';
 
-  strlcpy(bufptr, ext, (size_t)(bufend - bufptr + 1));
+  cupsCopyString(bufptr, ext, (size_t)(bufend - bufptr + 1));
 
   return (buffer);
 }

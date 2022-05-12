@@ -1,7 +1,7 @@
 /*
  * Private string definitions for CUPS.
  *
- * Copyright © 2021 by OpenPrinting.
+ * Copyright © 2021-2022 by OpenPrinting.
  * Copyright © 2007-2018 by Apple Inc.
  * Copyright © 1997-2006 by Easy Software Products.
  *
@@ -124,17 +124,6 @@ extern void	_cups_strcpy(char *dst, const char *src) _CUPS_PRIVATE;
 extern int	_cups_strcasecmp(const char *, const char *) _CUPS_PRIVATE;
 extern int	_cups_strncasecmp(const char *, const char *, size_t n) _CUPS_PRIVATE;
 
-#  ifndef HAVE_STRLCAT
-extern size_t _cups_strlcat(char *, const char *, size_t) _CUPS_PRIVATE;
-#    define strlcat _cups_strlcat
-#  endif /* !HAVE_STRLCAT */
-
-#  ifndef HAVE_STRLCPY
-extern size_t _cups_strlcpy(char *, const char *, size_t) _CUPS_PRIVATE;
-#    define strlcpy _cups_strlcpy
-#  endif /* !HAVE_STRLCPY */
-
-
 extern char	*_cupsStrAlloc(const char *s) _CUPS_PRIVATE;
 extern void	_cupsStrFlush(void) _CUPS_PRIVATE;
 extern void	_cupsStrFree(const char *s) _CUPS_PRIVATE;
@@ -142,7 +131,6 @@ extern char	*_cupsStrRetain(const char *s) _CUPS_PRIVATE;
 extern size_t	_cupsStrStatistics(size_t *alloc_bytes, size_t *total_bytes) _CUPS_PRIVATE;
 extern char	*_cupsStrFormatd(char *buf, char *bufend, double number, struct lconv *loc) _CUPS_PRIVATE;
 extern double	_cupsStrScand(const char *buf, char **bufptr, struct lconv *loc) _CUPS_PRIVATE;
-extern char	*_cupsStrDate(char *buf, size_t bufsize, time_t timeval) _CUPS_PRIVATE;
 
 
 #  ifdef __cplusplus

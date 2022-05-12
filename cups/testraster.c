@@ -170,7 +170,7 @@ do_raster_tests(cups_raster_mode_t mode)/* O - Write mode */
     header.cupsPageSize[0]  = 288.0f;
     header.cupsPageSize[1]  = 288.0f;
 
-    strlcpy(header.MediaType, "auto", sizeof(header.MediaType));
+    cupsCopyString(header.MediaType, "auto", sizeof(header.MediaType));
 
     if (page & 1)
     {
@@ -306,7 +306,7 @@ do_raster_tests(cups_raster_mode_t mode)/* O - Write mode */
     expected.PageSize[0]      = 288;
     expected.PageSize[1]      = 288;
 
-    strlcpy(expected.MediaType, "auto", sizeof(expected.MediaType));
+    cupsCopyString(expected.MediaType, "auto", sizeof(expected.MediaType));
 
     if (mode != CUPS_RASTER_WRITE_PWG)
     {
@@ -316,7 +316,7 @@ do_raster_tests(cups_raster_mode_t mode)/* O - Write mode */
 
     if (mode >= CUPS_RASTER_WRITE_PWG)
     {
-      strlcpy(expected.MediaClass, "PwgRaster", sizeof(expected.MediaClass));
+      cupsCopyString(expected.MediaClass, "PwgRaster", sizeof(expected.MediaClass));
       expected.cupsInteger[7] = 0xffffff;
     }
 

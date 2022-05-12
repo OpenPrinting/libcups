@@ -493,7 +493,7 @@ main(int  argc,				/* I - Number of command-line args */
 		usage();
               }
 
-              strlcpy(name, argv[i], sizeof(name));
+              cupsCopyString(name, argv[i], sizeof(name));
 	      if ((value = strchr(name, '=')) != NULL)
 	        *value++ = '\0';
 	      else
@@ -529,12 +529,12 @@ main(int  argc,				/* I - Number of command-line args */
 		  {
 		    snprintf(filename, sizeof(filename), "%s/ipptool/%s.gz", cg->cups_datadir, argv[i]);
 		    if (access(filename, 0))
-		      strlcpy(filename, argv[i], sizeof(filename));
+		      cupsCopyString(filename, argv[i], sizeof(filename));
 		  }
 		}
 	      }
               else
-		strlcpy(filename, argv[i], sizeof(filename));
+		cupsCopyString(filename, argv[i], sizeof(filename));
 
 	      _ippVarsSet(data->vars, "filename", filename);
 
@@ -1131,9 +1131,9 @@ do_monitor_printer_state(
 
 	    case IPP_TAG_BOOLEAN :
 		if (ippGetBoolean(found, last))
-		  strlcpy(buffer, "true", sizeof(buffer));
+		  cupsCopyString(buffer, "true", sizeof(buffer));
 		else
-		  strlcpy(buffer, "false", sizeof(buffer));
+		  cupsCopyString(buffer, "false", sizeof(buffer));
 		break;
 
 	    case IPP_TAG_CHARSET :
@@ -1146,7 +1146,7 @@ do_monitor_printer_state(
 	    case IPP_TAG_TEXTLANG :
 	    case IPP_TAG_URI :
 	    case IPP_TAG_URISCHEME :
-		strlcpy(buffer, ippGetString(found, last, NULL), sizeof(buffer));
+		cupsCopyString(buffer, ippGetString(found, last, NULL), sizeof(buffer));
 		break;
 
 	    default :
@@ -1764,7 +1764,7 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
             char	group_name[256],/* Parent attribute name */
 			*group_ptr;	/* Pointer into parent attribute name */
 
-	    strlcpy(group_name, expect->name, sizeof(group_name));
+	    cupsCopyString(group_name, expect->name, sizeof(group_name));
 	    if ((group_ptr = strchr(group_name, '/')) != NULL)
 	      *group_ptr = '\0';
 
@@ -1908,9 +1908,9 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
 
 		case IPP_TAG_BOOLEAN :
 		    if (ippGetBoolean(found, last))
-		      strlcpy(data->buffer, "true", sizeof(data->buffer));
+		      cupsCopyString(data->buffer, "true", sizeof(data->buffer));
 		    else
-		      strlcpy(data->buffer, "false", sizeof(data->buffer));
+		      cupsCopyString(data->buffer, "false", sizeof(data->buffer));
 		    break;
 
 		case IPP_TAG_RESOLUTION :
@@ -1938,7 +1938,7 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
 		case IPP_TAG_TEXTLANG :
 		case IPP_TAG_URI :
 		case IPP_TAG_URISCHEME :
-		    strlcpy(data->buffer, ippGetString(found, last, NULL), sizeof(data->buffer));
+		    cupsCopyString(data->buffer, ippGetString(found, last, NULL), sizeof(data->buffer));
 		    break;
 
 		default :
@@ -2609,7 +2609,7 @@ get_filename(const char *testfile,	/* I - Current test file */
     * Use the path as-is...
     */
 
-    strlcpy(dst, src, dstsize);
+    cupsCopyString(dst, src, dstsize);
   }
   else
   {
@@ -2617,13 +2617,13 @@ get_filename(const char *testfile,	/* I - Current test file */
     * Make path relative to testfile...
     */
 
-    strlcpy(dst, testfile, dstsize);
+    cupsCopyString(dst, testfile, dstsize);
     if ((dstptr = strrchr(dst, '/')) != NULL)
       dstptr ++;
     else
       dstptr = dst; /* Should never happen */
 
-    strlcpy(dstptr, src, dstsize - (size_t)(dstptr - dst));
+    cupsCopyString(dstptr, src, dstsize - (size_t)(dstptr - dst));
 
 #if _WIN32
     if (_access(dst, 0))
@@ -2892,9 +2892,9 @@ parse_generate_file(
 	  attr = ippFindAttribute(response, "print-color-mode-default", IPP_TAG_KEYWORD);
 
         if (attr)
-          strlcpy(params->type, ippGetString(attr, 0, NULL), sizeof(params->type));
+          cupsCopyString(params->type, ippGetString(attr, 0, NULL), sizeof(params->type));
 	else
-          strlcpy(params->type, "auto", sizeof(params->type));
+          cupsCopyString(params->type, "auto", sizeof(params->type));
       }
 
       if (!strcmp(params->type, "auto"))
@@ -2909,7 +2909,7 @@ parse_generate_file(
 	{
 	  if (ippContainsString(attr, autos[i][0]) || ippContainsString(attr, autos[i][1]))
 	  {
-	    strlcpy(params->type, autos[i][1], sizeof(params->type));
+	    cupsCopyString(params->type, autos[i][1], sizeof(params->type));
 	    break;
 	  }
 	}
@@ -2931,7 +2931,7 @@ parse_generate_file(
 	{
 	  if (ippContainsString(attr, bi_levels[i][1]))
 	  {
-	    strlcpy(params->type, bi_levels[i][1], sizeof(params->type));
+	    cupsCopyString(params->type, bi_levels[i][1], sizeof(params->type));
 	    break;
 	  }
 	}
@@ -2954,7 +2954,7 @@ parse_generate_file(
 	{
 	  if (ippContainsString(attr, colors[i][0]) || ippContainsString(attr, colors[i][1]))
 	  {
-	    strlcpy(params->type, colors[i][1], sizeof(params->type));
+	    cupsCopyString(params->type, colors[i][1], sizeof(params->type));
 	    break;
 	  }
 	}
@@ -2977,7 +2977,7 @@ parse_generate_file(
 	{
 	  if (ippContainsString(attr, monochromes[i][0]) || ippContainsString(attr, monochromes[i][1]))
 	  {
-	    strlcpy(params->type, monochromes[i][1], sizeof(params->type));
+	    cupsCopyString(params->type, monochromes[i][1], sizeof(params->type));
 	    break;
 	  }
 	}
@@ -3001,16 +3001,16 @@ parse_generate_file(
 	    goto fail;
           }
 
-          strlcpy(params->format, keyword, sizeof(params->format));
+          cupsCopyString(params->format, keyword, sizeof(params->format));
         }
         else if ((attr = ippFindAttribute(response, "document-format-supported", IPP_TAG_MIMETYPE)) != NULL)
         {
           // Default to Apple Raster unless sending bitmaps, which are only
           // supported by PWG Raster...
           if (ippContainsString(attr, "image/urf") && strncmp(params->type, "black_", 6) && strcmp(params->type, "srgb_1"))
-            strlcpy(params->format, "image/urf", sizeof(params->format));
+            cupsCopyString(params->format, "image/urf", sizeof(params->format));
 	  else if (ippContainsString(attr, "image/pwg-raster"))
-            strlcpy(params->format, "image/pwg-raster", sizeof(params->format));
+            cupsCopyString(params->format, "image/pwg-raster", sizeof(params->format));
         }
 
         if (!params->format[0])
@@ -3026,11 +3026,11 @@ parse_generate_file(
         // Use job ticket or default media...
         if (!params->media[0] && (keyword = ippGetString(ippFindAttribute(f->attrs, "media", IPP_TAG_ZERO), 0, NULL)) != NULL)
         {
-          strlcpy(params->media, keyword, sizeof(params->media));
+          cupsCopyString(params->media, keyword, sizeof(params->media));
         }
         else if ((keyword = ippGetString(ippFindAttribute(response, "media-default", IPP_TAG_ZERO), 0, NULL)) != NULL)
         {
-          strlcpy(params->media, keyword, sizeof(params->media));
+          cupsCopyString(params->media, keyword, sizeof(params->media));
         }
         else
         {
@@ -3043,7 +3043,7 @@ parse_generate_file(
         // Use ready media
         if ((keyword = ippGetString(ippFindAttribute(response, "media-ready", IPP_TAG_ZERO), 0, NULL)) != NULL)
         {
-          strlcpy(params->media, keyword, sizeof(params->media));
+          cupsCopyString(params->media, keyword, sizeof(params->media));
         }
         else
         {
@@ -3097,20 +3097,20 @@ parse_generate_file(
         if ((keyword = ippGetString(ippFindAttribute(f->attrs, "sides", IPP_TAG_ZERO), 0, NULL)) != NULL)
         {
           // Use the setting from the job ticket...
-          strlcpy(params->sides, keyword, sizeof(params->sides));
+          cupsCopyString(params->sides, keyword, sizeof(params->sides));
 	}
 	else if (params->num_pages != 1 && (attr = ippFindAttribute(response, "sides-supported", IPP_TAG_KEYWORD)) != NULL && ippGetCount(attr) > 1)
 	{
 	  // Default to two-sided for capable printers...
 	  if (params->orientation == IPP_ORIENT_LANDSCAPE || params->orientation == IPP_ORIENT_REVERSE_LANDSCAPE)
-	    strlcpy(params->sides, "two-sided-short-edge", sizeof(params->sides));
+	    cupsCopyString(params->sides, "two-sided-short-edge", sizeof(params->sides));
 	  else
-	    strlcpy(params->sides, "two-sided-long-edge", sizeof(params->sides));
+	    cupsCopyString(params->sides, "two-sided-long-edge", sizeof(params->sides));
 	}
 	else
 	{
 	  // Fall back to 1-sided output...
-	  strlcpy(params->sides, "one-sided", sizeof(params->sides));
+	  cupsCopyString(params->sides, "one-sided", sizeof(params->sides));
 	}
       }
 
@@ -3136,22 +3136,22 @@ parse_generate_file(
       {
         if ((attr = ippFindAttribute(response, "pwg-raster-document-sheet-back", IPP_TAG_KEYWORD)) != NULL)
         {
-          strlcpy(params->sheet_back, ippGetString(attr, 0, NULL), sizeof(params->sheet_back));
+          cupsCopyString(params->sheet_back, ippGetString(attr, 0, NULL), sizeof(params->sheet_back));
 	}
 	else if ((attr = ippFindAttribute(response, "urf-supported", IPP_TAG_KEYWORD)) != NULL)
 	{
 	  if (ippContainsString(attr, "DM1"))
-	    strlcpy(params->sheet_back, "flip", sizeof(params->sheet_back));
+	    cupsCopyString(params->sheet_back, "flip", sizeof(params->sheet_back));
 	  else if (ippContainsString(attr, "DM2"))
-	    strlcpy(params->sheet_back, "manual-tumble", sizeof(params->sheet_back));
+	    cupsCopyString(params->sheet_back, "manual-tumble", sizeof(params->sheet_back));
 	  else if (ippContainsString(attr, "DM3"))
-	    strlcpy(params->sheet_back, "rotated", sizeof(params->sheet_back));
+	    cupsCopyString(params->sheet_back, "rotated", sizeof(params->sheet_back));
 	  else
-	    strlcpy(params->sheet_back, "normal", sizeof(params->sheet_back));
+	    cupsCopyString(params->sheet_back, "normal", sizeof(params->sheet_back));
 	}
 	else
         {
-          strlcpy(params->sheet_back, "normal", sizeof(params->sheet_back));
+          cupsCopyString(params->sheet_back, "normal", sizeof(params->sheet_back));
 	}
       }
 
@@ -3180,7 +3180,7 @@ parse_generate_file(
       if (!strcmp(value, "auto") || !strcmp(value, "bi-level") || !strcmp(value, "color") || !strcmp(value, "monochrome") || !strcmp(value, "adobe-rgb_8") || !strcmp(value, "adobe-rgb_16") || !strcmp(value, "black_1") || !strcmp(value, "black_8") || !strcmp(value, "black_16") || !strcmp(value, "cmyk_8") || !strcmp(value, "cmyk_16") || !strcmp(value, "rgb_8") || !strcmp(value, "rgb_16") || !strcmp(value, "sgray_1") || !strcmp(value, "sgray_8") || !strcmp(value, "sgray_16") || !strcmp(value, "srgb_8") || !strcmp(value, "srgb_16"))
       {
         // Use "print-color-mode" or "pwg-raster-document-type-supported" keyword...
-        strlcpy(params->type, value, sizeof(params->type));
+        cupsCopyString(params->type, value, sizeof(params->type));
       }
       else
       {
@@ -3206,7 +3206,7 @@ parse_generate_file(
 
       if (!strcmp(value, "image/pwg-raster") || !strcmp(value, "image/urf"))
       {
-        strlcpy(params->format, value, sizeof(params->format));
+        cupsCopyString(params->format, value, sizeof(params->format));
       }
       else
       {
@@ -3232,7 +3232,7 @@ parse_generate_file(
 
       if (!strcmp(value, "default") || !strcmp(value, "ready") || pwgMediaForPWG(value) != NULL)
       {
-        strlcpy(params->media, value, sizeof(params->media));
+        cupsCopyString(params->media, value, sizeof(params->media));
       }
       else
       {
@@ -3416,7 +3416,7 @@ parse_generate_file(
 
       if (!strcmp(value, "one-sided") || !strcmp(value, "two-sided-long-edge") || !strcmp(value, "two-sided-short-edge"))
       {
-        strlcpy(params->sides, value, sizeof(params->sides));
+        cupsCopyString(params->sides, value, sizeof(params->sides));
       }
       else
       {
@@ -5154,7 +5154,7 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
 
       if (_ippFileReadToken(f, temp, sizeof(temp)))
       {
-        strlcpy(data->pause, temp, sizeof(data->pause));
+        cupsCopyString(data->pause, temp, sizeof(data->pause));
       }
       else
       {
@@ -6077,11 +6077,11 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       data->last_expect    = NULL;
       data->file[0]        = '\0';
       data->ignore_errors  = data->def_ignore_errors;
-      strlcpy(data->name, f->filename, sizeof(data->name));
+      cupsCopyString(data->name, f->filename, sizeof(data->name));
       if ((ptr = strrchr(data->name, '.')) != NULL)
         *ptr = '\0';
       data->repeat_interval = 5000000;
-      strlcpy(data->resource, data->vars->resource, sizeof(data->resource));
+      cupsCopyString(data->resource, data->vars->resource, sizeof(data->resource));
       data->skip_previous = 0;
       data->pass_test     = 0;
       data->skip_test     = 0;
@@ -6779,7 +6779,7 @@ with_value(ipptool_test_t *data,	/* I - Test data */
           if ((!strcmp(value, "true") || !strcmp(value, "1")) == ippGetBoolean(attr, i))
           {
             if (!matchbuf[0])
-	      strlcpy(matchbuf, value, matchlen);
+	      cupsCopyString(matchbuf, value, matchlen);
 
 	    if (!(flags & IPPTOOL_WITH_ALL))
 	    {
@@ -6816,7 +6816,7 @@ with_value(ipptool_test_t *data,	/* I - Test data */
           if (!strcmp(value, temp))
           {
             if (!matchbuf[0])
-	      strlcpy(matchbuf, value, matchlen);
+	      cupsCopyString(matchbuf, value, matchlen);
 
 	    if (!(flags & IPPTOOL_WITH_ALL))
 	    {
@@ -6891,7 +6891,7 @@ with_value(ipptool_test_t *data,	/* I - Test data */
 	                 0, NULL, 0))
 	    {
 	      if (!matchbuf[0])
-		strlcpy(matchbuf, get_string(attr, i, flags, temp, sizeof(temp)), matchlen);
+		cupsCopyString(matchbuf, get_string(attr, i, flags, temp, sizeof(temp)), matchlen);
 
 	      if (!(flags & IPPTOOL_WITH_ALL))
 	      {
@@ -6919,7 +6919,7 @@ with_value(ipptool_test_t *data,	/* I - Test data */
 	    if (!compare_uris(value, get_string(attr, i, flags, temp, sizeof(temp))))
 	    {
 	      if (!matchbuf[0])
-		strlcpy(matchbuf, get_string(attr, i, flags, temp, sizeof(temp)), matchlen);
+		cupsCopyString(matchbuf, get_string(attr, i, flags, temp, sizeof(temp)), matchlen);
 
 	      if (!(flags & IPPTOOL_WITH_ALL))
 	      {
@@ -6984,7 +6984,7 @@ with_value(ipptool_test_t *data,	/* I - Test data */
             if (!result)
 	    {
 	      if (!matchbuf[0])
-		strlcpy(matchbuf, get_string(attr, i, flags, temp, sizeof(temp)), matchlen);
+		cupsCopyString(matchbuf, get_string(attr, i, flags, temp, sizeof(temp)), matchlen);
 
 	      if (!(flags & IPPTOOL_WITH_ALL))
 	      {
@@ -7044,7 +7044,7 @@ with_value(ipptool_test_t *data,	/* I - Test data */
 	    if (!regexec(&re, temp, 0, NULL, 0))
 	    {
 	      if (!matchbuf[0])
-		strlcpy(matchbuf, temp, matchlen);
+		cupsCopyString(matchbuf, temp, matchlen);
 
 	      if (!(flags & IPPTOOL_WITH_ALL))
 	      {
@@ -7310,7 +7310,7 @@ with_value_from(
 	  if (ippContainsString(fromattr, value))
 	  {
 	    if (!matchbuf[0])
-	      strlcpy(matchbuf, value, matchlen);
+	      cupsCopyString(matchbuf, value, matchlen);
 	  }
 	  else
 	  {
@@ -7332,7 +7332,7 @@ with_value_from(
             if (!compare_uris(value, ippGetString(fromattr, j, NULL)))
             {
               if (!matchbuf[0])
-                strlcpy(matchbuf, value, matchlen);
+                cupsCopyString(matchbuf, value, matchlen);
               break;
             }
           }

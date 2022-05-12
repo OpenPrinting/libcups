@@ -1073,7 +1073,7 @@ ippAddStringfv(ipp_t      *ipp,		/* I - IPP message */
       s = "(null)";
 
     bytes = (ssize_t)strlen(s);
-    strlcpy(buffer, s, sizeof(buffer));
+    cupsCopyString(buffer, s, sizeof(buffer));
   }
   else
   {
@@ -1926,7 +1926,7 @@ ippFindNextAttribute(ipp_t      *ipp,	/* I - IPP message */
     * Search for child attribute...
     */
 
-    strlcpy(parent, name, sizeof(parent));
+    cupsCopyString(parent, name, sizeof(parent));
     if ((child = strchr(parent, '/')) == NULL)
     {
       DEBUG_puts("3ippFindNextAttribute: Attribute name too long.");
@@ -4314,7 +4314,7 @@ ippSetStringfv(ipp_t           *ipp,	/* I  - IPP message */
       s = "(null)";
 
     bytes = (ssize_t)strlen(s);
-    strlcpy(buffer, s, sizeof(buffer));
+    cupsCopyString(buffer, s, sizeof(buffer));
   }
   else
   {
@@ -6341,7 +6341,7 @@ ipp_lang_code(const char *locale,	/* I - Locale string */
 
   if (!_cups_strcasecmp(locale, "c"))
   {
-    strlcpy(buffer, "en", bufsize);
+    cupsCopyString(buffer, "en", bufsize);
     return (buffer);
   }
   else

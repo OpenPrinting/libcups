@@ -504,7 +504,7 @@ httpAddrGetList(const char *hostname,	/* I - Hostname, IP address, or NULL for p
     {
       addr = first;
       first->addr.un.sun_family = AF_LOCAL;
-      strlcpy(first->addr.un.sun_path, hostname, sizeof(first->addr.un.sun_path));
+      cupsCopyString(first->addr.un.sun_path, hostname, sizeof(first->addr.un.sun_path));
     }
   }
   else
@@ -538,7 +538,7 @@ httpAddrGetList(const char *hostname,	/* I - Hostname, IP address, or NULL for p
         * Copy the newer address format which supports link-local addresses...
 	*/
 
-	strlcpy(ipv6, hostname + 4, sizeof(ipv6));
+	cupsCopyString(ipv6, hostname + 4, sizeof(ipv6));
 	if ((ipv6len = (int)strlen(ipv6) - 1) >= 0 && ipv6[ipv6len] == ']')
 	{
           ipv6[ipv6len] = '\0';
@@ -558,7 +558,7 @@ httpAddrGetList(const char *hostname,	/* I - Hostname, IP address, or NULL for p
         * Copy the regular non-link-local IPv6 address...
 	*/
 
-	strlcpy(ipv6, hostname + 1, sizeof(ipv6));
+	cupsCopyString(ipv6, hostname + 1, sizeof(ipv6));
 	if ((ipv6len = (int)strlen(ipv6) - 1) >= 0 && ipv6[ipv6len] == ']')
 	{
           ipv6[ipv6len] = '\0';

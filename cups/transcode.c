@@ -102,7 +102,7 @@ cupsCharsetToUTF8(
 
   if (encoding == CUPS_UTF8 || encoding <= CUPS_US_ASCII || encoding >= CUPS_ENCODING_VBCS_END)
   {
-    strlcpy((char *)dest, src, maxout);
+    cupsCopyString((char *)dest, src, maxout);
     return ((ssize_t)strlen((char *)dest));
   }
 
@@ -223,7 +223,7 @@ cupsUTF8ToCharset(
   if (encoding == CUPS_UTF8 ||
       encoding >= CUPS_ENCODING_VBCS_END)
   {
-    strlcpy(dest, (char *)src, maxout);
+    cupsCopyString(dest, (char *)src, maxout);
     return ((ssize_t)strlen(dest));
   }
 

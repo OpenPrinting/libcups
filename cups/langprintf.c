@@ -53,7 +53,7 @@ _cupsLangPrintf(FILE       *fp,		/* I - File to write to */
   vsnprintf(buffer, sizeof(buffer) - 1, _cupsLangString(cg->lang_default, message), ap);
   va_end(ap);
 
-  strlcat(buffer, "\n", sizeof(buffer));
+  cupsConcatString(buffer, "\n", sizeof(buffer));
 
  /*
   * Transcode to the destination charset...
@@ -149,14 +149,14 @@ _cupsSetLocale(char *argv[])		/* IO - Command-line arguments */
 
   if (lc_time)
   {
-    strlcpy(new_lc_time, lc_time, sizeof(new_lc_time));
+    cupsCopyString(new_lc_time, lc_time, sizeof(new_lc_time));
     if ((charset = strchr(new_lc_time, '.')) == NULL)
       charset = new_lc_time + strlen(new_lc_time);
 
-    strlcpy(charset, ".UTF-8", sizeof(new_lc_time) - (size_t)(charset - new_lc_time));
+    cupsCopyString(charset, ".UTF-8", sizeof(new_lc_time) - (size_t)(charset - new_lc_time));
   }
   else
-    strlcpy(new_lc_time, "C", sizeof(new_lc_time));
+    cupsCopyString(new_lc_time, "C", sizeof(new_lc_time));
 
   setlocale(LC_TIME, new_lc_time);
 #endif /* LC_TIME */

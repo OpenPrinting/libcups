@@ -279,8 +279,7 @@ libcups3.def: $(LIBOBJS) $(IMAGEOBJS) Makefile
 	echo "VERSION 3.0" >>$@
 	echo "EXPORTS" >>$@
 	(nm $(LIBOBJS) 2>/dev/null | grep "T _" | awk '{print $$3}'; \
-	 echo __cups_strcpy; echo __cups_strlcat; echo __cups_strlcpy; \
-	 	echo __cups_gettimeofday; echo __cups_hstrerror) | \
+	 echo __cups_strcpy; echo __cups_gettimeofday; echo __cups_hstrerror) | \
 		grep -v -E -e '^cups_debug' -e 'Block$$' -e '^__cupsApple' | \
 		sed -e '1,$$s/^_//' | sort >>$@
 

@@ -678,13 +678,13 @@ httpCredentialsString(
     if (gnutls_x509_crt_get_dn_by_oid(cert, GNUTLS_OID_X520_COMMON_NAME, 0, 0, name, &len) >= 0)
       name[len] = '\0';
     else
-      strlcpy(name, "unknown", sizeof(name));
+      cupsCopyString(name, "unknown", sizeof(name));
 
     len = sizeof(issuer) - 1;
     if (gnutls_x509_crt_get_issuer_dn_by_oid(cert, GNUTLS_OID_X520_ORGANIZATION_NAME, 0, 0, issuer, &len) >= 0)
       issuer[len] = '\0';
     else
-      strlcpy(issuer, "unknown", sizeof(issuer));
+      cupsCopyString(issuer, "unknown", sizeof(issuer));
 
     expiration = gnutls_x509_crt_get_expiration_time(cert);
     sigalg     = gnutls_x509_crt_get_signature_algorithm(cert);
@@ -966,7 +966,7 @@ http_gnutls_default_path(char   *buffer,/* I - Path buffer */
     }
   }
   else
-    strlcpy(buffer, CUPS_SERVERROOT "/ssl", bufsize);
+    cupsCopyString(buffer, CUPS_SERVERROOT "/ssl", bufsize);
 
   DEBUG_printf(("1http_gnutls_default_path: Using default path \"%s\".", buffer));
 
@@ -1101,7 +1101,7 @@ http_gnutls_make_path(
   if (bufptr < bufend)
     *bufptr++ = '.';
 
-  strlcpy(bufptr, ext, (size_t)(bufend - bufptr + 1));
+  cupsCopyString(bufptr, ext, (size_t)(bufend - bufptr + 1));
 
   return (buffer);
 }
@@ -1345,7 +1345,7 @@ _httpTLSStart(http_t *http)		/* I - Connection to server */
 
     if (httpAddrLocalhost(http->hostaddr))
     {
-      strlcpy(hostname, "localhost", sizeof(hostname));
+      cupsCopyString(hostname, "localhost", sizeof(hostname));
     }
     else
     {
@@ -1353,7 +1353,7 @@ _httpTLSStart(http_t *http)		/* I - Connection to server */
       * Otherwise make sure the hostname we have does not end in a trailing dot.
       */
 
-      strlcpy(hostname, http->hostname, sizeof(hostname));
+      cupsCopyString(hostname, http->hostname, sizeof(hostname));
       if ((hostptr = hostname + strlen(hostname) - 1) >= hostname &&
 	  *hostptr == '.')
 	*hostptr = '\0';
@@ -1377,7 +1377,7 @@ _httpTLSStart(http_t *http)		/* I - Connection to server */
       * Use hostname for TLS upgrade...
       */
 
-      strlcpy(hostname, http->fields[HTTP_FIELD_HOST], sizeof(hostname));
+      cupsCopyString(hostname, http->fields[HTTP_FIELD_HOST], sizeof(hostname));
     }
     else
     {
@@ -1446,8 +1446,8 @@ _httpTLSStart(http_t *http)		/* I - Connection to server */
           * Use the CA certs...
           */
 
-          strlcpy(crtfile, cacrtfile, sizeof(crtfile));
-          strlcpy(keyfile, cakeyfile, sizeof(keyfile));
+          cupsCopyString(crtfile, cacrtfile, sizeof(crtfile));
+          cupsCopyString(keyfile, cakeyfile, sizeof(keyfile));
         }
       }
 
@@ -1493,8 +1493,8 @@ _httpTLSStart(http_t *http)		/* I - Connection to server */
           * Use the CA certs...
           */
 
-          strlcpy(crtfile, cacrtfile, sizeof(crtfile));
-          strlcpy(keyfile, cakeyfile, sizeof(keyfile));
+          cupsCopyString(crtfile, cacrtfile, sizeof(crtfile));
+          cupsCopyString(keyfile, cakeyfile, sizeof(keyfile));
         }
       }
 
@@ -1540,7 +1540,7 @@ _httpTLSStart(http_t *http)		/* I - Connection to server */
     return (-1);
   }
 
-  strlcpy(priority_string, "NORMAL", sizeof(priority_string));
+  cupsCopyString(priority_string, "NORMAL", sizeof(priority_string));
 
   if (tls_max_version < _HTTP_TLS_MAX)
   {
@@ -1548,11 +1548,11 @@ _httpTLSStart(http_t *http)		/* I - Connection to server */
     * Require specific TLS versions...
     */
 
-    strlcat(priority_string, ":-VERS-TLS-ALL", sizeof(priority_string));
+    cupsConcatString(priority_string, ":-VERS-TLS-ALL", sizeof(priority_string));
     for (version = tls_min_version; version <= tls_max_version; version ++)
     {
-      strlcat(priority_string, ":+", sizeof(priority_string));
-      strlcat(priority_string, versions[version], sizeof(priority_string));
+      cupsConcatString(priority_string, ":+", sizeof(priority_string));
+      cupsConcatString(priority_string, versions[version], sizeof(priority_string));
     }
   }
   else if (tls_min_version == _HTTP_TLS_SSL3)
@@ -1561,7 +1561,7 @@ _httpTLSStart(http_t *http)		/* I - Connection to server */
     * Allow all versions of TLS and SSL/3.0...
     */
 
-    strlcat(priority_string, ":+VERS-TLS-ALL:+VERS-SSL3.0", sizeof(priority_string));
+    cupsConcatString(priority_string, ":+VERS-TLS-ALL:+VERS-SSL3.0", sizeof(priority_string));
   }
   else
   {
@@ -1569,23 +1569,23 @@ _httpTLSStart(http_t *http)		/* I - Connection to server */
     * Require a minimum version...
     */
 
-    strlcat(priority_string, ":+VERS-TLS-ALL", sizeof(priority_string));
+    cupsConcatString(priority_string, ":+VERS-TLS-ALL", sizeof(priority_string));
     for (version = 0; version < tls_min_version; version ++)
     {
-      strlcat(priority_string, ":-", sizeof(priority_string));
-      strlcat(priority_string, versions[version], sizeof(priority_string));
+      cupsConcatString(priority_string, ":-", sizeof(priority_string));
+      cupsConcatString(priority_string, versions[version], sizeof(priority_string));
     }
   }
 
   if (tls_options & _HTTP_TLS_ALLOW_RC4)
-    strlcat(priority_string, ":+ARCFOUR-128", sizeof(priority_string));
+    cupsConcatString(priority_string, ":+ARCFOUR-128", sizeof(priority_string));
   else
-    strlcat(priority_string, ":!ARCFOUR-128", sizeof(priority_string));
+    cupsConcatString(priority_string, ":!ARCFOUR-128", sizeof(priority_string));
 
-  strlcat(priority_string, ":!ANON-DH", sizeof(priority_string));
+  cupsConcatString(priority_string, ":!ANON-DH", sizeof(priority_string));
 
   if (tls_options & _HTTP_TLS_DENY_CBC)
-    strlcat(priority_string, ":!AES-128-CBC:!AES-256-CBC:!CAMELLIA-128-CBC:!CAMELLIA-256-CBC:!3DES-CBC", sizeof(priority_string));
+    cupsConcatString(priority_string, ":!AES-128-CBC:!AES-256-CBC:!CAMELLIA-128-CBC:!CAMELLIA-256-CBC:!3DES-CBC", sizeof(priority_string));
 
 #ifdef HAVE_GNUTLS_PRIORITY_SET_DIRECT
   gnutls_priority_set_direct(http->tls, priority_string, NULL);

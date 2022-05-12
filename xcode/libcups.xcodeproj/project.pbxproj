@@ -99,7 +99,7 @@
 		270696461CADF3E200FFE5FB /* md5-internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220EEE133305BB00FCA411 /* md5-internal.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		270696481CADF3E200FFE5FB /* pwg-private.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220EF9133305BB00FCA411 /* pwg-private.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		2706964A1CADF3E200FFE5FB /* string-private.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220F01133305BB00FCA411 /* string-private.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		2706964B1CADF3E200FFE5FB /* thread-private.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220F04133305BB00FCA411 /* thread-private.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		2706964B1CADF3E200FFE5FB /* thread.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220F04133305BB00FCA411 /* thread.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		2706964C1CADF3E200FFE5FB /* config.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220F471333063D00FCA411 /* config.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		2706964D1CADF3E200FFE5FB /* cups.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220EC11333056300FCA411 /* cups.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		2706964E1CADF3E200FFE5FB /* dir.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220ED4133305BB00FCA411 /* dir.h */; settings = {ATTRIBUTES = (); }; };
@@ -119,7 +119,6 @@
 		270D02261D707E3700EA9403 /* testcreds.c in Sources */ = {isa = PBXBuildFile; fileRef = 270D02251D707E3700EA9403 /* testcreds.c */; };
 		2712865D1CC1309000E517C7 /* libcups_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 72A4332F155844CF002E172D /* libcups_static.a */; };
 		2712865E1CC1309000E517C7 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC591926750C000F61D3 /* CoreFoundation.framework */; };
-		271286611CC1309000E517C7 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5D1926750C000F61D3 /* Security.framework */; };
 		271286691CC130C700E517C7 /* tlscheck.c in Sources */ = {isa = PBXBuildFile; fileRef = 271286681CC130BD00E517C7 /* tlscheck.c */; };
 		273B1EA1226B3E4800428143 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC591926750C000F61D3 /* CoreFoundation.framework */; };
 		273B1EA2226B3E4800428143 /* libresolv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5B1926750C000F61D3 /* libresolv.dylib */; };
@@ -137,7 +136,6 @@
 		273BF6C71333B5370022CAAB /* testcups.c in Sources */ = {isa = PBXBuildFile; fileRef = 273BF6C61333B5370022CAAB /* testcups.c */; };
 		274770D72345342B0089BC31 /* libcups_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 72A4332F155844CF002E172D /* libcups_static.a */; };
 		274770D82345342B0089BC31 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 278C58E5136B64AF00836530 /* CoreFoundation.framework */; };
-		274770DA2345342B0089BC31 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 278C58E7136B64B000836530 /* Security.framework */; };
 		274770E2234534660089BC31 /* testthreads.c in Sources */ = {isa = PBXBuildFile; fileRef = 274770E1234534660089BC31 /* testthreads.c */; };
 		274FF68C1333B1C400317ECB /* array.c in Sources */ = {isa = PBXBuildFile; fileRef = 72220EB81333056300FCA411 /* array.c */; };
 		274FF68E1333B1C400317ECB /* auth.c in Sources */ = {isa = PBXBuildFile; fileRef = 72220EBB1333056300FCA411 /* auth.c */; };
@@ -195,16 +193,50 @@
 		2778BBD1275DA09B0070DA11 /* libiconv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5A1926750C000F61D3 /* libiconv.dylib */; };
 		2778BBD2275DA09B0070DA11 /* libresolv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5B1926750C000F61D3 /* libresolv.dylib */; };
 		2778BBD3275DA09B0070DA11 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5C1926750C000F61D3 /* libz.dylib */; };
-		2778BBD4275DA09B0070DA11 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5D1926750C000F61D3 /* Security.framework */; };
 		2778BBDB275DA0D80070DA11 /* fuzzipp.c in Sources */ = {isa = PBXBuildFile; fileRef = 2778BBDA275DA0D80070DA11 /* fuzzipp.c */; };
 		278C58E3136B647200836530 /* testhttp.c in Sources */ = {isa = PBXBuildFile; fileRef = 278C58E2136B647200836530 /* testhttp.c */; };
 		279AE6F52395B80F004DD600 /* libpam.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 279AE6F42395B80F004DD600 /* libpam.tbd */; };
+		27CAFC61282C895700FE02FC /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC5F282C895700FE02FC /* libssl.a */; };
+		27CAFC62282C895700FE02FC /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC60282C895700FE02FC /* libcrypto.a */; };
+		27CAFC63282C898300FE02FC /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC60282C895700FE02FC /* libcrypto.a */; };
+		27CAFC64282C898300FE02FC /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC5F282C895700FE02FC /* libssl.a */; };
+		27CAFC65282C899E00FE02FC /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC60282C895700FE02FC /* libcrypto.a */; };
+		27CAFC66282C899E00FE02FC /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC5F282C895700FE02FC /* libssl.a */; };
+		27CAFC67282C89CB00FE02FC /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC60282C895700FE02FC /* libcrypto.a */; };
+		27CAFC68282C89CB00FE02FC /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC5F282C895700FE02FC /* libssl.a */; };
+		27CAFC69282C89E000FE02FC /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC60282C895700FE02FC /* libcrypto.a */; };
+		27CAFC6A282C89E000FE02FC /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC5F282C895700FE02FC /* libssl.a */; };
+		27CAFC6B282C89FE00FE02FC /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC60282C895700FE02FC /* libcrypto.a */; };
+		27CAFC6C282C89FE00FE02FC /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC5F282C895700FE02FC /* libssl.a */; };
+		27CAFC6D282C8A1800FE02FC /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC60282C895700FE02FC /* libcrypto.a */; };
+		27CAFC6E282C8A1800FE02FC /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC5F282C895700FE02FC /* libssl.a */; };
+		27CAFC70282C8BCD00FE02FC /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC60282C895700FE02FC /* libcrypto.a */; };
+		27CAFC71282C8BCD00FE02FC /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC5F282C895700FE02FC /* libssl.a */; };
+		27CAFC72282C8C0200FE02FC /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC60282C895700FE02FC /* libcrypto.a */; };
+		27CAFC73282C8C0200FE02FC /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC5F282C895700FE02FC /* libssl.a */; };
+		27CAFC74282C8C1900FE02FC /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC60282C895700FE02FC /* libcrypto.a */; };
+		27CAFC75282C8C1900FE02FC /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC5F282C895700FE02FC /* libssl.a */; };
+		27CAFC76282C8C3300FE02FC /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC60282C895700FE02FC /* libcrypto.a */; };
+		27CAFC77282C8C3300FE02FC /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC5F282C895700FE02FC /* libssl.a */; };
+		27CAFC78282C8C4900FE02FC /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC60282C895700FE02FC /* libcrypto.a */; };
+		27CAFC79282C8C4900FE02FC /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC5F282C895700FE02FC /* libssl.a */; };
+		27CAFC7A282C8C5A00FE02FC /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC60282C895700FE02FC /* libcrypto.a */; };
+		27CAFC7B282C8C5A00FE02FC /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC5F282C895700FE02FC /* libssl.a */; };
+		27CAFC7C282C8C6F00FE02FC /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC60282C895700FE02FC /* libcrypto.a */; };
+		27CAFC7D282C8C6F00FE02FC /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC5F282C895700FE02FC /* libssl.a */; };
+		27CAFC7E282C8C8000FE02FC /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC60282C895700FE02FC /* libcrypto.a */; };
+		27CAFC7F282C8C8000FE02FC /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC5F282C895700FE02FC /* libssl.a */; };
+		27CAFC80282C8C9300FE02FC /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC60282C895700FE02FC /* libcrypto.a */; };
+		27CAFC81282C8C9300FE02FC /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC5F282C895700FE02FC /* libssl.a */; };
+		27CAFC82282C8D8100FE02FC /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC60282C895700FE02FC /* libcrypto.a */; };
+		27CAFC83282C8D8100FE02FC /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC5F282C895700FE02FC /* libssl.a */; };
+		27CAFC84282C8DA100FE02FC /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC60282C895700FE02FC /* libcrypto.a */; };
+		27CAFC85282C8DA100FE02FC /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC5F282C895700FE02FC /* libssl.a */; };
 		27D3966527BA81C6003D3D8E /* raster-testpage.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D3966427BA81C6003D3D8E /* raster-testpage.h */; };
 		27D3966627BA81C6003D3D8E /* raster-testpage.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D3966427BA81C6003D3D8E /* raster-testpage.h */; };
 		27D3966727BA81C6003D3D8E /* raster-testpage.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D3966427BA81C6003D3D8E /* raster-testpage.h */; };
 		27D3966E27BA81D3003D3D8E /* libcups_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 72A4332F155844CF002E172D /* libcups_static.a */; };
 		27D3966F27BA81D3003D3D8E /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 278C58E5136B64AF00836530 /* CoreFoundation.framework */; };
-		27D3967027BA81D3003D3D8E /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 278C58E7136B64B000836530 /* Security.framework */; };
 		27D3967727BA8206003D3D8E /* testtestpage.c in Sources */ = {isa = PBXBuildFile; fileRef = 27D3967627BA8206003D3D8E /* testtestpage.c */; };
 		27D3967B27BB389C003D3D8E /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D3967A27BB389C003D3D8E /* libz.tbd */; };
 		27D3967C27BB38AD003D3D8E /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D3967A27BB389C003D3D8E /* libz.tbd */; };
@@ -267,7 +299,7 @@
 		72220F3B133305BB00FCA411 /* string-private.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220F01133305BB00FCA411 /* string-private.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		72220F3C133305BB00FCA411 /* string.c in Sources */ = {isa = PBXBuildFile; fileRef = 72220F02133305BB00FCA411 /* string.c */; };
 		72220F3D133305BB00FCA411 /* tempfile.c in Sources */ = {isa = PBXBuildFile; fileRef = 72220F03133305BB00FCA411 /* tempfile.c */; };
-		72220F3E133305BB00FCA411 /* thread-private.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220F04133305BB00FCA411 /* thread-private.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		72220F3E133305BB00FCA411 /* thread.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220F04133305BB00FCA411 /* thread.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		72220F3F133305BB00FCA411 /* thread.c in Sources */ = {isa = PBXBuildFile; fileRef = 72220F05133305BB00FCA411 /* thread.c */; };
 		72220F40133305BB00FCA411 /* transcode.c in Sources */ = {isa = PBXBuildFile; fileRef = 72220F06133305BB00FCA411 /* transcode.c */; };
 		72220F41133305BB00FCA411 /* transcode.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220F07133305BB00FCA411 /* transcode.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -286,7 +318,6 @@
 		724FA53E1CC037370092477B /* libiconv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5A1926750C000F61D3 /* libiconv.dylib */; };
 		724FA53F1CC037370092477B /* libresolv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5B1926750C000F61D3 /* libresolv.dylib */; };
 		724FA5401CC037370092477B /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5C1926750C000F61D3 /* libz.dylib */; };
-		724FA5411CC037370092477B /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5D1926750C000F61D3 /* Security.framework */; };
 		724FA5431CC037370092477B /* libcups_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 72A4332F155844CF002E172D /* libcups_static.a */; };
 		724FA5491CC037460092477B /* testarray.c in Sources */ = {isa = PBXBuildFile; fileRef = 727EF042192E3544001EF690 /* testarray.c */; };
 		724FA5761CC037810092477B /* libcups_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 72A4332F155844CF002E172D /* libcups_static.a */; };
@@ -301,33 +332,27 @@
 		724FA58C1CC037980092477B /* libiconv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 728FB7EF1536167A005426E1 /* libiconv.dylib */; };
 		724FA58D1CC037980092477B /* libresolv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 728FB7F01536167A005426E1 /* libresolv.dylib */; };
 		724FA58E1CC037980092477B /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 728FB7EC1536161C005426E1 /* libz.dylib */; };
-		724FA58F1CC037980092477B /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 278C58E7136B64B000836530 /* Security.framework */; };
 		724FA5951CC037A50092477B /* testi18n.c in Sources */ = {isa = PBXBuildFile; fileRef = 727EF046192E3544001EF690 /* testi18n.c */; };
 		724FA59C1CC037AA0092477B /* libcups_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 72A4332F155844CF002E172D /* libcups_static.a */; };
 		724FA59D1CC037AA0092477B /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 278C58E5136B64AF00836530 /* CoreFoundation.framework */; };
 		724FA59F1CC037AA0092477B /* libiconv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 728FB7EF1536167A005426E1 /* libiconv.dylib */; };
 		724FA5A01CC037AA0092477B /* libresolv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 728FB7F01536167A005426E1 /* libresolv.dylib */; };
 		724FA5A11CC037AA0092477B /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 728FB7EC1536161C005426E1 /* libz.dylib */; };
-		724FA5A21CC037AA0092477B /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 278C58E7136B64B000836530 /* Security.framework */; };
 		724FA5A81CC037B70092477B /* testipp.c in Sources */ = {isa = PBXBuildFile; fileRef = 727EF047192E3544001EF690 /* testipp.c */; };
 		724FA5AF1CC037C60092477B /* libcups_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 72A4332F155844CF002E172D /* libcups_static.a */; };
 		724FA5B01CC037C60092477B /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 278C58E5136B64AF00836530 /* CoreFoundation.framework */; };
 		724FA5B21CC037C60092477B /* libiconv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 728FB7EF1536167A005426E1 /* libiconv.dylib */; };
 		724FA5B31CC037C60092477B /* libresolv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 728FB7F01536167A005426E1 /* libresolv.dylib */; };
 		724FA5B41CC037C60092477B /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 728FB7EC1536161C005426E1 /* libz.dylib */; };
-		724FA5B51CC037C60092477B /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 278C58E7136B64B000836530 /* Security.framework */; };
 		724FA5BB1CC037D30092477B /* testlang.c in Sources */ = {isa = PBXBuildFile; fileRef = 727EF048192E3544001EF690 /* testlang.c */; };
 		724FA5D71CC037F00092477B /* libcups_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 72A4332F155844CF002E172D /* libcups_static.a */; };
 		724FA5D81CC037F00092477B /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 278C58E5136B64AF00836530 /* CoreFoundation.framework */; };
-		724FA5DA1CC037F00092477B /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 278C58E7136B64B000836530 /* Security.framework */; };
 		724FA5E21CC037FD0092477B /* testoptions.c in Sources */ = {isa = PBXBuildFile; fileRef = 727EF049192E3544001EF690 /* testoptions.c */; };
 		724FA5FF1CC038190092477B /* libcups_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 72A4332F155844CF002E172D /* libcups_static.a */; };
 		724FA6001CC038190092477B /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 278C58E5136B64AF00836530 /* CoreFoundation.framework */; };
-		724FA6021CC038190092477B /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 278C58E7136B64B000836530 /* Security.framework */; };
 		724FA60A1CC038250092477B /* testpwg.c in Sources */ = {isa = PBXBuildFile; fileRef = 727EF04B192E3544001EF690 /* testpwg.c */; };
 		724FA6131CC0382B0092477B /* libcups_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 72A4332F155844CF002E172D /* libcups_static.a */; };
 		724FA6141CC0382B0092477B /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 278C58E5136B64AF00836530 /* CoreFoundation.framework */; };
-		724FA6161CC0382B0092477B /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 278C58E7136B64B000836530 /* Security.framework */; };
 		724FA61E1CC0383B0092477B /* testraster.c in Sources */ = {isa = PBXBuildFile; fileRef = 27F89DA21B3AC43B00E5A4B7 /* testraster.c */; };
 		7253C454216E97FF00494ADD /* raster-error.c in Sources */ = {isa = PBXBuildFile; fileRef = 72F75A691336FA8A004BB496 /* raster-error.c */; };
 		7253C455216E980000494ADD /* raster-error.c in Sources */ = {isa = PBXBuildFile; fileRef = 72F75A691336FA8A004BB496 /* raster-error.c */; };
@@ -348,7 +373,6 @@
 		7284F9F01BFCCDB10026F886 /* hash.c in Sources */ = {isa = PBXBuildFile; fileRef = 7284F9EF1BFCCD940026F886 /* hash.c */; };
 		7284F9F11BFCCDB20026F886 /* hash.c in Sources */ = {isa = PBXBuildFile; fileRef = 7284F9EF1BFCCD940026F886 /* hash.c */; };
 		728FB7E91536161C005426E1 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 278C58E5136B64AF00836530 /* CoreFoundation.framework */; };
-		728FB7EB1536161C005426E1 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 278C58E7136B64B000836530 /* Security.framework */; };
 		728FB7ED1536161C005426E1 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 728FB7EC1536161C005426E1 /* libz.dylib */; };
 		728FB7F11536167A005426E1 /* libiconv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 728FB7EF1536167A005426E1 /* libiconv.dylib */; };
 		728FB7F21536167A005426E1 /* libresolv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 728FB7F01536167A005426E1 /* libresolv.dylib */; };
@@ -891,9 +915,7 @@
 
 /* Begin PBXFileReference section */
 		2706965A1CADF3E200FFE5FB /* libcups_ios.a */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libcups_ios.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		270B267D17F5C06700C8A3A9 /* tls-darwin.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = "tls-darwin.c"; path = "../cups/tls-darwin.c"; sourceTree = "<group>"; };
 		270B267E17F5C06700C8A3A9 /* tls-gnutls.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = "tls-gnutls.c"; path = "../cups/tls-gnutls.c"; sourceTree = "<group>"; };
-		270B268117F5C5D600C8A3A9 /* tls-sspi.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = "tls-sspi.c"; path = "../cups/tls-sspi.c"; sourceTree = "<group>"; };
 		270D02241D707E0200EA9403 /* testcreds */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = testcreds; sourceTree = BUILT_PRODUCTS_DIR; };
 		270D02251D707E3700EA9403 /* testcreds.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = testcreds.c; path = ../cups/testcreds.c; sourceTree = "<group>"; };
 		271286671CC1309000E517C7 /* tlscheck */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tlscheck; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -936,6 +958,9 @@
 		278C58E7136B64B000836530 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = /System/Library/Frameworks/Security.framework; sourceTree = "<absolute>"; };
 		278C58E8136B64B000836530 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = /System/Library/Frameworks/SystemConfiguration.framework; sourceTree = "<absolute>"; };
 		279AE6F42395B80F004DD600 /* libpam.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libpam.tbd; path = usr/lib/libpam.tbd; sourceTree = SDKROOT; };
+		27CAFC5F282C895700FE02FC /* libssl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libssl.a; path = ../../../../../usr/local/lib/libssl.a; sourceTree = "<group>"; };
+		27CAFC60282C895700FE02FC /* libcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcrypto.a; path = ../../../../../usr/local/lib/libcrypto.a; sourceTree = "<group>"; };
+		27CAFC6F282C8ADF00FE02FC /* tls-openssl.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = "tls-openssl.c"; path = "../cups/tls-openssl.c"; sourceTree = "<group>"; };
 		27D3037D134148CB00F022B1 /* libcups3.def */ = {isa = PBXFileReference; lastKnownFileType = text; name = libcups3.def; path = ../cups/libcups3.def; sourceTree = "<group>"; };
 		27D3966427BA81C6003D3D8E /* raster-testpage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "raster-testpage.h"; path = "../cups/raster-testpage.h"; sourceTree = "<group>"; };
 		27D3967527BA81D3003D3D8E /* testtestpage */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = testtestpage; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -987,7 +1012,7 @@
 		72220F01133305BB00FCA411 /* string-private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "string-private.h"; path = "../cups/string-private.h"; sourceTree = "<group>"; };
 		72220F02133305BB00FCA411 /* string.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = string.c; path = ../cups/string.c; sourceTree = "<group>"; };
 		72220F03133305BB00FCA411 /* tempfile.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = tempfile.c; path = ../cups/tempfile.c; sourceTree = "<group>"; };
-		72220F04133305BB00FCA411 /* thread-private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "thread-private.h"; path = "../cups/thread-private.h"; sourceTree = "<group>"; };
+		72220F04133305BB00FCA411 /* thread.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = thread.h; path = ../cups/thread.h; sourceTree = "<group>"; };
 		72220F05133305BB00FCA411 /* thread.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = thread.c; path = ../cups/thread.c; sourceTree = "<group>"; };
 		72220F06133305BB00FCA411 /* transcode.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = transcode.c; path = ../cups/transcode.c; sourceTree = "<group>"; };
 		72220F07133305BB00FCA411 /* transcode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = transcode.h; path = ../cups/transcode.h; sourceTree = "<group>"; };
@@ -1066,6 +1091,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27CAFC65282C899E00FE02FC /* libcrypto.a in Frameworks */,
+				27CAFC66282C899E00FE02FC /* libssl.a in Frameworks */,
 				270D02191D707E0200EA9403 /* libcups_static.a in Frameworks */,
 				270D021A1D707E0200EA9403 /* CoreFoundation.framework in Frameworks */,
 				270D021C1D707E0200EA9403 /* libiconv.dylib in Frameworks */,
@@ -1079,12 +1106,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27CAFC70282C8BCD00FE02FC /* libcrypto.a in Frameworks */,
+				27CAFC71282C8BCD00FE02FC /* libssl.a in Frameworks */,
 				27D3968327BB390D003D3D8E /* libresolv.tbd in Frameworks */,
 				27D3968127BB3906003D3D8E /* libz.tbd in Frameworks */,
 				27D3968027BB38F6003D3D8E /* libiconv.tbd in Frameworks */,
 				2712865D1CC1309000E517C7 /* libcups_static.a in Frameworks */,
 				2712865E1CC1309000E517C7 /* CoreFoundation.framework in Frameworks */,
-				271286611CC1309000E517C7 /* Security.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1116,6 +1144,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27CAFC67282C89CB00FE02FC /* libcrypto.a in Frameworks */,
+				27CAFC68282C89CB00FE02FC /* libssl.a in Frameworks */,
 				2767FC5F1926750C000F61D3 /* CoreFoundation.framework in Frameworks */,
 				2767FC601926750C000F61D3 /* libiconv.dylib in Frameworks */,
 				2767FC611926750C000F61D3 /* libresolv.dylib in Frameworks */,
@@ -1129,12 +1159,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27CAFC72282C8C0200FE02FC /* libcrypto.a in Frameworks */,
+				27CAFC73282C8C0200FE02FC /* libssl.a in Frameworks */,
 				27D3968B27BB3963003D3D8E /* libresolv.tbd in Frameworks */,
 				27D3968627BB392F003D3D8E /* libiconv.tbd in Frameworks */,
 				27D3967C27BB38AD003D3D8E /* libz.tbd in Frameworks */,
 				274770D72345342B0089BC31 /* libcups_static.a in Frameworks */,
 				274770D82345342B0089BC31 /* CoreFoundation.framework in Frameworks */,
-				274770DA2345342B0089BC31 /* Security.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1165,6 +1196,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27CAFC69282C89E000FE02FC /* libcrypto.a in Frameworks */,
+				27CAFC6A282C89E000FE02FC /* libssl.a in Frameworks */,
 				2767FC6B192685E6000F61D3 /* libcups_static.a in Frameworks */,
 				2767FC6C192685E6000F61D3 /* CoreFoundation.framework in Frameworks */,
 				2767FC6D192685E6000F61D3 /* libiconv.dylib in Frameworks */,
@@ -1178,12 +1211,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27CAFC84282C8DA100FE02FC /* libcrypto.a in Frameworks */,
+				27CAFC85282C8DA100FE02FC /* libssl.a in Frameworks */,
 				2778BBCF275DA09B0070DA11 /* libcups_static.a in Frameworks */,
 				2778BBD0275DA09B0070DA11 /* CoreFoundation.framework in Frameworks */,
 				2778BBD1275DA09B0070DA11 /* libiconv.dylib in Frameworks */,
 				2778BBD2275DA09B0070DA11 /* libresolv.dylib in Frameworks */,
 				2778BBD3275DA09B0070DA11 /* libz.dylib in Frameworks */,
-				2778BBD4275DA09B0070DA11 /* Security.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1191,6 +1225,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27CAFC6D282C8A1800FE02FC /* libcrypto.a in Frameworks */,
+				27CAFC6E282C8A1800FE02FC /* libssl.a in Frameworks */,
 				72BFD5FB191AF0A30005DA37 /* libcups_static.a in Frameworks */,
 				72BFD5FC191AF0A30005DA37 /* CoreFoundation.framework in Frameworks */,
 				72BFD5FE191AF0A30005DA37 /* libiconv.dylib in Frameworks */,
@@ -1204,12 +1240,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27CAFC80282C8C9300FE02FC /* libcrypto.a in Frameworks */,
+				27CAFC81282C8C9300FE02FC /* libssl.a in Frameworks */,
 				27D3968927BB394D003D3D8E /* libiconv.tbd in Frameworks */,
 				27D3968827BB3946003D3D8E /* libresolv.tbd in Frameworks */,
 				27D3968727BB393C003D3D8E /* libz.tbd in Frameworks */,
 				27D3966E27BA81D3003D3D8E /* libcups_static.a in Frameworks */,
 				27D3966F27BA81D3003D3D8E /* CoreFoundation.framework in Frameworks */,
-				27D3967027BA81D3003D3D8E /* Security.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1217,11 +1254,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27CAFC61282C895700FE02FC /* libssl.a in Frameworks */,
+				27CAFC62282C895700FE02FC /* libcrypto.a in Frameworks */,
 				728FB7F11536167A005426E1 /* libiconv.dylib in Frameworks */,
 				728FB7F21536167A005426E1 /* libresolv.dylib in Frameworks */,
 				728FB7ED1536161C005426E1 /* libz.dylib in Frameworks */,
 				728FB7E91536161C005426E1 /* CoreFoundation.framework in Frameworks */,
-				728FB7EB1536161C005426E1 /* Security.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1229,11 +1267,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27CAFC82282C8D8100FE02FC /* libcrypto.a in Frameworks */,
+				27CAFC83282C8D8100FE02FC /* libssl.a in Frameworks */,
 				724FA53D1CC037370092477B /* CoreFoundation.framework in Frameworks */,
 				724FA53E1CC037370092477B /* libiconv.dylib in Frameworks */,
 				724FA53F1CC037370092477B /* libresolv.dylib in Frameworks */,
 				724FA5401CC037370092477B /* libz.dylib in Frameworks */,
-				724FA5411CC037370092477B /* Security.framework in Frameworks */,
 				724FA5431CC037370092477B /* libcups_static.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1242,6 +1281,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27CAFC6B282C89FE00FE02FC /* libcrypto.a in Frameworks */,
+				27CAFC6C282C89FE00FE02FC /* libssl.a in Frameworks */,
 				724FA5761CC037810092477B /* libcups_static.a in Frameworks */,
 				724FA5771CC037810092477B /* CoreFoundation.framework in Frameworks */,
 				724FA5781CC037810092477B /* libiconv.dylib in Frameworks */,
@@ -1255,12 +1296,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27CAFC76282C8C3300FE02FC /* libcrypto.a in Frameworks */,
+				27CAFC77282C8C3300FE02FC /* libssl.a in Frameworks */,
 				724FA5891CC037980092477B /* libcups_static.a in Frameworks */,
 				724FA58A1CC037980092477B /* CoreFoundation.framework in Frameworks */,
 				724FA58C1CC037980092477B /* libiconv.dylib in Frameworks */,
 				724FA58D1CC037980092477B /* libresolv.dylib in Frameworks */,
 				724FA58E1CC037980092477B /* libz.dylib in Frameworks */,
-				724FA58F1CC037980092477B /* Security.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1268,12 +1310,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27CAFC78282C8C4900FE02FC /* libcrypto.a in Frameworks */,
+				27CAFC79282C8C4900FE02FC /* libssl.a in Frameworks */,
 				724FA59C1CC037AA0092477B /* libcups_static.a in Frameworks */,
 				724FA59D1CC037AA0092477B /* CoreFoundation.framework in Frameworks */,
 				724FA59F1CC037AA0092477B /* libiconv.dylib in Frameworks */,
 				724FA5A01CC037AA0092477B /* libresolv.dylib in Frameworks */,
 				724FA5A11CC037AA0092477B /* libz.dylib in Frameworks */,
-				724FA5A21CC037AA0092477B /* Security.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1281,12 +1324,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27CAFC7A282C8C5A00FE02FC /* libcrypto.a in Frameworks */,
+				27CAFC7B282C8C5A00FE02FC /* libssl.a in Frameworks */,
 				724FA5AF1CC037C60092477B /* libcups_static.a in Frameworks */,
 				724FA5B01CC037C60092477B /* CoreFoundation.framework in Frameworks */,
 				724FA5B21CC037C60092477B /* libiconv.dylib in Frameworks */,
 				724FA5B31CC037C60092477B /* libresolv.dylib in Frameworks */,
 				724FA5B41CC037C60092477B /* libz.dylib in Frameworks */,
-				724FA5B51CC037C60092477B /* Security.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1294,12 +1338,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27CAFC74282C8C1900FE02FC /* libcrypto.a in Frameworks */,
+				27CAFC75282C8C1900FE02FC /* libssl.a in Frameworks */,
 				27D3968A27BB3957003D3D8E /* libresolv.tbd in Frameworks */,
 				27D3968527BB3926003D3D8E /* libiconv.tbd in Frameworks */,
 				27D3968427BB391F003D3D8E /* libz.tbd in Frameworks */,
 				724FA5D71CC037F00092477B /* libcups_static.a in Frameworks */,
 				724FA5D81CC037F00092477B /* CoreFoundation.framework in Frameworks */,
-				724FA5DA1CC037F00092477B /* Security.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1307,9 +1352,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27CAFC7C282C8C6F00FE02FC /* libcrypto.a in Frameworks */,
+				27CAFC7D282C8C6F00FE02FC /* libssl.a in Frameworks */,
 				724FA5FF1CC038190092477B /* libcups_static.a in Frameworks */,
 				724FA6001CC038190092477B /* CoreFoundation.framework in Frameworks */,
-				724FA6021CC038190092477B /* Security.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1317,12 +1363,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27CAFC7E282C8C8000FE02FC /* libcrypto.a in Frameworks */,
+				27CAFC7F282C8C8000FE02FC /* libssl.a in Frameworks */,
 				27D3968C27BB3972003D3D8E /* libresolv.tbd in Frameworks */,
 				27D3967F27BB38E6003D3D8E /* libiconv.tbd in Frameworks */,
 				27D3967D27BB38BD003D3D8E /* libz.tbd in Frameworks */,
 				724FA6131CC0382B0092477B /* libcups_static.a in Frameworks */,
 				724FA6141CC0382B0092477B /* CoreFoundation.framework in Frameworks */,
-				724FA6161CC0382B0092477B /* Security.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1343,6 +1390,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27CAFC63282C898300FE02FC /* libcrypto.a in Frameworks */,
+				27CAFC64282C898300FE02FC /* libssl.a in Frameworks */,
 				27D3968E27BB3989003D3D8E /* libresolv.tbd in Frameworks */,
 				27D3968D27BB397F003D3D8E /* libiconv.tbd in Frameworks */,
 				27D3967B27BB389C003D3D8E /* libz.tbd in Frameworks */,
@@ -1449,70 +1498,69 @@
 		72220EB41333050100FCA411 /* libcups */ = {
 			isa = PBXGroup;
 			children = (
-				72220EB81333056300FCA411 /* array.c */,
 				72220EB91333056300FCA411 /* array.h */,
 				7234F41F1378A16F00D3E9C9 /* array-private.h */,
+				72220EB81333056300FCA411 /* array.c */,
 				72220EBB1333056300FCA411 /* auth.c */,
 				72220F0A133305BB00FCA411 /* base.h */,
 				72220F471333063D00FCA411 /* config.h */,
 				72220EC11333056300FCA411 /* cups.h */,
 				72220EC01333056300FCA411 /* cups-private.h */,
 				276683561337A8C5000D33D0 /* cups.strings */,
-				72220ED1133305BB00FCA411 /* debug.c */,
 				722A24EE2178D00C000CAB20 /* debug-internal.h */,
 				722A24F22178D090000CAB20 /* debug-private.h */,
+				72220ED1133305BB00FCA411 /* debug.c */,
+				72220ED2133305BB00FCA411 /* dest.c */,
 				72CF95E018A13543000FCAE4 /* dest-job.c */,
 				72CF95E118A13543000FCAE4 /* dest-localization.c */,
 				72CF95E218A13543000FCAE4 /* dest-options.c */,
-				72220ED2133305BB00FCA411 /* dest.c */,
-				72220ED3133305BB00FCA411 /* dir.c */,
 				72220ED4133305BB00FCA411 /* dir.h */,
+				72220ED3133305BB00FCA411 /* dir.c */,
 				72220ED6133305BB00FCA411 /* encode.c */,
-				72220ED8133305BB00FCA411 /* file.c */,
 				72220ED9133305BB00FCA411 /* file.h */,
 				72220ED7133305BB00FCA411 /* file-private.h */,
+				72220ED8133305BB00FCA411 /* file.c */,
 				72220EDC133305BB00FCA411 /* getputfile.c */,
 				72220EDD133305BB00FCA411 /* globals.c */,
 				7284F9EF1BFCCD940026F886 /* hash.c */,
-				72220EE2133305BB00FCA411 /* http.c */,
 				72220EE3133305BB00FCA411 /* http.h */,
+				72220EE0133305BB00FCA411 /* http-private.h */,
+				72220EE2133305BB00FCA411 /* http.c */,
 				72220EDE133305BB00FCA411 /* http-addr.c */,
 				72220EDF133305BB00FCA411 /* http-addrlist.c */,
-				72220EE0133305BB00FCA411 /* http-private.h */,
 				72220EE1133305BB00FCA411 /* http-support.c */,
-				72220EE6133305BB00FCA411 /* ipp.c */,
 				72220EE7133305BB00FCA411 /* ipp.h */,
-				720E854120164E7A00C6C411 /* ipp-file.c */,
 				72220EE4133305BB00FCA411 /* ipp-private.h */,
+				72220EE6133305BB00FCA411 /* ipp.c */,
+				720E854120164E7A00C6C411 /* ipp-file.c */,
 				72220EE5133305BB00FCA411 /* ipp-support.c */,
 				720E854220164E7A00C6C411 /* ipp-vars.c */,
-				72220EE8133305BB00FCA411 /* langprintf.c */,
-				72220EEA133305BB00FCA411 /* language.c */,
 				72220EEB133305BB00FCA411 /* language.h */,
 				72220EE9133305BB00FCA411 /* language-private.h */,
+				72220EE8133305BB00FCA411 /* langprintf.c */,
+				72220EEA133305BB00FCA411 /* language.c */,
 				27D3037D134148CB00F022B1 /* libcups3.def */,
 				72220EEF133305BB00FCA411 /* md5.c */,
 				72220EEE133305BB00FCA411 /* md5-internal.h */,
 				72220EF1133305BB00FCA411 /* notify.c */,
 				72220EF2133305BB00FCA411 /* options.c */,
 				2767FC7519269687000F61D3 /* pwg.h */,
-				72220EF8133305BB00FCA411 /* pwg-media.c */,
 				72220EF9133305BB00FCA411 /* pwg-private.h */,
+				72220EF8133305BB00FCA411 /* pwg-media.c */,
 				72220EFA133305BB00FCA411 /* raster.h */,
-				72F75A691336FA8A004BB496 /* raster-error.c */,
 				2767FC76192696A0000F61D3 /* raster-private.h */,
-				72F75A6B1336FA8A004BB496 /* raster-stream.c */,
 				27D3966427BA81C6003D3D8E /* raster-testpage.h */,
+				72F75A691336FA8A004BB496 /* raster-error.c */,
+				72F75A6B1336FA8A004BB496 /* raster-stream.c */,
 				72220EFB133305BB00FCA411 /* request.c */,
 				72220F02133305BB00FCA411 /* string.c */,
 				72220F01133305BB00FCA411 /* string-private.h */,
 				72220F03133305BB00FCA411 /* tempfile.c */,
 				72220F05133305BB00FCA411 /* thread.c */,
-				72220F04133305BB00FCA411 /* thread-private.h */,
-				270B267D17F5C06700C8A3A9 /* tls-darwin.c */,
-				270B267E17F5C06700C8A3A9 /* tls-gnutls.c */,
-				270B268117F5C5D600C8A3A9 /* tls-sspi.c */,
+				72220F04133305BB00FCA411 /* thread.h */,
 				727AD5B619100A58009F6862 /* tls.c */,
+				270B267E17F5C06700C8A3A9 /* tls-gnutls.c */,
+				27CAFC6F282C8ADF00FE02FC /* tls-openssl.c */,
 				72220F06133305BB00FCA411 /* transcode.c */,
 				72220F07133305BB00FCA411 /* transcode.h */,
 				72220F08133305BB00FCA411 /* usersys.c */,
@@ -1525,6 +1573,8 @@
 		72220FB113330B4A00FCA411 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				27CAFC60282C895700FE02FC /* libcrypto.a */,
+				27CAFC5F282C895700FE02FC /* libssl.a */,
 				27D3968227BB390D003D3D8E /* libresolv.tbd */,
 				27D3967E27BB38E6003D3D8E /* libiconv.tbd */,
 				27D3967A27BB389C003D3D8E /* libz.tbd */,
@@ -1615,7 +1665,7 @@
 				270696481CADF3E200FFE5FB /* pwg-private.h in Headers */,
 				2706964A1CADF3E200FFE5FB /* string-private.h in Headers */,
 				7253C46C216ED5E500494ADD /* raster-private.h in Headers */,
-				2706964B1CADF3E200FFE5FB /* thread-private.h in Headers */,
+				2706964B1CADF3E200FFE5FB /* thread.h in Headers */,
 				2706964C1CADF3E200FFE5FB /* config.h in Headers */,
 				2706964D1CADF3E200FFE5FB /* cups.h in Headers */,
 				722A24F02178D00D000CAB20 /* debug-internal.h in Headers */,
@@ -1668,7 +1718,7 @@
 				72220F28133305BB00FCA411 /* md5-internal.h in Headers */,
 				72220F33133305BB00FCA411 /* pwg-private.h in Headers */,
 				72220F3B133305BB00FCA411 /* string-private.h in Headers */,
-				72220F3E133305BB00FCA411 /* thread-private.h in Headers */,
+				72220F3E133305BB00FCA411 /* thread.h in Headers */,
 				722A24EF2178D00D000CAB20 /* debug-internal.h in Headers */,
 				72220F481333063D00FCA411 /* config.h in Headers */,
 				7253C468216ED5D300494ADD /* raster.h in Headers */,
@@ -3294,6 +3344,7 @@
 					..,
 					/usr/local/include,
 				);
+				LIBRARY_SEARCH_PATHS = /usr/local/lib;
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = (
@@ -3361,6 +3412,7 @@
 					..,
 					/usr/local/include,
 				);
+				LIBRARY_SEARCH_PATHS = /usr/local/lib;
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				OTHER_CFLAGS = (
 					"-D_CUPS_SOURCE",

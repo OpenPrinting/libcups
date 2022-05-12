@@ -1,7 +1,7 @@
 /*
  * API definitions for CUPS.
  *
- * Copyright © 2021 by OpenPrinting.
+ * Copyright © 2021-2022 by OpenPrinting.
  * Copyright © 2007-2020 by Apple Inc.
  * Copyright © 1997-2007 by Easy Software Products.
  *
@@ -278,10 +278,12 @@ extern size_t		cupsAddOption(const char *name, const char *value, size_t num_opt
 extern ipp_status_t	cupsCancelDestJob(http_t *http, cups_dest_t *dest, int job_id) _CUPS_PUBLIC;
 extern int		cupsCheckDestSupported(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, const char *option, const char *value) _CUPS_PUBLIC;
 extern ipp_status_t	cupsCloseDestJob(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, int job_id) _CUPS_PUBLIC;
+extern size_t		cupsConcatString(char *dst, const char *src, size_t dstsize) _CUPS_PUBLIC;
 extern http_t		*cupsConnectDest(cups_dest_t *dest, unsigned flags, int msec, int *cancel, char *resource, size_t resourcesize, cups_dest_cb_t cb, void *user_data) _CUPS_PUBLIC;
 extern int		cupsCopyDest(cups_dest_t *dest, int num_dests, cups_dest_t **dests) _CUPS_PUBLIC;
 extern cups_dinfo_t	*cupsCopyDestInfo(http_t *http, cups_dest_t *dest) _CUPS_PUBLIC;
 extern int		cupsCopyDestConflicts(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, size_t num_options, cups_option_t *options, const char *new_option, const char *new_value, size_t *num_conflicts, cups_option_t **conflicts, size_t *num_resolved, cups_option_t **resolved) _CUPS_PUBLIC;
+extern size_t		cupsCopyString(char *dst, const char *src, size_t dstsize) _CUPS_PUBLIC;
 extern ipp_status_t	cupsCreateDestJob(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, int *job_id, const char *title, size_t num_options, cups_option_t *options) _CUPS_PUBLIC;
 
 extern int		cupsDoAuthentication(http_t *http, const char *method, const char *resource) _CUPS_PUBLIC;
@@ -360,7 +362,6 @@ extern int		cupsSetServerCredentials(const char *path, const char *common_name, 
 extern void		cupsSetUser(const char *user) _CUPS_PUBLIC;
 extern void		cupsSetUserAgent(const char *user_agent) _CUPS_PUBLIC;
 extern http_status_t	cupsStartDestDocument(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, int job_id, const char *docname, const char *format, size_t num_options, cups_option_t *options, bool last_document) _CUPS_PUBLIC;
-
 extern int		cupsTempFd(char *filename, size_t len) _CUPS_PUBLIC;
 extern cups_file_t	*cupsTempFile(char *filename, size_t len) _CUPS_PUBLIC;
 

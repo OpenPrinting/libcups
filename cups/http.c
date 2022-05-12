@@ -214,7 +214,7 @@ httpAcceptConnection(int fd,		/* I - Listen socket file descriptor */
   http->hostaddr = &(http->hostlist->addr);
 
   if (httpAddrLocalhost(http->hostaddr))
-    strlcpy(http->hostname, "localhost", sizeof(http->hostname));
+    cupsCopyString(http->hostname, "localhost", sizeof(http->hostname));
   else
     httpAddrString(http->hostaddr, http->hostname, sizeof(http->hostname));
 
@@ -801,7 +801,7 @@ httpGetContentEncoding(http_t *http)	/* I - HTTP connection */
       "x-gzip"
     };
 
-    strlcpy(temp, http->fields[HTTP_FIELD_ACCEPT_ENCODING], sizeof(temp));
+    cupsCopyString(temp, http->fields[HTTP_FIELD_ACCEPT_ENCODING], sizeof(temp));
 
     for (start = temp; *start; start = end)
     {
@@ -2182,7 +2182,7 @@ httpReadRequest(http_t *http,		/* I - HTTP connection */
   }
 
   DEBUG_printf(("1httpReadRequest: URI is \"%s\".", req_uri));
-  strlcpy(uri, req_uri, urilen);
+  cupsCopyString(uri, req_uri, urilen);
 
   return (http->state);
 }
@@ -2349,7 +2349,7 @@ httpSetAuthString(http_t     *http,	/* I - HTTP connection */
       if (data)
 	snprintf(http->authstring, len, "%s %s", scheme, data);
       else
-	strlcpy(http->authstring, scheme, len);
+	cupsCopyString(http->authstring, scheme, len);
     }
   }
   else
@@ -3394,7 +3394,7 @@ http_add_field(http_t       *http,	/* I - HTTP connection */
       * Check for a trailing dot on the hostname...
       */
 
-      strlcpy(temp, value, sizeof(temp));
+      cupsCopyString(temp, value, sizeof(temp));
       value = temp;
       ptr   = temp + strlen(temp) - 1;
 
@@ -3440,8 +3440,8 @@ http_add_field(http_t       *http,	/* I - HTTP connection */
     if ((mcombined = realloc(http->fields[field], total + 1)) != NULL)
     {
       http->fields[field] = mcombined;
-      strlcat(mcombined, ", ", total + 1);
-      strlcat(mcombined, value, total + 1);
+      cupsConcatString(mcombined, ", ", total + 1);
+      cupsConcatString(mcombined, value, total + 1);
     }
   }
   else
@@ -3759,7 +3759,7 @@ http_create(
   http->version  = HTTP_VERSION_1_1;
 
   if (host)
-    strlcpy(http->hostname, host, sizeof(http->hostname));
+    cupsCopyString(http->hostname, host, sizeof(http->hostname));
 
   if (port == 443)			/* Always use encryption for https */
     http->encryption = HTTP_ENCRYPTION_ALWAYS;
