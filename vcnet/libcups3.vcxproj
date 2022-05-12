@@ -152,7 +152,6 @@ xcopy /I/Y "$(TargetPath)"                                                      
   </ItemGroup>
   <ItemGroup>
     <None Include="..\cups\libcups3.def" />
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\cups\adminutil.h" />
