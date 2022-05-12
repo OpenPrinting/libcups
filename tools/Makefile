@@ -74,17 +74,19 @@ depend:
 #
 
 install:	all
-	echo Installing IPP tools in $(BUILDROOT)$(bindir)...
+	echo "Installing IPP tools to $(BUILDROOT)$(bindir)..."
 	$(INSTALL_DIR) $(BUILDROOT)$(bindir)
 	for file in $(IPPTOOLS); do \
 		$(INSTALL_BIN) $$file $(BUILDROOT)$(bindir); \
 	done
-	echo Installing printer commands in $(BUILDROOT)$(libexecdir)/ippeveprinter...
-	$(INSTALL_DIR) $(BUILDROOT)$(libexecdir)/ippeveprinter
+	echo "Installing printer commands to $(BUILDROOT)$(libexecdir)/command..."
+	$(INSTALL_DIR) $(BUILDROOT)$(libexecdir)/command
 	for file in $(IPPEVECOMMANDS); do \
-		$(INSTALL_BIN) $$file $(BUILDROOT)$(libexecdir)/ippeveprinter; \
+		$(INSTALL_BIN) $$file $(BUILDROOT)$(bindir); \
+		$(LN) $(bindir)/$$file $(BUILDROOT)$(libexecdir)/ippeveprinter; \
 	done
 	if test "x$(SYMROOT)" != "x"; then \
+		echo "Copying debug symbols to $(SYMROOT)..."; \
 		$(INSTALL_DIR) $(SYMROOT); \
 		for file in $(IPPTOOLS) $(IPPEVECOMMANDS); do \
 			cp $$file $(SYMROOT); \
@@ -98,16 +100,17 @@ install:	all
 #
 
 uninstall:
-	echo Uninstalling IPP tools from $(BUILDROOT)$(bindir)...
+	echo "Uninstalling IPP tools from $(BUILDROOT)$(bindir)..."
 	for file in $(IPPTOOLS); do \
 		$(RM) $(BUILDROOT)$(bindir)/$$file; \
 	done
 	-$(RMDIR) $(BUILDROOT)$(bindir)
-	echo Uninstalling print commands from $(BUILDROOT)$(libexecdir)/ippeveprinter...
+	echo "Uninstalling print commands from $(BUILDROOT)$(libexecdir)/command..."
 	for file in $(IPPEVECOMMANDS); do \
-		$(RM) $(BUILDROOT)$(libexecdir)/ippeveprinter/$$file; \
+		$(RM) $(BUILDROOT)$(bindir)/$$file; \
+		$(RM) $(BUILDROOT)$(libexecdir)/command/$$file; \
 	done
-	-$(RMDIR) $(BUILDROOT)$(libexecdir)/ippeveprinter
+	-$(RMDIR) $(BUILDROOT)$(libexecdir)/command
 
 
 #

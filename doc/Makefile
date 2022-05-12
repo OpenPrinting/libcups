@@ -1,9 +1,7 @@
 #
 # Documentation makefile for libcups.
 #
-# Copyright © 2021 by OpenPrinting.
-# Copyright © 2007-2019 by Apple Inc.
-# Copyright © 1997-2007 by Easy Software Products.
+# Copyright © 2021-2022 by OpenPrinting.
 #
 # Licensed under Apache License v2.0.  See the file "LICENSE" for more
 # information.
@@ -69,9 +67,10 @@ depend:
 #
 
 install:
-	$(INSTALL_DIR) -m 755 $(BUILDROOT)$(datadir)/libcups
+	echo "Installing documentation files to $(BUILDROOT)$(datadir)/doc/libcups..."
+	$(INSTALL_DIR) $(BUILDROOT)$(datadir)/doc/libcups
 	for file in $(DOCFILES); do \
-		$(INSTALL_MAN) $$file $(BUILDROOT)$(datadir)/libcups; \
+		$(INSTALL_MAN) $$file $(BUILDROOT)$(datadir)/doc/libcups; \
 	done
 
 
@@ -80,7 +79,8 @@ install:
 #
 
 uninstall:
+	echo "Uninstalling documentation files from $(BUILDROOT)$(datadir)/doc/libcups..."
 	for file in $(DOCFILES); do \
-		$(RM) $(BUILDROOT)$(datadir)/libcups/$$file; \
+		$(RM) $(BUILDROOT)$(datadir)/doc/libcups/$$file; \
 	done
-	-$(RMDIR) $(BUILDROOT)$(datadir)/libcups
+	-$(RMDIR) $(BUILDROOT)$(datadir)/doc/libcups

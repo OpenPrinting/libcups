@@ -1,9 +1,7 @@
 #
-# Example files makefile for CUPS.
+# Example files makefile for libcups.
 #
 # Copyright © 2021-2022 by OpenPrinting.
-# Copyright © 2007-2019 by Apple Inc.
-# Copyright © 2002-2005 by Easy Software Products.
 #
 # Licensed under Apache License v2.0.  See the file "LICENSE" for more
 # information.
@@ -131,43 +129,12 @@ depend:
 # Install all targets...
 #
 
-install:	all install-data install-headers install-libs install-exec
-
-
-#
-# Install data files...
-#
-
-install-data:
-	echo Installing sample ipptool files in $(DATADIR)/ipptool...
-	$(INSTALL_DIR) -m 755 $(DATADIR)/ipptool
-	for file in $(DATAFILES); do \
-		$(INSTALL_COMPDATA) $$file $(DATADIR)/ipptool; \
+install:
+	echo "Installing sample ipptool files in $(BUILDROOT)$(datadir)/cups/ipptool..."
+	$(INSTALL_DIR) $(BUILDROOT)$(datadir)/cups/ipptool
+	for file in $(DATAFILES) $(TESTFILES); do \
+		$(INSTALL_DATA) $$file $(BUILDROOT)$(datadir)/cups/ipptool; \
 	done
-	for file in $(TESTFILES); do \
-		$(INSTALL_DATA) $$file $(DATADIR)/ipptool; \
-	done
-
-
-#
-# Install programs...
-#
-
-install-exec:
-
-
-#
-# Install headers...
-#
-
-install-headers:
-
-
-#
-# Install libraries...
-#
-
-install-libs:
 
 
 #
@@ -175,11 +142,8 @@ install-libs:
 #
 
 uninstall:
-	echo Uninstalling sample ipptool files from $(DATADIR)/ipptool...
-	for file in $(DATAFILES); do \
-		$(RM) $(DATADIR)/ipptool/$$file; \
+	echo "Uninstalling sample ipptool files from $(BUILDROOT)$(datadir)/cups/ipptool..."
+	for file in $(DATAFILES) $(TESTFILES); do \
+		$(RM) $(BUILDROOT)$(datadir)/cups/ipptool/$$file; \
 	done
-	for file in $(TESTFILES); do \
-		$(RM) $(DATADIR)/ipptool/$$file; \
-	done
-	-$(RMDIR) $(DATADIR)/ipptool
+	-$(RMDIR) $(BUILDROOT)$(datadir)/cups/ipptool

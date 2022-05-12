@@ -1,9 +1,7 @@
 #
 # Locale file makefile for CUPS.
 #
-# Copyright © 2021 by OpenPrinting.
-# Copyright © 2007-2019 by Apple Inc.
-# Copyright © 1993-2007 by Easy Software Products.
+# Copyright © 2021-2022 by OpenPrinting.
 #
 # Licensed under Apache License v2.0.  See the file "LICENSE" for more
 # information.
@@ -57,63 +55,26 @@ depend:
 # Install all targets...
 #
 
-install:	all install-data install-headers install-libs install-exec
-
-
-#
-# Install data files...
-#
-
-install-data: $(INSTALL_LANGUAGES)
-
-install-languages:
-	$(INSTALL_DIR) -m 755 $(LOCALEDIR)
+install:
+	echo "Installing localization files to $(BUILDROOT)$(datadir)/locale..."
+	$(INSTALL_DIR) $(BUILDROOT)$(datadir)/locale
 	for loc in en $(LANGUAGES) ; do \
 		if test -f cups_$$loc.po; then \
-			$(INSTALL_DIR) -m 755 $(LOCALEDIR)/$$loc ; \
-			$(INSTALL_DATA) cups_$$loc.po $(LOCALEDIR)/$$loc/cups_$$loc.po ; \
+			$(INSTALL_DIR) $(BUILDROOT)$(datadir)/locale/$$loc ; \
+			$(INSTALL_DATA) cups_$$loc.po $(BUILDROOT)$(datadir)/locale/$$loc/cups_$$loc.po ; \
 		fi ; \
 	done
-
-install-langbundle:
-	$(INSTALL_DIR) -m 755 "$(BUILDROOT)$(RESOURCEDIR)"
-	$(INSTALL_DATA) cups.strings "$(BUILDROOT)$(RESOURCEDIR)"
-
-
-#
-# Install programs...
-#
-
-install-exec:
-
-
-#
-# Install headers...
-#
-
-install-headers:
-
-
-#
-# Install libraries...
-#
-
-install-libs:
 
 
 #
 # Uninstall files...
 #
 
-uninstall: $(UNINSTALL_LANGUAGES)
-
-uninstall-languages:
-	-for loc in en $(LANGUAGES) ; do \
-		$(RM) $(LOCALEDIR)/$$loc/cups_$$loc.po ; \
+uninstall:
+	echo "Uninstalling localization files from $(BUILDROOT)$(datadir)/locale..."
+	for loc in en $(LANGUAGES) ; do \
+		$(RM) $(BUILDROOT)$(datadir)/locale/$$loc/cups_$$loc.po ; \
 	done
-
-uninstall-langbundle:
-	$(RM) "$(BUILDROOT)$(RESOURCEDIR)/cups.strings"
 
 
 #

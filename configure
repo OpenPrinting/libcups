@@ -654,7 +654,7 @@ OPTIONS
 CSFLAGS
 LIBCUPS_STATIC
 LIBCUPS
-INSTALLSTATIC
+INSTALL_STATIC
 PKGCONFIG_AVAHI
 PKGCONFIG_REQUIRES_PRIVATE
 PKGCONFIG_REQUIRES
@@ -5210,19 +5210,19 @@ then :
 
 	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: Installing static libraries..." >&5
 printf "%s\n" "$as_me: Installing static libraries..." >&6;}
-	INSTALLSTATIC="installstatic"
+	INSTALL_STATIC="install-static"
         LIBCUPS_STATIC="libcups.a"
 
 else $as_nop
 
-	INSTALLSTATIC=""
+	INSTALL_STATIC=""
 	LIBCUPS_STATIC=""
 
 fi
 
 else $as_nop
 
-    INSTALLSTATIC=""
+    INSTALL_STATIC=""
     LIBCUPS="libcups.a"
     LIBCUPS_STATIC=""
     PKGCONFIG_LIBS="$PKGCONFIG_LIBS $PKGCONFIG_LIBS_PRIVATE"

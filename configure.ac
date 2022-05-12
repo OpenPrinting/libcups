@@ -414,14 +414,14 @@ AS_IF([test x$enable_shared != xno], [
 
     AS_IF([test x$enable_static != xno], [
 	AC_MSG_NOTICE([Installing static libraries...])
-	INSTALLSTATIC="installstatic"
+	INSTALL_STATIC="install-static"
         LIBCUPS_STATIC="libcups.a"
     ], [
-	INSTALLSTATIC=""
+	INSTALL_STATIC=""
 	LIBCUPS_STATIC=""
     ])
 ], [
-    INSTALLSTATIC=""
+    INSTALL_STATIC=""
     LIBCUPS="libcups.a"
     LIBCUPS_STATIC=""
     PKGCONFIG_LIBS="$PKGCONFIG_LIBS $PKGCONFIG_LIBS_PRIVATE"
@@ -430,7 +430,7 @@ AS_IF([test x$enable_shared != xno], [
     PKGCONFIG_REQUIRES_PRIVATE=""
 ])
 
-AC_SUBST([INSTALLSTATIC])
+AC_SUBST([INSTALL_STATIC])
 AC_SUBST([LIBCUPS])
 AC_SUBST([LIBCUPS_STATIC])
 

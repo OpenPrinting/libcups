@@ -184,13 +184,13 @@ depend:
 # Install all targets...
 #
 
-install:	all $(INSTALLSTATIC)
-	echo Installing header files into $(BUILDROOT)$(includedir)/cups...
+install:	all $(INSTALL_STATIC)
+	echo "Installing header files to $(BUILDROOT)$(includedir)/cups..."
 	$(INSTALL_DIR) $(BUILDROOT)$(includedir)/cups
 	for file in $(HEADERS); do \
 		$(INSTALL_DATA) $$file $(BUILDROOT)$(includedir)/cups; \
 	done
-	echo Installing libraries in $(BUILDROOT)$(libdir)...
+	echo "Installing libraries to $(BUILDROOT)$(libdir)..."
 	$(INSTALL_DIR) $(BUILDROOT)$(libdir)
 	$(INSTALL_LIB) $(LIBCUPS) $(BUILDROOT)$(libdir)
 	if test $(LIBCUPS) = "libcups.so.3"; then \
@@ -202,13 +202,14 @@ install:	all $(INSTALLSTATIC)
 		$(LN) $(LIBCUPS) $(BUILDROOT)$(libdir)/libcups.dylib; \
 	fi
 	if test "x$(SYMROOT)" != "x"; then \
+		echo "Copying debug symbols to $(SYMROOT)..."; \
 		$(INSTALL_DIR) $(SYMROOT); \
 		cp $(LIBCUPS) $(SYMROOT); \
 		dsymutil $(SYMROOT)/$(LIBCUPS); \
 	fi
 
-installstatic:
-	echo Installing static libraries in $(BUILDROOT)$(libdir)...
+install-static:
+	echo "Installing static libraries to $(BUILDROOT)$(libdir)..."
 	$(INSTALL_DIR) $(BUILDROOT)$(libdir)
 	$(INSTALL_LIB) libcups.a $(BUILDROOT)$(libdir)
 	$(RANLIB) $(BUILDROOT)$(libdir)/libcups.a
