@@ -345,7 +345,7 @@ httpClearFields(http_t *http)		/* I - HTTP connection */
 
   if (http)
   {
-    for (field = HTTP_FIELD_ACCEPT_LANGUAGE; field < HTTP_FIELD_MAX; field ++)
+    for (field = HTTP_FIELD_ACCEPT; field < HTTP_FIELD_MAX; field ++)
     {
       free(http->fields[field]);
       http->fields[field] = NULL;
@@ -2462,7 +2462,7 @@ httpSetField(http_t       *http,	/* I - HTTP connection */
   if (!http || field <= HTTP_FIELD_UNKNOWN || field >= HTTP_FIELD_MAX || !value)
     return;
 
-  http_add_field(http, field, value, 0);
+  http_add_field(http, field, value, false);
 }
 
 
@@ -2762,7 +2762,7 @@ _httpUpdate(http_t        *http,	/* I - HTTP connection */
     }
     else if ((field = httpFieldValue(line)) != HTTP_FIELD_UNKNOWN)
     {
-      http_add_field(http, field, value, 1);
+      http_add_field(http, field, value, true);
 
       if (field == HTTP_FIELD_AUTHENTICATION_INFO)
         httpGetSubField(http, HTTP_FIELD_AUTHENTICATION_INFO, "nextnonce", http->nextnonce, (int)sizeof(http->nextnonce));
@@ -3404,7 +3404,7 @@ http_add_field(http_t       *http,	/* I - HTTP connection */
   }
 
   if (append && field != HTTP_FIELD_ACCEPT_ENCODING && field != HTTP_FIELD_ACCEPT_LANGUAGE && field != HTTP_FIELD_ACCEPT_RANGES && field != HTTP_FIELD_ALLOW && field != HTTP_FIELD_LINK && field != HTTP_FIELD_TRANSFER_ENCODING && field != HTTP_FIELD_UPGRADE && field != HTTP_FIELD_WWW_AUTHENTICATE)
-    append = 0;
+    append = false;
 
   if (!append && http->fields[field])
   {
@@ -3453,9 +3453,11 @@ http_add_field(http_t       *http,	/* I - HTTP connection */
     http->fields[field] = strdup(value);
   }
 
+  DEBUG_printf(("1http_add_field: append=%s, field=%d(%s), value=\"%s\".", append ? "true" : "false", field, http_fields[field], http->fields[field]));
+
   if (field == HTTP_FIELD_CONTENT_ENCODING && http->data_encoding != HTTP_ENCODING_FIELDS)
   {
-    DEBUG_puts("1httpSetField: Calling http_content_coding_start.");
+    DEBUG_puts("1http_add_field: Calling http_content_coding_start.");
     http_content_coding_start(http, value);
   }
 }
