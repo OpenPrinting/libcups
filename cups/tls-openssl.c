@@ -1336,7 +1336,11 @@ http_default_path(
   if (cg->home && getuid())
 #endif // _WIN32
   {
+#ifdef __APPLE__
+    snprintf(buffer, bufsize, "%s/Library/Application Support/cups", cg->home);
+#else
     snprintf(buffer, bufsize, "%s/.cups", cg->home);
+#endif // __APPLE__
     if (access(buffer, 0))
     {
       DEBUG_printf(("1http_default_path: Making directory \"%s\".", buffer));
@@ -1347,7 +1351,11 @@ http_default_path(
       }
     }
 
+#ifdef __APPLE__
+    snprintf(buffer, bufsize, "%s/Library/Application Support/cups/ssl", cg->home);
+#else
     snprintf(buffer, bufsize, "%s/.cups/ssl", cg->home);
+#endif // __APPLE__
     if (access(buffer, 0))
     {
       DEBUG_printf(("1http_default_path: Making directory \"%s\".", buffer));

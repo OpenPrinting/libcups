@@ -943,7 +943,11 @@ http_gnutls_default_path(char   *buffer,/* I - Path buffer */
 
   if (cg->home && getuid())
   {
+#ifdef __APPLE__
+    snprintf(buffer, bufsize, "%s/Library/Application Support/cups", cg->home);
+#else
     snprintf(buffer, bufsize, "%s/.cups", cg->home);
+#endif // __APPLE__
     if (access(buffer, 0))
     {
       DEBUG_printf(("1http_gnutls_default_path: Making directory \"%s\".", buffer));
@@ -954,7 +958,11 @@ http_gnutls_default_path(char   *buffer,/* I - Path buffer */
       }
     }
 
+#ifdef __APPLE__
+    snprintf(buffer, bufsize, "%s/Library/Application Support/cups/ssl", cg->home);
+#else
     snprintf(buffer, bufsize, "%s/.cups/ssl", cg->home);
+#endif // __APPLE__
     if (access(buffer, 0))
     {
       DEBUG_printf(("1http_gnutls_default_path: Making directory \"%s\".", buffer));
