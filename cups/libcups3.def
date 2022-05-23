@@ -1,8 +1,6 @@
 LIBRARY libcups3
 VERSION 3.0
 EXPORTS
-_cupsArrayAddStrings
-_cupsArrayNewStrings
 _cupsBufferGet
 _cupsBufferRelease
 _cupsCharmapFlush
@@ -42,8 +40,6 @@ _cupsStrFree
 _cupsStrRetain
 _cupsStrScand
 _cupsStrStatistics
-_cups_debug_printf
-_cups_debug_puts
 _cups_debug_set
 _cups_gettimeofday
 _cups_hstrerror
@@ -70,7 +66,6 @@ _httpTLSStop
 _httpTLSWrite
 _httpUpdate
 _httpWait
-_ippCheckOptions
 _ippFileParse
 _ippFileReadToken
 _ippFindOption
@@ -87,6 +82,7 @@ cupsAddDestMediaOptions
 cupsAddIntegerOption
 cupsAddOption
 cupsArrayAdd
+cupsArrayAddStrings
 cupsArrayClear
 cupsArrayDelete
 cupsArrayDup
@@ -103,6 +99,7 @@ cupsArrayGetPrev
 cupsArrayGetUserData
 cupsArrayInsert
 cupsArrayNew
+cupsArrayNewStrings
 cupsArrayRemove
 cupsArrayRestore
 cupsArraySave
