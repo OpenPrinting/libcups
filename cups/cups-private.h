@@ -12,7 +12,7 @@
 #ifndef _CUPS_CUPS_PRIVATE_H_
 #  define _CUPS_CUPS_PRIVATE_H_
 #  include "string-private.h"
-#  include "array-private.h"
+#  include "array.h"
 #  include "ipp-private.h"
 #  include "http-private.h"
 #  include "language-private.h"

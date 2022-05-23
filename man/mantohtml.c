@@ -1,10 +1,12 @@
 /*
  * Man page to HTML conversion program.
  *
- * Copyright 2007-2017 by Apple Inc.
- * Copyright 2004-2006 by Easy Software Products.
+ * Copyright © 2022 by OpenPrinting.
+ * Copyright © 2007-2017 by Apple Inc.
+ * Copyright © 2004-2006 by Easy Software Products.
  *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more information.
+ * Licensed under Apache License v2.0.  See the file "LICENSE" for more
+ * information.
  */
 
 /*
@@ -12,7 +14,6 @@
  */
 
 #include <cups/string-private.h>
-#include <cups/array-private.h>
 #include <unistd.h>
 
 
@@ -856,7 +857,7 @@ main(int  argc,				/* I - Number of command-line args */
         if (!line[0])
           continue;			// Skip initial blank line
       }
-      
+
       html_fputs(line, &font, outfile);
       putc('\n', outfile);
 

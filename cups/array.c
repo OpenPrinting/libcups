@@ -1,7 +1,7 @@
 /*
  * Sorted array routines for CUPS.
  *
- * Copyright © 2021 by OpenPrinting.
+ * Copyright © 2021-2022 by OpenPrinting.
  * Copyright © 2007-2014 by Apple Inc.
  * Copyright © 1997-2007 by Easy Software Products.
  *
@@ -16,7 +16,6 @@
 #include <cups/cups.h>
 #include "string-private.h"
 #include "debug-internal.h"
-#include "array-private.h"
 
 
 /*
@@ -100,17 +99,19 @@ cupsArrayAdd(cups_array_t *a,		/* I - Array */
 
 
 /*
- * '_cupsArrayAddStrings()' - Add zero or more delimited strings to an array.
+ * 'cupsArrayAddStrings()' - Add zero or more delimited strings to an array.
  *
- * Note: The array MUST be created using the @link _cupsArrayNewStrings@
- * function. Duplicate strings are NOT added. If the string pointer "s" is NULL
- * or the empty string, no strings are added to the array.
+ * This function adds zero or more delimited strings to an array created using
+ * the @link cupsArrayNewStrings@ function. Duplicate strings are *not* added.
+ * If the string pointer "s" is `NULL` or the empty string, no strings are
+ * added to the array.  If "delim" is the space character, then all whitespace
+ * is recognized as a delimiter.
  */
 
 bool					/* O - `true` on success, `false` on failure */
-_cupsArrayAddStrings(cups_array_t *a,	/* I - Array */
-                     const char   *s,	/* I - Delimited strings or `NULL` */
-                     char         delim)/* I - Delimiter character */
+cupsArrayAddStrings(cups_array_t *a,	/* I - Array */
+                    const char   *s,	/* I - Delimited strings or `NULL` */
+                    char         delim)	/* I - Delimiter character */
 {
   char		*buffer,		/* Copy of string */
 		*start,			/* Start of string */
@@ -118,11 +119,11 @@ _cupsArrayAddStrings(cups_array_t *a,	/* I - Array */
   bool		status = true;		/* Status of add */
 
 
-  DEBUG_printf(("_cupsArrayAddStrings(a=%p, s=\"%s\", delim='%c')", (void *)a, s, delim));
+  DEBUG_printf(("cupsArrayAddStrings(a=%p, s=\"%s\", delim='%c')", (void *)a, s, delim));
 
   if (!a || !s || !*s)
   {
-    DEBUG_puts("1_cupsArrayAddStrings: Returning 0");
+    DEBUG_puts("1cupsArrayAddStrings: Returning 0");
     return (false);
   }
 
@@ -132,22 +133,21 @@ _cupsArrayAddStrings(cups_array_t *a,	/* I - Array */
     * Skip leading whitespace...
     */
 
-    DEBUG_puts("1_cupsArrayAddStrings: Skipping leading whitespace.");
+    DEBUG_puts("1cupsArrayAddStrings: Skipping leading whitespace.");
 
     while (*s && isspace(*s & 255))
       s ++;
 
-    DEBUG_printf(("1_cupsArrayAddStrings: Remaining string \"%s\".", s));
+    DEBUG_printf(("1cupsArrayAddStrings: Remaining string \"%s\".", s));
   }
 
-  if (!strchr(s, delim) &&
-      (delim != ' ' || (!strchr(s, '\t') && !strchr(s, '\n'))))
+  if (!strchr(s, delim) && (delim != ' ' || (!strchr(s, '\t') && !strchr(s, '\n'))))
   {
    /*
     * String doesn't contain a delimiter, so add it as a single value...
     */
 
-    DEBUG_puts("1_cupsArrayAddStrings: No delimiter seen, adding a single "
+    DEBUG_puts("1cupsArrayAddStrings: No delimiter seen, adding a single "
                "value.");
 
     if (!cupsArrayFind(a, (void *)s))
@@ -155,8 +155,8 @@ _cupsArrayAddStrings(cups_array_t *a,	/* I - Array */
   }
   else if ((buffer = strdup(s)) == NULL)
   {
-    DEBUG_puts("1_cupsArrayAddStrings: Unable to duplicate string.");
-    status = 0;
+    DEBUG_puts("1cupsArrayAddStrings: Unable to duplicate string.");
+    status = false;
   }
   else
   {
@@ -179,8 +179,7 @@ _cupsArrayAddStrings(cups_array_t *a,	/* I - Array */
       else
         end = start + strlen(start);
 
-      DEBUG_printf(("1_cupsArrayAddStrings: Adding \"%s\", end=\"%s\"", start,
-                    end));
+      DEBUG_printf(("1cupsArrayAddStrings: Adding \"%s\", end=\"%s\"", start, end));
 
       if (!cupsArrayFind(a, start))
         status &= cupsArrayAdd(a, start);
@@ -189,7 +188,7 @@ _cupsArrayAddStrings(cups_array_t *a,	/* I - Array */
     free(buffer);
   }
 
-  DEBUG_printf(("1_cupsArrayAddStrings: Returning %d.", status));
+  DEBUG_printf(("1cupsArrayAddStrings: Returning %s.", status ? "true" : "false"));
 
   return (status);
 }
@@ -748,22 +747,27 @@ cupsArrayNew(cups_array_cb_t  f,	/* I - Comparison callback function or `NULL` f
 
 
 /*
- * '_cupsArrayNewStrings()' - Create a new array of delimited strings.
+ * 'cupsArrayNewStrings()' - Create a new array of delimited strings.
  *
- * Note: The array automatically manages copies of the strings passed.  If the
- * string pointer "s" is `NULL` or the empty string, no strings are added to the
- * newly created array.
+ * This function creates an array that holds zero or more strings.  The created
+ * array automatically manages copies of the strings passed and sorts them in
+ * ascending order using a case-sensitive comparison.  If the string pointer "s"
+ * is `NULL` or the empty string, no strings are added to the newly created
+ * array.
+ *
+ * Additional strings can be added using the @link cupsArrayAdd@ or
+ * @link cupsArrayAddStrings@ functions.
  */
 
 cups_array_t *				/* O - Array */
-_cupsArrayNewStrings(const char *s,	/* I - Delimited strings or NULL */
-                     char       delim)	/* I - Delimiter character */
+cupsArrayNewStrings(const char *s,	/* I - Delimited strings or `NULL` to create an empty array */
+                    char       delim)	/* I - Delimiter character */
 {
   cups_array_t	*a;			/* Array */
 
 
   if ((a = cupsArrayNew((cups_array_cb_t)strcmp, NULL, NULL, 0, (cups_acopy_cb_t)_cupsStrAlloc, (cups_afree_cb_t)_cupsStrFree)) != NULL)
-    _cupsArrayAddStrings(a, s, delim);
+    cupsArrayAddStrings(a, s, delim);
 
   return (a);
 }

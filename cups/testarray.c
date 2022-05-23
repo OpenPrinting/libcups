@@ -15,7 +15,6 @@
 
 #include "string-private.h"
 #include "debug-private.h"
-#include "array-private.h"
 #include "cups.h"
 #include "dir.h"
 #include "test-internal.h"
@@ -386,8 +385,8 @@ main(void)
   * Test the array with string functions...
   */
 
-  testBegin("_cupsArrayNewStrings(\" \\t\\nfoo bar\\tboo\\nfar\", ' ')");
-  array = _cupsArrayNewStrings(" \t\nfoo bar\tboo\nfar", ' ');
+  testBegin("cupsArrayNewStrings(\" \\t\\nfoo bar\\tboo\\nfar\", ' ')");
+  array = cupsArrayNewStrings(" \t\nfoo bar\tboo\nfar", ' ');
   if (!array)
   {
     status = 1;
@@ -421,8 +420,8 @@ main(void)
   else
     testEnd(true);
 
-  testBegin("_cupsArrayAddStrings(array, \"foo2,bar2\", ',')");
-  _cupsArrayAddStrings(array, "foo2,bar2", ',');
+  testBegin("cupsArrayAddStrings(array, \"foo2,bar2\", ',')");
+  cupsArrayAddStrings(array, "foo2,bar2", ',');
 
   if (cupsArrayGetCount(array) != 6)
   {

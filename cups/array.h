@@ -1,7 +1,7 @@
 /*
  * Sorted array definitions for CUPS.
  *
- * Copyright © 2021 by OpenPrinting.
+ * Copyright © 2021-2022 by OpenPrinting.
  * Copyright © 2007-2010 by Apple Inc.
  * Copyright © 1997-2007 by Easy Software Products.
  *
@@ -40,6 +40,7 @@ typedef void (*cups_afree_cb_t)(void *element, void *data);
  */
 
 extern bool		cupsArrayAdd(cups_array_t *a, void *e) _CUPS_PUBLIC;
+extern bool		cupsArrayAddStrings(cups_array_t *a, const char *s, char delim) _CUPS_PUBLIC;
 extern void		cupsArrayClear(cups_array_t *a) _CUPS_PUBLIC;
 extern void		cupsArrayDelete(cups_array_t *a) _CUPS_PUBLIC;
 extern cups_array_t	*cupsArrayDup(cups_array_t *a) _CUPS_PUBLIC;
@@ -56,6 +57,7 @@ extern void		*cupsArrayGetPrev(cups_array_t *a) _CUPS_PUBLIC;
 extern void		*cupsArrayGetUserData(cups_array_t *a) _CUPS_PUBLIC;
 extern bool		cupsArrayInsert(cups_array_t *a, void *e) _CUPS_PUBLIC;
 extern cups_array_t	*cupsArrayNew(cups_array_cb_t f, void *d, cups_ahash_cb_t hf, size_t hsize, cups_acopy_cb_t cf, cups_afree_cb_t ff) _CUPS_PUBLIC;
+extern cups_array_t	*cupsArrayNewStrings(const char *s, char delim) _CUPS_PUBLIC;
 extern bool		cupsArrayRemove(cups_array_t *a, void *e) _CUPS_PUBLIC;
 extern void		*cupsArrayRestore(cups_array_t *a) _CUPS_PUBLIC;
 extern bool		cupsArraySave(cups_array_t *a) _CUPS_PUBLIC;
