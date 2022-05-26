@@ -130,7 +130,6 @@ cupsEncodeOption
 cupsEncodeOptions
 cupsEnumDests
 cupsFileClose
-cupsFileCompression
 cupsFileEOF
 cupsFileFind
 cupsFileFlush
@@ -138,6 +137,7 @@ cupsFileGetChar
 cupsFileGetConf
 cupsFileGetLine
 cupsFileGets
+cupsFileIsCompressed
 cupsFileLock
 cupsFileNumber
 cupsFileOpen
