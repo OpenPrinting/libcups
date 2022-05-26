@@ -1230,7 +1230,7 @@ _cupsMessageNew(void *context)		/* I - User data */
  * '_cupsMessageSave()' - Save a message catalog array.
  */
 
-int					/* O - 0 on success, -1 on failure */
+bool					/* O - `true` on success, `false` on failure */
 _cupsMessageSave(const char   *filename,/* I - Output filename */
                  int          flags,	/* I - Format flags */
                  cups_array_t *a)	/* I - Message array */
@@ -1244,7 +1244,7 @@ _cupsMessageSave(const char   *filename,/* I - Output filename */
   */
 
   if ((fp = cupsFileOpen(filename, "w")) == NULL)
-    return (-1);
+    return (false);
 
  /*
   * Write each message...

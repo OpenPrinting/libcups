@@ -1,7 +1,7 @@
 /*
  * File/directory test program for CUPS.
  *
- * Copyright © 2021 by OpenPrinting.
+ * Copyright © 2021-2022 by OpenPrinting.
  * Copyright © 2007-2018 by Apple Inc.
  * Copyright © 1997-2007 by Easy Software Products.
  *
@@ -34,7 +34,7 @@
 
 static int	count_lines(cups_file_t *fp);
 static int	random_tests(void);
-static int	read_write_tests(int compression);
+static int	read_write_tests(bool compression);
 
 
 /*
@@ -62,13 +62,13 @@ main(int  argc,				/* I - Number of command-line arguments */
     * Do uncompressed file tests...
     */
 
-    status = read_write_tests(0);
+    status = read_write_tests(false);
 
    /*
     * Do compressed file tests...
     */
 
-    status += read_write_tests(1);
+    status += read_write_tests(true);
 
    /*
     * Do uncompressed random I/O tests...
@@ -152,7 +152,9 @@ main(int  argc,				/* I - Number of command-line arguments */
 	    status ++;
 	  }
 	  else
+	  {
 	    testEnd(true);
+	  }
         }
       }
 
@@ -165,13 +167,13 @@ main(int  argc,				/* I - Number of command-line arguments */
 
     testBegin("cupsFileFind");
 #ifdef _WIN32
-    if (cupsFileFind("notepad.exe", "C:/WINDOWS", 1, filename, sizeof(filename)) &&
-	cupsFileFind("notepad.exe", "C:/WINDOWS;C:/WINDOWS/SYSTEM32", 1, filename, sizeof(filename)))
+    if (cupsFileFind("notepad.exe", "C:/WINDOWS", 1, filename, sizeof(filename)) && cupsFileFind("notepad.exe", "C:/WINDOWS;C:/WINDOWS/SYSTEM32", 1, filename, sizeof(filename)))
 #else
-    if (cupsFileFind("cat", "/bin", 1, filename, sizeof(filename)) &&
-	cupsFileFind("cat", "/bin:/usr/bin", 1, filename, sizeof(filename)))
+    if (cupsFileFind("cat", "/bin", 1, filename, sizeof(filename)) && cupsFileFind("cat", "/bin:/usr/bin", 1, filename, sizeof(filename)))
 #endif /* _WIN32 */
+    {
       testEndMessage(true, "%s", filename);
+    }
     else
     {
       testEnd(false);
@@ -212,7 +214,9 @@ main(int  argc,				/* I - Number of command-line arguments */
           status ++;
         }
         else
+        {
           testEnd(true);
+	}
 
         cupsDirClose(dir);
       }
@@ -257,7 +261,9 @@ main(int  argc,				/* I - Number of command-line arguments */
 	    status ++;
 	  }
 	  else
+	  {
 	    testEnd(true);
+	  }
 
 	  cupsDirClose(dir);
 	}
@@ -326,11 +332,12 @@ main(int  argc,				/* I - Number of command-line arguments */
 static int				/* O - Number of lines */
 count_lines(cups_file_t *fp)		/* I - File to read from */
 {
-  int	count;				/* Number of lines */
+  int	count = 0;			/* Number of lines */
   char	line[1024];			/* Line buffer */
 
 
-  for (count = 0; cupsFileGets(fp, line, sizeof(line)); count ++);
+  while (cupsFileGets(fp, line, sizeof(line)))
+    count ++;
 
   return (count);
 }
@@ -374,7 +381,9 @@ random_tests(void)
       break;
     }
     else
+    {
       testEnd(true);
+    }
 
    /*
     * cupsFileTell()
@@ -391,7 +400,9 @@ random_tests(void)
       break;
     }
     else
+    {
       testEnd(true);
+    }
 
    /*
     * cupsFileWrite()
@@ -401,7 +412,7 @@ random_tests(void)
     for (record = 0; record < 256; record ++)
     {
       memset(buffer, record, sizeof(buffer));
-      if (cupsFileWrite(fp, buffer, sizeof(buffer)) < (ssize_t)sizeof(buffer))
+      if (!cupsFileWrite(fp, buffer, sizeof(buffer)))
         break;
     }
 
@@ -412,7 +423,9 @@ random_tests(void)
       break;
     }
     else
+    {
       testEnd(true);
+    }
 
    /*
     * cupsFileTell()
@@ -429,7 +442,9 @@ random_tests(void)
       break;
     }
     else
+    {
       testEnd(true);
+    }
 
     cupsFileClose(fp);
 
@@ -446,7 +461,9 @@ random_tests(void)
       break;
     }
     else
+    {
       testEnd(true);
+    }
 
    /*
     * cupsFileSeek, cupsFileRead
@@ -523,7 +540,7 @@ random_tests(void)
  */
 
 static int				/* O - Status */
-read_write_tests(int compression)	/* I - Use compression? */
+read_write_tests(bool compression)	/* I - Use compression? */
 {
   int		i, j;			/* Looping vars */
   cups_file_t	*fp;			/* File */
@@ -567,16 +584,18 @@ read_write_tests(int compression)	/* I - Use compression? */
     testEnd(true);
 
    /*
-    * cupsFileCompression()
+    * cupsFileIsCompressed()
     */
 
-    testBegin("cupsFileCompression()");
+    testBegin("cupsFileIsCompressed()");
 
-    if (cupsFileCompression(fp) == compression)
+    if (cupsFileIsCompressed(fp) == compression)
+    {
       testEnd(true);
+    }
     else
     {
-      testEndMessage(false, "Got %d, expected %d", cupsFileCompression(fp), compression);
+      testEndMessage(false, "Got %s, expected %s", cupsFileIsCompressed(fp) ? "true" : "false", compression ? "true" : "false");
       status ++;
     }
 
@@ -587,7 +606,9 @@ read_write_tests(int compression)	/* I - Use compression? */
     testBegin("cupsFilePuts()");
 
     if (cupsFilePuts(fp, "# Hello, World\n") > 0)
+    {
       testEnd(true);
+    }
     else
     {
       testEndMessage(false, "%s", strerror(errno));
@@ -601,11 +622,15 @@ read_write_tests(int compression)	/* I - Use compression? */
     testBegin("cupsFilePrintf()");
 
     for (i = 0; i < 1000; i ++)
-      if (cupsFilePrintf(fp, "TestLine %03d\n", i) < 0)
+    {
+      if (!cupsFilePrintf(fp, "TestLine %03d\n", i))
         break;
+    }
 
     if (i >= 1000)
+    {
       testEnd(true);
+    }
     else
     {
       testEndMessage(false, "%s", strerror(errno));
@@ -619,11 +644,15 @@ read_write_tests(int compression)	/* I - Use compression? */
     testBegin("cupsFilePutChar()");
 
     for (i = 0; i < 256; i ++)
-      if (cupsFilePutChar(fp, i) < 0)
+    {
+      if (!cupsFilePutChar(fp, i))
         break;
+    }
 
     if (i >= 256)
+    {
       testEnd(true);
+    }
     else
     {
       testEndMessage(false, "%s", strerror(errno));
@@ -637,11 +666,15 @@ read_write_tests(int compression)	/* I - Use compression? */
     testBegin("cupsFileWrite()");
 
     for (i = 0; i < 10000; i ++)
-      if (cupsFileWrite(fp, (char *)writebuf, sizeof(writebuf)) < 0)
+    {
+      if (!cupsFileWrite(fp, (char *)writebuf, sizeof(writebuf)))
         break;
+    }
 
     if (i >= 10000)
+    {
       testEnd(true);
+    }
     else
     {
       testEndMessage(false, "%s", strerror(errno));
@@ -654,8 +687,10 @@ read_write_tests(int compression)	/* I - Use compression? */
 
     testBegin("cupsFilePuts(\"partial line\")");
 
-    if (cupsFilePuts(fp, partial_line) > 0)
+    if (cupsFilePuts(fp, partial_line))
+    {
       testEnd(true);
+    }
     else
     {
       testEndMessage(false, "%s", strerror(errno));
@@ -669,7 +704,9 @@ read_write_tests(int compression)	/* I - Use compression? */
     testBegin("cupsFileTell()");
 
     if ((length = cupsFileTell(fp)) == 81933283)
+    {
       testEnd(true);
+    }
     else
     {
       testEndMessage(false, "" CUPS_LLFMT " instead of 81933283", CUPS_LLCAST length);
@@ -682,8 +719,10 @@ read_write_tests(int compression)	/* I - Use compression? */
 
     testBegin("cupsFileClose()");
 
-    if (!cupsFileClose(fp))
+    if (cupsFileClose(fp))
+    {
       testEnd(true);
+    }
     else
     {
       testEndMessage(false, "%s", strerror(errno));
@@ -716,7 +755,9 @@ read_write_tests(int compression)	/* I - Use compression? */
     if (cupsFileGets(fp, line, sizeof(line)))
     {
       if (line[0] == '#')
+      {
         testEnd(true);
+      }
       else
       {
         testEndMessage(false, "Got line \"%s\", expected comment line", line);
@@ -730,17 +771,19 @@ read_write_tests(int compression)	/* I - Use compression? */
     }
 
    /*
-    * cupsFileCompression()
+    * cupsFileIsCompressed()
     */
 
-    testBegin("cupsFileCompression()");
+    testBegin("cupsFileIsCompressed()");
 
-    if (cupsFileCompression(fp) == compression)
+    if (cupsFileIsCompressed(fp) == compression)
+    {
       testEnd(true);
+    }
     else
     {
-      testEndMessage(false, "Got %d, expected %d", cupsFileCompression(fp),
-             compression);
+      testEndMessage(false, "Got %s, expected %s", cupsFileIsCompressed(fp) ? "true" : "false",
+             compression ? "true" : "false");
       status ++;
     }
 
@@ -753,14 +796,18 @@ read_write_tests(int compression)	/* I - Use compression? */
     testBegin("cupsFileGetConf()");
 
     for (i = 0, value = NULL; i < 1000; i ++)
+    {
       if (!cupsFileGetConf(fp, line, sizeof(line), &value, &linenum))
         break;
       else if (_cups_strcasecmp(line, "TestLine") || !value || atoi(value) != i ||
                linenum != (i + 2))
         break;
+    }
 
     if (i >= 1000)
+    {
       testEnd(true);
+    }
     else if (line[0])
     {
       testEndMessage(false, "Line %d, directive \"%s\", value \"%s\"", linenum,
@@ -780,11 +827,15 @@ read_write_tests(int compression)	/* I - Use compression? */
     testBegin("cupsFileGetChar()");
 
     for (i = 0, byte = 0; i < 256; i ++)
+    {
       if ((byte = cupsFileGetChar(fp)) != i)
         break;
+    }
 
     if (i >= 256)
+    {
       testEnd(true);
+    }
     else if (byte >= 0)
     {
       testEndMessage(false, "Got %d, expected %d", byte, i);
@@ -803,18 +854,24 @@ read_write_tests(int compression)	/* I - Use compression? */
     testBegin("cupsFileRead()");
 
     for (i = 0, bytes = 0; i < 10000; i ++)
+    {
       if ((bytes = cupsFileRead(fp, (char *)readbuf, sizeof(readbuf))) < 0)
         break;
       else if (memcmp(readbuf, writebuf, sizeof(readbuf)))
         break;
+    }
 
     if (i >= 10000)
+    {
       testEnd(true);
+    }
     else if (bytes > 0)
     {
       for (j = 0; j < (int)sizeof(readbuf); j ++)
+      {
         if (readbuf[j] != writebuf[j])
 	  break;
+      }
 
       testEndMessage(false, "Pass %d, match failed at offset %d - got %02X, expected %02X", i, j, readbuf[j], writebuf[j]);
     }
@@ -831,13 +888,17 @@ read_write_tests(int compression)	/* I - Use compression? */
     testBegin("cupsFileGetChar(partial line)");
 
     for (i = 0; i < (int)strlen(partial_line); i ++)
+    {
       if ((byte = cupsFileGetChar(fp)) < 0)
         break;
       else if (byte != partial_line[i])
         break;
+    }
 
     if (!partial_line[i])
+    {
       testEnd(true);
+    }
     else
     {
       testEndMessage(false, "got '%c', expected '%c'", byte, partial_line[i]);
@@ -851,7 +912,9 @@ read_write_tests(int compression)	/* I - Use compression? */
     testBegin("cupsFileTell()");
 
     if ((length = cupsFileTell(fp)) == 81933283)
+    {
       testEnd(true);
+    }
     else
     {
       testEndMessage(false, "" CUPS_LLFMT " instead of 81933283", CUPS_LLCAST length);
@@ -864,8 +927,10 @@ read_write_tests(int compression)	/* I - Use compression? */
 
     testBegin("cupsFileClose()");
 
-    if (!cupsFileClose(fp))
+    if (cupsFileClose(fp))
+    {
       testEnd(true);
+    }
     else
     {
       testEndMessage(false, "%s", strerror(errno));

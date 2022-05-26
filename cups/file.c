@@ -32,8 +32,8 @@
 struct _cups_file_s			/**** CUPS file structure... ****/
 {
   int		fd;			/* File descriptor */
+  bool		compressed;		/* Compression used? */
   char		mode,			/* Mode ('r' or 'w') */
-		compressed,		/* Compression used? */
 		buf[4096],		/* Buffer */
 		*ptr,			/* Pointer into buffer */
 		*end;			/* End of buffer data */
@@ -55,23 +55,23 @@ struct _cups_file_s			/**** CUPS file structure... ****/
  * Local functions...
  */
 
-static ssize_t	cups_compress(cups_file_t *fp, const char *buf, size_t bytes);
+static bool	cups_compress(cups_file_t *fp, const char *buf, size_t bytes);
 static ssize_t	cups_fill(cups_file_t *fp);
 static int	cups_open(const char *filename, int mode);
 static ssize_t	cups_read(cups_file_t *fp, char *buf, size_t bytes);
-static ssize_t	cups_write(cups_file_t *fp, const char *buf, size_t bytes);
+static bool	cups_write(cups_file_t *fp, const char *buf, size_t bytes);
 
 
 /*
  * 'cupsFileClose()' - Close a CUPS file.
  */
 
-int					/* O - 0 on success, -1 on error */
+bool					/* O - `true` on success, `false` on error */
 cupsFileClose(cups_file_t *fp)		/* I - CUPS file */
 {
   int	fd;				/* File descriptor */
   char	mode;				/* Open mode */
-  int	status;				/* Return status */
+  bool	status;				/* Return status */
 
 
   DEBUG_printf(("cupsFileClose(fp=%p)", (void *)fp));
@@ -81,7 +81,7 @@ cupsFileClose(cups_file_t *fp)		/* I - CUPS file */
   */
 
   if (!fp)
-    return (-1);
+    return (false);
 
  /*
   * Flush pending write data...
@@ -90,9 +90,9 @@ cupsFileClose(cups_file_t *fp)		/* I - CUPS file */
   if (fp->mode == 'w')
     status = cupsFileFlush(fp);
   else
-    status = 0;
+    status = true;
 
-  if (fp->compressed && status >= 0)
+  if (fp->compressed && status)
   {
     if (fp->mode == 'r')
     {
@@ -109,28 +109,25 @@ cupsFileClose(cups_file_t *fp)		/* I - CUPS file */
       */
 
       unsigned char	trailer[8];	/* Trailer CRC and length */
-      int		done;		/* Done writing... */
+      bool		done;		/* Done writing... */
 
 
       fp->stream.avail_in = 0;
 
-      for (done = 0;;)
+      for (done = false;;)
       {
         if (fp->stream.next_out > fp->cbuf)
 	{
-	  if (cups_write(fp, (char *)fp->cbuf,
-	                 (size_t)(fp->stream.next_out - fp->cbuf)) < 0)
-	    status = -1;
+	  status = cups_write(fp, (char *)fp->cbuf, (size_t)(fp->stream.next_out - fp->cbuf));
 
 	  fp->stream.next_out  = fp->cbuf;
 	  fp->stream.avail_out = sizeof(fp->cbuf);
 	}
 
-        if (done || status < 0)
+        if (done || !status)
 	  break;
 
-        done = deflate(&fp->stream, Z_FINISH) == Z_STREAM_END &&
-	       fp->stream.next_out == fp->cbuf;
+        done = deflate(&fp->stream, Z_FINISH) == Z_STREAM_END && fp->stream.next_out == fp->cbuf;
       }
 
      /*
@@ -146,8 +143,7 @@ cupsFileClose(cups_file_t *fp)		/* I - CUPS file */
       trailer[6] = (unsigned char)(fp->pos >> 16);
       trailer[7] = (unsigned char)(fp->pos >> 24);
 
-      if (cups_write(fp, (char *)trailer, 8) < 0)
-        status = -1;
+      status = cups_write(fp, (char *)trailer, 8);
 
      /*
       * Free all memory used by the compression stream...
@@ -184,23 +180,12 @@ cupsFileClose(cups_file_t *fp)		/* I - CUPS file */
   if (mode == 's')
   {
     if (httpAddrClose(NULL, fd) < 0)
-      status = -1;
+      status = false;
   }
   else if (close(fd) < 0)
-    status = -1;
+    status = false;
 
   return (status);
-}
-
-
-/*
- * 'cupsFileCompression()' - Return whether a file is compressed.
- */
-
-int					/* O - `CUPS_FILE_NONE` or `CUPS_FILE_GZIP` */
-cupsFileCompression(cups_file_t *fp)	/* I - CUPS file */
-{
-  return (fp ? fp->compressed : CUPS_FILE_NONE);
 }
 
 
@@ -324,10 +309,11 @@ cupsFileFind(const char *filename,	/* I - File to find */
  * 'cupsFileFlush()' - Flush pending output.
  */
 
-int					/* O - 0 on success, -1 on error */
+bool					/* O - `true` on success, `false` on error */
 cupsFileFlush(cups_file_t *fp)		/* I - CUPS file */
 {
   ssize_t	bytes;			/* Bytes to write */
+  bool		ret;			/* Return value */
 
 
   DEBUG_printf(("cupsFileFlush(fp=%p)", (void *)fp));
@@ -339,7 +325,7 @@ cupsFileFlush(cups_file_t *fp)		/* I - CUPS file */
   if (!fp || fp->mode != 'w')
   {
     DEBUG_puts("1cupsFileFlush: Attempt to flush a read-only file...");
-    return (-1);
+    return (false);
   }
 
   bytes = (ssize_t)(fp->ptr - fp->buf);
@@ -350,17 +336,16 @@ cupsFileFlush(cups_file_t *fp)		/* I - CUPS file */
   if (bytes > 0)
   {
     if (fp->compressed)
-      bytes = cups_compress(fp, fp->buf, (size_t)bytes);
+      ret = cups_compress(fp, fp->buf, (size_t)bytes);
     else
-      bytes = cups_write(fp, fp->buf, (size_t)bytes);
-
-    if (bytes < 0)
-      return (-1);
+      ret = cups_write(fp, fp->buf, (size_t)bytes);
 
     fp->ptr = fp->buf;
+
+    return (ret);
   }
 
-  return (0);
+  return (true);
 }
 
 
@@ -396,11 +381,13 @@ cupsFileGetChar(cups_file_t *fp)	/* I - CUPS file */
   DEBUG_printf(("5cupsFileGetChar: fp->eof=%d, fp->ptr=%p, fp->end=%p", fp->eof, (void *)fp->ptr, (void *)fp->end));
 
   if (fp->ptr >= fp->end)
+  {
     if (cups_fill(fp) <= 0)
     {
       DEBUG_puts("5cupsFileGetChar: Unable to fill buffer!");
       return (-1);
     }
+  }
 
  /*
   * Return the next character in the buffer...
@@ -715,38 +702,45 @@ cupsFileGets(cups_file_t *fp,		/* I - CUPS file */
 
 
 /*
- * 'cupsFileLock()' - Temporarily lock access to a file.
- *
- * @since CUPS 1.2/macOS 10.5@
+ * 'cupsFileIsCompressed()' - Return whether a file is compressed.
  */
 
-int					/* O - 0 on success, -1 on error */
+bool					/* O - `true` if compressed, `false` if not */
+cupsFileIsCompressed(cups_file_t *fp)	/* I - CUPS file */
+{
+  return (fp ? fp->compressed : false);
+}
+
+
+/*
+ * 'cupsFileLock()' - Temporarily lock access to a file.
+ */
+
+bool					/* O - `true` on success, `false` on error */
 cupsFileLock(cups_file_t *fp,		/* I - CUPS file */
-             int         block)		/* I - 1 to wait for the lock, 0 to fail right away */
+             bool        block)		/* I - `true` to wait for the lock, `false` to fail right away */
 {
  /*
   * Range check...
   */
 
   if (!fp || fp->mode == 's')
-    return (-1);
+    return (false);
 
  /*
   * Try the lock...
   */
 
 #ifdef _WIN32
-  return (_locking(fp->fd, block ? _LK_LOCK : _LK_NBLCK, 0));
+  return (_locking(fp->fd, block ? _LK_LOCK : _LK_NBLCK, 0) == 0);
 #else
-  return (lockf(fp->fd, block ? F_LOCK : F_TLOCK, 0));
+  return (lockf(fp->fd, block ? F_LOCK : F_TLOCK, 0) == 0);
 #endif /* _WIN32 */
 }
 
 
 /*
  * 'cupsFileNumber()' - Return the file descriptor associated with a CUPS file.
- *
- * @since CUPS 1.2/macOS 10.5@
  */
 
 int					/* O - File descriptor */
@@ -774,8 +768,6 @@ cupsFileNumber(cups_file_t *fp)		/* I - CUPS file */
  * "address:port" or "hostname:port". The socket will make an IPv4 or IPv6
  * connection as needed, generally preferring IPv6 connections when there is
  * a choice.
- *
- * @since CUPS 1.2/macOS 10.5@
  */
 
 cups_file_t *				/* O - CUPS file or `NULL` if the file or socket cannot be opened */
@@ -894,8 +886,6 @@ cupsFileOpen(const char *filename,	/* I - Name of file */
  * When opening for writing ("w"), an optional number from 1 to 9 can be
  * supplied which enables Flate compression of the file.  Compression is
  * not supported for the "a" (append) mode.
- *
- * @since CUPS 1.2/macOS 10.5@
  */
 
 cups_file_t *				/* O - CUPS file or `NULL` if the file could not be opened */
@@ -974,7 +964,7 @@ cupsFileOpenFd(int        fd,		/* I - File descriptor */
 
 	  fp->stream.next_out  = fp->cbuf;
 	  fp->stream.avail_out = sizeof(fp->cbuf);
-	  fp->compressed       = 1;
+	  fp->compressed       = true;
 	  fp->crc              = crc32(0L, Z_NULL, 0);
 	}
         break;
@@ -1049,7 +1039,7 @@ cupsFilePeekChar(cups_file_t *fp)	/* I - CUPS file */
  * 'cupsFilePrintf()' - Write a formatted string.
  */
 
-int					/* O - Number of bytes written or -1 on error */
+bool					/* O - `true` on success, `false` on error */
 cupsFilePrintf(cups_file_t *fp,		/* I - CUPS file */
                const char  *format,	/* I - Printf-style format string */
 	       ...)			/* I - Additional args as necessary */
@@ -1061,7 +1051,7 @@ cupsFilePrintf(cups_file_t *fp,		/* I - CUPS file */
   DEBUG_printf(("2cupsFilePrintf(fp=%p, format=\"%s\", ...)", (void *)fp, format));
 
   if (!fp || !format || (fp->mode != 'w' && fp->mode != 's'))
-    return (-1);
+    return (false);
 
   if (!fp->printf_buffer)
   {
@@ -1070,7 +1060,7 @@ cupsFilePrintf(cups_file_t *fp,		/* I - CUPS file */
     */
 
     if ((fp->printf_buffer = malloc(1024)) == NULL)
-      return (-1);
+      return (false);
 
     fp->printf_size = 1024;
   }
@@ -1104,8 +1094,8 @@ cupsFilePrintf(cups_file_t *fp,		/* I - CUPS file */
 
   if (fp->mode == 's')
   {
-    if (cups_write(fp, fp->printf_buffer, (size_t)bytes) < 0)
-      return (-1);
+    if (!cups_write(fp, fp->printf_buffer, (size_t)bytes))
+      return (false);
 
     fp->pos += bytes;
 
@@ -1115,8 +1105,10 @@ cupsFilePrintf(cups_file_t *fp,		/* I - CUPS file */
   }
 
   if ((fp->ptr + bytes) > fp->end)
-    if (cupsFileFlush(fp))
-      return (-1);
+  {
+    if (!cupsFileFlush(fp))
+      return (false);
+  }
 
   fp->pos += bytes;
 
@@ -1125,19 +1117,19 @@ cupsFilePrintf(cups_file_t *fp,		/* I - CUPS file */
   if ((size_t)bytes > sizeof(fp->buf))
   {
     if (fp->compressed)
-      return ((int)cups_compress(fp, fp->printf_buffer, (size_t)bytes));
+      return (cups_compress(fp, fp->printf_buffer, (size_t)bytes));
     else
-      return ((int)cups_write(fp, fp->printf_buffer, (size_t)bytes));
+      return (cups_write(fp, fp->printf_buffer, (size_t)bytes));
   }
   else
   {
     memcpy(fp->ptr, fp->printf_buffer, (size_t)bytes);
     fp->ptr += bytes;
 
-    if (fp->is_stdio && cupsFileFlush(fp))
-      return (-1);
+    if (fp->is_stdio && !cupsFileFlush(fp))
+      return (false);
     else
-      return ((int)bytes);
+      return (true);
   }
 }
 
@@ -1146,7 +1138,7 @@ cupsFilePrintf(cups_file_t *fp,		/* I - CUPS file */
  * 'cupsFilePutChar()' - Write a character.
  */
 
-int					/* O - 0 on success, -1 on error */
+bool					/* O - `true` on success, `false` on error */
 cupsFilePutChar(cups_file_t *fp,	/* I - CUPS file */
                 int         c)		/* I - Character to write */
 {
@@ -1155,7 +1147,7 @@ cupsFilePutChar(cups_file_t *fp,	/* I - CUPS file */
   */
 
   if (!fp || (fp->mode != 'w' && fp->mode != 's'))
-    return (-1);
+    return (false);
 
   if (fp->mode == 's')
   {
@@ -1169,7 +1161,7 @@ cupsFilePutChar(cups_file_t *fp,	/* I - CUPS file */
     ch = (char)c;
 
     if (send(fp->fd, &ch, 1, 0) < 1)
-      return (-1);
+      return (false);
   }
   else
   {
@@ -1178,8 +1170,10 @@ cupsFilePutChar(cups_file_t *fp,	/* I - CUPS file */
     */
 
     if (fp->ptr >= fp->end)
-      if (cupsFileFlush(fp))
-	return (-1);
+    {
+      if (!cupsFileFlush(fp))
+	return (false);
+    }
 
     *(fp->ptr) ++ = (char)c;
   }
@@ -1188,7 +1182,7 @@ cupsFilePutChar(cups_file_t *fp,	/* I - CUPS file */
 
   DEBUG_printf(("4cupsFilePutChar: pos=" CUPS_LLFMT, CUPS_LLCAST fp->pos));
 
-  return (0);
+  return (true);
 }
 
 
@@ -1198,25 +1192,22 @@ cupsFilePutChar(cups_file_t *fp,	/* I - CUPS file */
  * This function handles any comment escaping of the value.
  */
 
-ssize_t					/* O - Number of bytes written or -1 on error */
+bool					/* O - `true` on success, `false` on error */
 cupsFilePutConf(cups_file_t *fp,	/* I - CUPS file */
                 const char *directive,	/* I - Directive */
 		const char *value)	/* I - Value */
 {
-  ssize_t	bytes,			/* Number of bytes written */
-		temp;			/* Temporary byte count */
   const char	*ptr;			/* Pointer into value */
 
 
   if (!fp || !directive || !*directive)
-    return (-1);
+    return (false);
 
-  if ((bytes = cupsFilePuts(fp, directive)) < 0)
-    return (-1);
+  if (!cupsFilePuts(fp, directive))
+    return (false);
 
-  if (cupsFilePutChar(fp, ' ') < 0)
-    return (-1);
-  bytes ++;
+  if (!cupsFilePutChar(fp, ' '))
+    return (false);
 
   if (value && *value)
   {
@@ -1226,28 +1217,20 @@ cupsFilePutConf(cups_file_t *fp,	/* I - CUPS file */
       * Need to quote the first # in the info string...
       */
 
-      if ((temp = cupsFileWrite(fp, value, (size_t)(ptr - value))) < 0)
-        return (-1);
-      bytes += temp;
+      if (!cupsFileWrite(fp, value, (size_t)(ptr - value)))
+        return (false);
 
-      if (cupsFilePutChar(fp, '\\') < 0)
-        return (-1);
-      bytes ++;
+      if (!cupsFilePutChar(fp, '\\'))
+        return (false);
 
-      if ((temp = cupsFilePuts(fp, ptr)) < 0)
-        return (-1);
-      bytes += temp;
+      if (!cupsFilePuts(fp, ptr))
+        return (false);
     }
-    else if ((temp = cupsFilePuts(fp, value)) < 0)
-      return (-1);
-    else
-      bytes += temp;
+    else if (!cupsFilePuts(fp, value))
+      return (false);
   }
 
-  if (cupsFilePutChar(fp, '\n') < 0)
-    return (-1);
-  else
-    return (bytes + 1);
+  return (cupsFilePutChar(fp, '\n'));
 }
 
 
@@ -1257,11 +1240,11 @@ cupsFilePutConf(cups_file_t *fp,	/* I - CUPS file */
  * Like the `fputs` function, no newline is appended to the string.
  */
 
-int					/* O - Number of bytes written or -1 on error */
+bool					/* O - `true` on success, `false` on error */
 cupsFilePuts(cups_file_t *fp,		/* I - CUPS file */
              const char  *s)		/* I - String to write */
 {
-  ssize_t	bytes;			/* Bytes to write */
+  size_t	bytes;			/* Bytes to write */
 
 
  /*
@@ -1269,50 +1252,52 @@ cupsFilePuts(cups_file_t *fp,		/* I - CUPS file */
   */
 
   if (!fp || !s || (fp->mode != 'w' && fp->mode != 's'))
-    return (-1);
+    return (false);
 
  /*
   * Write the string...
   */
 
-  bytes = (ssize_t)strlen(s);
+  bytes = strlen(s);
 
   if (fp->mode == 's')
   {
-    if (cups_write(fp, s, (size_t)bytes) < 0)
-      return (-1);
+    if (!cups_write(fp, s, bytes))
+      return (false);
 
     fp->pos += bytes;
 
     DEBUG_printf(("4cupsFilePuts: pos=" CUPS_LLFMT, CUPS_LLCAST fp->pos));
 
-    return ((int)bytes);
+    return (true);
   }
 
   if ((fp->ptr + bytes) > fp->end)
-    if (cupsFileFlush(fp))
-      return (-1);
+  {
+    if (!cupsFileFlush(fp))
+      return (false);
+  }
 
   fp->pos += bytes;
 
   DEBUG_printf(("4cupsFilePuts: pos=" CUPS_LLFMT, CUPS_LLCAST fp->pos));
 
-  if ((size_t)bytes > sizeof(fp->buf))
+  if (bytes > sizeof(fp->buf))
   {
     if (fp->compressed)
-      return ((int)cups_compress(fp, s, (size_t)bytes));
+      return (cups_compress(fp, s, bytes) > 0);
     else
-      return ((int)cups_write(fp, s, (size_t)bytes));
+      return (cups_write(fp, s, bytes) > 0);
   }
   else
   {
-    memcpy(fp->ptr, s, (size_t)bytes);
+    memcpy(fp->ptr, s, bytes);
     fp->ptr += bytes;
 
-    if (fp->is_stdio && cupsFileFlush(fp))
-      return (-1);
+    if (fp->is_stdio && !cupsFileFlush(fp))
+      return (false);
     else
-      return ((int)bytes);
+      return (true);
   }
 }
 
@@ -1356,6 +1341,7 @@ cupsFileRead(cups_file_t *fp,		/* I - CUPS file */
   while (bytes > 0)
   {
     if (fp->ptr >= fp->end)
+    {
       if (cups_fill(fp) <= 0)
       {
         DEBUG_printf(("4cupsFileRead: cups_fill() returned -1, total="
@@ -1366,6 +1352,7 @@ cupsFileRead(cups_file_t *fp,		/* I - CUPS file */
 	else
 	  return (-1);
       }
+    }
 
     count = (ssize_t)(fp->end - fp->ptr);
     if (count > (ssize_t)bytes)
@@ -1444,7 +1431,7 @@ cupsFileRewind(cups_file_t *fp)		/* I - CUPS file */
   if (fp->compressed)
   {
     inflateEnd(&fp->stream);
-    fp->compressed = 0;
+    fp->compressed = false;
   }
 
   if (lseek(fp->fd, 0, SEEK_SET))
@@ -1724,7 +1711,7 @@ cupsFileTell(cups_file_t *fp)		/* I - CUPS file */
  * 'cupsFileUnlock()' - Unlock access to a file.
  */
 
-int					/* O - 0 on success, -1 on error */
+bool					/* O - `true` on success, `false` on error */
 cupsFileUnlock(cups_file_t *fp)		/* I - CUPS file */
 {
  /*
@@ -1734,16 +1721,16 @@ cupsFileUnlock(cups_file_t *fp)		/* I - CUPS file */
   DEBUG_printf(("cupsFileUnlock(fp=%p)", (void *)fp));
 
   if (!fp || fp->mode == 's')
-    return (-1);
+    return (false);
 
  /*
   * Unlock...
   */
 
 #ifdef _WIN32
-  return (_locking(fp->fd, _LK_UNLCK, 0));
+  return (_locking(fp->fd, _LK_UNLCK, 0) == 0);
 #else
-  return (lockf(fp->fd, F_ULOCK, 0));
+  return (lockf(fp->fd, F_ULOCK, 0) == 0);
 #endif /* _WIN32 */
 }
 
@@ -1752,7 +1739,7 @@ cupsFileUnlock(cups_file_t *fp)		/* I - CUPS file */
  * 'cupsFileWrite()' - Write to a file.
  */
 
-ssize_t					/* O - Number of bytes written or -1 on error */
+bool					/* O - `true` on success, `false` on error */
 cupsFileWrite(cups_file_t *fp,		/* I - CUPS file */
               const char  *buf,		/* I - Buffer */
 	      size_t      bytes)	/* I - Number of bytes to write */
@@ -1764,10 +1751,10 @@ cupsFileWrite(cups_file_t *fp,		/* I - CUPS file */
   DEBUG_printf(("2cupsFileWrite(fp=%p, buf=%p, bytes=" CUPS_LLFMT ")", (void *)fp, (void *)buf, CUPS_LLCAST bytes));
 
   if (!fp || !buf || (fp->mode != 'w' && fp->mode != 's'))
-    return (-1);
+    return (false);
 
   if (bytes == 0)
-    return (0);
+    return (true);
 
  /*
   * Write the buffer...
@@ -1775,19 +1762,21 @@ cupsFileWrite(cups_file_t *fp,		/* I - CUPS file */
 
   if (fp->mode == 's')
   {
-    if (cups_write(fp, buf, bytes) < 0)
-      return (-1);
+    if (!cups_write(fp, buf, bytes))
+      return (false);
 
     fp->pos += (off_t)bytes;
 
     DEBUG_printf(("4cupsFileWrite: pos=" CUPS_LLFMT, CUPS_LLCAST fp->pos));
 
-    return ((ssize_t)bytes);
+    return (true);
   }
 
   if ((fp->ptr + bytes) > fp->end)
-    if (cupsFileFlush(fp))
-      return (-1);
+  {
+    if (!cupsFileFlush(fp))
+      return (false);
+  }
 
   fp->pos += (off_t)bytes;
 
@@ -1804,7 +1793,7 @@ cupsFileWrite(cups_file_t *fp,		/* I - CUPS file */
   {
     memcpy(fp->ptr, buf, bytes);
     fp->ptr += bytes;
-    return ((ssize_t)bytes);
+    return (true);
   }
 }
 
@@ -1813,7 +1802,7 @@ cupsFileWrite(cups_file_t *fp,		/* I - CUPS file */
  * 'cups_compress()' - Compress a buffer of data.
  */
 
-static ssize_t				/* O - Number of bytes written or -1 */
+bool					/* O - `true` on success, `false` on error */
 cups_compress(cups_file_t *fp,		/* I - CUPS file */
               const char  *buf,		/* I - Buffer */
 	      size_t      bytes)	/* I - Number bytes */
@@ -1847,18 +1836,18 @@ cups_compress(cups_file_t *fp,		/* I - CUPS file */
 
     if (fp->stream.avail_out < (uInt)(sizeof(fp->cbuf) / 8))
     {
-      if (cups_write(fp, (char *)fp->cbuf, (size_t)(fp->stream.next_out - fp->cbuf)) < 0)
-        return (-1);
+      if (!cups_write(fp, (char *)fp->cbuf, (size_t)(fp->stream.next_out - fp->cbuf)))
+        return (false);
 
       fp->stream.next_out  = fp->cbuf;
       fp->stream.avail_out = sizeof(fp->cbuf);
     }
 
     if ((status = deflate(&(fp->stream), Z_NO_FLUSH)) < Z_OK && status != Z_BUF_ERROR)
-      return (-1);
+      return (false);
   }
 
-  return ((ssize_t)bytes);
+  return (true);
 }
 
 
@@ -1881,7 +1870,7 @@ cups_fill(cups_file_t *fp)		/* I - CUPS file */
   if (fp->ptr && fp->end)
     fp->bufpos += fp->end - fp->buf;
 
-  DEBUG_printf(("9cups_fill: fp->compressed=%d", fp->compressed));
+  DEBUG_printf(("9cups_fill: fp->compressed=%s", fp->compressed ? "true" : "false"));
 
   while (!fp->ptr || fp->compressed)
   {
@@ -1896,7 +1885,7 @@ cups_fill(cups_file_t *fp)		/* I - CUPS file */
       * Reset the file position in case we are seeking...
       */
 
-      fp->compressed = 0;
+      fp->compressed = false;
 
      /*
       * Read the first bytes in the file to determine if we have a gzip'd
@@ -2084,7 +2073,7 @@ cups_fill(cups_file_t *fp)		/* I - CUPS file */
 	return (-1);
       }
 
-      fp->compressed = 1;
+      fp->compressed = true;
     }
 
     if (fp->compressed)
@@ -2195,7 +2184,7 @@ cups_fill(cups_file_t *fp)		/* I - CUPS file */
 
         inflateEnd(&fp->stream);
 
-	fp->compressed = 0;
+	fp->compressed = false;
       }
       else if (status < Z_OK)
       {
@@ -2402,12 +2391,11 @@ cups_read(cups_file_t *fp,		/* I - CUPS file */
  * 'cups_write()' - Write to a file descriptor.
  */
 
-static ssize_t				/* O - Number of bytes written or -1 */
+bool					/* O - `true` on success, `false` on error */
 cups_write(cups_file_t *fp,		/* I - CUPS file */
            const char  *buf,		/* I - Buffer */
 	   size_t      bytes)		/* I - Number bytes */
 {
-  size_t	total;			/* Total bytes written */
   ssize_t	count;			/* Count this time */
 
 
@@ -2417,7 +2405,6 @@ cups_write(cups_file_t *fp,		/* I - CUPS file */
   * Loop until all bytes are written...
   */
 
-  total = 0;
   while (bytes > 0)
   {
 #ifdef _WIN32
@@ -2443,7 +2430,7 @@ cups_write(cups_file_t *fp,		/* I - CUPS file */
       if (errno == EAGAIN || errno == EINTR)
         continue;
       else
-        return (-1);
+        return (false);
     }
 
    /*
@@ -2451,7 +2438,6 @@ cups_write(cups_file_t *fp,		/* I - CUPS file */
     */
 
     bytes -= (size_t)count;
-    total += (size_t)count;
     buf   += count;
   }
 
@@ -2459,5 +2445,5 @@ cups_write(cups_file_t *fp,		/* I - CUPS file */
   * Return the total number of bytes written...
   */
 
-  return ((ssize_t)total);
+  return (true);
 }

@@ -65,6 +65,7 @@ Renamed Functions
 | `cupsArrayNext`          | `cupsArrayGetNext`      |
 | `cupsArrayPrev`          | `cupsArrayGetPrev`      |
 | `cupsEncryption`         | `cupsGetEncryption`     |
+| `cupsFileCompression`    | `cupsFileIsCompressed`  |
 | `cupsGetDests2`          | `cupsGetDests`          |
 | `cupsGetPassword2`       | `cupsGetPassword`       |
 | `cupsServer`             | `cupsGetServer`         |

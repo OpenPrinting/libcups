@@ -313,7 +313,6 @@
 		722A24F32178D091000CAB20 /* debug-private.h in Headers */ = {isa = PBXBuildFile; fileRef = 722A24F22178D090000CAB20 /* debug-private.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		722A24F42178D091000CAB20 /* debug-private.h in Headers */ = {isa = PBXBuildFile; fileRef = 722A24F22178D090000CAB20 /* debug-private.h */; };
 		722A24F52178D091000CAB20 /* debug-private.h in Headers */ = {isa = PBXBuildFile; fileRef = 722A24F22178D090000CAB20 /* debug-private.h */; };
-		7234F4201378A16F00D3E9C9 /* array-private.h in Headers */ = {isa = PBXBuildFile; fileRef = 7234F41F1378A16F00D3E9C9 /* array-private.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		724FA53D1CC037370092477B /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC591926750C000F61D3 /* CoreFoundation.framework */; };
 		724FA53E1CC037370092477B /* libiconv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5A1926750C000F61D3 /* libiconv.dylib */; };
 		724FA53F1CC037370092477B /* libresolv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5B1926750C000F61D3 /* libresolv.dylib */; };
@@ -366,7 +365,6 @@
 		7253C46C216ED5E500494ADD /* raster-private.h in Headers */ = {isa = PBXBuildFile; fileRef = 2767FC76192696A0000F61D3 /* raster-private.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		7253C46F216ED69200494ADD /* pwg.h in Headers */ = {isa = PBXBuildFile; fileRef = 2767FC7519269687000F61D3 /* pwg.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		7253C470216ED69400494ADD /* pwg.h in Headers */ = {isa = PBXBuildFile; fileRef = 2767FC7519269687000F61D3 /* pwg.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		7253C471216ED6C400494ADD /* array-private.h in Headers */ = {isa = PBXBuildFile; fileRef = 7234F41F1378A16F00D3E9C9 /* array-private.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		726AD702135E8A90002C930D /* ippeveprinter.c in Sources */ = {isa = PBXBuildFile; fileRef = 726AD701135E8A90002C930D /* ippeveprinter.c */; };
 		727AD5B719100A58009F6862 /* tls.c in Sources */ = {isa = PBXBuildFile; fileRef = 727AD5B619100A58009F6862 /* tls.c */; };
 		727AD5B819100A58009F6862 /* tls.c in Sources */ = {isa = PBXBuildFile; fileRef = 727AD5B619100A58009F6862 /* tls.c */; };
@@ -1023,7 +1021,6 @@
 		7226369D18AE73BB004ED309 /* config.h.in */ = {isa = PBXFileReference; lastKnownFileType = text; name = config.h.in; path = ../config.h.in; sourceTree = "<group>"; };
 		722A24EE2178D00C000CAB20 /* debug-internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "debug-internal.h"; path = "../cups/debug-internal.h"; sourceTree = "<group>"; };
 		722A24F22178D090000CAB20 /* debug-private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "debug-private.h"; path = "../cups/debug-private.h"; sourceTree = "<group>"; };
-		7234F41F1378A16F00D3E9C9 /* array-private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "array-private.h"; path = "../cups/array-private.h"; sourceTree = "<group>"; };
 		724FA5481CC037370092477B /* testarray */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = testarray; sourceTree = BUILT_PRODUCTS_DIR; };
 		724FA5811CC037810092477B /* testfile */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = testfile; sourceTree = BUILT_PRODUCTS_DIR; };
 		724FA5941CC037980092477B /* testi18n */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = testi18n; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1499,7 +1496,6 @@
 			isa = PBXGroup;
 			children = (
 				72220EB91333056300FCA411 /* array.h */,
-				7234F41F1378A16F00D3E9C9 /* array-private.h */,
 				72220EB81333056300FCA411 /* array.c */,
 				72220EBB1333056300FCA411 /* auth.c */,
 				72220F0A133305BB00FCA411 /* base.h */,
@@ -1656,7 +1652,6 @@
 				7253C469216ED5D400494ADD /* raster.h in Headers */,
 				722A24F42178D091000CAB20 /* debug-private.h in Headers */,
 				270696401CADF3E200FFE5FB /* cups-private.h in Headers */,
-				7253C471216ED6C400494ADD /* array-private.h in Headers */,
 				270696421CADF3E200FFE5FB /* file-private.h in Headers */,
 				270696431CADF3E200FFE5FB /* http-private.h in Headers */,
 				270696441CADF3E200FFE5FB /* ipp-private.h in Headers */,
@@ -1707,7 +1702,6 @@
 				722A24F32178D091000CAB20 /* debug-private.h in Headers */,
 				72220F41133305BB00FCA411 /* transcode.h in Headers */,
 				72220F44133305BB00FCA411 /* base.h in Headers */,
-				7234F4201378A16F00D3E9C9 /* array-private.h in Headers */,
 				72220ECD1333056300FCA411 /* cups-private.h in Headers */,
 				72220F11133305BB00FCA411 /* file-private.h in Headers */,
 				72220F1A133305BB00FCA411 /* http-private.h in Headers */,

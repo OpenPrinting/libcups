@@ -30,14 +30,6 @@ extern "C" {
 
 
 /*
- * CUPS file definitions...
- */
-
-#  define CUPS_FILE_NONE	0	/* No compression */
-#  define CUPS_FILE_GZIP	1	/* GZIP compression */
-
-
-/*
  * Types and structures...
  */
 
@@ -48,24 +40,24 @@ typedef struct _cups_file_s cups_file_t;/**** CUPS file type ****/
  * Prototypes...
  */
 
-extern int		cupsFileClose(cups_file_t *fp) _CUPS_PUBLIC;
-extern int		cupsFileCompression(cups_file_t *fp) _CUPS_PUBLIC;
+extern bool		cupsFileClose(cups_file_t *fp) _CUPS_PUBLIC;
 extern bool		cupsFileEOF(cups_file_t *fp) _CUPS_PUBLIC;
 extern const char	*cupsFileFind(const char *filename, const char *path, bool executable, char *buffer, size_t bufsize) _CUPS_PUBLIC;
-extern int		cupsFileFlush(cups_file_t *fp) _CUPS_PUBLIC;
+extern bool		cupsFileFlush(cups_file_t *fp) _CUPS_PUBLIC;
 extern int		cupsFileGetChar(cups_file_t *fp) _CUPS_PUBLIC;
 extern char		*cupsFileGetConf(cups_file_t *fp, char *buf, size_t buflen, char **value, int *linenum) _CUPS_PUBLIC;
 extern size_t		cupsFileGetLine(cups_file_t *fp, char *buf, size_t buflen) _CUPS_PUBLIC;
 extern char		*cupsFileGets(cups_file_t *fp, char *buf, size_t buflen) _CUPS_PUBLIC;
-extern int		cupsFileLock(cups_file_t *fp, int block) _CUPS_PUBLIC;
+extern bool		cupsFileIsCompressed(cups_file_t *fp) _CUPS_PUBLIC;
+extern bool		cupsFileLock(cups_file_t *fp, bool block) _CUPS_PUBLIC;
 extern int		cupsFileNumber(cups_file_t *fp) _CUPS_PUBLIC;
 extern cups_file_t	*cupsFileOpen(const char *filename, const char *mode) _CUPS_PUBLIC;
 extern cups_file_t	*cupsFileOpenFd(int fd, const char *mode) _CUPS_PUBLIC;
 extern int		cupsFilePeekChar(cups_file_t *fp) _CUPS_PUBLIC;
-extern int		cupsFilePrintf(cups_file_t *fp, const char *format, ...) _CUPS_FORMAT(2, 3) _CUPS_PUBLIC;
-extern int		cupsFilePutChar(cups_file_t *fp, int c) _CUPS_PUBLIC;
-extern ssize_t		cupsFilePutConf(cups_file_t *fp, const char *directive, const char *value) _CUPS_PUBLIC;
-extern int		cupsFilePuts(cups_file_t *fp, const char *s) _CUPS_PUBLIC;
+extern bool		cupsFilePrintf(cups_file_t *fp, const char *format, ...) _CUPS_FORMAT(2, 3) _CUPS_PUBLIC;
+extern bool		cupsFilePutChar(cups_file_t *fp, int c) _CUPS_PUBLIC;
+extern bool		cupsFilePutConf(cups_file_t *fp, const char *directive, const char *value) _CUPS_PUBLIC;
+extern bool		cupsFilePuts(cups_file_t *fp, const char *s) _CUPS_PUBLIC;
 extern ssize_t		cupsFileRead(cups_file_t *fp, char *buf, size_t bytes) _CUPS_PUBLIC;
 extern off_t		cupsFileRewind(cups_file_t *fp) _CUPS_PUBLIC;
 extern off_t		cupsFileSeek(cups_file_t *fp, off_t pos) _CUPS_PUBLIC;
@@ -73,8 +65,8 @@ extern cups_file_t	*cupsFileStderr(void) _CUPS_PUBLIC;
 extern cups_file_t	*cupsFileStdin(void) _CUPS_PUBLIC;
 extern cups_file_t	*cupsFileStdout(void) _CUPS_PUBLIC;
 extern off_t		cupsFileTell(cups_file_t *fp) _CUPS_PUBLIC;
-extern int		cupsFileUnlock(cups_file_t *fp) _CUPS_PUBLIC;
-extern ssize_t		cupsFileWrite(cups_file_t *fp, const char *buf, size_t bytes) _CUPS_PUBLIC;
+extern bool		cupsFileUnlock(cups_file_t *fp) _CUPS_PUBLIC;
+extern bool		cupsFileWrite(cups_file_t *fp, const char *buf, size_t bytes) _CUPS_PUBLIC;
 
 
 #  ifdef __cplusplus
