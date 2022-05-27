@@ -1603,8 +1603,8 @@ ippCopyAttribute(
  * original source IPP message will not be freed for the life of the destination.
  *
  * The @code cb@ and @code context@ parameters provide a generic way to "filter" the
- * attributes that are copied - the function must return 1 to copy the attribute or
- * 0 to skip it. The function may also choose to do a partial copy of the source attribute
+ * attributes that are copied - the function must return `true` to copy the attribute or
+ * `false` to skip it. The function may also choose to do a partial copy of the source attribute
  * itself.
  *
  * @since CUPS 1.6/macOS 10.8@

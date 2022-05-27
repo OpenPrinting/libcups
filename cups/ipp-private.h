@@ -132,43 +132,6 @@ typedef struct _ipp_option_s		/**** Attribute mapping data ****/
   const ipp_op_t *operations;		/* Allowed operations for this attr */
 } _ipp_option_t;
 
-typedef struct _ipp_file_s _ipp_file_t;/**** File Parser ****/
-typedef struct _ipp_vars_s _ipp_vars_t;/**** Variables ****/
-
-typedef int (*_ipp_fattr_cb_t)(_ipp_file_t *f, void *user_data, const char *attr);
-					/**** File Attribute (Filter) Callback ****/
-typedef int (*_ipp_ferror_cb_t)(_ipp_file_t *f, void *user_data, const char *error);
-					/**** File Parser Error Callback ****/
-typedef int (*_ipp_ftoken_cb_t)(_ipp_file_t *f, _ipp_vars_t *v, void *user_data, const char *token);
-					/**** File Parser Token Callback ****/
-
-struct _ipp_vars_s			/**** Variables ****/
-{
-  char		*uri,			/* URI for printer */
-		scheme[64],		/* Scheme from URI */
-		username[256],		/* Username from URI */
-		*password,		/* Password from URI (if any) */
-		host[256],		/* Hostname from URI */
-		portstr[32],		/* Port number string */
-		resource[1024];		/* Resource path from URI */
-  int 		port;			/* Port number from URI */
-  size_t	num_vars;		/* Number of variables */
-  cups_option_t	*vars;			/* Array of variables */
-  int		password_tries;		/* Number of retries for password */
-  _ipp_fattr_cb_t attrcb;		/* Attribute (filter) callback */
-  _ipp_ferror_cb_t errorcb;		/* Error callback */
-  _ipp_ftoken_cb_t tokencb;		/* Token callback */
-};
-
-struct _ipp_file_s			/**** File Parser */
-{
-  const char		*filename;	/* Filename */
-  cups_file_t		*fp;		/* File pointer */
-  int			linenum;	/* Current line number */
-  ipp_t			*attrs;		/* Attributes */
-  ipp_tag_t		group_tag;	/* Current group for new attributes */
-};
-
 
 /*
  * Prototypes for private functions...

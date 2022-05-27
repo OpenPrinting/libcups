@@ -34,7 +34,6 @@ LIBOBJS		= \
 		http-support.o \
 		ipp.o \
 		ipp-file.o \
-		ipp-vars.o \
 		ipp-support.o \
 		langprintf.o \
 		language.o \
