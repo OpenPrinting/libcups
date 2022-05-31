@@ -10,6 +10,7 @@
 //
 
 #include "cups.h"
+#include "http-private.h"
 #include "string-private.h"
 #include "debug-internal.h"
 
@@ -21,8 +22,11 @@
 struct _ipp_file_s			// IPP data file
 {
   cups_file_t		*fp;		// File pointer
-  const char		*filename;	// Filename
-  int			linenum;	// Current line number
+  char			*filename,	// Filename
+			mode;		// Read/write mode
+  int			indent,		// Current indentation
+			column,		// Current column
+			linenum;	// Current line number
   ipp_tag_t		group_tag;	// Current group for attributes
   ipp_t			*attrs;		// Current attributes
   size_t		num_vars;	// Number of variables
@@ -41,11 +45,10 @@ struct _ipp_file_s			// IPP data file
 //
 
 static bool	expand_buffer(ipp_file_t *file, size_t buffer_size);
-#if 0
-static ipp_t	*parse_collection(_ipp_file_t *f, _ipp_vars_t *v, void *user_data);
-static int	parse_value(_ipp_file_t *f, _ipp_vars_t *v, void *user_data, ipp_t *ipp, ipp_attribute_t **attr, size_t element);
-static void	report_error(_ipp_file_t *f, _ipp_vars_t *v, void *user_data, const char *message, ...) _CUPS_FORMAT(4, 5);
-#endif // 0
+static ipp_t	*parse_collection(ipp_file_t *file);
+static bool	parse_value(ipp_file_t *file, ipp_t *ipp, ipp_attribute_t **attr, size_t element);
+static bool	report_error(ipp_file_t *file, const char *message, ...) _CUPS_FORMAT(2,3);
+static bool	write_string(ipp_file_t *file, const char *s, size_t len);
 
 
 //
@@ -58,6 +61,124 @@ static void	report_error(_ipp_file_t *f, _ipp_vars_t *v, void *user_data, const 
 bool					// O - `true` on success, `false` on error
 ippFileClose(ipp_file_t *file)		// I - IPP data file
 {
+  bool	ret;				// Return value
+
+
+  if (!file)
+    return (false);
+
+  ret = cupsFileClose(file->fp);
+
+  free(file->filename);
+  cupsFreeOptions(file->num_vars, file->vars);
+  free(file->buffer);
+  free(file);
+
+  return (ret);
+}
+
+
+//
+// 'ippFileExpandVars()' - Expand IPP data file and environment variables in a string.
+//
+// This function expands IPP data file variables of the form "$name" and
+// environment variables of the form "$ENV[name]" in the source string to the
+// destination string.  The
+//
+
+size_t					// O - Required size for expanded variables
+ippFileExpandVars(ipp_file_t *file,	// I - IPP data file
+                  char       *dst,	// I - Destination buffer
+                  const char *src,	// I - Source string
+                  size_t     dstsize)	// I - Size of destination buffer
+{
+  char		*dstptr,		// Pointer into destination
+		*dstend,		// End of destination
+		temp[256],		// Temporary string
+		*tempptr;		// Pointer into temporary string
+  const char	*value;			// Value to substitute
+
+
+  dstptr = dst;
+  dstend = dst + dstsize - 1;
+
+  while (*src)
+  {
+    if (*src == '$')
+    {
+     /*
+      * Substitute a string/number...
+      */
+
+      if (!strncmp(src, "$$", 2))
+      {
+        value = "$";
+	src   += 2;
+      }
+      else if (!strncmp(src, "$ENV[", 5))
+      {
+	cupsCopyString(temp, src + 5, sizeof(temp));
+
+	for (tempptr = temp; *tempptr; tempptr ++)
+	{
+	  if (*tempptr == ']')
+	    break;
+	}
+
+        if (*tempptr)
+	  *tempptr++ = '\0';
+
+	value = getenv(temp);
+        src   += tempptr - temp + 5;
+      }
+      else
+      {
+        if (src[1] == '{')
+	{
+	  src += 2;
+	  cupsCopyString(temp, src, sizeof(temp));
+	  if ((tempptr = strchr(temp, '}')) != NULL)
+	    *tempptr = '\0';
+	  else
+	    tempptr = temp + strlen(temp);
+	}
+	else
+	{
+	  cupsCopyString(temp, src + 1, sizeof(temp));
+
+	  for (tempptr = temp; *tempptr; tempptr ++)
+	  {
+	    if (!isalnum(*tempptr & 255) && *tempptr != '-' && *tempptr != '_')
+	      break;
+	  }
+
+	  if (*tempptr)
+	    *tempptr = '\0';
+        }
+
+        value = ippFileGetVar(file, temp);
+
+        src += tempptr - temp + 1;
+      }
+
+      if (value)
+      {
+        cupsCopyString(dstptr, value, (size_t)(dstend - dstptr + 1));
+	dstptr += strlen(value);
+      }
+    }
+    else if (dstptr < dstend)
+      *dstptr++ = *src++;
+    else
+      dstptr ++;
+  }
+
+  if (dstptr < dstend)
+    *dstptr = '\0';
+  else
+    *dstend = '\0';
+
+  return ((size_t)(dstptr - dst));
 }
 
 
@@ -72,66 +193,444 @@ ippFileClose(ipp_file_t *file)		// I - IPP data file
 ipp_t *					// O - IPP attributes
 ippFileGetAttributes(ipp_file_t *file)	// I - IPP data file
 {
+  if (file)
+  {
+    ipp_t *attrs = file->attrs;		// IPP attributes
+
+    file->attrs = NULL;
+    return (attrs);
+  }
+  else
+  {
+    return (NULL);
+  }
 }
 
 
 //
-// 'ippFileGetFilename()' - .
+// 'ippFileGetFilename()' - Get the filename for an IPP data file.
+//
+// This function returns the filename associated with an IPP data file.
 //
 
-const char *
-ippFileGetFilename(ipp_file_t *file)
+const char *				// O - Filename
+ippFileGetFilename(ipp_file_t *file)	// I - IPP data file
 {
+  return (file ? file->filename : NULL);
 }
 
 
 //
-// 'ippFileGetLineNumber()' - .
+// 'ippFileGetLineNumber()' - Get the current line number in an IPP data file.
+//
+// This function returns the current line number in an IPP data file.
 //
 
-int
-ippFileGetLineNumber(ipp_file_t *file)
+int					// O - Line number
+ippFileGetLineNumber(ipp_file_t *file)	// I - IPP data file
 {
+  return (file ? file->linenum : 0);
 }
 
 
 //
-// 'ippFileGetVar()' - .
+// 'ippFileGetVar()' - Get the value of an IPP data file variable.
+//
+// This function returns the value of an IPP data file variable.  `NULL` is
+// returned if the variable is not set.
 //
 
-const char *
-ippFileGetVar(ipp_file_t *file, const char *name)
+const char *				// O - Variable value or `NULL` if none.
+ippFileGetVar(ipp_file_t *file,		// I - IPP data file
+	      const char *name)		// I - Variable name
 {
+  if (!file || !name)
+    return (NULL);
+  else if (!strcmp(name, "user"))
+    return (cupsGetUser());
+  else
+    return (cupsGetOption(name, file->num_vars, file->vars));
 }
 
 
 //
-// 'ippFileOpen()' - .
+// 'ippFileOpen()' - Open an IPP data file for reading or writing.
+//
+// This function opens an IPP data file for reading (mode="r") or writing
+// (mode="w").  If the "parent" argument is not `NULL`, all variables from the
+// parent data file are copied to the new file.
 //
 
-ipp_file_t *
-ippFileOpen(const char *filename, const char *mode, ipp_file_t *parent, ipp_fattr_cb_t attr_cb, ipp_ferror_cb_t error_cb, void *cb_data)
+ipp_file_t *				// O - IPP data file
+ippFileOpen(const char      *filename,	// I - Filename to open
+            const char      *mode,	// I - Open mode - "r" to read and "w" to write
+            ipp_file_t      *parent,	// I - Parent data file or `NULL` for none
+            ipp_fattr_cb_t  attr_cb,	// I - Attribute filtering callback, if any
+            ipp_ferror_cb_t error_cb,	// I - Error reporting callback, if any
+            void            *cb_data)	// I - Callback data, if any
 {
+  cups_file_t	*fp;			// IPP data file pointer
+  ipp_file_t	*file;			// IPP data file
+
+
+  if (!filename || !mode || (strcmp(mode, "r") && strcmp(mode, "w")))
+    return (NULL);
+
+  if ((fp = cupsFileOpen(filename, mode)) == NULL)
+    return (NULL);
+
+  if ((file = (ipp_file_t *)calloc(1, sizeof(ipp_file_t))) == NULL)
+  {
+    cupsFileClose(fp);
+    return (NULL);
+  }
+
+  file->fp       = fp;
+  file->filename = strdup(filename);
+  file->mode     = *mode;
+  file->linenum  = 1;
+  file->attr_cb  = attr_cb;
+  file->error_cb = error_cb;
+  file->cb_data  = cb_data;
+
+  if (parent)
+  {
+    size_t		count;		// Looping var
+    cups_option_t	*var;		// Current variable
+
+    for (count = parent->num_vars, var = parent->vars; count > 0; count --, var ++)
+      file->num_vars = cupsAddOption(var->name, var->value, file->num_vars, &file->vars);
+  }
+
+  return (file);
 }
 
 
 //
-// 'ippFileRead()' - .
+// 'ippFileRead()' - Read an IPP data file.
 //
 
 bool					// O - `true` on success, `false` on error
-ippFileRead(ipp_file_t *file, ipp_ftoken_cb_t token_cb)
+ippFileRead(ipp_file_t      *file,	// I - IPP data file
+            ipp_ftoken_cb_t token_cb)	// I - Token callback
 {
+  ipp_t		*attrs = NULL;		// Active IPP message
+  ipp_attribute_t *attr = NULL;		// Current attribute
+  char		token[1024];		// Token string
+  ipp_t		*ignored = NULL;	// Ignored attributes
+
+
+  // Range check input
+  if (!file || file->mode != 'r')
+    return (false);
+
+  // Read data file, using the callback function as needed...
+  while (ippFileReadToken(file, token, sizeof(token)))
+  {
+    if (!_cups_strcasecmp(token, "DEFINE") || !_cups_strcasecmp(token, "DEFINE-DEFAULT"))
+    {
+      char	name[128],		// Variable name
+		value[1024],		// Variable value
+		temp[1024];		// Temporary string
+
+      attr = NULL;
+
+      if (ippFileReadToken(file, name, sizeof(name)) && ippFileReadToken(file, temp, sizeof(temp)))
+      {
+        if (_cups_strcasecmp(token, "DEFINE-DEFAULT") || !ippFileGetVar(file, name))
+        {
+	  ippFileExpandVars(file, value, temp, sizeof(value));
+	  ippFileSetVar(file, name, value);
+	}
+      }
+      else
+      {
+        report_error(file, "Missing %s name and/or value on line %d of \"%s\".", token, file->linenum, file->filename);
+        break;
+      }
+    }
+    else if (file->attrs && !_cups_strcasecmp(token, "ATTR"))
+    {
+     /*
+      * Attribute definition...
+      */
+
+      char	syntax[128],		// Attribute syntax (value tag)
+		name[128];		// Attribute name
+      ipp_tag_t	value_tag;		// Value tag
+
+      attr = NULL;
+
+      if (!ippFileReadToken(file, syntax, sizeof(syntax)))
+      {
+        report_error(file, "Missing ATTR syntax on line %d of \"%s\".", file->linenum, file->filename);
+	break;
+      }
+      else if ((value_tag = ippTagValue(syntax)) < IPP_TAG_UNSUPPORTED_VALUE)
+      {
+        report_error(file, "Bad ATTR syntax \"%s\" on line %d of \"%s\".", syntax, file->linenum, file->filename);
+	break;
+      }
+
+      if (!ippFileReadToken(file, name, sizeof(name)) || !name[0])
+      {
+        report_error(file, "Missing ATTR name on line %d of \"%s\".", file->linenum, file->filename);
+	break;
+      }
+
+      if (!file->attr_cb || (*file->attr_cb)(file, file->cb_data, name))
+      {
+       /*
+        * Add this attribute...
+        */
+
+        attrs = file->attrs;
+      }
+      else
+      {
+       /*
+        * Ignore this attribute...
+        */
+
+        if (!ignored)
+          ignored = ippNew();
+
+        attrs = ignored;
+      }
+
+      if (value_tag < IPP_TAG_INTEGER)
+      {
+       /*
+	* Add out-of-band attribute - no value string needed...
+	*/
+
+        ippAddOutOfBand(attrs, file->group_tag, value_tag, name);
+      }
+      else
+      {
+       /*
+        * Add attribute with one or more values...
+        */
+
+        attr = ippAddString(attrs, file->group_tag, value_tag, name, NULL, NULL);
+
+        if (!parse_value(file, attrs, &attr, 0))
+          break;
+      }
+
+    }
+    else if (attr && !_cups_strcasecmp(token, ","))
+    {
+     /*
+      * Additional value...
+      */
+
+      if (!parse_value(file, attrs, &attr, ippGetCount(attr)))
+	break;
+    }
+    else
+    {
+     /*
+      * Something else...
+      */
+
+      attr  = NULL;
+      attrs = NULL;
+
+      if (!token_cb || !(token_cb)(file, file->cb_data, token))
+        break;
+    }
+  }
+
+  // Free any ignored attributes and return...
+  ippDelete(ignored);
+
+  return (true);
 }
 
 
 //
-// 'ippFileReadToken()' - .
+// 'ippFileReadToken()' - Read a token from an IPP data file.
+//
+// This function reads a single token or value from an IPP data file, skipping
+// comments and whitespace as needed.
 //
 
 bool					// O - `true` on success, `false` on error
-ippFileReadToken(ipp_file_t *file, char *buffer, size_t bufsize)
+ippFileReadToken(ipp_file_t *file,	// I - IPP data file
+                 char       *token,	// I - Token buffer
+                 size_t     tokensize)	// I - Size of token buffer
 {
+  int	ch,				// Character from file
+	quote = 0;			// Quoting character
+  char	*tokptr = token,		// Pointer into token buffer
+	*tokend = token + tokensize - 1;// End of token buffer
+
+
+  // Range check input...
+  if (!file || !token || tokensize < 32)
+  {
+    if (token)
+      *token = '\0';
+
+    return (false);
+  }
+
+  // Skip whitespace and comments...
+  DEBUG_printf(("1ippFileReadToken: linenum=%d, pos=%ld", file->linenum, (long)cupsFileTell(file->fp)));
+
+  while ((ch = cupsFileGetChar(file->fp)) != EOF)
+  {
+    if (_cups_isspace(ch))
+    {
+      // Whitespace...
+      if (ch == '\n')
+      {
+        file->linenum ++;
+        DEBUG_printf(("1ippFileReadToken: LF in leading whitespace, linenum=%d, pos=%ld", file->linenum, (long)cupsFileTell(file->fp)));
+      }
+    }
+    else if (ch == '#')
+    {
+      // Comment...
+      DEBUG_puts("1ippFileReadToken: Skipping comment in leading whitespace...");
+
+      while ((ch = cupsFileGetChar(file->fp)) != EOF)
+      {
+        if (ch == '\n')
+          break;
+      }
+
+      if (ch == '\n')
+      {
+        file->linenum ++;
+        DEBUG_printf(("1ippFileReadToken: LF at end of comment, linenum=%d, pos=%ld", file->linenum, (long)cupsFileTell(file->fp)));
+      }
+      else
+        break;
+    }
+    else
+      break;
+  }
+
+  if (ch == EOF)
+  {
+    DEBUG_puts("1ippFileReadToken: EOF");
+    return (false);
+  }
+
+  // Read a token...
+  while (ch != EOF)
+  {
+    if (ch == '\n')
+    {
+      file->linenum ++;
+      DEBUG_printf(("1ippFileReadToken: LF in token, linenum=%d, pos=%ld", file->linenum, (long)cupsFileTell(file->fp)));
+    }
+
+    if (ch == quote)
+    {
+      // End of quoted text...
+      *tokptr = '\0';
+      DEBUG_printf(("1ippFileReadToken: Returning \"%s\" at closing quote.", token));
+      return (true);
+    }
+    else if (!quote && _cups_isspace(ch))
+    {
+      // End of unquoted text...
+      *tokptr = '\0';
+      DEBUG_printf(("1ippFileReadToken: Returning \"%s\" before whitespace.", token));
+      return (true);
+    }
+    else if (!quote && (ch == '\'' || ch == '\"'))
+    {
+      // Start of quoted text or regular expression...
+      quote = ch;
+
+      DEBUG_printf(("1ippFileReadToken: Start of quoted string, quote=%c, pos=%ld", quote, (long)cupsFileTell(file->fp)));
+    }
+    else if (!quote && ch == '#')
+    {
+      // Start of comment...
+      cupsFileSeek(file->fp, cupsFileTell(file->fp) - 1);
+      *tokptr = '\0';
+      DEBUG_printf(("1ippFileReadToken: Returning \"%s\" before comment.", token));
+      return (true);
+    }
+    else if (!quote && (ch == '{' || ch == '}' || ch == ','))
+    {
+      // Delimiter...
+      if (tokptr > token)
+      {
+        // Return the preceding token first...
+	cupsFileSeek(file->fp, cupsFileTell(file->fp) - 1);
+      }
+      else
+      {
+        // Return this delimiter by itself...
+        *tokptr++ = (char)ch;
+      }
+
+      *tokptr = '\0';
+      DEBUG_printf(("1ippFileReadToken: Returning \"%s\".", token));
+      return (true);
+    }
+    else
+    {
+      if (ch == '\\')
+      {
+        // Quoted character...
+        DEBUG_printf(("1ippFileReadToken: Quoted character at pos=%ld", (long)cupsFileTell(file->fp)));
+
+        if ((ch = cupsFileGetChar(file->fp)) == EOF)
+        {
+	  *token = '\0';
+	  DEBUG_puts("1ippFileReadToken: EOF");
+	  return (false);
+	}
+	else if (ch == '\n')
+	{
+	  file->linenum ++;
+	  DEBUG_printf(("1ippFileReadToken: quoted LF, linenum=%d, pos=%ld", file->linenum, (long)cupsFileTell(file->fp)));
+	}
+	else if (ch == 'a')
+	  ch = '\a';
+	else if (ch == 'b')
+	  ch = '\b';
+	else if (ch == 'f')
+	  ch = '\f';
+	else if (ch == 'n')
+	  ch = '\n';
+	else if (ch == 'r')
+	  ch = '\r';
+	else if (ch == 't')
+	  ch = '\t';
+	else if (ch == 'v')
+	  ch = '\v';
+      }
+
+      if (tokptr < tokend)
+      {
+        // Add to current token...
+	*tokptr++ = (char)ch;
+      }
+      else
+      {
+        // Token too long...
+	*tokptr = '\0';
+	DEBUG_printf(("1ippFileReadToken: Too long: \"%s\".", token));
+	return (false);
+      }
+    }
+
+    // Get the next character...
+    ch = cupsFileGetChar(file->fp);
+  }
+
+  *tokptr = '\0';
+  DEBUG_printf(("1ippFileReadToken: Returning \"%s\" at EOF.", token));
+
+  return (tokptr > token);
 }
 
 
@@ -148,6 +647,52 @@ ippFileSetVar(ipp_file_t *file,		// I - IPP data file
               const char *name,		// I - Variable name
               const char *value)	// I - Value
 {
+  if (!file || !name || !value)
+    return;
+
+  // Save new variable...
+  if (!strcmp(name, "uri"))
+  {
+    // Also set URI component values...
+    char	uri[1024],		// New printer URI
+		resolved[1024],		// Resolved mDNS URI
+		scheme[32],		// URI scheme
+		userpass[256],		// URI username:password
+		*password,		// Pointer to password
+		hostname[256],		// URI hostname
+		resource[256];		// URI resource path
+    int		port;			// URI port number
+
+    if (strstr(value, "._tcp"))
+    {
+      // Resolve URI...
+      if (!_httpResolveURI(value, resolved, sizeof(resolved), _HTTP_RESOLVE_DEFAULT, NULL, NULL))
+        return;
+
+      value = resolved;
+    }
+
+    if (httpSeparateURI(HTTP_URI_CODING_ALL, value, scheme, sizeof(scheme), userpass, sizeof(userpass), hostname, sizeof(hostname), &port, resource, sizeof(resource)) >= HTTP_URI_STATUS_OK)
+    {
+      // Valid URI...
+      if ((password = strchr(userpass, ':')) != NULL)
+        *password = '\0';
+
+      file->num_vars = cupsAddOption("scheme", scheme, file->num_vars, &file->vars);
+      file->num_vars = cupsAddOption("uriuser", userpass, file->num_vars, &file->vars);
+      file->num_vars = cupsAddOption("hostname", hostname, file->num_vars, &file->vars);
+      file->num_vars = cupsAddIntegerOption("port", port, file->num_vars, &file->vars);
+      file->num_vars = cupsAddOption("resource", resource, file->num_vars, &file->vars);
+
+      httpAssembleURI(HTTP_URI_CODING_ALL, uri, sizeof(uri), scheme, NULL, hostname, port, resource);
+      file->num_vars = cupsAddOption("uri", uri, file->num_vars, &file->vars);
+    }
+  }
+  else
+  {
+    // Set another variable...
+    file->num_vars = cupsAddOption(name, value, file->num_vars, &file->vars);
+  }
 }
 
 
@@ -165,23 +710,194 @@ ippFileSetVarf(ipp_file_t *file,	// I - IPP data file
                const char *value,	// I - Printf-style value
                ...)			// I - Additional arguments as needed
 {
+  va_list	ap;			// Pointer to arguments
+  char		buffer[16384];		// Value buffer
+
+
+  if (!file || !name || !value)
+    return;
+
+  va_start(ap, value);
+  vsnprintf(buffer, sizeof(buffer), value, ap);
+  va_end(ap);
+
+  ippFileSetVar(file, name, buffer);
 }
 
 
 //
-// 'ippFileWriteAttributes()' - .
+// 'ippFileWriteAttributes()' - Write an IPP message to an IPP data file.
+//
+// This function writes an IPP message to an IPP data file using the attribute
+// filter specified in the call to @link ippFileOpen@.  If "with_group" is
+// `true`, "GROUP" directives are written as necessary to place the attributes
+// in the correct groups.
 //
 
 bool					// O - `true` on success, `false` on error
 ippFileWriteAttributes(
     ipp_file_t *file,			// I - IPP data file
-    ipp_t      *ipp)			// I - IPP attributes to write
+    ipp_t      *ipp,			// I - IPP attributes to write
+    bool       with_groups)		// I - `true` to include GROUPs, `false` otherwise
 {
+  bool			ret = true;	// Return value
+  ipp_attribute_t	*attr;		// Current attribute
+  const char		*name;		// Attribute name
+  ipp_tag_t		group_tag,	// Group tag
+			value_tag;	// Value tag
+  size_t		i,		// Looping var
+			count;		// Number of values
+
+
+  // Range check input...
+  if (!file || file->mode != 'w' || !ipp)
+    return (false);
+
+  // Make sure we are on a new line...
+  if (file->column)
+  {
+    cupsFilePutChar(file->fp, '\n');
+    file->column = 0;
+  }
+
+  // Loop through the attributes...
+  for (attr = ippFirstAttribute(ipp); attr; attr = ippNextAttribute(ipp))
+  {
+    if ((name = ippGetName(attr)) == NULL)
+      continue;
+
+    if (file->attr_cb && !(*file->attr_cb)(file, file->cb_data, name))
+      continue;
+
+    count     = ippGetCount(attr);
+    group_tag = ippGetGroupTag(attr);
+    value_tag = ippGetValueTag(attr);
+
+    if (with_groups && group_tag != IPP_TAG_ZERO && group_tag != file->group_tag)
+    {
+      ret &= ippFileWriteToken(file, "GROUP");
+      ret &= ippFileWriteTokenf(file, "%s\n", ippTagString(group_tag));
+      file->group_tag = group_tag;
+    }
+
+    ret &= ippFileWriteToken(file, group_tag == IPP_TAG_ZERO ? "MEMBER" : "ATTR");
+    ret &= ippFileWriteToken(file, ippTagString(value_tag));
+    ret &= ippFileWriteToken(file, name);
+
+    switch (value_tag)
+    {
+      case IPP_TAG_INTEGER :
+      case IPP_TAG_ENUM :
+	  for (i = 0; i < count; i ++)
+	    ret &= cupsFilePrintf(file->fp, "%s%d", i ? "," : " ", ippGetInteger(attr, i));
+	  break;
+
+      case IPP_TAG_BOOLEAN :
+	  ret &= cupsFilePuts(file->fp, ippGetBoolean(attr, 0) ? " true" : " false");
+
+	  for (i = 1; i < count; i ++)
+	    ret &= cupsFilePuts(file->fp, ippGetBoolean(attr, 1) ? ",true" : ",false");
+	  break;
+
+      case IPP_TAG_RANGE :
+	  for (i = 0; i < count; i ++)
+	  {
+	    int upper, lower = ippGetRange(attr, i, &upper);
+					// Upper/lower range values
+
+	    ret &= cupsFilePrintf(file->fp, "%s%d-%d", i ? "," : " ", lower, upper);
+	  }
+	  break;
+
+      case IPP_TAG_RESOLUTION :
+	  for (i = 0; i < count; i ++)
+	  {
+	    ipp_res_t	units;		// Resolution units
+	    int		yres, xres = ippGetResolution(attr, i, &yres, &units);
+					// X/Y resolution
+
+            if (xres == yres)
+	      ret &= cupsFilePrintf(file->fp, "%s%d%s", i ? "," : " ", xres, units == IPP_RES_PER_INCH ? "dpi" : "dpcm");
+	    else
+	      ret &= cupsFilePrintf(file->fp, "%s%dx%d%s", i ? "," : " ", xres, yres, units == IPP_RES_PER_INCH ? "dpi" : "dpcm");
+	  }
+	  break;
+
+      case IPP_TAG_DATE :
+	  for (i = 0; i < count; i ++)
+	  {
+	    time_t	utctime = ippDateToTime(ippGetDate(attr, i));
+					// Date/time value
+            struct tm	utcdate;	// Date/time components
+
+	    // Get the UTC date and time corresponding to this date value...
+            gmtime_r(&utctime, &utcdate);
+
+	    ret &= cupsFilePrintf(file->fp, "%s%04d-%02d-%02dT%02d:%02d:%02dZ", i ? "," : " ", utcdate.tm_year + 1900, utcdate.tm_mon + 1, utcdate.tm_mday, utcdate.tm_hour, utcdate.tm_min, utcdate.tm_sec);
+	  }
+	  break;
+
+      case IPP_TAG_STRING :
+	  for (i = 0; i < count; i ++)
+	  {
+	    size_t	len;		// Length of octetString
+	    const char	*s = (const char *)ippGetOctetString(attr, i, &len);
+					// octetString value
+
+	    ret &= cupsFilePuts(file->fp, i ? "," : " ");
+	    ret &= write_string(file, s, len);
+	  }
+	  break;
+
+      case IPP_TAG_TEXT :
+      case IPP_TAG_TEXTLANG :
+      case IPP_TAG_NAME :
+      case IPP_TAG_NAMELANG :
+      case IPP_TAG_KEYWORD :
+      case IPP_TAG_URI :
+      case IPP_TAG_URISCHEME :
+      case IPP_TAG_CHARSET :
+      case IPP_TAG_LANGUAGE :
+      case IPP_TAG_MIMETYPE :
+	  for (i = 0; i < count; i ++)
+	  {
+	    const char *s = ippGetString(attr, i, NULL);
+					// String value
+
+	    ret &= cupsFilePuts(file->fp, i ? "," : " ");
+	    ret &= write_string(file, s, strlen(s));
+	  }
+	  break;
+
+      case IPP_TAG_BEGIN_COLLECTION :
+	  file->indent += 4;
+	  for (i = 0; i < count; i ++)
+	  {
+	    ret &= cupsFilePuts(file->fp, i ? ",{\n" : " {\n");
+	    ret &= ippFileWriteAttributes(file, ippGetCollection(attr, i), false);
+	    ret &= cupsFilePrintf(file->fp, "%*s}", file->indent - 4, "");
+	  }
+	  file->indent -= 4;
+	  break;
+
+      default :
+	  /* Out-of-band value */
+	  break;
+    }
+
+    // Finish with a newline after the attribute definition
+    ret &= cupsFilePutChar(file->fp, '\n');
+  }
+
+  return (ret);
 }
 
 
 //
-// 'ippFileWriteComment()' - .
+// 'ippFileWriteComment()' - Write a comment to an IPP data file.
+//
+// This function writes a comment to an IPP data file.  Every line in the string
+// is prefixed with the "#" character and indented as needed.
 //
 
 bool					// O - `true` on success, `false` on error
@@ -189,22 +905,154 @@ ippFileWriteComment(ipp_file_t *file,	// I - IPP data file
                     const char *comment,// I - Printf-style comment string
                     ...)		// I - Additional arguments as needed
 {
+  bool		ret = true;		// Return value
+  va_list	ap,			// Pointer to arguments
+		ap2;			// Copy of arguments
+  int		bufsize;		// Size of formatted string
+  const char	*start,			// Start of comment line
+		*ptr;			// Pointer into comment
+
+
+  // Range check input...
+  if (!file || file->mode != 'w' || !comment)
+    return (false);
+
+  // Format the comment...
+  va_start(ap, comment);
+  va_copy(ap2, ap);
+
+  if ((bufsize = vsnprintf(file->buffer, file->alloc_buffer, comment, ap2)) >= (int)file->alloc_buffer)
+  {
+    if (!expand_buffer(file, (size_t)bufsize + 1))
+      return (false);
+
+    vsnprintf(file->buffer, file->alloc_buffer, comment, ap);
+  }
+
+  va_end(ap);
+
+  // Make sure we start on a new line...
+  if (file->column > 0)
+  {
+    ret &= cupsFilePutChar(file->fp, '\n');
+    file->column = 0;
+  }
+
+  for (start = file->buffer, ptr = start; *ptr; start = ptr)
+  {
+    // Find the end of the line...
+    while (*ptr && *ptr != '\n')
+      ptr ++;
+
+    // Write this line...
+    ret &= cupsFilePrintf(file->fp, "%*s# ", file->indent, "");
+    ret &= cupsFileWrite(file->fp, start, (size_t)(ptr - start));
+    ret &= cupsFilePutChar(file->fp, '\n');
+
+    // Skip newline, if any...
+    if (*ptr)
+      ptr ++;
+  }
+
+  return (ret);
 }
 
 
 //
-// 'ippFileWriteToken()' - .
+// 'ippFileWriteToken()' - Write a token or value string to an IPP data file.
+//
+// This function writes a token or value string to an IPP data file, quoting
+// and indenting the string as needed.
 //
 
 bool					// O - `true` on success, `false` on error
 ippFileWriteToken(ipp_file_t *file,	// I - IPP data file
                   const char *token)	// I - Token/value string
 {
+  const char	*ptr;			// Pointer into token/value string
+  bool		ret = true;		// Return value
+
+
+  // Range check input...
+  if (!file || file->mode != 'w' || !token)
+    return (false);
+
+  // Handle indentation...
+  if (!strcmp(token, "}"))
+  {
+    // Add newline before '}' as needed and unindent...
+    if (file->column > 0)
+    {
+      ret &= cupsFilePutChar(file->fp, '\n');
+      file->column = 0;
+    }
+
+    if (file->indent > 0)
+      file->indent -= 4;
+  }
+
+  if (file->column == 0 && file->indent > 0)
+  {
+    ret &= cupsFilePrintf(file->fp, "%*s", file->indent, "");
+    file->column += file->indent;
+  }
+  else if (strcmp(token, "{") && strcmp(token, "}"))
+  {
+    ret &= cupsFilePutChar(file->fp, ' ');
+    file->column ++;
+  }
+
+  // Look for whitespace or special characters...
+  for (ptr = token; *ptr; ptr ++)
+  {
+    if (strchr(" \t\'\"\\", *ptr))
+      break;
+  }
+
+  if (*ptr)
+  {
+    // Need to quote the string
+    ret &= write_string(file, token, strlen(token));
+  }
+  else if (!strcmp(token, "{"))
+  {
+    // Add newline after '{' and indent...
+    ret &= cupsFilePuts(file->fp, "{\n");
+    file->column = 0;
+    file->indent += 4;
+  }
+  else if (!strcmp(token, "}"))
+  {
+    // Add newline after '}'...
+    ret &= cupsFilePuts(file->fp, "}\n");
+    file->column = 0;
+  }
+  else
+  {
+    // Just write the string as-is...
+    ret &= cupsFilePuts(file->fp, token);
+
+    if ((ptr = token + strlen(token) - 1) >= token && *ptr == '\n')
+    {
+      // New line...
+      file->column = 0;
+    }
+    else
+    {
+      // Existing line...
+      file->column += strlen(token);
+    }
+  }
+
+  return (ret);
 }
 
 
 //
-// 'ippFileWriteTokenf()' - .
+// 'ippFileWriteTokenf()' - Write a formatted token or value string to an IPP data file.
+//
+// This function writes a formatted token or value string to an IPP data file,
+// quoting and indenting the string as needed.
 //
 
 bool					// O - `true` on success, `false` on error
@@ -212,14 +1060,30 @@ ippFileWriteTokenf(ipp_file_t *file,	// I - IPP data file
                    const char *token,	// I - Printf-style token/value string
                    ...)			// I - Additional arguments as needed
 {
-  va_list	ap;			// Pointer to arguments
+  va_list	ap,			// Pointer to arguments
+		ap2;			// Copy of arguments
+  int		bufsize;		// Size of formatted string
 
 
   // Range check input...
-  if (!file || !token)
+  if (!file || file->mode != 'w' || !token)
     return (false);
 
-  //
+  // Format the message...
+  va_start(ap, token);
+  va_copy(ap2, ap);
+
+  if ((bufsize = vsnprintf(file->buffer, file->alloc_buffer, token, ap2)) >= (int)file->alloc_buffer)
+  {
+    if (!expand_buffer(file, (size_t)bufsize + 1))
+      return (false);
+
+    vsnprintf(file->buffer, file->alloc_buffer, token, ap);
+  }
+
+  va_end(ap);
+
+  return (ippFileWriteToken(file, file->buffer));
 }
 
 
@@ -250,456 +1114,53 @@ expand_buffer(ipp_file_t *file,		// I - IPP data file
 }
 
 
-#if 0
-/*
- * '_ippFileParse()' - Parse an IPP data file.
- */
+//
+// 'parse_collection()' - Parse an IPP collection value.
+//
 
-ipp_t *					/* O - IPP attributes or @code NULL@ on failure */
-_ippFileParse(
-    _ipp_vars_t      *v,		/* I - Variables */
-    const char       *filename,		/* I - Name of file to parse */
-    void             *user_data)	/* I - User data pointer */
+static ipp_t *				// O - Collection value or @code NULL@ on error
+parse_collection(ipp_file_t *file)	// I - IPP data file
 {
-  _ipp_file_t	f;			/* IPP data file information */
-  ipp_t		*attrs = NULL;		/* Active IPP message */
-  ipp_attribute_t *attr = NULL;		/* Current attribute */
-  char		token[1024];		/* Token string */
-  ipp_t		*ignored = NULL;	/* Ignored attributes */
+  ipp_t		*col = ippNew();	// Collection value
+  ipp_attribute_t *attr = NULL;		// Current member attribute
+  char		token[1024];		// Token string
 
 
-  DEBUG_printf(("_ippFileParse(v=%p, filename=\"%s\", user_data=%p)", (void *)v, filename, user_data));
-
- /*
-  * Initialize file info...
-  */
-
-  memset(&f, 0, sizeof(f));
-  f.filename = filename;
-  f.linenum  = 1;
-
-  if ((f.fp = cupsFileOpen(filename, "r")) == NULL)
-  {
-    DEBUG_printf(("1_ippFileParse: Unable to open \"%s\": %s", filename, strerror(errno)));
-    return (0);
-  }
-
- /*
-  * Do the callback with a NULL token to setup any initial state...
-  */
-
-  (*v->tokencb)(&f, v, user_data, NULL);
-
- /*
-  * Read data file, using the callback function as needed...
-  */
-
-  while (_ippFileReadToken(&f, token, sizeof(token)))
-  {
-    if (!_cups_strcasecmp(token, "DEFINE") || !_cups_strcasecmp(token, "DEFINE-DEFAULT"))
-    {
-      char	name[128],		/* Variable name */
-		value[1024],		/* Variable value */
-		temp[1024];		/* Temporary string */
-
-      attr = NULL;
-
-      if (_ippFileReadToken(&f, name, sizeof(name)) && _ippFileReadToken(&f, temp, sizeof(temp)))
-      {
-        if (_cups_strcasecmp(token, "DEFINE-DEFAULT") || !_ippVarsGet(v, name))
-        {
-	  _ippVarsExpand(v, value, temp, sizeof(value));
-	  _ippVarsSet(v, name, value);
-	}
-      }
-      else
-      {
-        report_error(&f, v, user_data, "Missing %s name and/or value on line %d of \"%s\".", token, f.linenum, f.filename);
-        break;
-      }
-    }
-    else if (f.attrs && !_cups_strcasecmp(token, "ATTR"))
-    {
-     /*
-      * Attribute definition...
-      */
-
-      char	syntax[128],		/* Attribute syntax (value tag) */
-		name[128];		/* Attribute name */
-      ipp_tag_t	value_tag;		/* Value tag */
-
-      attr = NULL;
-
-      if (!_ippFileReadToken(&f, syntax, sizeof(syntax)))
-      {
-        report_error(&f, v, user_data, "Missing ATTR syntax on line %d of \"%s\".", f.linenum, f.filename);
-	break;
-      }
-      else if ((value_tag = ippTagValue(syntax)) < IPP_TAG_UNSUPPORTED_VALUE)
-      {
-        report_error(&f, v, user_data, "Bad ATTR syntax \"%s\" on line %d of \"%s\".", syntax, f.linenum, f.filename);
-	break;
-      }
-
-      if (!_ippFileReadToken(&f, name, sizeof(name)) || !name[0])
-      {
-        report_error(&f, v, user_data, "Missing ATTR name on line %d of \"%s\".", f.linenum, f.filename);
-	break;
-      }
-
-      if (!v->attrcb || (*v->attrcb)(&f, user_data, name))
-      {
-       /*
-        * Add this attribute...
-        */
-
-        attrs = f.attrs;
-      }
-      else
-      {
-       /*
-        * Ignore this attribute...
-        */
-
-        if (!ignored)
-          ignored = ippNew();
-
-        attrs = ignored;
-      }
-
-      if (value_tag < IPP_TAG_INTEGER)
-      {
-       /*
-	* Add out-of-band attribute - no value string needed...
-	*/
-
-        ippAddOutOfBand(attrs, f.group_tag, value_tag, name);
-      }
-      else
-      {
-       /*
-        * Add attribute with one or more values...
-        */
-
-        attr = ippAddString(attrs, f.group_tag, value_tag, name, NULL, NULL);
-
-        if (!parse_value(&f, v, user_data, attrs, &attr, 0))
-          break;
-      }
-
-    }
-    else if (attr && !_cups_strcasecmp(token, ","))
-    {
-     /*
-      * Additional value...
-      */
-
-      if (!parse_value(&f, v, user_data, attrs, &attr, ippGetCount(attr)))
-	break;
-    }
-    else
-    {
-     /*
-      * Something else...
-      */
-
-      attr  = NULL;
-      attrs = NULL;
-
-      if (!(*v->tokencb)(&f, v, user_data, token))
-        break;
-    }
-  }
-
- /*
-  * Close the file and free ignored attributes, then return any attributes we
-  * kept...
-  */
-
-  cupsFileClose(f.fp);
-  ippDelete(ignored);
-
-  return (f.attrs);
-}
-
-
-/*
- * '_ippFileReadToken()' - Read a token from an IPP data file.
- */
-
-int					/* O - 1 on success, 0 on failure */
-_ippFileReadToken(_ipp_file_t *f,	/* I - File to read from */
-                  char        *token,	/* I - Token string buffer */
-                  size_t      tokensize)/* I - Size of token string buffer */
-{
-  int	ch,				/* Character from file */
-	quote = 0;			/* Quoting character */
-  char	*tokptr = token,		/* Pointer into token buffer */
-	*tokend = token + tokensize - 1;/* End of token buffer */
-
-
- /*
-  * Skip whitespace and comments...
-  */
-
-  DEBUG_printf(("1_ippFileReadToken: linenum=%d, pos=%ld", f->linenum, (long)cupsFileTell(f->fp)));
-
-  while ((ch = cupsFileGetChar(f->fp)) != EOF)
-  {
-    if (_cups_isspace(ch))
-    {
-     /*
-      * Whitespace...
-      */
-
-      if (ch == '\n')
-      {
-        f->linenum ++;
-        DEBUG_printf(("1_ippFileReadToken: LF in leading whitespace, linenum=%d, pos=%ld", f->linenum, (long)cupsFileTell(f->fp)));
-      }
-    }
-    else if (ch == '#')
-    {
-     /*
-      * Comment...
-      */
-
-      DEBUG_puts("1_ippFileReadToken: Skipping comment in leading whitespace...");
-
-      while ((ch = cupsFileGetChar(f->fp)) != EOF)
-      {
-        if (ch == '\n')
-          break;
-      }
-
-      if (ch == '\n')
-      {
-        f->linenum ++;
-        DEBUG_printf(("1_ippFileReadToken: LF at end of comment, linenum=%d, pos=%ld", f->linenum, (long)cupsFileTell(f->fp)));
-      }
-      else
-        break;
-    }
-    else
-      break;
-  }
-
-  if (ch == EOF)
-  {
-    DEBUG_puts("1_ippFileReadToken: EOF");
-    return (0);
-  }
-
- /*
-  * Read a token...
-  */
-
-  while (ch != EOF)
-  {
-    if (ch == '\n')
-    {
-      f->linenum ++;
-      DEBUG_printf(("1_ippFileReadToken: LF in token, linenum=%d, pos=%ld", f->linenum, (long)cupsFileTell(f->fp)));
-    }
-
-    if (ch == quote)
-    {
-     /*
-      * End of quoted text...
-      */
-
-      *tokptr = '\0';
-      DEBUG_printf(("1_ippFileReadToken: Returning \"%s\" at closing quote.", token));
-      return (1);
-    }
-    else if (!quote && _cups_isspace(ch))
-    {
-     /*
-      * End of unquoted text...
-      */
-
-      *tokptr = '\0';
-      DEBUG_printf(("1_ippFileReadToken: Returning \"%s\" before whitespace.", token));
-      return (1);
-    }
-    else if (!quote && (ch == '\'' || ch == '\"'))
-    {
-     /*
-      * Start of quoted text or regular expression...
-      */
-
-      quote = ch;
-
-      DEBUG_printf(("1_ippFileReadToken: Start of quoted string, quote=%c, pos=%ld", quote, (long)cupsFileTell(f->fp)));
-    }
-    else if (!quote && ch == '#')
-    {
-     /*
-      * Start of comment...
-      */
-
-      cupsFileSeek(f->fp, cupsFileTell(f->fp) - 1);
-      *tokptr = '\0';
-      DEBUG_printf(("1_ippFileReadToken: Returning \"%s\" before comment.", token));
-      return (1);
-    }
-    else if (!quote && (ch == '{' || ch == '}' || ch == ','))
-    {
-     /*
-      * Delimiter...
-      */
-
-      if (tokptr > token)
-      {
-       /*
-        * Return the preceding token first...
-        */
-
-	cupsFileSeek(f->fp, cupsFileTell(f->fp) - 1);
-      }
-      else
-      {
-       /*
-        * Return this delimiter by itself...
-        */
-
-        *tokptr++ = (char)ch;
-      }
-
-      *tokptr = '\0';
-      DEBUG_printf(("1_ippFileReadToken: Returning \"%s\".", token));
-      return (1);
-    }
-    else
-    {
-      if (ch == '\\')
-      {
-       /*
-        * Quoted character...
-        */
-
-        DEBUG_printf(("1_ippFileReadToken: Quoted character at pos=%ld", (long)cupsFileTell(f->fp)));
-
-        if ((ch = cupsFileGetChar(f->fp)) == EOF)
-        {
-	  *token = '\0';
-	  DEBUG_puts("1_ippFileReadToken: EOF");
-	  return (0);
-	}
-	else if (ch == '\n')
-	{
-	  f->linenum ++;
-	  DEBUG_printf(("1_ippFileReadToken: quoted LF, linenum=%d, pos=%ld", f->linenum, (long)cupsFileTell(f->fp)));
-	}
-	else if (ch == 'a')
-	  ch = '\a';
-	else if (ch == 'b')
-	  ch = '\b';
-	else if (ch == 'f')
-	  ch = '\f';
-	else if (ch == 'n')
-	  ch = '\n';
-	else if (ch == 'r')
-	  ch = '\r';
-	else if (ch == 't')
-	  ch = '\t';
-	else if (ch == 'v')
-	  ch = '\v';
-      }
-
-      if (tokptr < tokend)
-      {
-       /*
-	* Add to current token...
-	*/
-
-	*tokptr++ = (char)ch;
-      }
-      else
-      {
-       /*
-	* Token too long...
-	*/
-
-	*tokptr = '\0';
-	DEBUG_printf(("1_ippFileReadToken: Too long: \"%s\".", token));
-	return (0);
-      }
-    }
-
-   /*
-    * Get the next character...
-    */
-
-    ch = cupsFileGetChar(f->fp);
-  }
-
-  *tokptr = '\0';
-  DEBUG_printf(("1_ippFileReadToken: Returning \"%s\" at EOF.", token));
-
-  return (tokptr > token);
-}
-
-
-/*
- * 'parse_collection()' - Parse an IPP collection value.
- */
-
-static ipp_t *				/* O - Collection value or @code NULL@ on error */
-parse_collection(
-    _ipp_file_t      *f,		/* I - IPP data file */
-    _ipp_vars_t      *v,		/* I - IPP variables */
-    void             *user_data)	/* I - User data pointer */
-{
-  ipp_t		*col = ippNew();	/* Collection value */
-  ipp_attribute_t *attr = NULL;		/* Current member attribute */
-  char		token[1024];		/* Token string */
-
-
- /*
-  * Parse the collection value...
-  */
-
-  while (_ippFileReadToken(f, token, sizeof(token)))
+  // Parse the collection value...
+  while (ippFileReadToken(file, token, sizeof(token)))
   {
     if (!_cups_strcasecmp(token, "}"))
     {
-     /*
-      * End of collection value...
-      */
-
+      // End of collection value...
       break;
     }
     else if (!_cups_strcasecmp(token, "MEMBER"))
     {
-     /*
-      * Member attribute definition...
-      */
-
-      char	syntax[128],		/* Attribute syntax (value tag) */
-		name[128];		/* Attribute name */
-      ipp_tag_t	value_tag;		/* Value tag */
+      // Member attribute definition...
+      char	syntax[128],		// Attribute syntax (value tag)
+		name[128];		// Attribute name
+      ipp_tag_t	value_tag;		// Value tag
 
       attr = NULL;
 
-      if (!_ippFileReadToken(f, syntax, sizeof(syntax)))
+      if (!ippFileReadToken(file, syntax, sizeof(syntax)))
       {
-        report_error(f, v, user_data, "Missing MEMBER syntax on line %d of \"%s\".", f->linenum, f->filename);
+        report_error(file, "Missing MEMBER syntax on line %d of \"%s\".", file->linenum, file->filename);
 	ippDelete(col);
 	col = NULL;
 	break;
       }
       else if ((value_tag = ippTagValue(syntax)) < IPP_TAG_UNSUPPORTED_VALUE)
       {
-        report_error(f, v, user_data, "Bad MEMBER syntax \"%s\" on line %d of \"%s\".", syntax, f->linenum, f->filename);
+        report_error(file, "Bad MEMBER syntax \"%s\" on line %d of \"%s\".", syntax, file->linenum, file->filename);
 	ippDelete(col);
 	col = NULL;
 	break;
       }
 
-      if (!_ippFileReadToken(f, name, sizeof(name)) || !name[0])
+      if (!ippFileReadToken(file, name, sizeof(name)) || !name[0])
       {
-        report_error(f, v, user_data, "Missing MEMBER name on line %d of \"%s\".", f->linenum, f->filename);
+        report_error(file, "Missing MEMBER name on line %d of \"%s\".", file->linenum, file->filename);
 	ippDelete(col);
 	col = NULL;
 	break;
@@ -707,21 +1168,15 @@ parse_collection(
 
       if (value_tag < IPP_TAG_INTEGER)
       {
-       /*
-	* Add out-of-band attribute - no value string needed...
-	*/
-
+        // Add out-of-band attribute - no value string needed...
         ippAddOutOfBand(col, IPP_TAG_ZERO, value_tag, name);
       }
       else
       {
-       /*
-        * Add attribute with one or more values...
-        */
-
+        // Add attribute with one or more values...
         attr = ippAddString(col, IPP_TAG_ZERO, value_tag, name, NULL, NULL);
 
-        if (!parse_value(f, v, user_data, col, &attr, 0))
+        if (!parse_value(file, col, &attr, 0))
         {
 	  ippDelete(col);
 	  col = NULL;
@@ -732,11 +1187,8 @@ parse_collection(
     }
     else if (attr && !_cups_strcasecmp(token, ","))
     {
-     /*
-      * Additional value...
-      */
-
-      if (!parse_value(f, v, user_data, col, &attr, ippGetCount(attr)))
+      // Additional value...
+      if (!parse_value(file, col, &attr, ippGetCount(attr)))
       {
 	ippDelete(col);
 	col = NULL;
@@ -745,11 +1197,8 @@ parse_collection(
     }
     else
     {
-     /*
-      * Something else...
-      */
-
-      report_error(f, v, user_data, "Unknown directive \"%s\" on line %d of \"%s\".", token, f->linenum, f->filename);
+      // Something else...
+      report_error(file, "Unknown directive \"%s\" on line %d of \"%s\".", token, file->linenum, file->filename);
       ippDelete(col);
       col  = NULL;
       attr = NULL;
@@ -762,32 +1211,30 @@ parse_collection(
 }
 
 
-/*
- * 'parse_value()' - Parse an IPP value.
- */
+//
+// 'parse_value()' - Parse an IPP value.
+//
 
-static int				/* O  - 1 on success or 0 on error */
-parse_value(_ipp_file_t      *f,	/* I  - IPP data file */
-            _ipp_vars_t      *v,	/* I  - IPP variables */
-            void             *user_data,/* I  - User data pointer */
-            ipp_t            *ipp,	/* I  - IPP message */
-            ipp_attribute_t  **attr,	/* IO - IPP attribute */
-            size_t           element)	/* I  - Element number */
+static bool				// O  - `true` on success or `false` on error
+parse_value(ipp_file_t      *file,	// I  - IPP data file
+            ipp_t           *ipp,	// I  - IPP message
+            ipp_attribute_t **attr,	// IO - IPP attribute
+            size_t          element)	// I  - Element number
 {
-  char		value[2049],		/* Value string */
-		*valueptr,		/* Pointer into value string */
-		temp[2049],		/* Temporary string */
-		*tempptr;		/* Pointer into temporary string */
-  size_t	valuelen;		/* Length of value */
+  char		value[2049],		// Value string
+		*valueptr,		// Pointer into value string
+		temp[2049],		// Temporary string
+		*tempptr;		// Pointer into temporary string
+  size_t	valuelen;		// Length of value
 
 
-  if (!_ippFileReadToken(f, temp, sizeof(temp)))
+  if (!ippFileReadToken(file, temp, sizeof(temp)))
   {
-    report_error(f, v, user_data, "Missing value on line %d of \"%s\".", f->linenum, f->filename);
-    return (0);
+    report_error(file, "Missing value on line %d of \"%s\".", file->linenum, file->filename);
+    return (false);
   }
 
-  _ippVarsExpand(v, value, temp, sizeof(value));
+  ippFileExpandVars(file, value, temp, sizeof(value));
 
   switch (ippGetValueTag(*attr))
   {
@@ -800,24 +1247,21 @@ parse_value(_ipp_file_t      *f,	/* I  - IPP data file */
 
     case IPP_TAG_DATE :
         {
-          int	year,			/* Year */
-		month,			/* Month */
-		day,			/* Day of month */
-		hour,			/* Hour */
-		minute,			/* Minute */
-		second,			/* Second */
-		utc_offset = 0;		/* Timezone offset from UTC */
-          ipp_uchar_t date[11];		/* dateTime value */
+          int	year,			// Year
+		month,			// Month
+		day,			// Day of month
+		hour,			// Hour
+		minute,			// Minute
+		second,			// Second
+		utc_offset = 0;		// Timezone offset from UTC
+          ipp_uchar_t date[11];		// dateTime value
 
           if (*value == 'P')
           {
-           /*
-            * Time period...
-            */
-
-            time_t	curtime;	/* Current time in seconds */
-            int		period = 0,	/* Current period value */
-			saw_T = 0;	/* Saw time separator */
+            // Time period...
+            time_t	curtime;	// Current time in seconds
+            int		period = 0,	// Current period value
+			saw_T = 0;	// Saw time separator
 
             curtime = time(NULL);
 
@@ -829,8 +1273,8 @@ parse_value(_ipp_file_t      *f,	/* I  - IPP data file */
 
                 if (!valueptr || period < 0)
                 {
-		  report_error(f, v, user_data, "Bad dateTime value \"%s\" on line %d of \"%s\".", value, f->linenum, f->filename);
-		  return (0);
+		  report_error(file, "Bad dateTime value \"%s\" on line %d of \"%s\".", value, file->linenum, file->filename);
+		  return (false);
 		}
               }
 
@@ -870,8 +1314,8 @@ parse_value(_ipp_file_t      *f,	/* I  - IPP data file */
               }
               else
 	      {
-		report_error(f, v, user_data, "Bad dateTime value \"%s\" on line %d of \"%s\".", value, f->linenum, f->filename);
-		return (0);
+		report_error(file, "Bad dateTime value \"%s\" on line %d of \"%s\".", value, file->linenum, file->filename);
+		return (false);
 	      }
 	    }
 
@@ -879,12 +1323,9 @@ parse_value(_ipp_file_t      *f,	/* I  - IPP data file */
           }
           else if (sscanf(value, "%d-%d-%dT%d:%d:%d%d", &year, &month, &day, &hour, &minute, &second, &utc_offset) < 6)
           {
-           /*
-            * Date/time value did not parse...
-            */
-
-	    report_error(f, v, user_data, "Bad dateTime value \"%s\" on line %d of \"%s\".", value, f->linenum, f->filename);
-	    return (0);
+            // Date/time value did not parse...
+	    report_error(file, "Bad dateTime value \"%s\" on line %d of \"%s\".", value, file->linenum, file->filename);
+	    return (false);
           }
 
           date[0] = (ipp_uchar_t)(year >> 8);
@@ -913,9 +1354,9 @@ parse_value(_ipp_file_t      *f,	/* I  - IPP data file */
 
     case IPP_TAG_RESOLUTION :
 	{
-	  int	xres,		/* X resolution */
-		yres;		/* Y resolution */
-	  char	*ptr;		/* Pointer into value */
+	  int	xres,		// X resolution
+		yres;		// Y resolution
+	  char	*ptr;		// Pointer into value
 
 	  xres = yres = (int)strtol(value, (char **)&ptr, 10);
 	  if (ptr > value && xres > 0)
@@ -926,8 +1367,8 @@ parse_value(_ipp_file_t      *f,	/* I  - IPP data file */
 
 	  if (ptr <= value || xres <= 0 || yres <= 0 || !ptr || (_cups_strcasecmp(ptr, "dpi") && _cups_strcasecmp(ptr, "dpc") && _cups_strcasecmp(ptr, "dpcm") && _cups_strcasecmp(ptr, "other")))
 	  {
-	    report_error(f, v, user_data, "Bad resolution value \"%s\" on line %d of \"%s\".", value, f->linenum, f->filename);
-	    return (0);
+	    report_error(file, "Bad resolution value \"%s\" on line %d of \"%s\".", value, file->linenum, file->filename);
+	    return (false);
 	  }
 
 	  if (!_cups_strcasecmp(ptr, "dpi"))
@@ -940,13 +1381,13 @@ parse_value(_ipp_file_t      *f,	/* I  - IPP data file */
 
     case IPP_TAG_RANGE :
 	{
-	  int	lower,			/* Lower value */
-		upper;			/* Upper value */
+	  int	lower,			// Lower value
+		upper;			// Upper value
 
           if (sscanf(value, "%d-%d", &lower, &upper) != 2)
           {
-	    report_error(f, v, user_data, "Bad rangeOfInteger value \"%s\" on line %d of \"%s\".", value, f->linenum, f->filename);
-	    return (0);
+	    report_error(file, "Bad rangeOfInteger value \"%s\" on line %d of \"%s\".", value, file->linenum, file->filename);
+	    return (false);
 	  }
 
 	  return (ippSetRange(ipp, attr, element, lower, upper));
@@ -959,8 +1400,8 @@ parse_value(_ipp_file_t      *f,	/* I  - IPP data file */
         {
           if (valuelen & 1)
           {
-	    report_error(f, v, user_data, "Bad octetString value on line %d of \"%s\".", f->linenum, f->filename);
-	    return (0);
+	    report_error(file, "Bad octetString value on line %d of \"%s\".", file->linenum, file->filename);
+	    return (false);
           }
 
           valueptr = value + 1;
@@ -970,8 +1411,8 @@ parse_value(_ipp_file_t      *f,	/* I  - IPP data file */
           {
 	    if (!isxdigit(valueptr[0] & 255) || !isxdigit(valueptr[1] & 255))
 	    {
-	      report_error(f, v, user_data, "Bad octetString value on line %d of \"%s\".", f->linenum, f->filename);
-	      return (0);
+	      report_error(file, "Bad octetString value on line %d of \"%s\".", file->linenum, file->filename);
+	      return (false);
 	    }
 
             if (valueptr[0] >= '0' && valueptr[0] <= '9')
@@ -1006,17 +1447,17 @@ parse_value(_ipp_file_t      *f,	/* I  - IPP data file */
 
     case IPP_TAG_BEGIN_COLLECTION :
         {
-          int	status;			/* Add status */
-          ipp_t *col;			/* Collection value */
+          bool	status;			// Add status
+          ipp_t *col;			// Collection value
 
           if (strcmp(value, "{"))
           {
-	    report_error(f, v, user_data, "Bad collection value on line %d of \"%s\".", f->linenum, f->filename);
-	    return (0);
+	    report_error(file, "Bad collection value on line %d of \"%s\".", file->linenum, file->filename);
+	    return (false);
           }
 
-          if ((col = parse_collection(f, v, user_data)) == NULL)
-            return (0);
+          if ((col = parse_collection(file)) == NULL)
+	    return (false);
 
 	  status = ippSetCollection(ipp, attr, element, col);
 	  ippDelete(col);
@@ -1025,298 +1466,85 @@ parse_value(_ipp_file_t      *f,	/* I  - IPP data file */
 	}
 
     default :
-        report_error(f, v, user_data, "Unsupported value on line %d of \"%s\".", f->linenum, f->filename);
-        return (0);
+        report_error(file, "Unsupported value on line %d of \"%s\".", file->linenum, file->filename);
+	return (false);
   }
 }
 
 
-/*
- * 'report_error()' - Report an error.
- */
+//
+// 'report_error()' - Report an error.
+//
 
-static void
+static bool				// O - `true` to continue, `false` to stop
 report_error(
-    _ipp_file_t *f,			/* I - IPP data file */
-    _ipp_vars_t *v,			/* I - Error callback function, if any */
-    void        *user_data,		/* I - User data pointer */
-    const char  *message,		/* I - Printf-style message */
-    ...)				/* I - Additional arguments as needed */
+    ipp_file_t *file,			// I - IPP data file
+    const char *message,		// I - Printf-style message
+    ...)				// I - Additional arguments as needed
 {
-  char		buffer[8192];		/* Formatted string */
-  va_list	ap;			/* Argument pointer */
+  va_list	ap;			// Argument pointer
+  char		buffer[8192];		// Formatted string
 
 
   va_start(ap, message);
   vsnprintf(buffer, sizeof(buffer), message, ap);
   va_end(ap);
 
-  if (v->errorcb)
-    (*v->errorcb)(f, user_data, buffer);
-  else
-    fprintf(stderr, "%s\n", buffer);
-}
-/*
- * IPP data file parsing functions.
- *
- * Copyright © 2022 by OpenPrinting.
- * Copyright © 2007-2019 by Apple Inc.
- * Copyright © 1997-2007 by Easy Software Products.
- *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more
- * information.
- */
+  if (file->error_cb)
+    return ((*file->error_cb)(file, file->cb_data, buffer));
 
-/*
- * Include necessary headers...
- */
-
-#include "cups-private.h"
-#include "ipp-private.h"
-#include "string-private.h"
-#include "debug-internal.h"
-
-
-/*
- * '_ippVarsDeinit()' - Free all memory associated with the IPP variables.
- */
-
-void
-_ippVarsDeinit(_ipp_vars_t *v)		/* I - IPP variables */
-{
-  if (v->uri)
-  {
-    free(v->uri);
-    v->uri = NULL;
-  }
-
-  cupsFreeOptions(v->num_vars, v->vars);
-  v->num_vars = 0;
-  v->vars     = NULL;
+  fprintf(stderr, "%s\n", buffer);
+  return (true);
 }
 
 
-/*
- * '_ippVarsExpand()' - Expand variables in the source string.
- */
+//
+// 'write_string()' - Write a quoted string value.
+//
 
-void
-_ippVarsExpand(_ipp_vars_t *v,		/* I - IPP variables */
-               char        *dst,	/* I - Destination buffer */
-               const char  *src,	/* I - Source string */
-               size_t      dstsize)	/* I - Destination buffer size */
+static bool				// O - `true` on success, `false` on failure
+write_string(ipp_file_t *file,		// I - IPP data file
+             const char *s,		// I - String
+             size_t     len)		// I - Length of string
 {
-  char		*dstptr,		/* Pointer into destination */
-		*dstend,		/* End of destination */
-		temp[256],		/* Temporary string */
-		*tempptr;		/* Pointer into temporary string */
-  const char	*value;			/* Value to substitute */
+  bool		ret = true;		// Return value
+  const char	*start,			// Start of string
+		*ptr,			// Pointer into string
+		*end;			// End of string
 
 
-  dstptr = dst;
-  dstend = dst + dstsize - 1;
+  // Start with a double quote...
+  ret &= cupsFilePutChar(file->fp, '\"');
+  file->column ++;
 
-  while (*src && dstptr < dstend)
+  // Loop through the string...
+  for (start = s, end = s + len, ptr = start; ptr < end; ptr ++)
   {
-    if (*src == '$')
+    if (*ptr == '\"' || *ptr == '\\')
     {
-     /*
-      * Substitute a string/number...
-      */
-
-      if (!strncmp(src, "$$", 2))
+      // Something that needs to be quoted...
+      if (ptr > start)
       {
-        value = "$";
-	src   += 2;
-      }
-      else if (!strncmp(src, "$ENV[", 5))
-      {
-	cupsCopyString(temp, src + 5, sizeof(temp));
-
-	for (tempptr = temp; *tempptr; tempptr ++)
-	  if (*tempptr == ']')
-	    break;
-
-        if (*tempptr)
-	  *tempptr++ = '\0';
-
-	value = getenv(temp);
-        src   += tempptr - temp + 5;
-      }
-      else
-      {
-        if (src[1] == '{')
-	{
-	  src += 2;
-	  cupsCopyString(temp, src, sizeof(temp));
-	  if ((tempptr = strchr(temp, '}')) != NULL)
-	    *tempptr = '\0';
-	  else
-	    tempptr = temp + strlen(temp);
-	}
-	else
-	{
-	  cupsCopyString(temp, src + 1, sizeof(temp));
-
-	  for (tempptr = temp; *tempptr; tempptr ++)
-	    if (!isalnum(*tempptr & 255) && *tempptr != '-' && *tempptr != '_')
-	      break;
-
-	  if (*tempptr)
-	    *tempptr = '\0';
-        }
-
-        value = _ippVarsGet(v, temp);
-
-        src += tempptr - temp + 1;
+        // Write lead-in text...
+	ret &= cupsFileWrite(file->fp, start, (size_t)(ptr - start));
+	file->column += ptr - start;
       }
 
-      if (value)
-      {
-        cupsCopyString(dstptr, value, (size_t)(dstend - dstptr + 1));
-	dstptr += strlen(dstptr);
-      }
+      // Then quote the " or \...
+      ret &= cupsFilePrintf(file->fp, "\\%c", *ptr);
+      start = ptr + 1;
+      file->column ++;
     }
-    else
-      *dstptr++ = *src++;
   }
 
-  *dstptr = '\0';
-}
-
-
-/*
- * '_ippVarsGet()' - Get a variable string.
- */
-
-const char *				/* O - Value or @code NULL@ if not set */
-_ippVarsGet(_ipp_vars_t *v,		/* I - IPP variables */
-            const char  *name)		/* I - Variable name */
-{
-  if (!v)
-    return (NULL);
-  else if (!strcmp(name, "uri"))
-    return (v->uri);
-  else if (!strcmp(name, "uriuser") || !strcmp(name, "username"))
-    return (v->username[0] ? v->username : NULL);
-  else if (!strcmp(name, "scheme") || !strcmp(name, "method"))
-    return (v->scheme);
-  else if (!strcmp(name, "hostname"))
-    return (v->host);
-  else if (!strcmp(name, "port"))
-    return (v->portstr);
-  else if (!strcmp(name, "resource"))
-    return (v->resource);
-  else if (!strcmp(name, "user"))
-    return (cupsGetUser());
-  else
-    return (cupsGetOption(name, v->num_vars, v->vars));
-}
-
-
-/*
- * '_ippVarsInit()' - Initialize .
- */
-
-void
-_ippVarsInit(_ipp_vars_t      *v,	/* I - IPP variables */
-             _ipp_fattr_cb_t  attrcb,	/* I - Attribute (filter) callback */
-             _ipp_ferror_cb_t errorcb,	/* I - Error callback */
-             _ipp_ftoken_cb_t tokencb)	/* I - Token callback */
-{
-  memset(v, 0, sizeof(_ipp_vars_t));
-
-  v->attrcb  = attrcb;
-  v->errorcb = errorcb;
-  v->tokencb = tokencb;
-}
-
-
-/*
- * '_ippVarsPasswordCB()' - Password callback using the IPP variables.
- */
-
-const char *				/* O - Password string or @code NULL@ */
-_ippVarsPasswordCB(
-    const char *prompt,			/* I - Prompt string (not used) */
-    http_t     *http,			/* I - HTTP connection (not used) */
-    const char *method,			/* I - HTTP method (not used) */
-    const char *resource,		/* I - Resource path (not used) */
-    void       *user_data)		/* I - IPP variables */
-{
-  _ipp_vars_t	*v = (_ipp_vars_t *)user_data;
-					/* I - IPP variables */
-
-
-  (void)prompt;
-  (void)http;
-  (void)method;
-  (void)resource;
-
-  if (v->username[0] && v->password && v->password_tries < 3)
+  if (ptr > start)
   {
-    v->password_tries ++;
-
-    cupsSetUser(v->username);
-
-    return (v->password);
+    ret &= cupsFileWrite(file->fp, start, (size_t)(ptr - start));
+    file->column += ptr - start;
   }
-  else
-  {
-    return (NULL);
-  }
+
+  ret &= cupsFilePutChar(file->fp, '\"');
+  file->column ++;
+
+  return (ret);
 }
-
-
-/*
- * '_ippVarsSet()' - Set an IPP variable.
- */
-
-int					/* O - 1 on success, 0 on failure */
-_ippVarsSet(_ipp_vars_t *v,		/* I - IPP variables */
-            const char  *name,		/* I - Variable name */
-            const char  *value)		/* I - Variable value */
-{
-  if (!strcmp(name, "uri"))
-  {
-    char	uri[1024];		/* New printer URI */
-    char	resolved[1024];		/* Resolved mDNS URI */
-
-    if (strstr(value, "._tcp"))
-    {
-     /*
-      * Resolve URI...
-      */
-
-      if (!_httpResolveURI(value, resolved, sizeof(resolved), _HTTP_RESOLVE_DEFAULT, NULL, NULL))
-        return (0);
-
-      value = resolved;
-    }
-
-    if (httpSeparateURI(HTTP_URI_CODING_ALL, value, v->scheme, sizeof(v->scheme), v->username, sizeof(v->username), v->host, sizeof(v->host), &(v->port), v->resource, sizeof(v->resource)) < HTTP_URI_STATUS_OK)
-      return (0);
-
-    if (v->username[0])
-    {
-      if ((v->password = strchr(v->username, ':')) != NULL)
-	*(v->password)++ = '\0';
-    }
-
-    snprintf(v->portstr, sizeof(v->portstr), "%d", v->port);
-
-    if (v->uri)
-      free(v->uri);
-
-    httpAssembleURI(HTTP_URI_CODING_ALL, uri, sizeof(uri), v->scheme, NULL, v->host, v->port, v->resource);
-    v->uri = strdup(uri);
-
-    return (v->uri != NULL);
-  }
-  else
-  {
-    v->num_vars = cupsAddOption(name, value, v->num_vars, &v->vars);
-    return (1);
-  }
-}
-#endif // 0

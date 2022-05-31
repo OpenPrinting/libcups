@@ -621,7 +621,7 @@ static size_t	ipp_col_string(ipp_t *col, char *buffer, size_t bufsize);
  * just like (v)snprintf.
  */
 
-size_t					/* O - Number of bytes less nul */
+size_t					/* O - Number of bytes less `nul` */
 ippAttributeString(
     ipp_attribute_t *attr,		/* I - Attribute */
     char            *buffer,		/* I - String buffer or NULL */

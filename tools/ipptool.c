@@ -128,7 +128,6 @@ typedef struct ipptool_status_s		/**** Status info ****/
 typedef struct ipptool_test_s		/**** Test Data ****/
 {
   /* Global Options */
-  _ipp_vars_t	*vars;			/* Variables */
   http_encryption_t encryption;		/* Encryption for connection */
   int		family;			/* Address family */
   ipptool_output_t output;		/* Output mode */
@@ -200,7 +199,7 @@ typedef struct ipptool_test_s		/**** Test Data ****/
  * Globals...
  */
 
-static int	Cancel = 0;		/* Cancel test? */
+static bool	Cancel = false;		/* Cancel test? */
 
 
 /*
@@ -211,17 +210,17 @@ static void	add_stringf(cups_array_t *a, const char *s, ...) _CUPS_FORMAT(2, 3);
 static int      compare_uris(const char *a, const char *b);
 static void	copy_hex_string(char *buffer, unsigned char *data, int datalen, size_t bufsize);
 static void	*do_monitor_printer_state(ipptool_test_t *data);
-static int	do_test(_ipp_file_t *f, ipptool_test_t *data);
+static int	do_test(ipp_file_t *file, ipptool_test_t *data);
 static int	do_tests(const char *testfile, ipptool_test_t *data);
-static int	error_cb(_ipp_file_t *f, ipptool_test_t *data, const char *error);
+static int	error_cb(ipp_file_t *f, ipptool_test_t *data, const char *error);
 static int      expect_matches(ipptool_expect_t *expect, ipp_attribute_t *attr);
 static http_status_t generate_file(http_t *http, ipptool_generate_t *params);
 static char	*get_filename(const char *testfile, char *dst, const char *src, size_t dstsize);
 static const char *get_string(ipp_attribute_t *attr, size_t element, int flags, char *buffer, size_t bufsize);
 static void	init_data(ipptool_test_t *data);
 static char	*iso_date(const ipp_uchar_t *date);
-static int	parse_generate_file(_ipp_file_t *f, ipptool_test_t *data);
-static int	parse_monitor_printer_state(_ipp_file_t *f, ipptool_test_t *data);
+static int	parse_generate_file(ipp_file_t *f, ipptool_test_t *data);
+static int	parse_monitor_printer_state(ipp_file_t *f, ipptool_test_t *data);
 static void	pause_message(const char *message);
 static void	print_attr(cups_file_t *outfile, ipptool_output_t output, ipp_attribute_t *attr, ipp_tag_t *group);
 static ipp_attribute_t *print_csv(ipptool_test_t *data, ipp_t *ipp, ipp_attribute_t *attr, int num_displayed, char **displayed, size_t *widths);
@@ -238,7 +237,7 @@ static void	print_xml_trailer(ipptool_test_t *data, int success, const char *mes
 static void	sigterm_handler(int sig);
 #endif /* _WIN32 */
 static bool	timeout_cb(http_t *http, void *user_data);
-static int	token_cb(_ipp_file_t *f, _ipp_vars_t *vars, ipptool_test_t *data, const char *token);
+static int	token_cb(ipp_file_t *f, ipptool_test_t *data, const char *token);
 static void	usage(void) _CUPS_NORETURN;
 static int	with_distinct_values(cups_array_t *errors, ipp_attribute_t *attr);
 static const char *with_flags_string(int flags);
@@ -265,10 +264,10 @@ main(int  argc,				/* I - Number of command-line args */
 			*testfile;	/* Test file to use */
   int			interval,	/* Test interval in microseconds */
 			repeat;		/* Repeat count */
-  _ipp_vars_t		vars;		/* Variables */
-  ipptool_test_t	*data;		/* Test data */
+  ipp_file_t		*parent;	// Parent IPP data file variables
+  ipptool_test_t	*data;		// Test data
   _cups_globals_t	*cg = _cupsGlobals();
-					/* Global data */
+					// Global data
 
 
 #ifndef _WIN32
@@ -4929,7 +4928,7 @@ sigterm_handler(int sig)		/* I - Signal number (unused) */
 {
   (void)sig;
 
-  Cancel = 1;
+  Cancel = true;
 
   signal(SIGINT, SIG_DFL);
   signal(SIGTERM, SIG_DFL);
