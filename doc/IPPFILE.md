@@ -1,5 +1,5 @@
-IPP Tools File API
-==================
+IPP Data File API
+=================
 
 API to read and write IPP attributes and other commands or data using a common base format that supports tools such as `ipptool` and `ippeveprinter`.
 
@@ -21,6 +21,7 @@ An open IPP tools file with associated variables and callbacks.  The following s
 - "scheme": URI scheme from the "uri" value, if any
 - "uri": URI, if any
 - "uriuser": Username from the "uri" value, if any
+- "uripassword": Password from the "uri" value, if any
 - "user": Current login user
 
     typedef bool (*ipp_fattr_cb_t)(ipp_file_t *file, void *cb_data, const char *name);
@@ -40,23 +41,42 @@ Public API
 ----------
 
     ipp_file_t *
-    ippFileOpen(const char *filename, const char *mode, ipp_file_t *parent,
-                ipp_fattr_cb_t attr_cb, ipp_ferror_cb_t error_cb,
-                void *cb_data);
+    ippFileNew(ipp_file_t *parent, ipp_fattr_cb_t attr_cb,
+               ipp_ferror_cb_t error_cb, void *cb_data);
 
-Open an IPP tools file for reading (mode = "r") or writing (mode = "w").  If an error occurs while opening the file, `NULL` is returned and the reason for the error can be found by calling the `cupsLastErrorString` function.  If an error callback is specified, that function is also called with the error message.
+Create a new IPP data file object.  The "parent" pointer causes the new file to contain the same variables as the parent and is typically used when processing the `INCLUDE` directive.
 
-The "parent" pointer causes the new file to contain the same variables as the parent and is typically used when processing the `INCLUDE` directive.
+    bool
+    ippFileOpen(ipp_file_t *file, const char *filename, const char *mode);
+
+Open an IPP tools file for reading (mode = "r") or writing (mode = "w").
 
     bool
     ippFileClose(ipp_file_t *file);
 
-Closes an IPP tools file, frees all memory used, and returns `true` on success or `false` on failure.
+Closes an IPP tools file and returns `true` on success or `false` on failure.
+
+    bool
+    ippFileDelete(ipp_file_t *file);
+
+Closes an IPP tools file (if needed), frees all memory used, and returns `true` on success or `false` on failure.
+
+    size_t
+    ippFileExpandVars(ipp_file_t *file, char *dst, const char *src,
+                      size_t dstsize);
+
+Expands variables in the source string, copying to the destination string.
+
+    ipp_attribute_t *
+    ippFileGetAttribute(ipp_file_t *file, const char *name,
+                        ipp_tag_t value_tag);
+
+Get the named IPP attribute if it has been read.
 
     ipp_t *
     ippFileGetAttributes(ipp_file_t *file);
 
-Get the IPP attributes that have been read so far.  You must call `ippDelete` or `cupsDo*Request` to free the resulting attributes.
+Get the IPP attributes that have been read so far.
 
     const char *
     ippFileGetFilename(ipp_file_t *file);
@@ -77,7 +97,7 @@ Gets the current line number in the file.
 Get and set file variables.  Setting the "uri" variable also sets the "hostname", "port", "resource", "scheme", and "uriuser" variables.
 
     bool
-    ippFileRead(ipp_file_t *file, ipp_ftoken_cb_t token_cb);
+    ippFileRead(ipp_file_t *file, ipp_ftoken_cb_t token_cb, bool with_groups);
 
 Reads the IPP tools file using the specified token callback.
 
@@ -87,9 +107,40 @@ Reads the IPP tools file using the specified token callback.
 Reads a single token from the file, returning `false` on end-of-file.
 
     bool
-    ippFileWrite(ipp_file_t *file, ipp_t *ipp);
+    ippFileRestorePosition(ipp_file_t *file);
 
-Writes the attributes in "ipp" to the file.  Returns `false` on error or `true` on success.
+    bool
+    ippFileSavePosition(ipp_file_t *file);
+
+Saves and restores the current read position in a file.
+
+    bool
+    ippFileSetAttributes(ipp_file_t *file, ipp_t *attrs);
+
+Set the IPP message to add attributes to when reading.
+
+    bool
+    ippFileSetGroupTag(ipp_file_t *file, ipp_tag_t group_tag);
+
+Set the current IPP group tag for new attributes.
+
+    bool
+    ippFileSetVar(ipp_file_t *file, const char *name, const char *value);
+
+    bool
+    ippFileSetVarf(ipp_file_t *file, const char *name, const char *value, ...);
+
+Set the named variable.
+
+    bool
+    ippFileWriteAttributes(ipp_file_t *file, ipp_t *ipp, bool with_groups);
+
+Writes the attributes in "ipp" to the file, including "GROUP" directives when "with_groups" is `true`.  Returns `false` on error or `true` on success.
+
+    bool
+    ippFileWriteComment(ipp_file_t *file, const char *comment, ...);
+
+Writes a comment to the file.
 
     bool
     ippFileWriteToken(ipp_file_t *file, const char *token);
