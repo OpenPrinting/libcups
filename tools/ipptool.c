@@ -194,8 +194,7 @@ typedef struct ipptool_test_s		/**** Test Data ****/
   ipptool_expect_t monitor_expects[MAX_MONITOR];
 					/* MONITOR-PRINTER-STATE EXPECTs */
   ipptool_generate_t *generate_params;	/* GENERATE-FILE parameters */
-  char		*buffer;		// Output buffer
-  size_t	alloc_buffer;		// Size of output buffer
+  char		buffer[1024*1024];	/* Output buffer */
 } ipptool_test_t;
 
 
@@ -2519,7 +2518,6 @@ static void
 free_data(ipptool_test_t *data)		// I - Test data
 {
   ippFileDelete(data->parent);
-  free(data->buffer);
   free(data);
 }
 
