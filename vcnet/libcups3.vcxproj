@@ -131,7 +131,6 @@ xcopy /I/Y "$(TargetPath)"                                                      
     <ClCompile Include="..\cups\http.c" />
     <ClCompile Include="..\cups\ipp-file.c" />
     <ClCompile Include="..\cups\ipp-support.c" />
-    <ClCompile Include="..\cups\ipp-vars.c" />
     <ClCompile Include="..\cups\ipp.c" />
     <ClCompile Include="..\cups\langprintf.c" />
     <ClCompile Include="..\cups\language.c" />
