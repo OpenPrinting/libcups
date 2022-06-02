@@ -1,7 +1,7 @@
 /*
  * IPP unit test program for libcups.
  *
- * Copyright © 2021 by OpenPrinting.
+ * Copyright © 2021-2022 by OpenPrinting.
  * Copyright © 2007-2019 by Apple Inc.
  * Copyright © 1997-2005 by Easy Software Products.
  *
@@ -291,7 +291,7 @@ static ipp_uchar_t mixed[] =		/* Mixed value buffer */
 void	print_attributes(ipp_t *ipp, int indent);
 ssize_t	read_cb(_ippdata_t *data, ipp_uchar_t *buffer, size_t bytes);
 ssize_t	read_hex(cups_file_t *fp, ipp_uchar_t *buffer, size_t bytes);
-int	token_cb(_ipp_file_t *f, _ipp_vars_t *v, void *user_data, const char *token);
+bool	token_cb(ipp_file_t *f, void *user_data, const char *token);
 ssize_t	write_cb(_ippdata_t *data, ipp_uchar_t *buffer, size_t bytes);
 
 
@@ -799,11 +799,14 @@ main(int  argc,			/* I - Number of command-line arguments */
         * Read an ASCII IPP message...
         */
 
-        _ipp_vars_t v;			/* IPP variables */
+        ipp_file_t *file;		// IPP data file
 
-        _ippVarsInit(&v, NULL, NULL, token_cb);
-        request = _ippFileParse(&v, argv[i], NULL);
-        _ippVarsDeinit(&v);
+        file    = ippFileNew(NULL, NULL, NULL, NULL);
+        request = ippNew();
+
+        ippFileOpen(file, argv[i], "r");
+        ippFileRead(file, token_cb, true);
+        ippFileDelete(file);
       }
       else if (strlen(argv[i]) > 4 && !strcmp(argv[i] + strlen(argv[i]) - 4, ".hex"))
       {
@@ -986,27 +989,21 @@ read_hex(cups_file_t *fp,		/* I - File to read from */
  * 'token_cb()' - Token callback for ASCII IPP data file parser.
  */
 
-int					/* O - 1 on success, 0 on failure */
-token_cb(_ipp_file_t *f,		/* I - IPP file data */
-         _ipp_vars_t *v,		/* I - IPP variables */
-         void        *user_data,	/* I - User data pointer */
-         const char  *token)		/* I - Token string */
+bool					/* O - `true` on success, `false` on failure */
+token_cb(ipp_file_t *f,			/* I - IPP file data */
+         void       *user_data,		/* I - User data pointer */
+         const char *token)		/* I - Token string */
 {
-  (void)v;
   (void)user_data;
 
-  if (!token)
+  // TODO: Add a custom directive to test this.
+  if (strcasecmp(token, "TEST"))
   {
-    f->attrs     = ippNew();
-    f->group_tag = IPP_TAG_PRINTER;
-  }
-  else
-  {
-    fprintf(stderr, "Unknown directive \"%s\" on line %d of \"%s\".\n", token, f->linenum, f->filename);
-    return (0);
+    fprintf(stderr, "Unknown directive '%s' on line %d of '%s'.\n", token, ippFileGetLineNumber(f), ippFileGetFilename(f));
+    return (false);
   }
 
-  return (1);
+  return (true);
 }
 
 
