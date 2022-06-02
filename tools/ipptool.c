@@ -5011,7 +5011,7 @@ token_cb(ipp_file_t     *f,		/* I - IPP file data */
   if (getenv("IPPTOOL_DEBUG"))
     fprintf(stderr, "ipptool: token='%s'\n", token);
 
-  if (ippFileHaveAttributes(f))
+  if (ippFileGetAttributes(f))
   {
    /*
     * Parse until we see a close brace...

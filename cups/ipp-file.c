@@ -313,20 +313,6 @@ ippFileGetVar(ipp_file_t *file,		// I - IPP data file
 
 
 //
-// 'ippFileHaveAttributes()' - Determine whether the IPP data file has attributes.
-//
-// This function returns whether the IPP data file currently has attributes
-// defined.
-//
-
-bool					// O - `true` if attributes are present, `false` otherwise
-ippFileHaveAttributes(ipp_file_t *file)	// I - IPP data file
-{
-  return (file ? file->attrs != NULL : false);
-}
-
-
-//
 // 'ippFileNew()' - Create a new IPP data file object for reading or writing.
 //
 // This function opens an IPP data file for reading (mode="r") or writing

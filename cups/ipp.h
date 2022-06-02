@@ -579,7 +579,6 @@ extern ipp_t		*ippFileGetAttributes(ipp_file_t *file) _CUPS_PUBLIC;
 extern const char	*ippFileGetFilename(ipp_file_t *file) _CUPS_PUBLIC;
 extern int		ippFileGetLineNumber(ipp_file_t *file) _CUPS_PUBLIC;
 extern const char	*ippFileGetVar(ipp_file_t *file, const char *name) _CUPS_PUBLIC;
-extern bool		ippFileHaveAttributes(ipp_file_t *file) _CUPS_PUBLIC;
 extern ipp_file_t	*ippFileNew(ipp_file_t *parent, ipp_fattr_cb_t attr_cb, ipp_ferror_cb_t error_cb, void *cb_data) _CUPS_PUBLIC;
 extern bool		ippFileOpen(ipp_file_t *file, const char *filename, const char *mode) _CUPS_PUBLIC;
 extern bool		ippFileRead(ipp_file_t *file, ipp_ftoken_cb_t token_cb, bool with_groups) _CUPS_PUBLIC;
