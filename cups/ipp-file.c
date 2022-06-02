@@ -72,7 +72,6 @@ ippFileClose(ipp_file_t *file)		// I - IPP data file
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
 
   free(file->filename);
-  ippDelete(file->attrs);
 
   file->fp       = NULL;
   file->filename = NULL;
@@ -250,27 +249,13 @@ ippFileGetAttribute(
 //
 // 'ippFileGetAttributes()' - Get the current set of attributes from an IPP data file.
 //
-// This function gets the current set of attributes from an IPP data file and
-// clears the internal attribute pointer.  The caller must call the
-// @link ippDelete@ function to free the memory used by the attributes.
+// This function gets the current set of attributes from an IPP data file.
 //
 
 ipp_t *					// O - IPP attributes
 ippFileGetAttributes(ipp_file_t *file)	// I - IPP data file
 {
-  if (file)
-  {
-    ipp_t *attrs = file->attrs;		// IPP attributes
-
-    file->attrs     = NULL;
-    file->group_tag = IPP_TAG_ZERO;
-
-    return (attrs);
-  }
-  else
-  {
-    return (NULL);
-  }
+  return (file ? file->attrs : NULL);
 }
 
 
@@ -324,6 +309,20 @@ ippFileGetVar(ipp_file_t *file,		// I - IPP data file
     return (cupsGetOption(name, file->parent->num_vars, file->parent->vars));
   else
     return (NULL);
+}
+
+
+//
+// 'ippFileHaveAttributes()' - Determine whether the IPP data file has attributes.
+//
+// This function returns whether the IPP data file currently has attributes
+// defined.
+//
+
+bool					// O - `true` if attributes are present, `false` otherwise
+ippFileHaveAttributes(ipp_file_t *file)	// I - IPP data file
+{
+  return (file ? file->attrs != NULL : false);
 }
 
 
@@ -410,7 +409,8 @@ ippFileOpen(ipp_file_t *file,		// I - IPP data file
 
 bool					// O - `true` on success, `false` on error
 ippFileRead(ipp_file_t      *file,	// I - IPP data file
-            ipp_ftoken_cb_t token_cb)	// I - Token callback
+            ipp_ftoken_cb_t token_cb,	// I - Token callback
+            bool            with_groups)// I - Read attributes with GROUP directives
 {
   ipp_t		*attrs = NULL;		// Active IPP message
   ipp_attribute_t *attr = NULL;		// Current attribute
@@ -448,10 +448,35 @@ ippFileRead(ipp_file_t      *file,	// I - IPP data file
       }
       else
       {
-        report_error(file, "Missing %s name and/or value on line %d of \"%s\".", token, file->linenum, file->filename);
+        report_error(file, "Missing %s name and/or value on line %d of '%s'.", token, file->linenum, file->filename);
         ret = false;
         break;
       }
+    }
+    else if (file->attrs && with_groups && !_cups_strcasecmp(token, "GROUP"))
+    {
+      // Attribute group...
+      char	temp[1024];		// Temporary token
+      ipp_tag_t	group_tag;		// Group tag
+
+      if (!ippFileReadToken(file, temp, sizeof(temp)))
+      {
+	report_error(file, "Missing GROUP tag on line %d of '%s'.", file->linenum, file->filename);
+	ret = false;
+	break;
+      }
+
+      if ((group_tag = ippTagValue(temp)) == IPP_TAG_ZERO || group_tag >= IPP_TAG_UNSUPPORTED_VALUE)
+      {
+	report_error(file, "Bad GROUP tag '%s' on line %d of '%s'.", temp, file->linenum, file->filename);
+	ret = false;
+	break;
+      }
+
+      if (group_tag == file->group_tag)
+	ippAddSeparator(file->attrs);
+
+      file->group_tag = group_tag;
     }
     else if (file->attrs && !_cups_strcasecmp(token, "ATTR"))
     {
@@ -464,20 +489,20 @@ ippFileRead(ipp_file_t      *file,	// I - IPP data file
 
       if (!ippFileReadToken(file, syntax, sizeof(syntax)))
       {
-        report_error(file, "Missing ATTR syntax on line %d of \"%s\".", file->linenum, file->filename);
+        report_error(file, "Missing ATTR syntax on line %d of '%s'.", file->linenum, file->filename);
 	ret = false;
 	break;
       }
       else if ((value_tag = ippTagValue(syntax)) < IPP_TAG_UNSUPPORTED_VALUE)
       {
-        report_error(file, "Bad ATTR syntax \"%s\" on line %d of \"%s\".", syntax, file->linenum, file->filename);
+        report_error(file, "Bad ATTR syntax \"%s\" on line %d of '%s'.", syntax, file->linenum, file->filename);
 	ret = false;
 	break;
       }
 
       if (!ippFileReadToken(file, name, sizeof(name)) || !name[0])
       {
-        report_error(file, "Missing ATTR name on line %d of \"%s\".", file->linenum, file->filename);
+        report_error(file, "Missing ATTR name on line %d of '%s'.", file->linenum, file->filename);
 	ret = false;
 	break;
       }
@@ -777,6 +802,48 @@ ippFileSavePosition(ipp_file_t *file)	// I - IPP data file
   file->save_line = file->linenum;
 
   return (true);
+}
+
+
+//
+// 'ippFileSetAttributes()' - Set the attributes for an IPP data file.
+//
+// This function sets the current set of attributes for an IPP data file,
+// typically an empty collection created with @link ippNew@.
+//
+
+bool					// O - `true` on success, `false` otherwise
+ippFileSetAttributes(ipp_file_t *file,	// I - IPP data file
+                     ipp_t      *attrs)	// I - IPP attributes
+{
+  if (file)
+  {
+    file->attrs = attrs;
+    return (true);
+  }
+
+  return (false);
+}
+
+
+//
+// 'ippFileSetGroupTag()' - Set the group tag for an IPP data file.
+//
+// This function sets the group tag associated with attributes that are read
+// from an IPP data file.
+//
+
+bool					// O - `true` on success, `false` otherwise
+ippFileSetGroupTag(ipp_file_t *file,	// I - IPP data file
+                   ipp_tag_t  group_tag)// I - Group tag
+{
+  if (file && group_tag >= IPP_TAG_OPERATION && group_tag <= IPP_TAG_SYSTEM)
+  {
+    file->group_tag = group_tag;
+    return (true);
+  }
+
+  return (false);
 }
 
 
@@ -1327,14 +1394,14 @@ parse_collection(ipp_file_t *file)	// I - IPP data file
 
       if (!ippFileReadToken(file, syntax, sizeof(syntax)))
       {
-        report_error(file, "Missing MEMBER syntax on line %d of \"%s\".", file->linenum, file->filename);
+        report_error(file, "Missing MEMBER syntax on line %d of '%s'.", file->linenum, file->filename);
 	ippDelete(col);
 	col = NULL;
 	break;
       }
       else if ((value_tag = ippTagValue(syntax)) < IPP_TAG_UNSUPPORTED_VALUE)
       {
-        report_error(file, "Bad MEMBER syntax \"%s\" on line %d of \"%s\".", syntax, file->linenum, file->filename);
+        report_error(file, "Bad MEMBER syntax \"%s\" on line %d of '%s'.", syntax, file->linenum, file->filename);
 	ippDelete(col);
 	col = NULL;
 	break;
@@ -1342,7 +1409,7 @@ parse_collection(ipp_file_t *file)	// I - IPP data file
 
       if (!ippFileReadToken(file, name, sizeof(name)) || !name[0])
       {
-        report_error(file, "Missing MEMBER name on line %d of \"%s\".", file->linenum, file->filename);
+        report_error(file, "Missing MEMBER name on line %d of '%s'.", file->linenum, file->filename);
 	ippDelete(col);
 	col = NULL;
 	break;
@@ -1380,7 +1447,7 @@ parse_collection(ipp_file_t *file)	// I - IPP data file
     else
     {
       // Something else...
-      report_error(file, "Unknown directive \"%s\" on line %d of \"%s\".", token, file->linenum, file->filename);
+      report_error(file, "Unknown directive \"%s\" on line %d of '%s'.", token, file->linenum, file->filename);
       ippDelete(col);
       col  = NULL;
       attr = NULL;
@@ -1412,7 +1479,7 @@ parse_value(ipp_file_t      *file,	// I  - IPP data file
 
   if (!ippFileReadToken(file, temp, sizeof(temp)))
   {
-    report_error(file, "Missing value on line %d of \"%s\".", file->linenum, file->filename);
+    report_error(file, "Missing value on line %d of '%s'.", file->linenum, file->filename);
     return (false);
   }
 
@@ -1455,7 +1522,7 @@ parse_value(ipp_file_t      *file,	// I  - IPP data file
 
                 if (!valueptr || period < 0)
                 {
-		  report_error(file, "Bad dateTime value \"%s\" on line %d of \"%s\".", value, file->linenum, file->filename);
+		  report_error(file, "Bad dateTime value \"%s\" on line %d of '%s'.", value, file->linenum, file->filename);
 		  return (false);
 		}
               }
@@ -1496,7 +1563,7 @@ parse_value(ipp_file_t      *file,	// I  - IPP data file
               }
               else
 	      {
-		report_error(file, "Bad dateTime value \"%s\" on line %d of \"%s\".", value, file->linenum, file->filename);
+		report_error(file, "Bad dateTime value \"%s\" on line %d of '%s'.", value, file->linenum, file->filename);
 		return (false);
 	      }
 	    }
@@ -1506,7 +1573,7 @@ parse_value(ipp_file_t      *file,	// I  - IPP data file
           else if (sscanf(value, "%d-%d-%dT%d:%d:%d%d", &year, &month, &day, &hour, &minute, &second, &utc_offset) < 6)
           {
             // Date/time value did not parse...
-	    report_error(file, "Bad dateTime value \"%s\" on line %d of \"%s\".", value, file->linenum, file->filename);
+	    report_error(file, "Bad dateTime value \"%s\" on line %d of '%s'.", value, file->linenum, file->filename);
 	    return (false);
           }
 
@@ -1549,7 +1616,7 @@ parse_value(ipp_file_t      *file,	// I  - IPP data file
 
 	  if (ptr <= value || xres <= 0 || yres <= 0 || !ptr || (_cups_strcasecmp(ptr, "dpi") && _cups_strcasecmp(ptr, "dpc") && _cups_strcasecmp(ptr, "dpcm") && _cups_strcasecmp(ptr, "other")))
 	  {
-	    report_error(file, "Bad resolution value \"%s\" on line %d of \"%s\".", value, file->linenum, file->filename);
+	    report_error(file, "Bad resolution value \"%s\" on line %d of '%s'.", value, file->linenum, file->filename);
 	    return (false);
 	  }
 
@@ -1568,7 +1635,7 @@ parse_value(ipp_file_t      *file,	// I  - IPP data file
 
           if (sscanf(value, "%d-%d", &lower, &upper) != 2)
           {
-	    report_error(file, "Bad rangeOfInteger value \"%s\" on line %d of \"%s\".", value, file->linenum, file->filename);
+	    report_error(file, "Bad rangeOfInteger value \"%s\" on line %d of '%s'.", value, file->linenum, file->filename);
 	    return (false);
 	  }
 
@@ -1582,7 +1649,7 @@ parse_value(ipp_file_t      *file,	// I  - IPP data file
         {
           if (valuelen & 1)
           {
-	    report_error(file, "Bad octetString value on line %d of \"%s\".", file->linenum, file->filename);
+	    report_error(file, "Bad octetString value on line %d of '%s'.", file->linenum, file->filename);
 	    return (false);
           }
 
@@ -1593,7 +1660,7 @@ parse_value(ipp_file_t      *file,	// I  - IPP data file
           {
 	    if (!isxdigit(valueptr[0] & 255) || !isxdigit(valueptr[1] & 255))
 	    {
-	      report_error(file, "Bad octetString value on line %d of \"%s\".", file->linenum, file->filename);
+	      report_error(file, "Bad octetString value on line %d of '%s'.", file->linenum, file->filename);
 	      return (false);
 	    }
 
@@ -1634,7 +1701,7 @@ parse_value(ipp_file_t      *file,	// I  - IPP data file
 
           if (strcmp(value, "{"))
           {
-	    report_error(file, "Bad collection value on line %d of \"%s\".", file->linenum, file->filename);
+	    report_error(file, "Bad collection value on line %d of '%s'.", file->linenum, file->filename);
 	    return (false);
           }
 
@@ -1648,7 +1715,7 @@ parse_value(ipp_file_t      *file,	// I  - IPP data file
 	}
 
     default :
-        report_error(file, "Unsupported value on line %d of \"%s\".", file->linenum, file->filename);
+        report_error(file, "Unsupported value on line %d of '%s'.", file->linenum, file->filename);
 	return (false);
   }
 }

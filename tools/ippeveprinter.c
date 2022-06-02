@@ -4041,11 +4041,11 @@ ipp_validate_job(ippeve_client_t *client)	/* I - Client */
  * 'ippserver_attr_cb()' - Determine whether an attribute should be loaded.
  */
 
-static int				/* O - 1 to use, 0 to ignore */
+static bool				/* O - `true` to use, `false` to ignore */
 ippserver_attr_cb(
-    _ipp_file_t    *f,			/* I - IPP file */
-    void           *user_data,		/* I - User data pointer (unused) */
-    const char     *attr)		/* I - Attribute name */
+    ipp_file_t *f,			/* I - IPP file */
+    void       *user_data,		/* I - User data pointer (unused) */
+    const char *attr)			/* I - Attribute name */
 {
   int		i,			/* Current element */
 		result;			/* Result of comparison */
@@ -4143,51 +4143,18 @@ ippserver_attr_cb(
  * 'ippserver_error_cb()' - Log an error message.
  */
 
-static int				/* O - 1 to continue, 0 to stop */
+static bool				/* O - `true` to continue, `false` to stop */
 ippserver_error_cb(
-    _ipp_file_t    *f,			/* I - IPP file data */
-    void           *user_data,		/* I - User data pointer (unused) */
-    const char     *error)		/* I - Error message */
+    ipp_file_t *f,			/* I - IPP file data */
+    void       *user_data,		/* I - User data pointer (unused) */
+    const char *error)			/* I - Error message */
 {
   (void)f;
   (void)user_data;
 
   _cupsLangPrintf(stderr, "%s\n", error);
 
-  return (1);
-}
-
-
-/*
- * 'ippserver_token_cb()' - Process ippserver-specific config file tokens.
- */
-
-static int				/* O - 1 to continue, 0 to stop */
-ippserver_token_cb(
-    _ipp_file_t    *f,			/* I - IPP file data */
-    _ipp_vars_t    *vars,		/* I - IPP variables */
-    void           *user_data,		/* I - User data pointer (unused) */
-    const char     *token)		/* I - Current token */
-{
-  (void)vars;
-  (void)user_data;
-
-  if (!token)
-  {
-   /*
-    * NULL token means do the initial setup - create an empty IPP message and
-    * return...
-    */
-
-    f->attrs     = ippNew();
-    f->group_tag = IPP_TAG_PRINTER;
-  }
-  else
-  {
-    _cupsLangPrintf(stderr, _("Unknown directive \"%s\" on line %d of \"%s\" ignored."), token, f->linenum, f->filename);
-  }
-
-  return (1);
+  return (false);
 }
 
 
@@ -4202,8 +4169,8 @@ load_ippserver_attributes(
     const char   *filename,		/* I - ippserver attribute filename */
     cups_array_t *docformats)		/* I - document-format-supported values */
 {
+  ipp_file_t	*file;			// IPP data file
   ipp_t		*attrs;			/* IPP attributes */
-  _ipp_vars_t	vars;			/* IPP variables */
   char		temp[256];		/* Temporary string */
 
 
@@ -4218,32 +4185,37 @@ load_ippserver_attributes(
   * - SERVERPORT: The default port of the server.
   */
 
-  _ippVarsInit(&vars, (_ipp_fattr_cb_t)ippserver_attr_cb, (_ipp_ferror_cb_t)ippserver_error_cb, (_ipp_ftoken_cb_t)ippserver_token_cb);
+  attrs = ippNew();
+  file  = ippFileNew(NULL, (ipp_fattr_cb_t)ippserver_attr_cb, (ipp_ferror_cb_t)ippserver_error_cb, NULL);
+
+  ippFileSetAttributes(file, attrs);
+  ippFileSetGroupTag(file, IPP_TAG_PRINTER);
 
   if (servername)
   {
-    _ippVarsSet(&vars, "SERVERNAME", servername);
+    ippFileSetVar(file, "SERVERNAME", servername);
   }
   else
   {
     httpGetHostname(NULL, temp, sizeof(temp));
-    _ippVarsSet(&vars, "SERVERNAME", temp);
+    ippFileSetVar(file, "SERVERNAME", temp);
   }
 
   snprintf(temp, sizeof(temp), "%d", serverport);
-  _ippVarsSet(&vars, "SERVERPORT", temp);
+  ippFileSetVar(file, "SERVERPORT", temp);
 
  /*
   * Load attributes and values for the printer...
   */
 
-  attrs = _ippFileParse(&vars, filename, NULL);
+  ippFileOpen(file, filename, "r");
+  ippFileRead(file, NULL, false);
 
  /*
   * Free memory and return...
   */
 
-  _ippVarsDeinit(&vars);
+  ippFileDelete(file);
 
   return (attrs);
 }

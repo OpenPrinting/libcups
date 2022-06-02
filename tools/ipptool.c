@@ -157,6 +157,7 @@ typedef struct ipptool_test_s		/**** Test Data ****/
 		skip_count;		/* Number of tests that were skipped */
 
   /* Per-Test State */
+  ipp_op_t	op;			// Operation code
   cups_array_t	*errors;		/* Errors array */
   bool		prev_pass,		/* Result of previous test */
 		skip_previous;		/* Skip on previous test failure? */
@@ -1264,6 +1265,7 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
   */
 
   request = ippFileGetAttributes(f);
+  ippFileSetAttributes(f, NULL);
 
  /*
   * Submit the IPP request...
@@ -1271,6 +1273,7 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
 
   data->test_count ++;
 
+  ippSetOperation(request, data->op);
   ippSetVersion(request, data->version / 10, data->version % 10);
   ippSetRequestId(request, data->request_id);
 
@@ -2288,7 +2291,7 @@ do_tests(const char     *testfile,	// I - Test file to use
     return (false);
   }
 
-  ippFileRead(file, (ipp_ftoken_cb_t)token_cb);
+  ippFileRead(file, (ipp_ftoken_cb_t)token_cb, true);
 
   ippFileDelete(file);
 
@@ -5010,7 +5013,7 @@ token_cb(ipp_file_t     *f,		/* I - IPP file data */
   if (getenv("IPPTOOL_DEBUG"))
     fprintf(stderr, "ipptool: token='%s'\n", token);
 
-  if (f->attrs)
+  if (ippFileHaveAttributes(f))
   {
    /*
     * Parse until we see a close brace...
@@ -5208,7 +5211,7 @@ token_cb(ipp_file_t     *f,		/* I - IPP file data */
 
       if (ippFileReadToken(f, name, sizeof(name)))
       {
-	if (_ippVarsGet(vars, name))
+	if (ippFileGetVar(f, name))
 	  data->pass_test = 1;
       }
       else
@@ -5225,7 +5228,7 @@ token_cb(ipp_file_t     *f,		/* I - IPP file data */
 
       if (ippFileReadToken(f, name, sizeof(name)))
       {
-	if (!_ippVarsGet(vars, name))
+	if (!ippFileGetVar(f, name))
 	  data->pass_test = 1;
       }
       else
@@ -5242,8 +5245,8 @@ token_cb(ipp_file_t     *f,		/* I - IPP file data */
 
       if (ippFileReadToken(f, name, sizeof(name)))
       {
-	if (_ippVarsGet(vars, name) || getenv(name))
-	  data->skip_test = 1;
+	if (ippFileGetVar(f, name) || getenv(name))
+	  data->skip_test = true;
       }
       else
       {
@@ -5265,7 +5268,7 @@ token_cb(ipp_file_t     *f,		/* I - IPP file data */
 	get_filename(ippFileGetFilename(f), filename, temp, sizeof(filename));
 
 	if (access(filename, R_OK))
-	  data->skip_test = 1;
+	  data->skip_test = true;
       }
       else
       {
@@ -5281,8 +5284,8 @@ token_cb(ipp_file_t     *f,		/* I - IPP file data */
 
       if (ippFileReadToken(f, name, sizeof(name)))
       {
-	if (!_ippVarsGet(vars, name) && !getenv(name))
-	  data->skip_test = 1;
+	if (!ippFileGetVar(f, name) && !getenv(name))
+	  data->skip_test = true;
       }
       else
       {
@@ -5431,32 +5434,7 @@ token_cb(ipp_file_t     *f,		/* I - IPP file data */
 	return (false);
       }
 
-      ippSetOperation(f->attrs, op);
-    }
-    else if (!_cups_strcasecmp(token, "GROUP"))
-    {
-     /*
-      * Attribute group...
-      */
-
-      ipp_tag_t	group_tag;		/* Group tag */
-
-      if (!ippFileReadToken(f, temp, sizeof(temp)))
-      {
-	print_fatal_error(data, "Missing GROUP tag on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
-	return (false);
-      }
-
-      if ((group_tag = ippTagValue(temp)) == IPP_TAG_ZERO || group_tag >= IPP_TAG_UNSUPPORTED_VALUE)
-      {
-	print_fatal_error(data, "Bad GROUP tag \"%s\" on line %d of '%s'.", temp, ippFileGetLineNumber(f), ippFileGetFilename(f));
-	return (false);
-      }
-
-      if (group_tag == f->group_tag)
-	ippAddSeparator(f->attrs);
-
-      f->group_tag = group_tag;
+      data->op = op;
     }
     else if (!_cups_strcasecmp(token, "DELAY"))
     {
@@ -5893,9 +5871,6 @@ token_cb(ipp_file_t     *f,		/* I - IPP file data */
 	     !_cups_strcasecmp(token, "WITH-SCHEME") ||
 	     !_cups_strcasecmp(token, "WITH-VALUE"))
     {
-      off_t	lastpos;		/* Last file position */
-      int	lastline;		/* Last line number */
-
       if (data->last_expect)
       {
 	if (!_cups_strcasecmp(token, "WITH-ALL-HOSTNAMES") || !_cups_strcasecmp(token, "WITH-HOSTNAME"))
@@ -5924,9 +5899,9 @@ token_cb(ipp_file_t     *f,		/* I - IPP file data */
 
       for (;;)
       {
-        lastpos  = cupsFileTell(f->fp);
-        lastline = ippFileGetLineNumber(f);
-        ptr      += strlen(ptr);
+        ippFileSavePosition(f);
+
+        ptr += strlen(ptr);
 
 	if (!ippFileReadToken(f, ptr, (sizeof(temp) - (size_t)(ptr - temp))))
 	  break;
@@ -5948,8 +5923,8 @@ token_cb(ipp_file_t     *f,		/* I - IPP file data */
           * Not another value, stop here...
           */
 
-          cupsFileSeek(f->fp, lastpos);
-          ippFileGetLineNumber(f) = lastline;
+          ippFileRestorePosition(f);
+
           *ptr = '\0';
           break;
 	}
@@ -6090,7 +6065,7 @@ token_cb(ipp_file_t     *f,		/* I - IPP file data */
       if ((ptr = strrchr(data->name, '.')) != NULL)
         *ptr = '\0';
       data->repeat_interval = 5000000;
-      cupsCopyString(data->resource, data->vars->resource, sizeof(data->resource));
+      cupsCopyString(data->resource, ippFileGetVar(data->parent, "resource"), sizeof(data->resource));
       data->skip_previous = false;
       data->pass_test     = false;
       data->skip_test     = false;
@@ -6106,6 +6081,7 @@ token_cb(ipp_file_t     *f,		/* I - IPP file data */
       data->monitor_interval    = 5000000;
       data->num_monitor_expects = 0;
 
+      ippFileSetAttributes(f, ippNew());
       ippFileSetVar(f, "date-current", iso_date(ippTimeToDate(time(NULL))));
     }
     else if (!strcmp(token, "DEFINE"))
@@ -6134,7 +6110,7 @@ token_cb(ipp_file_t     *f,		/* I - IPP file data */
 
       if (ippFileReadToken(f, name, sizeof(name)) && ippFileReadToken(f, temp, sizeof(temp)))
       {
-        if (!_ippVarsGet(vars, name))
+        if (!ippFileGetVar(f, name))
         {
           ippFileSetVar(f, "date-current", iso_date(ippTimeToDate(time(NULL))));
 	  ippFileExpandVars(f, value, temp, sizeof(value));
@@ -6199,8 +6175,8 @@ token_cb(ipp_file_t     *f,		/* I - IPP file data */
 
         memcpy(&inc_data, data, sizeof(inc_data));
         inc_data.http        = NULL;
-	inc_data.pass        = 1;
-	inc_data.prev_pass   = 1;
+	inc_data.pass        = true;
+	inc_data.prev_pass   = true;
 	inc_data.show_header = true;
 
         if (!do_tests(get_filename(ippFileGetFilename(f), filename, temp, sizeof(filename)), &inc_data) && data->stop_after_include_error)
@@ -6235,8 +6211,8 @@ token_cb(ipp_file_t     *f,		/* I - IPP file data */
 
         memcpy(&inc_data, data, sizeof(inc_data));
         inc_data.http        = NULL;
-	inc_data.pass        = 1;
-	inc_data.prev_pass   = 1;
+	inc_data.pass        = true;
+	inc_data.prev_pass   = true;
 	inc_data.show_header = true;
 
         if (!do_tests(get_filename(ippFileGetFilename(f), filename, temp, sizeof(filename)), &inc_data) && data->stop_after_include_error)
@@ -6297,8 +6273,8 @@ token_cb(ipp_file_t     *f,		/* I - IPP file data */
 
       if (ippFileReadToken(f, name, sizeof(name)))
       {
-        if (_ippVarsGet(vars, name) || getenv(name))
-          data->skip_test = 1;
+        if (ippFileGetVar(f, name) || getenv(name))
+          data->skip_test = true;
       }
       else
       {
@@ -6314,8 +6290,8 @@ token_cb(ipp_file_t     *f,		/* I - IPP file data */
 
       if (ippFileReadToken(f, name, sizeof(name)))
       {
-        if (!_ippVarsGet(vars, name) && !getenv(name))
-          data->skip_test = 1;
+        if (!ippFileGetVar(f, name) && !getenv(name))
+          data->skip_test = true;
       }
       else
       {

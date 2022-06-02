@@ -1714,7 +1714,7 @@ ippDelete(ipp_t *ipp)			/* I - IPP message */
   ipp->use --;
   if (ipp->use > 0)
   {
-    DEBUG_printf(("4debug_retain: %p IPP message (use=%d)", (void *)ipp, ipp->use));
+    DEBUG_printf(("4debug_retain: %p IPP message (use=%u)", (void *)ipp, (unsigned)ipp->use));
     return;
   }
 
