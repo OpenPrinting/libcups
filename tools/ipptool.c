@@ -92,8 +92,8 @@ typedef struct ipptool_expect_s		/**** Expected attribute info ****/
   int		repeat_limit;		/* Maximum number of times to repeat */
   bool		repeat_match,		/* Repeat test on match */
 		repeat_no_match,	/* Repeat test on no match */
-		with_distinct,		/* WITH-DISTINCT-VALUES? */
-		with_flags;		/* WITH flags */
+		with_distinct;		/* WITH-DISTINCT-VALUES? */
+  int		with_flags;		/* WITH flags */
   size_t	count;			/* Expected count if > 0 */
   ipp_tag_t	in_group;		/* IN-GROUP value */
 } ipptool_expect_t;
@@ -6580,13 +6580,13 @@ with_flags_string(int flags)            /* I - WITH flags */
  */
 
 static bool				/* O - `true` on match, `false` on non-match */
-with_value(ipptool_test_t *data,	/* I - Test data */
-           cups_array_t     *errors,	/* I - Errors array */
-           char             *value,	/* I - Value string */
-           int              flags,	/* I - Flags for match */
-           ipp_attribute_t  *attr,	/* I - Attribute to compare */
-	   char             *matchbuf,	/* I - Buffer to hold matching value */
-	   size_t           matchlen)	/* I - Length of match buffer */
+with_value(ipptool_test_t  *data,	/* I - Test data */
+           cups_array_t    *errors,	/* I - Errors array */
+           char            *value,	/* I - Value string */
+           int             flags,	/* I - Flags for match */
+           ipp_attribute_t *attr,	/* I - Attribute to compare */
+	   char            *matchbuf,	/* I - Buffer to hold matching value */
+	   size_t          matchlen)	/* I - Length of match buffer */
 {
   size_t	i,			/* Looping var */
     		count;			/* Number of values */
