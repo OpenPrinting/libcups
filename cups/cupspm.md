@@ -1,8 +1,8 @@
 ---
 title: CUPS Programming Manual
 author: Michael R Sweet
-copyright: Copyright © 2021 by OpenPrinting. All Rights Reserved.
-version: 2.4.0
+copyright: Copyright © 2021-2022 by OpenPrinting. All Rights Reserved.
+version: 3.0.0
 ...
 
 > Please [file issues on Github](https://github.com/openprinting/cups/issues) to
@@ -30,7 +30,7 @@ When writing software (other than printer drivers) that uses the "cups" library:
 - Do not use undocumented or deprecated APIs,
 - Do not rely on pre-configured printers,
 - Do not assume that printers support specific features or formats, and
-- Do not rely on implementation details (PPDs, etc.)
+- Do not rely on implementation details.
 
 CUPS is designed to insulate users and developers from the implementation
 details of printers and file formats.  The goal is to allow an application to
@@ -41,14 +41,6 @@ system manage the printer communication and format conversion needed.
 Similarly, printer and job management applications can use standard query
 operations to obtain the status information in a common, generic form and use
 standard management operations to control the state of those printers and jobs.
-
-> **Note:**
->
-> CUPS printer drivers necessarily depend on specific file formats and certain
-> implementation details of the CUPS software.  Please consult the Postscript
-> and raster printer driver developer documentation on the
-> [OpenPrinting CUPS web site](https://openprinting.github.io/cups) for more
-> information.
 
 
 ## Terms Used in This Document
@@ -113,11 +105,12 @@ From the command-line, create a file called `simple.c` using your favorite
 editor, copy the example to this file, and save.  Then run the following command
 to compile it with GCC and run it:
 
-    gcc -o simple `cups-config --cflags` simple.c `cups-config --libs`
+    gcc -o simple `pkg-config --cflags cups` simple.c `pkg-config --libs cups`
     ./simple
 
-The `cups-config` command provides the compiler flags (`cups-config --cflags`)
-and libraries (`cups-config --libs`) needed for the local system.
+The `pkg-config` command provides the compiler flags
+(`pkg-config --cflags cups`) and libraries (`pkg-config --libs cups`) needed for
+the local system.
 
 
 # Working with Destinations
@@ -976,18 +969,18 @@ function:
 ## Authentication
 
 CUPS normally handles authentication through the console.  GUI applications
-should set a password callback using the `cupsSetPasswordCB2` function:
+should set a password callback using the `cupsSetPasswordCB` function:
 
     void
-    cupsSetPasswordCB2(cups_password_cb2_t cb, void *user_data);
+    cupsSetPasswordCB(cups_password_cb_t cb, void *user_data);
 
 The password callback will be called when needed and is responsible for setting
 the current user name using `cupsSetUser` and returning a string:
 
     const char *
-    cups_password_cb2(const char *prompt, http_t *http,
-                      const char *method, const char *resource,
-                      void *user_data);
+    cups_password_cb(const char *prompt, http_t *http,
+                     const char *method, const char *resource,
+                     void *user_data);
 
 The `prompt` argument is a string from CUPS that should be displayed to the
 user.
@@ -1003,4 +996,110 @@ typically "POST".
 The `resource` argument specifies the path used for the request.
 
 The `user_data` argument provides the user data pointer from the
-`cupsSetPasswordCB2` call.
+`cupsSetPasswordCB` call.
+
+
+# Migrating Code from CUPS 2.x and Earlier
+
+The CUPS 3.x library removes all of the deprecated and obsolete APIs from CUPS
+2.x and earlier and makes other naming changes for consistency.  As a result,
+the CUPS 3.x library is no longer binary compatible with programs compiled
+against the CUPS 2.x library and earlier, and some source code may need minor
+changes to compile with the new library.  This file describes the changes and
+how to migrate to the new library.
+
+
+## General Changes
+
+The following general changes have been made to the CUPS API:
+
+- Boolean values now use the C99 `bool` type.
+- Counts, indices, and lengths now use the `size_t` type - this affects the
+  array, HTTP, IPP, and option APIs in particular.
+- Accessor functions have been renamed (as necessary) to use the "get" and "set"
+  verbs, for example `cupsServer` is now `cupsGetServer` and `httpEncryption` is
+  now `httpSetEncryption`.
+
+
+## API Changes
+
+- `httpGets` now has the `http_t` pointer as the first argument.
+- The `cups_size_t` structure now includes `color`, `source`, and `type` members
+  to allow specification of media color, source (input tray/roll), and type.
+
+
+## Removed Functions
+
+The following CUPS 2.x API functions have been removed from the CUPS library:
+
+- Old class/printer functions: `cupsGetClasses` and `cupsGetPrinters`.
+- HTTP functions: `httpConnect2`, `httpConnectEncrypt`, `httpDecode64_2`, and
+  `httpEncode64_2`.
+- PPD file functions: `ppdClose`, `ppdCollect`, `ppdCollect2`, `ppdConflicts`,
+  `ppdEmit`, `ppdEmitAfterOrder`, `ppdEmitFd`, `ppdEmitJCL`, `ppdEmitJCLEnd`,
+  `ppdEmitString`, `ppdErrorString`, `ppdFindAttr`, `ppdFindChoice`,
+  `ppdFindCustomOption`, `ppdFindCustomParam`, `ppdFindMarkedChoice`,
+  `ppdFindNextAttr`, `ppdFindOption`, `ppdFirstCustomParam`, `ppdFirstOption`,
+  `ppdInstallableConflict`, `ppdIsMarked`, `ppdLastError`, `ppdLocalize`,
+  `ppdLocalizeAttr`, `ppdLocalizeIPPReason`, `ppdLocalizeMarkerName`,
+  `ppdMarkDefaults`, `ppdMarkOption`, `ppdNextCustomParam`, `ppdNextOption`,
+  `ppdOpen`, `ppdOpen2`, `ppdOpenFd`, `ppdOpenFile`, `ppdPageLength`,
+  `ppdPageSize`, `ppdPageSizeLimits`, `ppdPageWidth`, and `ppdSetConformance`.
+- PPD helper functions: `cupsGetConflicts`, `cupsGetPPD`, `cupsGetPPD2`,
+  `cupsGetPPD3`, `cupsGetServerPPD`, `cupsMarkOptions`,
+  `cupsRasterInterpretPPD`, and `cupsResolveConflicts`.
+- Deprecated functions: `cupsTempFile`.
+- Non-destination print functions: `cupsCancelJob`, `cupsCancelJob2`,
+  `cupsCreateJob`, `cupsCloseJob`, `cupsFinishDocument`, `cupsGetDefault`,
+  `cupsGetDefault2`, `cupsPrintFile`, `cupsPrintFile2`, `cupsPrintFiles`,
+  `cupsPrintFiles2`, and `cupsSendDocument`.
+- Array functions: `cupsArrayNew2` and `cupsArrayNew3`.
+- Raster functions: `cupsRasterReadHeader2` and `cupsRasterWriteHeader2`.
+
+
+## Renamed Functions and Types
+
+The following functions have been renamed in CUPS 3.0:
+
+| Old CUPS 2.x Name        | New CUPS 3.0 Name       |
+|--------------------------|-------------------------|
+| `cupsArrayCount`         | `cupsArrayGetCount`     |
+| `cupsArrayFirst`         | `cupsArrayGetFirst`     |
+| `cupsArrayIndex`         | `cupsArrayGetElement`   |
+| `cupsArrayLast`          | `cupsArrayGetLast`      |
+| `cupsArrayNew3`          | `cupsArrayNew`          |
+| `cupsArrayNext`          | `cupsArrayGetNext`      |
+| `cupsArrayPrev`          | `cupsArrayGetPrev`      |
+| `cupsEncryption`         | `cupsGetEncryption`     |
+| `cupsFileCompression`    | `cupsFileIsCompressed`  |
+| `cupsGetDests2`          | `cupsGetDests`          |
+| `cupsGetPassword2`       | `cupsGetPassword`       |
+| `cupsServer`             | `cupsGetServer`         |
+| `cupsSetPasswordCB2`     | `cupsSetPasswordCB`     |
+| `cupsTempFile2`          | `cupsTempFile`          |
+| `cupsUser`               | `cupsGetUser`           |
+| `cupsUserAgent`          | `cupsGetUserAgent`      |
+| `httpBlocking`           | `httpSetBlocking`       |
+| `httpConnect2`           | `httpConnect`           |
+| `httpDecode64_2`         | `httpDecode64`          |
+| `httpEncode64_2`         | `httpEncode64`          |
+| `httpGetDateString2`     | `httpGetDateString`     |
+| `httpGetLength2`         | `httpGetLength`         |
+| `httpRead2`              | `httpRead`              |
+| `httpReconnect2`         | `httpReconnect`         |
+| `httpStatus`             | `httpStatusString`      |
+| `httpWrite2`             | `httpWrite`             |
+| `cupsRasterReadHeader2`  | `cupsRasterReadHeader`  |
+| `cupsRasterWriteHeader2` | `cupsRasterWriteHeader` |
+
+Similarly, the following types have been renamed in CUPS 3.0:
+
+| Old CUPS 2.x Name     | New CUPS 3.0 Name    |
+|-----------------------|----------------------|
+| `cups_acopy_func_t`   | `cups_acopy_cb_t`    |
+| `cups_afree_func_t`   | `cups_afree_cb_t`    |
+| `cups_array_func_t`   | `cups_array_cb_t`    |
+| `cups_mode_t`         | `cups_raster_mode_t` |
+| `cups_raster_iocb_t`  | `cups_raster_cb_t`   |
+| `cups_password_cb2_t` | `cups_password_cb_t` |
+| `cups_page_header2_t` | `cups_page_header_t` |

@@ -19,7 +19,7 @@
  * Local functions...
  */
 
-static int	enum_cb(void *user_data, unsigned flags, cups_dest_t *dest);
+static bool	enum_cb(void *user_data, unsigned flags, cups_dest_t *dest);
 static void	localize(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, const char *option, const char *value);
 static void	print_file(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, const char *filename, size_t num_options, cups_option_t *options);
 static void	show_conflicts(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, size_t num_options, cups_option_t *options);
@@ -38,6 +38,7 @@ main(int  argc,				/* I - Number of command-line arguments */
      char *argv[])			/* I - Command-line arguments */
 {
   int		i;			/* Looping var */
+  size_t	n;			/* Looping var */
   http_t	*http;			/* Connection to destination */
   cups_dest_t	*dest = NULL;		/* Destination */
   cups_dinfo_t	*dinfo;			/* Destination info */
@@ -51,11 +52,11 @@ main(int  argc,				/* I - Number of command-line arguments */
   if (!strcmp(argv[1], "--get"))
   {
     cups_dest_t	*dests;			/* Destinations */
-    int		num_dests = cupsGetDests(CUPS_HTTP_DEFAULT, &dests);
+    size_t	num_dests = cupsGetDests(CUPS_HTTP_DEFAULT, &dests);
 					/* Number of destinations */
 
-    for (i = 0; i < num_dests; i ++)
-      enum_cb(NULL, 0, dests + i);
+    for (n = 0; n < num_dests; n ++)
+      enum_cb(NULL, 0, dests + n);
 
     cupsFreeDests(num_dests, dests);
     return (0);
@@ -235,7 +236,7 @@ main(int  argc,				/* I - Number of command-line arguments */
  * 'enum_cb()' - Print the results from the enumeration of destinations.
  */
 
-static int				/* O - 1 to continue */
+static bool				/* O - `true` to continue */
 enum_cb(void        *user_data,		/* I - User data (unused) */
         unsigned    flags,		/* I - Flags */
 	cups_dest_t *dest)		/* I - Destination */
@@ -256,7 +257,7 @@ enum_cb(void        *user_data,		/* I - User data (unused) */
 
   puts("");
 
-  return (1);
+  return (true);
 }
 
 

@@ -29,8 +29,6 @@ static void	cups_create_localizations(http_t *http, cups_dinfo_t *dinfo);
  *
  * The returned string is stored in the destination information and will become
  * invalid if the destination information is deleted.
- *
- * @since CUPS 2.0/macOS 10.10@
  */
 
 const char *				/* O - Localized string */
@@ -225,8 +223,6 @@ cupsLocalizeDestMedia(
  *
  * The returned string is stored in the destination information and will become
  * invalid if the destination information is deleted.
- *
- * @since CUPS 1.6/macOS 10.8@
  */
 
 const char *				/* O - Localized string */
@@ -265,8 +261,6 @@ cupsLocalizeDestOption(
  *
  * The returned string is stored in the destination information and will become
  * invalid if the destination information is deleted.
- *
- * @since CUPS 1.6/macOS 10.8@
  */
 
 const char *				/* O - Localized string */

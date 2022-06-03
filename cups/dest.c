@@ -87,15 +87,15 @@ typedef struct _cups_dnssd_data_s	/* Enumeration data */
 #  else /* HAVE_AVAHI */
   AvahiSimplePoll	*simple_poll;	/* Polling interface */
   AvahiClient		*client;	/* Client information */
-  int			got_data;	/* Did we get data? */
-  int			browsers;	/* How many browsers are running? */
+  bool			got_data;	/* Did we get data? */
+  size_t		browsers;	/* How many browsers are running? */
 #  endif /* HAVE_MDNSRESPONDER */
   cups_dest_cb_t	cb;		/* Callback */
   void			*user_data;	/* User data pointer */
   cups_ptype_t		type,		/* Printer type filter */
 			mask;		/* Printer type mask */
   cups_array_t		*devices;	/* Devices found so far */
-  int			num_dests;	/* Number of lpoptions destinations */
+  size_t		num_dests;	/* Number of lpoptions destinations */
   cups_dest_t		*dests;		/* lpoptions destinations */
   char			def_name[1024],	/* Default printer name, if any */
 			*def_instance;	/* Default printer instance, if any */
@@ -125,10 +125,10 @@ typedef struct _cups_dnssd_resolve_s	/* Data for resolving URI */
 
 typedef struct _cups_getdata_s
 {
-  int		num_dests;		/* Number of destinations */
-  cups_dest_t	*dests;			/* Destinations */
-  char		def_name[1024],		/* Default printer name, if any */
-		*def_instance;		/* Default printer instance, if any */
+  size_t		num_dests;	/* Number of destinations */
+  cups_dest_t		*dests;		/* Destinations */
+  char			def_name[1024],	/* Default printer name, if any */
+			*def_instance;	/* Default printer instance, if any */
 } _cups_getdata_t;
 
 typedef struct _cups_namedata_s
@@ -150,87 +150,38 @@ static CFStringRef	appleCopyNetwork(void);
 static char		*appleGetPaperSize(char *name, size_t namesize);
 #endif /* __APPLE__ */
 #if _CUPS_LOCATION_DEFAULTS
-static CFStringRef	appleGetPrinter(CFArrayRef locations,
-			                CFStringRef network, CFIndex *locindex);
+static CFStringRef	appleGetPrinter(CFArrayRef locations, CFStringRef network, CFIndex *locindex);
 #endif /* _CUPS_LOCATION_DEFAULTS */
-static cups_dest_t	*cups_add_dest(const char *name, const char *instance,
-				       int *num_dests, cups_dest_t **dests);
+static cups_dest_t	*cups_add_dest(const char *name, const char *instance, size_t *num_dests, cups_dest_t **dests);
 static int		cups_compare_dests(cups_dest_t *a, cups_dest_t *b);
 #ifdef HAVE_DNSSD
 #  ifdef HAVE_MDNSRESPONDER
-static void		cups_dnssd_browse_cb(DNSServiceRef sdRef,
-					     DNSServiceFlags flags,
-					     uint32_t interfaceIndex,
-					     DNSServiceErrorType errorCode,
-					     const char *serviceName,
-					     const char *regtype,
-					     const char *replyDomain,
-					     void *context);
+static void		cups_dnssd_browse_cb(DNSServiceRef sdRef, DNSServiceFlags flags, uint32_t interfaceIndex, DNSServiceErrorType errorCode, const char *serviceName, const char *regtype, const char *replyDomain, void *context);
 #  else /* HAVE_AVAHI */
-static void		cups_dnssd_browse_cb(AvahiServiceBrowser *browser,
-					     AvahiIfIndex interface,
-					     AvahiProtocol protocol,
-					     AvahiBrowserEvent event,
-					     const char *serviceName,
-					     const char *regtype,
-					     const char *replyDomain,
-					     AvahiLookupResultFlags flags,
-					     void *context);
-static void		cups_dnssd_client_cb(AvahiClient *client,
-					     AvahiClientState state,
-					     void *context);
+static void		cups_dnssd_browse_cb(AvahiServiceBrowser *browser, AvahiIfIndex interface, AvahiProtocol protocol, AvahiBrowserEvent event, const char *serviceName, const char *regtype, const char *replyDomain, AvahiLookupResultFlags flags, void *context);
+static void		cups_dnssd_client_cb(AvahiClient *client, AvahiClientState state, void *context);
 #  endif /* HAVE_MDNSRESPONDER */
-static int		cups_dnssd_compare_devices(_cups_dnssd_device_t *a,
-			                           _cups_dnssd_device_t *b);
-static void		cups_dnssd_free_device(_cups_dnssd_device_t *device,
-			                       _cups_dnssd_data_t *data);
-static _cups_dnssd_device_t *
-			cups_dnssd_get_device(_cups_dnssd_data_t *data,
-					      const char *serviceName,
-					      const char *regtype,
-					      const char *replyDomain);
+static int		cups_dnssd_compare_devices(_cups_dnssd_device_t *a, _cups_dnssd_device_t *b);
+static void		cups_dnssd_free_device(_cups_dnssd_device_t *device, _cups_dnssd_data_t *data);
+static _cups_dnssd_device_t *cups_dnssd_get_device(_cups_dnssd_data_t *data, const char *serviceName, const char *regtype, const char *replyDomain);
 #  ifdef HAVE_MDNSRESPONDER
-static void		cups_dnssd_query_cb(DNSServiceRef sdRef,
-					    DNSServiceFlags flags,
-					    uint32_t interfaceIndex,
-					    DNSServiceErrorType errorCode,
-					    const char *fullName,
-					    uint16_t rrtype, uint16_t rrclass,
-					    uint16_t rdlen, const void *rdata,
-					    uint32_t ttl, void *context);
+static void		cups_dnssd_query_cb(DNSServiceRef sdRef, DNSServiceFlags flags, uint32_t interfaceIndex, DNSServiceErrorType errorCode, const char *fullName, uint16_t rrtype, uint16_t rrclass, uint16_t rdlen, const void *rdata, uint32_t ttl, void *context);
 #  else /* HAVE_AVAHI */
-static int		cups_dnssd_poll_cb(struct pollfd *pollfds,
-					   unsigned int num_pollfds,
-					   int timeout, void *context);
-static void		cups_dnssd_query_cb(AvahiRecordBrowser *browser,
-					    AvahiIfIndex interface,
-					    AvahiProtocol protocol,
-					    AvahiBrowserEvent event,
-					    const char *name, uint16_t rrclass,
-					    uint16_t rrtype, const void *rdata,
-					    size_t rdlen,
-					    AvahiLookupResultFlags flags,
-					    void *context);
+static int		cups_dnssd_poll_cb(struct pollfd *pollfds, unsigned int num_pollfds, int timeout, void *context);
+static void		cups_dnssd_query_cb(AvahiRecordBrowser *browser, AvahiIfIndex interface, AvahiProtocol protocol, AvahiBrowserEvent event, const char *name, uint16_t rrclass, uint16_t rrtype, const void *rdata, size_t rdlen, AvahiLookupResultFlags flags, void *context);
 #  endif /* HAVE_MDNSRESPONDER */
-static const char	*cups_dnssd_resolve(cups_dest_t *dest, const char *uri,
-					    int msec, int *cancel,
-					    cups_dest_cb_t cb, void *user_data);
+static const char	*cups_dnssd_resolve(cups_dest_t *dest, const char *uri, int msec, int *cancel, cups_dest_cb_t cb, void *user_data);
 static int		cups_dnssd_resolve_cb(void *context);
-static void		cups_dnssd_unquote(char *dst, const char *src,
-			                   size_t dstsize);
+static void		cups_dnssd_unquote(char *dst, const char *src, size_t dstsize);
 static int		cups_elapsed(struct timeval *t);
 #endif /* HAVE_DNSSD */
-static int              cups_enum_dests(http_t *http, unsigned flags, int msec, int *cancel, cups_ptype_t type, cups_ptype_t mask, cups_dest_cb_t cb, void *user_data);
-static int		cups_find_dest(const char *name, const char *instance,
-				       int num_dests, cups_dest_t *dests, int prev,
-				       int *rdiff);
-static int              cups_get_cb(_cups_getdata_t *data, unsigned flags, cups_dest_t *dest);
-static char		*cups_get_default(const char *filename, char *namebuf,
-					  size_t namesize, const char **instance);
-static int		cups_get_dests(const char *filename, const char *match_name, const char *match_inst, int load_all, int user_default_set, int num_dests, cups_dest_t **dests);
-static char		*cups_make_string(ipp_attribute_t *attr, char *buffer,
-			                  size_t bufsize);
-static int              cups_name_cb(_cups_namedata_t *data, unsigned flags, cups_dest_t *dest);
+static bool		cups_enum_dests(http_t *http, unsigned flags, int msec, int *cancel, cups_ptype_t type, cups_ptype_t mask, cups_dest_cb_t cb, void *user_data);
+static size_t		cups_find_dest(const char *name, const char *instance, size_t num_dests, cups_dest_t *dests, size_t prev, int *rdiff);
+static bool		cups_get_cb(_cups_getdata_t *data, unsigned flags, cups_dest_t *dest);
+static char		*cups_get_default(const char *filename, char *namebuf, size_t namesize, const char **instance);
+static size_t		cups_get_dests(const char *filename, const char *match_name, const char *match_inst, bool load_all, bool user_default_set, size_t num_dests, cups_dest_t **dests);
+static char		*cups_make_string(ipp_attribute_t *attr, char *buffer, size_t bufsize);
+static bool		cups_name_cb(_cups_namedata_t *data, unsigned flags, cups_dest_t *dest);
 static void		cups_queue_name(char *name, const char *serviceName, size_t namesize);
 
 
@@ -249,10 +200,10 @@ static void		cups_queue_name(char *name, const char *serviceName, size_t namesiz
  * destinations to the user's lpoptions file.
  */
 
-int					/* O  - New number of destinations */
+size_t					/* O  - New number of destinations */
 cupsAddDest(const char  *name,		/* I  - Destination name */
             const char	*instance,	/* I  - Instance name or @code NULL@ for none/primary */
-            int         num_dests,	/* I  - Number of destinations */
+            size_t      num_dests,	/* I  - Number of destinations */
             cups_dest_t **dests)	/* IO - Destinations */
 {
   int		i;			/* Looping var */
@@ -466,7 +417,9 @@ _cupsAppleSetDefaultPrinter(
   */
 
   if ((locations = appleCopyLocations()) != NULL)
+  {
     locprinter = appleGetPrinter(locations, network, &locindex);
+  }
   else
   {
     locprinter = NULL;
@@ -488,8 +441,10 @@ _cupsAppleSetDefaultPrinter(
         CFArrayRemoveValueAtIndex(newlocations, locindex);
     }
     else
+    {
       newlocations = CFArrayCreateMutable(kCFAllocatorDefault, 0,
 					  &kCFTypeArrayCallBacks);
+    }
 
     newlocation = CFDictionaryCreateMutable(kCFAllocatorDefault, 0,
 					    &kCFTypeDictionaryKeyCallBacks,
@@ -573,8 +528,6 @@ _cupsAppleSetUseLastPrinter(
  * for the "flags" argument to connect directly to the device associated with
  * the destination.  Otherwise, the connection is made to the CUPS scheduler
  * associated with the destination.
- *
- *
  */
 
 http_t *				/* O - Connection to destination or @code NULL@ */
@@ -757,12 +710,12 @@ cupsConnectDest(
  *
  */
 
-int                                     /* O  - New number of destinations */
-cupsCopyDest(cups_dest_t *dest,         /* I  - Destination to copy */
-             int         num_dests,     /* I  - Number of destinations */
-             cups_dest_t **dests)       /* IO - Destination array */
+size_t					/* O  - New number of destinations */
+cupsCopyDest(cups_dest_t *dest,		/* I  - Destination to copy */
+             size_t      num_dests,	/* I  - Number of destinations */
+             cups_dest_t **dests)	/* IO - Destination array */
 {
-  int		i;			/* Looping var */
+  size_t	i;			/* Looping var */
   cups_dest_t	*new_dest;		/* New destination pointer */
   cups_option_t	*new_option,		/* Current destination option */
 		*option;		/* Current parent option */
@@ -779,8 +732,7 @@ cupsCopyDest(cups_dest_t *dest,         /* I  - Destination to copy */
   * See if the destination already exists...
   */
 
-  if ((new_dest = cupsGetDest(dest->name, dest->instance, num_dests,
-                              *dests)) != NULL)
+  if ((new_dest = cupsGetDest(dest->name, dest->instance, num_dests, *dests)) != NULL)
   {
    /*
     * Protect against copying destination to itself...
@@ -799,7 +751,9 @@ cupsCopyDest(cups_dest_t *dest,         /* I  - Destination to copy */
     new_dest->options     = NULL;
   }
   else
+  {
     new_dest = cups_add_dest(dest->name, dest->instance, &num_dests, dests);
+  }
 
   if (new_dest)
   {
@@ -810,10 +764,7 @@ cupsCopyDest(cups_dest_t *dest,         /* I  - Destination to copy */
 
     new_dest->num_options = dest->num_options;
 
-    for (i = dest->num_options, option = dest->options,
-	     new_option = new_dest->options;
-	 i > 0;
-	 i --, option ++, new_option ++)
+    for (i = dest->num_options, option = dest->options, new_option = new_dest->options; i > 0; i --, option ++, new_option ++)
     {
       new_option->name  = _cupsStrRetain(option->name);
       new_option->value = _cupsStrRetain(option->value);
@@ -923,7 +874,7 @@ _cupsCreateDest(const char *name,	/* I - Printer name */
  *
  */
 
-int					/* O - 1 on success, 0 on failure */
+bool					/* O - `true` on success, `false` on failure */
 cupsEnumDests(
   unsigned       flags,			/* I - Enumeration flags */
   int            msec,			/* I - Timeout in milliseconds, -1 for indefinite */
@@ -942,10 +893,10 @@ cupsEnumDests(
  */
 
 void
-cupsFreeDests(int         num_dests,	/* I - Number of destinations */
+cupsFreeDests(size_t      num_dests,	/* I - Number of destinations */
               cups_dest_t *dests)	/* I - Destinations */
 {
-  int		i;			/* Looping var */
+  size_t	i;			/* Looping var */
   cups_dest_t	*dest;			/* Current destination */
 
 
@@ -974,7 +925,7 @@ cupsFreeDests(int         num_dests,	/* I - Number of destinations */
 cups_dest_t *				/* O - Destination pointer or @code NULL@ */
 cupsGetDest(const char  *name,		/* I - Destination name or @code NULL@ for the default destination */
             const char	*instance,	/* I - Instance name or @code NULL@ */
-            int         num_dests,	/* I - Number of destinations */
+            size_t      num_dests,	/* I - Number of destinations */
             cups_dest_t *dests)		/* I - Destinations */
 {
   int	diff,				/* Result of comparison */
@@ -1005,7 +956,7 @@ cupsGetDest(const char  *name,		/* I - Destination name or @code NULL@ for the d
     * Lookup name and optionally the instance...
     */
 
-    match = cups_find_dest(name, instance, num_dests, dests, -1, &diff);
+    match = cups_find_dest(name, instance, num_dests, dests, num_dests, &diff);
 
     if (!diff)
       return (dests + match);
@@ -1259,7 +1210,7 @@ cupsGetDestWithURI(const char *name,	/* I - Desired printer name or @code NULL@ 
  * options array for each destination that supports it.
  */
 
-int					/* O  - Number of destinations */
+size_t					/* O  - Number of destinations */
 _cupsGetDests(http_t       *http,	/* I  - Connection to server or
 					 *      @code CUPS_HTTP_DEFAULT@ */
 	      ipp_op_t     op,		/* I  - IPP operation */
@@ -1268,7 +1219,7 @@ _cupsGetDests(http_t       *http,	/* I  - Connection to server or
 	      cups_ptype_t type,	/* I  - Printer type bits */
 	      cups_ptype_t mask)	/* I  - Printer type mask */
 {
-  int		num_dests = 0;		/* Number of destinations */
+  size_t	num_dests = 0;		/* Number of destinations */
   cups_dest_t	*dest;			/* Current destination */
   ipp_t		*request,		/* IPP Request */
 		*response;		/* IPP Response */
@@ -1535,7 +1486,7 @@ _cupsGetDests(http_t       *http,	/* I  - Connection to server or
  *
  */
 
-int					/* O - Number of destinations */
+size_t					/* O - Number of destinations */
 cupsGetDests(http_t      *http,		/* I - Connection to server or @code CUPS_HTTP_DEFAULT@ */
              cups_dest_t **dests)	/* O - Destinations */
 {
@@ -1604,7 +1555,7 @@ cupsGetDests(http_t      *http,		/* I - Connection to server or @code CUPS_HTTP_
   if (data.num_dests > 0)
     _cupsSetError(IPP_STATUS_OK, NULL, 0);
 
-  DEBUG_printf(("1cupsGetDests: Returning %d destinations.", data.num_dests));
+  DEBUG_printf(("1cupsGetDests: Returning %u destinations.", (unsigned)data.num_dests));
 
   return (data.num_dests);
 }
@@ -1669,7 +1620,9 @@ cupsGetNamedDest(http_t     *http,	/* I - Connection to server or @code CUPS_HTT
 	instance = ptr;
       }
       else
+      {
         instance = NULL;
+      }
     }
     else if (cg->home)
     {
@@ -1781,7 +1734,7 @@ cupsGetNamedDest(http_t     *http,	/* I - Connection to server or @code CUPS_HTT
     dest->instance = _cupsStrAlloc(instance);
 
   if (set_as_default)
-    dest->is_default = 1;
+    dest->is_default = true;
 
  /*
   * Then add local options...
@@ -1819,13 +1772,13 @@ cupsGetNamedDest(http_t     *http,	/* I - Connection to server or @code CUPS_HTT
  *
  */
 
-int					/* O  - New number of destinations */
+size_t					/* O  - New number of destinations */
 cupsRemoveDest(const char  *name,	/* I  - Destination name */
                const char  *instance,	/* I  - Instance name or @code NULL@ */
-	       int         num_dests,	/* I  - Number of destinations */
+	       size_t      num_dests,	/* I  - Number of destinations */
 	       cups_dest_t **dests)	/* IO - Destinations */
 {
-  int		i;			/* Index into destinations */
+  size_t	i;			/* Index into destinations */
   cups_dest_t	*dest;			/* Pointer to destination */
 
 
@@ -1850,10 +1803,10 @@ cupsRemoveDest(const char  *name,	/* I  - Destination name */
 
   num_dests --;
 
-  i = (int)(dest - *dests);
+  i = (size_t)(dest - *dests);
 
   if (i < num_dests)
-    memmove(dest, dest + 1, (size_t)(num_dests - i) * sizeof(cups_dest_t));
+    memmove(dest, dest + 1, (num_dests - i) * sizeof(cups_dest_t));
 
   return (num_dests);
 }
@@ -1869,10 +1822,10 @@ void
 cupsSetDefaultDest(
     const char  *name,			/* I - Destination name */
     const char  *instance,		/* I - Instance name or @code NULL@ */
-    int         num_dests,		/* I - Number of destinations */
+    size_t      num_dests,		/* I - Number of destinations */
     cups_dest_t *dests)			/* I - Destinations */
 {
-  int		i;			/* Looping var */
+  size_t	i;			/* Looping var */
   cups_dest_t	*dest;			/* Current destination */
 
 
@@ -1889,10 +1842,7 @@ cupsSetDefaultDest(
   */
 
   for (i = num_dests, dest = dests; i > 0; i --, dest ++)
-    dest->is_default = !_cups_strcasecmp(name, dest->name) &&
-                       ((!instance && !dest->instance) ||
-		        (instance && dest->instance &&
-			 !_cups_strcasecmp(instance, dest->instance)));
+    dest->is_default = !_cups_strcasecmp(name, dest->name) && ((!instance && !dest->instance) || (instance && dest->instance && !_cups_strcasecmp(instance, dest->instance)));
 }
 
 
@@ -1905,19 +1855,19 @@ cupsSetDefaultDest(
  *
  */
 
-int					/* O - 0 on success, -1 on error */
+bool					/* O - `true` on success, `false` on error */
 cupsSetDests(http_t      *http,		/* I - Connection to server or @code CUPS_HTTP_DEFAULT@ */
-             int         num_dests,	/* I - Number of destinations */
+             size_t      num_dests,	/* I - Number of destinations */
              cups_dest_t *dests)	/* I - Destinations */
 {
-  int		i, j;			/* Looping vars */
-  int		wrote;			/* Wrote definition? */
+  size_t	i, j;			/* Looping vars */
+  bool		wrote;			/* Wrote definition? */
   cups_dest_t	*dest;			/* Current destination */
   cups_option_t	*option;		/* Current option */
   _ipp_option_t	*match;			/* Matching attribute for option */
   FILE		*fp;			/* File pointer */
   char		filename[1024];		/* lpoptions file */
-  int		num_temps;		/* Number of temporary destinations */
+  size_t	num_temps;		/* Number of temporary destinations */
   cups_dest_t	*temps = NULL,		/* Temporary destinations */
 		*temp;			/* Current temporary dest */
   const char	*val;			/* Value of temporary option */
@@ -1929,7 +1879,7 @@ cupsSetDests(http_t      *http,		/* I - Connection to server or @code CUPS_HTTP_
   */
 
   if (!num_dests || !dests)
-    return (-1);
+    return (false);
 
  /*
   * Get the server destinations...
@@ -1940,7 +1890,7 @@ cupsSetDests(http_t      *http,		/* I - Connection to server or @code CUPS_HTTP_
   if (cupsLastError() >= IPP_STATUS_REDIRECTION_OTHER_SITE)
   {
     cupsFreeDests(num_temps, temps);
-    return (-1);
+    return (false);
   }
 
  /*
@@ -1965,7 +1915,7 @@ cupsSetDests(http_t      *http,		/* I - Connection to server or @code CUPS_HTTP_
       if (mkdir(filename, 0700) && errno != EEXIST)
       {
 	cupsFreeDests(num_temps, temps);
-        return (-1);
+        return (false);
       }
     }
 
@@ -1983,7 +1933,7 @@ cupsSetDests(http_t      *http,		/* I - Connection to server or @code CUPS_HTTP_
   if ((fp = fopen(filename, "w")) == NULL)
   {
     cupsFreeDests(num_temps, temps);
-    return (-1);
+    return (false);
   }
 
 #ifndef _WIN32
@@ -2004,6 +1954,7 @@ cupsSetDests(http_t      *http,		/* I - Connection to server or @code CUPS_HTTP_
   */
 
   for (i = num_dests, dest = dests; i > 0; i --, dest ++)
+  {
     if (dest->instance != NULL || dest->num_options != 0 || dest->is_default)
     {
       if (dest->is_default)
@@ -2012,10 +1963,12 @@ cupsSetDests(http_t      *http,		/* I - Connection to server or @code CUPS_HTTP_
 	if (dest->instance)
 	  fprintf(fp, "/%s", dest->instance);
 
-        wrote = 1;
+        wrote = true;
       }
       else
-        wrote = 0;
+      {
+        wrote = false;
+      }
 
       temp = cupsGetDest(dest->name, NULL, num_temps, temps);
 
@@ -2044,7 +1997,7 @@ cupsSetDests(http_t      *http,		/* I - Connection to server or @code CUPS_HTTP_
 	  fprintf(fp, "Dest %s", dest->name);
 	  if (dest->instance)
 	    fprintf(fp, "/%s", dest->instance);
-          wrote = 1;
+          wrote = true;
 	}
 
         if (option->value[0])
@@ -2083,6 +2036,7 @@ cupsSetDests(http_t      *http,		/* I - Connection to server or @code CUPS_HTTP_
       if (wrote)
         fputs("\n", fp);
     }
+  }
 
  /*
   * Free the temporary destinations and close the file...
@@ -2118,7 +2072,7 @@ cupsSetDests(http_t      *http,		/* I - Connection to server or @code CUPS_HTTP_
   notify_post("com.apple.printerListChange");
 #endif /* __APPLE__ */
 
-  return (0);
+  return (true);
 }
 
 
@@ -2128,8 +2082,8 @@ cupsSetDests(http_t      *http,		/* I - Connection to server or @code CUPS_HTTP_
  */
 
 char *					/* O - Default printer or NULL */
-_cupsGetUserDefault(char   *name,		/* I - Name buffer */
-                 size_t namesize)	/* I - Size of name buffer */
+_cupsGetUserDefault(char   *name,	/* I - Name buffer */
+                    size_t namesize)	/* I - Size of name buffer */
 {
   const char	*env;			/* LPDEST or PRINTER env variable */
 #ifdef __APPLE__
@@ -2138,8 +2092,10 @@ _cupsGetUserDefault(char   *name,		/* I - Name buffer */
 
 
   if ((env = getenv("LPDEST")) == NULL)
+  {
     if ((env = getenv("PRINTER")) != NULL && !strcmp(env, "lp"))
       env = NULL;
+  }
 
   if (env)
   {
@@ -2191,8 +2147,7 @@ appleCopyLocations(void)
   * Look up the location array in the preferences...
   */
 
-  if ((locations = CFPreferencesCopyAppValue(kLastUsedPrintersKey,
-                                             kCUPSPrintingPrefs)) == NULL)
+  if ((locations = CFPreferencesCopyAppValue(kLastUsedPrintersKey, kCUPSPrintingPrefs)) == NULL)
     return (NULL);
 
   if (CFGetTypeID(locations) != CFArrayGetTypeID())
@@ -2351,11 +2306,11 @@ appleGetPrinter(CFArrayRef  locations,	/* I - Location array */
 static cups_dest_t *			/* O  - New destination */
 cups_add_dest(const char  *name,	/* I  - Name of destination */
               const char  *instance,	/* I  - Instance or NULL */
-              int         *num_dests,	/* IO - Number of destinations */
+              size_t      *num_dests,	/* IO - Number of destinations */
 	      cups_dest_t **dests)	/* IO - Destinations */
 {
-  int		insert,			/* Insertion point */
-		diff;			/* Result of comparison */
+  size_t	insert;			/* Insertion point */
+  int		diff;			/* Result of comparison */
   cups_dest_t	*dest;			/* Destination pointer */
 
 
@@ -2378,11 +2333,12 @@ cups_add_dest(const char  *name,	/* I  - Name of destination */
   */
 
   if (*num_dests == 0)
+  {
     insert = 0;
+  }
   else
   {
-    insert = cups_find_dest(name, instance, *num_dests, *dests, *num_dests - 1,
-                            &diff);
+    insert = cups_find_dest(name, instance, *num_dests, *dests, *num_dests - 1, &diff);
 
     if (diff > 0)
       insert ++;
@@ -2393,7 +2349,7 @@ cups_add_dest(const char  *name,	/* I  - Name of destination */
   */
 
   if (insert < *num_dests)
-    memmove(*dests + insert + 1, *dests + insert, (size_t)(*num_dests - insert) * sizeof(cups_dest_t));
+    memmove(*dests + insert + 1, *dests + insert, (*num_dests - insert) * sizeof(cups_dest_t));
 
   (*num_dests) ++;
 
@@ -2404,7 +2360,7 @@ cups_add_dest(const char  *name,	/* I  - Name of destination */
   dest              = *dests + insert;
   dest->name        = _cupsStrAlloc(name);
   dest->instance    = _cupsStrAlloc(instance);
-  dest->is_default  = 0;
+  dest->is_default  = false;
   dest->num_options = 0;
   dest->options     = (cups_option_t *)0;
 
@@ -2773,7 +2729,7 @@ cups_dnssd_poll_cb(
   }
   else if (val > 0)
   {
-    data->got_data = 1;
+    data->got_data = true;
   }
 
   return (val);
@@ -3246,7 +3202,7 @@ cups_elapsed(struct timeval *t)		/* IO - Previous time */
  * 'cups_enum_dests()' - Enumerate destinations from a specific server.
  */
 
-static int                              /* O - 1 on success, 0 on failure */
+static bool				/* O - `true` on success, `false` on failure */
 cups_enum_dests(
   http_t         *http,                 /* I - Connection to scheduler */
   unsigned       flags,                 /* I - Enumeration flags */
@@ -3257,9 +3213,9 @@ cups_enum_dests(
   cups_dest_cb_t cb,                    /* I - Callback function */
   void           *user_data)            /* I - User data */
 {
-  int           i, j, k,		/* Looping vars */
-                num_dests;              /* Number of destinations */
-  cups_dest_t   *dests = NULL,          /* Destinations */
+  size_t	i, j, k,		/* Looping vars */
+		num_dests;		/* Number of destinations */
+  cups_dest_t   *dests = NULL,		/* Destinations */
                 *dest;			/* Current destination */
   cups_option_t	*option;		/* Current option */
   const char	*user_default;		/* Default printer from environment */
@@ -3303,7 +3259,7 @@ cups_enum_dests(
   if (!cb)
   {
     DEBUG_puts("1cups_enum_dests: No callback, returning 0.");
-    return (0);
+    return (false);
   }
 
  /*
@@ -3392,9 +3348,7 @@ cups_enum_dests(
       }
     }
 
-    for (i = num_dests, dest = dests;
-         i > 0 && (!cancel || !*cancel);
-         i --, dest ++)
+    for (i = num_dests, dest = dests; i > 0 && (!cancel || !*cancel); i --, dest ++)
     {
       cups_dest_t	*user_dest;	/* Destination from lpoptions */
 #ifdef HAVE_DNSSD
@@ -3407,7 +3361,7 @@ cups_enum_dests(
         * Apply user defaults to this destination for all instances...
         */
 
-        for (j = user_dest - data.dests; j < data.num_dests; j ++, user_dest ++)
+        for (j = (size_t)(user_dest - data.dests); j < data.num_dests; j ++, user_dest ++)
         {
           if (_cups_strcasecmp(user_dest->name, dest->name))
           {
@@ -3491,7 +3445,7 @@ cups_enum_dests(
     cupsFreeDests(data.num_dests, data.dests);
     cupsArrayDelete(data.devices);
 
-    return (0);
+    return (false);
   }
 
   main_fd = DNSServiceRefSockFD(data.main_ref);
@@ -3505,7 +3459,7 @@ cups_enum_dests(
     cupsFreeDests(data.num_dests, data.dests);
     cupsArrayDelete(data.devices);
 
-    return (0);
+    return (false);
   }
 
 #    ifdef HAVE_TLS
@@ -3518,7 +3472,7 @@ cups_enum_dests(
     cupsFreeDests(data.num_dests, data.dests);
     cupsArrayDelete(data.devices);
 
-    return (0);
+    return (false);
   }
 #    endif /* HAVE_TLS */
 
@@ -3530,14 +3484,12 @@ cups_enum_dests(
     cupsFreeDests(data.num_dests, data.dests);
     cupsArrayDelete(data.devices);
 
-    return (0);
+    return (false);
   }
 
   avahi_simple_poll_set_func(data.simple_poll, cups_dnssd_poll_cb, &data);
 
-  data.client = avahi_client_new(avahi_simple_poll_get(data.simple_poll),
-         0, cups_dnssd_client_cb, &data,
-         &error);
+  data.client = avahi_client_new(avahi_simple_poll_get(data.simple_poll), 0, cups_dnssd_client_cb, &data, &error);
   if (!data.client)
   {
     DEBUG_puts("1cups_enum_dests: Unable to create Avahi client, returning 0.");
@@ -3546,7 +3498,7 @@ cups_enum_dests(
     cupsFreeDests(data.num_dests, data.dests);
     cupsArrayDelete(data.devices);
 
-    return (0);
+    return (false);
   }
 
   data.browsers = 1;
@@ -3560,7 +3512,7 @@ cups_enum_dests(
     cupsFreeDests(data.num_dests, data.dests);
     cupsArrayDelete(data.devices);
 
-    return (0);
+    return (false);
   }
 
 #    ifdef HAVE_TLS
@@ -3576,7 +3528,7 @@ cups_enum_dests(
     cupsFreeDests(data.num_dests, data.dests);
     cupsArrayDelete(data.devices);
 
-    return (0);
+    return (false);
   }
 #    endif /* HAVE_TLS */
 #  endif /* HAVE_MDNSRESPONDER */
@@ -3611,7 +3563,7 @@ cups_enum_dests(
 #    endif /* _WIN32 */
 
 #  else /* HAVE_AVAHI */
-    data.got_data = 0;
+    data.got_data = false;
 
     if ((error = avahi_simple_poll_iterate(data.simple_poll, _CUPS_DNSSD_MAXTIME)) > 0)
     {
@@ -3623,7 +3575,7 @@ cups_enum_dests(
       break;
     }
 
-    DEBUG_printf(("1cups_enum_dests: got_data=%d", data.got_data));
+    DEBUG_printf(("1cups_enum_dests: got_data=%s", data.got_data ? "true" : "false"));
 #  endif /* HAVE_MDNSRESPONDER */
 
     remaining -= cups_elapsed(&curtime);
@@ -3690,7 +3642,7 @@ cups_enum_dests(
 	    * Apply user defaults to this destination for all instances...
 	    */
 
-	    for (j = user_dest - data.dests; j < data.num_dests; j ++, user_dest ++)
+	    for (j = (size_t)(user_dest - data.dests); j < data.num_dests; j ++, user_dest ++)
 	    {
 	      if (_cups_strcasecmp(user_dest->name, dest->name))
 	      {
@@ -3786,7 +3738,7 @@ cups_enum_dests(
 
   DEBUG_puts("1cups_enum_dests: Returning 1.");
 
-  return (1);
+  return (true);
 }
 
 
@@ -3794,25 +3746,25 @@ cups_enum_dests(
  * 'cups_find_dest()' - Find a destination using a binary search.
  */
 
-static int				/* O - Index of match */
+static size_t				/* O - Index of match */
 cups_find_dest(const char  *name,	/* I - Destination name */
                const char  *instance,	/* I - Instance or NULL */
-               int         num_dests,	/* I - Number of destinations */
+               size_t      num_dests,	/* I - Number of destinations */
 	       cups_dest_t *dests,	/* I - Destinations */
-	       int         prev,	/* I - Previous index */
+	       size_t      prev,	/* I - Previous index */
 	       int         *rdiff)	/* O - Difference of match */
 {
-  int		left,			/* Low mark for binary search */
+  size_t	left,			/* Low mark for binary search */
 		right,			/* High mark for binary search */
-		current,		/* Current index */
-		diff;			/* Result of comparison */
+		current;		/* Current index */
+  int		diff;			/* Result of comparison */
   cups_dest_t	key;			/* Search key */
 
 
   key.name     = (char *)name;
   key.instance = (char *)instance;
 
-  if (prev >= 0)
+  if (prev < num_dests)
   {
    /*
     * Start search on either side of previous...
@@ -3897,7 +3849,7 @@ cups_find_dest(const char  *name,	/* I - Destination name */
  * 'cups_get_cb()' - Collect enumerated destinations.
  */
 
-static int                              /* O - 1 to continue, 0 to stop */
+static bool				/* O - `true` to continue, `false` to stop */
 cups_get_cb(_cups_getdata_t *data,      /* I - Data from cupsGetDests */
             unsigned        flags,      /* I - Enumeration flags */
             cups_dest_t     *dest)      /* I - Destination */
@@ -3919,7 +3871,7 @@ cups_get_cb(_cups_getdata_t *data,      /* I - Data from cupsGetDests */
     data->num_dests = cupsCopyDest(dest, data->num_dests, &data->dests);
   }
 
-  return (1);
+  return (true);
 }
 
 
@@ -3976,17 +3928,17 @@ cups_get_default(const char *filename,	/* I - File to read */
  * 'cups_get_dests()' - Get destinations from a file.
  */
 
-static int				/* O - Number of destinations */
+static size_t				/* O - Number of destinations */
 cups_get_dests(
     const char  *filename,		/* I - File to read from */
     const char  *match_name,		/* I - Destination name we want */
     const char  *match_inst,		/* I - Instance name we want */
-    int         load_all,		/* I - Load all saved destinations? */
-    int         user_default_set,	/* I - User default printer set? */
-    int         num_dests,		/* I - Number of destinations */
+    bool        load_all,		/* I - Load all saved destinations? */
+    bool        user_default_set,	/* I - User default printer set? */
+    size_t      num_dests,		/* I - Number of destinations */
     cups_dest_t **dests)		/* IO - Destinations */
 {
-  int		i;			/* Looping var */
+  size_t	i;			/* Looping var */
   cups_dest_t	*dest;			/* Current destination */
   cups_file_t	*fp;			/* File pointer */
   char		line[8192],		/* Line from file */
@@ -3996,7 +3948,7 @@ cups_get_dests(
   int		linenum;		/* Current line number */
 
 
-  DEBUG_printf(("7cups_get_dests(filename=\"%s\", match_name=\"%s\", match_inst=\"%s\", load_all=%d, user_default_set=%d, num_dests=%d, dests=%p)", filename, match_name, match_inst, load_all, user_default_set, num_dests, (void *)dests));
+  DEBUG_printf(("7cups_get_dests(filename=\"%s\", match_name=\"%s\", match_inst=\"%s\", load_all=%s, user_default_set=%s, num_dests=%u, dests=%p)", filename, match_name, match_inst, load_all ? "true" : "false", user_default_set ? "true" : "false", (unsigned)num_dests, (void *)dests));
 
  /*
   * Try to open the file...
@@ -4232,7 +4184,7 @@ cups_make_string(
  * 'cups_name_cb()' - Find an enumerated destination.
  */
 
-static int                              /* O - 1 to continue, 0 to stop */
+static bool				/* O - `true` to continue, `false` to stop */
 cups_name_cb(_cups_namedata_t *data,    /* I - Data from cupsGetNamedDest */
              unsigned         flags,    /* I - Enumeration flags */
              cups_dest_t      *dest)    /* I - Destination */
@@ -4246,10 +4198,10 @@ cups_name_cb(_cups_namedata_t *data,    /* I - Data from cupsGetNamedDest */
     */
 
     cupsCopyDest(dest, 0, &data->dest);
-    return (0);
+    return (false);
   }
 
-  return (1);
+  return (true);
 }
 
 

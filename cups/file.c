@@ -405,8 +405,6 @@ cupsFileGetChar(cups_file_t *fp)	/* I - CUPS file */
 
 /*
  * 'cupsFileGetConf()' - Get a line from a configuration file.
- *
- * @since CUPS 1.2/macOS 10.5@
  */
 
 char *					/* O  - Line read or `NULL` on end of file or error */
@@ -548,8 +546,6 @@ cupsFileGetConf(cups_file_t *fp,	/* I  - CUPS file */
  * and LF are preserved, as is any binary data on the line. The buffer is
  * nul-terminated, however you should use the returned length to determine
  * the number of bytes on the line.
- *
- * @since CUPS 1.2/macOS 10.5@
  */
 
 size_t					/* O - Number of bytes on line or 0 on end of file */
@@ -622,8 +618,6 @@ cupsFileGetLine(cups_file_t *fp,	/* I - File to read from */
 
 /*
  * 'cupsFileGets()' - Get a CR and/or LF-terminated line.
- *
- * @since CUPS 1.2/macOS 10.5@
  */
 
 char *					/* O - Line read or `NULL` on end of file or error */

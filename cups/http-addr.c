@@ -29,8 +29,6 @@
 
 /*
  * 'httpAddrAny()' - Check for the "any" address.
- *
- * @since CUPS 1.2/macOS 10.5@
  */
 
 int					/* O - 1 if "any", 0 otherwise */
@@ -60,8 +58,6 @@ httpAddrAny(const http_addr_t *addr)	/* I - Address to check */
  * Pass @code NULL@ for sockets created with @link httpAddrConnect2@ and the
  * listen address for sockets created with @link httpAddrListen@.  This function
  * ensures that domain sockets are removed when closed.
- *
- * @since CUPS 2.0/OS 10.10@
  */
 
 int						/* O - 0 on success, -1 on failure */
@@ -86,8 +82,6 @@ httpAddrClose(http_addr_t *addr,		/* I - Listen address or @code NULL@ */
 
 /*
  * 'httpAddrEqual()' - Compare two addresses.
- *
- * @since CUPS 1.2/macOS 10.5@
  */
 
 int						/* O - 1 if equal, 0 if not */
@@ -119,8 +113,6 @@ httpAddrEqual(const http_addr_t *addr1,		/* I - First address */
 
 /*
  * 'httpAddrLength()' - Return the length of the address in bytes.
- *
- * @since CUPS 1.2/macOS 10.5@
  */
 
 int					/* O - Length in bytes */
@@ -150,8 +142,6 @@ httpAddrLength(const http_addr_t *addr)	/* I - Address */
 /*
  * 'httpAddrListen()' - Create a listening socket bound to the specified
  *                      address and port.
- *
- * @since CUPS 1.7/macOS 10.9@
  */
 
 int					/* O - Socket or -1 on error */
@@ -282,8 +272,6 @@ httpAddrListen(http_addr_t *addr,	/* I - Address to bind to */
 
 /*
  * 'httpAddrLocalhost()' - Check for the local loopback address.
- *
- * @since CUPS 1.2/macOS 10.5@
  */
 
 int					/* O - 1 if local host, 0 otherwise */
@@ -314,8 +302,6 @@ httpAddrLocalhost(
 
 /*
  * 'httpAddrLookup()' - Lookup the hostname associated with the address.
- *
- * @since CUPS 1.2/macOS 10.5@
  */
 
 char *					/* O - Host name */
@@ -421,8 +407,6 @@ httpAddrFamily(http_addr_t *addr)	/* I - Address */
 
 /*
  * 'httpAddrPort()' - Get the port number associated with an address.
- *
- * @since CUPS 1.7/macOS 10.9@
  */
 
 int					/* O - Port number */
@@ -464,8 +448,6 @@ _httpAddrSetPort(http_addr_t *addr,	/* I - Address */
 
 /*
  * 'httpAddrString()' - Convert an address to a numeric string.
- *
- * @since CUPS 1.2/macOS 10.5@
  */
 
 char *					/* O - Numeric address string */
@@ -556,8 +538,6 @@ httpAddrString(const http_addr_t *addr,	/* I - Address to convert */
  * the client.
  *
  * Returns @code NULL@ if the socket is currently unconnected.
- *
- * @since CUPS 2.0/OS 10.10@
  */
 
 http_addr_t *				/* O - Connected address or @code NULL@ */
@@ -687,8 +667,6 @@ httpGetHostByName(const char *name)	/* I - Hostname or IP address */
  * or the address of the client for the connection from httpAcceptConnection().
  * Otherwise, return the FQDN for the local system using both gethostname()
  * and gethostbyname() to get the local hostname with domain.
- *
- * @since CUPS 1.2/macOS 10.5@
  */
 
 const char *				/* O - FQDN for connection or system */
@@ -801,8 +779,6 @@ httpGetHostname(http_t *http,		/* I - HTTP connection or NULL */
 /*
  * 'httpResolveHostname()' - Resolve the hostname of the HTTP connection
  *                           address.
- *
- * @since CUPS 2.0/OS 10.10@
  */
 
 const char *				/* O - Resolved hostname or @code NULL@ */

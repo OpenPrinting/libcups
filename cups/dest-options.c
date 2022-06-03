@@ -28,7 +28,7 @@
  */
 
 static void		cups_add_dconstres(cups_array_t *a, ipp_t *collection);
-static int		cups_collection_contains(ipp_t *test, ipp_t *match);
+static bool		cups_collection_contains(ipp_t *test, ipp_t *match);
 static size_t		cups_collection_string(ipp_attribute_t *attr, char *buffer, size_t bufsize) _CUPS_NONNULL((1,2));
 static int		cups_compare_dconstres(_cups_dconstres_t *a, _cups_dconstres_t *b);
 static int		cups_compare_media_db(_cups_media_db_t *a, _cups_media_db_t *b);
@@ -38,8 +38,8 @@ static void		cups_create_constraints(cups_dinfo_t *dinfo);
 static void		cups_create_defaults(cups_dinfo_t *dinfo);
 static void		cups_create_media_db(cups_dinfo_t *dinfo, unsigned flags);
 static void		cups_free_media_db(_cups_media_db_t *mdb);
-static int		cups_get_media_db(http_t *http, cups_dinfo_t *dinfo, pwg_media_t *pwg, unsigned flags, cups_size_t *size);
-static int		cups_is_close_media_db(_cups_media_db_t *a, _cups_media_db_t *b);
+static bool		cups_get_media_db(http_t *http, cups_dinfo_t *dinfo, pwg_media_t *pwg, unsigned flags, cups_size_t *size);
+static bool		cups_is_close_media_db(_cups_media_db_t *a, _cups_media_db_t *b);
 static cups_array_t	*cups_test_constraints(cups_dinfo_t *dinfo, const char *new_option, const char *new_value, size_t num_options, cups_option_t *options, size_t *num_conflicts, cups_option_t **conflicts);
 static void		cups_update_ready(http_t *http, cups_dinfo_t *dinfo);
 
@@ -145,11 +145,9 @@ cupsAddDestMediaOptions(
  *                              by the destination.
  *
  * Returns 1 if supported, 0 otherwise.
- *
- * @since CUPS 1.6/macOS 10.8@
  */
 
-int					/* O - 1 if supported, 0 otherwise */
+bool					/* O - `true` if supported, `false` if not */
 cupsCheckDestSupported(
     http_t       *http,			/* I - Connection to destination */
     cups_dest_t  *dest,			/* I - Destination */
@@ -180,14 +178,16 @@ cupsCheckDestSupported(
   */
 
   if (!http || !dest || !dinfo || !option)
-    return (0);
+    return (false);
 
  /*
   * Lookup the attribute...
   */
 
   if (strstr(option, "-supported"))
+  {
     attr = ippFindAttribute(dinfo->attrs, option, IPP_TAG_ZERO);
+  }
   else
   {
     snprintf(temp, sizeof(temp), "%s-supported", option);
@@ -195,10 +195,10 @@ cupsCheckDestSupported(
   }
 
   if (!attr)
-    return (0);
+    return (false);
 
   if (!value)
-    return (1);
+    return (true);
 
 /*
   * Compare values...
@@ -249,7 +249,7 @@ cupsCheckDestSupported(
         (pwg = pwgMediaForPWG(value)) != NULL &&
         pwg->width >= min_width && pwg->width <= max_width &&
         pwg->length >= min_length && pwg->length <= max_length)
-      return (1);
+      return (true);
   }
   else
   {
@@ -270,7 +270,7 @@ cupsCheckDestSupported(
 
           for (i = 0; i < attr->num_values; i ++)
             if (attr->values[i].integer == int_value)
-              return (1);
+              return (true);
           break;
 
       case IPP_TAG_BOOLEAN :
@@ -285,14 +285,14 @@ cupsCheckDestSupported(
           for (i = 0; i < attr->num_values; i ++)
             if (int_value >= attr->values[i].range.lower &&
                 int_value <= attr->values[i].range.upper)
-              return (1);
+              return (true);
           break;
 
       case IPP_TAG_RESOLUTION :
           if (sscanf(value, "%dx%d%15s", &xres_value, &yres_value, temp) != 3)
           {
             if (sscanf(value, "%d%15s", &xres_value, temp) != 2)
-              return (0);
+              return (true);
 
             yres_value = xres_value;
           }
@@ -302,7 +302,7 @@ cupsCheckDestSupported(
           else if (!strcmp(temp, "dpc") || !strcmp(temp, "dpcm"))
             units_value = IPP_RES_PER_CM;
           else
-            return (0);
+            return (true);
 
           for (i = attr->num_values, attrval = attr->values;
                i > 0;
@@ -311,7 +311,7 @@ cupsCheckDestSupported(
             if (attrval->resolution.xres == xres_value &&
                 attrval->resolution.yres == yres_value &&
                 attrval->resolution.units == units_value)
-              return (1);
+              return (true);
           }
           break;
 
@@ -326,8 +326,10 @@ cupsCheckDestSupported(
       case IPP_TAG_TEXTLANG :
       case IPP_TAG_NAMELANG :
           for (i = 0; i < attr->num_values; i ++)
+          {
             if (!strcmp(attr->values[i].string.text, value))
-              return (1);
+              return (true);
+          }
           break;
 
       default :
@@ -339,7 +341,7 @@ cupsCheckDestSupported(
   * If we get there the option+value is not supported...
   */
 
-  return (0);
+  return (false);
 }
 
 
@@ -361,8 +363,6 @@ cupsCheckDestSupported(
  *
  * If cupsCopyDestConflicts returns 1 but "num_resolved" and "resolved" are set
  * to 0 and @code NULL@, respectively, then the conflict cannot be resolved.
- *
- * @since CUPS 1.6/macOS 10.8@
  */
 
 int					/* O - 1 if there is a conflict, 0 if none, -1 on error */
@@ -650,8 +650,6 @@ cupsCopyDestConflicts(
  *
  * The caller is responsible for calling @link cupsFreeDestInfo@ on the return
  * value. @code NULL@ is returned on error.
- *
- * @since CUPS 1.6/macOS 10.8@
  */
 
 cups_dinfo_t *				/* O - Destination information */
@@ -811,8 +809,6 @@ cupsCopyDestInfo(
  * @code ippGetInteger@, @code ippGetOctetString@, @code ippGetRange@,
  * @code ippGetResolution@, @code ippGetString@, and @code ippGetValueTag@
  * functions to inspect the default value(s) as needed.
- *
- * @since CUPS 1.7/macOS 10.9@
  */
 
 ipp_attribute_t	*			/* O - Default attribute or @code NULL@ for none */
@@ -859,8 +855,6 @@ cupsFindDestDefault(
  * @code ippGetInteger@, @code ippGetOctetString@, @code ippGetRange@,
  * @code ippGetResolution@, @code ippGetString@, and @code ippGetValueTag@
  * functions to inspect the default value(s) as needed.
- *
- * @since CUPS 1.7/macOS 10.9@
  */
 
 ipp_attribute_t	*			/* O - Default attribute or @code NULL@ for none */
@@ -909,8 +903,6 @@ cupsFindDestReady(
  * @code ippGetInteger@, @code ippGetOctetString@, @code ippGetRange@,
  * @code ippGetResolution@, @code ippGetString@, and @code ippGetValueTag@
  * functions to inspect the default value(s) as needed.
- *
- * @since CUPS 1.7/macOS 10.9@
  */
 
 ipp_attribute_t	*			/* O - Default attribute or @code NULL@ for none */
@@ -952,8 +944,6 @@ cupsFindDestSupported(
 /*
  * 'cupsFreeDestInfo()' - Free destination information obtained using
  *                        @link cupsCopyDestInfo@.
- *
- * @since CUPS 1.6/macOS 10.8@
  */
 
 void
@@ -997,11 +987,9 @@ cupsFreeDestInfo(cups_dinfo_t *dinfo)	/* I - Destination information */
  * The @code flags@ parameter determines which set of media are indexed.  For
  * example, passing @code CUPS_MEDIA_FLAGS_BORDERLESS@ will get the Nth
  * borderless size supported by the printer.
- *
- * @since CUPS 1.7/macOS 10.9@
  */
 
-int					/* O - 1 on success, 0 on failure */
+bool					/* O - `true` on success, `false` on failure */
 cupsGetDestMediaByIndex(
     http_t       *http,			/* I - Connection to destination */
     cups_dest_t  *dest,			/* I - Destination */
@@ -1031,7 +1019,7 @@ cupsGetDestMediaByIndex(
   if (!http || !dest || !dinfo || !size)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), 0);
-    return (0);
+    return (false);
   }
 
  /*
@@ -1051,19 +1039,25 @@ cupsGetDestMediaByIndex(
   if ((nsize = (_cups_media_db_t *)cupsArrayGetElement(dinfo->cached_db, n)) == NULL)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), 0);
-    return (0);
+    return (false);
   }
 
   if (nsize->key)
+  {
     cupsCopyString(size->media, nsize->key, sizeof(size->media));
+  }
   else if (nsize->size_name)
+  {
     cupsCopyString(size->media, nsize->size_name, sizeof(size->media));
+  }
   else if ((pwg = pwgMediaForSize(nsize->width, nsize->length)) != NULL)
+  {
     cupsCopyString(size->media, pwg->pwg, sizeof(size->media));
+  }
   else
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), 0);
-    return (0);
+    return (false);
   }
 
   size->width  = nsize->width;
@@ -1073,7 +1067,7 @@ cupsGetDestMediaByIndex(
   size->right  = nsize->right;
   size->top    = nsize->top;
 
-  return (1);
+  return (true);
 }
 
 
@@ -1093,11 +1087,9 @@ cupsGetDestMediaByIndex(
  * The matching result (if any) is returned in the "cups_size_t" structure.
  *
  * Returns 1 when there is a match and 0 if there is not a match.
- *
- * @since CUPS 1.6/macOS 10.8@
  */
 
-int					/* O - 1 on match, 0 on failure */
+bool					/* O - `true` on match, `false` on failure */
 cupsGetDestMediaByName(
     http_t       *http,			/* I - Connection to destination */
     cups_dest_t  *dest,			/* I - Destination */
@@ -1126,7 +1118,7 @@ cupsGetDestMediaByName(
   if (!http || !dest || !dinfo || !media || !size)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), 0);
-    return (0);
+    return (false);
   }
 
  /*
@@ -1134,12 +1126,14 @@ cupsGetDestMediaByName(
   */
 
   if ((pwg = pwgMediaForPWG(media)) == NULL)
+  {
     if ((pwg = pwgMediaForLegacy(media)) == NULL)
     {
       DEBUG_printf(("1cupsGetDestMediaByName: Unknown size '%s'.", media));
       _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unknown media size name."), 1);
-      return (0);
+      return (false);
     }
+  }
 
  /*
   * Lookup the size...
@@ -1169,7 +1163,7 @@ cupsGetDestMediaByName(
  * @since CUPS 1.6/macOS 10.8@
  */
 
-int					/* O - 1 on match, 0 on failure */
+bool					/* O - `true` on match, `false` on failure */
 cupsGetDestMediaBySize(
     http_t       *http,			/* I - Connection to destination */
     cups_dest_t  *dest,			/* I - Destination */
@@ -1201,7 +1195,7 @@ cupsGetDestMediaBySize(
   if (!http || !dest || !dinfo || width <= 0 || length <= 0 || !size)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), 0);
-    return (0);
+    return (false);
   }
 
  /*
@@ -1213,7 +1207,7 @@ cupsGetDestMediaBySize(
     DEBUG_printf(("1cupsGetDestMediaBySize: Invalid size %dx%d.", width,
                   length));
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Invalid media size."), 1);
-    return (0);
+    return (false);
   }
 
  /*
@@ -1281,7 +1275,7 @@ cupsGetDestMediaCount(
  * @since CUPS 1.7/macOS 10.9@
  */
 
-int					/* O - 1 on success, 0 on failure */
+bool					/* O - `true` on match, `false` on failure */
 cupsGetDestMediaDefault(
     http_t       *http,			/* I - Connection to destination */
     cups_dest_t  *dest,			/* I - Destination */
@@ -1309,7 +1303,7 @@ cupsGetDestMediaDefault(
   if (!http || !dest || !dinfo || !size)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), 0);
-    return (0);
+    return (false);
   }
 
  /*
@@ -1320,16 +1314,16 @@ cupsGetDestMediaDefault(
     media = "na_letter_8.5x11in";
 
   if (cupsGetDestMediaByName(http, dest, dinfo, media, flags, size))
-    return (1);
+    return (true);
 
   if (strcmp(media, "na_letter_8.5x11in") && cupsGetDestMediaByName(http, dest, dinfo, "iso_a4_210x297mm", flags, size))
-    return (1);
+    return (true);
 
   if (strcmp(media, "iso_a4_210x297mm") && cupsGetDestMediaByName(http, dest, dinfo, "na_letter_8.5x11in", flags, size))
-    return (1);
+    return (true);
 
   if ((flags & CUPS_MEDIA_FLAGS_BORDERLESS) && cupsGetDestMediaByName(http, dest, dinfo, "na_index_4x6in", flags, size))
-    return (1);
+    return (true);
 
  /*
   * Fall back to the first matching media size...
@@ -1370,7 +1364,7 @@ cups_add_dconstres(
  * 'cups_collection_contains()' - Check whether test collection is contained in the matching collection.
  */
 
-static int				/* O - 1 on a match, 0 on a non-match */
+static bool				/* O - `true` on a match, `false` on a non-match */
 cups_collection_contains(ipp_t *test,	/* I - Collection to test */
                          ipp_t *match)	/* I - Matching values */
 {
@@ -1385,7 +1379,7 @@ cups_collection_contains(ipp_t *test,	/* I - Collection to test */
   for (mattr = ippFirstAttribute(match); mattr; mattr = ippNextAttribute(match))
   {
     if ((tattr = ippFindAttribute(test, ippGetName(mattr), IPP_TAG_ZERO)) == NULL)
-      return (0);
+      return (false);
 
     tcount = ippGetCount(tattr);
 
@@ -1394,29 +1388,29 @@ cups_collection_contains(ipp_t *test,	/* I - Collection to test */
       case IPP_TAG_INTEGER :
       case IPP_TAG_ENUM :
           if (ippGetValueTag(tattr) != ippGetValueTag(mattr))
-            return (0);
+            return (false);
 
           for (i = 0; i < tcount; i ++)
           {
             if (!ippContainsInteger(mattr, ippGetInteger(tattr, i)))
-              return (0);
+              return (false);
           }
           break;
 
       case IPP_TAG_RANGE :
           if (ippGetValueTag(tattr) != IPP_TAG_INTEGER)
-            return (0);
+            return (false);
 
           for (i = 0; i < tcount; i ++)
           {
             if (!ippContainsInteger(mattr, ippGetInteger(tattr, i)))
-              return (0);
+              return (false);
           }
           break;
 
       case IPP_TAG_BOOLEAN :
           if (ippGetValueTag(tattr) != IPP_TAG_BOOLEAN || ippGetBoolean(tattr, 0) != ippGetBoolean(mattr, 0))
-            return (0);
+            return (false);
           break;
 
       case IPP_TAG_TEXTLANG :
@@ -1432,7 +1426,7 @@ cups_collection_contains(ipp_t *test,	/* I - Collection to test */
           for (i = 0; i < tcount; i ++)
           {
             if ((tval = ippGetString(tattr, i, NULL)) == NULL || !ippContainsString(mattr, tval))
-              return (0);
+              return (false);
           }
           break;
 
@@ -1443,17 +1437,19 @@ cups_collection_contains(ipp_t *test,	/* I - Collection to test */
 					/* Testing collection */
 
             for (j = 0, mcount = ippGetCount(mattr); j < mcount; j ++)
+            {
               if (!cups_collection_contains(tcol, ippGetCollection(mattr, j)))
-                return (0);
+                return (false);
+            }
           }
           break;
 
       default :
-          return (0);
+          return (false);
     }
   }
 
-  return (1);
+  return (true);
 }
 
 
@@ -2251,7 +2247,7 @@ cups_free_media_db(
  * 'cups_get_media_db()' - Lookup the media entry for a given size.
  */
 
-static int				/* O - 1 on match, 0 on failure */
+static bool				/* O - `true` on match, `false` on failure */
 cups_get_media_db(http_t       *http,	/* I - Connection to destination */
                   cups_dinfo_t *dinfo,	/* I - Destination information */
                   pwg_media_t  *pwg,	/* I - PWG media info */
@@ -2328,7 +2324,7 @@ cups_get_media_db(http_t       *http,	/* I - Connection to destination */
 
       if ((flags & CUPS_MEDIA_FLAGS_EXACT) &&
           (best->left || best->right || best->top || best->bottom))
-        return (0);
+        return (false);
     }
     else if (flags & CUPS_MEDIA_FLAGS_DUPLEX)
     {
@@ -2375,12 +2371,12 @@ cups_get_media_db(http_t       *http,	/* I - Connection to destination */
         pwg->width > dinfo->max_size.width ||
         pwg->length < dinfo->min_size.length ||
         pwg->length > dinfo->max_size.length)
-      return (0);			/* Out of range */
+      return (false);			/* Out of range */
 
     if ((flags & CUPS_MEDIA_FLAGS_BORDERLESS) &&
         (dinfo->min_size.left > 0 || dinfo->min_size.right > 0 ||
          dinfo->min_size.top > 0 || dinfo->min_size.bottom > 0))
-      return (0);			/* Not borderless */
+      return (false);			/* Not borderless */
 
     key.size_name = (char *)pwg->pwg;
     key.bottom    = dinfo->min_size.bottom;
@@ -2420,7 +2416,7 @@ cups_get_media_db(http_t       *http,	/* I - Connection to destination */
         break;
 
     if (!mdb)
-      return (0);
+      return (false);
 
     best = mdb;
 
@@ -2507,7 +2503,7 @@ cups_get_media_db(http_t       *http,	/* I - Connection to destination */
   size->right  = best->right;
   size->top    = best->top;
 
-  return (1);
+  return (true);
 }
 
 
@@ -2518,7 +2514,7 @@ cups_get_media_db(http_t       *http,	/* I - Connection to destination */
  * Currently we use 5 points (from PostScript) as the matching range...
  */
 
-static int				/* O - 1 if the sizes are close */
+static bool				/* O - `true` if the sizes are close, `false` otherwise */
 cups_is_close_media_db(
     _cups_media_db_t *a,		/* I - First media entries */
     _cups_media_db_t *b)		/* I - Second media entries */
@@ -2530,8 +2526,7 @@ cups_is_close_media_db(
   dwidth  = a->width - b->width;
   dlength = a->length - b->length;
 
-  return (dwidth >= -176 && dwidth <= 176 &&
-          dlength >= -176 && dlength <= 176);
+  return (dwidth >= -176 && dwidth <= 176 && dlength >= -176 && dlength <= 176);
 }
 
 
@@ -2596,7 +2591,7 @@ cups_test_constraints(
         break;
       }
 
-      match = 0;
+      match = false;
 
       switch (attr->value_tag)
       {
@@ -2610,7 +2605,7 @@ cups_test_constraints(
 	    {
 	      if (attrval->integer == int_value)
 	      {
-		match = 1;
+		match = true;
 		break;
 	      }
             }
@@ -2625,7 +2620,7 @@ cups_test_constraints(
 	    {
 	      if (attrval->boolean == int_value)
 	      {
-		match = 1;
+		match = true;
 		break;
 	      }
             }
@@ -2641,7 +2636,7 @@ cups_test_constraints(
 	      if (int_value >= attrval->range.lower &&
 	          int_value <= attrval->range.upper)
 	      {
-		match = 1;
+		match = true;
 		break;
 	      }
             }
@@ -2671,7 +2666,7 @@ cups_test_constraints(
 		  attrval->resolution.yres == yres_value &&
 		  attrval->resolution.units == units_value)
 	      {
-	      	match = 1;
+	      	match = true;
 		break;
 	      }
 	    }
@@ -2693,7 +2688,7 @@ cups_test_constraints(
 	    {
 	      if (!strcmp(attrval->string.text, value))
 	      {
-		match = 1;
+		match = true;
 		break;
 	      }
             }
@@ -2707,7 +2702,7 @@ cups_test_constraints(
             {
               if (cups_collection_contains(col, ippGetCollection(attr, i)))
               {
-                match = 1;
+                match = true;
                 break;
 	      }
             }
@@ -2736,7 +2731,7 @@ cups_test_constraints(
       {
         cups_option_t	*moption;	/* Matching option */
 
-        for (i = (size_t)num_matching, moption = matching; i > 0; i --, moption ++)
+        for (i = num_matching, moption = matching; i > 0; i --, moption ++)
           *num_conflicts = cupsAddOption(moption->name, moption->value, *num_conflicts, conflicts);
       }
     }

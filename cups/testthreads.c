@@ -22,7 +22,7 @@
  * Local functions...
  */
 
-static int	enum_dests_cb(void *_name, unsigned flags, cups_dest_t *dest);
+static bool	enum_dests_cb(void *_name, unsigned flags, cups_dest_t *dest);
 static void	*run_query(cups_dest_t *dest);
 static void	show_supported(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, const char *option, const char *value);
 
@@ -51,7 +51,7 @@ main(int  argc,				/* I - Number of command-line arguments */
  * 'enum_dests_cb()' - Destination enumeration function...
  */
 
-static int				/* O - 1 to continue, 0 to stop */
+static bool				/* O - `true` to continue, `false` to stop */
 enum_dests_cb(void        *_name,	/* I - Printer name, if any */
               unsigned    flags,	/* I - Enumeration flags */
               cups_dest_t *dest)	/* I - Found destination */
@@ -68,7 +68,7 @@ enum_dests_cb(void        *_name,	/* I - Printer name, if any */
   */
 
   if (name && strcasecmp(name, dest->name))
-    return (1);				/* Continue */
+    return (true);			/* Continue */
 
  /*
   * Copy the destination and run the query on a separate thread...

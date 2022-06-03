@@ -147,8 +147,6 @@ cupsGetEncryption(void)
  * thread in a program. Multi-threaded programs that override the setting via
  * the @link cupsSetPasswordCB2@ function need to do so in each thread for the
  * same function to be used.
- *
- * @since CUPS 1.4/macOS 10.6@
  */
 
 const char *				/* O - Password */
@@ -205,8 +203,6 @@ cupsGetServer(void)
  * Note: The current certificate callback is tracked separately for each thread
  * in a program. Multi-threaded programs that override the callback need to do
  * so in each thread for the same callback to be used.
- *
- * @since CUPS 1.5/macOS 10.7@
  */
 
 void
@@ -229,8 +225,6 @@ cupsSetClientCertCB(
  * Note: The default credentials are tracked separately for each thread in a
  * program. Multi-threaded programs that override the setting need to do so in
  * each thread for the same setting to be used.
- *
- * @since CUPS 1.5/macOS 10.7@
  */
 
 int					/* O - Status of call (0 = success) */
@@ -326,8 +320,6 @@ cupsSetOAuthCB(
  * Note: The current password callback is tracked separately for each thread
  * in a program. Multi-threaded programs that override the callback need to do
  * so in each thread for the same callback to be used.
- *
- * @since CUPS 1.4/macOS 10.6@
  */
 
 void
@@ -435,8 +427,6 @@ cupsSetServer(const char *server)	/* I - Server name */
  * Note: The current credentials callback is tracked separately for each thread
  * in a program. Multi-threaded programs that override the callback need to do
  * so in each thread for the same callback to be used.
- *
- * @since CUPS 1.5/macOS 10.7@
  */
 
 void
@@ -480,8 +470,6 @@ cupsSetUser(const char *user)		/* I - User name */
  *
  * Setting the string to NULL forces the default value containing the CUPS
  * version, IPP version, and operating system version and architecture.
- *
- * @since CUPS 1.7/macOS 10.9@
  */
 
 void
@@ -633,8 +621,6 @@ cupsGetUser(void)
 
 /*
  * 'cupsGetUserAgent()' - Return the default HTTP User-Agent string.
- *
- * @since CUPS 1.7/macOS 10.9@
  */
 
 const char *				/* O - User-Agent string */

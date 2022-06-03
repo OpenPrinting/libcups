@@ -29,10 +29,10 @@
  */
 
 void
-cupsFreeJobs(int        num_jobs,	/* I - Number of jobs */
+cupsFreeJobs(size_t     num_jobs,	/* I - Number of jobs */
              cups_job_t *jobs)		/* I - Jobs */
 {
-  int		i;			/* Looping var */
+  size_t	i;			/* Looping var */
   cups_job_t	*job;			/* Current job */
 
 
@@ -131,14 +131,14 @@ cupsGetDefault(http_t *http)		/* I - Connection to server or `CUPS_HTTP_DEFAULT`
  *
  */
 
-int					/* O - Number of jobs */
+size_t					/* O - Number of jobs */
 cupsGetJobs(http_t           *http,	/* I - Connection to server or @code CUPS_HTTP_DEFAULT@ */
             cups_job_t       **jobs,	/* O - Job data */
             const char       *name,	/* I - @code NULL@ = all destinations, otherwise show jobs for named destination */
             bool             myjobs,	/* I - `false` = all users, `true` = mine */
 	    cups_whichjobs_t whichjobs)	/* I - `CUPS_WHICHJOBS_ALL`, `CUPS_WHICHJOBS_ACTIVE`, or `CUPS_WHICHJOBS_COMPLETED` */
 {
-  int		n;			/* Number of jobs */
+  size_t	n;			/* Number of jobs */
   ipp_t		*request,		/* IPP Request */
 		*response;		/* IPP Response */
   ipp_attribute_t *attr;		/* Current attribute */
@@ -155,7 +155,6 @@ cupsGetJobs(http_t           *http,	/* I - Connection to server or @code CUPS_HT
 		*title,			/* job-name */
 		*user;			/* job-originating-user-name */
   char		uri[HTTP_MAX_URI];	/* URI for jobs */
-  _cups_globals_t *cg = _cupsGlobals();	/* Pointer to library globals */
   static const char * const attrs[] =	/* Requested attributes */
 		{
 		  "document-format",
@@ -180,7 +179,7 @@ cupsGetJobs(http_t           *http,	/* I - Connection to server or @code CUPS_HT
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), 0);
 
-    return (-1);
+    return (0);
   }
 
  /*
@@ -189,22 +188,22 @@ cupsGetJobs(http_t           *http,	/* I - Connection to server or @code CUPS_HT
 
   if (name)
   {
-    if (httpAssembleURIf(HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", NULL,
-                         "localhost", 0, "/printers/%s",
-                         name) < HTTP_URI_STATUS_OK)
+    if (httpAssembleURIf(HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", NULL, "localhost", 0, "/printers/%s", name) < HTTP_URI_STATUS_OK)
     {
       _cupsSetError(IPP_STATUS_ERROR_INTERNAL,
                     _("Unable to create printer-uri"), 1);
 
-      return (-1);
+      return (0);
     }
   }
   else
     cupsCopyString(uri, "ipp://localhost/", sizeof(uri));
 
   if (!http)
+  {
     if ((http = _cupsConnect()) == NULL)
-      return (-1);
+      return (0);
+  }
 
  /*
   * Build an IPP_GET_JOBS request, which requires the following
@@ -355,7 +354,7 @@ cupsGetJobs(http_t           *http,	/* I - Connection to server or @code CUPS_HT
 
         ippDelete(response);
 
-	return (-1);
+	return (0);
       }
 
       *jobs = temp;
@@ -385,8 +384,5 @@ cupsGetJobs(http_t           *http,	/* I - Connection to server or @code CUPS_HT
     ippDelete(response);
   }
 
-  if (n == 0 && cg->last_error >= IPP_STATUS_ERROR_BAD_REQUEST)
-    return (-1);
-  else
-    return (n);
+  return (n);
 }

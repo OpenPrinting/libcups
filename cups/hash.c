@@ -1,6 +1,7 @@
 /*
  * Hashing function for CUPS.
  *
+ * Copyright © 2022 by OpenPrinting.
  * Copyright © 2015-2019 by Apple Inc.
  *
  * Licensed under Apache License v2.0.  See the file "LICENSE" for more
@@ -37,8 +38,6 @@
  * least 64 bytes in length for all of the supported algorithms.
  *
  * The returned hash is binary data.
- *
- * @since CUPS 2.2/macOS 10.12@
  */
 
 ssize_t					/* O - Size of hash or -1 on error */
