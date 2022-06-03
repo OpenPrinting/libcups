@@ -75,7 +75,7 @@ typedef enum ipptool_with_e		/**** WITH flags ****/
 
 typedef struct ipptool_expect_s		/**** Expected attribute info ****/
 {
-  int		optional,		/* Optional attribute? */
+  bool		optional,		/* Optional attribute? */
 		not_expect,		/* Don't expect attribute? */
 		expect_all;		/* Expect all attributes to match/not match */
   char		*name,			/* Attribute name */
@@ -89,11 +89,11 @@ typedef struct ipptool_expect_s		/**** Expected attribute info ****/
 		*define_no_match,	/* Variable to define on no-match */
 		*define_value,		/* Variable to define with value */
 		*display_match;		/* Message to display on a match */
-  int		repeat_limit,		/* Maximum number of times to repeat */
-		repeat_match,		/* Repeat test on match */
+  int		repeat_limit;		/* Maximum number of times to repeat */
+  bool		repeat_match,		/* Repeat test on match */
 		repeat_no_match,	/* Repeat test on no match */
-		with_distinct,		/* WITH-DISTINCT-VALUES? */
-		with_flags;		/* WITH flags */
+		with_distinct;		/* WITH-DISTINCT-VALUES? */
+  int		with_flags;		/* WITH flags */
   size_t	count;			/* Expected count if > 0 */
   ipp_tag_t	in_group;		/* IN-GROUP value */
 } ipptool_expect_t;
@@ -120,42 +120,44 @@ typedef struct ipptool_status_s		/**** Status info ****/
 		*define_match,		/* Variable to define on match */
 		*define_no_match,	/* Variable to define on no-match */
 		*define_value;		/* Variable to define with value */
-  int		repeat_limit,		/* Maximum number of times to repeat */
-		repeat_match,		/* Repeat the test when it does not match */
+  int		repeat_limit;		/* Maximum number of times to repeat */
+  bool		repeat_match,		/* Repeat the test when it does not match */
 		repeat_no_match;	/* Repeat the test when it matches */
 } ipptool_status_t;
 
 typedef struct ipptool_test_s		/**** Test Data ****/
 {
   /* Global Options */
-  _ipp_vars_t	*vars;			/* Variables */
+  ipp_file_t	*parent;		// Parent IPP data file values
+  int		password_tries;		// Number of password attempts
   http_encryption_t encryption;		/* Encryption for connection */
   int		family;			/* Address family */
   ipptool_output_t output;		/* Output mode */
-  int		repeat_on_busy;		/* Repeat tests on server-error-busy */
-  int		stop_after_include_error;
+  bool		repeat_on_busy;		/* Repeat tests on server-error-busy */
+  bool		stop_after_include_error;
 					/* Stop after include errors? */
   double	timeout;		/* Timeout for connection */
-  int		validate_headers,	/* Validate HTTP headers in response? */
-                verbosity;		/* Show all attributes? */
+  bool		validate_headers;	/* Validate HTTP headers in response? */
+  int		verbosity;		/* Show all attributes? */
 
   /* Test Defaults */
-  int		def_ignore_errors;	/* Default IGNORE-ERRORS value */
+  bool		def_ignore_errors;	/* Default IGNORE-ERRORS value */
   ipptool_transfer_t def_transfer;	/* Default TRANSFER value */
   int		def_version;		/* Default IPP version */
 
   /* Global State */
   http_t	*http;			/* HTTP connection to printer/server */
   cups_file_t	*outfile;		/* Output file */
-  int		show_header,		/* Show the test header? */
-		xml_header;		/* 1 if XML plist header was written */
-  bool		pass;			/* Have we passed all tests? */
+  bool		show_header,		/* Show the test header? */
+		xml_header,		/* `true` if XML plist header was written */
+		pass;			/* Have we passed all tests? */
   int		test_count,		/* Number of tests (total) */
 		pass_count,		/* Number of tests that passed */
 		fail_count,		/* Number of tests that failed */
 		skip_count;		/* Number of tests that were skipped */
 
   /* Per-Test State */
+  ipp_op_t	op;			// Operation code
   cups_array_t	*errors;		/* Errors array */
   bool		prev_pass,		/* Result of previous test */
 		skip_previous;		/* Skip on previous test failure? */
@@ -169,13 +171,13 @@ typedef struct ipptool_test_s		/**** Test Data ****/
 		*last_expect;		/* Last EXPECT (for predicates) */
   char		file[1024],		/* Data filename */
 		file_id[1024];		/* File identifier */
-  int		ignore_errors;		/* Ignore test failures? */
+  bool		ignore_errors;		/* Ignore test failures? */
   char		name[1024];		/* Test name */
   char		pause[1024];		/* PAUSE value */
   useconds_t	repeat_interval;	/* Repeat interval (delay) */
   int		request_id;		/* Current request ID */
   char		resource[512];		/* Resource for request */
-  int		pass_test,		/* Pass this test? */
+  bool		pass_test,		/* Pass this test? */
 		skip_test;		/* Skip this test? */
   size_t	num_statuses;		/* Number of valid status codes */
   ipptool_status_t statuses[100],	/* Valid status codes */
@@ -184,7 +186,7 @@ typedef struct ipptool_test_s		/**** Test Data ****/
   ipptool_transfer_t transfer;		/* To chunk or not to chunk */
   int		version;		/* IPP version number to use */
   cups_thread_t	monitor_thread;		/* Monitoring thread ID */
-  int		monitor_done;		/* Set to 1 to stop monitor thread */
+  bool		monitor_done;		/* Set to `true` to stop monitor thread */
   char		*monitor_uri;		/* MONITOR-PRINTER-STATE URI */
   useconds_t	monitor_delay,		/* MONITOR-PRINTER-STATE DELAY value, if any */
 		monitor_interval;	/* MONITOR-PRINTER-STATE DELAY interval */
@@ -192,7 +194,7 @@ typedef struct ipptool_test_s		/**** Test Data ****/
   ipptool_expect_t monitor_expects[MAX_MONITOR];
 					/* MONITOR-PRINTER-STATE EXPECTs */
   ipptool_generate_t *generate_params;	/* GENERATE-FILE parameters */
-  char		buffer[1024 * 1024];	/* Output buffer */
+  char		buffer[1024*1024];	/* Output buffer */
 } ipptool_test_t;
 
 
@@ -200,7 +202,7 @@ typedef struct ipptool_test_s		/**** Test Data ****/
  * Globals...
  */
 
-static int	Cancel = 0;		/* Cancel test? */
+static bool	Cancel = false;		/* Cancel test? */
 
 
 /*
@@ -208,20 +210,23 @@ static int	Cancel = 0;		/* Cancel test? */
  */
 
 static void	add_stringf(cups_array_t *a, const char *s, ...) _CUPS_FORMAT(2, 3);
-static int      compare_uris(const char *a, const char *b);
+static ipptool_test_t *alloc_data(void);
+static int	compare_uris(const char *a, const char *b);
+static http_t	*connect_printer(ipptool_test_t *data);
 static void	copy_hex_string(char *buffer, unsigned char *data, int datalen, size_t bufsize);
 static void	*do_monitor_printer_state(ipptool_test_t *data);
-static int	do_test(_ipp_file_t *f, ipptool_test_t *data);
-static int	do_tests(const char *testfile, ipptool_test_t *data);
-static int	error_cb(_ipp_file_t *f, ipptool_test_t *data, const char *error);
-static int      expect_matches(ipptool_expect_t *expect, ipp_attribute_t *attr);
+static bool	do_test(ipp_file_t *file, ipptool_test_t *data);
+static bool	do_tests(const char *testfile, ipptool_test_t *data);
+static bool	error_cb(ipp_file_t *f, ipptool_test_t *data, const char *error);
+static bool	expect_matches(ipptool_expect_t *expect, ipp_attribute_t *attr);
+static void	free_data(ipptool_test_t *data);
 static http_status_t generate_file(http_t *http, ipptool_generate_t *params);
 static char	*get_filename(const char *testfile, char *dst, const char *src, size_t dstsize);
 static const char *get_string(ipp_attribute_t *attr, size_t element, int flags, char *buffer, size_t bufsize);
-static void	init_data(ipptool_test_t *data);
 static char	*iso_date(const ipp_uchar_t *date);
-static int	parse_generate_file(_ipp_file_t *f, ipptool_test_t *data);
-static int	parse_monitor_printer_state(_ipp_file_t *f, ipptool_test_t *data);
+static bool	parse_generate_file(ipp_file_t *f, ipptool_test_t *data);
+static bool	parse_monitor_printer_state(ipp_file_t *f, ipptool_test_t *data);
+static const char *password_cb(const char *prompt, http_t *http, const char *method, const char *resource, void *user_data);
 static void	pause_message(const char *message);
 static void	print_attr(cups_file_t *outfile, ipptool_output_t output, ipp_attribute_t *attr, ipp_tag_t *group);
 static ipp_attribute_t *print_csv(ipptool_test_t *data, ipp_t *ipp, ipp_attribute_t *attr, int num_displayed, char **displayed, size_t *widths);
@@ -238,12 +243,12 @@ static void	print_xml_trailer(ipptool_test_t *data, int success, const char *mes
 static void	sigterm_handler(int sig);
 #endif /* _WIN32 */
 static bool	timeout_cb(http_t *http, void *user_data);
-static int	token_cb(_ipp_file_t *f, _ipp_vars_t *vars, ipptool_test_t *data, const char *token);
+static bool	token_cb(ipp_file_t *f, ipptool_test_t *data, const char *token);
 static void	usage(void) _CUPS_NORETURN;
-static int	with_distinct_values(cups_array_t *errors, ipp_attribute_t *attr);
+static bool	with_distinct_values(cups_array_t *errors, ipp_attribute_t *attr);
 static const char *with_flags_string(int flags);
-static int      with_value(ipptool_test_t *data, cups_array_t *errors, char *value, int flags, ipp_attribute_t *attr, char *matchbuf, size_t matchlen);
-static int      with_value_from(cups_array_t *errors, ipp_attribute_t *fromattr, ipp_attribute_t *attr, char *matchbuf, size_t matchlen);
+static bool	with_value(ipptool_test_t *data, cups_array_t *errors, char *value, int flags, ipp_attribute_t *attr, char *matchbuf, size_t matchlen);
+static bool	with_value_from(cups_array_t *errors, ipp_attribute_t *fromattr, ipp_attribute_t *attr, char *matchbuf, size_t matchlen);
 
 
 /*
@@ -265,10 +270,9 @@ main(int  argc,				/* I - Number of command-line args */
 			*testfile;	/* Test file to use */
   int			interval,	/* Test interval in microseconds */
 			repeat;		/* Repeat count */
-  _ipp_vars_t		vars;		/* Variables */
-  ipptool_test_t	*data;		/* Test data */
+  ipptool_test_t	*data;		// Test data
   _cups_globals_t	*cg = _cupsGlobals();
-					/* Global data */
+					// Global data
 
 
 #ifndef _WIN32
@@ -286,18 +290,7 @@ main(int  argc,				/* I - Number of command-line args */
 
   _cupsSetLocale(argv);
 
-  if ((data = (ipptool_test_t *)calloc(1, sizeof(ipptool_test_t))) == NULL)
-  {
-    perror("ipptool: Unable to allocate memory for tests");
-    return (1);
-  }
-
-  init_data(data);
-
-  _ippVarsInit(&vars, NULL, (_ipp_ferror_cb_t)error_cb, (_ipp_ftoken_cb_t)token_cb);
-  data->vars = &vars;
-
-  _ippVarsSet(data->vars, "date-start", iso_date(ippTimeToDate(time(NULL))));
+  data = alloc_data();
 
  /*
   * We need at least:
@@ -343,6 +336,7 @@ main(int  argc,				/* I - Number of command-line args */
     }
     else if (!strcmp(argv[i], "--version"))
     {
+      free_data(data);
       puts(LIBCUPS_VERSION);
       return (0);
     }
@@ -367,12 +361,7 @@ main(int  argc,				/* I - Number of command-line args */
               break;
 
 	  case 'E' : /* Encrypt with TLS */
-#ifdef HAVE_TLS
 	      data->encryption = HTTP_ENCRYPTION_REQUIRED;
-#else
-	      _cupsLangPrintf(stderr, _("%s: Sorry, no encryption support."),
-			      argv[0]);
-#endif /* HAVE_TLS */
 	      break;
 
           case 'I' : /* Ignore errors */
@@ -415,11 +404,7 @@ main(int  argc,				/* I - Number of command-line args */
               break;
 
 	  case 'S' : /* Encrypt with SSL */
-#ifdef HAVE_TLS
 	      data->encryption = HTTP_ENCRYPTION_ALWAYS;
-#else
-	      _cupsLangPrintf(stderr, _("%s: Sorry, no encryption support."), "ipptool");
-#endif /* HAVE_TLS */
 	      break;
 
 	  case 'T' : /* Set timeout */
@@ -499,7 +484,7 @@ main(int  argc,				/* I - Number of command-line args */
 	      else
 	        value = name + strlen(name);
 
-	      _ippVarsSet(data->vars, name, value);
+	      ippFileSetVar(data->parent, name, value);
 	      break;
 
           case 'f' : /* Set the default test filename */
@@ -536,60 +521,44 @@ main(int  argc,				/* I - Number of command-line args */
               else
 		cupsCopyString(filename, argv[i], sizeof(filename));
 
-	      _ippVarsSet(data->vars, "filename", filename);
+	      ippFileSetVar(data->parent, "filename", filename);
 
               if ((ext = strrchr(filename, '.')) != NULL)
               {
-               /*
-                * Guess the MIME media type based on the extension...
-                */
-
+                // Guess the MIME media type based on the extension...
                 if (!_cups_strcasecmp(ext, ".gif"))
-                  _ippVarsSet(data->vars, "filetype", "image/gif");
-                else if (!_cups_strcasecmp(ext, ".htm") ||
-                         !_cups_strcasecmp(ext, ".htm.gz") ||
-                         !_cups_strcasecmp(ext, ".html") ||
-                         !_cups_strcasecmp(ext, ".html.gz"))
-                  _ippVarsSet(data->vars, "filetype", "text/html");
-                else if (!_cups_strcasecmp(ext, ".jpg") ||
-                         !_cups_strcasecmp(ext, ".jpeg"))
-                  _ippVarsSet(data->vars, "filetype", "image/jpeg");
-                else if (!_cups_strcasecmp(ext, ".pcl") ||
-                         !_cups_strcasecmp(ext, ".pcl.gz"))
-                  _ippVarsSet(data->vars, "filetype", "application/vnd.hp-PCL");
+                  ippFileSetVar(data->parent, "filetype", "image/gif");
+                else if (!_cups_strcasecmp(ext, ".htm") || !_cups_strcasecmp(ext, ".htm.gz") || !_cups_strcasecmp(ext, ".html") || !_cups_strcasecmp(ext, ".html.gz"))
+                  ippFileSetVar(data->parent, "filetype", "text/html");
+                else if (!_cups_strcasecmp(ext, ".jpg") || !_cups_strcasecmp(ext, ".jpeg"))
+                  ippFileSetVar(data->parent, "filetype", "image/jpeg");
+                else if (!_cups_strcasecmp(ext, ".pcl") || !_cups_strcasecmp(ext, ".pcl.gz"))
+                  ippFileSetVar(data->parent, "filetype", "application/vnd.hp-PCL");
                 else if (!_cups_strcasecmp(ext, ".pdf"))
-                  _ippVarsSet(data->vars, "filetype", "application/pdf");
+                  ippFileSetVar(data->parent, "filetype", "application/pdf");
                 else if (!_cups_strcasecmp(ext, ".png"))
-                  _ippVarsSet(data->vars, "filetype", "image/png");
-                else if (!_cups_strcasecmp(ext, ".ps") ||
-                         !_cups_strcasecmp(ext, ".ps.gz"))
-                  _ippVarsSet(data->vars, "filetype", "application/postscript");
-                else if (!_cups_strcasecmp(ext, ".pwg") ||
-                         !_cups_strcasecmp(ext, ".pwg.gz") ||
-                         !_cups_strcasecmp(ext, ".ras") ||
-                         !_cups_strcasecmp(ext, ".ras.gz"))
-                  _ippVarsSet(data->vars, "filetype", "image/pwg-raster");
-                else if (!_cups_strcasecmp(ext, ".tif") ||
-                         !_cups_strcasecmp(ext, ".tiff"))
-                  _ippVarsSet(data->vars, "filetype", "image/tiff");
-                else if (!_cups_strcasecmp(ext, ".txt") ||
-                         !_cups_strcasecmp(ext, ".txt.gz"))
-                  _ippVarsSet(data->vars, "filetype", "text/plain");
-                else if (!_cups_strcasecmp(ext, ".urf") ||
-                         !_cups_strcasecmp(ext, ".urf.gz"))
-                  _ippVarsSet(data->vars, "filetype", "image/urf");
+                  ippFileSetVar(data->parent, "filetype", "image/png");
+                else if (!_cups_strcasecmp(ext, ".ps") || !_cups_strcasecmp(ext, ".ps.gz"))
+                  ippFileSetVar(data->parent, "filetype", "application/postscript");
+                else if (!_cups_strcasecmp(ext, ".pwg") || !_cups_strcasecmp(ext, ".pwg.gz") || !_cups_strcasecmp(ext, ".ras") || !_cups_strcasecmp(ext, ".ras.gz"))
+                  ippFileSetVar(data->parent, "filetype", "image/pwg-raster");
+                else if (!_cups_strcasecmp(ext, ".pxl") || !_cups_strcasecmp(ext, ".pxl.gz"))
+                  ippFileSetVar(data->parent, "filetype", "application/vnd.hp-PCLXL");
+                else if (!_cups_strcasecmp(ext, ".tif") || !_cups_strcasecmp(ext, ".tiff"))
+                  ippFileSetVar(data->parent, "filetype", "image/tiff");
+                else if (!_cups_strcasecmp(ext, ".txt") || !_cups_strcasecmp(ext, ".txt.gz"))
+                  ippFileSetVar(data->parent, "filetype", "text/plain");
+                else if (!_cups_strcasecmp(ext, ".urf") || !_cups_strcasecmp(ext, ".urf.gz"))
+                  ippFileSetVar(data->parent, "filetype", "image/urf");
                 else if (!_cups_strcasecmp(ext, ".xps"))
-                  _ippVarsSet(data->vars, "filetype", "application/openxps");
+                  ippFileSetVar(data->parent, "filetype", "application/openxps");
                 else
-		  _ippVarsSet(data->vars, "filetype", "application/octet-stream");
+		  ippFileSetVar(data->parent, "filetype", "application/octet-stream");
               }
               else
               {
-               /*
-                * Use the "auto-type" MIME media type...
-                */
-
-		_ippVarsSet(data->vars, "filetype", "application/octet-stream");
+                // Use the "auto-type" MIME media type...
+		ippFileSetVar(data->parent, "filetype", "application/octet-stream");
               }
 	      break;
 
@@ -666,43 +635,31 @@ main(int  argc,				/* I - Number of command-line args */
 	}
       }
     }
-    else if (!strncmp(argv[i], "ipp://", 6) || !strncmp(argv[i], "http://", 7)
-#ifdef HAVE_TLS
-	     || !strncmp(argv[i], "ipps://", 7) || !strncmp(argv[i], "https://", 8)
-#endif /* HAVE_TLS */
-	     )
+    else if (!strncmp(argv[i], "ipp://", 6) || !strncmp(argv[i], "http://", 7) || !strncmp(argv[i], "ipps://", 7) || !strncmp(argv[i], "https://", 8))
     {
-     /*
-      * Set URI...
-      */
-
-      if (data->vars->uri)
+      // Set URI...
+      if (ippFileGetVar(data->parent, "uri"))
       {
         _cupsLangPuts(stderr, _("ipptool: May only specify a single URI."));
         usage();
       }
 
-#ifdef HAVE_TLS
       if (!strncmp(argv[i], "ipps://", 7) || !strncmp(argv[i], "https://", 8))
         data->encryption = HTTP_ENCRYPTION_ALWAYS;
-#endif /* HAVE_TLS */
 
-      if (!_ippVarsSet(data->vars, "uri", argv[i]))
+      if (!ippFileSetVar(data->parent, "uri", argv[i]))
       {
         _cupsLangPrintf(stderr, _("ipptool: Bad URI \"%s\"."), argv[i]);
         return (1);
       }
 
-      if (data->vars->username[0] && data->vars->password)
-	cupsSetPasswordCB(_ippVarsPasswordCB, data->vars);
+      if (ippFileGetVar(data->parent, "uriuser") && ippFileGetVar(data->parent, "uripassword"))
+	cupsSetPasswordCB(password_cb, data->parent);
     }
     else
     {
-     /*
-      * Run test...
-      */
-
-      if (!data->vars->uri)
+      // Run test...
+      if (!ippFileGetVar(data->parent, "uri"))
       {
         _cupsLangPuts(stderr, _("ipptool: URI required before test file."));
         _cupsLangPuts(stderr, argv[i]);
@@ -734,15 +691,14 @@ main(int  argc,				/* I - Number of command-line args */
     }
   }
 
-  if (!data->vars->uri || !testfile)
+  if (!ippFileGetVar(data->parent, "uri") || !testfile)
     usage();
 
- /*
-  * Loop if the interval is set...
-  */
-
+  // Loop if the interval is set...
   if (data->output == IPPTOOL_OUTPUT_PLIST)
+  {
     print_xml_trailer(data, !status, NULL);
+  }
   else if (interval > 0 && repeat > 0)
   {
     while (repeat > 1)
@@ -763,19 +719,14 @@ main(int  argc,				/* I - Number of command-line args */
 
   if ((data->output == IPPTOOL_OUTPUT_TEST || (data->output == IPPTOOL_OUTPUT_PLIST && data->outfile)) && data->test_count > 1)
   {
-   /*
-    * Show a summary report if there were multiple tests...
-    */
-
+    // Show a summary report if there were multiple tests...
     cupsFilePrintf(cupsFileStdout(), "\nSummary: %d tests, %d passed, %d failed, %d skipped\nScore: %d%%\n", data->test_count, data->pass_count, data->fail_count, data->skip_count, 100 * (data->pass_count + data->skip_count) / data->test_count);
   }
 
   cupsFileClose(data->outfile);
+  free_data(data);
 
- /*
-  * Exit...
-  */
-
+  // Exit...
   return (status);
 }
 
@@ -813,6 +764,40 @@ add_stringf(cups_array_t *a,		/* I - Array */
   */
 
   cupsArrayAdd(a, buffer);
+}
+
+
+/*
+ * 'alloc_data()' - Initialize and allocate test data.
+ */
+
+static ipptool_test_t *		// O - Test data
+alloc_data(void)
+{
+  ipptool_test_t *data;		// Test data
+
+
+  if ((data = calloc(1, sizeof(ipptool_test_t))) == NULL)
+  {
+    _cupsLangPrintf(stderr, _("ipptool: Unable to allocate memory: %s"), strerror(errno));
+    exit(1);
+  }
+
+  data->parent       = ippFileNew(/*parent*/NULL, /*attr_cb*/NULL, (ipp_ferror_cb_t)error_cb, data);
+  data->output       = IPPTOOL_OUTPUT_LIST;
+  data->outfile      = cupsFileStdout();
+  data->family       = AF_UNSPEC;
+  data->def_transfer = IPPTOOL_TRANSFER_AUTO;
+  data->def_version  = 20;
+  data->errors       = cupsArrayNew(NULL, NULL, NULL, 0, (cups_acopy_cb_t)strdup, (cups_afree_cb_t)free);
+  data->pass         = true;
+  data->prev_pass    = true;
+  data->request_id   = (CUPS_RAND() % 1000) * 137;
+  data->show_header  = true;
+
+  ippFileSetVar(data->parent, "date-start", iso_date(ippTimeToDate(time(NULL))));
+
+  return (data);
 }
 
 
@@ -878,6 +863,41 @@ compare_uris(const char *a,             /* I - First URI */
     return (_cups_strcasecmp(aresource, bresource));
   else
     return (strcmp(aresource, bresource));
+}
+
+
+//
+// 'connect_printer()' - Connect to the printer.
+//
+
+static http_t *				// O - HTTP connection or `NULL` on error
+connect_printer(ipptool_test_t *data)	// I - Test data
+{
+  const char	*scheme = ippFileGetVar(data->parent, "scheme"),
+		*hostname = ippFileGetVar(data->parent, "hostname"),
+		*port = ippFileGetVar(data->parent, "port");
+					// URI fields
+  http_encryption_t encryption;		// Encryption mode
+  http_t	*http;			// HTTP connection
+
+
+  if (!_cups_strcasecmp(scheme, "https") || !_cups_strcasecmp(scheme, "ipps") || atoi(port) == 443)
+    encryption = HTTP_ENCRYPTION_ALWAYS;
+  else
+    encryption = data->encryption;
+
+  if ((http = httpConnect(hostname, atoi(port), NULL, data->family, encryption, 1, 30000, NULL)) == NULL)
+  {
+    print_fatal_error(data, "Unable to connect to '%s' on port %s: %s", hostname, port, cupsLastErrorString());
+    return (NULL);
+  }
+
+  httpSetDefaultField(data->http, HTTP_FIELD_ACCEPT_ENCODING, "deflate, gzip, identity");
+
+  if (data->timeout > 0.0)
+    httpSetTimeout(http, data->timeout, timeout_cb, NULL);
+
+  return (http);
 }
 
 
@@ -1061,10 +1081,10 @@ do_monitor_printer_state(
 
     for (i = data->num_monitor_expects, expect = data->monitor_expects; i > 0; i --, expect ++)
     {
-      if (expect->if_defined && !_ippVarsGet(data->vars, expect->if_defined))
+      if (expect->if_defined && !ippFileGetVar(data->parent, expect->if_defined))
 	continue;
 
-      if (expect->if_not_defined && _ippVarsGet(data->vars, expect->if_not_defined))
+      if (expect->if_not_defined && ippFileGetVar(data->parent, expect->if_not_defined))
 	continue;
 
       found = ippFindAttribute(response, expect->name, IPP_TAG_ZERO);
@@ -1077,7 +1097,7 @@ do_monitor_printer_state(
       {
 	if (expect->define_no_match)
 	{
-	  _ippVarsSet(data->vars, expect->define_no_match, "1");
+	  ippFileSetVar(data->parent, expect->define_no_match, "1");
 	  data->monitor_done = 1;
 	}
 	break;
@@ -1090,7 +1110,7 @@ do_monitor_printer_state(
       {
 	if (expect->define_no_match)
 	{
-	  _ippVarsSet(data->vars, expect->define_no_match, "1");
+	  ippFileSetVar(data->parent, expect->define_no_match, "1");
 	  data->monitor_done = 1;
 	}
 	break;
@@ -1100,7 +1120,7 @@ do_monitor_printer_state(
       {
 	if (expect->define_no_match)
 	{
-	  _ippVarsSet(data->vars, expect->define_no_match, "1");
+	  ippFileSetVar(data->parent, expect->define_no_match, "1");
 	  data->monitor_done = 1;
 	}
 	break;
@@ -1111,7 +1131,7 @@ do_monitor_printer_state(
 
       if (found && expect->define_match)
       {
-	_ippVarsSet(data->vars, expect->define_match, "1");
+	ippFileSetVar(data->parent, expect->define_match, "1");
 	data->monitor_done = 1;
       }
 
@@ -1155,7 +1175,7 @@ do_monitor_printer_state(
 	  }
 	}
 
-	_ippVarsSet(data->vars, expect->define_value, buffer);
+	ippFileSetVar(data->parent, expect->define_value, buffer);
 	data->monitor_done = 1;
       }
     }
@@ -1186,8 +1206,8 @@ do_monitor_printer_state(
  * 'do_test()' - Do a single test from the test file.
  */
 
-static int				/* O - 1 on success, 0 on failure */
-do_test(_ipp_file_t    *f,		/* I - IPP data file */
+static bool				/* O - `true` on success, `false` on failure */
+do_test(ipp_file_t     *f,		/* I - IPP data file */
         ipptool_test_t *data)		/* I - Test data */
 
 {
@@ -1212,7 +1232,7 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
 
 
   if (Cancel)
-    return (0);
+    return (false);
 
   if (getenv("IPPTOOL_DEBUG"))
     fprintf(stderr, "ipptool: Doing test '%s', num_expects=%u, num_statuses=%u.\n", data->name, (unsigned)data->num_expects, (unsigned)data->num_statuses);
@@ -1235,7 +1255,7 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
 
   if (data->monitor_uri)
   {
-    data->monitor_done   = 0;
+    data->monitor_done   = false;
     data->monitor_thread = cupsThreadCreate((cups_thread_func_t)do_monitor_printer_state, data);
   }
 
@@ -1243,8 +1263,8 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
   * Take over control of the attributes in the request...
   */
 
-  request  = f->attrs;
-  f->attrs = NULL;
+  request = ippFileGetAttributes(f);
+  ippFileSetAttributes(f, NULL);
 
  /*
   * Submit the IPP request...
@@ -1252,6 +1272,7 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
 
   data->test_count ++;
 
+  ippSetOperation(request, data->op);
   ippSetVersion(request, data->version / 10, data->version % 10);
   ippSetRequestId(request, data->request_id);
 
@@ -1339,7 +1360,7 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
     goto skip_error;
   }
 
-  data->vars->password_tries = 0;
+  data->password_tries = 0;
 
   do
   {
@@ -1387,8 +1408,8 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
     * Send the request...
     */
 
-    data->prev_pass = 1;
-    repeat_test     = 0;
+    data->prev_pass = true;
+    repeat_test     = false;
     response        = NULL;
 
     if (status != HTTP_STATUS_ERROR)
@@ -1447,11 +1468,11 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
 #endif /* _WIN32 */
 	{
 	  if (httpReconnect(data->http, 30000, NULL))
-	    data->prev_pass = 0;
+	    data->prev_pass = false;
 	}
 	else if (status == HTTP_STATUS_ERROR || status == HTTP_STATUS_CUPS_AUTHORIZATION_CANCELED)
 	{
-	  data->prev_pass = 0;
+	  data->prev_pass = false;
 	  break;
 	}
 	else if (status != HTTP_STATUS_OK)
@@ -1474,19 +1495,19 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
 #endif /* _WIN32 */
     {
       if (httpReconnect(data->http, 30000, NULL))
-	data->prev_pass = 0;
+	data->prev_pass = false;
     }
     else if (status == HTTP_STATUS_ERROR)
     {
       if (!Cancel)
 	httpReconnect(data->http, 30000, NULL);
 
-      data->prev_pass = 0;
+      data->prev_pass = false;
     }
     else if (status != HTTP_STATUS_OK)
     {
       httpFlush(data->http);
-      data->prev_pass = 0;
+      data->prev_pass = false;
     }
 
    /*
@@ -1530,16 +1551,16 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
       if ((attrptr = ippFindAttribute(response, "job-id", IPP_TAG_INTEGER)) != NULL)
       {
 	snprintf(temp, sizeof(temp), "%d", ippGetInteger(attrptr, 0));
-	_ippVarsSet(data->vars, "job-id", temp);
+	ippFileSetVar(data->parent, "job-id", temp);
       }
 
       if ((attrptr = ippFindAttribute(response, "job-uri", IPP_TAG_URI)) != NULL)
-	_ippVarsSet(data->vars, "job-uri", ippGetString(attrptr, 0, NULL));
+	ippFileSetVar(data->parent, "job-uri", ippGetString(attrptr, 0, NULL));
 
       if ((attrptr = ippFindAttribute(response, "notify-subscription-id", IPP_TAG_INTEGER)) != NULL)
       {
 	snprintf(temp, sizeof(temp), "%d", ippGetInteger(attrptr, 0));
-	_ippVarsSet(data->vars, "notify-subscription-id", temp);
+	ippFileSetVar(data->parent, "notify-subscription-id", temp);
       }
 
      /*
@@ -1689,10 +1710,10 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
       {
 	for (i = 0, status_ok = false; i < data->num_statuses; i ++)
 	{
-	  if (data->statuses[i].if_defined && !_ippVarsGet(data->vars, data->statuses[i].if_defined))
+	  if (data->statuses[i].if_defined && !ippFileGetVar(f, data->statuses[i].if_defined))
 	    continue;
 
-	  if (data->statuses[i].if_not_defined && _ippVarsGet(data->vars, data->statuses[i].if_not_defined))
+	  if (data->statuses[i].if_not_defined && ippFileGetVar(f, data->statuses[i].if_not_defined))
 	    continue;
 
 	  if (ippGetStatusCode(response) == data->statuses[i].status)
@@ -1703,7 +1724,7 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
 	      repeat_test = true;
 
 	    if (data->statuses[i].define_match)
-	      _ippVarsSet(data->vars, data->statuses[i].define_match, "1");
+	      ippFileSetVar(data->parent, data->statuses[i].define_match, "1");
 	  }
 	  else
 	  {
@@ -1712,7 +1733,7 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
 
 	    if (data->statuses[i].define_no_match)
 	    {
-	      _ippVarsSet(data->vars, data->statuses[i].define_no_match, "1");
+	      ippFileSetVar(data->parent, data->statuses[i].define_no_match, "1");
 	      status_ok = true;
 	    }
 	  }
@@ -1723,10 +1744,10 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
       {
 	for (i = 0; i < data->num_statuses; i ++)
 	{
-	  if (data->statuses[i].if_defined && !_ippVarsGet(data->vars, data->statuses[i].if_defined))
+	  if (data->statuses[i].if_defined && !ippFileGetVar(f, data->statuses[i].if_defined))
 	    continue;
 
-	  if (data->statuses[i].if_not_defined && _ippVarsGet(data->vars, data->statuses[i].if_not_defined))
+	  if (data->statuses[i].if_not_defined && ippFileGetVar(f, data->statuses[i].if_not_defined))
 	    continue;
 
 	  if (!data->statuses[i].repeat_match || repeat_count >= data->statuses[i].repeat_limit)
@@ -1741,11 +1762,10 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
       {
 	ipp_attribute_t *group_found;	/* Found parent attribute for group tests */
 
-	if (expect->if_defined && !_ippVarsGet(data->vars, expect->if_defined))
+	if (expect->if_defined && !ippFileGetVar(f, expect->if_defined))
 	  continue;
 
-	if (expect->if_not_defined &&
-	    _ippVarsGet(data->vars, expect->if_not_defined))
+	if (expect->if_not_defined && ippFileGetVar(f, expect->if_not_defined))
 	  continue;
 
 	if ((found = ippFindAttribute(response, expect->name, IPP_TAG_ZERO)) != NULL && expect->in_group && expect->in_group != ippGetGroupTag(found))
@@ -1778,7 +1798,7 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
 	      (expect->with_distinct && !with_distinct_values(NULL, found)))
 	  {
 	    if (expect->define_no_match)
-	      _ippVarsSet(data->vars, expect->define_no_match, "1");
+	      ippFileSetVar(data->parent, expect->define_no_match, "1");
 	    else if (!expect->define_match && !expect->define_value)
 	    {
 	      if (found && expect->not_expect && !expect->with_value && !expect->with_value_from)
@@ -1813,7 +1833,7 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
 	  if (found && expect->with_value_from && !with_value_from(NULL, ippFindAttribute(response, expect->with_value_from, IPP_TAG_ZERO), found, data->buffer, sizeof(data->buffer)))
 	  {
 	    if (expect->define_no_match)
-	      _ippVarsSet(data->vars, expect->define_no_match, "1");
+	      ippFileSetVar(data->parent, expect->define_no_match, "1");
 	    else if (!expect->define_match && !expect->define_value && ((!expect->repeat_match && !expect->repeat_no_match) || repeat_count >= expect->repeat_limit))
 	    {
 	      add_stringf(data->errors, "EXPECTED: %s WITH-VALUES-FROM %s", expect->name, expect->with_value_from);
@@ -1829,7 +1849,7 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
 	  else if (found && !with_value(data, NULL, expect->with_value, expect->with_flags, found, data->buffer, sizeof(data->buffer)))
 	  {
 	    if (expect->define_no_match)
-	      _ippVarsSet(data->vars, expect->define_no_match, "1");
+	      ippFileSetVar(data->parent, expect->define_no_match, "1");
 	    else if (!expect->define_match && !expect->define_value &&
 		     !expect->repeat_match && (!expect->repeat_no_match || repeat_count >= expect->repeat_limit))
 	    {
@@ -1850,7 +1870,7 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
 	  if (found && expect->count > 0 && ippGetCount(found) != expect->count)
 	  {
 	    if (expect->define_no_match)
-	      _ippVarsSet(data->vars, expect->define_no_match, "1");
+	      ippFileSetVar(data->parent, expect->define_no_match, "1");
 	    else if (!expect->define_match && !expect->define_value)
 	    {
 	      add_stringf(data->errors, "EXPECTED: %s COUNT %u (got %u)", expect->name, (unsigned)expect->count, (unsigned)ippGetCount(found));
@@ -1870,7 +1890,7 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
 	    if (!attrptr || ippGetCount(attrptr) != ippGetCount(found))
 	    {
 	      if (expect->define_no_match)
-		_ippVarsSet(data->vars, expect->define_no_match, "1");
+		ippFileSetVar(data->parent, expect->define_no_match, "1");
 	      else if (!expect->define_match && !expect->define_value)
 	      {
 		if (!attrptr)
@@ -1890,7 +1910,7 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
 	    cupsFilePrintf(cupsFileStdout(), "\n%s\n\n", expect->display_match);
 
 	  if (found && expect->define_match)
-	    _ippVarsSet(data->vars, expect->define_match, "1");
+	    ippFileSetVar(data->parent, expect->define_match, "1");
 
 	  if (found && expect->define_value)
 	  {
@@ -1947,11 +1967,10 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
 	      }
 	    }
 
-	    _ippVarsSet(data->vars, expect->define_value, data->buffer);
+	    ippFileSetVar(data->parent, expect->define_value, data->buffer);
 	  }
 
-	  if (found && expect->repeat_match &&
-	      repeat_count < expect->repeat_limit)
+	  if (found && expect->repeat_match && repeat_count < expect->repeat_limit)
 	    repeat_test = 1;
 	}
 	while (expect->expect_all && (found = ippFindNextAttribute(response, expect->name, IPP_TAG_ZERO)) != NULL);
@@ -2248,43 +2267,34 @@ do_test(_ipp_file_t    *f,		/* I - IPP data file */
  * 'do_tests()' - Do tests as specified in the test file.
  */
 
-static int				/* O - 1 on success, 0 on failure */
-do_tests(const char     *testfile,	/* I - Test file to use */
-         ipptool_test_t *data)		/* I - Test data */
+static bool				// O - `true` on success, `false` on failure
+do_tests(const char     *testfile,	// I - Test file to use
+         ipptool_test_t *data)		// I - Test data
 {
-  http_encryption_t encryption;		/* Encryption mode */
+  ipp_file_t	*file;			// IPP data file
 
 
- /*
-  * Connect to the printer/server...
-  */
+  // Connect to the printer/server...
+  data->http = connect_printer(data);
 
-  if (!_cups_strcasecmp(data->vars->scheme, "https") || !_cups_strcasecmp(data->vars->scheme, "ipps") || data->vars->port == 443)
-    encryption = HTTP_ENCRYPTION_ALWAYS;
-  else
-    encryption = data->encryption;
-
-  if ((data->http = httpConnect(data->vars->host, data->vars->port, NULL, data->family, encryption, 1, 30000, NULL)) == NULL)
+  // Run tests...
+  if ((file = ippFileNew(data->parent, NULL, (ipp_ferror_cb_t)error_cb, data)) == NULL)
   {
-    print_fatal_error(data, "Unable to connect to \"%s\" on port %d - %s", data->vars->host, data->vars->port, cupsLastErrorString());
-    return (0);
+    print_fatal_error(data, "Unable to create test file parser: %s", cupsLastErrorString());
+    return (false);
   }
 
-  httpSetDefaultField(data->http, HTTP_FIELD_ACCEPT_ENCODING, "deflate, gzip, identity");
+  if (!ippFileOpen(file, testfile, "r"))
+  {
+    print_fatal_error(data, "Unable to open '%s': %s", testfile, cupsLastErrorString());
+    return (false);
+  }
 
-  if (data->timeout > 0.0)
-    httpSetTimeout(data->http, data->timeout, timeout_cb, NULL);
+  ippFileRead(file, (ipp_ftoken_cb_t)token_cb, true);
 
- /*
-  * Run tests...
-  */
+  ippFileDelete(file);
 
-  _ippFileParse(data->vars, testfile, (void *)data);
-
- /*
-  * Close connection and return...
-  */
-
+  // Close connection and return...
   httpClose(data->http);
   data->http = NULL;
 
@@ -2296,16 +2306,16 @@ do_tests(const char     *testfile,	/* I - Test file to use */
  * 'error_cb()' - Print/add an error message.
  */
 
-static int				/* O - 1 to continue, 0 to stop */
-error_cb(_ipp_file_t      *f,		/* I - IPP file data */
-         ipptool_test_t *data,	/* I - Test data */
-         const char       *error)	/* I - Error message */
+static bool				// O - `true` to continue, `false` to stop
+error_cb(ipp_file_t     *f,		// I - IPP file data (not used)
+         ipptool_test_t *data,		// I - Test data
+         const char     *error)		// I - Error message
 {
   (void)f;
 
   print_fatal_error(data, "%s", error);
 
-  return (1);
+  return (true);
 }
 
 
@@ -2313,7 +2323,7 @@ error_cb(_ipp_file_t      *f,		/* I - IPP file data */
  * 'expect_matches()' - Return true if the tag matches the specification.
  */
 
-static int				/* O - 1 if matches, 0 otherwise */
+static bool				// O - `true` on match, `false` on non-match
 expect_matches(
     ipptool_expect_t *expect,		/* I - Expected attribute */
     ipp_attribute_t  *attr)		/* I - Attribute */
@@ -2329,36 +2339,24 @@ expect_matches(
   int		lower, upper;		/* Lower and upper bounds for syntax */
 
 
- /*
-  * If we don't expect a particular type, return immediately...
-  */
-
+  // If we don't expect a particular type, return immediately...
   if (!expect->of_type)
-    return (1);
+    return (true);
 
- /*
-  * Parse the "of_type" value since the string can contain multiple attribute
-  * types separated by "," or "|"...
-  */
-
+  // Parse the "of_type" value since the string can contain multiple attribute
+  // types separated by "," or "|"...
   value_tag = ippGetValueTag(attr);
   count     = ippGetCount(attr);
 
   for (of_type = expect->of_type, match = false; !match && *of_type; of_type = next)
   {
-   /*
-    * Find the next separator, and set it (temporarily) to nul if present.
-    */
-
+    // Find the next separator, and set it (temporarily) to nul if present.
     for (next = of_type; *next && *next != '|' && *next != ','; next ++);
 
     if ((sep = *next) != '\0')
       *next = '\0';
 
-   /*
-    * Support some meta-types to make it easier to write the test file.
-    */
-
+    // Support some meta-types to make it easier to write the test file.
     if ((paren = strchr(of_type, '(')) != NULL)
     {
       char *ptr;			// Pointer into syntax string
@@ -2500,10 +2498,7 @@ expect_matches(
       }
     }
 
-   /*
-    * Restore the separators if we have them...
-    */
-
+    // Restore the separators if we have them...
     if (paren)
       *paren = '(';
 
@@ -2516,10 +2511,22 @@ expect_matches(
 
 
 //
+// 'free_data()' - Free test data.
+//
+
+static void
+free_data(ipptool_test_t *data)		// I - Test data
+{
+  ippFileDelete(data->parent);
+  free(data);
+}
+
+
+//
 // 'generate_file()' - Generate a print file.
 //
 
-static http_status_t
+static http_status_t			// O - HTTP status
 generate_file(
     http_t             *http,		// I - HTTP connection
     ipptool_generate_t *params)		// I - GENERATE-FILE parameters
@@ -2724,28 +2731,6 @@ get_string(ipp_attribute_t *attr,	/* I - IPP attribute */
 
 
 /*
- * 'init_data()' - Initialize test data.
- */
-
-static void
-init_data(ipptool_test_t *data)	/* I - Data */
-{
-  memset(data, 0, sizeof(ipptool_test_t));
-
-  data->output       = IPPTOOL_OUTPUT_LIST;
-  data->outfile      = cupsFileStdout();
-  data->family       = AF_UNSPEC;
-  data->def_transfer = IPPTOOL_TRANSFER_AUTO;
-  data->def_version  = 11;
-  data->errors       = cupsArrayNew(NULL, NULL, NULL, 0, (cups_acopy_cb_t)strdup, (cups_afree_cb_t)free);
-  data->pass         = true;
-  data->prev_pass    = true;
-  data->request_id   = (CUPS_RAND() % 1000) * 137;
-  data->show_header  = 1;
-}
-
-
-/*
  * 'iso_date()' - Return an ISO 8601 date/time string for the given IPP dateTime
  *                value.
  */
@@ -2784,9 +2769,9 @@ iso_date(const ipp_uchar_t *date)	/* I - IPP (RFC 1903) date/time value */
  * }
  */
 
-static int				// O - 1 to continue, 0 to stop
+static bool				// O - `true` to continue, `false` to stop
 parse_generate_file(
-    _ipp_file_t    *f,			// I - IPP file data
+    ipp_file_t     *f,			// I - IPP file data
     ipptool_test_t *data)		// I - Test data
 {
   size_t		i;		// Looping var
@@ -2843,44 +2828,42 @@ parse_generate_file(
 
 
   // Make sure we have an open brace after the GENERATE-FILE...
-  if (!_ippFileReadToken(f, token, sizeof(token)) || strcmp(token, "{"))
+  if (!ippFileReadToken(f, token, sizeof(token)) || strcmp(token, "{"))
   {
-    print_fatal_error(data, "Missing open brace on line %d of \"%s\".", f->linenum, f->filename);
+    print_fatal_error(data, "Missing open brace on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
     return (0);
   }
 
   // Get printer attributes...
-  if ((http = httpConnect(data->vars->host, data->vars->port, NULL, data->family, data->encryption, 1, 30000, NULL)) == NULL)
+  if ((http = connect_printer(data)) == NULL)
   {
-    print_fatal_error(data, "Unable to connect to printer for GENERATE-FILE on line %d of \"%s\".", f->linenum, f->filename);
-    print_fatal_error(data, "Error: %s", cupsLastErrorString());
-    return (0);
+    print_fatal_error(data, "GENERATE-FILE connection failure on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+    return (false);
   }
 
   request = ippNewRequest(IPP_OP_GET_PRINTER_ATTRIBUTES);
-  ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, data->vars->uri);
+  ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, ippFileGetVar(data->parent, "uri"));
 
-  response = cupsDoRequest(http, request, data->vars->resource);
+  response = cupsDoRequest(http, request, ippFileGetVar(data->parent, "resource"));
 
   httpClose(http);
 
   if (cupsLastError() >= IPP_STATUS_ERROR_BAD_REQUEST)
   {
-    print_fatal_error(data, "Unable to get printer attributes for GENERATE-FILE on line %d of \"%s\".", f->linenum, f->filename);
-    print_fatal_error(data, "Error: %s", cupsLastErrorString());
+    print_fatal_error(data, "GENERATE-FILE query failure on line %d of '%s': %s", ippFileGetLineNumber(f), ippFileGetFilename(f), cupsLastErrorString());
     ippDelete(response);
-    return (0);
+    return (false);
   }
 
   // Allocate parameters...
   if ((params = calloc(1, sizeof(ipptool_generate_t))) == NULL)
   {
-    print_fatal_error(data, "Unable to allocate memory for GENERATE-FILE on line %d of \"%s\".", f->linenum, f->filename);
-    return (0);
+    print_fatal_error(data, "GENERATE-FILE memory allocation failure on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+    return (false);
   }
 
   // Loop until we get a closing brace...
-  while (_ippFileReadToken(f, token, sizeof(token)))
+  while (ippFileReadToken(f, token, sizeof(token)))
   {
     if (!strcmp(token, "}"))
     {
@@ -2888,7 +2871,7 @@ parse_generate_file(
       if (!params->type[0])
       {
         // Get request/printer default value for print-color-mode, default to "auto"...
-        if ((attr = ippFindAttribute(f->attrs, "print-color-mode", IPP_TAG_KEYWORD)) == NULL)
+        if ((attr = ippFileGetAttribute(f, "print-color-mode", IPP_TAG_KEYWORD)) == NULL)
 	  attr = ippFindAttribute(response, "print-color-mode-default", IPP_TAG_KEYWORD);
 
         if (attr)
@@ -2916,7 +2899,7 @@ parse_generate_file(
 
         if (!params->type[0])
         {
-	  print_fatal_error(data, "Printer does not support COLORSPACE \"auto\" on line %d of \"%s\".", f->linenum, f->filename);
+	  print_fatal_error(data, "Printer does not support COLORSPACE \"auto\" on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	  goto fail;
         }
       }
@@ -2938,7 +2921,7 @@ parse_generate_file(
 
 	if (!params->type[0])
 	{
-	  print_fatal_error(data, "Printer does not support COLORSPACE \"bi-level\" on line %d of \"%s\".", f->linenum, f->filename);
+	  print_fatal_error(data, "Printer does not support COLORSPACE \"bi-level\" on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	  goto fail;
 	}
       }
@@ -2961,7 +2944,7 @@ parse_generate_file(
 
         if (!params->type[0])
         {
-	  print_fatal_error(data, "Printer does not support COLORSPACE \"color\" on line %d of \"%s\".", f->linenum, f->filename);
+	  print_fatal_error(data, "Printer does not support COLORSPACE \"color\" on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	  goto fail;
         }
       }
@@ -2984,7 +2967,7 @@ parse_generate_file(
 
         if (!params->type[0])
         {
-	  print_fatal_error(data, "Printer does not support COLORSPACE \"monochrome\" on line %d of \"%s\".", f->linenum, f->filename);
+	  print_fatal_error(data, "Printer does not support COLORSPACE \"monochrome\" on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	  goto fail;
         }
       }
@@ -2993,11 +2976,11 @@ parse_generate_file(
       if (!params->format[0])
       {
         // Check the supported formats and choose a suitable one...
-        if ((keyword = ippGetString(ippFindAttribute(f->attrs, "document-format", IPP_TAG_MIMETYPE), 0, NULL)) != NULL)
+        if ((keyword = ippGetString(ippFileGetAttribute(f, "document-format", IPP_TAG_MIMETYPE), 0, NULL)) != NULL)
         {
           if (strcmp(keyword, "image/pwg-raster") && strcmp(keyword, "image/urf"))
           {
-	    print_fatal_error(data, "Unsupported \"document-format\" value on line %d of \"%s\".", f->linenum, f->filename);
+	    print_fatal_error(data, "Unsupported \"document-format\" value on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	    goto fail;
           }
 
@@ -3015,7 +2998,7 @@ parse_generate_file(
 
         if (!params->format[0])
         {
-	  print_fatal_error(data, "Printer does not support a compatible FORMAT on line %d of \"%s\".", f->linenum, f->filename);
+	  print_fatal_error(data, "Printer does not support a compatible FORMAT on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	  goto fail;
         }
       }
@@ -3024,7 +3007,7 @@ parse_generate_file(
       if (!params->media[0] || !strcmp(params->media, "default"))
       {
         // Use job ticket or default media...
-        if (!params->media[0] && (keyword = ippGetString(ippFindAttribute(f->attrs, "media", IPP_TAG_ZERO), 0, NULL)) != NULL)
+        if (!params->media[0] && (keyword = ippGetString(ippFileGetAttribute(f, "media", IPP_TAG_ZERO), 0, NULL)) != NULL)
         {
           cupsCopyString(params->media, keyword, sizeof(params->media));
         }
@@ -3034,7 +3017,7 @@ parse_generate_file(
         }
         else
         {
-	  print_fatal_error(data, "Printer does not report a default MEDIA size name on line %d of \"%s\".", f->linenum, f->filename);
+	  print_fatal_error(data, "Printer does not report a default MEDIA size name on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	  goto fail;
         }
       }
@@ -3047,7 +3030,7 @@ parse_generate_file(
         }
         else
         {
-	  print_fatal_error(data, "Printer does not report a ready MEDIA size name on line %d of \"%s\".", f->linenum, f->filename);
+	  print_fatal_error(data, "Printer does not report a ready MEDIA size name on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	  goto fail;
         }
       }
@@ -3086,7 +3069,7 @@ parse_generate_file(
 
 	if (!params->xdpi || !params->ydpi)
 	{
-	  print_fatal_error(data, "Printer does not report a supported RESOLUTION on line %d of \"%s\".", f->linenum, f->filename);
+	  print_fatal_error(data, "Printer does not report a supported RESOLUTION on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	  goto fail;
 	}
       }
@@ -3094,7 +3077,7 @@ parse_generate_file(
       // Default duplex/sides
       if (!params->sides[0])
       {
-        if ((keyword = ippGetString(ippFindAttribute(f->attrs, "sides", IPP_TAG_ZERO), 0, NULL)) != NULL)
+        if ((keyword = ippGetString(ippFileGetAttribute(f, "sides", IPP_TAG_ZERO), 0, NULL)) != NULL)
         {
           // Use the setting from the job ticket...
           cupsCopyString(params->sides, keyword, sizeof(params->sides));
@@ -3118,7 +3101,7 @@ parse_generate_file(
       if (!params->orientation)
       {
         // Use the job ticket value, otherwise use landscape for short-edge duplex
-        if ((attr = ippFindAttribute(f->attrs, "orientation-requested", IPP_TAG_ENUM)) != NULL)
+        if ((attr = ippFileGetAttribute(f, "orientation-requested", IPP_TAG_ENUM)) != NULL)
           params->orientation = (ipp_orient_t)ippGetInteger(attr, 0);
 	else
 	  params->orientation = !strcmp(params->sides, "two-sided-short-edge") ? IPP_ORIENT_LANDSCAPE : IPP_ORIENT_PORTRAIT;
@@ -3165,17 +3148,17 @@ parse_generate_file(
     {
       if (params->type[0])
       {
-	print_fatal_error(data, "Unexpected extra COLORSPACE on line %d of \"%s\".", f->linenum, f->filename);
+	print_fatal_error(data, "Unexpected extra COLORSPACE on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	goto fail;
       }
 
-      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
       {
-	print_fatal_error(data, "Missing COLORSPACE value on line %d of \"%s\".", f->linenum, f->filename);
+	print_fatal_error(data, "Missing COLORSPACE value on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	goto fail;
       }
 
-      _ippVarsExpand(data->vars, value, temp, sizeof(value));
+      ippFileExpandVars(f, value, temp, sizeof(value));
 
       if (!strcmp(value, "auto") || !strcmp(value, "bi-level") || !strcmp(value, "color") || !strcmp(value, "monochrome") || !strcmp(value, "adobe-rgb_8") || !strcmp(value, "adobe-rgb_16") || !strcmp(value, "black_1") || !strcmp(value, "black_8") || !strcmp(value, "black_16") || !strcmp(value, "cmyk_8") || !strcmp(value, "cmyk_16") || !strcmp(value, "rgb_8") || !strcmp(value, "rgb_16") || !strcmp(value, "sgray_1") || !strcmp(value, "sgray_8") || !strcmp(value, "sgray_16") || !strcmp(value, "srgb_8") || !strcmp(value, "srgb_16"))
       {
@@ -3184,7 +3167,7 @@ parse_generate_file(
       }
       else
       {
-	print_fatal_error(data, "Bad COLORSPACE \"%s\" on line %d of \"%s\".", value, f->linenum, f->filename);
+	print_fatal_error(data, "Bad COLORSPACE \"%s\" on line %d of '%s'.", value, ippFileGetLineNumber(f), ippFileGetFilename(f));
 	goto fail;
       }
     }
@@ -3192,17 +3175,17 @@ parse_generate_file(
     {
       if (params->format[0])
       {
-	print_fatal_error(data, "Unexpected extra FORMAT on line %d of \"%s\".", f->linenum, f->filename);
+	print_fatal_error(data, "Unexpected extra FORMAT on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	goto fail;
       }
 
-      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
       {
-	print_fatal_error(data, "Missing FORMAT MIME media type on line %d of \"%s\".", f->linenum, f->filename);
+	print_fatal_error(data, "Missing FORMAT MIME media type on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	goto fail;
       }
 
-      _ippVarsExpand(data->vars, value, temp, sizeof(value));
+      ippFileExpandVars(f, value, temp, sizeof(value));
 
       if (!strcmp(value, "image/pwg-raster") || !strcmp(value, "image/urf"))
       {
@@ -3210,7 +3193,7 @@ parse_generate_file(
       }
       else
       {
-	print_fatal_error(data, "Bad FORMAT \"%s\" on line %d of \"%s\".", value, f->linenum, f->filename);
+	print_fatal_error(data, "Bad FORMAT \"%s\" on line %d of '%s'.", value, ippFileGetLineNumber(f), ippFileGetFilename(f));
 	goto fail;
       }
     }
@@ -3218,17 +3201,17 @@ parse_generate_file(
     {
       if (params->media[0])
       {
-	print_fatal_error(data, "Unexpected extra MEDIA on line %d of \"%s\".", f->linenum, f->filename);
+	print_fatal_error(data, "Unexpected extra MEDIA on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	goto fail;
       }
 
-      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
       {
-	print_fatal_error(data, "Missing MEDIA size name on line %d of \"%s\".", f->linenum, f->filename);
+	print_fatal_error(data, "Missing MEDIA size name on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	goto fail;
       }
 
-      _ippVarsExpand(data->vars, value, temp, sizeof(value));
+      ippFileExpandVars(f, value, temp, sizeof(value));
 
       if (!strcmp(value, "default") || !strcmp(value, "ready") || pwgMediaForPWG(value) != NULL)
       {
@@ -3236,7 +3219,7 @@ parse_generate_file(
       }
       else
       {
-	print_fatal_error(data, "Bad MEDIA \"%s\" on line %d of \"%s\".", value, f->linenum, f->filename);
+	print_fatal_error(data, "Bad MEDIA \"%s\" on line %d of '%s'.", value, ippFileGetLineNumber(f), ippFileGetFilename(f));
 	goto fail;
       }
     }
@@ -3246,21 +3229,21 @@ parse_generate_file(
 
       if (params->num_copies)
       {
-	print_fatal_error(data, "Unexpected extra NUM-COPIES on line %d of \"%s\".", f->linenum, f->filename);
+	print_fatal_error(data, "Unexpected extra NUM-COPIES on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	goto fail;
       }
 
-      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
       {
-	print_fatal_error(data, "Missing NUM-COPIES number on line %d of \"%s\".", f->linenum, f->filename);
+	print_fatal_error(data, "Missing NUM-COPIES number on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	goto fail;
       }
 
-      _ippVarsExpand(data->vars, value, temp, sizeof(value));
+      ippFileExpandVars(f, value, temp, sizeof(value));
 
       if ((intvalue = strtoul(value, NULL, 10)) == ULONG_MAX || intvalue < 1)
       {
-	print_fatal_error(data, "Bad NUM-COPIES \"%s\" on line %d of \"%s\".", value, f->linenum, f->filename);
+	print_fatal_error(data, "Bad NUM-COPIES \"%s\" on line %d of '%s'.", value, ippFileGetLineNumber(f), ippFileGetFilename(f));
 	goto fail;
       }
 
@@ -3272,21 +3255,21 @@ parse_generate_file(
 
       if (params->num_pages)
       {
-	print_fatal_error(data, "Unexpected extra NUM-PAGES on line %d of \"%s\".", f->linenum, f->filename);
+	print_fatal_error(data, "Unexpected extra NUM-PAGES on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	goto fail;
       }
 
-      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
       {
-	print_fatal_error(data, "Missing NUM-PAGES number on line %d of \"%s\".", f->linenum, f->filename);
+	print_fatal_error(data, "Missing NUM-PAGES number on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	goto fail;
       }
 
-      _ippVarsExpand(data->vars, value, temp, sizeof(value));
+      ippFileExpandVars(f, value, temp, sizeof(value));
 
       if ((intvalue = strtoul(value, NULL, 10)) == ULONG_MAX || intvalue < 1)
       {
-	print_fatal_error(data, "Bad NUM-PAGES \"%s\" on line %d of \"%s\".", value, f->linenum, f->filename);
+	print_fatal_error(data, "Bad NUM-PAGES \"%s\" on line %d of '%s'.", value, ippFileGetLineNumber(f), ippFileGetFilename(f));
 	goto fail;
       }
 
@@ -3296,17 +3279,17 @@ parse_generate_file(
     {
       if (params->orientation)
       {
-	print_fatal_error(data, "Unexpected extra ORIENTATION on line %d of \"%s\".", f->linenum, f->filename);
+	print_fatal_error(data, "Unexpected extra ORIENTATION on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	goto fail;
       }
 
-      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
       {
-	print_fatal_error(data, "Missing ORIENTATION on line %d of \"%s\".", f->linenum, f->filename);
+	print_fatal_error(data, "Missing ORIENTATION on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	goto fail;
       }
 
-      _ippVarsExpand(data->vars, value, temp, sizeof(value));
+      ippFileExpandVars(f, value, temp, sizeof(value));
 
       if (!strcmp(value, "portrait"))
         params->orientation = IPP_ORIENT_PORTRAIT;
@@ -3318,7 +3301,7 @@ parse_generate_file(
         params->orientation = IPP_ORIENT_REVERSE_PORTRAIT;
       else
       {
-	print_fatal_error(data, "Bad ORIENTATION \"%s\" on line %d of \"%s\".", value, f->linenum, f->filename);
+	print_fatal_error(data, "Bad ORIENTATION \"%s\" on line %d of '%s'.", value, ippFileGetLineNumber(f), ippFileGetFilename(f));
 	goto fail;
       }
     }
@@ -3326,17 +3309,17 @@ parse_generate_file(
     {
       if (params->xdpi || params->ydpi)
       {
-	print_fatal_error(data, "Unexpected extra RESOLUTION on line %d of \"%s\".", f->linenum, f->filename);
+	print_fatal_error(data, "Unexpected extra RESOLUTION on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	goto fail;
       }
 
-      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
       {
-	print_fatal_error(data, "Missing RESOLUTION on line %d of \"%s\".", f->linenum, f->filename);
+	print_fatal_error(data, "Missing RESOLUTION on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	goto fail;
       }
 
-      _ippVarsExpand(data->vars, value, temp, sizeof(value));
+      ippFileExpandVars(f, value, temp, sizeof(value));
 
       if (!strcmp(value, "min") || !strcmp(value, "max"))
       {
@@ -3400,19 +3383,19 @@ parse_generate_file(
 
       if (strcmp(value, "default") && (params->xdpi <= 0 || params->ydpi <= 0))
       {
-	print_fatal_error(data, "Bad RESOLUTION \"%s\" on line %d of \"%s\".", value, f->linenum, f->filename);
+	print_fatal_error(data, "Bad RESOLUTION \"%s\" on line %d of '%s'.", value, ippFileGetLineNumber(f), ippFileGetFilename(f));
 	goto fail;
       }
     }
     else if (!_cups_strcasecmp(token, "SIDES"))
     {
-      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
       {
-	print_fatal_error(data, "Missing SIDES on line %d of \"%s\".", f->linenum, f->filename);
+	print_fatal_error(data, "Missing SIDES on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	goto fail;
       }
 
-      _ippVarsExpand(data->vars, value, temp, sizeof(value));
+      ippFileExpandVars(f, value, temp, sizeof(value));
 
       if (!strcmp(value, "one-sided") || !strcmp(value, "two-sided-long-edge") || !strcmp(value, "two-sided-short-edge"))
       {
@@ -3420,18 +3403,18 @@ parse_generate_file(
       }
       else
       {
-	print_fatal_error(data, "Bad SIDES \"%s\" on line %d of \"%s\".", value, f->linenum, f->filename);
+	print_fatal_error(data, "Bad SIDES \"%s\" on line %d of '%s'.", value, ippFileGetLineNumber(f), ippFileGetFilename(f));
 	goto fail;
       }
     }
     else
     {
-      print_fatal_error(data, "Unknown %s on line %d of \"%s\".", token, f->linenum, f->filename);
+      print_fatal_error(data, "Unknown %s on line %d of '%s'.", token, ippFileGetLineNumber(f), ippFileGetFilename(f));
       goto fail;
     }
   }
 
-  print_fatal_error(data, "Missing closing brace on line %d of \"%s\".", f->linenum, f->filename);
+  print_fatal_error(data, "Missing closing brace on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 
   fail:
 
@@ -3450,9 +3433,9 @@ parse_generate_file(
  * }
  */
 
-static int				/* O - 1 to continue, 0 to stop */
+static bool				/* O - `true` to continue, `false` to stop */
 parse_monitor_printer_state(
-    _ipp_file_t    *f,			/* I - IPP file data */
+    ipp_file_t     *f,			/* I - IPP file data */
     ipptool_test_t *data)		/* I - Test data */
 {
   char	token[256],			/* Token string */
@@ -3462,33 +3445,33 @@ parse_monitor_printer_state(
 	*ptr;				/* Pointer into value */
 
 
-  if (!_ippFileReadToken(f, temp, sizeof(temp)))
+  if (!ippFileReadToken(f, temp, sizeof(temp)))
   {
-    print_fatal_error(data, "Missing printer URI on line %d of \"%s\".", f->linenum, f->filename);
+    print_fatal_error(data, "Missing printer URI on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
     return (0);
   }
 
   if (strcmp(temp, "{"))
   {
     // Got a printer URI so copy it...
-    _ippVarsExpand(data->vars, value, temp, sizeof(value));
+    ippFileExpandVars(f, value, temp, sizeof(value));
     data->monitor_uri = strdup(value);
 
     // Then see if we have an opening brace...
-    if (!_ippFileReadToken(f, temp, sizeof(temp)) || strcmp(temp, "{"))
+    if (!ippFileReadToken(f, temp, sizeof(temp)) || strcmp(temp, "{"))
     {
-      print_fatal_error(data, "Missing opening brace on line %d of \"%s\".", f->linenum, f->filename);
+      print_fatal_error(data, "Missing opening brace on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
       return (0);
     }
   }
   else
   {
     // Use the default printer URI...
-    data->monitor_uri = strdup(data->vars->uri);
+    data->monitor_uri = strdup(ippFileGetVar(data->parent, "uri"));
   }
 
   // Loop until we get a closing brace...
-  while (_ippFileReadToken(f, token, sizeof(token)))
+  while (ippFileReadToken(f, token, sizeof(token)))
   {
     if (_cups_strcasecmp(token, "COUNT") &&
 	_cups_strcasecmp(token, "DEFINE-MATCH") &&
@@ -3513,13 +3496,13 @@ parse_monitor_printer_state(
 
       if (data->num_monitor_expects >= (int)(sizeof(data->monitor_expects) / sizeof(data->monitor_expects[0])))
       {
-	print_fatal_error(data, "Too many EXPECT's on line %d of \"%s\".", f->linenum, f->filename);
+	print_fatal_error(data, "Too many EXPECT's on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	return (0);
       }
 
-      if (!_ippFileReadToken(f, name, sizeof(name)))
+      if (!ippFileReadToken(f, name, sizeof(name)))
       {
-	print_fatal_error(data, "Missing EXPECT name on line %d of \"%s\".", f->linenum, f->filename);
+	print_fatal_error(data, "Missing EXPECT name on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	return (0);
       }
 
@@ -3546,15 +3529,15 @@ parse_monitor_printer_state(
     {
       size_t	count;			/* Count value */
 
-      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
       {
-	print_fatal_error(data, "Missing COUNT number on line %d of \"%s\".", f->linenum, f->filename);
+	print_fatal_error(data, "Missing COUNT number on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	return (0);
       }
 
       if ((count = strtoul(temp, NULL, 10)) == ULONG_MAX)
       {
-	print_fatal_error(data, "Bad COUNT \"%s\" on line %d of \"%s\".", temp, f->linenum, f->filename);
+	print_fatal_error(data, "Bad COUNT \"%s\" on line %d of '%s'.", temp, ippFileGetLineNumber(f), ippFileGetFilename(f));
 	return (0);
       }
 
@@ -3564,15 +3547,15 @@ parse_monitor_printer_state(
       }
       else
       {
-	print_fatal_error(data, "COUNT without a preceding EXPECT on line %d of \"%s\".", f->linenum, f->filename);
+	print_fatal_error(data, "COUNT without a preceding EXPECT on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	return (0);
       }
     }
     else if (!_cups_strcasecmp(token, "DEFINE-MATCH"))
     {
-      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
       {
-	print_fatal_error(data, "Missing DEFINE-MATCH variable on line %d of \"%s\".", f->linenum, f->filename);
+	print_fatal_error(data, "Missing DEFINE-MATCH variable on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	return (0);
       }
 
@@ -3582,15 +3565,15 @@ parse_monitor_printer_state(
       }
       else
       {
-	print_fatal_error(data, "DEFINE-MATCH without a preceding EXPECT on line %d of \"%s\".", f->linenum, f->filename);
+	print_fatal_error(data, "DEFINE-MATCH without a preceding EXPECT on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	return (0);
       }
     }
     else if (!_cups_strcasecmp(token, "DEFINE-NO-MATCH"))
     {
-      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
       {
-	print_fatal_error(data, "Missing DEFINE-NO-MATCH variable on line %d of \"%s\".", f->linenum, f->filename);
+	print_fatal_error(data, "Missing DEFINE-NO-MATCH variable on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	return (0);
       }
 
@@ -3600,15 +3583,15 @@ parse_monitor_printer_state(
       }
       else
       {
-	print_fatal_error(data, "DEFINE-NO-MATCH without a preceding EXPECT on line %d of \"%s\".", f->linenum, f->filename);
+	print_fatal_error(data, "DEFINE-NO-MATCH without a preceding EXPECT on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	return (0);
       }
     }
     else if (!_cups_strcasecmp(token, "DEFINE-VALUE"))
     {
-      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
       {
-	print_fatal_error(data, "Missing DEFINE-VALUE variable on line %d of \"%s\".", f->linenum, f->filename);
+	print_fatal_error(data, "Missing DEFINE-VALUE variable on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	return (0);
       }
 
@@ -3618,15 +3601,15 @@ parse_monitor_printer_state(
       }
       else
       {
-	print_fatal_error(data, "DEFINE-VALUE without a preceding EXPECT on line %d of \"%s\".", f->linenum, f->filename);
+	print_fatal_error(data, "DEFINE-VALUE without a preceding EXPECT on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	return (0);
       }
     }
     else if (!_cups_strcasecmp(token, "DISPLAY-MATCH"))
     {
-      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
       {
-	print_fatal_error(data, "Missing DISPLAY-MATCH message on line %d of \"%s\".", f->linenum, f->filename);
+	print_fatal_error(data, "Missing DISPLAY-MATCH message on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	return (0);
       }
 
@@ -3636,7 +3619,7 @@ parse_monitor_printer_state(
       }
       else
       {
-	print_fatal_error(data, "DISPLAY-MATCH without a preceding EXPECT on line %d of \"%s\".", f->linenum, f->filename);
+	print_fatal_error(data, "DISPLAY-MATCH without a preceding EXPECT on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	return (0);
       }
     }
@@ -3648,17 +3631,17 @@ parse_monitor_printer_state(
 
       double dval;                    /* Delay value */
 
-      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
       {
-	print_fatal_error(data, "Missing DELAY value on line %d of \"%s\".", f->linenum, f->filename);
+	print_fatal_error(data, "Missing DELAY value on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	return (0);
       }
 
-      _ippVarsExpand(data->vars, value, temp, sizeof(value));
+      ippFileExpandVars(f, value, temp, sizeof(value));
 
       if ((dval = _cupsStrScand(value, &ptr, localeconv())) < 0.0 || (*ptr && *ptr != ','))
       {
-	print_fatal_error(data, "Bad DELAY value \"%s\" on line %d of \"%s\".", value, f->linenum, f->filename);
+	print_fatal_error(data, "Bad DELAY value \"%s\" on line %d of '%s'.", value, ippFileGetLineNumber(f), ippFileGetFilename(f));
 	return (0);
       }
 
@@ -3668,7 +3651,7 @@ parse_monitor_printer_state(
       {
 	if ((dval = _cupsStrScand(ptr + 1, &ptr, localeconv())) <= 0.0 || *ptr)
 	{
-	  print_fatal_error(data, "Bad DELAY value \"%s\" on line %d of \"%s\".", value, f->linenum, f->filename);
+	  print_fatal_error(data, "Bad DELAY value \"%s\" on line %d of '%s'.", value, ippFileGetLineNumber(f), ippFileGetFilename(f));
 	  return (0);
 	}
 
@@ -3679,9 +3662,9 @@ parse_monitor_printer_state(
     }
     else if (!_cups_strcasecmp(token, "OF-TYPE"))
     {
-      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
       {
-	print_fatal_error(data, "Missing OF-TYPE value tag(s) on line %d of \"%s\".", f->linenum, f->filename);
+	print_fatal_error(data, "Missing OF-TYPE value tag(s) on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	return (0);
       }
 
@@ -3691,7 +3674,7 @@ parse_monitor_printer_state(
       }
       else
       {
-	print_fatal_error(data, "OF-TYPE without a preceding EXPECT on line %d of \"%s\".", f->linenum, f->filename);
+	print_fatal_error(data, "OF-TYPE without a preceding EXPECT on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	return (0);
       }
     }
@@ -3699,15 +3682,15 @@ parse_monitor_printer_state(
     {
       ipp_tag_t	in_group;		/* IN-GROUP value */
 
-      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
       {
-	print_fatal_error(data, "Missing IN-GROUP group tag on line %d of \"%s\".", f->linenum, f->filename);
+	print_fatal_error(data, "Missing IN-GROUP group tag on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	return (0);
       }
 
       if ((in_group = ippTagValue(temp)) == IPP_TAG_ZERO || in_group >= IPP_TAG_UNSUPPORTED_VALUE)
       {
-	print_fatal_error(data, "Bad IN-GROUP group tag \"%s\" on line %d of \"%s\".", temp, f->linenum, f->filename);
+	print_fatal_error(data, "Bad IN-GROUP group tag \"%s\" on line %d of '%s'.", temp, ippFileGetLineNumber(f), ippFileGetFilename(f));
 	return (0);
       }
       else if (data->last_expect)
@@ -3716,15 +3699,15 @@ parse_monitor_printer_state(
       }
       else
       {
-	print_fatal_error(data, "IN-GROUP without a preceding EXPECT on line %d of \"%s\".", f->linenum, f->filename);
+	print_fatal_error(data, "IN-GROUP without a preceding EXPECT on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	return (0);
       }
     }
     else if (!_cups_strcasecmp(token, "IF-DEFINED"))
     {
-      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
       {
-	print_fatal_error(data, "Missing IF-DEFINED name on line %d of \"%s\".", f->linenum, f->filename);
+	print_fatal_error(data, "Missing IF-DEFINED name on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	return (0);
       }
 
@@ -3734,15 +3717,15 @@ parse_monitor_printer_state(
       }
       else
       {
-	print_fatal_error(data, "IF-DEFINED without a preceding EXPECT on line %d of \"%s\".", f->linenum, f->filename);
+	print_fatal_error(data, "IF-DEFINED without a preceding EXPECT on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	return (0);
       }
     }
     else if (!_cups_strcasecmp(token, "IF-NOT-DEFINED"))
     {
-      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
       {
-	print_fatal_error(data, "Missing IF-NOT-DEFINED name on line %d of \"%s\".", f->linenum, f->filename);
+	print_fatal_error(data, "Missing IF-NOT-DEFINED name on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	return (0);
       }
 
@@ -3752,7 +3735,7 @@ parse_monitor_printer_state(
       }
       else
       {
-	print_fatal_error(data, "IF-NOT-DEFINED without a preceding EXPECT on line %d of \"%s\".", f->linenum, f->filename);
+	print_fatal_error(data, "IF-NOT-DEFINED without a preceding EXPECT on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	return (0);
       }
     }
@@ -3764,18 +3747,15 @@ parse_monitor_printer_state(
       }
       else
       {
-	print_fatal_error(data, "%s without a preceding EXPECT on line %d of \"%s\".", token, f->linenum, f->filename);
+	print_fatal_error(data, "%s without a preceding EXPECT on line %d of '%s'.", token, ippFileGetLineNumber(f), ippFileGetFilename(f));
 	return (0);
       }
     }
     else if (!_cups_strcasecmp(token, "WITH-VALUE"))
     {
-      off_t	lastpos;		/* Last file position */
-      int	lastline;		/* Last line number */
-
-      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
       {
-	print_fatal_error(data, "Missing %s value on line %d of \"%s\".", token, f->linenum, f->filename);
+	print_fatal_error(data, "Missing %s value on line %d of '%s'.", token, ippFileGetLineNumber(f), ippFileGetFilename(f));
 	return (0);
       }
 
@@ -3788,11 +3768,11 @@ parse_monitor_printer_state(
 
       for (;;)
       {
-        lastpos  = cupsFileTell(f->fp);
-        lastline = f->linenum;
-        ptr      += strlen(ptr);
+        ippFileSavePosition(f);
 
-	if (!_ippFileReadToken(f, ptr, (sizeof(temp) - (size_t)(ptr - temp))))
+        ptr += strlen(ptr);
+
+	if (!ippFileReadToken(f, ptr, (sizeof(temp) - (size_t)(ptr - temp))))
 	  break;
 
         if (!strcmp(ptr, ","))
@@ -3803,7 +3783,7 @@ parse_monitor_printer_state(
 
 	  ptr += strlen(ptr);
 
-	  if (!_ippFileReadToken(f, ptr, (sizeof(temp) - (size_t)(ptr - temp))))
+	  if (!ippFileReadToken(f, ptr, (sizeof(temp) - (size_t)(ptr - temp))))
 	    break;
         }
         else
@@ -3812,8 +3792,7 @@ parse_monitor_printer_state(
           * Not another value, stop here...
           */
 
-          cupsFileSeek(f->fp, lastpos);
-          f->linenum = lastline;
+          ippFileRestorePosition(f);
           *ptr = '\0';
           break;
 	}
@@ -3825,7 +3804,7 @@ parse_monitor_printer_state(
 	* Expand any variables in the value and then save it.
 	*/
 
-	_ippVarsExpand(data->vars, value, temp, sizeof(value));
+	ippFileExpandVars(f, value, temp, sizeof(value));
 
 	ptr = value + strlen(value) - 1;
 
@@ -3865,15 +3844,55 @@ parse_monitor_printer_state(
       }
       else
       {
-	print_fatal_error(data, "%s without a preceding EXPECT on line %d of \"%s\".", token, f->linenum, f->filename);
+	print_fatal_error(data, "%s without a preceding EXPECT on line %d of '%s'.", token, ippFileGetLineNumber(f), ippFileGetFilename(f));
 	return (0);
       }
     }
   }
 
-  print_fatal_error(data, "Missing closing brace on line %d of \"%s\".", f->linenum, f->filename);
+  print_fatal_error(data, "Missing closing brace on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 
   return (0);
+}
+
+
+/*
+ * 'password_cb()' - Password callback using the IPP variables.
+ */
+
+const char *				/* O - Password string or @code NULL@ */
+password_cb(
+    const char *prompt,			/* I - Prompt string (not used) */
+    http_t     *http,			/* I - HTTP connection (not used) */
+    const char *method,			/* I - HTTP method (not used) */
+    const char *resource,		/* I - Resource path (not used) */
+    void       *user_data)		/* I - IPP test data */
+{
+  ipptool_test_t *test = (ipptool_test_t *)user_data;
+					/* IPP test data */
+  const char	*uriuser = ippFileGetVar(test->parent, "uriuser"),
+					/* Username */
+		*uripassword = ippFileGetVar(test->parent, "uripassword");
+					/* Password */
+
+
+  (void)prompt;
+  (void)http;
+  (void)method;
+  (void)resource;
+
+  if (uriuser && uripassword && test->password_tries < 3)
+  {
+    test->password_tries ++;
+
+    cupsSetUser(uriuser);
+
+    return (uripassword);
+  }
+  else
+  {
+    return (NULL);
+  }
 }
 
 
@@ -4929,7 +4948,7 @@ sigterm_handler(int sig)		/* I - Signal number (unused) */
 {
   (void)sig;
 
-  Cancel = 1;
+  Cancel = true;
 
   signal(SIGINT, SIG_DFL);
   signal(SIGTERM, SIG_DFL);
@@ -4978,9 +4997,8 @@ timeout_cb(http_t *http,		/* I - Connection to server */
  * 'token_cb()' - Parse test file-specific tokens and run tests.
  */
 
-static int				/* O - 1 to continue, 0 to stop */
-token_cb(_ipp_file_t    *f,		/* I - IPP file data */
-         _ipp_vars_t    *vars,		/* I - IPP variables */
+static bool				/* O - `true` to continue, `false` to stop */
+token_cb(ipp_file_t     *f,		/* I - IPP file data */
          ipptool_test_t *data,		/* I - Test data */
          const char     *token)		/* I - Current token */
 {
@@ -4993,15 +5011,7 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
   if (getenv("IPPTOOL_DEBUG"))
     fprintf(stderr, "ipptool: token='%s'\n", token);
 
-  if (!token)
-  {
-   /*
-    * Initialize state as needed (nothing for now...)
-    */
-
-    return (1);
-  }
-  else if (f->attrs)
+  if (ippFileGetAttributes(f))
   {
    /*
     * Parse until we see a close brace...
@@ -5049,13 +5059,13 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
     {
       if (data->generate_params)
       {
-	print_fatal_error(data, "Extra GENERATE-FILE seen on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Extra GENERATE-FILE seen on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
       else if (data->file[0])
       {
-	print_fatal_error(data, "Cannot use GENERATE-FILE on line %d of \"%s\" with FILE.", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Cannot use GENERATE-FILE on line %d of '%s' with FILE.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
 
       return (parse_generate_file(f, data));
@@ -5064,8 +5074,8 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
     {
       if (data->monitor_uri)
       {
-	print_fatal_error(data, "Extra MONITOR-PRINTER-STATE seen on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Extra MONITOR-PRINTER-STATE seen on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
 
       return (parse_monitor_printer_state(f, data));
@@ -5078,13 +5088,13 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       * COMPRESSION gzip
       */
 
-      if (_ippFileReadToken(f, temp, sizeof(temp)))
+      if (ippFileReadToken(f, temp, sizeof(temp)))
       {
-	_ippVarsExpand(vars, data->compression, temp, sizeof(data->compression));
+	ippFileExpandVars(f, data->compression, temp, sizeof(data->compression));
 	if (strcmp(data->compression, "none") && strcmp(data->compression, "deflate") && strcmp(data->compression, "gzip"))
 	{
-	  print_fatal_error(data, "Unsupported COMPRESSION value \"%s\" on line %d of \"%s\".", data->compression, f->linenum, f->filename);
-	  return (0);
+	  print_fatal_error(data, "Unsupported COMPRESSION value \"%s\" on line %d of '%s'.", data->compression, ippFileGetLineNumber(f), ippFileGetFilename(f));
+	  return (false);
 	}
 
 	if (!strcmp(data->compression, "none"))
@@ -5092,8 +5102,8 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       }
       else
       {
-	print_fatal_error(data, "Missing COMPRESSION value on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Missing COMPRESSION value on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
     }
     else if (!strcmp(token, "DEFINE"))
@@ -5102,15 +5112,15 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       * DEFINE name value
       */
 
-      if (_ippFileReadToken(f, name, sizeof(name)) && _ippFileReadToken(f, temp, sizeof(temp)))
+      if (ippFileReadToken(f, name, sizeof(name)) && ippFileReadToken(f, temp, sizeof(temp)))
       {
-	_ippVarsExpand(vars, value, temp, sizeof(value));
-	_ippVarsSet(vars, name, value);
+	ippFileExpandVars(f, value, temp, sizeof(value));
+	ippFileSetVar(f, name, value);
       }
       else
       {
-	print_fatal_error(data, "Missing DEFINE name and/or value on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Missing DEFINE name and/or value on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
     }
     else if (!strcmp(token, "IGNORE-ERRORS"))
@@ -5120,14 +5130,14 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       * IGNORE-ERRORS no
       */
 
-      if (_ippFileReadToken(f, temp, sizeof(temp)) && (!_cups_strcasecmp(temp, "yes") || !_cups_strcasecmp(temp, "no")))
+      if (ippFileReadToken(f, temp, sizeof(temp)) && (!_cups_strcasecmp(temp, "yes") || !_cups_strcasecmp(temp, "no")))
       {
 	data->ignore_errors = !_cups_strcasecmp(temp, "yes");
       }
       else
       {
-	print_fatal_error(data, "Missing IGNORE-ERRORS value on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Missing IGNORE-ERRORS value on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
     }
     else if (!_cups_strcasecmp(token, "NAME"))
@@ -5136,14 +5146,14 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       * Name of test...
       */
 
-      if (_ippFileReadToken(f, temp, sizeof(temp)))
+      if (ippFileReadToken(f, temp, sizeof(temp)))
       {
-        _ippVarsExpand(vars, data->name, temp, sizeof(data->name));
+        ippFileExpandVars(f, data->name, temp, sizeof(data->name));
       }
       else
       {
-	print_fatal_error(data, "Missing NAME string on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Missing NAME string on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
     }
     else if (!_cups_strcasecmp(token, "PAUSE"))
@@ -5152,14 +5162,14 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       * Pause with a message...
       */
 
-      if (_ippFileReadToken(f, temp, sizeof(temp)))
+      if (ippFileReadToken(f, temp, sizeof(temp)))
       {
         cupsCopyString(data->pause, temp, sizeof(data->pause));
       }
       else
       {
-	print_fatal_error(data, "Missing PAUSE message on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Missing PAUSE message on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
     }
     else if (!strcmp(token, "REQUEST-ID"))
@@ -5169,7 +5179,7 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       * REQUEST-ID random
       */
 
-      if (_ippFileReadToken(f, temp, sizeof(temp)))
+      if (ippFileReadToken(f, temp, sizeof(temp)))
       {
 	if (isdigit(temp[0] & 255))
 	{
@@ -5181,14 +5191,14 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
 	}
 	else
 	{
-	  print_fatal_error(data, "Bad REQUEST-ID value \"%s\" on line %d of \"%s\".", temp, f->linenum, f->filename);
-	  return (0);
+	  print_fatal_error(data, "Bad REQUEST-ID value \"%s\" on line %d of '%s'.", temp, ippFileGetLineNumber(f), ippFileGetFilename(f));
+	  return (false);
 	}
       }
       else
       {
-	print_fatal_error(data, "Missing REQUEST-ID value on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Missing REQUEST-ID value on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
     }
     else if (!strcmp(token, "PASS-IF-DEFINED"))
@@ -5197,15 +5207,15 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       * PASS-IF-DEFINED variable
       */
 
-      if (_ippFileReadToken(f, name, sizeof(name)))
+      if (ippFileReadToken(f, name, sizeof(name)))
       {
-	if (_ippVarsGet(vars, name))
+	if (ippFileGetVar(f, name))
 	  data->pass_test = 1;
       }
       else
       {
-	print_fatal_error(data, "Missing PASS-IF-DEFINED value on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Missing PASS-IF-DEFINED value on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
     }
     else if (!strcmp(token, "PASS-IF-NOT-DEFINED"))
@@ -5214,15 +5224,15 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       * PASS-IF-NOT-DEFINED variable
       */
 
-      if (_ippFileReadToken(f, name, sizeof(name)))
+      if (ippFileReadToken(f, name, sizeof(name)))
       {
-	if (!_ippVarsGet(vars, name))
+	if (!ippFileGetVar(f, name))
 	  data->pass_test = 1;
       }
       else
       {
-	print_fatal_error(data, "Missing PASS-IF-NOT-DEFINED value on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Missing PASS-IF-NOT-DEFINED value on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
     }
     else if (!strcmp(token, "SKIP-IF-DEFINED"))
@@ -5231,15 +5241,15 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       * SKIP-IF-DEFINED variable
       */
 
-      if (_ippFileReadToken(f, name, sizeof(name)))
+      if (ippFileReadToken(f, name, sizeof(name)))
       {
-	if (_ippVarsGet(vars, name) || getenv(name))
-	  data->skip_test = 1;
+	if (ippFileGetVar(f, name) || getenv(name))
+	  data->skip_test = true;
       }
       else
       {
-	print_fatal_error(data, "Missing SKIP-IF-DEFINED value on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Missing SKIP-IF-DEFINED value on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
     }
     else if (!strcmp(token, "SKIP-IF-MISSING"))
@@ -5248,20 +5258,20 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       * SKIP-IF-MISSING filename
       */
 
-      if (_ippFileReadToken(f, temp, sizeof(temp)))
+      if (ippFileReadToken(f, temp, sizeof(temp)))
       {
         char filename[1024];		/* Filename */
 
-	_ippVarsExpand(vars, value, temp, sizeof(value));
-	get_filename(f->filename, filename, temp, sizeof(filename));
+	ippFileExpandVars(f, value, temp, sizeof(value));
+	get_filename(ippFileGetFilename(f), filename, temp, sizeof(filename));
 
 	if (access(filename, R_OK))
-	  data->skip_test = 1;
+	  data->skip_test = true;
       }
       else
       {
-	print_fatal_error(data, "Missing SKIP-IF-MISSING filename on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Missing SKIP-IF-MISSING filename on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
     }
     else if (!strcmp(token, "SKIP-IF-NOT-DEFINED"))
@@ -5270,15 +5280,15 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       * SKIP-IF-NOT-DEFINED variable
       */
 
-      if (_ippFileReadToken(f, name, sizeof(name)))
+      if (ippFileReadToken(f, name, sizeof(name)))
       {
-	if (!_ippVarsGet(vars, name) && !getenv(name))
-	  data->skip_test = 1;
+	if (!ippFileGetVar(f, name) && !getenv(name))
+	  data->skip_test = true;
       }
       else
       {
-	print_fatal_error(data, "Missing SKIP-IF-NOT-DEFINED value on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Missing SKIP-IF-NOT-DEFINED value on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
     }
     else if (!strcmp(token, "SKIP-PREVIOUS-ERROR"))
@@ -5288,14 +5298,14 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       * SKIP-PREVIOUS-ERROR no
       */
 
-      if (_ippFileReadToken(f, temp, sizeof(temp)) && (!_cups_strcasecmp(temp, "yes") || !_cups_strcasecmp(temp, "no")))
+      if (ippFileReadToken(f, temp, sizeof(temp)) && (!_cups_strcasecmp(temp, "yes") || !_cups_strcasecmp(temp, "no")))
       {
 	data->skip_previous = !_cups_strcasecmp(temp, "yes");
       }
       else
       {
-	print_fatal_error(data, "Missing SKIP-PREVIOUS-ERROR value on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Missing SKIP-PREVIOUS-ERROR value on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
     }
     else if (!strcmp(token, "TEST-ID"))
@@ -5304,14 +5314,14 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       * TEST-ID "string"
       */
 
-      if (_ippFileReadToken(f, temp, sizeof(temp)))
+      if (ippFileReadToken(f, temp, sizeof(temp)))
       {
-	_ippVarsExpand(vars, data->test_id, temp, sizeof(data->test_id));
+	ippFileExpandVars(f, data->test_id, temp, sizeof(data->test_id));
       }
       else
       {
-	print_fatal_error(data, "Missing TEST-ID value on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Missing TEST-ID value on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
     }
     else if (!strcmp(token, "TRANSFER"))
@@ -5322,7 +5332,7 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       * TRANSFER length
       */
 
-      if (_ippFileReadToken(f, temp, sizeof(temp)))
+      if (ippFileReadToken(f, temp, sizeof(temp)))
       {
 	if (!strcmp(temp, "auto"))
 	{
@@ -5338,19 +5348,19 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
 	}
 	else
 	{
-	  print_fatal_error(data, "Bad TRANSFER value \"%s\" on line %d of \"%s\".", temp, f->linenum, f->filename);
-	  return (0);
+	  print_fatal_error(data, "Bad TRANSFER value \"%s\" on line %d of '%s'.", temp, ippFileGetLineNumber(f), ippFileGetFilename(f));
+	  return (false);
 	}
       }
       else
       {
-	print_fatal_error(data, "Missing TRANSFER value on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Missing TRANSFER value on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
     }
     else if (!_cups_strcasecmp(token, "VERSION"))
     {
-      if (_ippFileReadToken(f, temp, sizeof(temp)))
+      if (ippFileReadToken(f, temp, sizeof(temp)))
       {
 	if (!strcmp(temp, "0.0"))
 	{
@@ -5378,14 +5388,14 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
 	}
 	else
 	{
-	  print_fatal_error(data, "Bad VERSION \"%s\" on line %d of \"%s\".", temp, f->linenum, f->filename);
-	  return (0);
+	  print_fatal_error(data, "Bad VERSION \"%s\" on line %d of '%s'.", temp, ippFileGetLineNumber(f), ippFileGetFilename(f));
+	  return (false);
 	}
       }
       else
       {
-	print_fatal_error(data, "Missing VERSION number on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Missing VERSION number on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
     }
     else if (!_cups_strcasecmp(token, "RESOURCE"))
@@ -5394,10 +5404,10 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       * Resource name...
       */
 
-      if (!_ippFileReadToken(f, data->resource, sizeof(data->resource)))
+      if (!ippFileReadToken(f, data->resource, sizeof(data->resource)))
       {
-	print_fatal_error(data, "Missing RESOURCE path on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Missing RESOURCE path on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
     }
     else if (!_cups_strcasecmp(token, "OPERATION"))
@@ -5408,46 +5418,21 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
 
       ipp_op_t	op;			/* Operation code */
 
-      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
       {
-	print_fatal_error(data, "Missing OPERATION code on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Missing OPERATION code on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
 
-      _ippVarsExpand(vars, value, temp, sizeof(value));
+      ippFileExpandVars(f, value, temp, sizeof(value));
 
       if ((op = ippOpValue(value)) == (ipp_op_t)-1 && (op = (ipp_op_t)strtol(value, NULL, 0)) == 0)
       {
-	print_fatal_error(data, "Bad OPERATION code \"%s\" on line %d of \"%s\".", temp, f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Bad OPERATION code \"%s\" on line %d of '%s'.", temp, ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
 
-      ippSetOperation(f->attrs, op);
-    }
-    else if (!_cups_strcasecmp(token, "GROUP"))
-    {
-     /*
-      * Attribute group...
-      */
-
-      ipp_tag_t	group_tag;		/* Group tag */
-
-      if (!_ippFileReadToken(f, temp, sizeof(temp)))
-      {
-	print_fatal_error(data, "Missing GROUP tag on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
-      }
-
-      if ((group_tag = ippTagValue(temp)) == IPP_TAG_ZERO || group_tag >= IPP_TAG_UNSUPPORTED_VALUE)
-      {
-	print_fatal_error(data, "Bad GROUP tag \"%s\" on line %d of \"%s\".", temp, f->linenum, f->filename);
-	return (0);
-      }
-
-      if (group_tag == f->group_tag)
-	ippAddSeparator(f->attrs);
-
-      f->group_tag = group_tag;
+      data->op = op;
     }
     else if (!_cups_strcasecmp(token, "DELAY"))
     {
@@ -5457,18 +5442,18 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
 
       double dval;                    /* Delay value */
 
-      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
       {
-	print_fatal_error(data, "Missing DELAY value on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Missing DELAY value on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
 
-      _ippVarsExpand(vars, value, temp, sizeof(value));
+      ippFileExpandVars(f, value, temp, sizeof(value));
 
       if ((dval = _cupsStrScand(value, &ptr, localeconv())) < 0.0 || (*ptr && *ptr != ','))
       {
-	print_fatal_error(data, "Bad DELAY value \"%s\" on line %d of \"%s\".", value, f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Bad DELAY value \"%s\" on line %d of '%s'.", value, ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
 
       data->delay = (useconds_t)(1000000.0 * dval);
@@ -5477,8 +5462,8 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       {
 	if ((dval = _cupsStrScand(ptr + 1, &ptr, localeconv())) <= 0.0 || *ptr)
 	{
-	  print_fatal_error(data, "Bad DELAY value \"%s\" on line %d of \"%s\".", value, f->linenum, f->filename);
-	  return (0);
+	  print_fatal_error(data, "Bad DELAY value \"%s\" on line %d of '%s'.", value, ippFileGetLineNumber(f), ippFileGetFilename(f));
+	  return (false);
 	}
 
 	data->repeat_interval = (useconds_t)(1000000.0 * dval);
@@ -5494,28 +5479,28 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
 
       if (data->file[0])
       {
-	print_fatal_error(data, "Extra FILE seen on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Extra FILE seen on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
       else if (data->generate_params)
       {
-	print_fatal_error(data, "Cannot use FILE on line %d of \"%s\" with GENERATE-FILE.", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Cannot use FILE on line %d of '%s' with GENERATE-FILE.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
 
-      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
       {
-	print_fatal_error(data, "Missing FILE filename on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Missing FILE filename on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
 
-      _ippVarsExpand(vars, value, temp, sizeof(value));
-      get_filename(f->filename, data->file, value, sizeof(data->file));
+      ippFileExpandVars(f, value, temp, sizeof(value));
+      get_filename(ippFileGetFilename(f), data->file, value, sizeof(data->file));
 
       if (access(data->file, R_OK))
       {
-	print_fatal_error(data, "Filename \"%s\" (mapped to \"%s\") on line %d of \"%s\" cannot be read.", value, data->file, f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Filename \"%s\" (mapped to \"%s\") on line %d of '%s' cannot be read.", value, data->file, ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
     }
     else if (!_cups_strcasecmp(token, "STATUS"))
@@ -5526,20 +5511,20 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
 
       if (data->num_statuses >= (int)(sizeof(data->statuses) / sizeof(data->statuses[0])))
       {
-	print_fatal_error(data, "Too many STATUS's on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Too many STATUS's on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
 
-      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
       {
-	print_fatal_error(data, "Missing STATUS code on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Missing STATUS code on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
 
       if ((data->statuses[data->num_statuses].status = ippErrorValue(temp)) == (ipp_status_t)-1 && (data->statuses[data->num_statuses].status = (ipp_status_t)strtol(temp, NULL, 0)) == 0)
       {
-	print_fatal_error(data, "Bad STATUS code \"%s\" on line %d of \"%s\".", temp, f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Bad STATUS code \"%s\" on line %d of '%s'.", temp, ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
 
       data->last_status = data->statuses + data->num_statuses;
@@ -5563,14 +5548,14 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
 
       if (data->num_expects >= (int)(sizeof(data->expects) / sizeof(data->expects[0])))
       {
-	print_fatal_error(data, "Too many EXPECT's on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Too many EXPECT's on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
 
-      if (!_ippFileReadToken(f, name, sizeof(name)))
+      if (!ippFileReadToken(f, name, sizeof(name)))
       {
-	print_fatal_error(data, "Missing EXPECT name on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Missing EXPECT name on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
 
       data->last_expect = data->expects + data->num_expects;
@@ -5597,16 +5582,16 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
     {
       size_t	count;			/* Count value */
 
-      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
       {
-	print_fatal_error(data, "Missing COUNT number on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Missing COUNT number on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
 
       if ((count = strtoul(temp, NULL, 10)) == ULONG_MAX)
       {
-	print_fatal_error(data, "Bad COUNT \"%s\" on line %d of \"%s\".", temp, f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Bad COUNT \"%s\" on line %d of '%s'.", temp, ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
 
       if (data->last_expect)
@@ -5615,16 +5600,16 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       }
       else
       {
-	print_fatal_error(data, "COUNT without a preceding EXPECT on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "COUNT without a preceding EXPECT on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
     }
     else if (!_cups_strcasecmp(token, "DEFINE-MATCH"))
     {
-      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
       {
-	print_fatal_error(data, "Missing DEFINE-MATCH variable on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Missing DEFINE-MATCH variable on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
 
       if (data->last_expect)
@@ -5637,16 +5622,16 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       }
       else
       {
-	print_fatal_error(data, "DEFINE-MATCH without a preceding EXPECT or STATUS on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "DEFINE-MATCH without a preceding EXPECT or STATUS on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
     }
     else if (!_cups_strcasecmp(token, "DEFINE-NO-MATCH"))
     {
-      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
       {
-	print_fatal_error(data, "Missing DEFINE-NO-MATCH variable on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Missing DEFINE-NO-MATCH variable on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
 
       if (data->last_expect)
@@ -5659,16 +5644,16 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       }
       else
       {
-	print_fatal_error(data, "DEFINE-NO-MATCH without a preceding EXPECT or STATUS on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "DEFINE-NO-MATCH without a preceding EXPECT or STATUS on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
     }
     else if (!_cups_strcasecmp(token, "DEFINE-VALUE"))
     {
-      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
       {
-	print_fatal_error(data, "Missing DEFINE-VALUE variable on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Missing DEFINE-VALUE variable on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
 
       if (data->last_expect)
@@ -5677,16 +5662,16 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       }
       else
       {
-	print_fatal_error(data, "DEFINE-VALUE without a preceding EXPECT on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "DEFINE-VALUE without a preceding EXPECT on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
     }
     else if (!_cups_strcasecmp(token, "DISPLAY-MATCH"))
     {
-      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
       {
-	print_fatal_error(data, "Missing DISPLAY-MATCH mesaage on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Missing DISPLAY-MATCH mesaage on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
 
       if (data->last_expect)
@@ -5695,16 +5680,16 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       }
       else
       {
-	print_fatal_error(data, "DISPLAY-MATCH without a preceding EXPECT on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "DISPLAY-MATCH without a preceding EXPECT on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
     }
     else if (!_cups_strcasecmp(token, "OF-TYPE"))
     {
-      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
       {
-	print_fatal_error(data, "Missing OF-TYPE value tag(s) on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Missing OF-TYPE value tag(s) on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
 
       if (data->last_expect)
@@ -5713,24 +5698,24 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       }
       else
       {
-	print_fatal_error(data, "OF-TYPE without a preceding EXPECT on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "OF-TYPE without a preceding EXPECT on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
     }
     else if (!_cups_strcasecmp(token, "IN-GROUP"))
     {
       ipp_tag_t	in_group;		/* IN-GROUP value */
 
-      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
       {
-	print_fatal_error(data, "Missing IN-GROUP group tag on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Missing IN-GROUP group tag on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
 
       if ((in_group = ippTagValue(temp)) == IPP_TAG_ZERO || in_group >= IPP_TAG_UNSUPPORTED_VALUE)
       {
-	print_fatal_error(data, "Bad IN-GROUP group tag \"%s\" on line %d of \"%s\".", temp, f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Bad IN-GROUP group tag \"%s\" on line %d of '%s'.", temp, ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
       else if (data->last_expect)
       {
@@ -5738,21 +5723,21 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       }
       else
       {
-	print_fatal_error(data, "IN-GROUP without a preceding EXPECT on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "IN-GROUP without a preceding EXPECT on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
     }
     else if (!_cups_strcasecmp(token, "REPEAT-LIMIT"))
     {
-      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
       {
-	print_fatal_error(data, "Missing REPEAT-LIMIT value on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Missing REPEAT-LIMIT value on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
       else if (atoi(temp) <= 0)
       {
-	print_fatal_error(data, "Bad REPEAT-LIMIT value on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Bad REPEAT-LIMIT value on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
 
       if (data->last_status)
@@ -5765,8 +5750,8 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       }
       else
       {
-	print_fatal_error(data, "REPEAT-LIMIT without a preceding EXPECT or STATUS on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "REPEAT-LIMIT without a preceding EXPECT or STATUS on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
     }
     else if (!_cups_strcasecmp(token, "REPEAT-MATCH"))
@@ -5781,8 +5766,8 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       }
       else
       {
-	print_fatal_error(data, "REPEAT-MATCH without a preceding EXPECT or STATUS on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "REPEAT-MATCH without a preceding EXPECT or STATUS on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
     }
     else if (!_cups_strcasecmp(token, "REPEAT-NO-MATCH"))
@@ -5797,16 +5782,16 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       }
       else
       {
-	print_fatal_error(data, "REPEAT-NO-MATCH without a preceding EXPECT or STATUS on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "REPEAT-NO-MATCH without a preceding EXPECT or STATUS on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
     }
     else if (!_cups_strcasecmp(token, "SAME-COUNT-AS"))
     {
-      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
       {
-	print_fatal_error(data, "Missing SAME-COUNT-AS name on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Missing SAME-COUNT-AS name on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
 
       if (data->last_expect)
@@ -5815,16 +5800,16 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       }
       else
       {
-	print_fatal_error(data, "SAME-COUNT-AS without a preceding EXPECT on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "SAME-COUNT-AS without a preceding EXPECT on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
     }
     else if (!_cups_strcasecmp(token, "IF-DEFINED"))
     {
-      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
       {
-	print_fatal_error(data, "Missing IF-DEFINED name on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Missing IF-DEFINED name on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
 
       if (data->last_expect)
@@ -5837,16 +5822,16 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       }
       else
       {
-	print_fatal_error(data, "IF-DEFINED without a preceding EXPECT or STATUS on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "IF-DEFINED without a preceding EXPECT or STATUS on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
     }
     else if (!_cups_strcasecmp(token, "IF-NOT-DEFINED"))
     {
-      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
       {
-	print_fatal_error(data, "Missing IF-NOT-DEFINED name on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Missing IF-NOT-DEFINED name on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
 
       if (data->last_expect)
@@ -5859,8 +5844,8 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       }
       else
       {
-	print_fatal_error(data, "IF-NOT-DEFINED without a preceding EXPECT or STATUS on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "IF-NOT-DEFINED without a preceding EXPECT or STATUS on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
     }
     else if (!_cups_strcasecmp(token, "WITH-DISTINCT-VALUES"))
@@ -5871,8 +5856,8 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       }
       else
       {
-	print_fatal_error(data, "%s without a preceding EXPECT on line %d of \"%s\".", token, f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "%s without a preceding EXPECT on line %d of '%s'.", token, ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
     }
     else if (!_cups_strcasecmp(token, "WITH-ALL-VALUES") ||
@@ -5884,9 +5869,6 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
 	     !_cups_strcasecmp(token, "WITH-SCHEME") ||
 	     !_cups_strcasecmp(token, "WITH-VALUE"))
     {
-      off_t	lastpos;		/* Last file position */
-      int	lastline;		/* Last line number */
-
       if (data->last_expect)
       {
 	if (!_cups_strcasecmp(token, "WITH-ALL-HOSTNAMES") || !_cups_strcasecmp(token, "WITH-HOSTNAME"))
@@ -5900,10 +5882,10 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
 	  data->last_expect->with_flags |= IPPTOOL_WITH_ALL;
       }
 
-      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
       {
-	print_fatal_error(data, "Missing %s value on line %d of \"%s\".", token, f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Missing %s value on line %d of '%s'.", token, ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
 
      /*
@@ -5915,11 +5897,11 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
 
       for (;;)
       {
-        lastpos  = cupsFileTell(f->fp);
-        lastline = f->linenum;
-        ptr      += strlen(ptr);
+        ippFileSavePosition(f);
 
-	if (!_ippFileReadToken(f, ptr, (sizeof(temp) - (size_t)(ptr - temp))))
+        ptr += strlen(ptr);
+
+	if (!ippFileReadToken(f, ptr, (sizeof(temp) - (size_t)(ptr - temp))))
 	  break;
 
         if (!strcmp(ptr, ","))
@@ -5930,7 +5912,7 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
 
 	  ptr += strlen(ptr);
 
-	  if (!_ippFileReadToken(f, ptr, (sizeof(temp) - (size_t)(ptr - temp))))
+	  if (!ippFileReadToken(f, ptr, (sizeof(temp) - (size_t)(ptr - temp))))
 	    break;
         }
         else
@@ -5939,8 +5921,8 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
           * Not another value, stop here...
           */
 
-          cupsFileSeek(f->fp, lastpos);
-          f->linenum = lastline;
+          ippFileRestorePosition(f);
+
           *ptr = '\0';
           break;
 	}
@@ -5952,7 +5934,7 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
 	* Expand any variables in the value and then save it.
 	*/
 
-	_ippVarsExpand(vars, value, temp, sizeof(value));
+	ippFileExpandVars(f, value, temp, sizeof(value));
 
 	ptr = value + strlen(value) - 1;
 
@@ -5992,16 +5974,16 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       }
       else
       {
-	print_fatal_error(data, "%s without a preceding EXPECT on line %d of \"%s\".", token, f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "%s without a preceding EXPECT on line %d of '%s'.", token, ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
     }
     else if (!_cups_strcasecmp(token, "WITH-VALUE-FROM"))
     {
-      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
       {
-	print_fatal_error(data, "Missing %s value on line %d of \"%s\".", token, f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Missing %s value on line %d of '%s'.", token, ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
 
       if (data->last_expect)
@@ -6010,15 +5992,15 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
 	* Expand any variables in the value and then save it.
 	*/
 
-	_ippVarsExpand(vars, value, temp, sizeof(value));
+	ippFileExpandVars(f, value, temp, sizeof(value));
 
 	data->last_expect->with_value_from = strdup(value);
 	data->last_expect->with_flags      = IPPTOOL_WITH_LITERAL;
       }
       else
       {
-	print_fatal_error(data, "%s without a preceding EXPECT on line %d of \"%s\".", token, f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "%s without a preceding EXPECT on line %d of '%s'.", token, ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
     }
     else if (!_cups_strcasecmp(token, "DISPLAY"))
@@ -6029,14 +6011,14 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
 
       if (data->num_displayed >= (int)(sizeof(data->displayed) / sizeof(data->displayed[0])))
       {
-	print_fatal_error(data, "Too many DISPLAY's on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Too many DISPLAY's on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
 
-      if (!_ippFileReadToken(f, temp, sizeof(temp)))
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
       {
-	print_fatal_error(data, "Missing DISPLAY name on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+	print_fatal_error(data, "Missing DISPLAY name on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
 
       data->displayed[data->num_displayed] = strdup(temp);
@@ -6044,8 +6026,8 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
     }
     else
     {
-      print_fatal_error(data, "Unexpected token %s seen on line %d of \"%s\".", token, f->linenum, f->filename);
-      return (0);
+      print_fatal_error(data, "Unexpected token %s seen on line %d of '%s'.", token, ippFileGetLineNumber(f), ippFileGetFilename(f));
+      return (false);
     }
   }
   else
@@ -6066,9 +6048,9 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
 	  print_xml_header(data);
 
 	if (data->output == IPPTOOL_OUTPUT_TEST || (data->output == IPPTOOL_OUTPUT_PLIST && data->outfile != cupsFileStdout()))
-	  cupsFilePrintf(cupsFileStdout(), "\"%s\":\n", f->filename);
+	  cupsFilePrintf(cupsFileStdout(), "\"%s\":\n", ippFileGetFilename(f));
 
-	data->show_header = 0;
+	data->show_header = false;
       }
 
       data->compression[0] = '\0';
@@ -6077,14 +6059,14 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       data->last_expect    = NULL;
       data->file[0]        = '\0';
       data->ignore_errors  = data->def_ignore_errors;
-      cupsCopyString(data->name, f->filename, sizeof(data->name));
+      cupsCopyString(data->name, ippFileGetFilename(f), sizeof(data->name));
       if ((ptr = strrchr(data->name, '.')) != NULL)
         *ptr = '\0';
       data->repeat_interval = 5000000;
-      cupsCopyString(data->resource, data->vars->resource, sizeof(data->resource));
-      data->skip_previous = 0;
-      data->pass_test     = 0;
-      data->skip_test     = 0;
+      cupsCopyString(data->resource, ippFileGetVar(data->parent, "resource"), sizeof(data->resource));
+      data->skip_previous = false;
+      data->pass_test     = false;
+      data->skip_test     = false;
       data->num_statuses  = 0;
       data->last_status   = NULL;
       data->test_id[0]    = '\0';
@@ -6097,10 +6079,8 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       data->monitor_interval    = 5000000;
       data->num_monitor_expects = 0;
 
-      _ippVarsSet(vars, "date-current", iso_date(ippTimeToDate(time(NULL))));
-
-      f->attrs     = ippNew();
-      f->group_tag = IPP_TAG_ZERO;
+      ippFileSetAttributes(f, ippNew());
+      ippFileSetVar(f, "date-current", iso_date(ippTimeToDate(time(NULL))));
     }
     else if (!strcmp(token, "DEFINE"))
     {
@@ -6108,16 +6088,16 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       * DEFINE name value
       */
 
-      if (_ippFileReadToken(f, name, sizeof(name)) && _ippFileReadToken(f, temp, sizeof(temp)))
+      if (ippFileReadToken(f, name, sizeof(name)) && ippFileReadToken(f, temp, sizeof(temp)))
       {
-        _ippVarsSet(vars, "date-current", iso_date(ippTimeToDate(time(NULL))));
-        _ippVarsExpand(vars, value, temp, sizeof(value));
-	_ippVarsSet(vars, name, value);
+        ippFileSetVar(f, "date-current", iso_date(ippTimeToDate(time(NULL))));
+        ippFileExpandVars(f, value, temp, sizeof(value));
+	ippFileSetVar(f, name, value);
       }
       else
       {
-        print_fatal_error(data, "Missing DEFINE name and/or value on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+        print_fatal_error(data, "Missing DEFINE name and/or value on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
     }
     else if (!strcmp(token, "DEFINE-DEFAULT"))
@@ -6126,19 +6106,19 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       * DEFINE-DEFAULT name value
       */
 
-      if (_ippFileReadToken(f, name, sizeof(name)) && _ippFileReadToken(f, temp, sizeof(temp)))
+      if (ippFileReadToken(f, name, sizeof(name)) && ippFileReadToken(f, temp, sizeof(temp)))
       {
-        if (!_ippVarsGet(vars, name))
+        if (!ippFileGetVar(f, name))
         {
-          _ippVarsSet(vars, "date-current", iso_date(ippTimeToDate(time(NULL))));
-	  _ippVarsExpand(vars, value, temp, sizeof(value));
-	  _ippVarsSet(vars, name, value);
+          ippFileSetVar(f, "date-current", iso_date(ippTimeToDate(time(NULL))));
+	  ippFileExpandVars(f, value, temp, sizeof(value));
+	  ippFileSetVar(f, name, value);
 	}
       }
       else
       {
-        print_fatal_error(data, "Missing DEFINE-DEFAULT name and/or value on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+        print_fatal_error(data, "Missing DEFINE-DEFAULT name and/or value on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+        return (false);
       }
     }
     else if (!strcmp(token, "FILE-ID"))
@@ -6147,15 +6127,15 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       * FILE-ID "string"
       */
 
-      if (_ippFileReadToken(f, temp, sizeof(temp)))
+      if (ippFileReadToken(f, temp, sizeof(temp)))
       {
-        _ippVarsSet(vars, "date-current", iso_date(ippTimeToDate(time(NULL))));
-        _ippVarsExpand(vars, data->file_id, temp, sizeof(data->file_id));
+        ippFileSetVar(f, "date-current", iso_date(ippTimeToDate(time(NULL))));
+        ippFileExpandVars(f, data->file_id, temp, sizeof(data->file_id));
       }
       else
       {
-        print_fatal_error(data, "Missing FILE-ID value on line %d of \"%s\".", f->linenum, f->filename);
-        return (0);
+        print_fatal_error(data, "Missing FILE-ID value on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+        return (false);
       }
     }
     else if (!strcmp(token, "IGNORE-ERRORS"))
@@ -6165,14 +6145,14 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       * IGNORE-ERRORS no
       */
 
-      if (_ippFileReadToken(f, temp, sizeof(temp)) && (!_cups_strcasecmp(temp, "yes") || !_cups_strcasecmp(temp, "no")))
+      if (ippFileReadToken(f, temp, sizeof(temp)) && (!_cups_strcasecmp(temp, "yes") || !_cups_strcasecmp(temp, "no")))
       {
         data->def_ignore_errors = !_cups_strcasecmp(temp, "yes");
       }
       else
       {
-        print_fatal_error(data, "Missing IGNORE-ERRORS value on line %d of \"%s\".", f->linenum, f->filename);
-        return (0);
+        print_fatal_error(data, "Missing IGNORE-ERRORS value on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+        return (false);
       }
     }
     else if (!strcmp(token, "INCLUDE"))
@@ -6182,7 +6162,7 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       * INCLUDE <filename>
       */
 
-      if (_ippFileReadToken(f, temp, sizeof(temp)))
+      if (ippFileReadToken(f, temp, sizeof(temp)))
       {
        /*
         * Map the filename to and then run the tests...
@@ -6193,23 +6173,23 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
 
         memcpy(&inc_data, data, sizeof(inc_data));
         inc_data.http        = NULL;
-	inc_data.pass        = 1;
-	inc_data.prev_pass   = 1;
-	inc_data.show_header = 1;
+	inc_data.pass        = true;
+	inc_data.prev_pass   = true;
+	inc_data.show_header = true;
 
-        if (!do_tests(get_filename(f->filename, filename, temp, sizeof(filename)), &inc_data) && data->stop_after_include_error)
+        if (!do_tests(get_filename(ippFileGetFilename(f), filename, temp, sizeof(filename)), &inc_data) && data->stop_after_include_error)
         {
-          data->pass = data->prev_pass = 0;
-          return (0);
+          data->pass = data->prev_pass = false;
+	  return (false);
 	}
       }
       else
       {
-        print_fatal_error(data, "Missing INCLUDE filename on line %d of \"%s\".", f->linenum, f->filename);
-        return (0);
+        print_fatal_error(data, "Missing INCLUDE filename on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+        return (false);
       }
 
-      data->show_header = 1;
+      data->show_header = true;
     }
     else if (!strcmp(token, "INCLUDE-IF-DEFINED"))
     {
@@ -6218,7 +6198,7 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       * INCLUDE-IF-DEFINED name <filename>
       */
 
-      if (_ippFileReadToken(f, name, sizeof(name)) && _ippFileReadToken(f, temp, sizeof(temp)))
+      if (ippFileReadToken(f, name, sizeof(name)) && ippFileReadToken(f, temp, sizeof(temp)))
       {
        /*
         * Map the filename to and then run the tests...
@@ -6229,23 +6209,23 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
 
         memcpy(&inc_data, data, sizeof(inc_data));
         inc_data.http        = NULL;
-	inc_data.pass        = 1;
-	inc_data.prev_pass   = 1;
-	inc_data.show_header = 1;
+	inc_data.pass        = true;
+	inc_data.prev_pass   = true;
+	inc_data.show_header = true;
 
-        if (!do_tests(get_filename(f->filename, filename, temp, sizeof(filename)), &inc_data) && data->stop_after_include_error)
+        if (!do_tests(get_filename(ippFileGetFilename(f), filename, temp, sizeof(filename)), &inc_data) && data->stop_after_include_error)
         {
-          data->pass = data->prev_pass = 0;
-          return (0);
+          data->pass = data->prev_pass = false;
+          return (false);
 	}
       }
       else
       {
-        print_fatal_error(data, "Missing INCLUDE-IF-DEFINED name or filename on line %d of \"%s\".", f->linenum, f->filename);
-        return (0);
+        print_fatal_error(data, "Missing INCLUDE-IF-DEFINED name or filename on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+        return (false);
       }
 
-      data->show_header = 1;
+      data->show_header = true;
     }
     else if (!strcmp(token, "INCLUDE-IF-NOT-DEFINED"))
     {
@@ -6254,34 +6234,34 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       * INCLUDE-IF-NOT-DEFINED name <filename>
       */
 
-      if (_ippFileReadToken(f, name, sizeof(name)) && _ippFileReadToken(f, temp, sizeof(temp)))
+      if (ippFileReadToken(f, name, sizeof(name)) && ippFileReadToken(f, temp, sizeof(temp)))
       {
        /*
         * Map the filename to and then run the tests...
 	*/
 
-        ipptool_test_t inc_data;	/* Data for included file */
+        ipptool_test_t	inc_data;	/* Data for included file */
         char		filename[1024];	/* Mapped filename */
 
         memcpy(&inc_data, data, sizeof(inc_data));
         inc_data.http        = NULL;
-	inc_data.pass        = 1;
-	inc_data.prev_pass   = 1;
-	inc_data.show_header = 1;
+	inc_data.pass        = true;
+	inc_data.prev_pass   = true;
+	inc_data.show_header = true;
 
-        if (!do_tests(get_filename(f->filename, filename, temp, sizeof(filename)), &inc_data) && data->stop_after_include_error)
+        if (!do_tests(get_filename(ippFileGetFilename(f), filename, temp, sizeof(filename)), &inc_data) && data->stop_after_include_error)
         {
-          data->pass = data->prev_pass = 0;
-          return (0);
+          data->pass = data->prev_pass = false;
+          return (false);
 	}
       }
       else
       {
-        print_fatal_error(data, "Missing INCLUDE-IF-NOT-DEFINED name or filename on line %d of \"%s\".", f->linenum, f->filename);
-        return (0);
+        print_fatal_error(data, "Missing INCLUDE-IF-NOT-DEFINED name or filename on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+        return (false);
       }
 
-      data->show_header = 1;
+      data->show_header = true;
     }
     else if (!strcmp(token, "SKIP-IF-DEFINED"))
     {
@@ -6289,15 +6269,15 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       * SKIP-IF-DEFINED variable
       */
 
-      if (_ippFileReadToken(f, name, sizeof(name)))
+      if (ippFileReadToken(f, name, sizeof(name)))
       {
-        if (_ippVarsGet(vars, name) || getenv(name))
-          data->skip_test = 1;
+        if (ippFileGetVar(f, name) || getenv(name))
+          data->skip_test = true;
       }
       else
       {
-        print_fatal_error(data, "Missing SKIP-IF-DEFINED variable on line %d of \"%s\".", f->linenum, f->filename);
-        return (0);
+        print_fatal_error(data, "Missing SKIP-IF-DEFINED variable on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+        return (false);
       }
     }
     else if (!strcmp(token, "SKIP-IF-NOT-DEFINED"))
@@ -6306,15 +6286,15 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       * SKIP-IF-NOT-DEFINED variable
       */
 
-      if (_ippFileReadToken(f, name, sizeof(name)))
+      if (ippFileReadToken(f, name, sizeof(name)))
       {
-        if (!_ippVarsGet(vars, name) && !getenv(name))
-          data->skip_test = 1;
+        if (!ippFileGetVar(f, name) && !getenv(name))
+          data->skip_test = true;
       }
       else
       {
-        print_fatal_error(data, "Missing SKIP-IF-NOT-DEFINED variable on line %d of \"%s\".", f->linenum, f->filename);
-        return (0);
+        print_fatal_error(data, "Missing SKIP-IF-NOT-DEFINED variable on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+        return (false);
       }
     }
     else if (!strcmp(token, "STOP-AFTER-INCLUDE-ERROR"))
@@ -6324,14 +6304,14 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       * STOP-AFTER-INCLUDE-ERROR no
       */
 
-      if (_ippFileReadToken(f, temp, sizeof(temp)) && (!_cups_strcasecmp(temp, "yes") || !_cups_strcasecmp(temp, "no")))
+      if (ippFileReadToken(f, temp, sizeof(temp)) && (!_cups_strcasecmp(temp, "yes") || !_cups_strcasecmp(temp, "no")))
       {
         data->stop_after_include_error = !_cups_strcasecmp(temp, "yes");
       }
       else
       {
-        print_fatal_error(data, "Missing STOP-AFTER-INCLUDE-ERROR value on line %d of \"%s\".", f->linenum, f->filename);
-        return (0);
+        print_fatal_error(data, "Missing STOP-AFTER-INCLUDE-ERROR value on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+        return (false);
       }
     }
     else if (!strcmp(token, "TRANSFER"))
@@ -6342,7 +6322,7 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
       * TRANSFER length
       */
 
-      if (_ippFileReadToken(f, temp, sizeof(temp)))
+      if (ippFileReadToken(f, temp, sizeof(temp)))
       {
         if (!strcmp(temp, "auto"))
 	  data->def_transfer = IPPTOOL_TRANSFER_AUTO;
@@ -6352,19 +6332,19 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
 	  data->def_transfer = IPPTOOL_TRANSFER_LENGTH;
 	else
 	{
-	  print_fatal_error(data, "Bad TRANSFER value \"%s\" on line %d of \"%s\".", temp, f->linenum, f->filename);
-	  return (0);
+	  print_fatal_error(data, "Bad TRANSFER value \"%s\" on line %d of '%s'.", temp, ippFileGetLineNumber(f), ippFileGetFilename(f));
+	  return (false);
 	}
       }
       else
       {
-        print_fatal_error(data, "Missing TRANSFER value on line %d of \"%s\".", f->linenum, f->filename);
-	return (0);
+        print_fatal_error(data, "Missing TRANSFER value on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
       }
     }
     else if (!strcmp(token, "VERSION"))
     {
-      if (_ippFileReadToken(f, temp, sizeof(temp)))
+      if (ippFileReadToken(f, temp, sizeof(temp)))
       {
         if (!strcmp(temp, "1.0"))
 	  data->def_version = 10;
@@ -6378,24 +6358,24 @@ token_cb(_ipp_file_t    *f,		/* I - IPP file data */
 	  data->def_version = 22;
 	else
 	{
-	  print_fatal_error(data, "Bad VERSION \"%s\" on line %d of \"%s\".", temp, f->linenum, f->filename);
-	  return (0);
+	  print_fatal_error(data, "Bad VERSION \"%s\" on line %d of '%s'.", temp, ippFileGetLineNumber(f), ippFileGetFilename(f));
+	  return (false);
 	}
       }
       else
       {
-        print_fatal_error(data, "Missing VERSION number on line %d of \"%s\".", f->linenum, f->filename);
-        return (0);
+        print_fatal_error(data, "Missing VERSION number on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+        return (false);
       }
     }
     else
     {
-      print_fatal_error(data, "Unexpected token %s seen on line %d of \"%s\".", token, f->linenum, f->filename);
-      return (0);
+      print_fatal_error(data, "Unexpected token %s seen on line %d of '%s'.", token, ippFileGetLineNumber(f), ippFileGetFilename(f));
+      return (false);
     }
   }
 
-  return (1);
+  return (true);
 }
 
 
@@ -6443,11 +6423,12 @@ usage(void)
  * 'with_distinct_values()' - Verify that an attribute contains unique values.
  */
 
-static int				// O - 1 if distinct, 0 if duplicate
+static bool				// O - `true` if distinct, `false` if duplicate
 with_distinct_values(
     cups_array_t    *errors,		// I - Array of errors
     ipp_attribute_t *attr)		// I - Attribute to test
 {
+  bool		ret;			// Return value
   size_t	i,			// Looping var
 		count;			// Number of values
   ipp_tag_t	value_tag;		// Value syntax
@@ -6458,7 +6439,7 @@ with_distinct_values(
 
   // If there is only 1 value, it must be distinct
   if ((count = ippGetCount(attr)) == 1)
-    return (1);
+    return (true);
 
   // Only check integers, enums, rangeOfInteger, resolution, and nul-terminated
   // strings...
@@ -6478,7 +6459,7 @@ with_distinct_values(
 
     default :
         add_stringf(errors, "WITH-DISTINCT-VALUES %s not supported for 1setOf %s", ippGetName(attr), ippTagString(value_tag));
-        return (0);
+        return (false);
   }
 
   // Collect values and determine they are all unique...
@@ -6557,10 +6538,10 @@ with_distinct_values(
   }
 
   // Cleanup...
-  i = cupsArrayGetCount(values) == count;
+  ret = cupsArrayGetCount(values) == count;
   cupsArrayDelete(values);
 
-  return (i);
+  return (ret);
 }
 
 
@@ -6598,14 +6579,14 @@ with_flags_string(int flags)            /* I - WITH flags */
  * 'with_value()' - Test a WITH-VALUE predicate.
  */
 
-static int				/* O - 1 on match, 0 on non-match */
-with_value(ipptool_test_t *data,	/* I - Test data */
-           cups_array_t     *errors,	/* I - Errors array */
-           char             *value,	/* I - Value string */
-           int              flags,	/* I - Flags for match */
-           ipp_attribute_t  *attr,	/* I - Attribute to compare */
-	   char             *matchbuf,	/* I - Buffer to hold matching value */
-	   size_t           matchlen)	/* I - Length of match buffer */
+static bool				/* O - `true` on match, `false` on non-match */
+with_value(ipptool_test_t  *data,	/* I - Test data */
+           cups_array_t    *errors,	/* I - Errors array */
+           char            *value,	/* I - Value string */
+           int             flags,	/* I - Flags for match */
+           ipp_attribute_t *attr,	/* I - Attribute to compare */
+	   char            *matchbuf,	/* I - Buffer to hold matching value */
+	   size_t          matchlen)	/* I - Length of match buffer */
 {
   size_t	i,			/* Looping var */
     		count;			/* Number of values */
@@ -6623,7 +6604,7 @@ with_value(ipptool_test_t *data,	/* I - Test data */
   */
 
   if (!value || !*value)
-    return (1);
+    return (true);
 
  /*
   * Compare the value string to the attribute value.
@@ -6852,7 +6833,7 @@ with_value(ipptool_test_t *data,	/* I - Test data */
 
     case IPP_TAG_NOVALUE :
     case IPP_TAG_UNKNOWN :
-	return (1);
+	return (true);
 
     case IPP_TAG_CHARSET :
     case IPP_TAG_KEYWORD :
@@ -6878,7 +6859,7 @@ with_value(ipptool_test_t *data,	/* I - Test data */
             regerror(r, &re, temp, sizeof(temp));
 
 	    print_fatal_error(data, "Unable to compile WITH-VALUE regular expression \"%s\" - %s", value, temp);
-	    return (0);
+	    return (false);
 	  }
 
          /*
@@ -6895,13 +6876,13 @@ with_value(ipptool_test_t *data,	/* I - Test data */
 
 	      if (!(flags & IPPTOOL_WITH_ALL))
 	      {
-	        match = 1;
+	        match = true;
 	        break;
 	      }
 	    }
 	    else if (flags & IPPTOOL_WITH_ALL)
 	    {
-	      match = 0;
+	      match = false;
 	      break;
 	    }
 	  }
@@ -6923,13 +6904,13 @@ with_value(ipptool_test_t *data,	/* I - Test data */
 
 	      if (!(flags & IPPTOOL_WITH_ALL))
 	      {
-	        match = 1;
+	        match = true;
 	        break;
 	      }
 	    }
 	    else if (flags & IPPTOOL_WITH_ALL)
 	    {
-	      match = 0;
+	      match = false;
 	      break;
 	    }
 	  }
@@ -6988,13 +6969,13 @@ with_value(ipptool_test_t *data,	/* I - Test data */
 
 	      if (!(flags & IPPTOOL_WITH_ALL))
 	      {
-	        match = 1;
+	        match = true;
 	        break;
 	      }
 	    }
 	    else if (flags & IPPTOOL_WITH_ALL)
 	    {
-	      match = 0;
+	      match = false;
 	      break;
 	    }
 	  }
@@ -7024,7 +7005,7 @@ with_value(ipptool_test_t *data,	/* I - Test data */
             regerror(r, &re, temp, sizeof(temp));
 
 	    print_fatal_error(data, "Unable to compile WITH-VALUE regular expression \"%s\" - %s", value, temp);
-	    return (0);
+	    return (false);
 	  }
 
          /*
@@ -7035,7 +7016,7 @@ with_value(ipptool_test_t *data,	/* I - Test data */
 	  {
             if ((adata = ippGetOctetString(attr, i, &adatalen)) == NULL || adatalen >= (int)sizeof(temp))
             {
-              match = 0;
+              match = false;
               break;
             }
             memcpy(temp, adata, (size_t)adatalen);
@@ -7048,13 +7029,13 @@ with_value(ipptool_test_t *data,	/* I - Test data */
 
 	      if (!(flags & IPPTOOL_WITH_ALL))
 	      {
-	        match = 1;
+	        match = true;
 	        break;
 	      }
 	    }
 	    else if (flags & IPPTOOL_WITH_ALL)
 	    {
-	      match = 0;
+	      match = false;
 	      break;
 	    }
 	  }
@@ -7091,7 +7072,7 @@ with_value(ipptool_test_t *data,	/* I - Test data */
             if ((withlen = strlen(value)) & 1 || withlen > (2 * (sizeof(withdata) + 1)))
             {
 	      print_fatal_error(data, "Bad WITH-VALUE hex value.");
-              return (0);
+              return (false);
 	    }
 
 	    withlen = withlen / 2 - 1;
@@ -7120,7 +7101,7 @@ with_value(ipptool_test_t *data,	/* I - Test data */
 	    if (*valptr)
 	    {
 	      print_fatal_error(data, "Bad WITH-VALUE hex value.");
-              return (0);
+              return (false);
 	    }
           }
           else
@@ -7145,13 +7126,13 @@ with_value(ipptool_test_t *data,	/* I - Test data */
 
 	      if (!(flags & IPPTOOL_WITH_ALL))
 	      {
-	        match = 1;
+	        match = true;
 	        break;
 	      }
 	    }
 	    else if (flags & IPPTOOL_WITH_ALL)
 	    {
-	      match = 0;
+	      match = false;
 	      break;
 	    }
 	  }
@@ -7180,7 +7161,7 @@ with_value(ipptool_test_t *data,	/* I - Test data */
  * 'with_value_from()' - Test a WITH-VALUE-FROM predicate.
  */
 
-static int				/* O - 1 on match, 0 on non-match */
+static bool				/* O - `true` on match, `false` on non-match */
 with_value_from(
     cups_array_t    *errors,		/* I - Errors array */
     ipp_attribute_t *fromattr,		/* I - "From" attribute */
@@ -7252,11 +7233,13 @@ with_value_from(
 
 	for (i = 0; i < count; i ++)
 	{
-	  int xres, yres;
-	  ipp_res_t units;
-          size_t fromcount = ippGetCount(fromattr);
-	  int fromxres, fromyres;
-	  ipp_res_t fromunits;
+	  int		xres, yres;	// Current X,Y resolution
+	  ipp_res_t	units;		// Current units
+          size_t	fromcount = ippGetCount(fromattr);
+					// From count
+	  int		fromxres, fromyres;
+					// From X,Y resolution
+	  ipp_res_t	fromunits;	// From units
 
 	  xres = ippGetResolution(attr, i, &yres, &units);
 
@@ -7291,7 +7274,7 @@ with_value_from(
 
     case IPP_TAG_NOVALUE :
     case IPP_TAG_UNKNOWN :
-	return (1);
+	return (true);
 
     case IPP_TAG_CHARSET :
     case IPP_TAG_KEYWORD :
@@ -7323,9 +7306,10 @@ with_value_from(
     case IPP_TAG_URI :
 	for (i = 0; i < count; i ++)
 	{
-	  const char *value = ippGetString(attr, i, NULL);
-					/* Current string value */
-          size_t fromcount = ippGetCount(fromattr);
+	  const char	*value = ippGetString(attr, i, NULL);
+					// Current string value
+          size_t	fromcount = ippGetCount(fromattr);
+					// From count
 
           for (j = 0; j < fromcount; j ++)
           {
@@ -7352,10 +7336,10 @@ with_value_from(
 
   return (match);
 
-  /* value tag mismatch between fromattr and attr */
+  // value tag mismatch between fromattr and attr...
   wrong_value_tag :
 
   add_stringf(errors, "GOT: %s OF-TYPE %s", ippGetName(attr), ippTagString(ippGetValueTag(attr)));
 
-  return (0);
+  return (false);
 }

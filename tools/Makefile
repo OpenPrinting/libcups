@@ -117,14 +117,15 @@ uninstall:
 # Local programs (not built when cross-compiling...)
 #
 
-local:		ippeveprinter-static ipptool-static
+local:		ippeveprinter-static ippfind-static ipptool-static
 
 
 #
 # Test everything...
 #
 
-test:		all
+test:		local
+	./run-tests.sh
 
 
 #

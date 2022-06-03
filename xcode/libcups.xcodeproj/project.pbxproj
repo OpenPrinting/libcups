@@ -258,8 +258,6 @@
 		27D3968E27BB3989003D3D8E /* libresolv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D3968227BB390D003D3D8E /* libresolv.tbd */; };
 		720E854320164E7B00C6C411 /* ipp-file.c in Sources */ = {isa = PBXBuildFile; fileRef = 720E854120164E7A00C6C411 /* ipp-file.c */; };
 		720E854420164E7B00C6C411 /* ipp-file.c in Sources */ = {isa = PBXBuildFile; fileRef = 720E854120164E7A00C6C411 /* ipp-file.c */; };
-		720E854520164E7B00C6C411 /* ipp-vars.c in Sources */ = {isa = PBXBuildFile; fileRef = 720E854220164E7A00C6C411 /* ipp-vars.c */; };
-		720E854620164E7B00C6C411 /* ipp-vars.c in Sources */ = {isa = PBXBuildFile; fileRef = 720E854220164E7A00C6C411 /* ipp-vars.c */; };
 		72220EC51333056300FCA411 /* array.c in Sources */ = {isa = PBXBuildFile; fileRef = 72220EB81333056300FCA411 /* array.c */; };
 		72220EC61333056300FCA411 /* array.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220EB91333056300FCA411 /* array.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		72220EC81333056300FCA411 /* auth.c in Sources */ = {isa = PBXBuildFile; fileRef = 72220EBB1333056300FCA411 /* auth.c */; };
@@ -968,7 +966,6 @@
 		27D3968227BB390D003D3D8E /* libresolv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libresolv.tbd; path = usr/lib/libresolv.tbd; sourceTree = SDKROOT; };
 		27F89DA21B3AC43B00E5A4B7 /* testraster.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = testraster.c; path = ../cups/testraster.c; sourceTree = "<group>"; };
 		720E854120164E7A00C6C411 /* ipp-file.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "ipp-file.c"; path = "../cups/ipp-file.c"; sourceTree = "<group>"; };
-		720E854220164E7A00C6C411 /* ipp-vars.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "ipp-vars.c"; path = "../cups/ipp-vars.c"; sourceTree = "<group>"; };
 		72220EAE1333047D00FCA411 /* libcups.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libcups.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		72220EB81333056300FCA411 /* array.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = array.c; path = ../cups/array.c; sourceTree = "<group>"; };
 		72220EB91333056300FCA411 /* array.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = array.h; path = ../cups/array.h; sourceTree = "<group>"; };
@@ -1530,7 +1527,6 @@
 				72220EE6133305BB00FCA411 /* ipp.c */,
 				720E854120164E7A00C6C411 /* ipp-file.c */,
 				72220EE5133305BB00FCA411 /* ipp-support.c */,
-				720E854220164E7A00C6C411 /* ipp-vars.c */,
 				72220EEB133305BB00FCA411 /* language.h */,
 				72220EE9133305BB00FCA411 /* language-private.h */,
 				72220EE8133305BB00FCA411 /* langprintf.c */,
@@ -2325,7 +2321,6 @@
 				274FF68C1333B1C400317ECB /* array.c in Sources */,
 				7253C459216E981200494ADD /* raster-stream.c in Sources */,
 				274FF68E1333B1C400317ECB /* auth.c in Sources */,
-				720E854620164E7B00C6C411 /* ipp-vars.c in Sources */,
 				274FF6931333B1C400317ECB /* debug.c in Sources */,
 				274FF6941333B1C400317ECB /* dest.c in Sources */,
 				274FF6951333B1C400317ECB /* dir.c in Sources */,
@@ -2410,7 +2405,6 @@
 				7253C457216E981000494ADD /* raster-stream.c in Sources */,
 				727AD5B719100A58009F6862 /* tls.c in Sources */,
 				72220EC81333056300FCA411 /* auth.c in Sources */,
-				720E854520164E7B00C6C411 /* ipp-vars.c in Sources */,
 				72220F0B133305BB00FCA411 /* debug.c in Sources */,
 				72220F0C133305BB00FCA411 /* dest.c in Sources */,
 				72220F0D133305BB00FCA411 /* dir.c in Sources */,
