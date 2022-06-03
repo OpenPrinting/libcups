@@ -116,6 +116,8 @@ _cupsGlobalUnlock(void)
 #ifdef _WIN32
 /*
  * 'DllMain()' - Main entry for library.
+ *
+ * @private@
  */
 
 BOOL WINAPI				/* O - Success/failure */

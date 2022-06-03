@@ -310,7 +310,7 @@ cupsThreadWait(cups_thread_t thread)	// I - Thread ID
 // 'win32_self()' - Return the current thread.
 //
 
-cups_thread_t				// O - Thread
+static cups_thread_t			// O - Thread
 win32_self(void)
 {
   cups_thread_t	thread;			// Thread
@@ -342,7 +342,7 @@ win32_self(void)
 // 'win32_testcancel()' - Mark a safe cancellation point.
 //
 
-void
+static void
 win32_testcancel(void)
 {
   cups_thread_t	thread;			// Current thread

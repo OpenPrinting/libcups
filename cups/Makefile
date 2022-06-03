@@ -492,15 +492,11 @@ tlscheck:	tlscheck.o libcups.a
 doc:
 	echo "Generating CUPS Programming Manual..."
 	$(RM) cupspm.xml
+	codedoc --section "Programming" --body cupspm.md cupspm.xml \
+		$(LIBOBJS:.o=.c) $(HEADERS) --coverimage cupspm.png \
+		--epub ../doc/cupspm.epub
 	codedoc --section "Programming" --body cupspm.md \
-		cupspm.xml \
-		array.[ch] auth.c cups.h dest*.c dir.[ch] encode.c file.[ch] \
-		http.h http*.c ipp.h ipp*.c options.c pwg.[ch] \
-		raster.h raster-stubs.c tls-darwin.c usersys.c util.c \
-		--coverimage cupspm.png \
-		--epub ../doc/help/cupspm.epub
-	codedoc --section "Programming" --body cupspm.md \
-		cupspm.xml > ../doc/help/cupspm.html
+		cupspm.xml > ../doc/cupspm.html
 	$(RM) cupspm.xml
 
 

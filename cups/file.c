@@ -1796,7 +1796,7 @@ cupsFileWrite(cups_file_t *fp,		/* I - CUPS file */
  * 'cups_compress()' - Compress a buffer of data.
  */
 
-bool					/* O - `true` on success, `false` on error */
+static bool				/* O - `true` on success, `false` on error */
 cups_compress(cups_file_t *fp,		/* I - CUPS file */
               const char  *buf,		/* I - Buffer */
 	      size_t      bytes)	/* I - Number bytes */
@@ -2385,7 +2385,7 @@ cups_read(cups_file_t *fp,		/* I - CUPS file */
  * 'cups_write()' - Write to a file descriptor.
  */
 
-bool					/* O - `true` on success, `false` on error */
+static bool				/* O - `true` on success, `false` on error */
 cups_write(cups_file_t *fp,		/* I - CUPS file */
            const char  *buf,		/* I - Buffer */
 	   size_t      bytes)		/* I - Number bytes */
