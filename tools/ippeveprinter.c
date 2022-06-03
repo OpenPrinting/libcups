@@ -141,11 +141,7 @@ static const char * const ippeve_preason_strings[] =
  * URL scheme for web resources...
  */
 
-#ifdef HAVE_TLS
-#  define WEB_SCHEME "https"
-#else
-#  define WEB_SCHEME "http"
-#endif /* HAVE_TLS */
+#define WEB_SCHEME "https"
 
 
 /*
@@ -378,20 +374,18 @@ main(int  argc,				/* I - Number of command-line args */
 		*device_uri = NULL,	/* Device URI */
 		*output_format = NULL,	/* Output format */
 		*icon = NULL,		/* Icon file */
-#ifdef HAVE_TLS
 		*keypath = NULL,	/* Keychain path */
-#endif /* HAVE_TLS */
 		*location = "",		/* Location of printer */
 		*make = "Example",	/* Manufacturer */
 		*model = "Printer",	/* Model */
 		*name = NULL,		/* Printer name */
 		*strings = NULL,	/* Strings file */
 		*subtypes = "_print";	/* DNS-SD service subtype */
-  int		legacy = 0,		/* Legacy mode? */
-		duplex = 0,		/* Duplex mode */
-		ppm = 10,		/* Pages per minute for mono */
-		ppm_color = 0,		/* Pages per minute for color */
-		web_forms = 1;		/* Enable web site forms? */
+  bool		legacy = false,		/* Legacy mode? */
+		duplex = false,		/* Duplex mode */
+		web_forms = true;	/* Enable web site forms? */
+  int		ppm = 10,		/* Pages per minute for mono */
+		ppm_color = 0;		/* Pages per minute for color */
   ipp_t		*attrs = NULL;		/* Printer attributes */
   char		directory[1024] = "";	/* Spool directory */
   cups_array_t	*docformats = NULL;	/* Supported formats */
@@ -412,7 +406,7 @@ main(int  argc,				/* I - Number of command-line args */
     }
     else if (!strcmp(argv[i], "--no-web-forms"))
     {
-      web_forms = 0;
+      web_forms = false;
     }
     else if (!strcmp(argv[i], "--pam-service"))
     {
@@ -439,8 +433,8 @@ main(int  argc,				/* I - Number of command-line args */
         switch (*opt)
 	{
 	  case '2' : /* -2 (enable 2-sided printing) */
-	      duplex = 1;
-	      legacy = 1;
+	      duplex = true;
+	      legacy = true;
 	      break;
 
           case 'A' : /* -A (enable authentication) */
@@ -464,7 +458,6 @@ main(int  argc,				/* I - Number of command-line args */
 	      output_format = argv[i];
 	      break;
 
-#ifdef HAVE_TLS
 	  case 'K' : /* -K keypath */
 	      i ++;
 	      if (i >= argc)
@@ -472,7 +465,6 @@ main(int  argc,				/* I - Number of command-line args */
 
 	      keypath = argv[i];
 	      break;
-#endif /* HAVE_TLS */
 
 	  case 'M' : /* -M manufacturer */
 	      i ++;
@@ -480,7 +472,7 @@ main(int  argc,				/* I - Number of command-line args */
 	        usage(1);
 
 	      make   = argv[i];
-	      legacy = 1;
+	      legacy = true;
 	      break;
 
 	  case 'S' : /* -S filename.strings */
@@ -534,7 +526,7 @@ main(int  argc,				/* I - Number of command-line args */
 	        usage(1);
 
 	      docformats = cupsArrayNewStrings(argv[i], ',');
-	      legacy     = 1;
+	      legacy     = true;
 	      break;
 
 	  case 'i' : /* -i icon.png */
@@ -563,7 +555,7 @@ main(int  argc,				/* I - Number of command-line args */
 	        usage(1);
 
 	      model  = argv[i];
-	      legacy = 1;
+	      legacy = true;
 	      break;
 
 	  case 'n' : /* -n hostname */
@@ -598,7 +590,7 @@ main(int  argc,				/* I - Number of command-line args */
 	      if (sscanf(argv[i], "%d,%d", &ppm, &ppm_color) < 1)
 	        usage(1);
 
-	      legacy = 1;
+	      legacy = true;
 	      break;
 
 	  case 'v' : /* -v (be verbose) */
@@ -669,22 +661,20 @@ main(int  argc,				/* I - Number of command-line args */
   * Create the printer...
   */
 
-  if (!docformats)
-    docformats = cupsArrayNewStrings(ppm_color > 0 ? "image/jpeg,image/pwg-raster,image/urf": "image/pwg-raster,image/urf", ',');
-
   if (attrfile)
     attrs = load_ippserver_attributes(servername, serverport, attrfile, docformats);
   else
     attrs = load_legacy_attributes(make, model, ppm, ppm_color, duplex, docformats);
+
+  if (!docformats && !ippFindAttribute(attrs, "document-format-supported", IPP_TAG_MIMETYPE))
+    docformats = cupsArrayNewStrings(ppm_color > 0 ? "image/jpeg,image/pwg-raster,image/urf": "image/pwg-raster,image/urf", ',');
 
   if ((printer = create_printer(servername, serverport, name, location, icon, strings, docformats, subtypes, directory, command, device_uri, output_format, attrs)) == NULL)
     return (1);
 
   printer->web_forms = web_forms;
 
-#ifdef HAVE_TLS
   cupsSetServerCredentials(keypath, printer->hostname, 1);
-#endif /* HAVE_TLS */
 
  /*
   * Run the print service...
@@ -1535,12 +1525,9 @@ create_printer(
   {					/* reference-uri-schemes-supported */
     "file",
     "ftp",
-    "http"
-#ifdef HAVE_TLS
-    , "https"
-#endif /* HAVE_TLS */
+    "http",
+    "https"
   };
-#ifdef HAVE_TLS
   static const char * const uri_authentication_supported[] =
   {					/* uri-authentication-supported values */
     "none",
@@ -1556,7 +1543,6 @@ create_printer(
     "none",
     "tls"
   };
-#endif /* HAVE_TLS */
   static const char * const which_jobs[] =
   {					/* which-jobs-supported values */
     "completed",
@@ -1744,11 +1730,7 @@ create_printer(
 
   if (Verbosity)
   {
-#ifdef HAVE_TLS
     fprintf(stderr, "printer-uri-supported=\"ipp://%s:%d/ipp/print\",\"ipps://%s:%d/ipp/print\"\n", printer->hostname, printer->port, printer->hostname, printer->port);
-#else
-    fprintf(stderr, "printer-uri-supported=\"ipp://%s:%d/ipp/print\"\n", printer->hostname, printer->port);
-#endif /* HAVE_TLS */
     fprintf(stderr, "printer-uuid=\"%s\"\n", uuid);
   }
 
@@ -1784,11 +1766,14 @@ create_printer(
   * Assemble the final list of document formats...
   */
 
-  if (!cupsArrayFind(docformats, (void *)"application/octet-stream"))
-    cupsArrayAdd(docformats, (void *)"application/octet-stream");
+  if (docformats)
+  {
+    if (!cupsArrayFind(docformats, (void *)"application/octet-stream"))
+      cupsArrayAdd(docformats, (void *)"application/octet-stream");
 
-  for (num_formats = 0, format = (const char *)cupsArrayGetFirst(docformats); format && num_formats < (int)(sizeof(formats) / sizeof(formats[0])); format = (const char *)cupsArrayGetNext(docformats))
-    formats[num_formats ++] = format;
+    for (num_formats = 0, format = (const char *)cupsArrayGetFirst(docformats); format && num_formats < (int)(sizeof(formats) / sizeof(formats[0])); format = (const char *)cupsArrayGetNext(docformats))
+      formats[num_formats ++] = format;
+  }
 
  /*
   * Get the list of attributes that can be used when creating a job...
@@ -1829,11 +1814,16 @@ create_printer(
   if (!ippFindAttribute(printer->attrs, "compression-supported", IPP_TAG_ZERO))
     ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "compression-supported", (int)(sizeof(compressions) / sizeof(compressions[0])), NULL, compressions);
 
-  /* document-format-default */
-  ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_MIMETYPE), "document-format-default", NULL, "application/octet-stream");
+  if (docformats)
+  {
+    /* document-format-default */
+    if (!ippFindAttribute(printer->attrs, "document-format-default", IPP_TAG_MIMETYPE))
+      ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_MIMETYPE), "document-format-default", NULL, "application/octet-stream");
 
-  /* document-format-supported */
-  ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_MIMETYPE, "document-format-supported", num_formats, NULL, formats);
+    /* document-format-supported */
+    if (!ippFindAttribute(printer->attrs, "document-format-supported", IPP_TAG_MIMETYPE))
+      ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_MIMETYPE, "document-format-supported", num_formats, NULL, formats);
+  }
 
   /* generated-natural-language-supported */
   ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_LANGUAGE), "generated-natural-language-supported", NULL, "en");
@@ -1935,24 +1925,13 @@ create_printer(
   ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_URISCHEME), "reference-uri-schemes-supported", (int)(sizeof(reference_uri_schemes_supported) / sizeof(reference_uri_schemes_supported[0])), NULL, reference_uri_schemes_supported);
 
   /* uri-authentication-supported */
-#ifdef HAVE_TLS
   if (PAMService)
     ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "uri-authentication-supported", 2, NULL, uri_authentication_basic);
   else
     ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "uri-authentication-supported", 2, NULL, uri_authentication_supported);
-#else
-  if (PAMService)
-    ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "uri-authentication-supported", NULL, "basic");
-  else
-    ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "uri-authentication-supported", NULL, "none");
-#endif /* HAVE_TLS */
 
   /* uri-security-supported */
-#ifdef HAVE_TLS
   ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "uri-security-supported", 2, NULL, uri_security_supported);
-#else
-  ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "uri-security-supported", NULL, "none");
-#endif /* HAVE_TLS */
 
   /* which-jobs-supported */
   ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "which-jobs-supported", sizeof(which_jobs) / sizeof(which_jobs[0]), NULL, which_jobs);
@@ -2539,11 +2518,7 @@ finish_document_uri(
     goto abort_job;
   }
 
-  if (strcmp(scheme, "file") &&
-#ifdef HAVE_TLS
-      strcmp(scheme, "https") &&
-#endif /* HAVE_TLS */
-      strcmp(scheme, "http"))
+  if (strcmp(scheme, "file") && strcmp(scheme, "https") && strcmp(scheme, "http"))
   {
     respond_ipp(client, IPP_STATUS_ERROR_URI_SCHEME, "URI scheme \"%s\" not supported.", scheme);
 
@@ -2620,12 +2595,10 @@ finish_document_uri(
   }
   else
   {
-#ifdef HAVE_TLS
     if (port == 443 || !strcmp(scheme, "https"))
       encryption = HTTP_ENCRYPTION_ALWAYS;
     else
-#endif /* HAVE_TLS */
-    encryption = HTTP_ENCRYPTION_IF_REQUESTED;
+      encryption = HTTP_ENCRYPTION_IF_REQUESTED;
 
     if ((http = httpConnect(hostname, port, NULL, AF_UNSPEC, encryption, 1, 30000, NULL)) == NULL)
     {
@@ -3692,10 +3665,8 @@ ipp_get_printer_attributes(
     httpAssembleURI(HTTP_URI_CODING_ALL, uris[0], sizeof(uris[0]), "ipp", NULL, client->host_field, client->host_port, "/ipp/print");
     values[num_values ++] = uris[0];
 
-#ifdef HAVE_TLS
     httpAssembleURI(HTTP_URI_CODING_ALL, uris[1], sizeof(uris[1]), "ipps", NULL, client->host_field, client->host_port, "/ipp/print");
     values[num_values ++] = uris[1];
-#endif /* HAVE_TLS */
 
     ippAddStrings(client->response, IPP_TAG_PRINTER, IPP_TAG_URI, "printer-uri-supported", num_values, NULL, values);
   }
@@ -4069,6 +4040,7 @@ ippserver_attr_cb(
     "job-ids-supported",
     "job-k-octets-supported",
     "job-settable-attributes-supported",
+    "media-col-supported",
     "multiple-document-jobs-supported",
     "multiple-operation-time-out",
     "multiple-operation-time-out-action",
@@ -5101,13 +5073,10 @@ process_client(ippeve_client_t *client)	/* I - Client */
   * Loop until we are out of requests or timeout (30 seconds)...
   */
 
-#ifdef HAVE_TLS
-  int first_time = 1;			/* First time request? */
-#endif /* HAVE_TLS */
+  bool first_time = true;		/* First time request? */
 
   while (httpWait(client->http, 30000))
   {
-#ifdef HAVE_TLS
     if (first_time)
     {
      /*
@@ -5129,9 +5098,8 @@ process_client(ippeve_client_t *client)	/* I - Client */
         fprintf(stderr, "%s Connection now encrypted.\n", client->hostname);
       }
 
-      first_time = 0;
+      first_time = false;
     }
-#endif /* HAVE_TLS */
 
     if (!process_http(client))
       break;
@@ -5304,7 +5272,6 @@ process_http(ippeve_client_t *client)	/* I - Client connection */
 
   if (!strcasecmp(httpGetField(client->http, HTTP_FIELD_CONNECTION), "Upgrade"))
   {
-#ifdef HAVE_TLS
     if (strstr(httpGetField(client->http, HTTP_FIELD_UPGRADE), "TLS/") != NULL && !httpIsEncrypted(client->http))
     {
       if (!respond_http(client, HTTP_STATUS_SWITCHING_PROTOCOLS, NULL, NULL, 0))
@@ -5320,10 +5287,7 @@ process_http(ippeve_client_t *client)	/* I - Client connection */
 
       fprintf(stderr, "%s Connection now encrypted.\n", client->hostname);
     }
-    else
-#endif /* HAVE_TLS */
-
-    if (!respond_http(client, HTTP_STATUS_NOT_IMPLEMENTED, NULL, NULL, 0))
+    else if (!respond_http(client, HTTP_STATUS_NOT_IMPLEMENTED, NULL, NULL, 0))
       return (0);
   }
 
@@ -6529,9 +6493,7 @@ register_printer(
   TXTRecordSetValue(&ipp_txt, "Duplex", 1, ippGetCount(sides_supported) > 1 ? "T" : "F");
   if ((value = ippGetString(printer_uuid, 0, NULL)) != NULL)
     TXTRecordSetValue(&ipp_txt, "UUID", (uint8_t)strlen(value) - 9, value + 9);
-#  ifdef HAVE_TLS
-  TXTRecordSetValue(&ipp_txt, "TLS", 3, "1.2");
-#  endif /* HAVE_TLS */
+  TXTRecordSetValue(&ipp_txt, "TLS", 3, "1.3");
   if (urf[0])
     TXTRecordSetValue(&ipp_txt, "URF", (uint8_t)strlen(urf), urf);
   TXTRecordSetValue(&ipp_txt, "txtvers", 1, "1");
@@ -6576,7 +6538,6 @@ register_printer(
     return (0);
   }
 
-#  ifdef HAVE_TLS
  /*
   * Then register the _ipps._tcp (IPP) service type with the real port number to
   * advertise our IPPS printer...
@@ -6597,7 +6558,6 @@ register_printer(
     _cupsLangPrintf(stderr, _("Unable to register \"%s.%s\": %d"), printer->dnssd_name, regtype, error);
     return (0);
   }
-#  endif /* HAVE_TLS */
 
  /*
   * Similarly, register the _http._tcp,_printer (HTTP) service type with the
@@ -6636,9 +6596,7 @@ register_printer(
   ipp_txt = avahi_string_list_add_printf(ipp_txt, "Duplex=%s", ippGetCount(sides_supported) > 1 ? "T" : "F");
   if ((value = ippGetString(printer_uuid, 0, NULL)) != NULL)
     ipp_txt = avahi_string_list_add_printf(ipp_txt, "UUID=%s", value + 9);
-#  ifdef HAVE_TLS
-  ipp_txt = avahi_string_list_add_printf(ipp_txt, "TLS=1.2");
-#  endif /* HAVE_TLS */
+  ipp_txt = avahi_string_list_add_printf(ipp_txt, "TLS=1.3");
   if (urf[0])
     ipp_txt = avahi_string_list_add_printf(ipp_txt, "URF=%s", urf);
   ipp_txt = avahi_string_list_add_printf(ipp_txt, "txtvers=1");
@@ -6680,7 +6638,6 @@ register_printer(
     free(temptypes);
   }
 
-#ifdef HAVE_TLS
  /*
   * _ipps._tcp (IPPS) for secure printing...
   */
@@ -6703,7 +6660,6 @@ register_printer(
 
     free(temptypes);
   }
-#endif /* HAVE_TLS */
 
  /*
   * Finally _http.tcp (HTTP) for the web interface...
@@ -7668,9 +7624,7 @@ usage(int status)			/* O - Exit status */
   _cupsLangPuts(stdout, _("-A                      Enable authentication"));
   _cupsLangPuts(stdout, _("-D device-uri           Set the device URI for the printer"));
   _cupsLangPuts(stdout, _("-F output-type/subtype  Set the output format for the printer"));
-#ifdef HAVE_TLS
   _cupsLangPuts(stdout, _("-K keypath              Set location of server X.509 certificates and keys."));
-#endif /* HAVE_TLS */
   _cupsLangPuts(stdout, _("-M manufacturer         Set manufacturer name (default=Test)"));
   _cupsLangPuts(stdout, _("-S filename.strings     Set strings file"));
   _cupsLangPuts(stdout, _("-V version              Set default IPP version"));

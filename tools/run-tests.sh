@@ -18,7 +18,7 @@ ippeveprinter=$!
 
 # Test the instance...
 echo "Running ippfind + ipptool..."
-./ippfind-static -T 5 --literal-name "$name" --exec ./ipptool-static -tIf ../examples/document-letter.pdf '{}' ../examples/ipp-2.0.test \; || status=1
+./ippfind-static -T 5 --literal-name "$name" --exec ./ipptool-static -V 2.0 -tIf ../examples/document-letter.pdf '{}' ../examples/ipp-2.0.test \; || status=1
 
 # Clean up
 kill $ippeveprinter
