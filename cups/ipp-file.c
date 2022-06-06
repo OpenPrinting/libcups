@@ -46,7 +46,6 @@ struct _ipp_file_s			// IPP data file
 //
 
 static bool	expand_buffer(ipp_file_t *file, size_t buffer_size);
-static ipp_t	*parse_collection(ipp_file_t *file);
 static bool	parse_value(ipp_file_t *file, ipp_t *ipp, ipp_attribute_t **attr, size_t element);
 static bool	report_error(ipp_file_t *file, const char *message, ...) _CUPS_FORMAT(2,3);
 static bool	write_string(ipp_file_t *file, const char *s, size_t len);
@@ -555,6 +554,125 @@ ippFileRead(ipp_file_t      *file,	// I - IPP data file
   ippDelete(ignored);
 
   return (ret);
+}
+
+
+//
+// 'ippFileReadCollection()' - Read a collection from an IPP data file.
+//
+// This function reads a collection value from an IPP data file.  Collection
+// values are surrounded by curly braces ("{" and "}") and have "MEMBER"
+// directives to define member attributes in the collection.
+//
+
+ipp_t *					// O - Collection value
+ippFileReadCollection(ipp_file_t *file)	// I - IPP data file
+{
+  ipp_t		*col;			// Collection value
+  ipp_attribute_t *attr = NULL;		// Current member attribute
+  char		token[1024];		// Token string
+
+
+  // Range check input...
+  if (!file)
+    return (NULL);
+
+  // Read the first token to verify it is an open curly brace...
+  if (!ippFileReadToken(file, token, sizeof(token)))
+  {
+    report_error(file, "Missing collection value on line %d of '%s'.", file->linenum, file->filename);
+    return (NULL);
+  }
+  else if (strcmp(token, "{"))
+  {
+    report_error(file, "Bad collection value on line %d of '%s'.", file->linenum, file->filename);
+    return (NULL);
+  }
+
+  // Parse the collection value...
+  col = ippNew();
+
+  while (ippFileReadToken(file, token, sizeof(token)))
+  {
+    if (!strcmp(token, "}"))
+    {
+      // End of collection value...
+      break;
+    }
+    else if (!_cups_strcasecmp(token, "MEMBER"))
+    {
+      // Member attribute definition...
+      char	syntax[128],		// Attribute syntax (value tag)
+		name[128];		// Attribute name
+      ipp_tag_t	value_tag;		// Value tag
+
+      attr = NULL;
+
+      if (!ippFileReadToken(file, syntax, sizeof(syntax)))
+      {
+        report_error(file, "Missing MEMBER syntax on line %d of '%s'.", file->linenum, file->filename);
+	ippDelete(col);
+	col = NULL;
+	break;
+      }
+      else if ((value_tag = ippTagValue(syntax)) < IPP_TAG_UNSUPPORTED_VALUE)
+      {
+        report_error(file, "Bad MEMBER syntax \"%s\" on line %d of '%s'.", syntax, file->linenum, file->filename);
+	ippDelete(col);
+	col = NULL;
+	break;
+      }
+
+      if (!ippFileReadToken(file, name, sizeof(name)) || !name[0])
+      {
+        report_error(file, "Missing MEMBER name on line %d of '%s'.", file->linenum, file->filename);
+	ippDelete(col);
+	col = NULL;
+	break;
+      }
+
+      if (value_tag < IPP_TAG_INTEGER)
+      {
+        // Add out-of-band attribute - no value string needed...
+        ippAddOutOfBand(col, IPP_TAG_ZERO, value_tag, name);
+      }
+      else
+      {
+        // Add attribute with one or more values...
+        attr = ippAddString(col, IPP_TAG_ZERO, value_tag, name, NULL, NULL);
+
+        if (!parse_value(file, col, &attr, 0))
+        {
+	  ippDelete(col);
+	  col = NULL;
+          break;
+	}
+      }
+
+    }
+    else if (attr && !_cups_strcasecmp(token, ","))
+    {
+      // Additional value...
+      if (!parse_value(file, col, &attr, ippGetCount(attr)))
+      {
+	ippDelete(col);
+	col = NULL;
+	break;
+      }
+    }
+    else
+    {
+      // Something else...
+      report_error(file, "Unknown directive \"%s\" on line %d of '%s'.", token, file->linenum, file->filename);
+      ippDelete(col);
+      col  = NULL;
+      attr = NULL;
+      break;
+
+    }
+  }
+
+  return (col);
 }
 
 
@@ -1350,103 +1468,6 @@ expand_buffer(ipp_file_t *file,		// I - IPP data file
 
 
 //
-// 'parse_collection()' - Parse an IPP collection value.
-//
-
-static ipp_t *				// O - Collection value or @code NULL@ on error
-parse_collection(ipp_file_t *file)	// I - IPP data file
-{
-  ipp_t		*col = ippNew();	// Collection value
-  ipp_attribute_t *attr = NULL;		// Current member attribute
-  char		token[1024];		// Token string
-
-
-  // Parse the collection value...
-  while (ippFileReadToken(file, token, sizeof(token)))
-  {
-    if (!_cups_strcasecmp(token, "}"))
-    {
-      // End of collection value...
-      break;
-    }
-    else if (!_cups_strcasecmp(token, "MEMBER"))
-    {
-      // Member attribute definition...
-      char	syntax[128],		// Attribute syntax (value tag)
-		name[128];		// Attribute name
-      ipp_tag_t	value_tag;		// Value tag
-
-      attr = NULL;
-
-      if (!ippFileReadToken(file, syntax, sizeof(syntax)))
-      {
-        report_error(file, "Missing MEMBER syntax on line %d of '%s'.", file->linenum, file->filename);
-	ippDelete(col);
-	col = NULL;
-	break;
-      }
-      else if ((value_tag = ippTagValue(syntax)) < IPP_TAG_UNSUPPORTED_VALUE)
-      {
-        report_error(file, "Bad MEMBER syntax \"%s\" on line %d of '%s'.", syntax, file->linenum, file->filename);
-	ippDelete(col);
-	col = NULL;
-	break;
-      }
-
-      if (!ippFileReadToken(file, name, sizeof(name)) || !name[0])
-      {
-        report_error(file, "Missing MEMBER name on line %d of '%s'.", file->linenum, file->filename);
-	ippDelete(col);
-	col = NULL;
-	break;
-      }
-
-      if (value_tag < IPP_TAG_INTEGER)
-      {
-        // Add out-of-band attribute - no value string needed...
-        ippAddOutOfBand(col, IPP_TAG_ZERO, value_tag, name);
-      }
-      else
-      {
-        // Add attribute with one or more values...
-        attr = ippAddString(col, IPP_TAG_ZERO, value_tag, name, NULL, NULL);
-
-        if (!parse_value(file, col, &attr, 0))
-        {
-	  ippDelete(col);
-	  col = NULL;
-          break;
-	}
-      }
-
-    }
-    else if (attr && !_cups_strcasecmp(token, ","))
-    {
-      // Additional value...
-      if (!parse_value(file, col, &attr, ippGetCount(attr)))
-      {
-	ippDelete(col);
-	col = NULL;
-	break;
-      }
-    }
-    else
-    {
-      // Something else...
-      report_error(file, "Unknown directive \"%s\" on line %d of '%s'.", token, file->linenum, file->filename);
-      ippDelete(col);
-      col  = NULL;
-      attr = NULL;
-      break;
-
-    }
-  }
-
-  return (col);
-}
-
-
-//
 // 'parse_value()' - Parse an IPP value.
 //
 
@@ -1685,13 +1706,7 @@ parse_value(ipp_file_t      *file,	// I  - IPP data file
           bool	status;			// Add status
           ipp_t *col;			// Collection value
 
-          if (strcmp(value, "{"))
-          {
-	    report_error(file, "Bad collection value on line %d of '%s'.", file->linenum, file->filename);
-	    return (false);
-          }
-
-          if ((col = parse_collection(file)) == NULL)
+          if ((col = ippFileReadCollection(file)) == NULL)
 	    return (false);
 
 	  status = ippSetCollection(ipp, attr, element, col);
