@@ -1542,13 +1542,15 @@ ippCopyAttribute(
         break;
 
     case IPP_TAG_BEGIN_COLLECTION :
-        if ((dstattr = ippAddCollections(dst, srcattr->group_tag, srcattr->name, srcattr->num_values, NULL)) == NULL)
-          break;
-
-        for (i = srcattr->num_values, srcval = srcattr->values, dstval = dstattr->values; i > 0; i --, srcval ++, dstval ++)
+        for (i = srcattr->num_values, srcval = srcattr->values, dstattr = NULL; i > 0; i --, srcval ++)
 	{
-	  dstval->collection = srcval->collection;
-	  srcval->collection->use ++;
+	  if (srcval->collection)
+	  {
+	    if (dstattr)
+	      ippSetCollection(dst, &dstattr, ippGetCount(dstattr), srcval->collection);
+	    else
+              dstattr = ippAddCollection(dst, srcattr->group_tag, srcattr->name, srcval->collection);
+	  }
 	}
         break;
 

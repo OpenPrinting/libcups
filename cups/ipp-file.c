@@ -1484,6 +1484,8 @@ parse_value(ipp_file_t      *file,	// I  - IPP data file
   size_t	valuelen;		// Length of value
 
 
+  ippFileSavePosition(file);
+
   if (!ippFileReadToken(file, temp, sizeof(temp)))
   {
     report_error(file, "Missing value on line %d of '%s'.", file->linenum, file->filename);
@@ -1705,6 +1707,8 @@ parse_value(ipp_file_t      *file,	// I  - IPP data file
         {
           bool	status;			// Add status
           ipp_t *col;			// Collection value
+
+          ippFileRestorePosition(file);
 
           if ((col = ippFileReadCollection(file)) == NULL)
 	    return (false);
