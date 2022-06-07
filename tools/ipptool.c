@@ -211,6 +211,7 @@ static bool	Cancel = false;		/* Cancel test? */
 
 static void	add_stringf(cups_array_t *a, const char *s, ...) _CUPS_FORMAT(2, 3);
 static ipptool_test_t *alloc_data(void);
+static void	clear_data(ipptool_test_t *data);
 static int	compare_uris(const char *a, const char *b);
 static http_t	*connect_printer(ipptool_test_t *data);
 static void	copy_hex_string(char *buffer, unsigned char *data, int datalen, size_t bufsize);
@@ -307,6 +308,7 @@ main(int  argc,				/* I - Number of command-line args */
   {
     if (!strcmp(argv[i], "--help"))
     {
+      free_data(data);
       usage();
     }
     else if (!strcmp(argv[i], "--ippserver"))
@@ -316,6 +318,7 @@ main(int  argc,				/* I - Number of command-line args */
       if (i >= argc)
       {
 	_cupsLangPuts(stderr, _("ipptool: Missing filename for \"--ippserver\"."));
+	free_data(data);
 	usage();
       }
 
@@ -325,7 +328,8 @@ main(int  argc,				/* I - Number of command-line args */
       if ((data->outfile = cupsFileOpen(argv[i], "w")) == NULL)
       {
 	_cupsLangPrintf(stderr, _("%s: Unable to open \"%s\": %s"), "ipptool", argv[i], strerror(errno));
-	exit(1);
+	free_data(data);
+	return (1);
       }
 
       data->output = IPPTOOL_OUTPUT_IPPSERVER;
@@ -336,8 +340,9 @@ main(int  argc,				/* I - Number of command-line args */
     }
     else if (!strcmp(argv[i], "--version"))
     {
-      free_data(data);
       puts(LIBCUPS_VERSION);
+
+      free_data(data);
       return (0);
     }
     else if (argv[i][0] == '-')
@@ -631,6 +636,7 @@ main(int  argc,				/* I - Number of command-line args */
 
 	  default :
 	      _cupsLangPrintf(stderr, _("%s: Unknown option \"-%c\"."), "ipptool", *opt);
+	      free_data(data);
 	      usage();
 	}
       }
@@ -641,6 +647,7 @@ main(int  argc,				/* I - Number of command-line args */
       if (ippFileGetVar(data->parent, "uri"))
       {
         _cupsLangPuts(stderr, _("ipptool: May only specify a single URI."));
+	free_data(data);
         usage();
       }
 
@@ -650,6 +657,7 @@ main(int  argc,				/* I - Number of command-line args */
       if (!ippFileSetVar(data->parent, "uri", argv[i]))
       {
         _cupsLangPrintf(stderr, _("ipptool: Bad URI \"%s\"."), argv[i]);
+	free_data(data);
         return (1);
       }
 
@@ -663,6 +671,7 @@ main(int  argc,				/* I - Number of command-line args */
       {
         _cupsLangPuts(stderr, _("ipptool: URI required before test file."));
         _cupsLangPuts(stderr, argv[i]);
+	free_data(data);
 	usage();
       }
 
@@ -692,7 +701,10 @@ main(int  argc,				/* I - Number of command-line args */
   }
 
   if (!ippFileGetVar(data->parent, "uri") || !testfile)
+  {
+    free_data(data);
     usage();
+  }
 
   // Loop if the interval is set...
   if (data->output == IPPTOOL_OUTPUT_PLIST)
@@ -798,6 +810,71 @@ alloc_data(void)
   ippFileSetVar(data->parent, "date-start", iso_date(ippTimeToDate(time(NULL))));
 
   return (data);
+}
+
+
+//
+// 'clear_data()' - Clear per-test data...
+//
+
+static void
+clear_data(ipptool_test_t *data)	// I - Test data
+{
+  size_t	i;			// Looping var
+  ipptool_expect_t *expect;		// Current EXPECT
+
+
+  cupsArrayClear(data->errors);
+
+  for (i = 0; i < data->num_displayed; i ++)
+    free(data->displayed[i]);
+  data->num_displayed = 0;
+
+  for (i = data->num_expects, expect = data->expects; i > 0; i --, expect ++)
+  {
+    free(expect->name);
+    free(expect->of_type);
+    free(expect->same_count_as);
+    free(expect->if_defined);
+    free(expect->if_not_defined);
+    free(expect->with_value);
+    free(expect->define_match);
+    free(expect->define_no_match);
+    free(expect->define_value);
+    free(expect->display_match);
+  }
+  data->num_expects = 0;
+
+  for (i = 0; i < data->num_statuses; i ++)
+  {
+    free(data->statuses[i].if_defined);
+    free(data->statuses[i].if_not_defined);
+    free(data->statuses[i].define_match);
+    free(data->statuses[i].define_no_match);
+    free(data->statuses[i].define_value);
+  }
+  data->num_statuses = 0;
+
+  free(data->monitor_uri);
+  data->monitor_uri = NULL;
+
+  for (i = data->num_monitor_expects, expect = data->monitor_expects; i > 0; i --, expect ++)
+  {
+    free(expect->name);
+    free(expect->of_type);
+    free(expect->same_count_as);
+    free(expect->if_defined);
+    free(expect->if_not_defined);
+    free(expect->with_value);
+    free(expect->define_match);
+    free(expect->define_no_match);
+    free(expect->define_value);
+    free(expect->display_match);
+  }
+  data->num_monitor_expects = 0;
+
+  free(data->generate_params);
+  data->generate_params = NULL;
 }
 
 
@@ -2210,54 +2287,7 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
   ippDelete(response);
   response = NULL;
 
-  for (i = 0; i < data->num_statuses; i ++)
-  {
-    free(data->statuses[i].if_defined);
-    free(data->statuses[i].if_not_defined);
-    free(data->statuses[i].define_match);
-    free(data->statuses[i].define_no_match);
-  }
-  data->num_statuses = 0;
-
-  for (i = data->num_expects, expect = data->expects; i > 0; i --, expect ++)
-  {
-    free(expect->name);
-    free(expect->of_type);
-    free(expect->same_count_as);
-    free(expect->if_defined);
-    free(expect->if_not_defined);
-    free(expect->with_value);
-    free(expect->define_match);
-    free(expect->define_no_match);
-    free(expect->define_value);
-    free(expect->display_match);
-  }
-  data->num_expects = 0;
-
-  for (i = 0; i < data->num_displayed; i ++)
-    free(data->displayed[i]);
-  data->num_displayed = 0;
-
-  free(data->monitor_uri);
-  data->monitor_uri = NULL;
-
-  for (i = data->num_monitor_expects, expect = data->monitor_expects; i > 0; i --, expect ++)
-  {
-    free(expect->name);
-    free(expect->of_type);
-    free(expect->same_count_as);
-    free(expect->if_defined);
-    free(expect->if_not_defined);
-    free(expect->with_value);
-    free(expect->define_match);
-    free(expect->define_no_match);
-    free(expect->define_value);
-    free(expect->display_match);
-  }
-  data->num_monitor_expects = 0;
-
-  free(data->generate_params);
-  data->generate_params = NULL;
+  clear_data(data);
 
   return (data->ignore_errors || data->prev_pass);
 }
@@ -2517,7 +2547,11 @@ expect_matches(
 static void
 free_data(ipptool_test_t *data)		// I - Test data
 {
+  clear_data(data);
+
   ippFileDelete(data->parent);
+  cupsArrayDelete(data->errors);
+
   free(data);
 }
 
@@ -6168,16 +6202,28 @@ token_cb(ipp_file_t     *f,		/* I - IPP file data */
         * Map the filename to and then run the tests...
 	*/
 
-        ipptool_test_t	inc_data;	/* Data for included file */
-        char		filename[1024];	/* Mapped filename */
+        ipptool_test_t	inc_data;	// Data for included file
+        bool		inc_pass;	// Include file passed?
+        char		filename[1024];	// Mapped filename
 
         memcpy(&inc_data, data, sizeof(inc_data));
+        inc_data.test_count  = 0;
+        inc_data.pass_count  = 0;
+        inc_data.fail_count  = 0;
+        inc_data.skip_count  = 0;
         inc_data.http        = NULL;
 	inc_data.pass        = true;
 	inc_data.prev_pass   = true;
 	inc_data.show_header = true;
 
-        if (!do_tests(get_filename(ippFileGetFilename(f), filename, temp, sizeof(filename)), &inc_data) && data->stop_after_include_error)
+        inc_pass = do_tests(get_filename(ippFileGetFilename(f), filename, temp, sizeof(filename)), &inc_data);
+
+        data->test_count += inc_data.test_count;
+        data->pass_count += inc_data.pass_count;
+        data->fail_count += inc_data.fail_count;
+        data->skip_count += inc_data.skip_count;
+
+        if (!inc_pass && data->stop_after_include_error)
         {
           data->pass = data->prev_pass = false;
 	  return (false);
@@ -6204,19 +6250,31 @@ token_cb(ipp_file_t     *f,		/* I - IPP file data */
         * Map the filename to and then run the tests...
 	*/
 
-        ipptool_test_t inc_data;	/* Data for included file */
-        char		filename[1024];	/* Mapped filename */
+        ipptool_test_t	inc_data;	// Data for included file
+        bool		inc_pass;	// Include file passed?
+        char		filename[1024];	// Mapped filename
 
         memcpy(&inc_data, data, sizeof(inc_data));
+        inc_data.test_count  = 0;
+        inc_data.pass_count  = 0;
+        inc_data.fail_count  = 0;
+        inc_data.skip_count  = 0;
         inc_data.http        = NULL;
 	inc_data.pass        = true;
 	inc_data.prev_pass   = true;
 	inc_data.show_header = true;
 
-        if (!do_tests(get_filename(ippFileGetFilename(f), filename, temp, sizeof(filename)), &inc_data) && data->stop_after_include_error)
+        inc_pass = do_tests(get_filename(ippFileGetFilename(f), filename, temp, sizeof(filename)), &inc_data);
+
+        data->test_count += inc_data.test_count;
+        data->pass_count += inc_data.pass_count;
+        data->fail_count += inc_data.fail_count;
+        data->skip_count += inc_data.skip_count;
+
+        if (!inc_pass && data->stop_after_include_error)
         {
           data->pass = data->prev_pass = false;
-          return (false);
+	  return (false);
 	}
       }
       else
@@ -6240,19 +6298,31 @@ token_cb(ipp_file_t     *f,		/* I - IPP file data */
         * Map the filename to and then run the tests...
 	*/
 
-        ipptool_test_t	inc_data;	/* Data for included file */
-        char		filename[1024];	/* Mapped filename */
+        ipptool_test_t	inc_data;	// Data for included file
+        bool		inc_pass;	// Include file passed?
+        char		filename[1024];	// Mapped filename
 
         memcpy(&inc_data, data, sizeof(inc_data));
+        inc_data.test_count  = 0;
+        inc_data.pass_count  = 0;
+        inc_data.fail_count  = 0;
+        inc_data.skip_count  = 0;
         inc_data.http        = NULL;
 	inc_data.pass        = true;
 	inc_data.prev_pass   = true;
 	inc_data.show_header = true;
 
-        if (!do_tests(get_filename(ippFileGetFilename(f), filename, temp, sizeof(filename)), &inc_data) && data->stop_after_include_error)
+        inc_pass = do_tests(get_filename(ippFileGetFilename(f), filename, temp, sizeof(filename)), &inc_data);
+
+        data->test_count += inc_data.test_count;
+        data->pass_count += inc_data.pass_count;
+        data->fail_count += inc_data.fail_count;
+        data->skip_count += inc_data.skip_count;
+
+        if (!inc_pass && data->stop_after_include_error)
         {
           data->pass = data->prev_pass = false;
-          return (false);
+	  return (false);
 	}
       }
       else

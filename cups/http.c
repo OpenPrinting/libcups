@@ -394,6 +394,7 @@ httpClose(http_t *http)			/* I - HTTP connection */
 
   httpClearFields(http);
 
+  free(http->fields[HTTP_FIELD_HOST]);
   free(http->authstring);
   free(http->cookie);
 

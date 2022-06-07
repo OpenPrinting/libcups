@@ -1383,7 +1383,7 @@ create_printer(
 			uuid[128],	/* printer-uuid */
 			*iconsptr;	/* Pointer into icons string */
   int			k_supported;	/* Maximum file size supported */
-  size_t		num_formats;	/* Number of supported document formats */
+  size_t		num_formats = 0;/* Number of supported document formats */
   const char		*formats[100],	/* Supported document formats */
 			*format;	/* Current format */
   size_t		num_sup_attrs;	/* Number of supported attributes */
@@ -1771,7 +1771,7 @@ create_printer(
     if (!cupsArrayFind(docformats, (void *)"application/octet-stream"))
       cupsArrayAdd(docformats, (void *)"application/octet-stream");
 
-    for (num_formats = 0, format = (const char *)cupsArrayGetFirst(docformats); format && num_formats < (int)(sizeof(formats) / sizeof(formats[0])); format = (const char *)cupsArrayGetNext(docformats))
+    for (format = (const char *)cupsArrayGetFirst(docformats); format && num_formats < (sizeof(formats) / sizeof(formats[0])); format = (const char *)cupsArrayGetNext(docformats))
       formats[num_formats ++] = format;
   }
 
