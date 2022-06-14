@@ -59,6 +59,7 @@ unittests:
 clean:
 	$(RM) $(IPPTOOLS) $(IPPEVECOMMANDS) $(OBJS)
 	$(RM) ippeveprinter-static ippfind-static ipptool-static
+	$(RM) test.log test-cups.log
 
 
 #
