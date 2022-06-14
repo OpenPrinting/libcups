@@ -232,10 +232,10 @@ cups_globals_alloc(void)
           if (ptr[1])
             *ptr++ = '/';
           else
-            *ptr = '\0';		// Strip trailing \
+            *ptr = '\0';		// Strip trailing "\"
         }
         else if (*ptr == '/' && !ptr[1])
-          *ptr = '\0';			// Strip trailing /
+          *ptr = '\0';			// Strip trailing "/"
         else
           ptr ++;
       }
