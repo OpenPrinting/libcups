@@ -391,7 +391,7 @@ main(int  argc,			/* I - Number of command-line arguments */
     data.wsize   = sizeof(buffer);
     data.wbuffer = buffer;
 
-    while ((state = ippWriteIO(&data, (ipp_iocb_t)write_cb, 1, NULL,
+    while ((state = ippWriteIO(&data, (ipp_io_cb_t)write_cb, 1, NULL,
                                request)) != IPP_STATE_DATA)
       if (state == IPP_STATE_ERROR)
 	break;
@@ -438,7 +438,7 @@ main(int  argc,			/* I - Number of command-line arguments */
     request   = ippNew();
     data.rpos = 0;
 
-    while ((state = ippReadIO(&data, (ipp_iocb_t)read_cb, 1, NULL,
+    while ((state = ippReadIO(&data, (ipp_io_cb_t)read_cb, 1, NULL,
                               request)) != IPP_STATE_DATA)
     {
       if (state == IPP_STATE_ERROR)
@@ -670,7 +670,7 @@ main(int  argc,			/* I - Number of command-line arguments */
     data.wsize   = sizeof(bad_collection);
     data.wbuffer = bad_collection;
 
-    while ((state = ippReadIO(&data, (ipp_iocb_t)read_cb, 1, NULL, request)) != IPP_STATE_DATA)
+    while ((state = ippReadIO(&data, (ipp_io_cb_t)read_cb, 1, NULL, request)) != IPP_STATE_DATA)
       if (state == IPP_STATE_ERROR)
 	break;
 
@@ -694,7 +694,7 @@ main(int  argc,			/* I - Number of command-line arguments */
     data.wsize   = sizeof(mixed);
     data.wbuffer = mixed;
 
-    while ((state = ippReadIO(&data, (ipp_iocb_t)read_cb, 1, NULL,
+    while ((state = ippReadIO(&data, (ipp_io_cb_t)read_cb, 1, NULL,
                               request)) != IPP_STATE_DATA)
       if (state == IPP_STATE_ERROR)
 	break;
@@ -822,7 +822,7 @@ main(int  argc,			/* I - Number of command-line arguments */
 	}
 
 	request = ippNew();
-	while ((state = ippReadIO(fp, (ipp_iocb_t)read_hex, 1, NULL, request)) == IPP_STATE_ATTRIBUTE);
+	while ((state = ippReadIO(fp, (ipp_io_cb_t)read_hex, 1, NULL, request)) == IPP_STATE_ATTRIBUTE);
 
 	if (state != IPP_STATE_DATA)
 	{
@@ -849,7 +849,7 @@ main(int  argc,			/* I - Number of command-line arguments */
 	}
 
 	request = ippNew();
-	while ((state = ippReadIO(fp, (ipp_iocb_t)cupsFileRead, 1, NULL,
+	while ((state = ippReadIO(fp, (ipp_io_cb_t)cupsFileRead, 1, NULL,
 				  request)) == IPP_STATE_ATTRIBUTE);
 
 	if (state != IPP_STATE_DATA)

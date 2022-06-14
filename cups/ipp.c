@@ -1357,7 +1357,7 @@ ippContainsString(
   }
 
   // Compare...
-  DEBUG_printf(("1ippContainsString: attr %s, %s with %u values.", attr->name, ippTagString(attr->value_tag), (unsigned)attr->num_values));
+  DEBUG_printf(("1ippContainsString: attr %s, %s%s with %u values.", attr->name, (attr->value_tag & IPP_TAG_CUPS_CONST) ? "(const)" : "", ippTagString(attr->value_tag), (unsigned)attr->num_values));
 
   switch (attr->value_tag & IPP_TAG_CUPS_MASK)
   {
@@ -1370,7 +1370,7 @@ ippContainsString(
 	{
 	  DEBUG_printf(("1ippContainsString: value[%u]=\"%s\"", (unsigned)(attr->num_values - i), avalue->string.text));
 
-	  if (!strcmp(value, avalue->string.text))
+	  if (avalue->string.text && !strcmp(value, avalue->string.text))
 	  {
 	    DEBUG_puts("1ippContainsString: Returning true (match)");
 	    return (true);
@@ -1387,7 +1387,7 @@ ippContainsString(
 	{
 	  DEBUG_printf(("1ippContainsString: value[%u]=\"%s\"", (unsigned)(attr->num_values - i), avalue->string.text));
 
-	  if (!_cups_strcasecmp(value, avalue->string.text))
+	  if (avalue->string.text && !_cups_strcasecmp(value, avalue->string.text))
 	  {
 	    DEBUG_puts("1ippContainsString: Returning true (match)");
 	    return (true);
@@ -1422,7 +1422,8 @@ ippCopyAttribute(
     bool            quickcopy)		// I - `true` for a referenced copy, `false` for a new copy
 {
   size_t		i;		// Looping var
-  ipp_tag_t		srctag;		// Source value tag
+  ipp_tag_t		srctag,		// Source value tag
+			dstcopy;	// Copy bit for quick copies
   ipp_attribute_t	*dstattr;	// Destination attribute
   _ipp_value_t		*srcval,	// Source value
 			*dstval;	// Destination value
@@ -1435,8 +1436,8 @@ ippCopyAttribute(
     return (NULL);
 
   // Copy it...
-  quickcopy = (quickcopy && (srcattr->value_tag & IPP_TAG_CUPS_CONST)) ? IPP_TAG_CUPS_CONST : 0;
-  srctag    = srcattr->value_tag & IPP_TAG_CUPS_MASK;
+  dstcopy = (quickcopy && (srcattr->value_tag & IPP_TAG_CUPS_CONST)) ? IPP_TAG_CUPS_CONST : 0;
+  srctag  = srcattr->value_tag & IPP_TAG_CUPS_MASK;
 
   switch (srctag)
   {
@@ -1473,10 +1474,10 @@ ippCopyAttribute(
     case IPP_TAG_CHARSET :
     case IPP_TAG_LANGUAGE :
     case IPP_TAG_MIMETYPE :
-        if ((dstattr = ippAddStrings(dst, srcattr->group_tag, (ipp_tag_t)(srctag | quickcopy), srcattr->name, srcattr->num_values, NULL, NULL)) == NULL)
+        if ((dstattr = ippAddStrings(dst, srcattr->group_tag, (ipp_tag_t)(srctag | dstcopy), srcattr->name, srcattr->num_values, NULL, NULL)) == NULL)
           break;
 
-        if (quickcopy)
+        if (dstcopy)
 	{
 	  // Can safely quick-copy these string values...
 	  memcpy(dstattr->values, srcattr->values, (size_t)srcattr->num_values * sizeof(_ipp_value_t));
@@ -1491,10 +1492,10 @@ ippCopyAttribute(
 
     case IPP_TAG_TEXTLANG :
     case IPP_TAG_NAMELANG :
-        if ((dstattr = ippAddStrings(dst, srcattr->group_tag, (ipp_tag_t)(srctag | quickcopy), srcattr->name, srcattr->num_values, NULL, NULL)) == NULL)
+        if ((dstattr = ippAddStrings(dst, srcattr->group_tag, (ipp_tag_t)(srctag | dstcopy), srcattr->name, srcattr->num_values, NULL, NULL)) == NULL)
           break;
 
-        if (quickcopy)
+        if (dstcopy)
 	{
 	  // Can safely quick-copy these string values...
 	  memcpy(dstattr->values, srcattr->values, (size_t)srcattr->num_values * sizeof(_ipp_value_t));
@@ -4387,7 +4388,7 @@ ippValidateAttribute(
     return (false);
   }
 
-  switch (attr->value_tag)
+  switch (attr->value_tag & IPP_TAG_CUPS_MASK)
   {
     case IPP_TAG_INTEGER :
         break;

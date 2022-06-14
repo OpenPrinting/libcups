@@ -121,7 +121,7 @@ main(int  argc,			// I - Number of command-line arguments
     data.wsize   = sizeof(buffer);
     data.wbuffer = buffer;
 
-    while ((state = ippWriteIO(&data, (ipp_iocb_t)write_cb, 1, NULL, request)) != IPP_STATE_DATA)
+    while ((state = ippWriteIO(&data, (ipp_io_cb_t)write_cb, 1, NULL, request)) != IPP_STATE_DATA)
     {
       if (state == IPP_STATE_ERROR)
 	break;
@@ -210,7 +210,7 @@ main(int  argc,			// I - Number of command-line arguments
     request = ippNew();
     do
     {
-      state = ippReadIO(fp, (ipp_iocb_t)cupsFileRead, 1, NULL, request);
+      state = ippReadIO(fp, (ipp_io_cb_t)cupsFileRead, 1, NULL, request);
     }
     while (state == IPP_STATE_ATTRIBUTE);
 
@@ -222,7 +222,7 @@ main(int  argc,			// I - Number of command-line arguments
 
     do
     {
-      state = ippWriteIO(fp, (ipp_iocb_t)cupsFileWrite, 1, NULL, request);
+      state = ippWriteIO(fp, (ipp_io_cb_t)cupsFileWrite, 1, NULL, request);
     }
     while (state == IPP_STATE_ATTRIBUTE);
 
