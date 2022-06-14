@@ -31,7 +31,6 @@ extern "C" {
 
 #  define CUPS_DATE_ANY			(time_t)-1
 #  define CUPS_FORMAT_AUTO		"application/octet-stream"
-#  define CUPS_FORMAT_COMMAND		"application/vnd.cups-command"
 #  define CUPS_FORMAT_JPEG		"image/jpeg"
 #  define CUPS_FORMAT_PDF		"application/pdf"
 #  define CUPS_FORMAT_POSTSCRIPT	"application/postscript"
