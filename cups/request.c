@@ -39,10 +39,10 @@
  */
 
 ipp_t *					/* O - Response data */
-cupsDoFileRequest(http_t     *http,	/* I - Connection to server or @code CUPS_HTTP_DEFAULT@ */
+cupsDoFileRequest(http_t     *http,	/* I - Connection to server or `CUPS_HTTP_DEFAULT` */
                   ipp_t      *request,	/* I - IPP request */
                   const char *resource,	/* I - HTTP resource for POST */
-		  const char *filename)	/* I - File to send or @code NULL@ for none */
+		  const char *filename)	/* I - File to send or `NULL` for none */
 {
   ipp_t		*response;		/* IPP response data */
   int		infile;			/* Input file */
@@ -93,11 +93,11 @@ cupsDoFileRequest(http_t     *http,	/* I - Connection to server or @code CUPS_HT
  */
 
 ipp_t *					/* O - Response data */
-cupsDoIORequest(http_t     *http,	/* I - Connection to server or @code CUPS_HTTP_DEFAULT@ */
+cupsDoIORequest(http_t     *http,	/* I - Connection to server or `CUPS_HTTP_DEFAULT` */
                 ipp_t      *request,	/* I - IPP request */
                 const char *resource,	/* I - HTTP resource for POST */
-		int        infile,	/* I - File to read from or -1 for none */
-		int        outfile)	/* I - File to write to or -1 for none */
+		int        infile,	/* I - File to read from or `-1` for none */
+		int        outfile)	/* I - File to write to or `-1` for none */
 {
   ipp_t		*response = NULL;	/* IPP response data */
   size_t	length = 0;		/* Content-Length value */
@@ -282,7 +282,7 @@ cupsDoIORequest(http_t     *http,	/* I - Connection to server or @code CUPS_HTTP
  */
 
 ipp_t *					/* O - Response data */
-cupsDoRequest(http_t     *http,		/* I - Connection to server or @code CUPS_HTTP_DEFAULT@ */
+cupsDoRequest(http_t     *http,		/* I - Connection to server or `CUPS_HTTP_DEFAULT` */
               ipp_t      *request,	/* I - IPP request */
               const char *resource)	/* I - HTTP resource for POST */
 {
@@ -301,8 +301,8 @@ cupsDoRequest(http_t     *http,		/* I - Connection to server or @code CUPS_HTTP_
  * otherwise call @link httpFlush@ to complete the response processing.
  */
 
-ipp_t *					/* O - Response or @code NULL@ on HTTP error */
-cupsGetResponse(http_t     *http,	/* I - Connection to server or @code CUPS_HTTP_DEFAULT@ */
+ipp_t *					/* O - Response or `NULL` on HTTP error */
+cupsGetResponse(http_t     *http,	/* I - Connection to server or `CUPS_HTTP_DEFAULT` */
                 const char *resource)	/* I - HTTP resource for POST */
 {
   http_status_t	status;			/* HTTP status */
@@ -425,7 +425,7 @@ cupsGetResponse(http_t     *http,	/* I - Connection to server or @code CUPS_HTTP
 
       if (!cupsDoAuthentication(http, "POST", resource))
       {
-        if (httpReconnect(http, 30000, NULL))
+        if (!httpReconnect(http, 30000, NULL))
           http->status = HTTP_STATUS_ERROR;
       }
       else
@@ -443,8 +443,8 @@ cupsGetResponse(http_t     *http,	/* I - Connection to server or @code CUPS_HTTP
 
       DEBUG_puts("2cupsGetResponse: Need encryption...");
 
-      if (!httpReconnect(http, 30000, NULL))
-        httpEncryption(http, HTTP_ENCRYPTION_REQUIRED);
+      if (httpReconnect(http, 30000, NULL))
+        httpSetEncryption(http, HTTP_ENCRYPTION_REQUIRED);
     }
 #endif /* HAVE_TLS */
   }
@@ -486,7 +486,7 @@ cupsLastError(void)
  *                           current thread.
  */
 
-const char *				/* O - status-message text from last request */
+const char *				/* O - "status-message" text from last request */
 cupsLastErrorString(void)
 {
   return (_cupsGlobals()->last_status_message);
@@ -494,46 +494,16 @@ cupsLastErrorString(void)
 
 
 /*
- * '_cupsNextDelay()' - Return the next retry delay value.
- *
- * This function currently returns the Fibonacci sequence 1 1 2 3 5 8.
- *
- * Pass 0 for the current delay value to initialize the sequence.
- */
-
-int					/* O  - Next delay value */
-_cupsNextDelay(int current,		/* I  - Current delay value or 0 */
-               int *previous)		/* IO - Previous delay value */
-{
-  int	next;				/* Next delay value */
-
-
-  if (current > 0)
-  {
-    next      = (current + *previous) % 12;
-    *previous = next < current ? 0 : current;
-  }
-  else
-  {
-    next      = 1;
-    *previous = 0;
-  }
-
-  return (next);
-}
-
-
-/*
  * 'cupsReadResponseData()' - Read additional data after the IPP response.
  *
  * This function is used after @link cupsGetResponse@ to read the PPD or document
- * files from @code CUPS_GET_PPD@ and @code CUPS_GET_DOCUMENT@ requests,
+ * files from `CUPS_GET_PPD` and `CUPS_GET_DOCUMENT` requests,
  * respectively.
  */
 
 ssize_t					/* O - Bytes read, 0 on EOF, -1 on error */
 cupsReadResponseData(
-    http_t *http,			/* I - Connection to server or @code CUPS_HTTP_DEFAULT@ */
+    http_t *http,			/* I - Connection to server or `CUPS_HTTP_DEFAULT` */
     char   *buffer,			/* I - Buffer to use */
     size_t length)			/* I - Number of bytes to read */
 {
@@ -566,13 +536,13 @@ cupsReadResponseData(
 /*
  * 'cupsSendRequest()' - Send an IPP request.
  *
- * Use @link cupsWriteRequestData@ to write any additional data (document, PPD
- * file, etc.) for the request, @link cupsGetResponse@ to get the IPP response,
- * and @link cupsReadResponseData@ to read any additional data following the
- * response. Only one request can be sent/queued at a time per @code http_t@
+ * Use @link cupsWriteRequestData@ to write any additional data (document, etc.)
+ * for the request, @link cupsGetResponse@ to get the IPP response, and
+ * @link cupsReadResponseData@ to read any additional data following the
+ * response. Only one request can be sent/queued at a time per `http_t`
  * connection.
  *
- * Returns the initial HTTP status code, which will be @code HTTP_STATUS_CONTINUE@
+ * Returns the initial HTTP status code, which will be `HTTP_STATUS_CONTINUE`
  * on a successful send of the request.
  *
  * Note: Unlike @link cupsDoFileRequest@, @link cupsDoIORequest@, and
@@ -580,10 +550,10 @@ cupsReadResponseData(
  */
 
 http_status_t				/* O - Initial HTTP status */
-cupsSendRequest(http_t     *http,	/* I - Connection to server or @code CUPS_HTTP_DEFAULT@ */
+cupsSendRequest(http_t     *http,	/* I - Connection to server or `CUPS_HTTP_DEFAULT` */
                 ipp_t      *request,	/* I - IPP request */
                 const char *resource,	/* I - Resource path */
-		size_t     length)	/* I - Length of data to follow or @code CUPS_LENGTH_VARIABLE@ */
+		size_t     length)	/* I - Length of data to follow or `CUPS_LENGTH_VARIABLE` */
 {
   http_status_t		status;		/* Status of HTTP request */
   int			got_status;	/* Did we get the status? */
@@ -627,7 +597,7 @@ cupsSendRequest(http_t     *http,	/* I - Connection to server or @code CUPS_HTTP
   {
     DEBUG_printf(("1cupsSendRequest: Unknown HTTP state (%d), "
                   "reconnecting.", http->state));
-    if (httpReconnect(http, 30000, NULL))
+    if (!httpReconnect(http, 30000, NULL))
       return (HTTP_STATUS_ERROR);
   }
 
@@ -639,8 +609,8 @@ cupsSendRequest(http_t     *http,	/* I - Connection to server or @code CUPS_HTTP
   */
 
   if (ippFindAttribute(request, "auth-info", IPP_TAG_TEXT) &&
-      !httpAddrLocalhost(http->hostaddr) && !http->tls &&
-      httpEncryption(http, HTTP_ENCRYPTION_REQUIRED))
+      !httpAddrIsLocalhost(http->hostaddr) && !http->tls &&
+      !httpSetEncryption(http, HTTP_ENCRYPTION_REQUIRED))
   {
     DEBUG_puts("1cupsSendRequest: Unable to encrypt connection.");
     return (HTTP_STATUS_SERVICE_UNAVAILABLE);
@@ -655,7 +625,7 @@ cupsSendRequest(http_t     *http,	/* I - Connection to server or @code CUPS_HTTP
   {
     DEBUG_puts("2cupsSendRequest: Connection: close");
     httpClearFields(http);
-    if (httpReconnect(http, 30000, NULL))
+    if (!httpReconnect(http, 30000, NULL))
     {
       DEBUG_puts("1cupsSendRequest: Unable to reconnect.");
       return (HTTP_STATUS_SERVICE_UNAVAILABLE);
@@ -703,10 +673,10 @@ cupsSendRequest(http_t     *http,	/* I - Connection to server or @code CUPS_HTTP
 
     DEBUG_puts("2cupsSendRequest: Sending HTTP POST...");
 
-    if (httpPost(http, resource))
+    if (!httpWriteRequest(http, "POST", resource))
     {
       DEBUG_puts("2cupsSendRequest: POST failed, reconnecting.");
-      if (httpReconnect(http, 30000, NULL))
+      if (!httpReconnect(http, 30000, NULL))
       {
         DEBUG_puts("1cupsSendRequest: Unable to reconnect.");
         return (HTTP_STATUS_SERVICE_UNAVAILABLE);
@@ -817,7 +787,7 @@ cupsSendRequest(http_t     *http,	/* I - Connection to server or @code CUPS_HTTP
 
           DEBUG_puts("2cupsSendRequest: Reconnecting after HTTP_STATUS_UNAUTHORIZED.");
 
-	  if (httpReconnect(http, 30000, NULL))
+	  if (!httpReconnect(http, 30000, NULL))
 	  {
 	    DEBUG_puts("1cupsSendRequest: Unable to reconnect.");
 	    return (HTTP_STATUS_SERVICE_UNAVAILABLE);
@@ -834,14 +804,14 @@ cupsSendRequest(http_t     *http,	/* I - Connection to server or @code CUPS_HTTP
           DEBUG_puts("2cupsSendRequest: Reconnecting after "
 	             "HTTP_STATUS_UPGRADE_REQUIRED.");
 
-	  if (httpReconnect(http, 30000, NULL))
+	  if (!httpReconnect(http, 30000, NULL))
 	  {
 	    DEBUG_puts("1cupsSendRequest: Unable to reconnect.");
 	    return (HTTP_STATUS_SERVICE_UNAVAILABLE);
 	  }
 
 	  DEBUG_puts("2cupsSendRequest: Upgrading to TLS.");
-	  if (httpEncryption(http, HTTP_ENCRYPTION_REQUIRED))
+	  if (!httpSetEncryption(http, HTTP_ENCRYPTION_REQUIRED))
 	  {
 	    DEBUG_puts("1cupsSendRequest: Unable to encrypt connection.");
 	    return (HTTP_STATUS_SERVICE_UNAVAILABLE);
@@ -859,7 +829,7 @@ cupsSendRequest(http_t     *http,	/* I - Connection to server or @code CUPS_HTTP
           DEBUG_puts("2cupsSendRequest: Reconnecting after "
 	             "HTTP_EXPECTATION_FAILED.");
 
-	  if (httpReconnect(http, 30000, NULL))
+	  if (!httpReconnect(http, 30000, NULL))
 	  {
 	    DEBUG_puts("1cupsSendRequest: Unable to reconnect.");
 	    return (HTTP_STATUS_SERVICE_UNAVAILABLE);
@@ -884,9 +854,9 @@ cupsSendRequest(http_t     *http,	/* I - Connection to server or @code CUPS_HTTP
  * after @link cupsStartDocument@ to provide a document file.
  */
 
-http_status_t				/* O - @code HTTP_STATUS_CONTINUE@ if OK or HTTP status on error */
+http_status_t				/* O - `HTTP_STATUS_CONTINUE` if OK or HTTP status on error */
 cupsWriteRequestData(
-    http_t     *http,			/* I - Connection to server or @code CUPS_HTTP_DEFAULT@ */
+    http_t     *http,			/* I - Connection to server or `CUPS_HTTP_DEFAULT` */
     const char *buffer,			/* I - Bytes to write */
     size_t     length)			/* I - Number of bytes to write */
 {
@@ -989,9 +959,9 @@ _cupsConnect(void)
 
     if (strcmp(cg->http->hostname, cg->server) ||
 #ifdef AF_LOCAL
-        (httpAddrFamily(cg->http->hostaddr) != AF_LOCAL && cg->ipp_port != httpAddrPort(cg->http->hostaddr)) ||
+        (httpAddrGetFamily(cg->http->hostaddr) != AF_LOCAL && cg->ipp_port != httpAddrGetPort(cg->http->hostaddr)) ||
 #else
-        cg->ipp_port != httpAddrPort(cg->http->hostaddr) ||
+        cg->ipp_port != httpAddrGetPort(cg->http->hostaddr) ||
 #endif /* AF_LOCAL */
         (cg->http->encryption != cg->encryption &&
 	 cg->http->encryption == HTTP_ENCRYPTION_NEVER))
@@ -1036,7 +1006,7 @@ _cupsConnect(void)
 
   if (!cg->http)
   {
-    if ((cg->http = httpConnect(cupsGetServer(), ippPort(), NULL, AF_UNSPEC, cupsGetEncryption(), 1, 30000, NULL)) == NULL)
+    if ((cg->http = httpConnect(cupsGetServer(), ippGetPort(), NULL, AF_UNSPEC, cupsGetEncryption(), 1, 30000, NULL)) == NULL)
     {
       if (errno)
         _cupsSetError(IPP_STATUS_ERROR_SERVICE_UNAVAILABLE, NULL, 0);

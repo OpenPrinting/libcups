@@ -69,12 +69,12 @@ _cupsCharmapFlush(void)
 
 ssize_t					/* O - Count or `-1` on error */
 cupsCharsetToUTF8(
-    cups_utf8_t           *dest,	/* O - Target string */
+    char                  *dest,	/* O - Target string */
     const char            *src,		/* I - Source string */
     const size_t          maxout,	/* I - Max output */
     const cups_encoding_t encoding)	/* I - Encoding */
 {
-  cups_utf8_t	*destptr;		/* Pointer into UTF-8 buffer */
+  char		*destptr;		/* Pointer into UTF-8 buffer */
 #ifdef HAVE_ICONV_H
   size_t	srclen,			/* Length of source string */
 		outBytesLeft;		/* Bytes remaining in output buffer */
@@ -115,7 +115,7 @@ cupsCharsetToUTF8(
   if (encoding == CUPS_ISO8859_1)
   {
     int		ch;			/* Character from string */
-    cups_utf8_t	*destend;		/* End of UTF-8 buffer */
+    char	*destend;		/* End of UTF-8 buffer */
 
 
     destend = dest + maxout - 2;
@@ -126,11 +126,11 @@ cupsCharsetToUTF8(
 
       if (ch & 128)
       {
-	*destptr++ = (cups_utf8_t)(0xc0 | (ch >> 6));
-	*destptr++ = (cups_utf8_t)(0x80 | (ch & 0x3f));
+	*destptr++ = (char)(0xc0 | (ch >> 6));
+	*destptr++ = (char)(0x80 | (ch & 0x3f));
       }
       else
-	*destptr++ = (cups_utf8_t)ch;
+	*destptr++ = (char)ch;
     }
 
     *destptr = '\0';
@@ -193,7 +193,7 @@ cupsCharsetToUTF8(
 ssize_t					/* O - Count or `-1` on error */
 cupsUTF8ToCharset(
     char                  *dest,	/* O - Target string */
-    const cups_utf8_t     *src,		/* I - Source string */
+    const char	          *src,		/* I - Source string */
     const size_t          maxout,	/* I - Max output */
     const cups_encoding_t encoding)	/* I - Encoding */
 {
@@ -318,28 +318,19 @@ cupsUTF8ToCharset(
 /*
  * 'cupsUTF8ToUTF32()' - Convert UTF-8 to UTF-32.
  *
- * 32-bit UTF-32 (actually 21-bit) maps to UTF-8 as follows...
- *
- *   UTF-32 char     UTF-8 char(s)
- *   --------------------------------------------------
- *	  0 to 127 = 0xxxxxxx (US-ASCII)
- *     128 to 2047 = 110xxxxx 10yyyyyy
- *   2048 to 65535 = 1110xxxx 10yyyyyy 10zzzzzz
- *	   > 65535 = 11110xxx 10yyyyyy 10zzzzzz 10xxxxxx
- *
- * UTF-32 prohibits chars beyond Plane 16 (> 0x10ffff) in UCS-4,
- * which would convert to five- or six-octet UTF-8 sequences.
+ * This function converts a UTF-8 (8-bit encoding of Unicode) `nul`-terminated
+ * C string to a UTF-32 (32-bit encoding of Unicode) string.
  */
 
 ssize_t					/* O - Count or `-1` on error */
 cupsUTF8ToUTF32(
-    cups_utf32_t      *dest,		/* O - Target string */
-    const cups_utf8_t *src,		/* I - Source string */
-    const size_t      maxout)		/* I - Max output */
+    cups_utf32_t *dest,			/* O - Target string */
+    const char   *src,			/* I - Source string */
+    const size_t maxout)		/* I - Max output */
 {
   size_t	i;			/* Looping variable */
-  cups_utf8_t	ch;			/* Character value */
-  cups_utf8_t	next;			/* Next character value */
+  int		ch,			/* Character value */
+		next;			/* Next character value */
   cups_utf32_t	ch32;			/* UTF-32 character value */
 
 
@@ -535,26 +526,17 @@ cupsUTF8ToUTF32(
 /*
  * 'cupsUTF32ToUTF8()' - Convert UTF-32 to UTF-8.
  *
- * 32-bit UTF-32 (actually 21-bit) maps to UTF-8 as follows...
- *
- *   UTF-32 char     UTF-8 char(s)
- *   --------------------------------------------------
- *	  0 to 127 = 0xxxxxxx (US-ASCII)
- *     128 to 2047 = 110xxxxx 10yyyyyy
- *   2048 to 65535 = 1110xxxx 10yyyyyy 10zzzzzz
- *	   > 65535 = 11110xxx 10yyyyyy 10zzzzzz 10xxxxxx
- *
- * UTF-32 prohibits chars beyond Plane 16 (> 0x10ffff) in UCS-4,
- * which would convert to five- or six-octet UTF-8 sequences.
+ * This function converts a UTF-32 (32-bit encoding of Unicode) string to a
+ * UTF-8 (8-bit encoding of Unicode) `nul`-terminated C string.
  */
 
 ssize_t					/* O - Count or `-1` on error */
 cupsUTF32ToUTF8(
-    cups_utf8_t        *dest,		/* O - Target string */
+    char               *dest,		/* O - Target string */
     const cups_utf32_t *src,		/* I - Source string */
     const size_t       maxout)		/* I - Max output */
 {
-  cups_utf8_t	*start;			/* Start of destination string */
+  char		*start;			/* Start of destination string */
   size_t	i;			/* Looping variable */
   int		swap;			/* Byte-swap input to output */
   cups_utf32_t	ch;			/* Character value */
@@ -625,7 +607,7 @@ cupsUTF32ToUTF8(
       * One-octet UTF-8 <= 127 (US-ASCII)...
       */
 
-      *dest++ = (cups_utf8_t)ch;
+      *dest++ = (char)ch;
       i --;
 
       DEBUG_printf(("4cupsUTF32ToUTF8: %08x => %02x", (unsigned)ch, dest[-1]));
@@ -643,8 +625,8 @@ cupsUTF32ToUTF8(
         return (-1);
       }
 
-      *dest++ = (cups_utf8_t)(0xc0 | ((ch >> 6) & 0x1f));
-      *dest++ = (cups_utf8_t)(0x80 | (ch & 0x3f));
+      *dest++ = (char)(0xc0 | ((ch >> 6) & 0x1f));
+      *dest++ = (char)(0x80 | (ch & 0x3f));
       i -= 2;
 
       DEBUG_printf(("4cupsUTF32ToUTF8: %08x => %02x %02x", (unsigned)ch, dest[-2], dest[-1]));
@@ -662,9 +644,9 @@ cupsUTF32ToUTF8(
         return (-1);
       }
 
-      *dest++ = (cups_utf8_t)(0xe0 | ((ch >> 12) & 0x0f));
-      *dest++ = (cups_utf8_t)(0x80 | ((ch >> 6) & 0x3f));
-      *dest++ = (cups_utf8_t)(0x80 | (ch & 0x3f));
+      *dest++ = (char)(0xe0 | ((ch >> 12) & 0x0f));
+      *dest++ = (char)(0x80 | ((ch >> 6) & 0x3f));
+      *dest++ = (char)(0x80 | (ch & 0x3f));
       i -= 3;
 
       DEBUG_printf(("4cupsUTF32ToUTF8: %08x => %02x %02x %02x", (unsigned)ch, dest[-3], dest[-2], dest[-1]));
@@ -682,10 +664,10 @@ cupsUTF32ToUTF8(
         return (-1);
       }
 
-      *dest++ = (cups_utf8_t)(0xf0 | ((ch >> 18) & 0x07));
-      *dest++ = (cups_utf8_t)(0x80 | ((ch >> 12) & 0x3f));
-      *dest++ = (cups_utf8_t)(0x80 | ((ch >> 6) & 0x3f));
-      *dest++ = (cups_utf8_t)(0x80 | (ch & 0x3f));
+      *dest++ = (char)(0xf0 | ((ch >> 18) & 0x07));
+      *dest++ = (char)(0x80 | ((ch >> 12) & 0x3f));
+      *dest++ = (char)(0x80 | ((ch >> 6) & 0x3f));
+      *dest++ = (char)(0x80 | (ch & 0x3f));
       i -= 4;
 
       DEBUG_printf(("4cupsUTF32ToUTF8: %08x => %02x %02x %02x %02x", (unsigned)ch, dest[-4], dest[-3], dest[-2], dest[-1]));

@@ -1074,23 +1074,41 @@ The following functions have been renamed in CUPS 3.0:
 | `cupsFileCompression`    | `cupsFileIsCompressed`  |
 | `cupsGetDests2`          | `cupsGetDests`          |
 | `cupsGetPassword2`       | `cupsGetPassword`       |
+| `cupsRasterReadHeader2`  | `cupsRasterReadHeader`  |
+| `cupsRasterWriteHeader2` | `cupsRasterWriteHeader` |
 | `cupsServer`             | `cupsGetServer`         |
 | `cupsSetPasswordCB2`     | `cupsSetPasswordCB`     |
 | `cupsTempFile2`          | `cupsTempFile`          |
 | `cupsUser`               | `cupsGetUser`           |
 | `cupsUserAgent`          | `cupsGetUserAgent`      |
+| `httpAddrAny`            | `httpAddrIsAny`         |
+| `httpAddrEqual`          | `httpAddrIsEqual`       |
+| `httpAddrFamily`         | `httpAddrGetFamily`     |
+| `httpAddrLength`         | `httpAddrGetLength`     |
+| `httpAddrLocalhost`      | `httpAddrIsLocalhost`   |
+| `httpAddrPort`           | `httpAddrGetPort`       |
+| `httpAddrString`         | `httpAddrGetString`     |
 | `httpBlocking`           | `httpSetBlocking`       |
 | `httpConnect2`           | `httpConnect`           |
 | `httpDecode64_2`         | `httpDecode64`          |
+| `httpDelete`             | `httpWriteRequest`      |
 | `httpEncode64_2`         | `httpEncode64`          |
+| `httpEncryption`         | `httpSetEncryption`     |
+| `httpGet`                | `httpWriteRequest`      |
 | `httpGetDateString2`     | `httpGetDateString`     |
 | `httpGetLength2`         | `httpGetLength`         |
+| `httpOptions`            | `httpWriteRequest`      |
+| `httpPost`               | `httpWriteRequest`      |
+| `httpPut`                | `httpWriteRequest`      |
 | `httpRead2`              | `httpRead`              |
 | `httpReconnect2`         | `httpReconnect`         |
 | `httpStatus`             | `httpStatusString`      |
+| `httpTrace`              | `httpWriteRequest`      |
 | `httpWrite2`             | `httpWrite`             |
-| `cupsRasterReadHeader2`  | `cupsRasterReadHeader`  |
-| `cupsRasterWriteHeader2` | `cupsRasterWriteHeader` |
+| `ippFirstAttribute`      | `ippGetFirstAttribute`  |
+| `ippNextAttribute`       | `ippGetNextAttribute`   |
+| `ippPort`                | `ippGetPort`            |
+
 
 Similarly, the following types have been renamed in CUPS 3.0:
 
@@ -1103,3 +1121,5 @@ Similarly, the following types have been renamed in CUPS 3.0:
 | `cups_raster_iocb_t`  | `cups_raster_cb_t`   |
 | `cups_password_cb2_t` | `cups_password_cb_t` |
 | `cups_page_header2_t` | `cups_page_header_t` |
+| `ipp_copycb_t`        | `ipp_copy_cb_t`      |
+| `ipp_iocb_t`          | `ipp_io_cb_t`        |

@@ -102,7 +102,7 @@ static const char * const lang_encodings[] =
  * Local functions...
  */
 
-static void	print_utf8(const char *msg, const cups_utf8_t *src);
+static void	print_utf8(const char *msg, const char *src);
 
 
 /*
@@ -122,22 +122,22 @@ main(int  argc,				/* I - Argument Count */
   char		legsrc[1024],		/* Legacy source string */
 		legdest[1024],		/* Legacy destination string */
 		*legptr;		/* Pointer into legacy string */
-  cups_utf8_t	utf8latin[] =		/* UTF-8 Latin-1 source */
+  char		utf8latin[] =		/* UTF-8 Latin-1 source */
     { 0x41, 0x20, 0x21, 0x3D, 0x20, 0xC3, 0x84, 0x2E, 0x00 };
     /* "A != <A WITH DIAERESIS>." - use ISO 8859-1 */
-  cups_utf8_t	utf8repla[] =		/* UTF-8 Latin-1 replacement */
+  char		utf8repla[] =		/* UTF-8 Latin-1 replacement */
     { 0x41, 0x20, 0xE2, 0x89, 0xA2, 0x20, 0xC3, 0x84, 0x2E, 0x00 };
     /* "A <NOT IDENTICAL TO> <A WITH DIAERESIS>." */
-  cups_utf8_t	utf8greek[] =		/* UTF-8 Greek source string */
+  char		utf8greek[] =		/* UTF-8 Greek source string */
     { 0x41, 0x20, 0x21, 0x3D, 0x20, 0xCE, 0x91, 0x2E, 0x00 };
     /* "A != <ALPHA>." - use ISO 8859-7 */
-  cups_utf8_t	utf8japan[] =		/* UTF-8 Japanese source */
+  char		utf8japan[] =		/* UTF-8 Japanese source */
     { 0x41, 0x20, 0x21, 0x3D, 0x20, 0xEE, 0x9C, 0x80, 0x2E, 0x00 };
     /* "A != <PRIVATE U+E700>." - use Windows 932 or EUC-JP */
-  cups_utf8_t	utf8taiwan[] =		/* UTF-8 Chinese source */
+  char		utf8taiwan[] =		/* UTF-8 Chinese source */
     { 0x41, 0x20, 0x21, 0x3D, 0x20, 0xE4, 0xB9, 0x82, 0x2E, 0x00 };
     /* "A != <CJK U+4E42>." - use Windows 950 (Big5) or EUC-TW */
-  cups_utf8_t	utf8dest[1024];		/* UTF-8 destination string */
+  char		utf8dest[1024];		/* UTF-8 destination string */
   cups_utf32_t	utf32dest[1024];	/* UTF-32 destination string */
 
 
@@ -212,7 +212,7 @@ main(int  argc,				/* I - Argument Count */
   {
     count ++;
 
-    if (cupsUTF8ToUTF32(utf32dest, (cups_utf8_t *)line, 1024) < 0)
+    if (cupsUTF8ToUTF32(utf32dest, line, 1024) < 0)
     {
       testEndMessage(false, "UTF-8 to UTF-32 on line %d", count);
       errors ++;
@@ -236,7 +236,7 @@ main(int  argc,				/* I - Argument Count */
   {
     count ++;
 
-    len = cupsUTF8ToCharset(legdest, (cups_utf8_t *)line, 1024, CUPS_EUC_JP);
+    len = cupsUTF8ToCharset(legdest, line, 1024, CUPS_EUC_JP);
     if (len < 0)
     {
       testEndMessage(false, "UTF-8 to EUC-JP on line %d", count);
@@ -540,8 +540,8 @@ main(int  argc,				/* I - Argument Count */
  */
 
 static void
-print_utf8(const char	     *msg,	/* I - Message String */
-	   const cups_utf8_t *src)	/* I - UTF-8 Source String */
+print_utf8(const char *msg,		/* I - Message String */
+	   const char *src)		/* I - UTF-8 Source String */
 {
   const char	*prefix;		/* Prefix string */
 

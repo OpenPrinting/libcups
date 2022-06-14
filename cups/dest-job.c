@@ -21,9 +21,9 @@
  *
  * The "job_id" is the number returned by cupsCreateDestJob.
  *
- * Returns @code IPP_STATUS_OK@ on success and
- * @code IPP_STATUS_ERROR_NOT_AUTHORIZED@ or
- * @code IPP_STATUS_ERROR_FORBIDDEN@ on failure.
+ * Returns `IPP_STATUS_OK` on success and
+ * `IPP_STATUS_ERROR_NOT_AUTHORIZED` or
+ * `IPP_STATUS_ERROR_FORBIDDEN` on failure.
  */
 
 ipp_status_t                            /* O - Status of cancel operation */
@@ -58,7 +58,7 @@ cupsCancelDestJob(http_t      *http,	/* I - Connection to destination */
  * 'cupsCloseDestJob()' - Close a job and start printing.
  *
  * Use when the last call to cupsStartDocument passed 0 for "last_document".
- * "job_id" is the job ID returned by cupsCreateDestJob. Returns @code IPP_STATUS_OK@
+ * "job_id" is the job ID returned by cupsCreateDestJob. Returns `IPP_STATUS_OK`
  * on success.
  */
 
@@ -149,7 +149,7 @@ cupsCloseDestJob(
 /*
  * 'cupsCreateDestJob()' - Create a job on a destination.
  *
- * Returns @code IPP_STATUS_OK@ or @code IPP_STATUS_OK_SUBST@ on success, saving the job ID
+ * Returns `IPP_STATUS_OK` or `IPP_STATUS_OK_SUBST` on success, saving the job ID
  * in the variable pointed to by "job_id".
  */
 
@@ -245,7 +245,7 @@ cupsCreateDestJob(
 /*
  * 'cupsFinishDestDocument()' - Finish the current document.
  *
- * Returns @code IPP_STATUS_OK@ or @code IPP_STATUS_OK_SUBST@ on success.
+ * Returns `IPP_STATUS_OK` or `IPP_STATUS_OK_SUBST` on success.
  */
 
 ipp_status_t				/* O - Status of document submission */
@@ -293,9 +293,9 @@ cupsFinishDestDocument(
  * "job_id" is the job ID returned by cupsCreateDestJob.  "docname" is the name
  * of the document/file being printed, "format" is the MIME media type for the
  * document (see CUPS_FORMAT_xxx constants), and "num_options" and "options"
- * are the options do be applied to the document. "last_document" should be 1
- * if this is the last document to be submitted in the job.  Returns
- * @code HTTP_CONTINUE@ on success.
+ * are the options do be applied to the document. "last_document" should be
+ * `true` if this is the last document to be submitted in the job.  Returns
+ * `HTTP_CONTINUE` on success.
  */
 
 http_status_t				/* O - Status of document creation */

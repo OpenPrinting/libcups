@@ -1,7 +1,7 @@
 /*
  * HTTP test program for CUPS.
  *
- * Copyright © 2021 by OpenPrinting.
+ * Copyright © 2021-2022 by OpenPrinting.
  * Copyright © 2007-2018 by Apple Inc.
  * Copyright © 1997-2006 by Easy Software Products.
  *
@@ -395,7 +395,7 @@ main(int  argc,				/* I - Number of command-line arguments */
         char	numeric[1024];		/* Numeric IP address */
 
 
-	httpAddrString(&(addr->addr), numeric, sizeof(numeric));
+	httpAddrGetString(&(addr->addr), numeric, sizeof(numeric));
 	if (!strcmp(numeric, "UNKNOWN"))
 	  break;
       }
@@ -527,10 +527,9 @@ main(int  argc,				/* I - Number of command-line arguments */
     char	resolved[1024];		/* Resolved URI */
 
 
-    testBegin("_httpResolveURI(%s, _HTTP_RESOLVE_DEFAULT)", argv[1]);
+    testBegin("httpResolveURI(%s, HTTP_RESOLVE_DEFAULT)", argv[1]);
 
-    if (!_httpResolveURI(argv[1], resolved, sizeof(resolved),
-                         _HTTP_RESOLVE_DEFAULT, NULL, NULL))
+    if (!httpResolveURI(argv[1], resolved, sizeof(resolved), HTTP_RESOLVE_DEFAULT, NULL, NULL))
     {
       testEnd(false);
       return (1);
@@ -538,10 +537,9 @@ main(int  argc,				/* I - Number of command-line arguments */
     else
       testEndMessage(true, "%s", resolved);
 
-    testBegin("_httpResolveURI(%s, _HTTP_RESOLVE_FQDN)", argv[1]);
+    testBegin("httpResolveURI(%s, HTTP_RESOLVE_FQDN)", argv[1]);
 
-    if (!_httpResolveURI(argv[1], resolved, sizeof(resolved),
-                         _HTTP_RESOLVE_FQDN, NULL, NULL))
+    if (!httpResolveURI(argv[1], resolved, sizeof(resolved), HTTP_RESOLVE_FQDN, NULL, NULL))
     {
       testEnd(false);
       return (1);
@@ -563,10 +561,7 @@ main(int  argc,				/* I - Number of command-line arguments */
     * Test URI separation...
     */
 
-    uri_status = httpSeparateURI(HTTP_URI_CODING_ALL, argv[2], scheme,
-                                 sizeof(scheme), username, sizeof(username),
-				 hostname, sizeof(hostname), &port,
-				 resource, sizeof(resource));
+    uri_status = httpSeparateURI(HTTP_URI_CODING_ALL, argv[2], scheme, sizeof(scheme), username, sizeof(username), hostname, sizeof(hostname), &port, resource, sizeof(resource));
     printf("uri_status = %s\n", uri_status_strings[uri_status + 8]);
     printf("scheme     = \"%s\"\n", scheme);
     printf("username   = \"%s\"\n", username);
@@ -634,7 +629,7 @@ main(int  argc,				/* I - Number of command-line arguments */
         printf("IsValidName: %d\n", httpCredentialsAreValidForName(creds, hostname));
         printf("String: \"%s\"\n", info);
 
-	printf("LoadCredentials: %d\n", httpLoadCredentials(NULL, &lcreds, hostname));
+	printf("LoadCredentials: %s\n", httpLoadCredentials(NULL, &lcreds, hostname) ? "true" : "false");
 	httpCredentialsString(lcreds, info, sizeof(info));
 	printf("    Count: %u\n", (unsigned)cupsArrayGetCount(lcreds));
 	printf("    String: \"%s\"\n", info);
@@ -658,7 +653,7 @@ main(int  argc,				/* I - Number of command-line arguments */
 
         if (trust != HTTP_TRUST_OK)
 	{
-	  printf("SaveCredentials: %d\n", httpSaveCredentials(NULL, creds, hostname));
+	  printf("SaveCredentials: %s\n", httpSaveCredentials(NULL, creds, hostname) ? "true" : "false");
 	  trust = httpCredentialsGetTrust(creds, hostname);
 	  printf("New Trust: %s\n", trusts[trust]);
 	}
@@ -678,7 +673,7 @@ main(int  argc,				/* I - Number of command-line arguments */
       if (!_cups_strcasecmp(httpGetField(http, HTTP_FIELD_CONNECTION), "close"))
       {
 	httpClearFields(http);
-	if (httpReconnect(http, 30000, NULL))
+	if (!httpReconnect(http, 30000, NULL))
 	{
           status = HTTP_STATUS_ERROR;
           break;
@@ -692,17 +687,17 @@ main(int  argc,				/* I - Number of command-line arguments */
       httpSetField(http, HTTP_FIELD_AUTHORIZATION, httpGetAuthString(http));
       httpSetField(http, HTTP_FIELD_ACCEPT_LANGUAGE, "en");
 
-      if (httpHead(http, resource))
+      if (httpWriteRequest(http, "HEAD", resource))
       {
         if (httpReconnect(http, 30000, NULL))
         {
-          status = HTTP_STATUS_ERROR;
-          break;
+          status = HTTP_STATUS_UNAUTHORIZED;
+          continue;
         }
         else
         {
-          status = HTTP_STATUS_UNAUTHORIZED;
-          continue;
+          status = HTTP_STATUS_ERROR;
+          break;
         }
       }
 
@@ -730,7 +725,7 @@ main(int  argc,				/* I - Number of command-line arguments */
 	  break;
 	}
 
-	if (httpReconnect(http, 30000, NULL))
+	if (!httpReconnect(http, 30000, NULL))
 	{
 	  status = HTTP_STATUS_ERROR;
 	  break;
@@ -745,14 +740,14 @@ main(int  argc,				/* I - Number of command-line arguments */
 	httpFlush(http);
 
 	/* Reconnect... */
-	if (httpReconnect(http, 30000, NULL))
+	if (!httpReconnect(http, 30000, NULL))
 	{
 	  status = HTTP_STATUS_ERROR;
 	  break;
 	}
 
 	/* Upgrade with encryption... */
-	httpEncryption(http, HTTP_ENCRYPTION_REQUIRED);
+	httpSetEncryption(http, HTTP_ENCRYPTION_REQUIRED);
 
 	/* Try again, this time with encryption enabled... */
 	continue;
@@ -779,7 +774,7 @@ main(int  argc,				/* I - Number of command-line arguments */
       if (!_cups_strcasecmp(httpGetField(http, HTTP_FIELD_CONNECTION), "close"))
       {
 	httpClearFields(http);
-	if (httpReconnect(http, 30000, NULL))
+	if (!httpReconnect(http, 30000, NULL))
 	{
           status = HTTP_STATUS_ERROR;
           break;
@@ -794,17 +789,17 @@ main(int  argc,				/* I - Number of command-line arguments */
       httpSetField(http, HTTP_FIELD_ACCEPT_LANGUAGE, "en");
       httpSetField(http, HTTP_FIELD_ACCEPT_ENCODING, encoding);
 
-      if (httpGet(http, resource))
+      if (httpWriteRequest(http, "GET", resource))
       {
         if (httpReconnect(http, 30000, NULL))
         {
-          status = HTTP_STATUS_ERROR;
-          break;
+          status = HTTP_STATUS_UNAUTHORIZED;
+          continue;
         }
         else
         {
-          status = HTTP_STATUS_UNAUTHORIZED;
-          continue;
+          status = HTTP_STATUS_ERROR;
+          break;
         }
       }
 
@@ -832,7 +827,7 @@ main(int  argc,				/* I - Number of command-line arguments */
 	  break;
 	}
 
-	if (httpReconnect(http, 30000, NULL))
+	if (!httpReconnect(http, 30000, NULL))
 	{
 	  status = HTTP_STATUS_ERROR;
 	  break;
@@ -847,14 +842,14 @@ main(int  argc,				/* I - Number of command-line arguments */
 	httpFlush(http);
 
 	/* Reconnect... */
-	if (httpReconnect(http, 30000, NULL))
+	if (!httpReconnect(http, 30000, NULL))
 	{
 	  status = HTTP_STATUS_ERROR;
 	  break;
 	}
 
 	/* Upgrade with encryption... */
-	httpEncryption(http, HTTP_ENCRYPTION_REQUIRED);
+	httpSetEncryption(http, HTTP_ENCRYPTION_REQUIRED);
 
 	/* Try again, this time with encryption enabled... */
 	continue;

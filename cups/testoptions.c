@@ -93,7 +93,7 @@ main(int  argc,				/* I - Number of command-line arguments */
     ippSetOperation(request, IPP_OP_PRINT_JOB);
 
     cupsEncodeOptions(request, num_options, options, IPP_TAG_JOB);
-    for (count = 0, attr = ippFirstAttribute(request); attr; attr = ippNextAttribute(request), count ++);
+    for (count = 0, attr = ippGetFirstAttribute(request); attr; attr = ippGetNextAttribute(request), count ++);
     if (count != 6)
     {
       testEndMessage(false, "%d attributes, expected 6", count);

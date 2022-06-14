@@ -524,10 +524,10 @@ typedef bool (*ipp_ferror_cb_t)(ipp_file_t *file, void *cb_data, const char *err
 typedef bool (*ipp_ftoken_cb_t)(ipp_file_t *file, void *cb_data, const char *token);
 					// IPP data file token callback
 
-typedef ssize_t	(*ipp_iocb_t)(void *context, ipp_uchar_t *buffer, size_t bytes);
+typedef ssize_t	(*ipp_io_cb_t)(void *context, ipp_uchar_t *buffer, size_t bytes);
 					// ippReadIO/ippWriteIO callback function
 
-typedef bool (*ipp_copycb_t)(void *context, ipp_t *dst, ipp_attribute_t *attr);
+typedef bool (*ipp_copy_cb_t)(void *context, ipp_t *dst, ipp_attribute_t *attr);
                                         // ippCopyAttributes callback function
 
 
@@ -555,16 +555,16 @@ extern ipp_attribute_t	*ippAddStringfv(ipp_t *ipp, ipp_tag_t group, ipp_tag_t va
 extern ipp_attribute_t	*ippAddStrings(ipp_t *ipp, ipp_tag_t group, ipp_tag_t value_tag, const char *name,  size_t num_values, const char *language, const char * const *values) _CUPS_PUBLIC;
 extern size_t		ippAttributeString(ipp_attribute_t *attr, char *buffer, size_t bufsize) _CUPS_PUBLIC;
 
-extern int		ippContainsInteger(ipp_attribute_t *attr, int value) _CUPS_PUBLIC;
-extern int		ippContainsString(ipp_attribute_t *attr, const char *value) _CUPS_PUBLIC;
-extern ipp_attribute_t	*ippCopyAttribute(ipp_t *dst, ipp_attribute_t *attr, int quickcopy) _CUPS_PUBLIC;
-extern int		ippCopyAttributes(ipp_t *dst, ipp_t *src, int quickcopy, ipp_copycb_t cb, void *context) _CUPS_PUBLIC;
+extern bool		ippContainsInteger(ipp_attribute_t *attr, int value) _CUPS_PUBLIC;
+extern bool		ippContainsString(ipp_attribute_t *attr, const char *value) _CUPS_PUBLIC;
+extern ipp_attribute_t	*ippCopyAttribute(ipp_t *dst, ipp_attribute_t *attr, bool quickcopy) _CUPS_PUBLIC;
+extern bool		ippCopyAttributes(ipp_t *dst, ipp_t *src, bool quickcopy, ipp_copy_cb_t cb, void *context) _CUPS_PUBLIC;
 extern cups_array_t	*ippCreateRequestedArray(ipp_t *request) _CUPS_PUBLIC;
 
 extern time_t		ippDateToTime(const ipp_uchar_t *date) _CUPS_PUBLIC;
 extern void		ippDelete(ipp_t *ipp) _CUPS_PUBLIC;
 extern void		ippDeleteAttribute(ipp_t *ipp, ipp_attribute_t *attr) _CUPS_PUBLIC;
-extern int		ippDeleteValues(ipp_t *ipp, ipp_attribute_t **attr, size_t element, size_t count) _CUPS_PUBLIC;
+extern bool		ippDeleteValues(ipp_t *ipp, ipp_attribute_t **attr, size_t element, size_t count) _CUPS_PUBLIC;
 
 extern const char	*ippEnumString(const char *attrname, int enumvalue) _CUPS_PUBLIC;
 extern int		ippEnumValue(const char *attrname, const char *enumstring) _CUPS_PUBLIC;
@@ -597,17 +597,19 @@ extern bool		ippFileWriteTokenf(ipp_file_t *file, const char *token, ...) _CUPS_
 
 extern ipp_attribute_t	*ippFindAttribute(ipp_t *ipp, const char *name, ipp_tag_t value_tag) _CUPS_PUBLIC;
 extern ipp_attribute_t	*ippFindNextAttribute(ipp_t *ipp, const char *name, ipp_tag_t value_tag) _CUPS_PUBLIC;
-extern ipp_attribute_t	*ippFirstAttribute(ipp_t *ipp) _CUPS_PUBLIC;
 
 extern bool		ippGetBoolean(ipp_attribute_t *attr, size_t element) _CUPS_PUBLIC;
 extern ipp_t		*ippGetCollection(ipp_attribute_t *attr, size_t element) _CUPS_PUBLIC;
 extern size_t		ippGetCount(ipp_attribute_t *attr) _CUPS_PUBLIC;
 extern const ipp_uchar_t *ippGetDate(ipp_attribute_t *attr, size_t element) _CUPS_PUBLIC;
+extern ipp_attribute_t	*ippGetFirstAttribute(ipp_t *ipp) _CUPS_PUBLIC;
 extern ipp_tag_t	ippGetGroupTag(ipp_attribute_t *attr) _CUPS_PUBLIC;
 extern int		ippGetInteger(ipp_attribute_t *attr, size_t element) _CUPS_PUBLIC;
 extern const char	*ippGetName(ipp_attribute_t *attr) _CUPS_PUBLIC;
+extern ipp_attribute_t	*ippGetNextAttribute(ipp_t *ipp) _CUPS_PUBLIC;
 extern void		*ippGetOctetString(ipp_attribute_t *attr, size_t element, size_t *datalen) _CUPS_PUBLIC;
 extern ipp_op_t		ippGetOperation(ipp_t *ipp) _CUPS_PUBLIC;
+extern int		ippGetPort(void) _CUPS_PUBLIC;
 extern int		ippGetRange(ipp_attribute_t *attr, size_t element, int *upper) _CUPS_PUBLIC;
 extern int		ippGetRequestId(ipp_t *ipp) _CUPS_PUBLIC;
 extern int		ippGetResolution(ipp_attribute_t *attr, size_t element, int *yres, ipp_res_t *units) _CUPS_PUBLIC;
@@ -622,48 +624,45 @@ extern size_t		ippLength(ipp_t *ipp) _CUPS_PUBLIC;
 extern ipp_t		*ippNew(void) _CUPS_PUBLIC;
 extern ipp_t		*ippNewRequest(ipp_op_t op) _CUPS_PUBLIC;
 extern ipp_t		*ippNewResponse(ipp_t *request) _CUPS_PUBLIC;
-extern ipp_attribute_t	*ippNextAttribute(ipp_t *ipp) _CUPS_PUBLIC;
 
 extern const char	*ippOpString(ipp_op_t op) _CUPS_PUBLIC;
 extern ipp_op_t		ippOpValue(const char *name) _CUPS_PUBLIC;
 
-extern int		ippPort(void) _CUPS_PUBLIC;
-
 extern ipp_state_t	ippRead(http_t *http, ipp_t *ipp) _CUPS_PUBLIC;
 extern ipp_state_t	ippReadFile(int fd, ipp_t *ipp) _CUPS_PUBLIC;
-extern ipp_state_t	ippReadIO(void *src, ipp_iocb_t cb, bool blocking, ipp_t *parent, ipp_t *ipp) _CUPS_PUBLIC;
+extern ipp_state_t	ippReadIO(void *src, ipp_io_cb_t cb, bool blocking, ipp_t *parent, ipp_t *ipp) _CUPS_PUBLIC;
 
-extern int		ippSetBoolean(ipp_t *ipp, ipp_attribute_t **attr, size_t element, bool boolvalue) _CUPS_PUBLIC;
-extern int		ippSetCollection(ipp_t *ipp, ipp_attribute_t **attr, size_t element, ipp_t *colvalue) _CUPS_PUBLIC;
-extern int		ippSetDate(ipp_t *ipp, ipp_attribute_t **attr, size_t element, const ipp_uchar_t *datevalue) _CUPS_PUBLIC;
-extern int		ippSetGroupTag(ipp_t *ipp, ipp_attribute_t **attr, ipp_tag_t group_tag) _CUPS_PUBLIC;
-extern int		ippSetInteger(ipp_t *ipp, ipp_attribute_t **attr, size_t element, int intvalue) _CUPS_PUBLIC;
-extern int		ippSetName(ipp_t *ipp, ipp_attribute_t **attr, const char *name) _CUPS_PUBLIC;
-extern int		ippSetOctetString(ipp_t *ipp, ipp_attribute_t **attr, size_t element, const void *data, size_t datalen) _CUPS_PUBLIC;
-extern int		ippSetOperation(ipp_t *ipp, ipp_op_t op) _CUPS_PUBLIC;
+extern bool		ippSetBoolean(ipp_t *ipp, ipp_attribute_t **attr, size_t element, bool boolvalue) _CUPS_PUBLIC;
+extern bool		ippSetCollection(ipp_t *ipp, ipp_attribute_t **attr, size_t element, ipp_t *colvalue) _CUPS_PUBLIC;
+extern bool		ippSetDate(ipp_t *ipp, ipp_attribute_t **attr, size_t element, const ipp_uchar_t *datevalue) _CUPS_PUBLIC;
+extern bool		ippSetGroupTag(ipp_t *ipp, ipp_attribute_t **attr, ipp_tag_t group_tag) _CUPS_PUBLIC;
+extern bool		ippSetInteger(ipp_t *ipp, ipp_attribute_t **attr, size_t element, int intvalue) _CUPS_PUBLIC;
+extern bool		ippSetName(ipp_t *ipp, ipp_attribute_t **attr, const char *name) _CUPS_PUBLIC;
+extern bool		ippSetOctetString(ipp_t *ipp, ipp_attribute_t **attr, size_t element, const void *data, size_t datalen) _CUPS_PUBLIC;
+extern bool		ippSetOperation(ipp_t *ipp, ipp_op_t op) _CUPS_PUBLIC;
 extern void		ippSetPort(int p) _CUPS_PUBLIC;
-extern int		ippSetRange(ipp_t *ipp, ipp_attribute_t **attr, size_t element, int lowervalue, int uppervalue) _CUPS_PUBLIC;
-extern int		ippSetRequestId(ipp_t *ipp, int request_id) _CUPS_PUBLIC;
-extern int		ippSetResolution(ipp_t *ipp, ipp_attribute_t **attr, size_t element, ipp_res_t unitsvalue, int xresvalue, int yresvalue) _CUPS_PUBLIC;
-extern int		ippSetState(ipp_t *ipp, ipp_state_t state) _CUPS_PUBLIC;
-extern int		ippSetStatusCode(ipp_t *ipp, ipp_status_t status) _CUPS_PUBLIC;
-extern int		ippSetString(ipp_t *ipp, ipp_attribute_t **attr, size_t element, const char *strvalue) _CUPS_PUBLIC;
-extern int		ippSetStringf(ipp_t *ipp, ipp_attribute_t **attr, size_t element, const char *format, ...) _CUPS_FORMAT(4,5) _CUPS_PUBLIC;
-extern int		ippSetStringfv(ipp_t *ipp, ipp_attribute_t **attr, size_t element, const char *format, va_list ap) _CUPS_PUBLIC;
-extern int		ippSetValueTag(ipp_t *ipp, ipp_attribute_t **attr, ipp_tag_t value_tag) _CUPS_PUBLIC;
-extern int		ippSetVersion(ipp_t *ipp, int major, int minor) _CUPS_PUBLIC;
+extern bool		ippSetRange(ipp_t *ipp, ipp_attribute_t **attr, size_t element, int lowervalue, int uppervalue) _CUPS_PUBLIC;
+extern bool		ippSetRequestId(ipp_t *ipp, int request_id) _CUPS_PUBLIC;
+extern bool		ippSetResolution(ipp_t *ipp, ipp_attribute_t **attr, size_t element, ipp_res_t unitsvalue, int xresvalue, int yresvalue) _CUPS_PUBLIC;
+extern bool		ippSetState(ipp_t *ipp, ipp_state_t state) _CUPS_PUBLIC;
+extern bool		ippSetStatusCode(ipp_t *ipp, ipp_status_t status) _CUPS_PUBLIC;
+extern bool		ippSetString(ipp_t *ipp, ipp_attribute_t **attr, size_t element, const char *strvalue) _CUPS_PUBLIC;
+extern bool		ippSetStringf(ipp_t *ipp, ipp_attribute_t **attr, size_t element, const char *format, ...) _CUPS_FORMAT(4,5) _CUPS_PUBLIC;
+extern bool		ippSetStringfv(ipp_t *ipp, ipp_attribute_t **attr, size_t element, const char *format, va_list ap) _CUPS_PUBLIC;
+extern bool		ippSetValueTag(ipp_t *ipp, ipp_attribute_t **attr, ipp_tag_t value_tag) _CUPS_PUBLIC;
+extern bool		ippSetVersion(ipp_t *ipp, int major, int minor) _CUPS_PUBLIC;
 extern const char	*ippStateString(ipp_state_t state) _CUPS_PUBLIC;
 
 extern const char	*ippTagString(ipp_tag_t tag) _CUPS_PUBLIC;
 extern ipp_tag_t	ippTagValue(const char *name) _CUPS_PUBLIC;
 extern const ipp_uchar_t *ippTimeToDate(time_t t) _CUPS_PUBLIC;
 
-extern int		ippValidateAttribute(ipp_attribute_t *attr) _CUPS_PUBLIC;
-extern int		ippValidateAttributes(ipp_t *ipp) _CUPS_PUBLIC;
+extern bool		ippValidateAttribute(ipp_attribute_t *attr) _CUPS_PUBLIC;
+extern bool		ippValidateAttributes(ipp_t *ipp) _CUPS_PUBLIC;
 
 extern ipp_state_t	ippWrite(http_t *http, ipp_t *ipp) _CUPS_PUBLIC;
 extern ipp_state_t	ippWriteFile(int fd, ipp_t *ipp) _CUPS_PUBLIC;
-extern ipp_state_t	ippWriteIO(void *dst, ipp_iocb_t cb, bool blocking, ipp_t *parent, ipp_t *ipp) _CUPS_PUBLIC;
+extern ipp_state_t	ippWriteIO(void *dst, ipp_io_cb_t cb, bool blocking, ipp_t *parent, ipp_t *ipp) _CUPS_PUBLIC;
 
 
 #  ifdef __cplusplus

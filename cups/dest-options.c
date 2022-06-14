@@ -529,9 +529,9 @@ cupsCopyDestConflicts(
       cupsArrayAdd(pass, r);
       cupsArrayAdd(resolvers, r);
 
-      for (attr = ippFirstAttribute(r->collection);
+      for (attr = ippGetFirstAttribute(r->collection);
            attr;
-           attr = ippNextAttribute(r->collection))
+           attr = ippGetNextAttribute(r->collection))
       {
         if (new_option && !strcmp(attr->name, new_option))
           continue;			/* Ignore this if we just changed it */
@@ -661,9 +661,8 @@ cupsCopyDestInfo(
   unsigned	dflags;			/* Destination flags */
   ipp_t		*request,		/* Get-Printer-Attributes request */
 		*response;		/* Supported attributes */
-  int		tries,			/* Number of tries so far */
-		delay,			/* Current retry delay */
-		prev_delay;		/* Next retry delay */
+  int		tries;			/* Number of tries so far */
+  unsigned	delay;			/* Current retry delay */
   const char	*uri;			/* Printer URI */
   char		resource[1024];		/* Resource path */
   int		version;		/* IPP version */
@@ -690,13 +689,13 @@ cupsCopyDestInfo(
     dflags = CUPS_DEST_FLAGS_NONE;
   }
 #ifdef AF_LOCAL
-  else if (httpAddrFamily(http->hostaddr) == AF_LOCAL)
+  else if (httpAddrGetFamily(http->hostaddr) == AF_LOCAL)
   {
     DEBUG_puts("1cupsCopyDestInfo: Connection to server (domain socket).");
     dflags = CUPS_DEST_FLAGS_NONE;
   }
 #endif /* AF_LOCAL */
-  else if ((strcmp(http->hostname, cg->server) && cg->server[0] != '/') || cg->ipp_port != httpAddrPort(http->hostaddr))
+  else if ((strcmp(http->hostname, cg->server) && cg->server[0] != '/') || cg->ipp_port != httpAddrGetPort(http->hostaddr))
   {
     DEBUG_printf(("1cupsCopyDestInfo: Connection to device (%s).", http->hostname));
     dflags = CUPS_DEST_FLAGS_DEVICE;
@@ -728,10 +727,9 @@ cupsCopyDestInfo(
   * Get the supported attributes...
   */
 
-  delay      = 1;
-  prev_delay = 1;
-  tries      = 0;
-  version    = 20;
+  delay   = 1;
+  tries   = 0;
+  version = 20;
 
   do
   {
@@ -761,9 +759,14 @@ cupsCopyDestInfo(
       }
       else if (status == IPP_STATUS_ERROR_BUSY)
       {
-        sleep((unsigned)delay);
+        // Retry in N seconds...
+        unsigned temp = delay & 255;	// Temporary delay value
 
-        delay = _cupsNextDelay(delay, &prev_delay);
+        sleep(temp);
+
+	// Update the delay value to the next number in a Fibonacci sequence,
+	// wrapping at 60 seconds (1 1 2 3 5 8 13 21 34 55 29 24 53 17 ...)
+        delay = ((((delay >> 8) + temp - 1) % 60) + 1) | (temp << 8);
       }
       else
         return (NULL);
@@ -984,9 +987,9 @@ cupsFreeDestInfo(cups_dinfo_t *dinfo)	/* I - Destination information */
  * 'cupsGetDestMediaByIndex()' - Get a media name, dimension, and margins for a
  *                               specific size.
  *
- * The @code flags@ parameter determines which set of media are indexed.  For
- * example, passing @code CUPS_MEDIA_FLAGS_BORDERLESS@ will get the Nth
- * borderless size supported by the printer.
+ * The "flags" parameter determines which set of media are indexed.  For
+ * example, passing `CUPS_MEDIA_FLAGS_BORDERLESS` will get the Nth borderless
+ * size supported by the printer.
  */
 
 bool					/* O - `true` on success, `false` on failure */
@@ -1077,16 +1080,16 @@ cupsGetDestMediaByIndex(
  * The "media" string is a PWG media name.  "Flags" provides some matching
  * guidance (multiple flags can be combined):
  *
- * CUPS_MEDIA_FLAGS_DEFAULT    = find the closest size supported by the printer,
- * CUPS_MEDIA_FLAGS_BORDERLESS = find a borderless size,
- * CUPS_MEDIA_FLAGS_DUPLEX     = find a size compatible with 2-sided printing,
- * CUPS_MEDIA_FLAGS_EXACT      = find an exact match for the size, and
- * CUPS_MEDIA_FLAGS_READY      = if the printer supports media sensing, find the
- *                               size amongst the "ready" media.
+ * - `CUPS_MEDIA_FLAGS_DEFAULT`: find the closest size supported by the printer,
+ * - `CUPS_MEDIA_FLAGS_BORDERLESS`: find a borderless size,
+ * - `CUPS_MEDIA_FLAGS_DUPLEX`: find a size compatible with 2-sided printing,
+ * - `CUPS_MEDIA_FLAGS_EXACT`: find an exact match for the size, and
+ * - `CUPS_MEDIA_FLAGS_READY`: if the printer supports media sensing, find the
+ *   size amongst the "ready" media.
  *
- * The matching result (if any) is returned in the "cups_size_t" structure.
+ * The matching result (if any) is returned in the `cups_size_t` structure.
  *
- * Returns 1 when there is a match and 0 if there is not a match.
+ * Returns `true` when there is a match and `false` if there is not a match.
  */
 
 bool					/* O - `true` on match, `false` on failure */
@@ -1149,18 +1152,16 @@ cupsGetDestMediaByName(
  * "Width" and "length" are the dimensions in hundredths of millimeters.
  * "Flags" provides some matching guidance (multiple flags can be combined):
  *
- * CUPS_MEDIA_FLAGS_DEFAULT    = find the closest size supported by the printer,
- * CUPS_MEDIA_FLAGS_BORDERLESS = find a borderless size,
- * CUPS_MEDIA_FLAGS_DUPLEX     = find a size compatible with 2-sided printing,
- * CUPS_MEDIA_FLAGS_EXACT      = find an exact match for the size, and
- * CUPS_MEDIA_FLAGS_READY      = if the printer supports media sensing, find the
- *                               size amongst the "ready" media.
+ * - `CUPS_MEDIA_FLAGS_DEFAULT`: find the closest size supported by the printer,
+ * - `CUPS_MEDIA_FLAGS_BORDERLESS`: find a borderless size,
+ * - `CUPS_MEDIA_FLAGS_DUPLEX`: find a size compatible with 2-sided printing,
+ * - `CUPS_MEDIA_FLAGS_EXACT`: find an exact match for the size, and
+ * - `CUPS_MEDIA_FLAGS_READY`: if the printer supports media sensing, find the
+ *   size amongst the "ready" media.
  *
- * The matching result (if any) is returned in the "cups_size_t" structure.
+ * The matching result (if any) is returned in the `cups_size_t` structure.
  *
- * Returns 1 when there is a match and 0 if there is not a match.
- *
- * @since CUPS 1.6/macOS 10.8@
+ * Returns `true` when there is a match and `false` if there is not a match.
  */
 
 bool					/* O - `true` on match, `false` on failure */
@@ -1168,10 +1169,8 @@ cupsGetDestMediaBySize(
     http_t       *http,			/* I - Connection to destination */
     cups_dest_t  *dest,			/* I - Destination */
     cups_dinfo_t *dinfo,		/* I - Destination information */
-    int         width,			/* I - Media width in hundredths of
-					 *     of millimeters */
-    int         length,			/* I - Media length in hundredths of
-					 *     of millimeters */
+    int         width,			/* I - Media width in hundredths of millimeters */
+    int         length,			/* I - Media length in hundredths of millimeters */
     unsigned     flags,			/* I - Media matching flags */
     cups_size_t  *size)			/* O - Media size information */
 {
@@ -1222,9 +1221,9 @@ cupsGetDestMediaBySize(
  * 'cupsGetDestMediaCount()' - Get the number of sizes supported by a
  *                             destination.
  *
- * The @code flags@ parameter determines the set of media sizes that are
- * counted.  For example, passing @code CUPS_MEDIA_FLAGS_BORDERLESS@ will return
- * the number of borderless sizes.
+ * The "flags" parameter determines the set of media sizes that are counted.
+ * For example, passing `CUPS_MEDIA_FLAGS_BORDERLESS` will return the number of
+ * borderless sizes.
  */
 
 size_t					/* O - Number of sizes */
@@ -1268,11 +1267,9 @@ cupsGetDestMediaCount(
 /*
  * 'cupsGetDestMediaDefault()' - Get the default size for a destination.
  *
- * The @code flags@ parameter determines which default size is returned.  For
- * example, passing @code CUPS_MEDIA_FLAGS_BORDERLESS@ will return the default
+ * The "flags" parameter determines which default size is returned.  For
+ * example, passing `CUPS_MEDIA_FLAGS_BORDERLESS` will return the default
  * borderless size, typically US Letter or A4, but sometimes 4x6 photo media.
- *
- * @since CUPS 1.7/macOS 10.9@
  */
 
 bool					/* O - `true` on match, `false` on failure */
@@ -1346,8 +1343,7 @@ cups_add_dconstres(
   _cups_dconstres_t	*temp;		/* Current constraint/resolver */
 
 
-  if ((attr = ippFindAttribute(collection, "resolver-name",
-                               IPP_TAG_NAME)) == NULL)
+  if ((attr = ippFindAttribute(collection, "resolver-name", IPP_TAG_NAME)) == NULL)
     return;
 
   if ((temp = calloc(1, sizeof(_cups_dconstres_t))) == NULL)
@@ -1376,7 +1372,7 @@ cups_collection_contains(ipp_t *test,	/* I - Collection to test */
   const char		*tval;		/* Testing string value */
 
 
-  for (mattr = ippFirstAttribute(match); mattr; mattr = ippNextAttribute(match))
+  for (mattr = ippGetFirstAttribute(match); mattr; mattr = ippGetNextAttribute(match))
   {
     if ((tattr = ippFindAttribute(test, ippGetName(mattr), IPP_TAG_ZERO)) == NULL)
       return (false);
@@ -1496,7 +1492,7 @@ cups_collection_string(
     else
       bufptr ++;
 
-    for (member = first = ippFirstAttribute(col); member; member = ippNextAttribute(col))
+    for (member = first = ippGetFirstAttribute(col); member; member = ippGetNextAttribute(col))
     {
       const char *mname = ippGetName(member);
 
@@ -1904,7 +1900,7 @@ cups_create_defaults(
   * xxx=value to the defaults option array.
   */
 
-  for (attr = ippFirstAttribute(dinfo->attrs); attr; attr = ippNextAttribute(dinfo->attrs))
+  for (attr = ippGetFirstAttribute(dinfo->attrs); attr; attr = ippGetNextAttribute(dinfo->attrs))
   {
     if (!ippGetName(attr) || ippGetGroupTag(attr) != IPP_TAG_PRINTER)
       continue;
@@ -2569,9 +2565,9 @@ cups_test_constraints(
     num_matching = 0;
     matching     = NULL;
 
-    for (attr = ippFirstAttribute(c->collection);
+    for (attr = ippGetFirstAttribute(c->collection);
          attr;
-         attr = ippNextAttribute(c->collection))
+         attr = ippGetNextAttribute(c->collection))
     {
      /*
       * Get the value for the current attribute in the constraint...

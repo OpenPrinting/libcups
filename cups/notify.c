@@ -21,9 +21,7 @@
  * 'cupsNotifySubject()' - Return the localized subject for the given notification message.
  *
  * This function returns a localized subject string for the given notification
- * message.  The returned string must be freed by the caller using `free()`.
- *
- *
+ * message.  The returned string must be freed by the caller using `free`.
  */
 
 char *					/* O - Subject string or `NULL` */
@@ -143,9 +141,7 @@ cupsNotifySubject(cups_lang_t *lang,	/* I - Language data */
  * 'cupsNotifyText()' - Return the localized text for the given notification message.
  *
  * This function returns a localized text string for the given notification
- * message.  The returned string must be freed by the caller using `free()`.
- *
- *
+ * message.  The returned string must be freed by the caller using `free`.
  */
 
 char *					/* O - Message text or `NULL` */

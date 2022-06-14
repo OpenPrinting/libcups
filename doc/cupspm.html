@@ -449,20 +449,21 @@ span.string {
 <li><a href="#cupsWriteRequestData">cupsWriteRequestData</a></li>
 <li><a href="#httpAcceptConnection">httpAcceptConnection</a></li>
 <li><a href="#httpAddCredential">httpAddCredential</a></li>
-<li><a href="#httpAddrAny">httpAddrAny</a></li>
 <li><a href="#httpAddrClose">httpAddrClose</a></li>
 <li><a href="#httpAddrConnect">httpAddrConnect</a></li>
 <li><a href="#httpAddrCopyList">httpAddrCopyList</a></li>
-<li><a href="#httpAddrEqual">httpAddrEqual</a></li>
-<li><a href="#httpAddrFamily">httpAddrFamily</a></li>
 <li><a href="#httpAddrFreeList">httpAddrFreeList</a></li>
+<li><a href="#httpAddrGetFamily">httpAddrGetFamily</a></li>
+<li><a href="#httpAddrGetLength">httpAddrGetLength</a></li>
 <li><a href="#httpAddrGetList">httpAddrGetList</a></li>
-<li><a href="#httpAddrLength">httpAddrLength</a></li>
+<li><a href="#httpAddrGetPort">httpAddrGetPort</a></li>
+<li><a href="#httpAddrGetString">httpAddrGetString</a></li>
+<li><a href="#httpAddrIsAny">httpAddrIsAny</a></li>
+<li><a href="#httpAddrIsEqual">httpAddrIsEqual</a></li>
+<li><a href="#httpAddrIsLocalhost">httpAddrIsLocalhost</a></li>
 <li><a href="#httpAddrListen">httpAddrListen</a></li>
-<li><a href="#httpAddrLocalhost">httpAddrLocalhost</a></li>
 <li><a href="#httpAddrLookup">httpAddrLookup</a></li>
-<li><a href="#httpAddrPort">httpAddrPort</a></li>
-<li><a href="#httpAddrString">httpAddrString</a></li>
+<li><a href="#httpAddrSetPort">httpAddrSetPort</a></li>
 <li><a href="#httpAssembleURI">httpAssembleURI</a></li>
 <li><a href="#httpAssembleURIf">httpAssembleURIf</a></li>
 <li><a href="#httpAssembleUUID">httpAssembleUUID</a></li>
@@ -472,16 +473,14 @@ span.string {
 <li><a href="#httpClose">httpClose</a></li>
 <li><a href="#httpCompareCredentials">httpCompareCredentials</a></li>
 <li><a href="#httpConnect">httpConnect</a></li>
+<li><a href="#httpCreateCredentials">httpCreateCredentials</a></li>
 <li><a href="#httpDecode64">httpDecode64</a></li>
-<li><a href="#httpDelete">httpDelete</a></li>
 <li><a href="#httpEncode64">httpEncode64</a></li>
-<li><a href="#httpEncryption">httpEncryption</a></li>
 <li><a href="#httpError">httpError</a></li>
 <li><a href="#httpFieldValue">httpFieldValue</a></li>
 <li><a href="#httpFlush">httpFlush</a></li>
 <li><a href="#httpFlushWrite">httpFlushWrite</a></li>
 <li><a href="#httpFreeCredentials">httpFreeCredentials</a></li>
-<li><a href="#httpGet">httpGet</a></li>
 <li><a href="#httpGetActivity">httpGetActivity</a></li>
 <li><a href="#httpGetAddress">httpGetAddress</a></li>
 <li><a href="#httpGetAuthString">httpGetAuthString</a></li>
@@ -505,24 +504,22 @@ span.string {
 <li><a href="#httpGetSubField">httpGetSubField</a></li>
 <li><a href="#httpGetVersion">httpGetVersion</a></li>
 <li><a href="#httpGets">httpGets</a></li>
-<li><a href="#httpHead">httpHead</a></li>
 <li><a href="#httpInitialize">httpInitialize</a></li>
 <li><a href="#httpIsChunked">httpIsChunked</a></li>
 <li><a href="#httpIsEncrypted">httpIsEncrypted</a></li>
-<li><a href="#httpOptions">httpOptions</a></li>
 <li><a href="#httpPeek">httpPeek</a></li>
-<li><a href="#httpPost">httpPost</a></li>
-<li><a href="#httpPut">httpPut</a></li>
 <li><a href="#httpRead">httpRead</a></li>
 <li><a href="#httpReadRequest">httpReadRequest</a></li>
 <li><a href="#httpReconnect">httpReconnect</a></li>
 <li><a href="#httpResolveHostname">httpResolveHostname</a></li>
+<li><a href="#httpResolveURI">httpResolveURI</a></li>
 <li><a href="#httpSeparateURI">httpSeparateURI</a></li>
 <li><a href="#httpSetAuthString">httpSetAuthString</a></li>
 <li><a href="#httpSetBlocking">httpSetBlocking</a></li>
 <li><a href="#httpSetCookie">httpSetCookie</a></li>
 <li><a href="#httpSetCredentials">httpSetCredentials</a></li>
 <li><a href="#httpSetDefaultField">httpSetDefaultField</a></li>
+<li><a href="#httpSetEncryption">httpSetEncryption</a></li>
 <li><a href="#httpSetExpect">httpSetExpect</a></li>
 <li><a href="#httpSetField">httpSetField</a></li>
 <li><a href="#httpSetKeepAlive">httpSetKeepAlive</a></li>
@@ -535,6 +532,7 @@ span.string {
 <li><a href="#httpUpdate">httpUpdate</a></li>
 <li><a href="#httpWait">httpWait</a></li>
 <li><a href="#httpWrite">httpWrite</a></li>
+<li><a href="#httpWriteRequest">httpWriteRequest</a></li>
 <li><a href="#httpWriteResponse">httpWriteResponse</a></li>
 <li><a href="#ippAddBoolean">ippAddBoolean</a></li>
 <li><a href="#ippAddBooleans">ippAddBooleans</a></li>
@@ -579,6 +577,7 @@ span.string {
 <li><a href="#ippFileNew">ippFileNew</a></li>
 <li><a href="#ippFileOpen">ippFileOpen</a></li>
 <li><a href="#ippFileRead">ippFileRead</a></li>
+<li><a href="#ippFileReadCollection">ippFileReadCollection</a></li>
 <li><a href="#ippFileReadToken">ippFileReadToken</a></li>
 <li><a href="#ippFileRestorePosition">ippFileRestorePosition</a></li>
 <li><a href="#ippFileSavePosition">ippFileSavePosition</a></li>
@@ -592,16 +591,18 @@ span.string {
 <li><a href="#ippFileWriteTokenf">ippFileWriteTokenf</a></li>
 <li><a href="#ippFindAttribute">ippFindAttribute</a></li>
 <li><a href="#ippFindNextAttribute">ippFindNextAttribute</a></li>
-<li><a href="#ippFirstAttribute">ippFirstAttribute</a></li>
 <li><a href="#ippGetBoolean">ippGetBoolean</a></li>
 <li><a href="#ippGetCollection">ippGetCollection</a></li>
 <li><a href="#ippGetCount">ippGetCount</a></li>
 <li><a href="#ippGetDate">ippGetDate</a></li>
+<li><a href="#ippGetFirstAttribute">ippGetFirstAttribute</a></li>
 <li><a href="#ippGetGroupTag">ippGetGroupTag</a></li>
 <li><a href="#ippGetInteger">ippGetInteger</a></li>
 <li><a href="#ippGetName">ippGetName</a></li>
+<li><a href="#ippGetNextAttribute">ippGetNextAttribute</a></li>
 <li><a href="#ippGetOctetString">ippGetOctetString</a></li>
 <li><a href="#ippGetOperation">ippGetOperation</a></li>
+<li><a href="#ippGetPort">ippGetPort</a></li>
 <li><a href="#ippGetRange">ippGetRange</a></li>
 <li><a href="#ippGetRequestId">ippGetRequestId</a></li>
 <li><a href="#ippGetResolution">ippGetResolution</a></li>
@@ -614,10 +615,8 @@ span.string {
 <li><a href="#ippNew">ippNew</a></li>
 <li><a href="#ippNewRequest">ippNewRequest</a></li>
 <li><a href="#ippNewResponse">ippNewResponse</a></li>
-<li><a href="#ippNextAttribute">ippNextAttribute</a></li>
 <li><a href="#ippOpString">ippOpString</a></li>
 <li><a href="#ippOpValue">ippOpValue</a></li>
-<li><a href="#ippPort">ippPort</a></li>
 <li><a href="#ippRead">ippRead</a></li>
 <li><a href="#ippReadFile">ippReadFile</a></li>
 <li><a href="#ippReadIO">ippReadIO</a></li>
@@ -668,7 +667,6 @@ span.string {
 <li><a href="#cups_cond_t">cups_cond_t</a></li>
 <li><a href="#cups_cspace_t">cups_cspace_t</a></li>
 <li><a href="#cups_cut_t">cups_cut_t</a></li>
-<li><a href="#cups_dbcs_t">cups_dbcs_t</a></li>
 <li><a href="#cups_dentry_t">cups_dentry_t</a></li>
 <li><a href="#cups_dest_cb_t">cups_dest_cb_t</a></li>
 <li><a href="#cups_dest_t">cups_dest_t</a></li>
@@ -679,6 +677,7 @@ span.string {
 <li><a href="#cups_job_t">cups_job_t</a></li>
 <li><a href="#cups_jog_t">cups_jog_t</a></li>
 <li><a href="#cups_lang_t">cups_lang_t</a></li>
+<li><a href="#cups_mutex_t">cups_mutex_t</a></li>
 <li><a href="#cups_oauth_cb_t">cups_oauth_cb_t</a></li>
 <li><a href="#cups_option_t">cups_option_t</a></li>
 <li><a href="#cups_order_t">cups_order_t</a></li>
@@ -690,16 +689,12 @@ span.string {
 <li><a href="#cups_raster_mode_t">cups_raster_mode_t</a></li>
 <li><a href="#cups_raster_t">cups_raster_t</a></li>
 <li><a href="#cups_rwlock_t">cups_rwlock_t</a></li>
-<li><a href="#cups_sbcs_t">cups_sbcs_t</a></li>
 <li><a href="#cups_server_cert_cb_t">cups_server_cert_cb_t</a></li>
 <li><a href="#cups_size_t">cups_size_t</a></li>
 <li><a href="#cups_thread_func_t">cups_thread_func_t</a></li>
+<li><a href="#cups_thread_t">cups_thread_t</a></li>
 <li><a href="#cups_threadkey_t">cups_threadkey_t</a></li>
-<li><a href="#cups_ucs2_t">cups_ucs2_t</a></li>
-<li><a href="#cups_ucs4_t">cups_ucs4_t</a></li>
 <li><a href="#cups_utf32_t">cups_utf32_t</a></li>
-<li><a href="#cups_utf8_t">cups_utf8_t</a></li>
-<li><a href="#cups_vbcs_t">cups_vbcs_t</a></li>
 <li><a href="#cups_whichjobs_t">cups_whichjobs_t</a></li>
 <li><a href="#http_addr_t">http_addr_t</a></li>
 <li><a href="#http_addrlist_t">http_addrlist_t</a></li>
@@ -707,6 +702,8 @@ span.string {
 <li><a href="#http_encryption_t">http_encryption_t</a></li>
 <li><a href="#http_field_t">http_field_t</a></li>
 <li><a href="#http_keepalive_t">http_keepalive_t</a></li>
+<li><a href="#http_resolve_cb_t">http_resolve_cb_t</a></li>
+<li><a href="#http_resolve_t">http_resolve_t</a></li>
 <li><a href="#http_state_t">http_state_t</a></li>
 <li><a href="#http_status_t">http_status_t</a></li>
 <li><a href="#http_t">http_t</a></li>
@@ -715,13 +712,13 @@ span.string {
 <li><a href="#http_uri_coding_t">http_uri_coding_t</a></li>
 <li><a href="#http_uri_status_t">http_uri_status_t</a></li>
 <li><a href="#ipp_attribute_t">ipp_attribute_t</a></li>
-<li><a href="#ipp_copycb_t">ipp_copycb_t</a></li>
+<li><a href="#ipp_copy_cb_t">ipp_copy_cb_t</a></li>
 <li><a href="#ipp_dstate_t">ipp_dstate_t</a></li>
 <li><a href="#ipp_fattr_cb_t">ipp_fattr_cb_t</a></li>
 <li><a href="#ipp_ferror_cb_t">ipp_ferror_cb_t</a></li>
 <li><a href="#ipp_file_t">ipp_file_t</a></li>
 <li><a href="#ipp_ftoken_cb_t">ipp_ftoken_cb_t</a></li>
-<li><a href="#ipp_iocb_t">ipp_iocb_t</a></li>
+<li><a href="#ipp_io_cb_t">ipp_io_cb_t</a></li>
 <li><a href="#ipp_jstate_t">ipp_jstate_t</a></li>
 <li><a href="#ipp_op_t">ipp_op_t</a></li>
 <li><a href="#ipp_orient_t">ipp_orient_t</a></li>
@@ -762,6 +759,7 @@ span.string {
 <li><a href="#http_encryption_e">http_encryption_e</a></li>
 <li><a href="#http_field_e">http_field_e</a></li>
 <li><a href="#http_keepalive_e">http_keepalive_e</a></li>
+<li><a href="#http_resolve_e">http_resolve_e</a></li>
 <li><a href="#http_state_e">http_state_e</a></li>
 <li><a href="#http_status_e">http_status_e</a></li>
 <li><a href="#http_trust_e">http_trust_e</a></li>
@@ -1565,6 +1563,12 @@ cups_password_cb(const char *prompt, http_t *http,
 <tr><td> <code>cupsGetPassword2</code></td>
 <td> <code>cupsGetPassword</code></td>
 </tr>
+<tr><td> <code>cupsRasterReadHeader2</code></td>
+<td> <code>cupsRasterReadHeader</code></td>
+</tr>
+<tr><td> <code>cupsRasterWriteHeader2</code></td>
+<td> <code>cupsRasterWriteHeader</code></td>
+</tr>
 <tr><td> <code>cupsServer</code></td>
 <td> <code>cupsGetServer</code></td>
 </tr>
@@ -1580,6 +1584,27 @@ cups_password_cb(const char *prompt, http_t *http,
 <tr><td> <code>cupsUserAgent</code></td>
 <td> <code>cupsGetUserAgent</code></td>
 </tr>
+<tr><td> <code>httpAddrAny</code></td>
+<td> <code>httpAddrIsAny</code></td>
+</tr>
+<tr><td> <code>httpAddrEqual</code></td>
+<td> <code>httpAddrIsEqual</code></td>
+</tr>
+<tr><td> <code>httpAddrFamily</code></td>
+<td> <code>httpAddrGetFamily</code></td>
+</tr>
+<tr><td> <code>httpAddrLength</code></td>
+<td> <code>httpAddrGetLength</code></td>
+</tr>
+<tr><td> <code>httpAddrLocalhost</code></td>
+<td> <code>httpAddrIsLocalhost</code></td>
+</tr>
+<tr><td> <code>httpAddrPort</code></td>
+<td> <code>httpAddrGetPort</code></td>
+</tr>
+<tr><td> <code>httpAddrString</code></td>
+<td> <code>httpAddrGetString</code></td>
+</tr>
 <tr><td> <code>httpBlocking</code></td>
 <td> <code>httpSetBlocking</code></td>
 </tr>
@@ -1589,14 +1614,32 @@ cups_password_cb(const char *prompt, http_t *http,
 <tr><td> <code>httpDecode64_2</code></td>
 <td> <code>httpDecode64</code></td>
 </tr>
+<tr><td> <code>httpDelete</code></td>
+<td> <code>httpWriteRequest</code></td>
+</tr>
 <tr><td> <code>httpEncode64_2</code></td>
 <td> <code>httpEncode64</code></td>
+</tr>
+<tr><td> <code>httpEncryption</code></td>
+<td> <code>httpSetEncryption</code></td>
+</tr>
+<tr><td> <code>httpGet</code></td>
+<td> <code>httpWriteRequest</code></td>
 </tr>
 <tr><td> <code>httpGetDateString2</code></td>
 <td> <code>httpGetDateString</code></td>
 </tr>
 <tr><td> <code>httpGetLength2</code></td>
 <td> <code>httpGetLength</code></td>
+</tr>
+<tr><td> <code>httpOptions</code></td>
+<td> <code>httpWriteRequest</code></td>
+</tr>
+<tr><td> <code>httpPost</code></td>
+<td> <code>httpWriteRequest</code></td>
+</tr>
+<tr><td> <code>httpPut</code></td>
+<td> <code>httpWriteRequest</code></td>
 </tr>
 <tr><td> <code>httpRead2</code></td>
 <td> <code>httpRead</code></td>
@@ -1607,14 +1650,20 @@ cups_password_cb(const char *prompt, http_t *http,
 <tr><td> <code>httpStatus</code></td>
 <td> <code>httpStatusString</code></td>
 </tr>
+<tr><td> <code>httpTrace</code></td>
+<td> <code>httpWriteRequest</code></td>
+</tr>
 <tr><td> <code>httpWrite2</code></td>
 <td> <code>httpWrite</code></td>
 </tr>
-<tr><td> <code>cupsRasterReadHeader2</code></td>
-<td> <code>cupsRasterReadHeader</code></td>
+<tr><td> <code>ippFirstAttribute</code></td>
+<td> <code>ippGetFirstAttribute</code></td>
 </tr>
-<tr><td> <code>cupsRasterWriteHeader2</code></td>
-<td> <code>cupsRasterWriteHeader</code></td>
+<tr><td> <code>ippNextAttribute</code></td>
+<td> <code>ippGetNextAttribute</code></td>
+</tr>
+<tr><td> <code>ippPort</code></td>
+<td> <code>ippGetPort</code></td>
 </tr>
 </tbody>
 </table>
@@ -1643,6 +1692,12 @@ cups_password_cb(const char *prompt, http_t *http,
 </tr>
 <tr><td> <code>cups_page_header2_t</code></td>
 <td> <code>cups_page_header_t</code></td>
+</tr>
+<tr><td> <code>ipp_copycb_t</code></td>
+<td> <code>ipp_copy_cb_t</code></td>
+</tr>
+<tr><td> <code>ipp_iocb_t</code></td>
+<td> <code>ipp_io_cb_t</code></td>
 </tr>
 </tbody>
 </table>
@@ -1765,7 +1820,7 @@ bool cupsArrayAddStrings(<a href="#cups_array_t">cups_array_t</a> *a, const char
 <tr><th>a</th>
 <td class="description">Array</td></tr>
 <tr><th>s</th>
-<td class="description">Delimited strings or <code>NULL</code></td></tr>
+<td class="description">Delimited strings</td></tr>
 <tr><th>delim</th>
 <td class="description">Delimiter character</td></tr>
 </tbody></table>
@@ -2006,12 +2061,10 @@ The user data pointer argument can safely be omitted when not required so
 functions like <code>strcmp</code> can be used for sorted string arrays.
 
 <pre>
-int                  // -1 if a &lt; b, 0 if a == b, and 1 if a &gt; b
-compare_cb(void *a,  // First element
-void *b,  // Second element
-void *d)  // User data pointer
+int // Return -1 if a &lt; b, 0 if a == b, and 1 if a &gt; b
+compare_cb(void *a, void *b, void *d)
 {
-...
+... &quot;a&quot; and &quot;b&quot; are the elements, &quot;d&quot; is the user data pointer
 }
 </pre>
 The hash callback function (&quot;hf&quot;) is used to implement cached lookups with
@@ -2021,11 +2074,10 @@ representing a hash into the array.  The hash value is of type <code>size_t</cod
 provides at least 32-bits of resolution.
 
 <pre>
-size_t            // Hash value from 0 to (hashsize - 1)
-hash_cb(void *e,  // Element
-void *d)  // User data pointer
+size_t // Return hash value from 0 to (hashsize - 1)
+hash_cb(void *e, void *d)
 {
-...
+... &quot;e&quot; is the element, &quot;d&quot; is the user data pointer
 }
 </pre>
 The copy callback function (&quot;cf&quot;) is used to automatically copy/retain
@@ -2034,11 +2086,10 @@ elements when added to the array or the array is copied with
 user data pointer (&quot;d&quot;) and returns a new pointer that is stored in the array.
 
 <pre>
-void *            // Pointer to copied/retained element or NULL
-copy_cb(void *e,  // Element to copy/retain
-void *d)  // User data pointer
+void * // Return pointer to copied/retained element or NULL
+copy_cb(void *e, void *d)
 {
-...
+... &quot;e&quot; is the element, &quot;d&quot; is the user data pointer
 }
 </pre>
 Finally, the free callback function (&quot;cf&quot;) is used to automatically
@@ -2047,10 +2098,9 @@ receives a pointer to the element and the user data pointer (&quot;d&quot;).
 
 <pre>
 void
-free_cb(void *e,  // Element to free/release
-void *d)  // User data pointer
+free_cb(void *e, void *d)
 {
-...
+... &quot;e&quot; is the element, &quot;d&quot; is the user data pointer
 }
 ```</pre>
 </p>
@@ -2144,7 +2194,7 @@ Returns <code>IPP_STATUS_OK</code> on success and
 <h3 class="function"><a id="cupsCharsetToUTF8">cupsCharsetToUTF8</a></h3>
 <p class="description">Convert legacy character set to UTF-8.</p>
 <p class="code">
-ssize_t cupsCharsetToUTF8(<a href="#cups_utf8_t">cups_utf8_t</a> *dest, const char *src, const size_t maxout, const <a href="#cups_encoding_t">cups_encoding_t</a> encoding);</p>
+ssize_t cupsCharsetToUTF8(char *dest, const char *src, const size_t maxout, const <a href="#cups_encoding_t">cups_encoding_t</a> encoding);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>dest</th>
@@ -2246,7 +2296,7 @@ void cupsCondInit(<a href="#cups_cond_t">cups_cond_t</a> *cond);</p>
 <h3 class="function"><a id="cupsCondWait">cupsCondWait</a></h3>
 <p class="description">Wait for a condition with optional timeout.</p>
 <p class="code">
-void cupsCondWait(<a href="#cups_cond_t">cups_cond_t</a> *cond, cups_mutex_t *mutex, double timeout);</p>
+void cupsCondWait(<a href="#cups_cond_t">cups_cond_t</a> *cond, <a href="#cups_mutex_t">cups_mutex_t</a> *mutex, double timeout);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>cond</th>
@@ -2286,13 +2336,12 @@ void cupsCondWait(<a href="#cups_cond_t">cups_cond_t</a> *cond, cups_mutex_t *mu
 and optionally the resource path to use for the destination.  These calls
 will block until a connection is made, the timeout expires, the integer
 pointed to by &quot;cancel&quot; is non-zero, or the callback function (or block)
-returns 0.  The caller is responsible for calling <a href="#httpClose"><code>httpClose</code></a> on the
+returns <code>0</code>.  The caller is responsible for calling <a href="#httpClose"><code>httpClose</code></a> on the
 returned connection.<br>
 <br>
-Starting with CUPS 2.2.4, the caller can pass <code>CUPS_DEST_FLAGS_DEVICE</code>
-for the &quot;flags&quot; argument to connect directly to the device associated with
-the destination.  Otherwise, the connection is made to the CUPS scheduler
-associated with the destination.</p>
+The caller can pass <code>CUPS_DEST_FLAGS_DEVICE</code> for the &quot;flags&quot; argument to
+connect directly to the device associated with the destination.  Otherwise,
+the connection is made to the CUPS scheduler associated with the destination.</p>
 <h3 class="function"><a id="cupsCopyDest">cupsCopyDest</a></h3>
 <p class="description">Copy a destination.</p>
 <p class="code">
@@ -2310,8 +2359,8 @@ size_t cupsCopyDest(<a href="#cups_dest_t">cups_dest_t</a> *dest, size_t num_des
 <p class="description">New number of destinations</p>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">Make a copy of the destination to an array of destinations (or just a single
-copy) - for use with the cupsEnumDests* functions. The caller is responsible
-for calling cupsFreeDests() on the returned object(s).</p>
+copy) - for use with the <code>cupsEnumDests*</code> functions. The caller is
+responsible for calling <a href="#cupsFreeDests"><code>cupsFreeDests</code></a> on the returned object(s).</p>
 <h3 class="function"><a id="cupsCopyDestConflicts">cupsCopyDestConflicts</a></h3>
 <p class="description">Get conflicts and resolutions for a new
 option/value pair.</p>
@@ -2509,9 +2558,9 @@ server, retrying and authenticating as necessary.  The request is freed with
 <tr><th>resource</th>
 <td class="description">HTTP resource for POST</td></tr>
 <tr><th>infile</th>
-<td class="description">File to read from or -1 for none</td></tr>
+<td class="description">File to read from or <code>-1</code> for none</td></tr>
 <tr><th>outfile</th>
-<td class="description">File to write to or -1 for none</td></tr>
+<td class="description">File to write to or <code>-1</code> for none</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Response data</p>
@@ -2603,17 +2652,17 @@ bool cupsEnumDests(unsigned flags, int msec, int *cancel, <a href="#cups_ptype_t
 <p class="description"><code>true</code> on success, <code>false</code> on failure</p>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">Destinations are enumerated from one or more sources.  The callback function
-receives the <code>user_data</code> pointer and the destination pointer which can
-be used as input to the <a href="#cupsCopyDest"><code>cupsCopyDest</code></a> function.  The function must
-return 1 to continue enumeration or 0 to stop.<br>
+receives the &quot;user_data&quot; pointer and the destination pointer which can be
+used as input to the <a href="#cupsCopyDest"><code>cupsCopyDest</code></a> function.  The function must return
+<code>true</code> to continue enumeration or <code>false</code> to stop.<br>
 <br>
-The <code>type</code> and <code>mask</code> arguments allow the caller to filter the
-destinations that are enumerated.  Passing 0 for both will enumerate all
-printers.  The constant <code>CUPS_PRINTER_DISCOVERED</code> is used to filter on
-destinations that are available but have not yet been added locally.<br>
+The &quot;type&quot; and &quot;mask&quot; arguments allow the caller to filter the destinations
+that are enumerated.  Passing <code>0</code> for both will enumerate all printers.  The
+constant <code>CUPS_PRINTER_DISCOVERED</code> is used to filter on destinations that are
+available but have not yet been added locally.<br>
 <br>
 Enumeration happens on the current thread and does not return until all
-destinations have been enumerated or the callback function returns 0.<br>
+destinations have been enumerated or the callback function returns <code>false</code>.<br>
 <br>
 Note: The callback function will likely receive multiple updates for the same
 destinations - it is up to the caller to suppress any duplicate destinations.</p>
@@ -2685,7 +2734,7 @@ int cupsFileGetChar(<a href="#cups_file_t">cups_file_t</a> *fp);</p>
 <td class="description">CUPS file</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">Character or -1 on end of file</p>
+<p class="description">Character or <code>-1</code> on end of file</p>
 <h3 class="function"><a id="cupsFileGetConf">cupsFileGetConf</a></h3>
 <p class="description">Get a line from a configuration file.</p>
 <p class="code">
@@ -2724,7 +2773,7 @@ size_t cupsFileGetLine(<a href="#cups_file_t">cups_file_t</a> *fp, char *buf, si
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">This function differs from <a href="#cupsFileGets"><code>cupsFileGets</code></a> in that the trailing CR
 and LF are preserved, as is any binary data on the line. The buffer is
-nul-terminated, however you should use the returned length to determine
+<code>nul</code>-terminated, however you should use the returned length to determine
 the number of bytes on the line.</p>
 <h3 class="function"><a id="cupsFileGets">cupsFileGets</a></h3>
 <p class="description">Get a CR and/or LF-terminated line.</p>
@@ -2794,7 +2843,7 @@ int cupsFileNumber(<a href="#cups_file_t">cups_file_t</a> *fp);</p>
 existing file, &quot;a&quot; to append to an existing file or create a new file,
 or &quot;s&quot; to open a socket connection.<br>
 <br>
-When opening for writing (&quot;w&quot;), an optional number from 1 to 9 can be
+When opening for writing (&quot;w&quot;), an optional number from <code>1</code> to <code>9</code> can be
 supplied which enables Flate compression of the file.  Compression is
 not supported for the &quot;a&quot; (append) mode.<br>
 <br>
@@ -2819,7 +2868,7 @@ a choice.</p>
 <p class="discussion">The &quot;mode&quot; parameter can be &quot;r&quot; to read, &quot;w&quot; to write, &quot;a&quot; to append,
 or &quot;s&quot; to treat the file descriptor as a bidirectional socket connection.<br>
 <br>
-When opening for writing (&quot;w&quot;), an optional number from 1 to 9 can be
+When opening for writing (&quot;w&quot;), an optional number from <code>1</code> to <code>9</code> can be
 supplied which enables Flate compression of the file.  Compression is
 not supported for the &quot;a&quot; (append) mode.</p>
 <h3 class="function"><a id="cupsFilePeekChar">cupsFilePeekChar</a></h3>
@@ -2832,7 +2881,7 @@ int cupsFilePeekChar(<a href="#cups_file_t">cups_file_t</a> *fp);</p>
 <td class="description">CUPS file</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">Character or -1 on end of file</p>
+<p class="description">Character or <code>-1</code> on end of file</p>
 <h3 class="function"><a id="cupsFilePrintf">cupsFilePrintf</a></h3>
 <p class="description">Write a formatted string.</p>
 <p class="code">
@@ -2918,7 +2967,7 @@ off_t cupsFileRewind(<a href="#cups_file_t">cups_file_t</a> *fp);</p>
 <td class="description">CUPS file</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">New file position or -1 on error</p>
+<p class="description">New file position or <code>-1</code> on error</p>
 <h3 class="function"><a id="cupsFileSeek">cupsFileSeek</a></h3>
 <p class="description">Seek in a file.</p>
 <p class="code">
@@ -2931,7 +2980,7 @@ off_t cupsFileSeek(<a href="#cups_file_t">cups_file_t</a> *fp, off_t pos);</p>
 <td class="description">Position in file</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">New file position or -1 on error</p>
+<p class="description">New file position or <code>-1</code> on error</p>
 <h3 class="function"><a id="cupsFileStderr">cupsFileStderr</a></h3>
 <p class="description">Return a CUPS file associated with stderr.</p>
 <p class="code">
@@ -3152,8 +3201,9 @@ not support the lpoptions-defined default printer.</p>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Destination pointer or <code>NULL</code></p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">Use the <a href="#cupsEnumDests"><code>cupsEnumDests</code></a> or <a href="#cupsGetDests2"><code>cupsGetDests2</code></a> functions to get a
-list of supported destinations for the current user.</p>
+<p class="discussion">This function gets the named destination from the list of destinations.  Use
+the <a href="#cupsEnumDests"><code>cupsEnumDests</code></a> or <a href="#cupsGetDests"><code>cupsGetDests</code></a> functions to get a list of
+supported destinations for the current user.</p>
 <h3 class="function"><a id="cupsGetDestMediaByIndex">cupsGetDestMediaByIndex</a></h3>
 <p class="description">Get a media name, dimension, and margins for a
 specific size.</p>
@@ -3177,9 +3227,9 @@ bool cupsGetDestMediaByIndex(<a href="#http_t">http_t</a> *http, <a href="#cups_
 <h4 class="returnvalue">Return Value</h4>
 <p class="description"><code>true</code> on success, <code>false</code> on failure</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>flags</code> parameter determines which set of media are indexed.  For
-example, passing <code>CUPS_MEDIA_FLAGS_BORDERLESS</code> will get the Nth
-borderless size supported by the printer.</p>
+<p class="discussion">The &quot;flags&quot; parameter determines which set of media are indexed.  For
+example, passing <code>CUPS_MEDIA_FLAGS_BORDERLESS</code> will get the Nth borderless
+size supported by the printer.</p>
 <h3 class="function"><a id="cupsGetDestMediaByName">cupsGetDestMediaByName</a></h3>
 <p class="description">Get media names, dimensions, and margins.</p>
 <p class="code">
@@ -3203,19 +3253,24 @@ bool cupsGetDestMediaByName(<a href="#http_t">http_t</a> *http, <a href="#cups_d
 <p class="description"><code>true</code> on match, <code>false</code> on failure</p>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">The &quot;media&quot; string is a PWG media name.  &quot;Flags&quot; provides some matching
-guidance (multiple flags can be combined):<br>
+guidance (multiple flags can be combined):
+
+</p><ul>
+<li><code>CUPS_MEDIA_FLAGS_DEFAULT</code>: find the closest size supported by the printer,
+</li>
+<li><code>CUPS_MEDIA_FLAGS_BORDERLESS</code>: find a borderless size,
+</li>
+<li><code>CUPS_MEDIA_FLAGS_DUPLEX</code>: find a size compatible with 2-sided printing,
+</li>
+<li><code>CUPS_MEDIA_FLAGS_EXACT</code>: find an exact match for the size, and
+</li>
+<li><code>CUPS_MEDIA_FLAGS_READY</code>: if the printer supports media sensing, find the
+size amongst the &quot;ready&quot; media.</li>
+</ul>
+<p class="discussion">The matching result (if any) is returned in the <code>cups_size_t</code> structure.<br>
 <br>
-CUPS_MEDIA_FLAGS_DEFAULT    = find the closest size supported by the printer,
-CUPS_MEDIA_FLAGS_BORDERLESS = find a borderless size,
-CUPS_MEDIA_FLAGS_DUPLEX     = find a size compatible with 2-sided printing,
-CUPS_MEDIA_FLAGS_EXACT      = find an exact match for the size, and
-CUPS_MEDIA_FLAGS_READY      = if the printer supports media sensing, find the
-size amongst the &quot;ready&quot; media.<br>
-<br>
-The matching result (if any) is returned in the &quot;cups_size_t&quot; structure.<br>
-<br>
-Returns 1 when there is a match and 0 if there is not a match.</p>
-<h3 class="function"><span class="info">&#160;CUPS 1.6/macOS 10.8&#160;</span><a id="cupsGetDestMediaBySize">cupsGetDestMediaBySize</a></h3>
+Returns <code>true</code> when there is a match and <code>false</code> if there is not a match.</p>
+<h3 class="function"><a id="cupsGetDestMediaBySize">cupsGetDestMediaBySize</a></h3>
 <p class="description">Get media names, dimensions, and margins.</p>
 <p class="code">
 bool cupsGetDestMediaBySize(<a href="#http_t">http_t</a> *http, <a href="#cups_dest_t">cups_dest_t</a> *dest, <a href="#cups_dinfo_t">cups_dinfo_t</a> *dinfo, int width, int length, unsigned flags, <a href="#cups_size_t">cups_size_t</a> *size);</p>
@@ -3228,11 +3283,9 @@ bool cupsGetDestMediaBySize(<a href="#http_t">http_t</a> *http, <a href="#cups_d
 <tr><th>dinfo</th>
 <td class="description">Destination information</td></tr>
 <tr><th>width</th>
-<td class="description">Media width in hundredths of
-of millimeters</td></tr>
+<td class="description">Media width in hundredths of millimeters</td></tr>
 <tr><th>length</th>
-<td class="description">Media length in hundredths of
-of millimeters</td></tr>
+<td class="description">Media length in hundredths of millimeters</td></tr>
 <tr><th>flags</th>
 <td class="description">Media matching flags</td></tr>
 <tr><th>size</th>
@@ -3242,20 +3295,23 @@ of millimeters</td></tr>
 <p class="description"><code>true</code> on match, <code>false</code> on failure</p>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">&quot;Width&quot; and &quot;length&quot; are the dimensions in hundredths of millimeters.
-&quot;Flags&quot; provides some matching guidance (multiple flags can be combined):<br>
-<br>
-CUPS_MEDIA_FLAGS_DEFAULT    = find the closest size supported by the printer,
-CUPS_MEDIA_FLAGS_BORDERLESS = find a borderless size,
-CUPS_MEDIA_FLAGS_DUPLEX     = find a size compatible with 2-sided printing,
-CUPS_MEDIA_FLAGS_EXACT      = find an exact match for the size, and
-CUPS_MEDIA_FLAGS_READY      = if the printer supports media sensing, find the
-size amongst the &quot;ready&quot; media.<br>
-<br>
-The matching result (if any) is returned in the &quot;cups_size_t&quot; structure.<br>
-<br>
-Returns 1 when there is a match and 0 if there is not a match.
+&quot;Flags&quot; provides some matching guidance (multiple flags can be combined):
 
-</p>
+</p><ul>
+<li><code>CUPS_MEDIA_FLAGS_DEFAULT</code>: find the closest size supported by the printer,
+</li>
+<li><code>CUPS_MEDIA_FLAGS_BORDERLESS</code>: find a borderless size,
+</li>
+<li><code>CUPS_MEDIA_FLAGS_DUPLEX</code>: find a size compatible with 2-sided printing,
+</li>
+<li><code>CUPS_MEDIA_FLAGS_EXACT</code>: find an exact match for the size, and
+</li>
+<li><code>CUPS_MEDIA_FLAGS_READY</code>: if the printer supports media sensing, find the
+size amongst the &quot;ready&quot; media.</li>
+</ul>
+<p class="discussion">The matching result (if any) is returned in the <code>cups_size_t</code> structure.<br>
+<br>
+Returns <code>true</code> when there is a match and <code>false</code> if there is not a match.</p>
 <h3 class="function"><a id="cupsGetDestMediaCount">cupsGetDestMediaCount</a></h3>
 <p class="description">Get the number of sizes supported by a
 destination.</p>
@@ -3275,10 +3331,10 @@ size_t cupsGetDestMediaCount(<a href="#http_t">http_t</a> *http, <a href="#cups_
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Number of sizes</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>flags</code> parameter determines the set of media sizes that are
-counted.  For example, passing <code>CUPS_MEDIA_FLAGS_BORDERLESS</code> will return
-the number of borderless sizes.</p>
-<h3 class="function"><span class="info">&#160;CUPS 1.7/macOS 10.9&#160;</span><a id="cupsGetDestMediaDefault">cupsGetDestMediaDefault</a></h3>
+<p class="discussion">The &quot;flags&quot; parameter determines the set of media sizes that are counted.
+For example, passing <code>CUPS_MEDIA_FLAGS_BORDERLESS</code> will return the number of
+borderless sizes.</p>
+<h3 class="function"><a id="cupsGetDestMediaDefault">cupsGetDestMediaDefault</a></h3>
 <p class="description">Get the default size for a destination.</p>
 <p class="code">
 bool cupsGetDestMediaDefault(<a href="#http_t">http_t</a> *http, <a href="#cups_dest_t">cups_dest_t</a> *dest, <a href="#cups_dinfo_t">cups_dinfo_t</a> *dinfo, unsigned flags, <a href="#cups_size_t">cups_size_t</a> *size);</p>
@@ -3298,11 +3354,9 @@ bool cupsGetDestMediaDefault(<a href="#http_t">http_t</a> *http, <a href="#cups_
 <h4 class="returnvalue">Return Value</h4>
 <p class="description"><code>true</code> on match, <code>false</code> on failure</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>flags</code> parameter determines which default size is returned.  For
+<p class="discussion">The &quot;flags&quot; parameter determines which default size is returned.  For
 example, passing <code>CUPS_MEDIA_FLAGS_BORDERLESS</code> will return the default
-borderless size, typically US Letter or A4, but sometimes 4x6 photo media.
-
-</p>
+borderless size, typically US Letter or A4, but sometimes 4x6 photo media.</p>
 <h3 class="function"><a id="cupsGetDestWithURI">cupsGetDestWithURI</a></h3>
 <p class="description">Get a destination associated with a URI.</p>
 <p class="code">
@@ -3320,7 +3374,7 @@ borderless size, typically US Letter or A4, but sometimes 4x6 photo media.
 <p class="discussion">&quot;name&quot; is the desired name for the printer. If <code>NULL</code>, a name will be
 created using the URI.<br>
 <br>
-&quot;uri&quot; is the &quot;ipp&quot; or &quot;ipps&quot; URI for the printer.</p>
+&quot;uri&quot; is the 'ipp:' or 'ipps:' URI for the printer.</p>
 <h3 class="function"><a id="cupsGetDests">cupsGetDests</a></h3>
 <p class="description">Get the list of destinations from the specified server.</p>
 <p class="code">
@@ -3439,10 +3493,10 @@ size_t cupsGetJobs(<a href="#http_t">http_t</a> *http, <a href="#cups_job_t">cup
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Number of jobs</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">A &quot;whichjobs&quot; value of <code>CUPS_WHICHJOBS_ALL</code> returns all jobs regardless
-of state, while <code>CUPS_WHICHJOBS_ACTIVE</code> returns jobs that are
-pending, processing, or held and <code>CUPS_WHICHJOBS_COMPLETED</code> returns
-jobs that are stopped, canceled, aborted, or completed.</p>
+<p class="discussion">A &quot;whichjobs&quot; value of <code>CUPS_WHICHJOBS_ALL</code> returns all jobs regardless of
+state, while <code>CUPS_WHICHJOBS_ACTIVE</code> returns jobs that are pending,
+processing, or held and <code>CUPS_WHICHJOBS_COMPLETED</code> returns jobs that are
+stopped, canceled, aborted, or completed.</p>
 <h3 class="function"><a id="cupsGetNamedDest">cupsGetNamedDest</a></h3>
 <p class="description">Get options for the named destination.</p>
 <p class="code">
@@ -3512,7 +3566,7 @@ user does not provide a password.<br>
 <br>
 Note: The current password callback function is tracked separately for each
 thread in a program. Multi-threaded programs that override the setting via
-the <a href="#cupsSetPasswordCB2"><code>cupsSetPasswordCB2</code></a> function need to do so in each thread for the
+the <a href="#cupsSetPasswordCB"><code>cupsSetPasswordCB</code></a> function need to do so in each thread for the
 same function to be used.</p>
 <h3 class="function"><a id="cupsGetResponse">cupsGetResponse</a></h3>
 <p class="description">Get a response to an IPP request.</p>
@@ -3672,7 +3726,7 @@ current thread.</p>
 <p class="code">
 const char *cupsLastErrorString(void);</p>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">status-message text from last request</p>
+<p class="description">&quot;status-message&quot; text from last request</p>
 <h3 class="function"><a id="cupsLocalizeDestMedia">cupsLocalizeDestMedia</a></h3>
 <p class="description">Get the localized string for a destination media
 size.</p>
@@ -3743,7 +3797,7 @@ invalid if the destination information is deleted.</p>
 <h3 class="function"><a id="cupsMutexDestroy">cupsMutexDestroy</a></h3>
 <p class="description">Destroy a mutex.</p>
 <p class="code">
-void cupsMutexDestroy(cups_mutex_t *mutex);</p>
+void cupsMutexDestroy(<a href="#cups_mutex_t">cups_mutex_t</a> *mutex);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>mutex</th>
@@ -3752,7 +3806,7 @@ void cupsMutexDestroy(cups_mutex_t *mutex);</p>
 <h3 class="function"><a id="cupsMutexInit">cupsMutexInit</a></h3>
 <p class="description">Initialize a mutex.</p>
 <p class="code">
-void cupsMutexInit(cups_mutex_t *mutex);</p>
+void cupsMutexInit(<a href="#cups_mutex_t">cups_mutex_t</a> *mutex);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>mutex</th>
@@ -3761,7 +3815,7 @@ void cupsMutexInit(cups_mutex_t *mutex);</p>
 <h3 class="function"><a id="cupsMutexLock">cupsMutexLock</a></h3>
 <p class="description">Lock a mutex.</p>
 <p class="code">
-void cupsMutexLock(cups_mutex_t *mutex);</p>
+void cupsMutexLock(<a href="#cups_mutex_t">cups_mutex_t</a> *mutex);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>mutex</th>
@@ -3770,7 +3824,7 @@ void cupsMutexLock(cups_mutex_t *mutex);</p>
 <h3 class="function"><a id="cupsMutexUnlock">cupsMutexUnlock</a></h3>
 <p class="description">Unlock a mutex.</p>
 <p class="code">
-void cupsMutexUnlock(cups_mutex_t *mutex);</p>
+void cupsMutexUnlock(<a href="#cups_mutex_t">cups_mutex_t</a> *mutex);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>mutex</th>
@@ -3791,7 +3845,7 @@ char *cupsNotifySubject(<a href="#cups_lang_t">cups_lang_t</a> *lang, <a href="#
 <p class="description">Subject string or <code>NULL</code></p>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">This function returns a localized subject string for the given notification
-message.  The returned string must be freed by the caller using <code>free()</code>.</p>
+message.  The returned string must be freed by the caller using <code>free</code>.</p>
 <h3 class="function"><a id="cupsNotifyText">cupsNotifyText</a></h3>
 <p class="description">Return the localized text for the given notification message.</p>
 <p class="code">
@@ -3807,7 +3861,7 @@ char *cupsNotifyText(<a href="#cups_lang_t">cups_lang_t</a> *lang, <a href="#ipp
 <p class="description">Message text or <code>NULL</code></p>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">This function returns a localized text string for the given notification
-message.  The returned string must be freed by the caller using <code>free()</code>.</p>
+message.  The returned string must be freed by the caller using <code>free</code>.</p>
 <h3 class="function"><a id="cupsParseOptions">cupsParseOptions</a></h3>
 <p class="description">Parse options from a command-line argument.</p>
 <p class="code">
@@ -4147,9 +4201,9 @@ size_t cupsRemoveOption(const char *name, size_t num_options, <a href="#cups_opt
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Initial HTTP status</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">Use <a href="#cupsWriteRequestData"><code>cupsWriteRequestData</code></a> to write any additional data (document, PPD
-file, etc.) for the request, <a href="#cupsGetResponse"><code>cupsGetResponse</code></a> to get the IPP response,
-and <a href="#cupsReadResponseData"><code>cupsReadResponseData</code></a> to read any additional data following the
+<p class="discussion">Use <a href="#cupsWriteRequestData"><code>cupsWriteRequestData</code></a> to write any additional data (document, etc.)
+for the request, <a href="#cupsGetResponse"><code>cupsGetResponse</code></a> to get the IPP response, and
+<a href="#cupsReadResponseData"><code>cupsReadResponseData</code></a> to read any additional data following the
 response. Only one request can be sent/queued at a time per <code>http_t</code>
 connection.<br>
 <br>
@@ -4179,14 +4233,14 @@ so in each thread for the same callback to be used.</p>
 <p class="description">Set the default credentials to be used for SSL/TLS
 connections.</p>
 <p class="code">
-int cupsSetCredentials(<a href="#cups_array_t">cups_array_t</a> *credentials);</p>
+bool cupsSetCredentials(<a href="#cups_array_t">cups_array_t</a> *credentials);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>credentials</th>
 <td class="description">Array of credentials</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">Status of call (0 = success)</p>
+<p class="description"><code>true</code> on success, <code>false</code> on failure</p>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">Note: The default credentials are tracked separately for each thread in a
 program. Multi-threaded programs that override the setting need to do so in
@@ -4284,9 +4338,7 @@ void cupsSetPasswordCB(<a href="#cups_password_cb_t">cups_password_cb_t</a> cb, 
 </tbody></table>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">Pass <code>NULL</code> to restore the default (console) password callback, which
-reads the password from the console. Programs should call either this
-function or <a href="#cupsSetPasswordCB2"><code>cupsSetPasswordCB2</code></a>, as only one callback can be registered
-by a program per thread.<br>
+reads the password from the console.<br>
 <br>
 Note: The current password callback is tracked separately for each thread
 in a program. Multi-threaded programs that override the callback need to do
@@ -4385,31 +4437,41 @@ version, IPP version, and operating system version and architecture.</p>
 <p class="discussion">&quot;job_id&quot; is the job ID returned by cupsCreateDestJob.  &quot;docname&quot; is the name
 of the document/file being printed, &quot;format&quot; is the MIME media type for the
 document (see CUPS_FORMAT_xxx constants), and &quot;num_options&quot; and &quot;options&quot;
-are the options do be applied to the document. &quot;last_document&quot; should be 1
-if this is the last document to be submitted in the job.  Returns
+are the options do be applied to the document. &quot;last_document&quot; should be
+<code>true</code> if this is the last document to be submitted in the job.  Returns
 <code>HTTP_CONTINUE</code> on success.</p>
 <h3 class="function"><a id="cupsTempFd">cupsTempFd</a></h3>
 <p class="description">Creates a temporary file.</p>
 <p class="code">
-int cupsTempFd(char *filename, size_t len);</p>
+int cupsTempFd(const char *prefix, const char *suffix, char *filename, size_t len);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
+<tr><th>prefix</th>
+<td class="description">Filename prefix or <code>NULL</code> for none</td></tr>
+<tr><th>suffix</th>
+<td class="description">Filename suffix or <code>NULL</code> for none</td></tr>
 <tr><th>filename</th>
 <td class="description">Pointer to buffer</td></tr>
 <tr><th>len</th>
 <td class="description">Size of buffer</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">New file descriptor or -1 on error</p>
+<p class="description">New file descriptor or <code>-1</code> on error</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The temporary filename is returned in the filename buffer.
-The temporary file is opened for reading and writing.</p>
+<p class="discussion">This function creates a temporary file and returns a file descriptor for the
+file.  The unique temporary filename uses the &quot;prefix&quot; and &quot;suffix&quot; arguments
+and is returned in the filename buffer.  The temporary file is opened for
+reading and writing.</p>
 <h3 class="function"><a id="cupsTempFile">cupsTempFile</a></h3>
 <p class="description">Creates a temporary CUPS file.</p>
 <p class="code">
-<a href="#cups_file_t">cups_file_t</a> *cupsTempFile(char *filename, size_t len);</p>
+<a href="#cups_file_t">cups_file_t</a> *cupsTempFile(const char *prefix, const char *suffix, char *filename, size_t len);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
+<tr><th>prefix</th>
+<td class="description">Filename prefix or <code>NULL</code> for none</td></tr>
+<tr><th>suffix</th>
+<td class="description">Filename suffix or <code>NULL</code> for none</td></tr>
 <tr><th>filename</th>
 <td class="description">Pointer to buffer</td></tr>
 <tr><th>len</th>
@@ -4418,12 +4480,14 @@ The temporary file is opened for reading and writing.</p>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">CUPS file or <code>NULL</code> on error</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The temporary filename is returned in the filename buffer.
-The temporary file is opened for writing.</p>
+<p class="discussion">This function creates a temporary file and returns a file descriptor for the
+file.  The unique temporary filename uses the &quot;prefix&quot; and &quot;suffix&quot; arguments
+and is returned in the filename buffer.  The temporary file is opened for
+writing.</p>
 <h3 class="function"><a id="cupsThreadCancel">cupsThreadCancel</a></h3>
 <p class="description">Cancel (kill) a thread.</p>
 <p class="code">
-void cupsThreadCancel(cups_thread_t thread);</p>
+void cupsThreadCancel(<a href="#cups_thread_t">cups_thread_t</a> thread);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>thread</th>
@@ -4432,7 +4496,7 @@ void cupsThreadCancel(cups_thread_t thread);</p>
 <h3 class="function"><a id="cupsThreadCreate">cupsThreadCreate</a></h3>
 <p class="description">Create a thread.</p>
 <p class="code">
-cups_thread_t cupsThreadCreate(<a href="#cups_thread_func_t">cups_thread_func_t</a> func, void *arg);</p>
+<a href="#cups_thread_t">cups_thread_t</a> cupsThreadCreate(<a href="#cups_thread_func_t">cups_thread_func_t</a> func, void *arg);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>func</th>
@@ -4445,7 +4509,7 @@ cups_thread_t cupsThreadCreate(<a href="#cups_thread_func_t">cups_thread_func_t<
 <h3 class="function"><a id="cupsThreadDetach">cupsThreadDetach</a></h3>
 <p class="description">Tell the OS that the thread is running independently.</p>
 <p class="code">
-void cupsThreadDetach(cups_thread_t thread);</p>
+void cupsThreadDetach(<a href="#cups_thread_t">cups_thread_t</a> thread);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>thread</th>
@@ -4454,7 +4518,7 @@ void cupsThreadDetach(cups_thread_t thread);</p>
 <h3 class="function"><a id="cupsThreadWait">cupsThreadWait</a></h3>
 <p class="description">Wait for a thread to exit.</p>
 <p class="code">
-void *cupsThreadWait(cups_thread_t thread);</p>
+void *cupsThreadWait(<a href="#cups_thread_t">cups_thread_t</a> thread);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>thread</th>
@@ -4465,7 +4529,7 @@ void *cupsThreadWait(cups_thread_t thread);</p>
 <h3 class="function"><a id="cupsUTF32ToUTF8">cupsUTF32ToUTF8</a></h3>
 <p class="description">Convert UTF-32 to UTF-8.</p>
 <p class="code">
-ssize_t cupsUTF32ToUTF8(<a href="#cups_utf8_t">cups_utf8_t</a> *dest, const <a href="#cups_utf32_t">cups_utf32_t</a> *src, const size_t maxout);</p>
+ssize_t cupsUTF32ToUTF8(char *dest, const <a href="#cups_utf32_t">cups_utf32_t</a> *src, const size_t maxout);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>dest</th>
@@ -4478,22 +4542,12 @@ ssize_t cupsUTF32ToUTF8(<a href="#cups_utf8_t">cups_utf8_t</a> *dest, const <a h
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Count or <code>-1</code> on error</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">32-bit UTF-32 (actually 21-bit) maps to UTF-8 as follows...<br>
-<br>
-UTF-32 char     UTF-8 char(s)
---------------------------------------------------
-0 to 127 = 0xxxxxxx (US-ASCII)
-128 to 2047 = 110xxxxx 10yyyyyy
-2048 to 65535 = 1110xxxx 10yyyyyy 10zzzzzz
-</p><blockquote>
-65535 = 11110xxx 10yyyyyy 10zzzzzz 10xxxxxx</blockquote><br>
-<br>
-UTF-32 prohibits chars beyond Plane 16 (&gt; 0x10ffff) in UCS-4,
-which would convert to five- or six-octet UTF-8 sequences.</p>
+<p class="discussion">This function converts a UTF-32 (32-bit encoding of Unicode) string to a
+UTF-8 (8-bit encoding of Unicode) <code>nul</code>-terminated C string.</p>
 <h3 class="function"><a id="cupsUTF8ToCharset">cupsUTF8ToCharset</a></h3>
 <p class="description">Convert UTF-8 to legacy character set.</p>
 <p class="code">
-ssize_t cupsUTF8ToCharset(char *dest, const <a href="#cups_utf8_t">cups_utf8_t</a> *src, const size_t maxout, const <a href="#cups_encoding_t">cups_encoding_t</a> encoding);</p>
+ssize_t cupsUTF8ToCharset(char *dest, const char *src, const size_t maxout, const <a href="#cups_encoding_t">cups_encoding_t</a> encoding);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>dest</th>
@@ -4510,7 +4564,7 @@ ssize_t cupsUTF8ToCharset(char *dest, const <a href="#cups_utf8_t">cups_utf8_t</
 <h3 class="function"><a id="cupsUTF8ToUTF32">cupsUTF8ToUTF32</a></h3>
 <p class="description">Convert UTF-8 to UTF-32.</p>
 <p class="code">
-ssize_t cupsUTF8ToUTF32(<a href="#cups_utf32_t">cups_utf32_t</a> *dest, const <a href="#cups_utf8_t">cups_utf8_t</a> *src, const size_t maxout);</p>
+ssize_t cupsUTF8ToUTF32(<a href="#cups_utf32_t">cups_utf32_t</a> *dest, const char *src, const size_t maxout);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>dest</th>
@@ -4523,18 +4577,8 @@ ssize_t cupsUTF8ToUTF32(<a href="#cups_utf32_t">cups_utf32_t</a> *dest, const <a
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Count or <code>-1</code> on error</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">32-bit UTF-32 (actually 21-bit) maps to UTF-8 as follows...<br>
-<br>
-UTF-32 char     UTF-8 char(s)
---------------------------------------------------
-0 to 127 = 0xxxxxxx (US-ASCII)
-128 to 2047 = 110xxxxx 10yyyyyy
-2048 to 65535 = 1110xxxx 10yyyyyy 10zzzzzz
-</p><blockquote>
-65535 = 11110xxx 10yyyyyy 10zzzzzz 10xxxxxx</blockquote><br>
-<br>
-UTF-32 prohibits chars beyond Plane 16 (&gt; 0x10ffff) in UCS-4,
-which would convert to five- or six-octet UTF-8 sequences.</p>
+<p class="discussion">This function converts a UTF-8 (8-bit encoding of Unicode) <code>nul</code>-terminated
+C string to a UTF-32 (32-bit encoding of Unicode) string.</p>
 <h3 class="function"><a id="cupsWriteRequestData">cupsWriteRequestData</a></h3>
 <p class="description">Write additional data after an IPP request.</p>
 <p class="code">
@@ -4557,21 +4601,20 @@ after <a href="#cupsStartDocument"><code>cupsStartDocument</code></a> to provide
 <p class="description">Accept a new HTTP client connection from the
 specified listening socket.</p>
 <p class="code">
-<a href="#http_t">http_t</a> *httpAcceptConnection(int fd, int blocking);</p>
+<a href="#http_t">http_t</a> *httpAcceptConnection(int fd, bool blocking);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>fd</th>
 <td class="description">Listen socket file descriptor</td></tr>
 <tr><th>blocking</th>
-<td class="description">1 if the connection should be
-blocking, 0 otherwise</td></tr>
+<td class="description"><code>true</code> if the connection should be blocking, <code>false</code> otherwise</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">HTTP connection or <code>NULL</code></p>
 <h3 class="function"><a id="httpAddCredential">httpAddCredential</a></h3>
 <p class="description">Allocates and adds a single credential to an array.</p>
 <p class="code">
-int httpAddCredential(<a href="#cups_array_t">cups_array_t</a> *credentials, const void *data, size_t datalen);</p>
+bool httpAddCredential(<a href="#cups_array_t">cups_array_t</a> *credentials, const void *data, size_t datalen);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>credentials</th>
@@ -4582,25 +4625,14 @@ int httpAddCredential(<a href="#cups_array_t">cups_array_t</a> *credentials, con
 <td class="description">Length of data</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">0 on success, -1 on error</p>
+<p class="description"><code>true</code> on success, <code>false</code> on error</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">Use <code>cupsArrayNew(NULL, NULL)</code> to create a credentials array.</p>
-<h3 class="function"><a id="httpAddrAny">httpAddrAny</a></h3>
-<p class="description">Check for the &quot;any&quot; address.</p>
-<p class="code">
-int httpAddrAny(const <a href="#http_addr_t">http_addr_t</a> *addr);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>addr</th>
-<td class="description">Address to check</td></tr>
-</tbody></table>
-<h4 class="returnvalue">Return Value</h4>
-<p class="description">1 if &quot;any&quot;, 0 otherwise</p>
+<p class="discussion">Use <code>httpCreateCredentials</code> to create a credentials array.</p>
 <h3 class="function"><a id="httpAddrClose">httpAddrClose</a></h3>
 <p class="description">Close a socket created by <a href="#httpAddrConnect"><code>httpAddrConnect</code></a> or
 <a href="#httpAddrListen"><code>httpAddrListen</code></a>.</p>
 <p class="code">
-int httpAddrClose(<a href="#http_addr_t">http_addr_t</a> *addr, int fd);</p>
+bool httpAddrClose(<a href="#http_addr_t">http_addr_t</a> *addr, int fd);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>addr</th>
@@ -4609,9 +4641,9 @@ int httpAddrClose(<a href="#http_addr_t">http_addr_t</a> *addr, int fd);</p>
 <td class="description">Socket file descriptor</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">0 on success, -1 on failure</p>
+<p class="description"><code>true</code> on success, <code>false</code> on failure</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">Pass <code>NULL</code> for sockets created with <a href="#httpAddrConnect2"><code>httpAddrConnect2</code></a> and the
+<p class="discussion">Pass <code>NULL</code> for sockets created with <a href="#httpAddrConnect"><code>httpAddrConnect</code></a> and the
 listen address for sockets created with <a href="#httpAddrListen"><code>httpAddrListen</code></a>.  This function
 ensures that domain sockets are removed when closed.</p>
 <h3 class="function"><a id="httpAddrConnect">httpAddrConnect</a></h3>
@@ -4643,30 +4675,6 @@ timeout and optional cancel.</p>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">New address list or <code>NULL</code> on error</p>
-<h3 class="function"><a id="httpAddrEqual">httpAddrEqual</a></h3>
-<p class="description">Compare two addresses.</p>
-<p class="code">
-int httpAddrEqual(const <a href="#http_addr_t">http_addr_t</a> *addr1, const <a href="#http_addr_t">http_addr_t</a> *addr2);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>addr1</th>
-<td class="description">First address</td></tr>
-<tr><th>addr2</th>
-<td class="description">Second address</td></tr>
-</tbody></table>
-<h4 class="returnvalue">Return Value</h4>
-<p class="description">1 if equal, 0 if not</p>
-<h3 class="function"><a id="httpAddrFamily">httpAddrFamily</a></h3>
-<p class="description">Get the address family of an address.</p>
-<p class="code">
-int httpAddrFamily(<a href="#http_addr_t">http_addr_t</a> *addr);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>addr</th>
-<td class="description">Address</td></tr>
-</tbody></table>
-<h4 class="returnvalue">Return Value</h4>
-<p class="description">Address family</p>
 <h3 class="function"><a id="httpAddrFreeList">httpAddrFreeList</a></h3>
 <p class="description">Free an address list.</p>
 <p class="code">
@@ -4676,6 +4684,28 @@ void httpAddrFreeList(<a href="#http_addrlist_t">http_addrlist_t</a> *addrlist);
 <tr><th>addrlist</th>
 <td class="description">Address list to free</td></tr>
 </tbody></table>
+<h3 class="function"><a id="httpAddrGetFamily">httpAddrGetFamily</a></h3>
+<p class="description">Get the address family of an address.</p>
+<p class="code">
+int httpAddrGetFamily(<a href="#http_addr_t">http_addr_t</a> *addr);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>addr</th>
+<td class="description">Address</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Address family</p>
+<h3 class="function"><a id="httpAddrGetLength">httpAddrGetLength</a></h3>
+<p class="description">Return the length of the address in bytes.</p>
+<p class="code">
+size_t httpAddrGetLength(const <a href="#http_addr_t">http_addr_t</a> *addr);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>addr</th>
+<td class="description">Address</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Length in bytes</p>
 <h3 class="function"><a id="httpAddrGetList">httpAddrGetList</a></h3>
 <p class="description">Get a list of addresses for a hostname.</p>
 <p class="code">
@@ -4691,20 +4721,69 @@ void httpAddrFreeList(<a href="#http_addrlist_t">http_addrlist_t</a> *addrlist);
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">List of addresses or NULL</p>
-<h3 class="function"><a id="httpAddrLength">httpAddrLength</a></h3>
-<p class="description">Return the length of the address in bytes.</p>
+<h3 class="function"><a id="httpAddrGetPort">httpAddrGetPort</a></h3>
+<p class="description">Get the port number associated with an address.</p>
 <p class="code">
-int httpAddrLength(const <a href="#http_addr_t">http_addr_t</a> *addr);</p>
+int httpAddrGetPort(<a href="#http_addr_t">http_addr_t</a> *addr);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>addr</th>
 <td class="description">Address</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">Length in bytes</p>
+<p class="description">Port number</p>
+<h3 class="function"><a id="httpAddrGetString">httpAddrGetString</a></h3>
+<p class="description">Convert an address to a numeric string.</p>
+<p class="code">
+char *httpAddrGetString(const <a href="#http_addr_t">http_addr_t</a> *addr, char *s, size_t slen);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>addr</th>
+<td class="description">Address to convert</td></tr>
+<tr><th>s</th>
+<td class="description">String buffer</td></tr>
+<tr><th>slen</th>
+<td class="description">Length of string buffer</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Numeric address string</p>
+<h3 class="function"><a id="httpAddrIsAny">httpAddrIsAny</a></h3>
+<p class="description">Check for the &quot;any&quot; address.</p>
+<p class="code">
+bool httpAddrIsAny(const <a href="#http_addr_t">http_addr_t</a> *addr);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>addr</th>
+<td class="description">Address to check</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description"><code>true</code> if &quot;any&quot;, <code>false</code> otherwise</p>
+<h3 class="function"><a id="httpAddrIsEqual">httpAddrIsEqual</a></h3>
+<p class="description">Compare two addresses.</p>
+<p class="code">
+bool httpAddrIsEqual(const <a href="#http_addr_t">http_addr_t</a> *addr1, const <a href="#http_addr_t">http_addr_t</a> *addr2);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>addr1</th>
+<td class="description">First address</td></tr>
+<tr><th>addr2</th>
+<td class="description">Second address</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description"><code>true</code> if equal, <code>false</code> if not</p>
+<h3 class="function"><a id="httpAddrIsLocalhost">httpAddrIsLocalhost</a></h3>
+<p class="description">Check for the local loopback address.</p>
+<p class="code">
+bool httpAddrIsLocalhost(const <a href="#http_addr_t">http_addr_t</a> *addr);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>addr</th>
+<td class="description">Address to check</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description"><code>true</code> if local host, <code>false</code> otherwise</p>
 <h3 class="function"><a id="httpAddrListen">httpAddrListen</a></h3>
-<p class="description">Create a listening socket bound to the specified
-address and port.</p>
+<p class="description">Create a listening socket bound to the specified address and port.</p>
 <p class="code">
 int httpAddrListen(<a href="#http_addr_t">http_addr_t</a> *addr, int port);</p>
 <h4 class="parameters">Parameters</h4>
@@ -4715,22 +4794,11 @@ int httpAddrListen(<a href="#http_addr_t">http_addr_t</a> *addr, int port);</p>
 <td class="description">Port number to bind to</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">Socket or -1 on error</p>
-<h3 class="function"><a id="httpAddrLocalhost">httpAddrLocalhost</a></h3>
-<p class="description">Check for the local loopback address.</p>
-<p class="code">
-int httpAddrLocalhost(const <a href="#http_addr_t">http_addr_t</a> *addr);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>addr</th>
-<td class="description">Address to check</td></tr>
-</tbody></table>
-<h4 class="returnvalue">Return Value</h4>
-<p class="description">1 if local host, 0 otherwise</p>
+<p class="description">Socket or <code>-1</code> on error</p>
 <h3 class="function"><a id="httpAddrLookup">httpAddrLookup</a></h3>
 <p class="description">Lookup the hostname associated with the address.</p>
 <p class="code">
-char *httpAddrLookup(const <a href="#http_addr_t">http_addr_t</a> *addr, char *name, int namelen);</p>
+char *httpAddrLookup(const <a href="#http_addr_t">http_addr_t</a> *addr, char *name, size_t namelen);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>addr</th>
@@ -4742,37 +4810,22 @@ char *httpAddrLookup(const <a href="#http_addr_t">http_addr_t</a> *addr, char *n
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Host name</p>
-<h3 class="function"><a id="httpAddrPort">httpAddrPort</a></h3>
-<p class="description">Get the port number associated with an address.</p>
+<h3 class="function"><a id="httpAddrSetPort">httpAddrSetPort</a></h3>
+<p class="description">Set the port number associated with an address.</p>
 <p class="code">
-int httpAddrPort(<a href="#http_addr_t">http_addr_t</a> *addr);</p>
+void httpAddrSetPort(<a href="#http_addr_t">http_addr_t</a> *addr, int port);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>addr</th>
 <td class="description">Address</td></tr>
+<tr><th>port</th>
+<td class="description">Port</td></tr>
 </tbody></table>
-<h4 class="returnvalue">Return Value</h4>
-<p class="description">Port number</p>
-<h3 class="function"><a id="httpAddrString">httpAddrString</a></h3>
-<p class="description">Convert an address to a numeric string.</p>
-<p class="code">
-char *httpAddrString(const <a href="#http_addr_t">http_addr_t</a> *addr, char *s, int slen);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>addr</th>
-<td class="description">Address to convert</td></tr>
-<tr><th>s</th>
-<td class="description">String buffer</td></tr>
-<tr><th>slen</th>
-<td class="description">Length of string</td></tr>
-</tbody></table>
-<h4 class="returnvalue">Return Value</h4>
-<p class="description">Numeric address string</p>
 <h3 class="function"><a id="httpAssembleURI">httpAssembleURI</a></h3>
 <p class="description">Assemble a uniform resource identifier from its
 components.</p>
 <p class="code">
-<a href="#http_uri_status_t">http_uri_status_t</a> httpAssembleURI(<a href="#http_uri_coding_t">http_uri_coding_t</a> encoding, char *uri, int urilen, const char *scheme, const char *username, const char *host, int port, const char *resource);</p>
+<a href="#http_uri_status_t">http_uri_status_t</a> httpAssembleURI(<a href="#http_uri_coding_t">http_uri_coding_t</a> encoding, char *uri, size_t urilen, const char *scheme, const char *username, const char *host, int port, const char *resource);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>encoding</th>
@@ -4803,7 +4856,7 @@ URI string.</p>
 <p class="description">Assemble a uniform resource identifier from its
 components with a formatted resource.</p>
 <p class="code">
-<a href="#http_uri_status_t">http_uri_status_t</a> httpAssembleURIf(<a href="#http_uri_coding_t">http_uri_coding_t</a> encoding, char *uri, int urilen, const char *scheme, const char *username, const char *host, int port, const char *resourcef, ...);</p>
+<a href="#http_uri_status_t">http_uri_status_t</a> httpAssembleURIf(<a href="#http_uri_coding_t">http_uri_coding_t</a> encoding, char *uri, size_t urilen, const char *scheme, const char *username, const char *host, int port, const char *resourcef, ...);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>encoding</th>
@@ -4863,14 +4916,14 @@ The buffer needs to be at least 46 bytes in size.</p>
 <h3 class="function"><a id="httpCheck">httpCheck</a></h3>
 <p class="description">Check to see if there is a pending response from the server.</p>
 <p class="code">
-int httpCheck(<a href="#http_t">http_t</a> *http);</p>
+bool httpCheck(<a href="#http_t">http_t</a> *http);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>http</th>
 <td class="description">HTTP connection</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">0 = no data, 1 = data available</p>
+<p class="description"><code>true</code> when data is available, <code>false</code> otherwise</p>
 <h3 class="function"><a id="httpClearCookie">httpClearCookie</a></h3>
 <p class="description">Clear the cookie value(s).</p>
 <p class="code">
@@ -4901,7 +4954,7 @@ void httpClose(<a href="#http_t">http_t</a> *http);</p>
 <h3 class="function"><a id="httpCompareCredentials">httpCompareCredentials</a></h3>
 <p class="description">Compare two sets of X.509 credentials.</p>
 <p class="code">
-int httpCompareCredentials(<a href="#cups_array_t">cups_array_t</a> *cred1, <a href="#cups_array_t">cups_array_t</a> *cred2);</p>
+bool httpCompareCredentials(<a href="#cups_array_t">cups_array_t</a> *cred1, <a href="#cups_array_t">cups_array_t</a> *cred2);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>cred1</th>
@@ -4910,7 +4963,7 @@ int httpCompareCredentials(<a href="#cups_array_t">cups_array_t</a> *cred1, <a h
 <td class="description">Second set of X.509 credentials</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">1 if they match, 0 if they do not</p>
+<p class="description"><code>true</code> if they match, <code>false</code> if they do not</p>
 <h3 class="function"><a id="httpConnect">httpConnect</a></h3>
 <p class="description">Connect to a HTTP server.</p>
 <p class="code">
@@ -4936,6 +4989,22 @@ int httpCompareCredentials(<a href="#cups_array_t">cups_array_t</a> *cred1, <a h
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">New HTTP connection</p>
+<h3 class="function"><a id="httpCreateCredentials">httpCreateCredentials</a></h3>
+<p class="description">Create a new array of HTTP credentials.</p>
+<p class="code">
+<a href="#cups_array_t">cups_array_t</a> *httpCreateCredentials(const void *data, size_t datalen);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>data</th>
+<td class="description">PEM-encoded X.509 data</td></tr>
+<tr><th>datalen</th>
+<td class="description">Length of data</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Array</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function creates a new array of HTTP credentials for use with the
+<a href="#httpAddCredentials"><code>httpAddCredentials</code></a> and <a href="#httpSetCredentials"><code>httpSetCredentials</code></a> functions.</p>
 <h3 class="function"><a id="httpDecode64">httpDecode64</a></h3>
 <p class="description">Base64-decode a string.</p>
 <p class="code">
@@ -4955,19 +5024,6 @@ char *httpDecode64(char *out, size_t *outlen, const char *in);</p>
 <p class="discussion">The caller must initialize &quot;outlen&quot; to the maximum size of the decoded
 string before calling <code>httpDecode64_2</code>.  On return &quot;outlen&quot; contains the
 decoded length of the string.</p>
-<h3 class="function"><a id="httpDelete">httpDelete</a></h3>
-<p class="description">Send a DELETE request to the server.</p>
-<p class="code">
-int httpDelete(<a href="#http_t">http_t</a> *http, const char *uri);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>http</th>
-<td class="description">HTTP connection</td></tr>
-<tr><th>uri</th>
-<td class="description">URI to delete</td></tr>
-</tbody></table>
-<h4 class="returnvalue">Return Value</h4>
-<p class="description">Status of call (0 = success)</p>
 <h3 class="function"><a id="httpEncode64">httpEncode64</a></h3>
 <p class="description">Base64-encode a string.</p>
 <p class="code">
@@ -4985,19 +5041,6 @@ char *httpEncode64(char *out, size_t outlen, const char *in, size_t inlen);</p>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Encoded string</p>
-<h3 class="function"><a id="httpEncryption">httpEncryption</a></h3>
-<p class="description">Set the required encryption on the link.</p>
-<p class="code">
-int httpEncryption(<a href="#http_t">http_t</a> *http, <a href="#http_encryption_t">http_encryption_t</a> e);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>http</th>
-<td class="description">HTTP connection</td></tr>
-<tr><th>e</th>
-<td class="description">New encryption preference</td></tr>
-</tbody></table>
-<h4 class="returnvalue">Return Value</h4>
-<p class="description">-1 on error, 0 on success</p>
 <h3 class="function"><a id="httpError">httpError</a></h3>
 <p class="description">Get the last error on a connection.</p>
 <p class="code">
@@ -5050,19 +5093,6 @@ void httpFreeCredentials(<a href="#cups_array_t">cups_array_t</a> *credentials);
 <tr><th>credentials</th>
 <td class="description">Array of credentials</td></tr>
 </tbody></table>
-<h3 class="function"><a id="httpGet">httpGet</a></h3>
-<p class="description">Send a GET request to the server.</p>
-<p class="code">
-int httpGet(<a href="#http_t">http_t</a> *http, const char *uri);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>http</th>
-<td class="description">HTTP connection</td></tr>
-<tr><th>uri</th>
-<td class="description">URI to get</td></tr>
-</tbody></table>
-<h4 class="returnvalue">Return Value</h4>
-<p class="description">Status of call (0 = success)</p>
 <h3 class="function"><a id="httpGetActivity">httpGetActivity</a></h3>
 <p class="description">Get the most recent activity for a connection.</p>
 <p class="code">
@@ -5232,7 +5262,7 @@ const char *httpGetField(<a href="#http_t">http_t</a> *http, <a href="#http_fiel
 <h3 class="function"><a id="httpGetHostname">httpGetHostname</a></h3>
 <p class="description">Get the FQDN for the connection or local system.</p>
 <p class="code">
-const char *httpGetHostname(<a href="#http_t">http_t</a> *http, char *s, int slen);</p>
+const char *httpGetHostname(<a href="#http_t">http_t</a> *http, char *s, size_t slen);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>http</th>
@@ -5245,11 +5275,11 @@ const char *httpGetHostname(<a href="#http_t">http_t</a> *http, char *s, int sle
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">FQDN for connection or system</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">When &quot;http&quot; points to a connected socket, return the hostname or
-address that was used in the call to httpConnect() or httpConnectEncrypt(),
-or the address of the client for the connection from httpAcceptConnection().
-Otherwise, return the FQDN for the local system using both gethostname()
-and gethostbyname() to get the local hostname with domain.</p>
+<p class="discussion">When &quot;http&quot; points to a connected socket, return the hostname or address that
+was used in the call to <a href="#httpConnect"><code>httpConnect</code></a> or the address of the client for
+the connection from <a href="#httpAcceptConnection"><code>httpAcceptConnection</code></a>.<br>
+<br>
+When &quot;http&quot; is <code>NULL</code>, return the FQDN for the local system.</p>
 <h3 class="function"><a id="httpGetKeepAlive">httpGetKeepAlive</a></h3>
 <p class="description">Get the current Keep-Alive state of the connection.</p>
 <p class="code">
@@ -5380,19 +5410,6 @@ char *httpGets(<a href="#http_t">http_t</a> *http, char *line, size_t length);</
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Line or <code>NULL</code></p>
-<h3 class="function"><a id="httpHead">httpHead</a></h3>
-<p class="description">Send a HEAD request to the server.</p>
-<p class="code">
-int httpHead(<a href="#http_t">http_t</a> *http, const char *uri);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>http</th>
-<td class="description">HTTP connection</td></tr>
-<tr><th>uri</th>
-<td class="description">URI for head</td></tr>
-</tbody></table>
-<h4 class="returnvalue">Return Value</h4>
-<p class="description">Status of call (0 = success)</p>
 <h3 class="function"><a id="httpInitialize">httpInitialize</a></h3>
 <p class="description">Initialize the HTTP interface library and set the
 default HTTP proxy (if any).</p>
@@ -5401,43 +5418,30 @@ void httpInitialize(void);</p>
 <h3 class="function"><a id="httpIsChunked">httpIsChunked</a></h3>
 <p class="description">Report whether a message body is chunked.</p>
 <p class="code">
-int httpIsChunked(<a href="#http_t">http_t</a> *http);</p>
+bool httpIsChunked(<a href="#http_t">http_t</a> *http);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>http</th>
 <td class="description">HTTP connection</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">1 if chunked, 0 if not</p>
+<p class="description"><code>true</code> if chunked, <code>false</code> if not</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">This function returns non-zero if the message body is composed of
+<p class="discussion">This function returns <code>true</code> if the message body is composed of
 variable-length chunks.</p>
 <h3 class="function"><a id="httpIsEncrypted">httpIsEncrypted</a></h3>
 <p class="description">Report whether a connection is encrypted.</p>
 <p class="code">
-int httpIsEncrypted(<a href="#http_t">http_t</a> *http);</p>
+bool httpIsEncrypted(<a href="#http_t">http_t</a> *http);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>http</th>
 <td class="description">HTTP connection</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">1 if encrypted, 0 if not</p>
+<p class="description"><code>true</code> if encrypted, <code>false</code> if not</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">This function returns non-zero if the connection is currently encrypted.</p>
-<h3 class="function"><a id="httpOptions">httpOptions</a></h3>
-<p class="description">Send an OPTIONS request to the server.</p>
-<p class="code">
-int httpOptions(<a href="#http_t">http_t</a> *http, const char *uri);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>http</th>
-<td class="description">HTTP connection</td></tr>
-<tr><th>uri</th>
-<td class="description">URI for options</td></tr>
-</tbody></table>
-<h4 class="returnvalue">Return Value</h4>
-<p class="description">Status of call (0 = success)</p>
+<p class="discussion">This function returns <code>true</code> if the connection is currently encrypted.</p>
 <h3 class="function"><a id="httpPeek">httpPeek</a></h3>
 <p class="description">Peek at data from a HTTP connection.</p>
 <p class="code">
@@ -5459,32 +5463,6 @@ a buffer as needed.  The data is still available for reading using
 <a href="#httpRead"><code>httpRead</code></a>.<br>
 <br>
 For non-blocking connections the usual timeouts apply.</p>
-<h3 class="function"><a id="httpPost">httpPost</a></h3>
-<p class="description">Send a POST request to the server.</p>
-<p class="code">
-int httpPost(<a href="#http_t">http_t</a> *http, const char *uri);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>http</th>
-<td class="description">HTTP connection</td></tr>
-<tr><th>uri</th>
-<td class="description">URI for post</td></tr>
-</tbody></table>
-<h4 class="returnvalue">Return Value</h4>
-<p class="description">Status of call (0 = success)</p>
-<h3 class="function"><a id="httpPut">httpPut</a></h3>
-<p class="description">Send a PUT request to the server.</p>
-<p class="code">
-int httpPut(<a href="#http_t">http_t</a> *http, const char *uri);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>http</th>
-<td class="description">HTTP connection</td></tr>
-<tr><th>uri</th>
-<td class="description">URI to put</td></tr>
-</tbody></table>
-<h4 class="returnvalue">Return Value</h4>
-<p class="description">Status of call (0 = success)</p>
 <h3 class="function"><a id="httpRead">httpRead</a></h3>
 <p class="description">Read data from a HTTP connection.</p>
 <p class="code">
@@ -5516,10 +5494,9 @@ ssize_t httpRead(<a href="#http_t">http_t</a> *http, char *buffer, size_t length
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">New state of connection</p>
 <h3 class="function"><a id="httpReconnect">httpReconnect</a></h3>
-<p class="description">Reconnect to a HTTP server with timeout and optional
-cancel.</p>
+<p class="description">Reconnect to a HTTP server with timeout and optional cancel.</p>
 <p class="code">
-int httpReconnect(<a href="#http_t">http_t</a> *http, int msec, int *cancel);</p>
+bool httpReconnect(<a href="#http_t">http_t</a> *http, int msec, int *cancel);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>http</th>
@@ -5530,7 +5507,7 @@ int httpReconnect(<a href="#http_t">http_t</a> *http, int msec, int *cancel);</p
 <td class="description">Pointer to &quot;cancel&quot; variable</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">0 on success, non-zero on failure</p>
+<p class="description"><code>true</code> on success, <code>false</code> on failure</p>
 <h3 class="function"><a id="httpResolveHostname">httpResolveHostname</a></h3>
 <p class="description">Resolve the hostname of the HTTP connection
 address.</p>
@@ -5547,11 +5524,49 @@ const char *httpResolveHostname(<a href="#http_t">http_t</a> *http, char *buffer
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Resolved hostname or <code>NULL</code></p>
+<h3 class="function"><a id="httpResolveURI">httpResolveURI</a></h3>
+<p class="description">Resolve a DNS-SD URI.</p>
+<p class="code">
+const char *httpResolveURI(const char *uri, char *resolved_uri, size_t resolved_size, <a href="#http_resolve_t">http_resolve_t</a> options, <a href="#http_resolve_cb_t">http_resolve_cb_t</a> cb, void *cb_data);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>uri</th>
+<td class="description">DNS-SD URI</td></tr>
+<tr><th>resolved_uri</th>
+<td class="description">Buffer for resolved URI</td></tr>
+<tr><th>resolved_size</th>
+<td class="description">Size of URI buffer</td></tr>
+<tr><th>options</th>
+<td class="description">Resolve options</td></tr>
+<tr><th>cb</th>
+<td class="description">Continue callback function</td></tr>
+<tr><th>cb_data</th>
+<td class="description">Context pointer for callback</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Resolved URI</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function resolves a DNS-SD URI of the form
+&quot;scheme://service-instance-name._protocol._tcp.domain/...&quot;.  The &quot;options&quot;
+parameter specifies a bitfield of resolution options including:
+
+</p><ul>
+<li><code>HTTP_RESOLVE_DEFAULT</code>: Use default options
+</li>
+<li><code>HTTP_RESOLVE_FQDN</code>: Resolve the fully-qualified domain name instead of an IP address
+</li>
+<li><code>HTTP_RESOLVE_FAXOUT</code>: Resolve the FaxOut service instead of Print (IPP/IPPS)</li>
+</ul>
+<p class="discussion">The &quot;cb&quot; parameter specifies a callback that allows resolution to be
+terminated.  The callback is provided the &quot;cb_data&quot; value and returns a
+<code>bool</code> value that is <code>true</code> to continue and <code>false</code> to stop.  If no callback
+is specified (&quot;cb&quot; is <code>NULL</code>), then this function will block up to 90 seconds
+to resolve the specified URI.</p>
 <h3 class="function"><a id="httpSeparateURI">httpSeparateURI</a></h3>
 <p class="description">Separate a Universal Resource Identifier into its
 components.</p>
 <p class="code">
-<a href="#http_uri_status_t">http_uri_status_t</a> httpSeparateURI(<a href="#http_uri_coding_t">http_uri_coding_t</a> decoding, const char *uri, char *scheme, int schemelen, char *username, int usernamelen, char *host, int hostlen, int *port, char *resource, int resourcelen);</p>
+<a href="#http_uri_status_t">http_uri_status_t</a> httpSeparateURI(<a href="#http_uri_coding_t">http_uri_coding_t</a> decoding, const char *uri, char *scheme, size_t schemelen, char *username, size_t usernamelen, char *host, size_t hostlen, int *port, char *resource, size_t resourcelen);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>decoding</th>
@@ -5596,8 +5611,7 @@ void httpSetAuthString(<a href="#http_t">http_t</a> *http, const char *scheme, c
 <p class="discussion">This function stores a copy of the current authorization string in the HTTP
 connection object.  You must still call <a href="#httpSetField"><code>httpSetField</code></a> to set
 <code>HTTP_FIELD_AUTHORIZATION</code> prior to issuing a HTTP request using
-<a href="#httpGet"><code>httpGet</code></a>, <a href="#httpHead"><code>httpHead</code></a>, <a href="#httpOptions"><code>httpOptions</code></a>, <a href="#httpPost"><code>httpPost</code></a>, or
-<a href="#httpPut"><code>httpPut</code></a>.</p>
+<a href="#httpWriteRequest"><code>httpWriteRequest</code></a>.</p>
 <h3 class="function"><a id="httpSetBlocking">httpSetBlocking</a></h3>
 <p class="description">Set blocking/non-blocking behavior on a connection.</p>
 <p class="code">
@@ -5624,7 +5638,7 @@ void httpSetCookie(<a href="#http_t">http_t</a> *http, const char *cookie);</p>
 <p class="description">Set the credentials associated with an encrypted
 connection.</p>
 <p class="code">
-int httpSetCredentials(<a href="#http_t">http_t</a> *http, <a href="#cups_array_t">cups_array_t</a> *credentials);</p>
+bool httpSetCredentials(<a href="#http_t">http_t</a> *http, <a href="#cups_array_t">cups_array_t</a> *credentials);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>http</th>
@@ -5633,7 +5647,7 @@ int httpSetCredentials(<a href="#http_t">http_t</a> *http, <a href="#cups_array_
 <td class="description">Array of credentials</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">Status of call (0 = success)</p>
+<p class="description"><code>true</code> on success, <code>false</code> on error</p>
 <h3 class="function"><a id="httpSetDefaultField">httpSetDefaultField</a></h3>
 <p class="description">Set the default value of an HTTP header.</p>
 <p class="code">
@@ -5653,6 +5667,19 @@ void httpSetDefaultField(<a href="#http_t">http_t</a> *http, <a href="#http_fiel
 </p><blockquote>
 <em>Note:</em> Currently only the <code>HTTP_FIELD_ACCEPT_ENCODING</code>,
 <code>HTTP_FIELD_SERVER</code>, and <code>HTTP_FIELD_USER_AGENT</code> fields can be set.</blockquote>
+<h3 class="function"><a id="httpSetEncryption">httpSetEncryption</a></h3>
+<p class="description">Set the required encryption on the link.</p>
+<p class="code">
+bool httpSetEncryption(<a href="#http_t">http_t</a> *http, <a href="#http_encryption_t">http_encryption_t</a> e);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>http</th>
+<td class="description">HTTP connection</td></tr>
+<tr><th>e</th>
+<td class="description">New encryption preference</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description"><code>true</code> on success, <code>false</code> on error</p>
 <h3 class="function"><a id="httpSetExpect">httpSetExpect</a></h3>
 <p class="description">Set the Expect: header in a request.</p>
 <p class="code">
@@ -5662,11 +5689,12 @@ void httpSetExpect(<a href="#http_t">http_t</a> *http, <a href="#http_status_t">
 <tr><th>http</th>
 <td class="description">HTTP connection</td></tr>
 <tr><th>expect</th>
-<td class="description">HTTP status to expect (<code>HTTP_STATUS_CONTINUE</code>)</td></tr>
+<td class="description">HTTP status to expect (<code>HTTP_STATUS_NONE</code> or <code>HTTP_STATUS_CONTINUE</code>)</td></tr>
 </tbody></table>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">This function sets the <code>Expect:</code> header in a request.  Currently only
-<code>HTTP_STATUS_CONTINUE</code> is supported for the &quot;expect&quot; argument.</p>
+<code>HTTP_STATUS_NONE</code> or <code>HTTP_STATUS_CONTINUE</code> is supported for the &quot;expect&quot;
+argument.</p>
 <h3 class="function"><a id="httpSetField">httpSetField</a></h3>
 <p class="description">Set the value of an HTTP header.</p>
 <p class="code">
@@ -5709,7 +5737,7 @@ while other values specify a fixed <code>Content-Length</code>.</p>
 <h3 class="function"><a id="httpSetTimeout">httpSetTimeout</a></h3>
 <p class="description">Set read/write timeouts and an optional callback.</p>
 <p class="code">
-void httpSetTimeout(<a href="#http_t">http_t</a> *http, double timeout, <a href="#http_timeout_cb_t">http_timeout_cb_t</a> cb, void *user_data);</p>
+void httpSetTimeout(<a href="#http_t">http_t</a> *http, double timeout, <a href="#http_timeout_cb_t">http_timeout_cb_t</a> cb, void *cb_data);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>http</th>
@@ -5718,8 +5746,8 @@ void httpSetTimeout(<a href="#http_t">http_t</a> *http, double timeout, <a href=
 <td class="description">Number of seconds for timeout, must be greater than <code>0</code></td></tr>
 <tr><th>cb</th>
 <td class="description">Callback function or <code>NULL</code> for none</td></tr>
-<tr><th>user_data</th>
-<td class="description">User data pointer</td></tr>
+<tr><th>cb_data</th>
+<td class="description">Callback data pointer</td></tr>
 </tbody></table>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">This function sets the read/write timeouts for an HTTP connection with an
@@ -5728,15 +5756,15 @@ connection pointer and a user data pointer, and returns <code>true</code> to con
 <code>false</code> to error (time) out.
 
 <pre>
-bool                           // true to continue, false to stop
-timeout_cb(http_t *http,       // HTTP connection
-void   *user_data)  // User data pointer
+bool // true to continue, false to stop
+timeout_cb(http_t *http, void *user_data)
 {
-...
+... &quot;http&quot; contains the HTTP connection, &quot;user_data&quot; contains the callback pointer
 }
 ```</pre>
-the server need to do so in each
-thread for the same server to be used.</p>
+lution to be
+terminated.  The callback is provided the &quot;cb_data&quot; value and returns a
+<code>bool</code></p>
 <h3 class="function"><a id="httpShutdown">httpShutdown</a></h3>
 <p class="description">Shutdown one side of an HTTP connection.</p>
 <p class="code">
@@ -5799,7 +5827,7 @@ value.</p>
 <h3 class="function"><a id="httpWait">httpWait</a></h3>
 <p class="description">Wait for data available on a connection.</p>
 <p class="code">
-int httpWait(<a href="#http_t">http_t</a> *http, int msec);</p>
+bool httpWait(<a href="#http_t">http_t</a> *http, int msec);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>http</th>
@@ -5808,7 +5836,7 @@ int httpWait(<a href="#http_t">http_t</a> *http, int msec);</p>
 <td class="description">Milliseconds to wait</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">1 if data is available, 0 otherwise</p>
+<p class="description"><code>true</code> when data is available, <code>false</code> otherwise</p>
 <h3 class="function"><a id="httpWrite">httpWrite</a></h3>
 <p class="description">Write data to a HTTP connection.</p>
 <p class="code">
@@ -5824,10 +5852,31 @@ ssize_t httpWrite(<a href="#http_t">http_t</a> *http, const char *buffer, size_t
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Number of bytes written</p>
+<h3 class="function"><a id="httpWriteRequest">httpWriteRequest</a></h3>
+<p class="description">Write a HTTP request.</p>
+<p class="code">
+bool httpWriteRequest(<a href="#http_t">http_t</a> *http, const char *method, const char *uri);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>http</th>
+<td class="description">HTTP connection</td></tr>
+<tr><th>method</th>
+<td class="description">Request method (&quot;GET&quot;, &quot;POST&quot;, &quot;PUT&quot;, etc.)</td></tr>
+<tr><th>uri</th>
+<td class="description">Request URI</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description"><code>true</code> on success, <code>false</code> on failure</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function writes a HTTP request to the specified connection.  The
+&quot;method&quot; parameter specifies the HTTP method (&quot;GET&quot;, &quot;POST&quot;, &quot;PUT&quot;, etc)
+while the &quot;uri&quot; parameter specifies the request URI.  All fields must be
+set using the <a href="#httpSetCookie"><code>httpSetCookie</code></a>, <a href="#httpSetField"><code>httpSetField</code></a>, and
+<a href="#httpSetLength"><code>httpSetLength</code></a> functions prior to writing the request.</p>
 <h3 class="function"><a id="httpWriteResponse">httpWriteResponse</a></h3>
 <p class="description">Write a HTTP response to a client connection.</p>
 <p class="code">
-int httpWriteResponse(<a href="#http_t">http_t</a> *http, <a href="#http_status_t">http_status_t</a> status);</p>
+bool httpWriteResponse(<a href="#http_t">http_t</a> *http, <a href="#http_status_t">http_status_t</a> status);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>http</th>
@@ -5836,7 +5885,7 @@ int httpWriteResponse(<a href="#http_t">http_t</a> *http, <a href="#http_status_
 <td class="description">Status code</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">0 on success, -1 on error</p>
+<p class="description"><code>true</code> on success, <code>false</code> on error</p>
 <h3 class="function"><a id="ippAddBoolean">ippAddBoolean</a></h3>
 <p class="description">Add a boolean attribute to an IPP message.</p>
 <p class="code">
@@ -5855,10 +5904,10 @@ int httpWriteResponse(<a href="#http_t">http_t</a> *http, <a href="#http_status_
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">New attribute</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>ipp</code> parameter refers to an IPP message previously created using
+<p class="discussion">The &quot;ipp&quot; parameter refers to an IPP message previously created using
 the <a href="#ippNew"><code>ippNew</code></a>, <a href="#ippNewRequest"><code>ippNewRequest</code></a>, or  <a href="#ippNewResponse"><code>ippNewResponse</code></a> functions.<br>
 <br>
-The <code>group</code> parameter specifies the IPP attribute group tag: none
+The &quot;group&quot; parameter specifies the IPP attribute group tag: none
 (<code>IPP_TAG_ZERO</code>, for member attributes), document (<code>IPP_TAG_DOCUMENT</code>),
 event notification (<code>IPP_TAG_EVENT_NOTIFICATION</code>), operation
 (<code>IPP_TAG_OPERATION</code>), printer (<code>IPP_TAG_PRINTER</code>), subscription
@@ -5883,10 +5932,10 @@ event notification (<code>IPP_TAG_EVENT_NOTIFICATION</code>), operation
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">New attribute</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>ipp</code> parameter refers to an IPP message previously created using
+<p class="discussion">The &quot;ipp&quot; parameter refers to an IPP message previously created using
 the <a href="#ippNew"><code>ippNew</code></a>, <a href="#ippNewRequest"><code>ippNewRequest</code></a>, or  <a href="#ippNewResponse"><code>ippNewResponse</code></a> functions.<br>
 <br>
-The <code>group</code> parameter specifies the IPP attribute group tag: none
+The &quot;group&quot; parameter specifies the IPP attribute group tag: none
 (<code>IPP_TAG_ZERO</code>, for member attributes), document (<code>IPP_TAG_DOCUMENT</code>),
 event notification (<code>IPP_TAG_EVENT_NOTIFICATION</code>), operation
 (<code>IPP_TAG_OPERATION</code>), printer (<code>IPP_TAG_PRINTER</code>), subscription
@@ -5909,10 +5958,10 @@ event notification (<code>IPP_TAG_EVENT_NOTIFICATION</code>), operation
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">New attribute</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>ipp</code> parameter refers to an IPP message previously created using
+<p class="discussion">The &quot;ipp&quot; parameter refers to an IPP message previously created using
 the <a href="#ippNew"><code>ippNew</code></a>, <a href="#ippNewRequest"><code>ippNewRequest</code></a>, or  <a href="#ippNewResponse"><code>ippNewResponse</code></a> functions.<br>
 <br>
-The <code>group</code> parameter specifies the IPP attribute group tag: none
+The &quot;group&quot; parameter specifies the IPP attribute group tag: none
 (<code>IPP_TAG_ZERO</code>, for member attributes), document (<code>IPP_TAG_DOCUMENT</code>),
 event notification (<code>IPP_TAG_EVENT_NOTIFICATION</code>), operation
 (<code>IPP_TAG_OPERATION</code>), printer (<code>IPP_TAG_PRINTER</code>), subscription
@@ -5937,10 +5986,10 @@ event notification (<code>IPP_TAG_EVENT_NOTIFICATION</code>), operation
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">New attribute</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>ipp</code> parameter refers to an IPP message previously created using
+<p class="discussion">The &quot;ipp&quot; parameter refers to an IPP message previously created using
 the <a href="#ippNew"><code>ippNew</code></a>, <a href="#ippNewRequest"><code>ippNewRequest</code></a>, or  <a href="#ippNewResponse"><code>ippNewResponse</code></a> functions.<br>
 <br>
-The <code>group</code> parameter specifies the IPP attribute group tag: none
+The &quot;group&quot; parameter specifies the IPP attribute group tag: none
 (<code>IPP_TAG_ZERO</code>, for member attributes), document (<code>IPP_TAG_DOCUMENT</code>),
 event notification (<code>IPP_TAG_EVENT_NOTIFICATION</code>), operation
 (<code>IPP_TAG_OPERATION</code>), printer (<code>IPP_TAG_PRINTER</code>), subscription
@@ -5963,10 +6012,10 @@ event notification (<code>IPP_TAG_EVENT_NOTIFICATION</code>), operation
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">New attribute</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>ipp</code> parameter refers to an IPP message previously created using
+<p class="discussion">The &quot;ipp&quot; parameter refers to an IPP message previously created using
 the <a href="#ippNew"><code>ippNew</code></a>, <a href="#ippNewRequest"><code>ippNewRequest</code></a>, or  <a href="#ippNewResponse"><code>ippNewResponse</code></a> functions.<br>
 <br>
-The <code>group</code> parameter specifies the IPP attribute group tag: none
+The &quot;group&quot; parameter specifies the IPP attribute group tag: none
 (<code>IPP_TAG_ZERO</code>, for member attributes), document (<code>IPP_TAG_DOCUMENT</code>),
 event notification (<code>IPP_TAG_EVENT_NOTIFICATION</code>), operation
 (<code>IPP_TAG_OPERATION</code>), printer (<code>IPP_TAG_PRINTER</code>), subscription
@@ -5991,10 +6040,10 @@ event notification (<code>IPP_TAG_EVENT_NOTIFICATION</code>), operation
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">New attribute</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>ipp</code> parameter refers to an IPP message previously created using
+<p class="discussion">The &quot;ipp&quot; parameter refers to an IPP message previously created using
 the <a href="#ippNew"><code>ippNew</code></a>, <a href="#ippNewRequest"><code>ippNewRequest</code></a>, or  <a href="#ippNewResponse"><code>ippNewResponse</code></a> functions.<br>
 <br>
-The <code>group</code> parameter specifies the IPP attribute group tag: none
+The &quot;group&quot; parameter specifies the IPP attribute group tag: none
 (<code>IPP_TAG_ZERO</code>, for member attributes), document (<code>IPP_TAG_DOCUMENT</code>),
 event notification (<code>IPP_TAG_EVENT_NOTIFICATION</code>), operation
 (<code>IPP_TAG_OPERATION</code>), printer (<code>IPP_TAG_PRINTER</code>), subscription
@@ -6024,10 +6073,10 @@ Supported values include enum (<code>IPP_TAG_ENUM</code>) and integer
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">New attribute</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>ipp</code> parameter refers to an IPP message previously created using
+<p class="discussion">The &quot;ipp&quot; parameter refers to an IPP message previously created using
 the <a href="#ippNew"><code>ippNew</code></a>, <a href="#ippNewRequest"><code>ippNewRequest</code></a>, or  <a href="#ippNewResponse"><code>ippNewResponse</code></a> functions.<br>
 <br>
-The <code>group</code> parameter specifies the IPP attribute group tag: none
+The &quot;group&quot; parameter specifies the IPP attribute group tag: none
 (<code>IPP_TAG_ZERO</code>, for member attributes), document (<code>IPP_TAG_DOCUMENT</code>),
 event notification (<code>IPP_TAG_EVENT_NOTIFICATION</code>), operation
 (<code>IPP_TAG_OPERATION</code>), printer (<code>IPP_TAG_PRINTER</code>), subscription
@@ -6055,10 +6104,10 @@ Supported values include enum (<code>IPP_TAG_ENUM</code>) and integer
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">New attribute</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>ipp</code> parameter refers to an IPP message previously created using
+<p class="discussion">The &quot;ipp&quot; parameter refers to an IPP message previously created using
 the <a href="#ippNew"><code>ippNew</code></a>, <a href="#ippNewRequest"><code>ippNewRequest</code></a>, or  <a href="#ippNewResponse"><code>ippNewResponse</code></a> functions.<br>
 <br>
-The <code>group</code> parameter specifies the IPP attribute group tag: none
+The &quot;group&quot; parameter specifies the IPP attribute group tag: none
 (<code>IPP_TAG_ZERO</code>, for member attributes), document (<code>IPP_TAG_DOCUMENT</code>),
 event notification (<code>IPP_TAG_EVENT_NOTIFICATION</code>), operation
 (<code>IPP_TAG_OPERATION</code>), printer (<code>IPP_TAG_PRINTER</code>), subscription
@@ -6081,10 +6130,10 @@ event notification (<code>IPP_TAG_EVENT_NOTIFICATION</code>), operation
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">New attribute</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>ipp</code> parameter refers to an IPP message previously created using
+<p class="discussion">The &quot;ipp&quot; parameter refers to an IPP message previously created using
 the <a href="#ippNew"><code>ippNew</code></a>, <a href="#ippNewRequest"><code>ippNewRequest</code></a>, or  <a href="#ippNewResponse"><code>ippNewResponse</code></a> functions.<br>
 <br>
-The <code>group</code> parameter specifies the IPP attribute group tag: none
+The &quot;group&quot; parameter specifies the IPP attribute group tag: none
 (<code>IPP_TAG_ZERO</code>, for member attributes), document (<code>IPP_TAG_DOCUMENT</code>),
 event notification (<code>IPP_TAG_EVENT_NOTIFICATION</code>), operation
 (<code>IPP_TAG_OPERATION</code>), printer (<code>IPP_TAG_PRINTER</code>), subscription
@@ -6115,16 +6164,16 @@ admin-define (<code>IPP_TAG_ADMINDEFINE</code>).</p>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">New attribute</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>ipp</code> parameter refers to an IPP message previously created using
+<p class="discussion">The &quot;ipp&quot; parameter refers to an IPP message previously created using
 the <a href="#ippNew"><code>ippNew</code></a>, <a href="#ippNewRequest"><code>ippNewRequest</code></a>, or  <a href="#ippNewResponse"><code>ippNewResponse</code></a> functions.<br>
 <br>
-The <code>group</code> parameter specifies the IPP attribute group tag: none
+The &quot;group&quot; parameter specifies the IPP attribute group tag: none
 (<code>IPP_TAG_ZERO</code>, for member attributes), document (<code>IPP_TAG_DOCUMENT</code>),
 event notification (<code>IPP_TAG_EVENT_NOTIFICATION</code>), operation
 (<code>IPP_TAG_OPERATION</code>), printer (<code>IPP_TAG_PRINTER</code>), subscription
 (<code>IPP_TAG_SUBSCRIPTION</code>), or unsupported (<code>IPP_TAG_UNSUPPORTED_GROUP</code>).<br>
 <br>
-The <code>lower</code> parameter must be less than or equal to the <code>upper</code> parameter.</p>
+The &quot;lower<code> parameter must be less than or equal to the </code>upper&quot; parameter.</p>
 <h3 class="function"><a id="ippAddRanges">ippAddRanges</a></h3>
 <p class="description">Add ranges of values to an IPP message.</p>
 <p class="code">
@@ -6147,10 +6196,10 @@ The <code>lower</code> parameter must be less than or equal to the <code>upper</
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">New attribute</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>ipp</code> parameter refers to an IPP message previously created using
+<p class="discussion">The &quot;ipp&quot; parameter refers to an IPP message previously created using
 the <a href="#ippNew"><code>ippNew</code></a>, <a href="#ippNewRequest"><code>ippNewRequest</code></a>, or  <a href="#ippNewResponse"><code>ippNewResponse</code></a> functions.<br>
 <br>
-The <code>group</code> parameter specifies the IPP attribute group tag: none
+The &quot;group&quot; parameter specifies the IPP attribute group tag: none
 (<code>IPP_TAG_ZERO</code>, for member attributes), document (<code>IPP_TAG_DOCUMENT</code>),
 event notification (<code>IPP_TAG_EVENT_NOTIFICATION</code>), operation
 (<code>IPP_TAG_OPERATION</code>), printer (<code>IPP_TAG_PRINTER</code>), subscription
@@ -6177,10 +6226,10 @@ event notification (<code>IPP_TAG_EVENT_NOTIFICATION</code>), operation
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">New attribute</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>ipp</code> parameter refers to an IPP message previously created using
+<p class="discussion">The &quot;ipp&quot; parameter refers to an IPP message previously created using
 the <a href="#ippNew"><code>ippNew</code></a>, <a href="#ippNewRequest"><code>ippNewRequest</code></a>, or  <a href="#ippNewResponse"><code>ippNewResponse</code></a> functions.<br>
 <br>
-The <code>group</code> parameter specifies the IPP attribute group tag: none
+The &quot;group&quot; parameter specifies the IPP attribute group tag: none
 (<code>IPP_TAG_ZERO</code>, for member attributes), document (<code>IPP_TAG_DOCUMENT</code>),
 event notification (<code>IPP_TAG_EVENT_NOTIFICATION</code>), operation
 (<code>IPP_TAG_OPERATION</code>), printer (<code>IPP_TAG_PRINTER</code>), subscription
@@ -6209,10 +6258,10 @@ event notification (<code>IPP_TAG_EVENT_NOTIFICATION</code>), operation
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">New attribute</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>ipp</code> parameter refers to an IPP message previously created using
+<p class="discussion">The &quot;ipp&quot; parameter refers to an IPP message previously created using
 the <a href="#ippNew"><code>ippNew</code></a>, <a href="#ippNewRequest"><code>ippNewRequest</code></a>, or  <a href="#ippNewResponse"><code>ippNewResponse</code></a> functions.<br>
 <br>
-The <code>group</code> parameter specifies the IPP attribute group tag: none
+The &quot;group&quot; parameter specifies the IPP attribute group tag: none
 (<code>IPP_TAG_ZERO</code>, for member attributes), document (<code>IPP_TAG_DOCUMENT</code>),
 event notification (<code>IPP_TAG_EVENT_NOTIFICATION</code>), operation
 (<code>IPP_TAG_OPERATION</code>), printer (<code>IPP_TAG_PRINTER</code>), subscription
@@ -6229,7 +6278,7 @@ event notification (<code>IPP_TAG_EVENT_NOTIFICATION</code>), operation
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">New attribute</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>ipp</code> parameter refers to an IPP message previously created using
+<p class="discussion">The &quot;ipp&quot; parameter refers to an IPP message previously created using
 the <a href="#ippNew"><code>ippNew</code></a>, <a href="#ippNewRequest"><code>ippNewRequest</code></a>, or  <a href="#ippNewResponse"><code>ippNewResponse</code></a> functions.</p>
 <h3 class="function"><a id="ippAddString">ippAddString</a></h3>
 <p class="description">Add a language-encoded string to an IPP message.</p>
@@ -6253,10 +6302,10 @@ the <a href="#ippNew"><code>ippNew</code></a>, <a href="#ippNewRequest"><code>ip
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">New attribute</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>ipp</code> parameter refers to an IPP message previously created using
+<p class="discussion">The &quot;ipp&quot; parameter refers to an IPP message previously created using
 the <a href="#ippNew"><code>ippNew</code></a>, <a href="#ippNewRequest"><code>ippNewRequest</code></a>, or  <a href="#ippNewResponse"><code>ippNewResponse</code></a> functions.<br>
 <br>
-The <code>group</code> parameter specifies the IPP attribute group tag: none
+The &quot;group&quot; parameter specifies the IPP attribute group tag: none
 (<code>IPP_TAG_ZERO</code>, for member attributes), document (<code>IPP_TAG_DOCUMENT</code>),
 event notification (<code>IPP_TAG_EVENT_NOTIFICATION</code>), operation
 (<code>IPP_TAG_OPERATION</code>), printer (<code>IPP_TAG_PRINTER</code>), subscription
@@ -6265,12 +6314,12 @@ event notification (<code>IPP_TAG_EVENT_NOTIFICATION</code>), operation
 Supported string values include charset (<code>IPP_TAG_CHARSET</code>), keyword
 (<code>IPP_TAG_KEYWORD</code>), language (<code>IPP_TAG_LANGUAGE</code>), mimeMediaType
 (<code>IPP_TAG_MIMETYPE</code>), name (<code>IPP_TAG_NAME</code>), nameWithLanguage
-(<code>IPP_TAG_NAMELANG), text (</code>code IPP_TAG_TEXT@), textWithLanguage
-(<code>IPP_TAG_TEXTLANG</code>), uri (<code>IPP_TAG_URI</code>), and uriScheme
-(<code>IPP_TAG_URISCHEME</code>).<br>
-<br>
-The <code>language</code> parameter must be non-<code>NULL</code> for nameWithLanguage and
-textWithLanguage string values and must be <code>NULL</code> for all other string values.</p>
+(<code>IPP_TAG_NAMELANG), text (`IPP_TAG_TEXT`), textWithLanguage
+(`IPP_TAG_TEXTLANG`), uri (`IPP_TAG_URI`), and uriScheme
+(`IPP_TAG_URISCHEME`).
+
+The "language" parameter must be non-`NULL` for nameWithLanguage and
+textWithLanguage string values and must be `NULL` for all other string values.</code></p>
 <h3 class="function"><a id="ippAddStringf">ippAddStringf</a></h3>
 <p class="description">Add a formatted string to an IPP message.</p>
 <p class="code">
@@ -6295,10 +6344,10 @@ textWithLanguage string values and must be <code>NULL</code> for all other strin
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">New attribute</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>ipp</code> parameter refers to an IPP message previously created using
+<p class="discussion">The &quot;ipp&quot; parameter refers to an IPP message previously created using
 the <a href="#ippNew"><code>ippNew</code></a>, <a href="#ippNewRequest"><code>ippNewRequest</code></a>, or  <a href="#ippNewResponse"><code>ippNewResponse</code></a> functions.<br>
 <br>
-The <code>group</code> parameter specifies the IPP attribute group tag: none
+The &quot;group&quot; parameter specifies the IPP attribute group tag: none
 (<code>IPP_TAG_ZERO</code>, for member attributes), document
 (<code>IPP_TAG_DOCUMENT</code>), event notification
 (<code>IPP_TAG_EVENT_NOTIFICATION</code>), operation (<code>IPP_TAG_OPERATION</code>),
@@ -6308,18 +6357,18 @@ or unsupported (<code>IPP_TAG_UNSUPPORTED_GROUP</code>).<br>
 Supported string values include charset (<code>IPP_TAG_CHARSET</code>), keyword
 (<code>IPP_TAG_KEYWORD</code>), language (<code>IPP_TAG_LANGUAGE</code>), mimeMediaType
 (<code>IPP_TAG_MIMETYPE</code>), name (<code>IPP_TAG_NAME</code>), nameWithLanguage
-(<code>IPP_TAG_NAMELANG), text (</code>code IPP_TAG_TEXT@), textWithLanguage
-(<code>IPP_TAG_TEXTLANG</code>), uri (<code>IPP_TAG_URI</code>), and uriScheme
-(<code>IPP_TAG_URISCHEME</code>).<br>
-<br>
-The <code>language</code> parameter must be non-<code>NULL</code> for nameWithLanguage
-and textWithLanguage string values and must be <code>NULL</code> for all other
-string values.<br>
-<br>
-The <code>format</code> parameter uses formatting characters compatible with the
+(<code>IPP_TAG_NAMELANG), text (`IPP_TAG_TEXT`), textWithLanguage
+(`IPP_TAG_TEXTLANG`), uri (`IPP_TAG_URI`), and uriScheme
+(`IPP_TAG_URISCHEME`).
+
+The "language" parameter must be non-`NULL` for nameWithLanguage
+and textWithLanguage string values and must be `NULL` for all other
+string values.
+
+The "format" parameter uses formatting characters compatible with the
 printf family of standard functions.  Additional arguments follow it as
 needed.  The formatted string is truncated as needed to the maximum length of
-the corresponding value type.</p>
+the corresponding value type.</code></p>
 <h3 class="function"><a id="ippAddStringfv">ippAddStringfv</a></h3>
 <p class="description">Add a formatted string to an IPP message.</p>
 <p class="code">
@@ -6344,10 +6393,10 @@ the corresponding value type.</p>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">New attribute</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>ipp</code> parameter refers to an IPP message previously created using
+<p class="discussion">The &quot;ipp&quot; parameter refers to an IPP message previously created using
 the <a href="#ippNew"><code>ippNew</code></a>, <a href="#ippNewRequest"><code>ippNewRequest</code></a>, or  <a href="#ippNewResponse"><code>ippNewResponse</code></a> functions.<br>
 <br>
-The <code>group</code> parameter specifies the IPP attribute group tag: none
+The &quot;group&quot; parameter specifies the IPP attribute group tag: none
 (<code>IPP_TAG_ZERO</code>, for member attributes), document
 (<code>IPP_TAG_DOCUMENT</code>), event notification
 (<code>IPP_TAG_EVENT_NOTIFICATION</code>), operation (<code>IPP_TAG_OPERATION</code>),
@@ -6357,18 +6406,18 @@ or unsupported (<code>IPP_TAG_UNSUPPORTED_GROUP</code>).<br>
 Supported string values include charset (<code>IPP_TAG_CHARSET</code>), keyword
 (<code>IPP_TAG_KEYWORD</code>), language (<code>IPP_TAG_LANGUAGE</code>), mimeMediaType
 (<code>IPP_TAG_MIMETYPE</code>), name (<code>IPP_TAG_NAME</code>), nameWithLanguage
-(<code>IPP_TAG_NAMELANG), text (</code>code IPP_TAG_TEXT@), textWithLanguage
-(<code>IPP_TAG_TEXTLANG</code>), uri (<code>IPP_TAG_URI</code>), and uriScheme
-(<code>IPP_TAG_URISCHEME</code>).<br>
-<br>
-The <code>language</code> parameter must be non-<code>NULL</code> for nameWithLanguage
-and textWithLanguage string values and must be <code>NULL</code> for all other
-string values.<br>
-<br>
-The <code>format</code> parameter uses formatting characters compatible with the
+(<code>IPP_TAG_NAMELANG), text (`IPP_TAG_TEXT`), textWithLanguage
+(`IPP_TAG_TEXTLANG`), uri (`IPP_TAG_URI`), and uriScheme
+(`IPP_TAG_URISCHEME`).
+
+The "language" parameter must be non-`NULL` for nameWithLanguage
+and textWithLanguage string values and must be `NULL` for all other
+string values.
+
+The "format" parameter uses formatting characters compatible with the
 printf family of standard functions.  Additional arguments are passed in the
-stdarg pointer <code>ap</code>.  The formatted string is truncated as needed to the
-maximum length of the corresponding value type.</p>
+stdarg pointer `ap`.  The formatted string is truncated as needed to the
+maximum length of the corresponding value type.</code></p>
 <h3 class="function"><a id="ippAddStrings">ippAddStrings</a></h3>
 <p class="description">Add language-encoded strings to an IPP message.</p>
 <p class="code">
@@ -6393,10 +6442,10 @@ maximum length of the corresponding value type.</p>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">New attribute</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>ipp</code> parameter refers to an IPP message previously created using
+<p class="discussion">The &quot;ipp&quot; parameter refers to an IPP message previously created using
 the <a href="#ippNew"><code>ippNew</code></a>, <a href="#ippNewRequest"><code>ippNewRequest</code></a>, or  <a href="#ippNewResponse"><code>ippNewResponse</code></a> functions.<br>
 <br>
-The <code>group</code> parameter specifies the IPP attribute group tag: none
+The &quot;group&quot; parameter specifies the IPP attribute group tag: none
 (<code>IPP_TAG_ZERO</code>, for member attributes), document (<code>IPP_TAG_DOCUMENT</code>),
 event notification (<code>IPP_TAG_EVENT_NOTIFICATION</code>), operation
 (<code>IPP_TAG_OPERATION</code>), printer (<code>IPP_TAG_PRINTER</code>), subscription
@@ -6405,12 +6454,12 @@ event notification (<code>IPP_TAG_EVENT_NOTIFICATION</code>), operation
 Supported string values include charset (<code>IPP_TAG_CHARSET</code>), keyword
 (<code>IPP_TAG_KEYWORD</code>), language (<code>IPP_TAG_LANGUAGE</code>), mimeMediaType
 (<code>IPP_TAG_MIMETYPE</code>), name (<code>IPP_TAG_NAME</code>), nameWithLanguage
-(<code>IPP_TAG_NAMELANG), text (</code>code IPP_TAG_TEXT@), textWithLanguage
-(<code>IPP_TAG_TEXTLANG</code>), uri (<code>IPP_TAG_URI</code>), and uriScheme
-(<code>IPP_TAG_URISCHEME</code>).<br>
-<br>
-The <code>language</code> parameter must be non-<code>NULL</code> for nameWithLanguage and
-textWithLanguage string values and must be <code>NULL</code> for all other string values.</p>
+(<code>IPP_TAG_NAMELANG), text (`IPP_TAG_TEXT`), textWithLanguage
+(`IPP_TAG_TEXTLANG`), uri (`IPP_TAG_URI`), and uriScheme
+(`IPP_TAG_URISCHEME`).
+
+The "language" parameter must be non-`NULL` for nameWithLanguage and
+textWithLanguage string values and must be `NULL` for all other string values.</code></p>
 <h3 class="function"><a id="ippAttributeString">ippAttributeString</a></h3>
 <p class="description">Convert the attribute's value to a string.</p>
 <p class="code">
@@ -6427,14 +6476,15 @@ size_t ippAttributeString(<a href="#ipp_attribute_t">ipp_attribute_t</a> *attr, 
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Number of bytes less <code>nul</code></p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">Returns the number of bytes that would be written, not including the
-trailing nul. The buffer pointer can be NULL to get the required length,
-just like (v)snprintf.</p>
+<p class="discussion">This function converts an attribute's values into a string and returns the
+number of bytes that would be written, not including the trailing <code>nul</code>.  The
+buffer pointer can be NULL to get the required length, just like
+<code>(v)snprintf</code>.</p>
 <h3 class="function"><a id="ippContainsInteger">ippContainsInteger</a></h3>
 <p class="description">Determine whether an attribute contains the
 specified value or is within the list of ranges.</p>
 <p class="code">
-int ippContainsInteger(<a href="#ipp_attribute_t">ipp_attribute_t</a> *attr, int value);</p>
+bool ippContainsInteger(<a href="#ipp_attribute_t">ipp_attribute_t</a> *attr, int value);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>attr</th>
@@ -6443,16 +6493,16 @@ int ippContainsInteger(<a href="#ipp_attribute_t">ipp_attribute_t</a> *attr, int
 <td class="description">Integer/enum value</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">1 on a match, 0 on no match</p>
+<p class="description"><code>true</code> on a match, <code>false</code> on no match</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">Returns non-zero when the attribute contains either a matching integer or
-enum value, or the value falls within one of the rangeOfInteger values for
-the attribute.</p>
+<p class="discussion">This function returns <code>true</code> when the attribute contains either a matching
+integer or enum value, or the value falls within one of the rangeOfInteger
+values for the attribute.</p>
 <h3 class="function"><a id="ippContainsString">ippContainsString</a></h3>
 <p class="description">Determine whether an attribute contains the
 specified string value.</p>
 <p class="code">
-int ippContainsString(<a href="#ipp_attribute_t">ipp_attribute_t</a> *attr, const char *value);</p>
+bool ippContainsString(<a href="#ipp_attribute_t">ipp_attribute_t</a> *attr, const char *value);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>attr</th>
@@ -6461,14 +6511,14 @@ int ippContainsString(<a href="#ipp_attribute_t">ipp_attribute_t</a> *attr, cons
 <td class="description">String value</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">1 on a match, 0 on no match</p>
+<p class="description"><code>true</code> on a match, <code>false</code> on no match</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">Returns non-zero when the attribute contains a matching charset, keyword,
-naturalLanguage, mimeMediaType, name, text, uri, or uriScheme value.</p>
+<p class="discussion">This function returns <code>true</code> when the attribute contains a matching charset,
+keyword, naturalLanguage, mimeMediaType, name, text, uri, or uriScheme value.</p>
 <h3 class="function"><a id="ippCopyAttribute">ippCopyAttribute</a></h3>
 <p class="description">Copy an attribute.</p>
 <p class="code">
-<a href="#ipp_attribute_t">ipp_attribute_t</a> *ippCopyAttribute(<a href="#ipp_t">ipp_t</a> *dst, <a href="#ipp_attribute_t">ipp_attribute_t</a> *srcattr, int quickcopy);</p>
+<a href="#ipp_attribute_t">ipp_attribute_t</a> *ippCopyAttribute(<a href="#ipp_t">ipp_t</a> *dst, <a href="#ipp_attribute_t">ipp_attribute_t</a> *srcattr, bool quickcopy);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>dst</th>
@@ -6476,19 +6526,19 @@ naturalLanguage, mimeMediaType, name, text, uri, or uriScheme value.</p>
 <tr><th>srcattr</th>
 <td class="description">Attribute to copy</td></tr>
 <tr><th>quickcopy</th>
-<td class="description">1 for a referenced copy, 0 for normal</td></tr>
+<td class="description"><code>true</code> for a referenced copy, <code>false</code> for a new copy</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">New attribute</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The specified attribute, <code>attr</code>, is copied to the destination IPP message.
-When <code>quickcopy</code> is non-zero, a &quot;shallow&quot; reference copy of the attribute is
-created - this should only be done as long as the original source IPP message will
-not be freed for the life of the destination.</p>
+<p class="discussion">This function copies an attribute to another IPP message.  When &quot;quickcopy&quot;
+is <code>true</code>, a shallow reference copy of the attribute is created - this should
+only be done as long as the original source IPP message will not be freed for
+the life of the destination.</p>
 <h3 class="function"><a id="ippCopyAttributes">ippCopyAttributes</a></h3>
 <p class="description">Copy attributes from one IPP message to another.</p>
 <p class="code">
-int ippCopyAttributes(<a href="#ipp_t">ipp_t</a> *dst, <a href="#ipp_t">ipp_t</a> *src, int quickcopy, <a href="#ipp_copycb_t">ipp_copycb_t</a> cb, void *context);</p>
+bool ippCopyAttributes(<a href="#ipp_t">ipp_t</a> *dst, <a href="#ipp_t">ipp_t</a> *src, bool quickcopy, <a href="#ipp_copy_cb_t">ipp_copy_cb_t</a> cb, void *cb_data);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>dst</th>
@@ -6496,24 +6546,25 @@ int ippCopyAttributes(<a href="#ipp_t">ipp_t</a> *dst, <a href="#ipp_t">ipp_t</a
 <tr><th>src</th>
 <td class="description">Source IPP message</td></tr>
 <tr><th>quickcopy</th>
-<td class="description">1 for a referenced copy, 0 for normal</td></tr>
+<td class="description"><code>true</code> for a referenced copy, <code>false</code> for a new copy</td></tr>
 <tr><th>cb</th>
 <td class="description">Copy callback or <code>NULL</code> for none</td></tr>
-<tr><th>context</th>
-<td class="description">Context pointer</td></tr>
+<tr><th>cb_data</th>
+<td class="description">Callback data pointer</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">1 on success, 0 on error</p>
+<p class="description"><code>true</code> on success, <code>false</code> on error</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">Zero or more attributes are copied from the source IPP message, <code>src</code>, to the
-destination IPP message, <code>dst</code>. When <code>quickcopy</code> is non-zero, a &quot;shallow&quot;
-reference copy of the attribute is created - this should only be done as long as the
-original source IPP message will not be freed for the life of the destination.<br>
+<p class="discussion">This function copies zero or more attributes from the source to the
+destination IPP message.  When &quot;quickcopy&quot; is <code>true</code>, a shallow reference
+copy of the attribute is created - this should only be done as long as the
+original source IPP message will not be freed for the life of the
+destination.<br>
 <br>
-The <code>cb</code> and <code>context</code> parameters provide a generic way to &quot;filter&quot; the
-attributes that are copied - the function must return <code>true</code> to copy the attribute or
-<code>false</code> to skip it. The function may also choose to do a partial copy of the source attribute
-itself.</p>
+The &quot;cb&quot; and &quot;cb_data&quot; parameters provide a generic way to &quot;filter&quot; the
+attributes that are copied - the function must return <code>true</code> to copy the
+attribute or <code>false</code> to skip it.  The function may also choose to do a
+partial copy of the source attribute itself.</p>
 <h3 class="function"><a id="ippCreateRequestedArray">ippCreateRequestedArray</a></h3>
 <p class="description">Create a CUPS array of attribute names from the
 given requested-attributes attribute.</p>
@@ -6532,13 +6583,13 @@ list of &quot;requested-attribute&quot; values supplied in an IPP request.  All 
 registered values are supported in addition to the CUPS IPP extension
 attributes.<br>
 <br>
-The <code>request</code> parameter specifies the request message that was read from
+The &quot;request&quot; parameter specifies the request message that was read from
 the client.<br>
 <br>
 <code>NULL</code> is returned if all attributes should be returned.  Otherwise, the
-result is a sorted array of attribute names, where <code>cupsArrayFind(array,
-"attribute-name")</code> will return a non-NULL pointer.  The array must be freed
-using the <code>cupsArrayDelete</code> function.</p>
+result is a sorted array of attribute names, where
+<code>cupsArrayFind(array, "attribute-name")</code> will return a non-NULL pointer.  The
+array must be freed using <a href="#cupsArrayDelete"><code>cupsArrayDelete</code></a>.</p>
 <h3 class="function"><a id="ippDateToTime">ippDateToTime</a></h3>
 <p class="description">Convert from RFC 2579 Date/Time format to time in
 seconds.</p>
@@ -6574,7 +6625,7 @@ void ippDeleteAttribute(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute
 <h3 class="function"><a id="ippDeleteValues">ippDeleteValues</a></h3>
 <p class="description">Delete values in an attribute.</p>
 <p class="code">
-int ippDeleteValues(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t">ipp_attribute_t</a> **attr, size_t element, size_t count);</p>
+bool ippDeleteValues(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t">ipp_attribute_t</a> **attr, size_t element, size_t count);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>ipp</th>
@@ -6582,17 +6633,19 @@ int ippDeleteValues(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t">
 <tr><th>attr</th>
 <td class="description">Attribute</td></tr>
 <tr><th>element</th>
-<td class="description">Index of first value to delete (0-based)</td></tr>
+<td class="description">Index of first value to delete (<code>0</code>-based)</td></tr>
 <tr><th>count</th>
 <td class="description">Number of values to delete</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">1 on success, 0 on failure</p>
+<p class="description"><code>true</code> on success, <code>false</code> on failure</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>element</code> parameter specifies the first value to delete, starting at
-0. It must be less than the number of values returned by <a href="#ippGetCount"><code>ippGetCount</code></a>.<br>
+<p class="discussion">This function deletes one or more values in an attribute.  The &quot;element&quot;
+parameter specifies the first value to delete, starting at <code>0</code>.  It must be
+less than the number of values returned by <a href="#ippGetCount"><code>ippGetCount</code></a>.<br>
 <br>
-The <code>attr</code> parameter may be modified as a result of setting the value.<br>
+The &quot;attr&quot; parameter may be modified as a result of setting the value,
+which will set the variable to <code>NULL</code>.<br>
 <br>
 Deleting all values in an attribute deletes the attribute.</p>
 <h3 class="function"><a id="ippEnumString">ippEnumString</a></h3>
@@ -6620,7 +6673,7 @@ int ippEnumValue(const char *attrname, const char *enumstring);</p>
 <td class="description">Enum string</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">Enum value or -1 if unknown</p>
+<p class="description">Enum value or <code>-1</code> if unknown</p>
 <h3 class="function"><a id="ippErrorString">ippErrorString</a></h3>
 <p class="description">Return a name for the given status code.</p>
 <p class="code">
@@ -6822,6 +6875,21 @@ bool ippFileRead(<a href="#ipp_file_t">ipp_file_t</a> *file, <a href="#ipp_ftoke
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description"><code>true</code> on success, <code>false</code> on error</p>
+<h3 class="function"><a id="ippFileReadCollection">ippFileReadCollection</a></h3>
+<p class="description">Read a collection from an IPP data file.</p>
+<p class="code">
+<a href="#ipp_t">ipp_t</a> *ippFileReadCollection(<a href="#ipp_file_t">ipp_file_t</a> *file);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>file</th>
+<td class="description">IPP data file</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Collection value</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function reads a collection value from an IPP data file.  Collection
+values are surrounded by curly braces (&quot;{&quot; and &quot;}&quot;) and have &quot;MEMBER&quot;
+directives to define member attributes in the collection.</p>
 <h3 class="function"><a id="ippFileReadToken">ippFileReadToken</a></h3>
 <p class="description">Read a token from an IPP data file.</p>
 <p class="code">
@@ -7013,7 +7081,7 @@ bool ippFileWriteTokenf(<a href="#ipp_file_t">ipp_file_t</a> *file, const char *
 <p class="discussion">This function writes a formatted token or value string to an IPP data file,
 quoting and indenting the string as needed.</p>
 <h3 class="function"><a id="ippFindAttribute">ippFindAttribute</a></h3>
-<p class="description">Find a named attribute in a request.</p>
+<p class="description">Find a named attribute in an IPP message.</p>
 <p class="code">
 <a href="#ipp_attribute_t">ipp_attribute_t</a> *ippFindAttribute(<a href="#ipp_t">ipp_t</a> *ipp, const char *name, ipp_tag_t type);</p>
 <h4 class="parameters">Parameters</h4>
@@ -7028,11 +7096,11 @@ quoting and indenting the string as needed.</p>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Matching attribute</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">Starting with CUPS 2.0, the attribute name can contain a hierarchical list
-of attribute and member names separated by slashes, for example
-&quot;media-col/media-size&quot;.</p>
+<p class="discussion">This function finds the first occurrence of a named attribute in an IPP
+message.  The attribute name can contain a hierarchical list of attribute and
+member names separated by slashes, for example &quot;media-col/media-size&quot;.</p>
 <h3 class="function"><a id="ippFindNextAttribute">ippFindNextAttribute</a></h3>
-<p class="description">Find the next named attribute in a request.</p>
+<p class="description">Find the next named attribute in an IPP message.</p>
 <p class="code">
 <a href="#ipp_attribute_t">ipp_attribute_t</a> *ippFindNextAttribute(<a href="#ipp_t">ipp_t</a> *ipp, const char *name, ipp_tag_t type);</p>
 <h4 class="parameters">Parameters</h4>
@@ -7047,20 +7115,9 @@ of attribute and member names separated by slashes, for example
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Matching attribute</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">Starting with CUPS 2.0, the attribute name can contain a hierarchical list
-of attribute and member names separated by slashes, for example
-&quot;media-col/media-size&quot;.</p>
-<h3 class="function"><a id="ippFirstAttribute">ippFirstAttribute</a></h3>
-<p class="description">Return the first attribute in the message.</p>
-<p class="code">
-<a href="#ipp_attribute_t">ipp_attribute_t</a> *ippFirstAttribute(<a href="#ipp_t">ipp_t</a> *ipp);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>ipp</th>
-<td class="description">IPP message</td></tr>
-</tbody></table>
-<h4 class="returnvalue">Return Value</h4>
-<p class="description">First attribute or <code>NULL</code> if none</p>
+<p class="discussion">This function finds the next named attribute in an IPP message.  The
+attribute name can contain a hierarchical list of attribute and member names
+separated by slashes, for example &quot;media-col/media-size&quot;.</p>
 <h3 class="function"><a id="ippGetBoolean">ippGetBoolean</a></h3>
 <p class="description">Get a boolean value for an attribute.</p>
 <p class="code">
@@ -7070,12 +7127,12 @@ bool ippGetBoolean(<a href="#ipp_attribute_t">ipp_attribute_t</a> *attr, size_t 
 <tr><th>attr</th>
 <td class="description">IPP attribute</td></tr>
 <tr><th>element</th>
-<td class="description">Value number (0-based)</td></tr>
+<td class="description">Value number (<code>0</code>-based)</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Boolean value or <code>false</code> on error</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>element</code> parameter specifies which value to get from 0 to
+<p class="discussion">The &quot;element&quot; parameter specifies which value to get from <code>0</code> to
 <code>ippGetCount(attr)</code> - 1.</p>
 <h3 class="function"><a id="ippGetCollection">ippGetCollection</a></h3>
 <p class="description">Get a collection value for an attribute.</p>
@@ -7086,12 +7143,12 @@ bool ippGetBoolean(<a href="#ipp_attribute_t">ipp_attribute_t</a> *attr, size_t 
 <tr><th>attr</th>
 <td class="description">IPP attribute</td></tr>
 <tr><th>element</th>
-<td class="description">Value number (0-based)</td></tr>
+<td class="description">Value number (<code>0</code>-based)</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Collection value or <code>NULL</code> on error</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>element</code> parameter specifies which value to get from 0 to
+<p class="discussion">The &quot;element&quot; parameter specifies which value to get from <code>0</code> to
 <code>ippGetCount(attr)</code> - 1.</p>
 <h3 class="function"><a id="ippGetCount">ippGetCount</a></h3>
 <p class="description">Get the number of values in an attribute.</p>
@@ -7113,13 +7170,24 @@ const <a href="#ipp_uchar_t">ipp_uchar_t</a> *ippGetDate(<a href="#ipp_attribute
 <tr><th>attr</th>
 <td class="description">IPP attribute</td></tr>
 <tr><th>element</th>
-<td class="description">Value number (0-based)</td></tr>
+<td class="description">Value number (<code>0</code>-based)</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">dateTime value or <code>NULL</code></p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>element</code> parameter specifies which value to get from 0 to
+<p class="discussion">The &quot;element&quot; parameter specifies which value to get from <code>0</code> to
 <code>ippGetCount(attr)</code> - 1.</p>
+<h3 class="function"><a id="ippGetFirstAttribute">ippGetFirstAttribute</a></h3>
+<p class="description">Return the first attribute in the message.</p>
+<p class="code">
+<a href="#ipp_attribute_t">ipp_attribute_t</a> *ippGetFirstAttribute(<a href="#ipp_t">ipp_t</a> *ipp);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>ipp</th>
+<td class="description">IPP message</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">First attribute or <code>NULL</code> if none</p>
 <h3 class="function"><a id="ippGetGroupTag">ippGetGroupTag</a></h3>
 <p class="description">Get the group associated with an attribute.</p>
 <p class="code">
@@ -7140,12 +7208,12 @@ int ippGetInteger(<a href="#ipp_attribute_t">ipp_attribute_t</a> *attr, size_t e
 <tr><th>attr</th>
 <td class="description">IPP attribute</td></tr>
 <tr><th>element</th>
-<td class="description">Value number (0-based)</td></tr>
+<td class="description">Value number (<code>0</code>-based)</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Value or <code>0</code> on error</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>element</code> parameter specifies which value to get from 0 to
+<p class="discussion">The &quot;element&quot; parameter specifies which value to get from <code>0</code> to
 <code>ippGetCount(attr)</code> - 1.</p>
 <h3 class="function"><a id="ippGetName">ippGetName</a></h3>
 <p class="description">Get the attribute name.</p>
@@ -7158,6 +7226,17 @@ const char *ippGetName(<a href="#ipp_attribute_t">ipp_attribute_t</a> *attr);</p
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Attribute name or <code>NULL</code> for separators</p>
+<h3 class="function"><a id="ippGetNextAttribute">ippGetNextAttribute</a></h3>
+<p class="description">Return the next attribute in the message.</p>
+<p class="code">
+<a href="#ipp_attribute_t">ipp_attribute_t</a> *ippGetNextAttribute(<a href="#ipp_t">ipp_t</a> *ipp);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>ipp</th>
+<td class="description">IPP message</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Next attribute or <code>NULL</code> if none</p>
 <h3 class="function"><a id="ippGetOctetString">ippGetOctetString</a></h3>
 <p class="description">Get an octetString value from an IPP attribute.</p>
 <p class="code">
@@ -7167,14 +7246,14 @@ void *ippGetOctetString(<a href="#ipp_attribute_t">ipp_attribute_t</a> *attr, si
 <tr><th>attr</th>
 <td class="description">IPP attribute</td></tr>
 <tr><th>element</th>
-<td class="description">Value number (0-based)</td></tr>
+<td class="description">Value number (<code>0</code>-based)</td></tr>
 <tr><th>datalen</th>
 <td class="description">Length of octetString data</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Pointer to octetString data</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>element</code> parameter specifies which value to get from 0 to
+<p class="discussion">The &quot;element&quot; parameter specifies which value to get from '0' to
 <code>ippGetCount(attr)</code> - 1.</p>
 <h3 class="function"><a id="ippGetOperation">ippGetOperation</a></h3>
 <p class="description">Get the operation ID in an IPP message.</p>
@@ -7187,6 +7266,12 @@ void *ippGetOctetString(<a href="#ipp_attribute_t">ipp_attribute_t</a> *attr, si
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Operation ID or 0 on error</p>
+<h3 class="function"><a id="ippGetPort">ippGetPort</a></h3>
+<p class="description">Return the default IPP port number.</p>
+<p class="code">
+int ippGetPort(void);</p>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Port number</p>
 <h3 class="function"><a id="ippGetRange">ippGetRange</a></h3>
 <p class="description">Get a rangeOfInteger value from an attribute.</p>
 <p class="code">
@@ -7196,14 +7281,14 @@ int ippGetRange(<a href="#ipp_attribute_t">ipp_attribute_t</a> *attr, size_t ele
 <tr><th>attr</th>
 <td class="description">IPP attribute</td></tr>
 <tr><th>element</th>
-<td class="description">Value number (0-based)</td></tr>
+<td class="description">Value number (<code>0</code>-based)</td></tr>
 <tr><th>uppervalue</th>
 <td class="description">Upper value of range</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Lower value of range or 0</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>element</code> parameter specifies which value to get from 0 to
+<p class="discussion">The &quot;element&quot; parameter specifies which value to get from <code>0</code> to
 <code>ippGetCount(attr)</code> - 1.</p>
 <h3 class="function"><a id="ippGetRequestId">ippGetRequestId</a></h3>
 <p class="description">Get the request ID from an IPP message.</p>
@@ -7225,7 +7310,7 @@ int ippGetResolution(<a href="#ipp_attribute_t">ipp_attribute_t</a> *attr, size_
 <tr><th>attr</th>
 <td class="description">IPP attribute</td></tr>
 <tr><th>element</th>
-<td class="description">Value number (0-based)</td></tr>
+<td class="description">Value number (<code>0</code>-based)</td></tr>
 <tr><th>yres</th>
 <td class="description">Vertical/feed resolution</td></tr>
 <tr><th>units</th>
@@ -7234,7 +7319,7 @@ int ippGetResolution(<a href="#ipp_attribute_t">ipp_attribute_t</a> *attr, size_
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Horizontal/cross feed resolution or 0</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>element</code> parameter specifies which value to get from 0 to
+<p class="discussion">The &quot;element&quot; parameter specifies which value to get from <code>0</code> to
 <code>ippGetCount(attr)</code> - 1.</p>
 <h3 class="function"><a id="ippGetState">ippGetState</a></h3>
 <p class="description">Get the IPP message state.</p>
@@ -7267,14 +7352,14 @@ const char *ippGetString(<a href="#ipp_attribute_t">ipp_attribute_t</a> *attr, s
 <tr><th>attr</th>
 <td class="description">IPP attribute</td></tr>
 <tr><th>element</th>
-<td class="description">Value number (0-based)</td></tr>
+<td class="description">Value number (<code>0</code>-based)</td></tr>
 <tr><th>language</th>
 <td class="description">Language code (<code>NULL</code> for don't care)</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Get the string and optionally the language code for an attribute.</p>
-<p class="discussion">The <code>element</code> parameter specifies which value to get from 0 to
-<code>ippGetCount(attr)</code> - 1.</p>
+<p class="discussion">The &quot;element&quot; parameter specifies which value to get from <code>0</code> to
+<code>ippGetCount(attr) - 1</code>.</p>
 <h3 class="function"><a id="ippGetValueTag">ippGetValueTag</a></h3>
 <p class="description">Get the value tag for an attribute.</p>
 <p class="code">
@@ -7349,17 +7434,6 @@ provided request message.  If the &quot;attributes-charset&quot; or
 &quot;attributes-natural-language&quot; attributes are missing from the request,
 'utf-8' and a value derived from the current locale are substituted,
 respectively.</p>
-<h3 class="function"><a id="ippNextAttribute">ippNextAttribute</a></h3>
-<p class="description">Return the next attribute in the message.</p>
-<p class="code">
-<a href="#ipp_attribute_t">ipp_attribute_t</a> *ippNextAttribute(<a href="#ipp_t">ipp_t</a> *ipp);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>ipp</th>
-<td class="description">IPP message</td></tr>
-</tbody></table>
-<h4 class="returnvalue">Return Value</h4>
-<p class="description">Next attribute or <code>NULL</code> if none</p>
 <h3 class="function"><a id="ippOpString">ippOpString</a></h3>
 <p class="description">Return a name for the given operation id.</p>
 <p class="code">
@@ -7382,12 +7456,6 @@ const char *ippOpString(<a href="#ipp_op_t">ipp_op_t</a> op);</p>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Operation ID</p>
-<h3 class="function"><a id="ippPort">ippPort</a></h3>
-<p class="description">Return the default IPP port number.</p>
-<p class="code">
-int ippPort(void);</p>
-<h4 class="returnvalue">Return Value</h4>
-<p class="description">Port number</p>
 <h3 class="function"><a id="ippRead">ippRead</a></h3>
 <p class="description">Read data for an IPP message from a HTTP connection.</p>
 <p class="code">
@@ -7417,7 +7485,7 @@ int ippPort(void);</p>
 <h3 class="function"><a id="ippReadIO">ippReadIO</a></h3>
 <p class="description">Read data for an IPP message.</p>
 <p class="code">
-<a href="#ipp_state_t">ipp_state_t</a> ippReadIO(void *src, <a href="#ipp_iocb_t">ipp_iocb_t</a> cb, bool blocking, <a href="#ipp_t">ipp_t</a> *parent, <a href="#ipp_t">ipp_t</a> *ipp);</p>
+<a href="#ipp_state_t">ipp_state_t</a> ippReadIO(void *src, <a href="#ipp_io_cb_t">ipp_io_cb_t</a> cb, bool blocking, <a href="#ipp_t">ipp_t</a> *parent, <a href="#ipp_t">ipp_t</a> *ipp);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>src</th>
@@ -7436,7 +7504,7 @@ int ippPort(void);</p>
 <h3 class="function"><a id="ippSetBoolean">ippSetBoolean</a></h3>
 <p class="description">Set a boolean value in an attribute.</p>
 <p class="code">
-int ippSetBoolean(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t">ipp_attribute_t</a> **attr, size_t element, bool boolvalue);</p>
+bool ippSetBoolean(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t">ipp_attribute_t</a> **attr, size_t element, bool boolvalue);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>ipp</th>
@@ -7444,24 +7512,24 @@ int ippSetBoolean(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t">ip
 <tr><th>attr</th>
 <td class="description">IPP attribute</td></tr>
 <tr><th>element</th>
-<td class="description">Value number (0-based)</td></tr>
+<td class="description">Value number (<code>0</code>-based)</td></tr>
 <tr><th>boolvalue</th>
 <td class="description">Boolean value</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">1 on success, 0 on failure</p>
+<p class="description"><code>true</code> on success, <code>false</code> on failure</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>ipp</code> parameter refers to an IPP message previously created using
+<p class="discussion">The &quot;ipp&quot; parameter refers to an IPP message previously created using
 the <a href="#ippNew"><code>ippNew</code></a>, <a href="#ippNewRequest"><code>ippNewRequest</code></a>, or  <a href="#ippNewResponse"><code>ippNewResponse</code></a> functions.<br>
 <br>
-The <code>attr</code> parameter may be modified as a result of setting the value.<br>
+The &quot;attr&quot; parameter may be modified as a result of setting the value.<br>
 <br>
-The <code>element</code> parameter specifies which value to set from 0 to
+The &quot;element&quot; parameter specifies which value to set from <code>0</code> to
 <code>ippGetCount(attr)</code>.</p>
 <h3 class="function"><a id="ippSetCollection">ippSetCollection</a></h3>
 <p class="description">Set a collection value in an attribute.</p>
 <p class="code">
-int ippSetCollection(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t">ipp_attribute_t</a> **attr, size_t element, <a href="#ipp_t">ipp_t</a> *colvalue);</p>
+bool ippSetCollection(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t">ipp_attribute_t</a> **attr, size_t element, <a href="#ipp_t">ipp_t</a> *colvalue);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>ipp</th>
@@ -7469,24 +7537,24 @@ int ippSetCollection(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t"
 <tr><th>attr</th>
 <td class="description">IPP attribute</td></tr>
 <tr><th>element</th>
-<td class="description">Value number (0-based)</td></tr>
+<td class="description">Value number (<code>0</code>-based)</td></tr>
 <tr><th>colvalue</th>
 <td class="description">Collection value</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">1 on success, 0 on failure</p>
+<p class="description"><code>true</code> on success, <code>false</code> on failure</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>ipp</code> parameter refers to an IPP message previously created using
+<p class="discussion">The &quot;ipp&quot; parameter refers to an IPP message previously created using
 the <a href="#ippNew"><code>ippNew</code></a>, <a href="#ippNewRequest"><code>ippNewRequest</code></a>, or  <a href="#ippNewResponse"><code>ippNewResponse</code></a> functions.<br>
 <br>
-The <code>attr</code> parameter may be modified as a result of setting the value.<br>
+The &quot;attr&quot; parameter may be modified as a result of setting the value.<br>
 <br>
-The <code>element</code> parameter specifies which value to set from 0 to
+The &quot;element&quot; parameter specifies which value to set from <code>0</code> to
 <code>ippGetCount(attr)</code>.</p>
 <h3 class="function"><a id="ippSetDate">ippSetDate</a></h3>
 <p class="description">Set a dateTime value in an attribute.</p>
 <p class="code">
-int ippSetDate(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t">ipp_attribute_t</a> **attr, size_t element, const <a href="#ipp_uchar_t">ipp_uchar_t</a> *datevalue);</p>
+bool ippSetDate(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t">ipp_attribute_t</a> **attr, size_t element, const <a href="#ipp_uchar_t">ipp_uchar_t</a> *datevalue);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>ipp</th>
@@ -7494,24 +7562,24 @@ int ippSetDate(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t">ipp_a
 <tr><th>attr</th>
 <td class="description">IPP attribute</td></tr>
 <tr><th>element</th>
-<td class="description">Value number (0-based)</td></tr>
+<td class="description">Value number (<code>0</code>-based)</td></tr>
 <tr><th>datevalue</th>
 <td class="description">dateTime value</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">1 on success, 0 on failure</p>
+<p class="description"><code>true</code> on success, <code>false</code> on failure</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>ipp</code> parameter refers to an IPP message previously created using
+<p class="discussion">The &quot;ipp&quot; parameter refers to an IPP message previously created using
 the <a href="#ippNew"><code>ippNew</code></a>, <a href="#ippNewRequest"><code>ippNewRequest</code></a>, or  <a href="#ippNewResponse"><code>ippNewResponse</code></a> functions.<br>
 <br>
-The <code>attr</code> parameter may be modified as a result of setting the value.<br>
+The &quot;attr&quot; parameter may be modified as a result of setting the value.<br>
 <br>
-The <code>element</code> parameter specifies which value to set from 0 to
+The &quot;element&quot; parameter specifies which value to set from <code>0</code> to
 <code>ippGetCount(attr)</code>.</p>
 <h3 class="function"><a id="ippSetGroupTag">ippSetGroupTag</a></h3>
 <p class="description">Set the group tag of an attribute.</p>
 <p class="code">
-int ippSetGroupTag(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t">ipp_attribute_t</a> **attr, ipp_tag_t group_tag);</p>
+bool ippSetGroupTag(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t">ipp_attribute_t</a> **attr, ipp_tag_t group_tag);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>ipp</th>
@@ -7522,14 +7590,14 @@ int ippSetGroupTag(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t">i
 <td class="description">Group tag</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">1 on success, 0 on failure</p>
+<p class="description"><code>true</code> on success, <code>false</code> on failure</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>ipp</code> parameter refers to an IPP message previously created using
+<p class="discussion">The &quot;ipp&quot; parameter refers to an IPP message previously created using
 the <a href="#ippNew"><code>ippNew</code></a>, <a href="#ippNewRequest"><code>ippNewRequest</code></a>, or  <a href="#ippNewResponse"><code>ippNewResponse</code></a> functions.<br>
 <br>
-The <code>attr</code> parameter may be modified as a result of setting the value.<br>
+The &quot;attr&quot; parameter may be modified as a result of setting the value.<br>
 <br>
-The <code>group</code> parameter specifies the IPP attribute group tag: none
+The &quot;group&quot; parameter specifies the IPP attribute group tag: none
 (<code>IPP_TAG_ZERO</code>, for member attributes), document (<code>IPP_TAG_DOCUMENT</code>),
 event notification (<code>IPP_TAG_EVENT_NOTIFICATION</code>), operation
 (<code>IPP_TAG_OPERATION</code>), printer (<code>IPP_TAG_PRINTER</code>), subscription
@@ -7537,7 +7605,7 @@ event notification (<code>IPP_TAG_EVENT_NOTIFICATION</code>), operation
 <h3 class="function"><a id="ippSetInteger">ippSetInteger</a></h3>
 <p class="description">Set an integer or enum value in an attribute.</p>
 <p class="code">
-int ippSetInteger(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t">ipp_attribute_t</a> **attr, size_t element, int intvalue);</p>
+bool ippSetInteger(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t">ipp_attribute_t</a> **attr, size_t element, int intvalue);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>ipp</th>
@@ -7545,24 +7613,24 @@ int ippSetInteger(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t">ip
 <tr><th>attr</th>
 <td class="description">IPP attribute</td></tr>
 <tr><th>element</th>
-<td class="description">Value number (0-based)</td></tr>
+<td class="description">Value number (<code>0</code>-based)</td></tr>
 <tr><th>intvalue</th>
 <td class="description">Integer/enum value</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">1 on success, 0 on failure</p>
+<p class="description"><code>true</code> on success, <code>false</code> on failure</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>ipp</code> parameter refers to an IPP message previously created using
+<p class="discussion">The &quot;ipp&quot; parameter refers to an IPP message previously created using
 the <a href="#ippNew"><code>ippNew</code></a>, <a href="#ippNewRequest"><code>ippNewRequest</code></a>, or  <a href="#ippNewResponse"><code>ippNewResponse</code></a> functions.<br>
 <br>
-The <code>attr</code> parameter may be modified as a result of setting the value.<br>
+The &quot;attr&quot; parameter may be modified as a result of setting the value.<br>
 <br>
-The <code>element</code> parameter specifies which value to set from 0 to
+The &quot;element&quot; parameter specifies which value to set from <code>0</code> to
 <code>ippGetCount(attr)</code>.</p>
 <h3 class="function"><a id="ippSetName">ippSetName</a></h3>
 <p class="description">Set the name of an attribute.</p>
 <p class="code">
-int ippSetName(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t">ipp_attribute_t</a> **attr, const char *name);</p>
+bool ippSetName(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t">ipp_attribute_t</a> **attr, const char *name);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>ipp</th>
@@ -7573,16 +7641,16 @@ int ippSetName(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t">ipp_a
 <td class="description">Attribute name</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">1 on success, 0 on failure</p>
+<p class="description"><code>true</code> on success, <code>false</code> on failure</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>ipp</code> parameter refers to an IPP message previously created using
+<p class="discussion">The &quot;ipp&quot; parameter refers to an IPP message previously created using
 the <a href="#ippNew"><code>ippNew</code></a>, <a href="#ippNewRequest"><code>ippNewRequest</code></a>, or  <a href="#ippNewResponse"><code>ippNewResponse</code></a> functions.<br>
 <br>
-The <code>attr</code> parameter may be modified as a result of setting the value.</p>
+The &quot;attr&quot; parameter may be modified as a result of setting the value.</p>
 <h3 class="function"><a id="ippSetOctetString">ippSetOctetString</a></h3>
 <p class="description">Set an octetString value in an IPP attribute.</p>
 <p class="code">
-int ippSetOctetString(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t">ipp_attribute_t</a> **attr, size_t element, const void *data, size_t datalen);</p>
+bool ippSetOctetString(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t">ipp_attribute_t</a> **attr, size_t element, const void *data, size_t datalen);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>ipp</th>
@@ -7590,26 +7658,26 @@ int ippSetOctetString(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t
 <tr><th>attr</th>
 <td class="description">IPP attribute</td></tr>
 <tr><th>element</th>
-<td class="description">Value number (0-based)</td></tr>
+<td class="description">Value number (<code>0</code>-based)</td></tr>
 <tr><th>data</th>
 <td class="description">Pointer to octetString data</td></tr>
 <tr><th>datalen</th>
 <td class="description">Length of octetString data</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">1 on success, 0 on failure</p>
+<p class="description"><code>true</code> on success, <code>false</code> on failure</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>ipp</code> parameter refers to an IPP message previously created using
+<p class="discussion">The &quot;ipp&quot; parameter refers to an IPP message previously created using
 the <a href="#ippNew"><code>ippNew</code></a>, <a href="#ippNewRequest"><code>ippNewRequest</code></a>, or  <a href="#ippNewResponse"><code>ippNewResponse</code></a> functions.<br>
 <br>
-The <code>attr</code> parameter may be modified as a result of setting the value.<br>
+The &quot;attr&quot; parameter may be modified as a result of setting the value.<br>
 <br>
-The <code>element</code> parameter specifies which value to set from 0 to
+The &quot;element&quot; parameter specifies which value to set from <code>0</code> to
 <code>ippGetCount(attr)</code>.</p>
 <h3 class="function"><a id="ippSetOperation">ippSetOperation</a></h3>
 <p class="description">Set the operation ID in an IPP request message.</p>
 <p class="code">
-int ippSetOperation(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_op_t">ipp_op_t</a> op);</p>
+bool ippSetOperation(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_op_t">ipp_op_t</a> op);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>ipp</th>
@@ -7618,9 +7686,9 @@ int ippSetOperation(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_op_t">ipp_op_
 <td class="description">Operation ID</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">1 on success, 0 on failure</p>
+<p class="description"><code>true</code> on success, <code>false</code> on failure</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>ipp</code> parameter refers to an IPP message previously created using
+<p class="discussion">The &quot;ipp&quot; parameter refers to an IPP message previously created using
 the <a href="#ippNew"><code>ippNew</code></a>, <a href="#ippNewRequest"><code>ippNewRequest</code></a>, or  <a href="#ippNewResponse"><code>ippNewResponse</code></a> functions.</p>
 <h3 class="function"><a id="ippSetPort">ippSetPort</a></h3>
 <p class="description">Set the default port number.</p>
@@ -7634,7 +7702,7 @@ void ippSetPort(int p);</p>
 <h3 class="function"><a id="ippSetRange">ippSetRange</a></h3>
 <p class="description">Set a rangeOfInteger value in an attribute.</p>
 <p class="code">
-int ippSetRange(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t">ipp_attribute_t</a> **attr, size_t element, int lowervalue, int uppervalue);</p>
+bool ippSetRange(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t">ipp_attribute_t</a> **attr, size_t element, int lowervalue, int uppervalue);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>ipp</th>
@@ -7642,26 +7710,26 @@ int ippSetRange(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t">ipp_
 <tr><th>attr</th>
 <td class="description">IPP attribute</td></tr>
 <tr><th>element</th>
-<td class="description">Value number (0-based)</td></tr>
+<td class="description">Value number (<code>0</code>-based)</td></tr>
 <tr><th>lowervalue</th>
 <td class="description">Lower bound for range</td></tr>
 <tr><th>uppervalue</th>
 <td class="description">Upper bound for range</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">1 on success, 0 on failure</p>
+<p class="description"><code>true</code> on success, <code>false</code> on failure</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>ipp</code> parameter refers to an IPP message previously created using
+<p class="discussion">The &quot;ipp&quot; parameter refers to an IPP message previously created using
 the <a href="#ippNew"><code>ippNew</code></a>, <a href="#ippNewRequest"><code>ippNewRequest</code></a>, or  <a href="#ippNewResponse"><code>ippNewResponse</code></a> functions.<br>
 <br>
-The <code>attr</code> parameter may be modified as a result of setting the value.<br>
+The &quot;attr&quot; parameter may be modified as a result of setting the value.<br>
 <br>
-The <code>element</code> parameter specifies which value to set from 0 to
+The &quot;element&quot; parameter specifies which value to set from <code>0</code> to
 <code>ippGetCount(attr)</code>.</p>
 <h3 class="function"><a id="ippSetRequestId">ippSetRequestId</a></h3>
 <p class="description">Set the request ID in an IPP message.</p>
 <p class="code">
-int ippSetRequestId(<a href="#ipp_t">ipp_t</a> *ipp, int request_id);</p>
+bool ippSetRequestId(<a href="#ipp_t">ipp_t</a> *ipp, int request_id);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>ipp</th>
@@ -7670,16 +7738,16 @@ int ippSetRequestId(<a href="#ipp_t">ipp_t</a> *ipp, int request_id);</p>
 <td class="description">Request ID</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">1 on success, 0 on failure</p>
+<p class="description"><code>true</code> on success, <code>false</code> on failure</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>ipp</code> parameter refers to an IPP message previously created using
+<p class="discussion">The &quot;ipp&quot; parameter refers to an IPP message previously created using
 the <a href="#ippNew"><code>ippNew</code></a>, <a href="#ippNewRequest"><code>ippNewRequest</code></a>, or  <a href="#ippNewResponse"><code>ippNewResponse</code></a> functions.<br>
 <br>
-The <code>request_id</code> parameter must be greater than 0.</p>
+The &quot;request_id&quot; parameter must be greater than 0.</p>
 <h3 class="function"><a id="ippSetResolution">ippSetResolution</a></h3>
 <p class="description">Set a resolution value in an attribute.</p>
 <p class="code">
-int ippSetResolution(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t">ipp_attribute_t</a> **attr, size_t element, <a href="#ipp_res_t">ipp_res_t</a> unitsvalue, int xresvalue, int yresvalue);</p>
+bool ippSetResolution(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t">ipp_attribute_t</a> **attr, size_t element, <a href="#ipp_res_t">ipp_res_t</a> unitsvalue, int xresvalue, int yresvalue);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>ipp</th>
@@ -7687,7 +7755,7 @@ int ippSetResolution(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t"
 <tr><th>attr</th>
 <td class="description">IPP attribute</td></tr>
 <tr><th>element</th>
-<td class="description">Value number (0-based)</td></tr>
+<td class="description">Value number (<code>0</code>-based)</td></tr>
 <tr><th>unitsvalue</th>
 <td class="description">Resolution units</td></tr>
 <tr><th>xresvalue</th>
@@ -7696,19 +7764,19 @@ int ippSetResolution(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t"
 <td class="description">Vertical/feed resolution</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">1 on success, 0 on failure</p>
+<p class="description"><code>true</code> on success, <code>false</code> on failure</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>ipp</code> parameter refers to an IPP message previously created using
+<p class="discussion">The &quot;ipp&quot; parameter refers to an IPP message previously created using
 the <a href="#ippNew"><code>ippNew</code></a>, <a href="#ippNewRequest"><code>ippNewRequest</code></a>, or  <a href="#ippNewResponse"><code>ippNewResponse</code></a> functions.<br>
 <br>
-The <code>attr</code> parameter may be modified as a result of setting the value.<br>
+The &quot;attr&quot; parameter may be modified as a result of setting the value.<br>
 <br>
-The <code>element</code> parameter specifies which value to set from 0 to
+The &quot;element&quot; parameter specifies which value to set from <code>0</code> to
 <code>ippGetCount(attr)</code>.</p>
 <h3 class="function"><a id="ippSetState">ippSetState</a></h3>
 <p class="description">Set the current state of the IPP message.</p>
 <p class="code">
-int ippSetState(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_state_t">ipp_state_t</a> state);</p>
+bool ippSetState(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_state_t">ipp_state_t</a> state);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>ipp</th>
@@ -7717,11 +7785,11 @@ int ippSetState(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_state_t">ipp_stat
 <td class="description">IPP state value</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">1 on success, 0 on failure</p>
+<p class="description"><code>true</code> on success, <code>false</code> on failure</p>
 <h3 class="function"><a id="ippSetStatusCode">ippSetStatusCode</a></h3>
 <p class="description">Set the status code in an IPP response or event message.</p>
 <p class="code">
-int ippSetStatusCode(<a href="#ipp_t">ipp_t</a> *ipp, ipp_status_t status);</p>
+bool ippSetStatusCode(<a href="#ipp_t">ipp_t</a> *ipp, ipp_status_t status);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>ipp</th>
@@ -7730,14 +7798,14 @@ int ippSetStatusCode(<a href="#ipp_t">ipp_t</a> *ipp, ipp_status_t status);</p>
 <td class="description">Status code</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">1 on success, 0 on failure</p>
+<p class="description"><code>true</code> on success, <code>false</code> on failure</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>ipp</code> parameter refers to an IPP message previously created using
+<p class="discussion">The &quot;ipp&quot; parameter refers to an IPP message previously created using
 the <a href="#ippNew"><code>ippNew</code></a>, <a href="#ippNewRequest"><code>ippNewRequest</code></a>, or  <a href="#ippNewResponse"><code>ippNewResponse</code></a> functions.</p>
 <h3 class="function"><a id="ippSetString">ippSetString</a></h3>
 <p class="description">Set a string value in an attribute.</p>
 <p class="code">
-int ippSetString(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t">ipp_attribute_t</a> **attr, size_t element, const char *strvalue);</p>
+bool ippSetString(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t">ipp_attribute_t</a> **attr, size_t element, const char *strvalue);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>ipp</th>
@@ -7745,24 +7813,24 @@ int ippSetString(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t">ipp
 <tr><th>attr</th>
 <td class="description">IPP attribute</td></tr>
 <tr><th>element</th>
-<td class="description">Value number (0-based)</td></tr>
+<td class="description">Value number (<code>0</code>-based)</td></tr>
 <tr><th>strvalue</th>
 <td class="description">String value</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">1 on success, 0 on failure</p>
+<p class="description"><code>true</code> on success, <code>false</code> on failure</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>ipp</code> parameter refers to an IPP message previously created using
+<p class="discussion">The &quot;ipp&quot; parameter refers to an IPP message previously created using
 the <a href="#ippNew"><code>ippNew</code></a>, <a href="#ippNewRequest"><code>ippNewRequest</code></a>, or  <a href="#ippNewResponse"><code>ippNewResponse</code></a> functions.<br>
 <br>
-The <code>attr</code> parameter may be modified as a result of setting the value.<br>
+The &quot;attr&quot; parameter may be modified as a result of setting the value.<br>
 <br>
-The <code>element</code> parameter specifies which value to set from 0 to
+The &quot;element&quot; parameter specifies which value to set from <code>0</code> to
 <code>ippGetCount(attr)</code>.</p>
 <h3 class="function"><a id="ippSetStringf">ippSetStringf</a></h3>
 <p class="description">Set a formatted string value of an attribute.</p>
 <p class="code">
-int ippSetStringf(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t">ipp_attribute_t</a> **attr, size_t element, const char *format, ...);</p>
+bool ippSetStringf(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t">ipp_attribute_t</a> **attr, size_t element, const char *format, ...);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>ipp</th>
@@ -7770,31 +7838,31 @@ int ippSetStringf(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t">ip
 <tr><th>attr</th>
 <td class="description">IPP attribute</td></tr>
 <tr><th>element</th>
-<td class="description">Value number (0-based)</td></tr>
+<td class="description">Value number (<code>0</code>-based)</td></tr>
 <tr><th>format</th>
 <td class="description">Printf-style format string</td></tr>
 <tr><th>...</th>
 <td class="description">Additional arguments as needed</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">1 on success, 0 on failure</p>
+<p class="description"><code>true</code> on success, <code>false</code> on failure</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>ipp</code> parameter refers to an IPP message previously created using
+<p class="discussion">The &quot;ipp&quot; parameter refers to an IPP message previously created using
 the <a href="#ippNew"><code>ippNew</code></a>, <a href="#ippNewRequest"><code>ippNewRequest</code></a>, or  <a href="#ippNewResponse"><code>ippNewResponse</code></a> functions.<br>
 <br>
-The <code>attr</code> parameter may be modified as a result of setting the value.<br>
+The &quot;attr&quot; parameter may be modified as a result of setting the value.<br>
 <br>
-The <code>element</code> parameter specifies which value to set from 0 to
+The &quot;element&quot; parameter specifies which value to set from <code>0</code> to
 <code>ippGetCount(attr)</code>.<br>
 <br>
-The <code>format</code> parameter uses formatting characters compatible with the
+The &quot;format&quot; parameter uses formatting characters compatible with the
 printf family of standard functions.  Additional arguments follow it as
 needed.  The formatted string is truncated as needed to the maximum length of
 the corresponding value type.</p>
 <h3 class="function"><a id="ippSetStringfv">ippSetStringfv</a></h3>
 <p class="description">Set a formatted string value of an attribute.</p>
 <p class="code">
-int ippSetStringfv(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t">ipp_attribute_t</a> **attr, size_t element, const char *format, va_list ap);</p>
+bool ippSetStringfv(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t">ipp_attribute_t</a> **attr, size_t element, const char *format, va_list ap);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>ipp</th>
@@ -7802,31 +7870,31 @@ int ippSetStringfv(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t">i
 <tr><th>attr</th>
 <td class="description">IPP attribute</td></tr>
 <tr><th>element</th>
-<td class="description">Value number (0-based)</td></tr>
+<td class="description">Value number (<code>0</code>-based)</td></tr>
 <tr><th>format</th>
 <td class="description">Printf-style format string</td></tr>
 <tr><th>ap</th>
 <td class="description">Pointer to additional arguments</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">1 on success, 0 on failure</p>
+<p class="description"><code>true</code> on success, <code>false</code> on failure</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>ipp</code> parameter refers to an IPP message previously created using
+<p class="discussion">The &quot;ipp&quot; parameter refers to an IPP message previously created using
 the <a href="#ippNew"><code>ippNew</code></a>, <a href="#ippNewRequest"><code>ippNewRequest</code></a>, or  <a href="#ippNewResponse"><code>ippNewResponse</code></a> functions.<br>
 <br>
-The <code>attr</code> parameter may be modified as a result of setting the value.<br>
+The &quot;attr&quot; parameter may be modified as a result of setting the value.<br>
 <br>
-The <code>element</code> parameter specifies which value to set from 0 to
+The &quot;element&quot; parameter specifies which value to set from <code>0</code> to
 <code>ippGetCount(attr)</code>.<br>
 <br>
-The <code>format</code> parameter uses formatting characters compatible with the
+The &quot;format&quot; parameter uses formatting characters compatible with the
 printf family of standard functions.  Additional arguments follow it as
 needed.  The formatted string is truncated as needed to the maximum length of
 the corresponding value type.</p>
 <h3 class="function"><a id="ippSetValueTag">ippSetValueTag</a></h3>
 <p class="description">Set the value tag of an attribute.</p>
 <p class="code">
-int ippSetValueTag(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t">ipp_attribute_t</a> **attr, ipp_tag_t value_tag);</p>
+bool ippSetValueTag(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t">ipp_attribute_t</a> **attr, ipp_tag_t value_tag);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>ipp</th>
@@ -7837,12 +7905,12 @@ int ippSetValueTag(<a href="#ipp_t">ipp_t</a> *ipp, <a href="#ipp_attribute_t">i
 <td class="description">Value tag</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">1 on success, 0 on failure</p>
+<p class="description"><code>true</code> on success, <code>false</code> on failure</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>ipp</code> parameter refers to an IPP message previously created using
+<p class="discussion">The &quot;ipp&quot; parameter refers to an IPP message previously created using
 the <a href="#ippNew"><code>ippNew</code></a>, <a href="#ippNewRequest"><code>ippNewRequest</code></a>, or  <a href="#ippNewResponse"><code>ippNewResponse</code></a> functions.<br>
 <br>
-The <code>attr</code> parameter may be modified as a result of setting the value.<br>
+The &quot;attr&quot; parameter may be modified as a result of setting the value.<br>
 <br>
 Integer (<code>IPP_TAG_INTEGER</code>) values can be promoted to rangeOfInteger
 (<code>IPP_TAG_RANGE</code>) values, the various string tags can be promoted to name
@@ -7858,7 +7926,7 @@ code for the current locale.</p>
 <h3 class="function"><a id="ippSetVersion">ippSetVersion</a></h3>
 <p class="description">Set the version number in an IPP message.</p>
 <p class="code">
-int ippSetVersion(<a href="#ipp_t">ipp_t</a> *ipp, int major, int minor);</p>
+bool ippSetVersion(<a href="#ipp_t">ipp_t</a> *ipp, int major, int minor);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>ipp</th>
@@ -7869,9 +7937,9 @@ int ippSetVersion(<a href="#ipp_t">ipp_t</a> *ipp, int major, int minor);</p>
 <td class="description">Minor version number (major.minor)</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">1 on success, 0 on failure</p>
+<p class="description"><code>true</code> on success, <code>false</code> on failure</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The <code>ipp</code> parameter refers to an IPP message previously created using
+<p class="discussion">The &quot;ipp&quot; parameter refers to an IPP message previously created using
 the <a href="#ippNew"><code>ippNew</code></a>, <a href="#ippNewRequest"><code>ippNewRequest</code></a>, or  <a href="#ippNewResponse"><code>ippNewResponse</code></a> functions.<br>
 <br>
 The valid version numbers are currently 1.0, 1.1, 2.0, 2.1, and 2.2.</p>
@@ -7898,7 +7966,8 @@ const char *ippTagString(ipp_tag_t tag);</p>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Tag name</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The returned names are defined in RFC 8011 and the IANA IPP Registry.</p>
+<p class="discussion">The returned names are defined in RFC 8011 and the IANA IPP Registry.
+/</p>
 <h3 class="function"><a id="ippTagValue">ippTagValue</a></h3>
 <p class="description">Return the tag value corresponding to a tag name.</p>
 <p class="code">
@@ -7926,29 +7995,29 @@ const <a href="#ipp_uchar_t">ipp_uchar_t</a> *ippTimeToDate(time_t t);</p>
 <h3 class="function"><a id="ippValidateAttribute">ippValidateAttribute</a></h3>
 <p class="description">Validate the contents of an attribute.</p>
 <p class="code">
-int ippValidateAttribute(<a href="#ipp_attribute_t">ipp_attribute_t</a> *attr);</p>
+bool ippValidateAttribute(<a href="#ipp_attribute_t">ipp_attribute_t</a> *attr);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>attr</th>
 <td class="description">Attribute</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">1 if valid, 0 otherwise</p>
+<p class="description"><code>true</code> if valid, <code>false</code> otherwise</p>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">This function validates the contents of an attribute based on the name and
-value tag.  1 is returned if the attribute is valid, 0 otherwise.  On
-failure, <a href="#cupsLastErrorString"><code>cupsLastErrorString</code></a> is set to a human-readable message.</p>
+value tag.  <code>true</code> is returned if the attribute is valid, <code>false</code> otherwise.
+On failure, <a href="#cupsLastErrorString"><code>cupsLastErrorString</code></a> is set to a human-readable message.</p>
 <h3 class="function"><a id="ippValidateAttributes">ippValidateAttributes</a></h3>
 <p class="description">Validate all attributes in an IPP message.</p>
 <p class="code">
-int ippValidateAttributes(<a href="#ipp_t">ipp_t</a> *ipp);</p>
+bool ippValidateAttributes(<a href="#ipp_t">ipp_t</a> *ipp);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>ipp</th>
 <td class="description">IPP message</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">1 if valid, 0 otherwise</p>
+<p class="description"><code>true</code> if valid, <code>false</code> otherwise</p>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">This function validates the contents of the IPP message, including each
 attribute.  Like <a href="#ippValidateAttribute"><code>ippValidateAttribute</code></a>, <a href="#cupsLastErrorString"><code>cupsLastErrorString</code></a> is
@@ -7982,7 +8051,7 @@ set to a human-readable message on failure.</p>
 <h3 class="function"><a id="ippWriteIO">ippWriteIO</a></h3>
 <p class="description">Write data for an IPP message.</p>
 <p class="code">
-<a href="#ipp_state_t">ipp_state_t</a> ippWriteIO(void *dst, <a href="#ipp_iocb_t">ipp_iocb_t</a> cb, bool blocking, <a href="#ipp_t">ipp_t</a> *parent, <a href="#ipp_t">ipp_t</a> *ipp);</p>
+<a href="#ipp_state_t">ipp_state_t</a> ippWriteIO(void *dst, <a href="#ipp_io_cb_t">ipp_io_cb_t</a> cb, bool blocking, <a href="#ipp_t">ipp_t</a> *parent, <a href="#ipp_t">ipp_t</a> *ipp);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>dst</th>
@@ -8001,7 +8070,7 @@ set to a human-readable message on failure.</p>
 <h3 class="function"><a id="pwgFormatSizeName">pwgFormatSizeName</a></h3>
 <p class="description">Generate a PWG self-describing media size name.</p>
 <p class="code">
-int pwgFormatSizeName(char *keyword, size_t keysize, const char *prefix, const char *name, int width, int length, const char *units);</p>
+bool pwgFormatSizeName(char *keyword, size_t keysize, const char *prefix, const char *name, int width, int length, const char *units);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>keyword</th>
@@ -8020,7 +8089,7 @@ int pwgFormatSizeName(char *keyword, size_t keysize, const char *prefix, const c
 <td class="description">Units - &quot;in&quot;, &quot;mm&quot;, or <code>NULL</code> for automatic</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">1 on success, 0 on failure</p>
+<p class="description"><code>true</code> on success, <code>false</code> on failure</p>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">This function generates a PWG self-describing media size name of the form
 &quot;prefix_name_WIDTHxLENGTHunits&quot;.  The prefix is typically &quot;custom&quot; or &quot;roll&quot;
@@ -8040,7 +8109,7 @@ are used.</p>
 <p class="description">Initialize a pwg_size_t structure using IPP Job Template
 attributes.</p>
 <p class="code">
-int pwgInitSize(<a href="#pwg_size_t">pwg_size_t</a> *size, <a href="#ipp_t">ipp_t</a> *job, int *margins_set);</p>
+bool pwgInitSize(<a href="#pwg_size_t">pwg_size_t</a> *size, <a href="#ipp_t">ipp_t</a> *job, bool *margins_set);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>size</th>
@@ -8048,10 +8117,10 @@ int pwgInitSize(<a href="#pwg_size_t">pwg_size_t</a> *size, <a href="#ipp_t">ipp
 <tr><th>job</th>
 <td class="description">Job template attributes</td></tr>
 <tr><th>margins_set</th>
-<td class="description">1 if margins were set, 0 otherwise</td></tr>
+<td class="description"><code>true</code> if margins were set, <code>false</code> otherwise</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">1 if size was initialized, 0 otherwise</p>
+<p class="description"><code>true</code> on success, <code>false</code> on failure</p>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">This function initializes a pwg_size_t structure from an IPP &quot;media&quot; or
 &quot;media-col&quot; attribute in the specified IPP message.  0 is returned if neither
@@ -8176,7 +8245,7 @@ typedef bool(*)(http_t *http, void *tls, <a href="#cups_array_t">cups_array_t</a
 <h3 class="typedef"><a id="cups_cond_t">cups_cond_t</a></h3>
 <p class="description">Condition variable</p>
 <p class="code">
-typedef CONDITION_VARIABLE cups_cond_t;
+typedef pthread_cond_t cups_cond_t;
 </p>
 <h3 class="typedef"><a id="cups_cspace_t">cups_cspace_t</a></h3>
 <p class="description">cupsColorSpace attribute values</p>
@@ -8187,11 +8256,6 @@ typedef enum <a href="#cups_cspace_e">cups_cspace_e</a> cups_cspace_t;
 <p class="description">CutMedia attribute values</p>
 <p class="code">
 typedef enum <a href="#cups_cut_e">cups_cut_e</a> cups_cut_t;
-</p>
-<h3 class="typedef"><a id="cups_dbcs_t">cups_dbcs_t</a></h3>
-<p class="description">DBCS Legacy 16-bit unit</p>
-<p class="code">
-typedef unsigned short cups_dbcs_t;
 </p>
 <h3 class="typedef"><a id="cups_dentry_t">cups_dentry_t</a></h3>
 <p class="description">Directory entry type</p>
@@ -8242,6 +8306,11 @@ typedef enum <a href="#cups_jog_e">cups_jog_e</a> cups_jog_t;
 <p class="description">Language Cache Structure</p>
 <p class="code">
 typedef struct <a href="#cups_lang_s">cups_lang_s</a> cups_lang_t;
+</p>
+<h3 class="typedef"><a id="cups_mutex_t">cups_mutex_t</a></h3>
+<p class="description">Mutual exclusion lock</p>
+<p class="code">
+typedef pthread_mutex_t cups_mutex_t;
 </p>
 <h3 class="typedef"><a id="cups_oauth_cb_t">cups_oauth_cb_t</a></h3>
 <p class="description">OAuth callback</p>
@@ -8296,12 +8365,7 @@ typedef struct _cups_raster_s cups_raster_t;
 <h3 class="typedef"><a id="cups_rwlock_t">cups_rwlock_t</a></h3>
 <p class="description">Reader/writer lock</p>
 <p class="code">
-typedef SRWLOCK cups_rwlock_t;
-</p>
-<h3 class="typedef"><a id="cups_sbcs_t">cups_sbcs_t</a></h3>
-<p class="description">SBCS Legacy 8-bit unit</p>
-<p class="code">
-typedef unsigned char cups_sbcs_t;
+typedef pthread_rwlock_t cups_rwlock_t;
 </p>
 <h3 class="typedef"><a id="cups_server_cert_cb_t">cups_server_cert_cb_t</a></h3>
 <p class="description">Server credentials callback</p>
@@ -8318,35 +8382,20 @@ typedef struct <a href="#cups_size_s">cups_size_s</a> cups_size_t;
 <p class="code">
 typedef void *(*)(void *arg)cups_thread_func_t;
 </p>
+<h3 class="typedef"><a id="cups_thread_t">cups_thread_t</a></h3>
+<p class="description">Thread identifier</p>
+<p class="code">
+typedef pthread_t cups_thread_t;
+</p>
 <h3 class="typedef"><a id="cups_threadkey_t">cups_threadkey_t</a></h3>
-<p class="description">Functions...</p>
+<p class="description">Thread data key</p>
 <p class="code">
 typedef pthread_key_t cups_threadkey_t;
-</p>
-<h3 class="typedef"><a id="cups_ucs2_t">cups_ucs2_t</a></h3>
-<p class="description">UCS-2 Unicode/ISO-10646 unit</p>
-<p class="code">
-typedef unsigned short cups_ucs2_t;
-</p>
-<h3 class="typedef"><a id="cups_ucs4_t">cups_ucs4_t</a></h3>
-<p class="description">UCS-4 Unicode/ISO-10646 unit</p>
-<p class="code">
-typedef unsigned long cups_ucs4_t;
 </p>
 <h3 class="typedef"><a id="cups_utf32_t">cups_utf32_t</a></h3>
 <p class="description">UTF-32 Unicode/ISO-10646 unit</p>
 <p class="code">
 typedef unsigned long cups_utf32_t;
-</p>
-<h3 class="typedef"><a id="cups_utf8_t">cups_utf8_t</a></h3>
-<p class="description">UTF-8 Unicode/ISO-10646 unit</p>
-<p class="code">
-typedef unsigned char cups_utf8_t;
-</p>
-<h3 class="typedef"><a id="cups_vbcs_t">cups_vbcs_t</a></h3>
-<p class="description">VBCS Legacy 32-bit unit</p>
-<p class="code">
-typedef unsigned long cups_vbcs_t;
 </p>
 <h3 class="typedef"><a id="cups_whichjobs_t">cups_whichjobs_t</a></h3>
 <p class="description">Which jobs for <a href="#cupsGetJobs"><code>cupsGetJobs</code></a></p>
@@ -8382,6 +8431,16 @@ typedef enum <a href="#http_field_e">http_field_e</a> http_field_t;
 <p class="description">HTTP keep-alive values</p>
 <p class="code">
 typedef enum <a href="#http_keepalive_e">http_keepalive_e</a> http_keepalive_t;
+</p>
+<h3 class="typedef"><a id="http_resolve_cb_t">http_resolve_cb_t</a></h3>
+<p class="description"><a href="#httpResolveURI"><code>httpResolveURI</code></a> callback</p>
+<p class="code">
+typedef bool(*)(void *data)http_resolve_cb_t;
+</p>
+<h3 class="typedef"><a id="http_resolve_t">http_resolve_t</a></h3>
+<p class="description"><a href="#httpResolveURI"><code>httpResolveURI</code></a> options bitfield</p>
+<p class="code">
+typedef unsigned http_resolve_t;
 </p>
 <h3 class="typedef"><a id="http_state_t">http_state_t</a></h3>
 <p class="description">HTTP state values; states are server-oriented...</p>
@@ -8423,10 +8482,10 @@ typedef enum <a href="#http_uri_status_e">http_uri_status_e</a> http_uri_status_
 <p class="code">
 typedef struct _ipp_attribute_s ipp_attribute_t;
 </p>
-<h3 class="typedef"><a id="ipp_copycb_t">ipp_copycb_t</a></h3>
+<h3 class="typedef"><a id="ipp_copy_cb_t">ipp_copy_cb_t</a></h3>
 <p class="description">ippCopyAttributes callback function</p>
 <p class="code">
-typedef bool(*)(void *context, <a href="#ipp_t">ipp_t</a> *dst, <a href="#ipp_attribute_t">ipp_attribute_t</a> *attr)ipp_copycb_t;
+typedef bool(*)(void *context, <a href="#ipp_t">ipp_t</a> *dst, <a href="#ipp_attribute_t">ipp_attribute_t</a> *attr)ipp_copy_cb_t;
 </p>
 <h3 class="typedef"><a id="ipp_dstate_t">ipp_dstate_t</a></h3>
 <p class="description">&quot;document-state&quot; values</p>
@@ -8453,10 +8512,10 @@ typedef struct _ipp_file_s ipp_file_t;
 <p class="code">
 typedef bool(*)(ipp_file_t *file, void *cb_data, const char *token)ipp_ftoken_cb_t;
 </p>
-<h3 class="typedef"><a id="ipp_iocb_t">ipp_iocb_t</a></h3>
+<h3 class="typedef"><a id="ipp_io_cb_t">ipp_io_cb_t</a></h3>
 <p class="description">ippReadIO/ippWriteIO callback function</p>
 <p class="code">
-typedef ssize_t(*)(void *context, <a href="#ipp_uchar_t">ipp_uchar_t</a> *buffer, size_t bytes) ipp_iocb_t;
+typedef ssize_t(*)(void *context, <a href="#ipp_uchar_t">ipp_uchar_t</a> *buffer, size_t bytes) ipp_io_cb_t;
 </p>
 <h3 class="typedef"><a id="ipp_jstate_t">ipp_jstate_t</a></h3>
 <p class="description">&quot;job-state&quot; values</p>
@@ -9106,6 +9165,14 @@ factor not applied)</td></tr>
 <table class="list"><tbody>
 <tr><th>HTTP_KEEPALIVE_OFF </th><td class="description">No keep alive support</td></tr>
 <tr><th>HTTP_KEEPALIVE_ON </th><td class="description">Use keep alive</td></tr>
+</tbody></table>
+<h3 class="enumeration"><a id="http_resolve_e">http_resolve_e</a></h3>
+<p class="description"><a href="#httpResolveURI"><code>httpResolveURI</code></a> options bit values</p>
+<h4 class="constants">Constants</h4>
+<table class="list"><tbody>
+<tr><th>HTTP_RESOLVE_DEFAULT </th><td class="description">Resolve with default options</td></tr>
+<tr><th>HTTP_RESOLVE_FAXOUT </th><td class="description">Resolve FaxOut service instead of Print</td></tr>
+<tr><th>HTTP_RESOLVE_FQDN </th><td class="description">Resolve to a FQDN</td></tr>
 </tbody></table>
 <h3 class="enumeration"><a id="http_state_e">http_state_e</a></h3>
 <p class="description">HTTP state values; states are server-oriented...</p>

@@ -178,10 +178,7 @@ cupsFileClose(cups_file_t *fp)		/* I - CUPS file */
   */
 
   if (mode == 's')
-  {
-    if (httpAddrClose(NULL, fd) < 0)
-      status = false;
-  }
+    status = httpAddrClose(NULL, fd);
   else if (close(fd) < 0)
     status = false;
 
@@ -353,7 +350,7 @@ cupsFileFlush(cups_file_t *fp)		/* I - CUPS file */
  * 'cupsFileGetChar()' - Get a single character from a file.
  */
 
-int					/* O - Character or -1 on end of file */
+int					/* O - Character or `-1` on end of file */
 cupsFileGetChar(cups_file_t *fp)	/* I - CUPS file */
 {
  /*
@@ -544,7 +541,7 @@ cupsFileGetConf(cups_file_t *fp,	/* I  - CUPS file */
  *
  * This function differs from @link cupsFileGets@ in that the trailing CR
  * and LF are preserved, as is any binary data on the line. The buffer is
- * nul-terminated, however you should use the returned length to determine
+ * `nul`-terminated, however you should use the returned length to determine
  * the number of bytes on the line.
  */
 
@@ -754,7 +751,7 @@ cupsFileNumber(cups_file_t *fp)		/* I - CUPS file */
  * existing file, "a" to append to an existing file or create a new file,
  * or "s" to open a socket connection.
  *
- * When opening for writing ("w"), an optional number from 1 to 9 can be
+ * When opening for writing ("w"), an optional number from `1` to `9` can be
  * supplied which enables Flate compression of the file.  Compression is
  * not supported for the "a" (append) mode.
  *
@@ -877,7 +874,7 @@ cupsFileOpen(const char *filename,	/* I - Name of file */
  * The "mode" parameter can be "r" to read, "w" to write, "a" to append,
  * or "s" to treat the file descriptor as a bidirectional socket connection.
  *
- * When opening for writing ("w"), an optional number from 1 to 9 can be
+ * When opening for writing ("w"), an optional number from `1` to `9` can be
  * supplied which enables Flate compression of the file.  Compression is
  * not supported for the "a" (append) mode.
  */
@@ -1003,7 +1000,7 @@ _cupsFilePeekAhead(cups_file_t *fp,	/* I - CUPS file */
  * 'cupsFilePeekChar()' - Peek at the next character from a file.
  */
 
-int					/* O - Character or -1 on end of file */
+int					/* O - Character or `-1` on end of file */
 cupsFilePeekChar(cups_file_t *fp)	/* I - CUPS file */
 {
  /*
@@ -1381,7 +1378,7 @@ cupsFileRead(cups_file_t *fp,		/* I - CUPS file */
  * 'cupsFileRewind()' - Set the current file position to the beginning of the file.
  */
 
-off_t					/* O - New file position or -1 on error */
+off_t					/* O - New file position or `-1` on error */
 cupsFileRewind(cups_file_t *fp)		/* I - CUPS file */
 {
  /*
@@ -1450,7 +1447,7 @@ cupsFileRewind(cups_file_t *fp)		/* I - CUPS file */
  * 'cupsFileSeek()' - Seek in a file.
  */
 
-off_t					/* O - New file position or -1 on error */
+off_t					/* O - New file position or `-1` on error */
 cupsFileSeek(cups_file_t *fp,		/* I - CUPS file */
              off_t       pos)		/* I - Position in file */
 {

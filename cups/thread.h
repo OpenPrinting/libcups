@@ -31,7 +31,7 @@ typedef struct _cups_thread_s *cups_thread_t;
 typedef CONDITION_VARIABLE cups_cond_t;	// Condition variable
 typedef CRITICAL_SECTION cups_mutex_t;	// Mutual exclusion lock
 typedef SRWLOCK cups_rwlock_t;		// Reader/writer lock
-typedef DWORD	cups_threadkey_t;
+typedef DWORD	cups_thread_key_t;	// Thread data key
 #    define CUPS_COND_INITIALIZER { 0 }
 #    define CUPS_MUTEX_INITIALIZER { (void*)-1, -1, 0, 0, 0, 0 }
 #    define CUPS_RWLOCK_INITIALIZER { 0 }
@@ -48,11 +48,12 @@ typedef DWORD	cups_threadkey_t;
 #    include <pthread.h>
 typedef void *(*cups_thread_func_t)(void *arg);
 					// Thread function
-typedef pthread_t cups_thread_t;
-typedef pthread_cond_t cups_cond_t;
-typedef pthread_mutex_t cups_mutex_t;
-typedef pthread_rwlock_t cups_rwlock_t;
-typedef pthread_key_t	cups_threadkey_t;
+typedef pthread_t cups_thread_t;	// Thread identifier
+typedef pthread_cond_t cups_cond_t;	// Condition variable
+typedef pthread_mutex_t cups_mutex_t;	// Mutual exclusion lock
+typedef pthread_rwlock_t cups_rwlock_t;	// Reader/writer lock
+typedef pthread_key_t	cups_thread_key_t;
+					// Thread data key
 #    define CUPS_COND_INITIALIZER PTHREAD_COND_INITIALIZER
 #    define CUPS_MUTEX_INITIALIZER PTHREAD_MUTEX_INITIALIZER
 #    define CUPS_RWLOCK_INITIALIZER PTHREAD_RWLOCK_INITIALIZER

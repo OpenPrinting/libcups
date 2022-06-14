@@ -52,9 +52,6 @@ extern "C" {
  */
 
 #  define _HTTP_MAX_SBUFFER	65536	/* Size of (de)compression buffer */
-#  define _HTTP_RESOLVE_DEFAULT	0	/* Just resolve with default options */
-#  define _HTTP_RESOLVE_FQDN	2	/* Resolve to a FQDN */
-#  define _HTTP_RESOLVE_FAXOUT	4	/* Resolve FaxOut service? */
 
 #  define _HTTP_TLS_NONE	0	/* No TLS options */
 #  define _HTTP_TLS_ALLOW_RC4	1	/* Allow RC4 cipher suites */
@@ -175,24 +172,22 @@ extern const char *_cups_hstrerror(int error);
  * Prototypes...
  */
 
-extern void		_httpAddrSetPort(http_addr_t *addr, int port) _CUPS_PRIVATE;
 extern http_tls_credentials_t _httpCreateCredentials(cups_array_t *credentials) _CUPS_PRIVATE;
 extern char		*_httpDecodeURI(char *dst, const char *src, size_t dstsize) _CUPS_PRIVATE;
 extern void		_httpDisconnect(http_t *http) _CUPS_PRIVATE;
 extern char		*_httpEncodeURI(char *dst, const char *src, size_t dstsize) _CUPS_PRIVATE;
 extern void		_httpFreeCredentials(http_tls_credentials_t credentials) _CUPS_PRIVATE;
-extern const char	*_httpResolveURI(const char *uri, char *resolved_uri, size_t resolved_size, int options, int (*cb)(void *context), void *context) _CUPS_PRIVATE;
-extern int		_httpSetDigestAuthString(http_t *http, const char *nonce, const char *method, const char *resource) _CUPS_PRIVATE;
+extern bool		_httpSetDigestAuthString(http_t *http, const char *nonce, const char *method, const char *resource) _CUPS_PRIVATE;
 extern const char	*_httpStatusString(cups_lang_t *lang, http_status_t status) _CUPS_PRIVATE;
 extern void		_httpTLSInitialize(void) _CUPS_PRIVATE;
 extern size_t		_httpTLSPending(http_t *http) _CUPS_PRIVATE;
 extern int		_httpTLSRead(http_t *http, char *buf, int len) _CUPS_PRIVATE;
 extern void		_httpTLSSetOptions(int options, int min_version, int max_version) _CUPS_PRIVATE;
-extern int		_httpTLSStart(http_t *http) _CUPS_PRIVATE;
+extern bool		_httpTLSStart(http_t *http) _CUPS_PRIVATE;
 extern void		_httpTLSStop(http_t *http) _CUPS_PRIVATE;
 extern int		_httpTLSWrite(http_t *http, const char *buf, int len) _CUPS_PRIVATE;
 extern int		_httpUpdate(http_t *http, http_status_t *status) _CUPS_PRIVATE;
-extern int		_httpWait(http_t *http, int msec, int usessl) _CUPS_PRIVATE;
+extern bool		_httpWait(http_t *http, int msec, bool usessl) _CUPS_PRIVATE;
 
 
 #  ifdef __cplusplus

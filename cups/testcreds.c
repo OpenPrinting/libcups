@@ -70,7 +70,7 @@ main(int  argc,				/* I - Number of command-line arguments */
     }
 
     puts("HTTP Credentials:");
-    if (!httpCopyCredentials(http, &hcreds))
+    if (httpCopyCredentials(http, &hcreds))
     {
       trust = httpCredentialsGetTrust(hcreds, hostname);
 
@@ -103,7 +103,7 @@ main(int  argc,				/* I - Number of command-line arguments */
 
   printf("Trust Store for \"%s\":\n", hostname);
 
-  if (!httpLoadCredentials(NULL, &tcreds, hostname))
+  if (httpLoadCredentials(NULL, &tcreds, hostname))
   {
     httpCredentialsString(tcreds, tinfo, sizeof(tinfo));
 

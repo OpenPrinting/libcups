@@ -243,8 +243,6 @@ extern char		*_cupsGetUserDefault(char *name, size_t namesize) _CUPS_INTERNAL;
 extern void		_cupsGlobalLock(void) _CUPS_PRIVATE;
 extern void		_cupsGlobalUnlock(void) _CUPS_PRIVATE;
 extern _cups_globals_t	*_cupsGlobals(void) _CUPS_PRIVATE;
-// TODO: Remove _cupsNextDelay
-extern int		_cupsNextDelay(int current, int *previous) _CUPS_PRIVATE;
 extern void		_cupsSetDefaults(void) _CUPS_INTERNAL;
 extern void		_cupsSetError(ipp_status_t status, const char *message, int localize) _CUPS_PRIVATE;
 extern void		_cupsSetHTTPError(http_status_t status) _CUPS_INTERNAL;

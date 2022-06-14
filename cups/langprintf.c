@@ -59,7 +59,7 @@ _cupsLangPrintf(FILE       *fp,		/* I - File to write to */
   * Transcode to the destination charset...
   */
 
-  bytes = cupsUTF8ToCharset(output, (cups_utf8_t *)buffer, sizeof(output), cg->lang_default->encoding);
+  bytes = cupsUTF8ToCharset(output, buffer, sizeof(output), cg->lang_default->encoding);
 
  /*
   * Write the string and return the number of bytes written...
@@ -101,8 +101,8 @@ _cupsLangPuts(FILE       *fp,		/* I - File to write to */
   * Transcode to the destination charset...
   */
 
-  bytes = cupsUTF8ToCharset(output, (cups_utf8_t *)_cupsLangString(cg->lang_default, message), sizeof(output) - 4, cg->lang_default->encoding);
-  bytes += cupsUTF8ToCharset(output + bytes, (cups_utf8_t *)"\n", sizeof(output) - (size_t)bytes, cg->lang_default->encoding);
+  bytes = cupsUTF8ToCharset(output, _cupsLangString(cg->lang_default, message), sizeof(output) - 4, cg->lang_default->encoding);
+  bytes += cupsUTF8ToCharset(output + bytes, "\n", sizeof(output) - (size_t)bytes, cg->lang_default->encoding);
 
  /*
   * Write the string and return the number of bytes written...
@@ -184,8 +184,7 @@ _cupsSetLocale(char *argv[])		/* IO - Command-line arguments */
       * Try converting from the locale charset to UTF-8...
       */
 
-      if (cupsCharsetToUTF8((cups_utf8_t *)buffer, argv[i], sizeof(buffer),
-                            cg->lang_default->encoding) < 0)
+      if (cupsCharsetToUTF8(buffer, argv[i], sizeof(buffer), cg->lang_default->encoding) < 0)
         continue;
 
      /*

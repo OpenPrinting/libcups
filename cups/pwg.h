@@ -1,7 +1,7 @@
 /*
  * PWG media API definitions for CUPS.
  *
- * Copyright © 2021 by OpenPrinting.
+ * Copyright © 2021-2022 by OpenPrinting.
  * Copyright © 2009-2017 by Apple Inc.
  *
  * Licensed under Apache License v2.0.  See the file "LICENSE" for more
@@ -61,8 +61,8 @@ typedef struct pwg_size_s		/**** Size element - PPD to/from PWG @exclude all@ */
  * Functions...
  */
 
-extern int		pwgFormatSizeName(char *keyword, size_t keysize, const char *prefix, const char *name, int width, int length, const char *units) _CUPS_PUBLIC;
-extern int		pwgInitSize(pwg_size_t *size, ipp_t *job, int *margins_set) _CUPS_PUBLIC;
+extern bool		pwgFormatSizeName(char *keyword, size_t keysize, const char *prefix, const char *name, int width, int length, const char *units) _CUPS_PUBLIC;
+extern bool		pwgInitSize(pwg_size_t *size, ipp_t *job, bool *margins_set) _CUPS_PUBLIC;
 extern pwg_media_t	*pwgMediaForLegacy(const char *legacy) _CUPS_PUBLIC;
 extern pwg_media_t	*pwgMediaForPPD(const char *ppd) _CUPS_PUBLIC;
 extern pwg_media_t	*pwgMediaForPWG(const char *pwg) _CUPS_PUBLIC;

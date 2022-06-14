@@ -510,7 +510,7 @@ make_raster_file(ipp_t      *response,  /* I - Printer attributes */
     return (NULL);
   }
 
-  if ((fd = cupsTempFd(tempname, tempsize)) < 0)
+  if ((fd = cupsTempFd(NULL, ".pwg", tempname, tempsize)) < 0)
   {
     printf("Unable to create temporary print file: %s\n", strerror(errno));
     free(line);
@@ -988,7 +988,7 @@ show_attributes(const char *title,      /* I - Title */
   if (!request)
     printf("  status-code=%s\n", ippErrorString(ippGetStatusCode(ipp)));
 
-  for (attr = ippFirstAttribute(ipp); attr; attr = ippNextAttribute(ipp))
+  for (attr = ippGetFirstAttribute(ipp); attr; attr = ippGetNextAttribute(ipp))
   {
     if (group != ippGetGroupTag(attr))
     {

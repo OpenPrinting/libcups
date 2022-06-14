@@ -140,18 +140,18 @@ cupsGetEncryption(void)
  * 'cupsGetPassword()' - Get a password from the user using the current
  *                        password callback.
  *
- * Uses the current password callback function. Returns @code NULL@ if the
+ * Uses the current password callback function. Returns `NULL` if the
  * user does not provide a password.
  *
  * Note: The current password callback function is tracked separately for each
  * thread in a program. Multi-threaded programs that override the setting via
- * the @link cupsSetPasswordCB2@ function need to do so in each thread for the
+ * the @link cupsSetPasswordCB@ function need to do so in each thread for the
  * same function to be used.
  */
 
 const char *				/* O - Password */
 cupsGetPassword(const char *prompt,	/* I - Prompt string */
-		http_t     *http,	/* I - Connection to server or @code CUPS_HTTP_DEFAULT@ */
+		http_t     *http,	/* I - Connection to server or `CUPS_HTTP_DEFAULT` */
 		const char *method,	/* I - Request method ("GET", "POST", "PUT") */
 		const char *resource)	/* I - Resource path */
 {
@@ -198,7 +198,7 @@ cupsGetServer(void)
 /*
  * 'cupsSetClientCertCB()' - Set the client certificate callback.
  *
- * Pass @code NULL@ to restore the default callback.
+ * Pass `NULL` to restore the default callback.
  *
  * Note: The current certificate callback is tracked separately for each thread
  * in a program. Multi-threaded programs that override the callback need to do
@@ -227,7 +227,7 @@ cupsSetClientCertCB(
  * each thread for the same setting to be used.
  */
 
-int					/* O - Status of call (0 = success) */
+bool					/* O - `true` on success, `false` on failure */
 cupsSetCredentials(
     cups_array_t *credentials)		/* I - Array of credentials */
 {
@@ -235,14 +235,14 @@ cupsSetCredentials(
 
 
   if (cupsArrayGetCount(credentials) < 1)
-    return (-1);
+    return (false);
 
 #ifdef HAVE_TLS
   _httpFreeCredentials(cg->tls_credentials);
   cg->tls_credentials = _httpCreateCredentials(credentials);
 #endif /* HAVE_TLS */
 
-  return (cg->tls_credentials ? 0 : -1);
+  return (cg->tls_credentials != NULL);
 }
 
 
@@ -268,7 +268,7 @@ cupsSetEncryption(http_encryption_t e)	/* I - New encryption preference */
   cg->encryption = e;
 
   if (cg->http)
-    httpEncryption(cg->http, e);
+    httpSetEncryption(cg->http, e);
 }
 
 
@@ -276,7 +276,7 @@ cupsSetEncryption(http_encryption_t e)	/* I - New encryption preference */
  * 'cupsSetOAuthCB()' - Set the OAuth 2.0 callback for CUPS.
  *
  * This function sets the OAuth 2.0 callback for the various CUPS APIs that
- * send HTTP requests. Pass @code NULL@ to restore the default (console-based)
+ * send HTTP requests. Pass `NULL` to restore the default (console-based)
  * callback.
  *
  * The OAuth callback receives the HTTP connection, realm name, scope name (if
@@ -312,10 +312,8 @@ cupsSetOAuthCB(
 /*
  * 'cupsSetPasswordCB()' - Set the password callback for CUPS.
  *
- * Pass @code NULL@ to restore the default (console) password callback, which
- * reads the password from the console. Programs should call either this
- * function or @link cupsSetPasswordCB2@, as only one callback can be registered
- * by a program per thread.
+ * Pass `NULL` to restore the default (console) password callback, which
+ * reads the password from the console.
  *
  * Note: The current password callback is tracked separately for each thread
  * in a program. Multi-threaded programs that override the callback need to do
@@ -345,7 +343,7 @@ cupsSetPasswordCB(
  * The "server" string can be a fully-qualified hostname, a numeric
  * IPv4 or IPv6 address, or a domain socket pathname. Hostnames and numeric IP
  * addresses can be optionally followed by a colon and port number to override
- * the default port 631, e.g. "hostname:8631". Pass @code NULL@ to restore the
+ * the default port 631, e.g. "hostname:8631". Pass `NULL` to restore the
  * default server name and port.
  *
  * Note: The current server is tracked separately for each thread in a program.
@@ -422,7 +420,7 @@ cupsSetServer(const char *server)	/* I - Server name */
 /*
  * 'cupsSetServerCertCB()' - Set the server certificate callback.
  *
- * Pass @code NULL@ to restore the default callback.
+ * Pass `NULL` to restore the default callback.
  *
  * Note: The current credentials callback is tracked separately for each thread
  * in a program. Multi-threaded programs that override the callback need to do
@@ -445,7 +443,7 @@ cupsSetServerCertCB(
 /*
  * 'cupsSetUser()' - Set the default user name.
  *
- * Pass @code NULL@ to restore the default user name.
+ * Pass `NULL` to restore the default user name.
  *
  * Note: The current user name is tracked separately for each thread in a
  * program. Multi-threaded programs that override the user name need to do so
@@ -473,7 +471,7 @@ cupsSetUser(const char *user)		/* I - User name */
  */
 
 void
-cupsSetUserAgent(const char *user_agent)/* I - User-Agent string or @code NULL@ */
+cupsSetUserAgent(const char *user_agent)/* I - User-Agent string or `NULL` */
 {
   _cups_globals_t	*cg = _cupsGlobals();
 					/* Thread globals */
@@ -640,7 +638,7 @@ cupsGetUserAgent(void)
  * '_cupsGetPassword()' - Get a password from the user.
  */
 
-const char *				/* O - Password or @code NULL@ if none */
+const char *				/* O - Password or `NULL` if none */
 _cupsGetPassword(const char *prompt)	/* I - Prompt string */
 {
 #ifdef _WIN32

@@ -351,7 +351,7 @@ extern size_t		cupsRemoveOption(const char *name, size_t num_options, cups_optio
 extern http_status_t	cupsSendRequest(http_t *http, ipp_t *request, const char *resource, size_t length) _CUPS_PUBLIC;
 extern void		cupsSetOAuthCB(cups_oauth_cb_t cb, void *data) _CUPS_PUBLIC;
 extern void		cupsSetClientCertCB(cups_client_cert_cb_t cb, void *user_data) _CUPS_PUBLIC;
-extern int		cupsSetCredentials(cups_array_t *certs) _CUPS_PUBLIC;
+extern bool		cupsSetCredentials(cups_array_t *certs) _CUPS_PUBLIC;
 extern void		cupsSetDefaultDest(const char *name, const char *instance, size_t num_dests, cups_dest_t *dests) _CUPS_PUBLIC;
 extern bool		cupsSetDests(http_t *http, size_t num_dests, cups_dest_t *dests) _CUPS_PUBLIC;
 extern void		cupsSetEncryption(http_encryption_t e) _CUPS_PUBLIC;
@@ -362,8 +362,8 @@ extern int		cupsSetServerCredentials(const char *path, const char *common_name, 
 extern void		cupsSetUser(const char *user) _CUPS_PUBLIC;
 extern void		cupsSetUserAgent(const char *user_agent) _CUPS_PUBLIC;
 extern http_status_t	cupsStartDestDocument(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, int job_id, const char *docname, const char *format, size_t num_options, cups_option_t *options, bool last_document) _CUPS_PUBLIC;
-extern int		cupsTempFd(char *filename, size_t len) _CUPS_PUBLIC;
-extern cups_file_t	*cupsTempFile(char *filename, size_t len) _CUPS_PUBLIC;
+extern int		cupsTempFd(const char *prefix, const char *suffix, char *filename, size_t len) _CUPS_PUBLIC;
+extern cups_file_t	*cupsTempFile(const char *prefix, const char *suffix, char *filename, size_t len) _CUPS_PUBLIC;
 
 extern http_status_t	cupsWriteRequestData(http_t *http, const char *buffer, size_t length) _CUPS_PUBLIC;
 

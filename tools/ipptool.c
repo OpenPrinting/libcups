@@ -1139,7 +1139,7 @@ do_monitor_printer_state(
 	httpError(data->http) != ETIMEDOUT)
 #endif // _WIN32
     {
-      if (httpReconnect(http, 30000, NULL))
+      if (!httpReconnect(http, 30000, NULL))
 	break;
     }
     else if (status == HTTP_STATUS_ERROR || status == HTTP_STATUS_CUPS_AUTHORIZATION_CANCELED)
@@ -1376,10 +1376,10 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
     cupsFilePrintf(data->outfile, "<integer>%d</integer>\n", data->request_id);
     cupsFilePuts(data->outfile, "<key>RequestAttributes</key>\n");
     cupsFilePuts(data->outfile, "<array>\n");
-    if (ippFirstAttribute(request))
+    if (ippGetFirstAttribute(request))
     {
       cupsFilePuts(data->outfile, "<dict>\n");
-      for (attrptr = ippFirstAttribute(request), group = ippGetGroupTag(attrptr); attrptr; attrptr = ippNextAttribute(request))
+      for (attrptr = ippGetFirstAttribute(request), group = ippGetGroupTag(attrptr); attrptr; attrptr = ippGetNextAttribute(request))
 	print_attr(data->outfile, data->output, attrptr, &group);
       cupsFilePuts(data->outfile, "</dict>\n");
     }
@@ -1392,7 +1392,7 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
     {
       cupsFilePrintf(cupsFileStdout(), "    %s:\n", ippOpString(ippGetOperation(request)));
 
-      for (attrptr = ippFirstAttribute(request); attrptr; attrptr = ippNextAttribute(request))
+      for (attrptr = ippGetFirstAttribute(request); attrptr; attrptr = ippGetNextAttribute(request))
 	print_attr(cupsFileStdout(), IPPTOOL_OUTPUT_TEST, attrptr, NULL);
     }
 
@@ -1544,7 +1544,7 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
 	    httpError(data->http) != ETIMEDOUT)
 #endif /* _WIN32 */
 	{
-	  if (httpReconnect(data->http, 30000, NULL))
+	  if (!httpReconnect(data->http, 30000, NULL))
 	    data->prev_pass = false;
 	}
 	else if (status == HTTP_STATUS_ERROR || status == HTTP_STATUS_CUPS_AUTHORIZATION_CANCELED)
@@ -1571,7 +1571,7 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
 	httpError(data->http) != ETIMEDOUT)
 #endif /* _WIN32 */
     {
-      if (httpReconnect(data->http, 30000, NULL))
+      if (!httpReconnect(data->http, 30000, NULL))
 	data->prev_pass = false;
     }
     else if (status == HTTP_STATUS_ERROR)
@@ -1661,7 +1661,7 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
       if (ippGetRequestId(response) != data->request_id)
 	add_stringf(data->errors, "Bad request ID %d in response - expected %d (RFC 8011 section 4.1.1)", ippGetRequestId(response), data->request_id);
 
-      attrptr = ippFirstAttribute(response);
+      attrptr = ippGetFirstAttribute(response);
       if (!attrptr)
       {
 	add_stringf(data->errors, "Missing first attribute \"attributes-charset (charset)\" in group operation-attributes-tag (RFC 8011 section 4.1.4).");
@@ -1671,7 +1671,7 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
 	if (!ippGetName(attrptr) || ippGetValueTag(attrptr) != IPP_TAG_CHARSET || ippGetGroupTag(attrptr) != IPP_TAG_OPERATION || ippGetCount(attrptr) != 1 ||strcmp(ippGetName(attrptr), "attributes-charset"))
 	  add_stringf(data->errors, "Bad first attribute \"%s (%s%s)\" in group %s, expected \"attributes-charset (charset)\" in group operation-attributes-tag (RFC 8011 section 4.1.4).", ippGetName(attrptr) ? ippGetName(attrptr) : "(null)", ippGetCount(attrptr) > 1 ? "1setOf " : "", ippTagString(ippGetValueTag(attrptr)), ippTagString(ippGetGroupTag(attrptr)));
 
-	attrptr = ippNextAttribute(response);
+	attrptr = ippGetNextAttribute(response);
 	if (!attrptr)
 	  add_stringf(data->errors, "Missing second attribute \"attributes-natural-language (naturalLanguage)\" in group operation-attributes-tag (RFC 8011 section 4.1.4).");
 	else if (!ippGetName(attrptr) || ippGetValueTag(attrptr) != IPP_TAG_LANGUAGE || ippGetGroupTag(attrptr) != IPP_TAG_OPERATION || ippGetCount(attrptr) != 1 || strcmp(ippGetName(attrptr), "attributes-natural-language"))
@@ -1711,9 +1711,9 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
 
       a = cupsArrayNew((cups_array_cb_t)strcmp, NULL, NULL, 0, NULL, NULL);
 
-      for (attrptr = ippFirstAttribute(response), group = ippGetGroupTag(attrptr);
+      for (attrptr = ippGetFirstAttribute(response), group = ippGetGroupTag(attrptr);
 	   attrptr;
-	   attrptr = ippNextAttribute(response))
+	   attrptr = ippGetNextAttribute(response))
       {
 	if (ippGetGroupTag(attrptr) != group)
 	{
@@ -2066,7 +2066,7 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
 \
 	if (data->num_displayed > 0)
 	{
-	  for (attrptr = ippFirstAttribute(response); attrptr; attrptr = ippNextAttribute(response))
+	  for (attrptr = ippGetFirstAttribute(response); attrptr; attrptr = ippGetNextAttribute(response))
 	  {
 	    const char *attrname = ippGetName(attrptr);
 	    if (attrname)
@@ -2116,16 +2116,16 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
     cupsFilePuts(data->outfile, "<key>ResponseAttributes</key>\n");
     cupsFilePuts(data->outfile, "<array>\n");
     cupsFilePuts(data->outfile, "<dict>\n");
-    for (attrptr = ippFirstAttribute(response), group = ippGetGroupTag(attrptr);
+    for (attrptr = ippGetFirstAttribute(response), group = ippGetGroupTag(attrptr);
 	 attrptr;
-	 attrptr = ippNextAttribute(response))
+	 attrptr = ippGetNextAttribute(response))
       print_attr(data->outfile, data->output, attrptr, &group);
     cupsFilePuts(data->outfile, "</dict>\n");
     cupsFilePuts(data->outfile, "</array>\n");
   }
   else if (data->output == IPPTOOL_OUTPUT_IPPSERVER && response)
   {
-    for (attrptr = ippFirstAttribute(response); attrptr; attrptr = ippNextAttribute(response))
+    for (attrptr = ippGetFirstAttribute(response); attrptr; attrptr = ippGetNextAttribute(response))
     {
       if (!ippGetName(attrptr) || ippGetGroupTag(attrptr) != IPP_TAG_PRINTER)
 	continue;
@@ -2139,7 +2139,7 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
 		group_tag;		/* Attribute's group tag */
 
     cupsFilePuts(data->outfile, "[\n");
-    attrptr = ippFirstAttribute(response);
+    attrptr = ippGetFirstAttribute(response);
     while (attrptr)
     {
       group_tag = ippGetGroupTag(attrptr);
@@ -2156,12 +2156,12 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
 	}
 
 	print_json_attr(data, attrptr, 8);
-	attrptr = ippNextAttribute(response);
+	attrptr = ippGetNextAttribute(response);
 	cupsFilePuts(data->outfile, ippGetName(attrptr) && ippGetGroupTag(attrptr) == cur_tag ? ",\n" : "\n");
       }
       else
       {
-	attrptr = ippNextAttribute(response);
+	attrptr = ippGetNextAttribute(response);
       }
     }
 
@@ -2181,7 +2181,7 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
 
       if (data->verbosity && response)
       {
-	for (attrptr = ippFirstAttribute(response); attrptr; attrptr = ippNextAttribute(response))
+	for (attrptr = ippGetFirstAttribute(response); attrptr; attrptr = ippGetNextAttribute(response))
 	  print_attr(cupsFileStdout(), IPPTOOL_OUTPUT_TEST, attrptr, NULL);
       }
     }
@@ -2212,12 +2212,12 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
     else
       print_line(data, NULL, NULL, data->num_displayed, data->displayed, widths);
 
-    attrptr = ippFirstAttribute(response);
+    attrptr = ippGetFirstAttribute(response);
 
     while (attrptr)
     {
       while (attrptr && ippGetGroupTag(attrptr) <= IPP_TAG_OPERATION)
-	attrptr = ippNextAttribute(response);
+	attrptr = ippGetNextAttribute(response);
 
       if (attrptr)
       {
@@ -2227,7 +2227,7 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
 	  attrptr = print_line(data, response, attrptr, data->num_displayed, data->displayed, widths);
 
 	while (attrptr && ippGetGroupTag(attrptr) > IPP_TAG_OPERATION)
-	  attrptr = ippNextAttribute(response);
+	  attrptr = ippGetNextAttribute(response);
       }
     }
   }
@@ -2257,7 +2257,7 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
 
   if (data->num_displayed > 0 && !data->verbosity && response && (data->output == IPPTOOL_OUTPUT_TEST || (data->output == IPPTOOL_OUTPUT_PLIST && data->outfile != cupsFileStdout())))
   {
-    for (attrptr = ippFirstAttribute(response); attrptr; attrptr = ippNextAttribute(response))
+    for (attrptr = ippGetFirstAttribute(response); attrptr; attrptr = ippGetNextAttribute(response))
     {
       if (ippGetName(attrptr))
       {
@@ -4152,7 +4152,7 @@ print_attr(cups_file_t      *outfile,	/* I  - Output file */
 					/* Collection value */
 
 	    cupsFilePuts(outfile, "<dict>\n");
-	    for (colattr = ippFirstAttribute(col); colattr; colattr = ippNextAttribute(col))
+	    for (colattr = ippGetFirstAttribute(col); colattr; colattr = ippGetNextAttribute(col))
 	      print_attr(outfile, output, colattr, NULL);
 	    cupsFilePuts(outfile, "</dict>\n");
 	  }
@@ -4225,7 +4225,7 @@ print_csv(
     // Collect the values...
     memset(values, 0, sizeof(values));
 
-    for (; current; current = ippNextAttribute(ipp))
+    for (; current; current = ippGetNextAttribute(ipp))
     {
       if (!ippGetName(current))
 	break;
@@ -4421,7 +4421,7 @@ print_ippserver_attr(
 	  ipp_t *col = ippGetCollection(attr, i);
 
 	  cupsFilePuts(data->outfile, i ? ",{\n" : " {\n");
-	  for (colattr = ippFirstAttribute(col); colattr; colattr = ippNextAttribute(col))
+	  for (colattr = ippGetFirstAttribute(col); colattr; colattr = ippGetNextAttribute(col))
 	    print_ippserver_attr(data, colattr, indent + 4);
 	  cupsFilePrintf(data->outfile, "%*s}", indent, "");
 	}
@@ -4640,11 +4640,11 @@ print_json_attr(
 	  ipp_t *col = ippGetCollection(attr, 0);
 
 	  cupsFilePuts(data->outfile, ": {\n");
-	  colattr = ippFirstAttribute(col);
+	  colattr = ippGetFirstAttribute(col);
 	  while (colattr)
 	  {
 	    print_json_attr(data, colattr, indent + 4);
-	    colattr = ippNextAttribute(col);
+	    colattr = ippGetNextAttribute(col);
 	    cupsFilePuts(data->outfile, colattr ? ",\n" : "\n");
 	  }
 	  cupsFilePrintf(data->outfile, "%*s}", indent, "");
@@ -4657,11 +4657,11 @@ print_json_attr(
 	    ipp_t *col = ippGetCollection(attr, i);
 
 	    cupsFilePrintf(data->outfile, "%*s{\n", indent + 4, "");
-	    colattr = ippFirstAttribute(col);
+	    colattr = ippGetFirstAttribute(col);
 	    while (colattr)
 	    {
 	      print_json_attr(data, colattr, indent + 8);
-	      colattr = ippNextAttribute(col);
+	      colattr = ippGetNextAttribute(col);
 	      cupsFilePuts(data->outfile, colattr ? ",\n" : "\n");
 	    }
 	    cupsFilePrintf(data->outfile, "%*s}%s", indent + 4, "", (i + 1) < count ? ",\n" : "\n");
@@ -4763,7 +4763,7 @@ print_line(
     // Collect the values...
     memset(values, 0, sizeof(values));
 
-    for (; current; current = ippNextAttribute(ipp))
+    for (; current; current = ippGetNextAttribute(ipp))
     {
       if (!ippGetName(current))
 	break;
@@ -6582,7 +6582,7 @@ with_distinct_values(
 			*bufend,	// End of buffer
 			prefix;		// Prefix character
 
-            for (prefix = '{', bufptr = buffer, bufend = buffer + sizeof(buffer) - 2, member = ippFirstAttribute(col); member && bufptr < bufend; member = ippNextAttribute(col))
+            for (prefix = '{', bufptr = buffer, bufend = buffer + sizeof(buffer) - 2, member = ippGetFirstAttribute(col); member && bufptr < bufend; member = ippGetNextAttribute(col))
             {
               *bufptr++ = prefix;
               prefix    = ' ';

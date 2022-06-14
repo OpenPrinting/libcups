@@ -74,7 +74,7 @@ cupsGetFd(http_t     *http,		/* I - Connection to server or @code CUPS_HTTP_DEFA
     if (!_cups_strcasecmp(httpGetField(http, HTTP_FIELD_CONNECTION), "close"))
     {
       httpClearFields(http);
-      if (httpReconnect(http, 30000, NULL))
+      if (!httpReconnect(http, 30000, NULL))
       {
 	status = HTTP_STATUS_ERROR;
 	break;
@@ -97,17 +97,17 @@ cupsGetFd(http_t     *http,		/* I - Connection to server or @code CUPS_HTTP_DEFA
 
     httpSetField(http, HTTP_FIELD_AUTHORIZATION, http->authstring);
 
-    if (httpGet(http, resource))
+    if (!httpWriteRequest(http, "GET", resource))
     {
       if (httpReconnect(http, 30000, NULL))
       {
-        status = HTTP_STATUS_ERROR;
-	break;
+        status = HTTP_STATUS_UNAUTHORIZED;
+        continue;
       }
       else
       {
-        status = HTTP_STATUS_UNAUTHORIZED;
-        continue;
+        status = HTTP_STATUS_ERROR;
+	break;
       }
     }
 
@@ -135,7 +135,7 @@ cupsGetFd(http_t     *http,		/* I - Connection to server or @code CUPS_HTTP_DEFA
         break;
       }
 
-      if (httpReconnect(http, 30000, NULL))
+      if (!httpReconnect(http, 30000, NULL))
       {
         status = HTTP_STATUS_ERROR;
         break;
@@ -150,14 +150,14 @@ cupsGetFd(http_t     *http,		/* I - Connection to server or @code CUPS_HTTP_DEFA
       httpFlush(http);
 
       /* Reconnect... */
-      if (httpReconnect(http, 30000, NULL))
+      if (!httpReconnect(http, 30000, NULL))
       {
         status = HTTP_STATUS_ERROR;
         break;
       }
 
       /* Upgrade with encryption... */
-      httpEncryption(http, HTTP_ENCRYPTION_REQUIRED);
+      httpSetEncryption(http, HTTP_ENCRYPTION_REQUIRED);
 
       /* Try again, this time with encryption enabled... */
       continue;
@@ -309,7 +309,7 @@ cupsPutFd(http_t     *http,		/* I - Connection to server or @code CUPS_HTTP_DEFA
     if (!_cups_strcasecmp(httpGetField(http, HTTP_FIELD_CONNECTION), "close"))
     {
       httpClearFields(http);
-      if (httpReconnect(http, 30000, NULL))
+      if (!httpReconnect(http, 30000, NULL))
       {
 	status = HTTP_STATUS_ERROR;
 	break;
@@ -336,17 +336,17 @@ cupsPutFd(http_t     *http,		/* I - Connection to server or @code CUPS_HTTP_DEFA
 
     httpSetField(http, HTTP_FIELD_AUTHORIZATION, http->authstring);
 
-    if (httpPut(http, resource))
+    if (!httpWriteRequest(http, "PUT", resource))
     {
       if (httpReconnect(http, 30000, NULL))
       {
-        status = HTTP_STATUS_ERROR;
-	break;
+        status = HTTP_STATUS_UNAUTHORIZED;
+        continue;
       }
       else
       {
-        status = HTTP_STATUS_UNAUTHORIZED;
-        continue;
+        status = HTTP_STATUS_ERROR;
+	break;
       }
     }
 
@@ -395,7 +395,7 @@ cupsPutFd(http_t     *http,		/* I - Connection to server or @code CUPS_HTTP_DEFA
       httpFlush(http);
 
       /* Reconnect... */
-      if (httpReconnect(http, 30000, NULL))
+      if (!httpReconnect(http, 30000, NULL))
       {
         status = HTTP_STATUS_ERROR;
         break;
@@ -429,7 +429,7 @@ cupsPutFd(http_t     *http,		/* I - Connection to server or @code CUPS_HTTP_DEFA
         break;
       }
 
-      if (httpReconnect(http, 30000, NULL))
+      if (!httpReconnect(http, 30000, NULL))
       {
         status = HTTP_STATUS_ERROR;
         break;
@@ -444,14 +444,14 @@ cupsPutFd(http_t     *http,		/* I - Connection to server or @code CUPS_HTTP_DEFA
       httpFlush(http);
 
       /* Reconnect... */
-      if (httpReconnect(http, 30000, NULL))
+      if (!httpReconnect(http, 30000, NULL))
       {
         status = HTTP_STATUS_ERROR;
         break;
       }
 
       /* Upgrade with encryption... */
-      httpEncryption(http, HTTP_ENCRYPTION_REQUIRED);
+      httpSetEncryption(http, HTTP_ENCRYPTION_REQUIRED);
 
       /* Try again, this time with encryption enabled... */
       continue;

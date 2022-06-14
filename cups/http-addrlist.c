@@ -103,9 +103,9 @@ httpAddrConnect(
       * Create the socket...
       */
 
-      DEBUG_printf(("2httpAddrConnect2: Trying %s:%d...", httpAddrString(&(addrlist->addr), temp, sizeof(temp)), httpAddrPort(&(addrlist->addr))));
+      DEBUG_printf(("2httpAddrConnect2: Trying %s:%d...", httpAddrGetString(&(addrlist->addr), temp, sizeof(temp)), httpAddrGetPort(&(addrlist->addr))));
 
-      if ((fds[nfds] = (int)socket(httpAddrFamily(&(addrlist->addr)), SOCK_STREAM, 0)) < 0)
+      if ((fds[nfds] = (int)socket(httpAddrGetFamily(&(addrlist->addr)), SOCK_STREAM, 0)) < 0)
       {
        /*
 	* Don't abort yet, as this could just be an issue with the local
@@ -166,9 +166,9 @@ httpAddrConnect(
       * Then connect...
       */
 
-      if (!connect(fds[nfds], &(addrlist->addr.addr), (socklen_t)httpAddrLength(&(addrlist->addr))))
+      if (!connect(fds[nfds], &(addrlist->addr.addr), (socklen_t)httpAddrGetLength(&(addrlist->addr))))
       {
-	DEBUG_printf(("1httpAddrConnect2: Connected to %s:%d...", httpAddrString(&(addrlist->addr), temp, sizeof(temp)), httpAddrPort(&(addrlist->addr))));
+	DEBUG_printf(("1httpAddrConnect2: Connected to %s:%d...", httpAddrGetString(&(addrlist->addr), temp, sizeof(temp)), httpAddrGetPort(&(addrlist->addr))));
 
 #ifdef O_NONBLOCK
 	fcntl(fds[nfds], F_SETFL, flags);
@@ -191,7 +191,7 @@ httpAddrConnect(
       if (errno != EINPROGRESS && errno != EWOULDBLOCK)
 #endif /* _WIN32 */
       {
-	DEBUG_printf(("1httpAddrConnect2: Unable to connect to %s:%d: %s", httpAddrString(&(addrlist->addr), temp, sizeof(temp)), httpAddrPort(&(addrlist->addr)), strerror(errno)));
+	DEBUG_printf(("1httpAddrConnect2: Unable to connect to %s:%d: %s", httpAddrGetString(&(addrlist->addr), temp, sizeof(temp)), httpAddrGetPort(&(addrlist->addr)), strerror(errno)));
 	httpAddrClose(NULL, fds[nfds]);
 	addrlist = addrlist->next;
 	continue;
@@ -275,7 +275,7 @@ httpAddrConnect(
 #  ifdef DEBUG
 	  len   = sizeof(peer);
 	  if (!getpeername(fds[i], (struct sockaddr *)&peer, &len))
-	    DEBUG_printf(("1httpAddrConnect2: Connected to %s:%d...", httpAddrString(&peer, temp, sizeof(temp)), httpAddrPort(&peer)));
+	    DEBUG_printf(("1httpAddrConnect2: Connected to %s:%d...", httpAddrGetString(&peer, temp, sizeof(temp)), httpAddrGetPort(&peer)));
 #  endif /* DEBUG */
 
           break;

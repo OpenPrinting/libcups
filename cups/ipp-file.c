@@ -987,7 +987,7 @@ ippFileSetVar(ipp_file_t *file,		// I - IPP data file
     if (strstr(value, "._tcp"))
     {
       // Resolve URI...
-      if (!_httpResolveURI(value, resolved, sizeof(resolved), _HTTP_RESOLVE_DEFAULT, NULL, NULL))
+      if (!httpResolveURI(value, resolved, sizeof(resolved), HTTP_RESOLVE_DEFAULT, NULL, NULL))
       {
 	_cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(ENOENT), 0);
 	return (false);
@@ -1105,7 +1105,7 @@ ippFileWriteAttributes(
   }
 
   // Loop through the attributes...
-  for (attr = ippFirstAttribute(ipp); attr; attr = ippNextAttribute(ipp))
+  for (attr = ippGetFirstAttribute(ipp); attr; attr = ippGetNextAttribute(ipp))
   {
     if ((name = ippGetName(attr)) == NULL)
       continue;

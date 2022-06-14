@@ -772,7 +772,7 @@ main(int  argc,				/* I - Number of command-line arguments */
 
     response = cupsDoRequest(http, request, resource);
 
-    for (attr = ippFirstAttribute(response); attr; attr = ippNextAttribute(response))
+    for (attr = ippGetFirstAttribute(response); attr; attr = ippGetNextAttribute(response))
     {
       if (ippGetGroupTag(attr) != IPP_TAG_PRINTER)
         continue;

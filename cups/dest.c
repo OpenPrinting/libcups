@@ -171,7 +171,7 @@ static int		cups_dnssd_poll_cb(struct pollfd *pollfds, unsigned int num_pollfds,
 static void		cups_dnssd_query_cb(AvahiRecordBrowser *browser, AvahiIfIndex interface, AvahiProtocol protocol, AvahiBrowserEvent event, const char *name, uint16_t rrclass, uint16_t rrtype, const void *rdata, size_t rdlen, AvahiLookupResultFlags flags, void *context);
 #  endif /* HAVE_MDNSRESPONDER */
 static const char	*cups_dnssd_resolve(cups_dest_t *dest, const char *uri, int msec, int *cancel, cups_dest_cb_t cb, void *user_data);
-static int		cups_dnssd_resolve_cb(void *context);
+static bool		cups_dnssd_resolve_cb(void *context);
 static void		cups_dnssd_unquote(char *dst, const char *src, size_t dstsize);
 static int		cups_elapsed(struct timeval *t);
 #endif /* HAVE_DNSSD */
@@ -202,7 +202,7 @@ static void		cups_queue_name(char *name, const char *serviceName, size_t namesiz
 
 size_t					/* O  - New number of destinations */
 cupsAddDest(const char  *name,		/* I  - Destination name */
-            const char	*instance,	/* I  - Instance name or @code NULL@ for none/primary */
+            const char	*instance,	/* I  - Instance name or `NULL` for none/primary */
             size_t      num_dests,	/* I  - Number of destinations */
             cups_dest_t **dests)	/* IO - Destinations */
 {
@@ -517,20 +517,19 @@ _cupsAppleSetUseLastPrinter(
 /*
  * 'cupsConnectDest()' - Open a connection to the destination.
  *
- * Connect to the destination, returning a new @code http_t@ connection object
+ * Connect to the destination, returning a new `http_t` connection object
  * and optionally the resource path to use for the destination.  These calls
  * will block until a connection is made, the timeout expires, the integer
  * pointed to by "cancel" is non-zero, or the callback function (or block)
- * returns 0.  The caller is responsible for calling @link httpClose@ on the
+ * returns `0`.  The caller is responsible for calling @link httpClose@ on the
  * returned connection.
  *
- * Starting with CUPS 2.2.4, the caller can pass @code CUPS_DEST_FLAGS_DEVICE@
- * for the "flags" argument to connect directly to the device associated with
- * the destination.  Otherwise, the connection is made to the CUPS scheduler
- * associated with the destination.
+ * The caller can pass `CUPS_DEST_FLAGS_DEVICE` for the "flags" argument to
+ * connect directly to the device associated with the destination.  Otherwise,
+ * the connection is made to the CUPS scheduler associated with the destination.
  */
 
-http_t *				/* O - Connection to destination or @code NULL@ */
+http_t *				/* O - Connection to destination or `NULL` */
 cupsConnectDest(
     cups_dest_t    *dest,		/* I - Destination */
     unsigned       flags,		/* I - Connection flags */
@@ -685,7 +684,7 @@ cupsConnectDest(
     if (cb)
       (*cb)(user_data, CUPS_DEST_FLAGS_UNCONNECTED | CUPS_DEST_FLAGS_CONNECTING, dest);
 
-    if (!httpReconnect(http, msec, cancel) && cb)
+    if (httpReconnect(http, msec, cancel) && cb)
     {
       if (cancel && *cancel)
 	(*cb)(user_data, CUPS_DEST_FLAGS_UNCONNECTED | CUPS_DEST_FLAGS_CONNECTING, dest);
@@ -704,10 +703,8 @@ cupsConnectDest(
  * 'cupsCopyDest()' - Copy a destination.
  *
  * Make a copy of the destination to an array of destinations (or just a single
- * copy) - for use with the cupsEnumDests* functions. The caller is responsible
- * for calling cupsFreeDests() on the returned object(s).
- *
- *
+ * copy) - for use with the `cupsEnumDests*` functions. The caller is
+ * responsible for calling @link cupsFreeDests@ on the returned object(s).
  */
 
 size_t					/* O  - New number of destinations */
@@ -779,10 +776,10 @@ cupsCopyDest(cups_dest_t *dest,		/* I  - Destination to copy */
  * '_cupsCreateDest()' - Create a local (temporary) queue.
  */
 
-char *					/* O - Printer URI or @code NULL@ on error */
+char *					/* O - Printer URI or `NULL` on error */
 _cupsCreateDest(const char *name,	/* I - Printer name */
-                const char *info,	/* I - Printer description of @code NULL@ */
-		const char *device_id,	/* I - 1284 Device ID or @code NULL@ */
+                const char *info,	/* I - Printer description of `NULL` */
+		const char *device_id,	/* I - 1284 Device ID or `NULL` */
 		const char *device_uri,	/* I - Device URI */
 		char       *uri,	/* I - Printer URI buffer */
 		size_t     urisize)	/* I - Size of URI buffer */
@@ -798,7 +795,7 @@ _cupsCreateDest(const char *name,	/* I - Printer name */
   if (!name || !device_uri || !uri || urisize < 32)
     return (NULL);
 
-  if ((http = httpConnect(cupsGetServer(), ippPort(), NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, 30000, NULL)) == NULL)
+  if ((http = httpConnect(cupsGetServer(), ippGetPort(), NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, 30000, NULL)) == NULL)
     return (NULL);
 
   request = ippNewRequest(IPP_OP_CUPS_CREATE_LOCAL_PRINTER);
@@ -856,22 +853,20 @@ _cupsCreateDest(const char *name,	/* I - Printer name */
  * 'cupsEnumDests()' - Enumerate available destinations with a callback function.
  *
  * Destinations are enumerated from one or more sources.  The callback function
- * receives the @code user_data@ pointer and the destination pointer which can
- * be used as input to the @link cupsCopyDest@ function.  The function must
- * return 1 to continue enumeration or 0 to stop.
+ * receives the "user_data" pointer and the destination pointer which can be
+ * used as input to the @link cupsCopyDest@ function.  The function must return
+ * `true` to continue enumeration or `false` to stop.
  *
- * The @code type@ and @code mask@ arguments allow the caller to filter the
- * destinations that are enumerated.  Passing 0 for both will enumerate all
- * printers.  The constant @code CUPS_PRINTER_DISCOVERED@ is used to filter on
- * destinations that are available but have not yet been added locally.
+ * The "type" and "mask" arguments allow the caller to filter the destinations
+ * that are enumerated.  Passing `0` for both will enumerate all printers.  The
+ * constant `CUPS_PRINTER_DISCOVERED` is used to filter on destinations that are
+ * available but have not yet been added locally.
  *
  * Enumeration happens on the current thread and does not return until all
- * destinations have been enumerated or the callback function returns 0.
+ * destinations have been enumerated or the callback function returns `false`.
  *
  * Note: The callback function will likely receive multiple updates for the same
  * destinations - it is up to the caller to suppress any duplicate destinations.
- *
- *
  */
 
 bool					/* O - `true` on success, `false` on failure */
@@ -918,13 +913,14 @@ cupsFreeDests(size_t      num_dests,	/* I - Number of destinations */
 /*
  * 'cupsGetDest()' - Get the named destination from the list.
  *
- * Use the @link cupsEnumDests@ or @link cupsGetDests2@ functions to get a
- * list of supported destinations for the current user.
+ * This function gets the named destination from the list of destinations.  Use
+ * the @link cupsEnumDests@ or @link cupsGetDests@ functions to get a list of
+ * supported destinations for the current user.
  */
 
-cups_dest_t *				/* O - Destination pointer or @code NULL@ */
-cupsGetDest(const char  *name,		/* I - Destination name or @code NULL@ for the default destination */
-            const char	*instance,	/* I - Instance name or @code NULL@ */
+cups_dest_t *				/* O - Destination pointer or `NULL` */
+cupsGetDest(const char  *name,		/* I - Destination name or `NULL` for the default destination */
+            const char	*instance,	/* I - Instance name or `NULL` */
             size_t      num_dests,	/* I - Number of destinations */
             cups_dest_t *dests)		/* I - Destinations */
 {
@@ -1080,16 +1076,14 @@ _cupsGetDestResource(
 /*
  * 'cupsGetDestWithURI()' - Get a destination associated with a URI.
  *
- * "name" is the desired name for the printer. If @code NULL@, a name will be
+ * "name" is the desired name for the printer. If `NULL`, a name will be
  * created using the URI.
  *
- * "uri" is the "ipp" or "ipps" URI for the printer.
- *
- *
+ * "uri" is the 'ipp:' or 'ipps:' URI for the printer.
  */
 
-cups_dest_t *				/* O - Destination or @code NULL@ */
-cupsGetDestWithURI(const char *name,	/* I - Desired printer name or @code NULL@ */
+cups_dest_t *				/* O - Destination or `NULL` */
+cupsGetDestWithURI(const char *name,	/* I - Desired printer name or `NULL` */
                    const char *uri)	/* I - URI for the printer */
 {
   cups_dest_t	*dest;			/* New destination */
@@ -1301,7 +1295,7 @@ _cupsGetDests(http_t       *http,	/* I  - Connection to server or
   if (name && op != IPP_OP_CUPS_GET_DEFAULT)
   {
     httpAssembleURIf(HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", NULL,
-                     "localhost", ippPort(), "/printers/%s", name);
+                     "localhost", ippGetPort(), "/printers/%s", name);
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL,
                  uri);
   }
@@ -1527,7 +1521,7 @@ cupsGetDests(http_t      *http,		/* I - Connection to server or @code CUPS_HTTP_
   data.num_dests = 0;
   data.dests     = NULL;
 
-  if (!httpAddrLocalhost(httpGetAddress(http)))
+  if (!httpAddrIsLocalhost(httpGetAddress(http)))
   {
    /*
     * When talking to a remote cupsd, just enumerate printers on the remote
@@ -1567,13 +1561,13 @@ cupsGetDests(http_t      *http,		/* I - Connection to server or @code CUPS_HTTP_
  * This function is optimized for retrieving a single destination and should
  * be used instead of @link cupsGetDests2@ and @link cupsGetDest@ when you
  * either know the name of the destination or want to print to the default
- * destination.  If @code NULL@ is returned, the destination does not exist or
+ * destination.  If `NULL` is returned, the destination does not exist or
  * there is no default destination.
  *
  * If "http" is @code CUPS_HTTP_DEFAULT@, the connection to the default print
  * server will be used.
  *
- * If "name" is @code NULL@, the default printer for the current user will be
+ * If "name" is `NULL`, the default printer for the current user will be
  * returned.
  *
  * The returned destination must be freed using @link cupsFreeDests@ with a
@@ -1582,10 +1576,10 @@ cupsGetDests(http_t      *http,		/* I - Connection to server or @code CUPS_HTTP_
  *
  */
 
-cups_dest_t *				/* O - Destination or @code NULL@ */
+cups_dest_t *				/* O - Destination or `NULL` */
 cupsGetNamedDest(http_t     *http,	/* I - Connection to server or @code CUPS_HTTP_DEFAULT@ */
-                 const char *name,	/* I - Destination name or @code NULL@ for the default destination */
-                 const char *instance)	/* I - Instance name or @code NULL@ */
+                 const char *name,	/* I - Destination name or `NULL` for the default destination */
+                 const char *instance)	/* I - Instance name or `NULL` */
 {
   const char    *dest_name;             /* Working destination name */
   cups_dest_t	*dest;			/* Destination */
@@ -1774,7 +1768,7 @@ cupsGetNamedDest(http_t     *http,	/* I - Connection to server or @code CUPS_HTT
 
 size_t					/* O  - New number of destinations */
 cupsRemoveDest(const char  *name,	/* I  - Destination name */
-               const char  *instance,	/* I  - Instance name or @code NULL@ */
+               const char  *instance,	/* I  - Instance name or `NULL` */
 	       size_t      num_dests,	/* I  - Number of destinations */
 	       cups_dest_t **dests)	/* IO - Destinations */
 {
@@ -1821,7 +1815,7 @@ cupsRemoveDest(const char  *name,	/* I  - Destination name */
 void
 cupsSetDefaultDest(
     const char  *name,			/* I - Destination name */
-    const char  *instance,		/* I - Instance name or @code NULL@ */
+    const char  *instance,		/* I - Instance name or `NULL` */
     size_t      num_dests,		/* I - Number of destinations */
     cups_dest_t *dests)			/* I - Destinations */
 {
@@ -3086,7 +3080,7 @@ cups_dnssd_resolve(
   if (cb)
     (*cb)(user_data, CUPS_DEST_FLAGS_UNCONNECTED | CUPS_DEST_FLAGS_RESOLVING, dest);
 
-  if ((uri = _httpResolveURI(uri, tempuri, sizeof(tempuri), _HTTP_RESOLVE_DEFAULT, cups_dnssd_resolve_cb, &resolve)) == NULL)
+  if ((uri = httpResolveURI(uri, tempuri, sizeof(tempuri), HTTP_RESOLVE_DEFAULT, cups_dnssd_resolve_cb, &resolve)) == NULL)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to resolve printer-uri."), 1);
 
@@ -3110,7 +3104,7 @@ cups_dnssd_resolve(
  * 'cups_dnssd_resolve_cb()' - See if we should continue resolving.
  */
 
-static int				/* O - 1 to continue, 0 to stop */
+static bool				/* O - `true` to continue, `false` to stop */
 cups_dnssd_resolve_cb(void *context)	/* I - Resolve data */
 {
   _cups_dnssd_resolve_t	*resolve = (_cups_dnssd_resolve_t *)context;
@@ -3125,7 +3119,7 @@ cups_dnssd_resolve_cb(void *context)	/* I - Resolve data */
   if (resolve->cancel && *(resolve->cancel))
   {
     DEBUG_puts("4cups_dnssd_resolve_cb: Canceled.");
-    return (0);
+    return (false);
   }
 
  /*
@@ -3136,9 +3130,7 @@ cups_dnssd_resolve_cb(void *context)	/* I - Resolve data */
 
   DEBUG_printf(("4cups_dnssd_resolve_cb: curtime=%d.%06d, end_time=%d.%06d", (int)curtime.tv_sec, (int)curtime.tv_usec, (int)resolve->end_time.tv_sec, (int)resolve->end_time.tv_usec));
 
-  return (curtime.tv_sec < resolve->end_time.tv_sec ||
-          (curtime.tv_sec == resolve->end_time.tv_sec &&
-           curtime.tv_usec < resolve->end_time.tv_usec));
+  return (curtime.tv_sec < resolve->end_time.tv_sec || (curtime.tv_sec == resolve->end_time.tv_sec && curtime.tv_usec < resolve->end_time.tv_usec));
 }
 
 

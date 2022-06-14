@@ -1,7 +1,7 @@
 /*
  * Authentication functions for CUPS.
  *
- * Copyright © 2021 by OpenPrinting.
+ * Copyright © 2021-2022 by OpenPrinting.
  * Copyright © 2007-2019 by Apple Inc.
  * Copyright © 1997-2007 by Easy Software Products.
  *
@@ -517,7 +517,7 @@ static int				/* O - 0 if not a local connection */
 					/*     1  if local connection */
 cups_is_local_connection(http_t *http)	/* I - HTTP connection to server */
 {
-  if (!httpAddrLocalhost(http->hostaddr) && _cups_strcasecmp(http->hostname, "localhost") != 0)
+  if (!httpAddrIsLocalhost(http->hostaddr) && _cups_strcasecmp(http->hostname, "localhost") != 0)
     return 0;
   return 1;
 }
@@ -549,7 +549,7 @@ cups_local_auth(http_t *http)		/* I - HTTP connection to server */
   _cups_globals_t *cg = _cupsGlobals();	/* Global data */
 
 
-  DEBUG_printf(("7cups_local_auth(http=%p) hostaddr=%s, hostname=\"%s\"", (void *)http, httpAddrString(http->hostaddr, filename, sizeof(filename)), http->hostname));
+  DEBUG_printf(("7cups_local_auth(http=%p) hostaddr=%s, hostname=\"%s\"", (void *)http, httpAddrGetString(http->hostaddr, filename, sizeof(filename)), http->hostname));
 
  /*
   * See if we are accessing localhost...

@@ -123,18 +123,16 @@ cupsGetDefault(http_t *http)		/* I - Connection to server or `CUPS_HTTP_DEFAULT`
 /*
  * 'cupsGetJobs()' - Get the jobs from the specified server.
  *
- * A "whichjobs" value of @code CUPS_WHICHJOBS_ALL@ returns all jobs regardless
- * of state, while @code CUPS_WHICHJOBS_ACTIVE@ returns jobs that are
- * pending, processing, or held and @code CUPS_WHICHJOBS_COMPLETED@ returns
- * jobs that are stopped, canceled, aborted, or completed.
- *
- *
+ * A "whichjobs" value of `CUPS_WHICHJOBS_ALL` returns all jobs regardless of
+ * state, while `CUPS_WHICHJOBS_ACTIVE` returns jobs that are pending,
+ * processing, or held and `CUPS_WHICHJOBS_COMPLETED` returns jobs that are
+ * stopped, canceled, aborted, or completed.
  */
 
 size_t					/* O - Number of jobs */
-cupsGetJobs(http_t           *http,	/* I - Connection to server or @code CUPS_HTTP_DEFAULT@ */
+cupsGetJobs(http_t           *http,	/* I - Connection to server or `CUPS_HTTP_DEFAULT` */
             cups_job_t       **jobs,	/* O - Job data */
-            const char       *name,	/* I - @code NULL@ = all destinations, otherwise show jobs for named destination */
+            const char       *name,	/* I - `NULL` = all destinations, otherwise show jobs for named destination */
             bool             myjobs,	/* I - `false` = all users, `true` = mine */
 	    cups_whichjobs_t whichjobs)	/* I - `CUPS_WHICHJOBS_ALL`, `CUPS_WHICHJOBS_ACTIVE`, or `CUPS_WHICHJOBS_COMPLETED` */
 {

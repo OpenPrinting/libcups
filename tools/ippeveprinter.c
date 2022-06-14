@@ -16,10 +16,6 @@
  * current IPP Everywhere specification, thus the new name.
  */
 
-/*
- * Include necessary headers...
- */
-
 #include <cups/cups-private.h>
 #include <cups/debug-private.h>
 
@@ -202,7 +198,7 @@ typedef struct ippeve_printer_s		/**** Printer data ****/
 			*output_format,	/* Output format */
 			*command;	/* Command to run with job file */
   int			port;		/* Port */
-  int			web_forms;	/* Enable web interface forms? */
+  bool			web_forms;	/* Enable web interface forms? */
   size_t		urilen;		/* Length of printer URI */
   ipp_t			*attrs;		/* Static attributes */
   time_t		start_time;	/* Startup time */
@@ -266,7 +262,7 @@ typedef struct ippeve_client_s		/**** Client data ****/
 static http_status_t	authenticate_request(ippeve_client_t *client);
 static void		clean_jobs(ippeve_printer_t *printer);
 static int		compare_jobs(ippeve_job_t *a, ippeve_job_t *b);
-static void		copy_attributes(ipp_t *to, ipp_t *from, cups_array_t *ra, ipp_tag_t group_tag, int quickcopy);
+static void		copy_attributes(ipp_t *to, ipp_t *from, cups_array_t *ra, ipp_tag_t group_tag, bool quickcopy);
 static void		copy_job_attributes(ippeve_client_t *client, ippeve_job_t *job, cups_array_t *ra);
 static ippeve_client_t	*create_client(ippeve_printer_t *printer, int sock);
 static ippeve_job_t	*create_job(ippeve_client_t *client);
@@ -322,7 +318,7 @@ static int		process_ipp(ippeve_client_t *client);
 static void		*process_job(ippeve_job_t *job);
 static void		process_state_message(ippeve_job_t *job, char *message);
 static int		register_printer(ippeve_printer_t *printer);
-static int		respond_http(ippeve_client_t *client, http_status_t code, const char *content_coding, const char *type, size_t length);
+static bool		respond_http(ippeve_client_t *client, http_status_t code, const char *content_coding, const char *type, size_t length);
 static void		respond_ipp(ippeve_client_t *client, ipp_status_t status, const char *message, ...) _CUPS_FORMAT(3, 4);
 static void		respond_unsupported(ippeve_client_t *client, ipp_attribute_t *attr);
 static void		run_printer(ippeve_printer_t *printer);
@@ -845,7 +841,7 @@ copy_attributes(ipp_t        *to,	/* I - Destination request */
 	        ipp_t        *from,	/* I - Source request */
 	        cups_array_t *ra,	/* I - Requested attributes */
 	        ipp_tag_t    group_tag,	/* I - Group to copy */
-	        int          quickcopy)	/* I - Do a quick copy? */
+	        bool         quickcopy)	/* I - Do a quick copy? */
 {
   ippeve_filter_t	filter;			/* Filter data */
 
@@ -853,7 +849,7 @@ copy_attributes(ipp_t        *to,	/* I - Destination request */
   filter.ra        = ra;
   filter.group_tag = group_tag;
 
-  ippCopyAttributes(to, from, quickcopy, (ipp_copycb_t)filter_cb, &filter);
+  ippCopyAttributes(to, from, quickcopy, (ipp_copy_cb_t)filter_cb, &filter);
 }
 
 
@@ -1993,9 +1989,9 @@ debug_attributes(const char *title,	/* I - Title */
             ippErrorString(ippGetStatusCode(ipp)), ippGetStatusCode(ipp));
   fprintf(stderr, "  request-id=%d\n\n", ippGetRequestId(ipp));
 
-  for (attr = ippFirstAttribute(ipp), group_tag = IPP_TAG_ZERO;
+  for (attr = ippGetFirstAttribute(ipp), group_tag = IPP_TAG_ZERO;
        attr;
-       attr = ippNextAttribute(ipp))
+       attr = ippGetNextAttribute(ipp))
   {
     if (ippGetGroupTag(attr) != group_tag)
     {
@@ -2614,7 +2610,7 @@ finish_document_uri(
 
     httpClearFields(http);
     httpSetField(http, HTTP_FIELD_ACCEPT_LANGUAGE, "en");
-    if (httpGet(http, resource))
+    if (!httpWriteRequest(http, "GET", resource))
     {
       respond_ipp(client, IPP_STATUS_ERROR_DOCUMENT_ACCESS, "Unable to GET URI: %s", strerror(errno));
 
@@ -5089,7 +5085,7 @@ process_client(ippeve_client_t *client)	/* I - Client */
       {
         fprintf(stderr, "%s Starting HTTPS session.\n", client->hostname);
 
-	if (httpEncryption(client->http, HTTP_ENCRYPTION_ALWAYS))
+	if (!httpSetEncryption(client->http, HTTP_ENCRYPTION_ALWAYS))
 	{
 	  fprintf(stderr, "%s Unable to encrypt connection: %s\n", client->hostname, cupsLastErrorString());
 	  break;
@@ -5279,7 +5275,7 @@ process_http(ippeve_client_t *client)	/* I - Client connection */
 
       fprintf(stderr, "%s Upgrading to encrypted connection.\n", client->hostname);
 
-      if (httpEncryption(client->http, HTTP_ENCRYPTION_REQUIRED))
+      if (!httpSetEncryption(client->http, HTTP_ENCRYPTION_REQUIRED))
       {
         fprintf(stderr, "%s Unable to encrypt connection: %s\n", client->hostname, cupsLastErrorString());
 	return (0);
@@ -5609,7 +5605,7 @@ process_ipp(ippeve_client_t *client)	/* I - Client */
   {
     respond_ipp(client, IPP_STATUS_ERROR_BAD_REQUEST, "Bad request-id %d.", ippGetRequestId(client->request));
   }
-  else if (!ippFirstAttribute(client->request))
+  else if (!ippGetFirstAttribute(client->request))
   {
     respond_ipp(client, IPP_STATUS_ERROR_BAD_REQUEST, "No attributes in request.");
   }
@@ -5620,10 +5616,10 @@ process_ipp(ippeve_client_t *client)	/* I - Client */
     * don't repeat groups...
     */
 
-    for (attr = ippFirstAttribute(client->request),
+    for (attr = ippGetFirstAttribute(client->request),
              group = ippGetGroupTag(attr);
 	 attr;
-	 attr = ippNextAttribute(client->request))
+	 attr = ippGetNextAttribute(client->request))
     {
       if (ippGetGroupTag(attr) < group && ippGetGroupTag(attr) != IPP_TAG_ZERO)
       {
@@ -5650,7 +5646,7 @@ process_ipp(ippeve_client_t *client)	/* I - Client */
       *     printer-uri/job-uri
       */
 
-      attr = ippFirstAttribute(client->request);
+      attr = ippGetFirstAttribute(client->request);
       name = ippGetName(attr);
       if (attr && name && !strcmp(name, "attributes-charset") &&
 	  ippGetValueTag(attr) == IPP_TAG_CHARSET)
@@ -5658,7 +5654,7 @@ process_ipp(ippeve_client_t *client)	/* I - Client */
       else
 	charset = NULL;
 
-      attr = ippNextAttribute(client->request);
+      attr = ippGetNextAttribute(client->request);
       name = ippGetName(attr);
 
       if (attr && name && !strcmp(name, "attributes-natural-language") &&
@@ -5926,7 +5922,7 @@ process_job(ippeve_job_t *job)		/* I - Job */
       myenvp[myenvc ++] = strdup(val);
     }
 
-    for (attr = ippFirstAttribute(job->printer->attrs); attr && myenvc < (int)(sizeof(myenvp) / sizeof(myenvp[0]) - 1); attr = ippNextAttribute(job->printer->attrs))
+    for (attr = ippGetFirstAttribute(job->printer->attrs); attr && myenvc < (int)(sizeof(myenvp) / sizeof(myenvp[0]) - 1); attr = ippGetNextAttribute(job->printer->attrs))
     {
      /*
       * Convert "attribute-name-default" to "IPP_ATTRIBUTE_NAME_DEFAULT=" and
@@ -5961,7 +5957,7 @@ process_job(ippeve_job_t *job)		/* I - Job */
       myenvp[myenvc++] = strdup(val);
     }
 
-    for (attr = ippFirstAttribute(job->attrs); attr && myenvc < (int)(sizeof(myenvp) / sizeof(myenvp[0]) - 1); attr = ippNextAttribute(job->attrs))
+    for (attr = ippGetFirstAttribute(job->attrs); attr && myenvc < (int)(sizeof(myenvp) / sizeof(myenvp[0]) - 1); attr = ippGetNextAttribute(job->attrs))
     {
      /*
       * Convert "attribute-name" to "IPP_ATTRIBUTE_NAME=" and then add the
@@ -6686,7 +6682,7 @@ register_printer(
  * 'respond_http()' - Send a HTTP response.
  */
 
-int					/* O - 1 on success, 0 on failure */
+bool					/* O - `true` on success, `false` on failure */
 respond_http(
     ippeve_client_t *client,		/* I - Client */
     http_status_t code,			/* I - HTTP status of response */
@@ -6701,17 +6697,11 @@ respond_http(
 
   if (code == HTTP_STATUS_CONTINUE)
   {
-   /*
-    * 100-continue doesn't send any headers...
-    */
-
-    return (httpWriteResponse(client->http, HTTP_STATUS_CONTINUE) == 0);
+    // 100-continue doesn't send any headers...
+    return (httpWriteResponse(client->http, HTTP_STATUS_CONTINUE));
   }
 
- /*
-  * Format an error message...
-  */
-
+  // Format an error message...
   if (!type && !length && code != HTTP_STATUS_OK && code != HTTP_STATUS_SWITCHING_PROTOCOLS)
   {
     snprintf(message, sizeof(message), "%d - %s\n", code, httpStatusString(code));
@@ -6722,14 +6712,10 @@ respond_http(
   else
     message[0] = '\0';
 
- /*
-  * Send the HTTP response header...
-  */
-
+  // Send the HTTP response header...
   httpClearFields(client->http);
 
-  if (code == HTTP_STATUS_METHOD_NOT_ALLOWED ||
-      client->operation == HTTP_STATE_OPTIONS)
+  if (code == HTTP_STATUS_METHOD_NOT_ALLOWED || client->operation == HTTP_STATE_OPTIONS)
     httpSetField(client->http, HTTP_FIELD_ALLOW, "GET, HEAD, OPTIONS, POST");
 
   if (code == HTTP_STATUS_UNAUTHORIZED)
@@ -6743,8 +6729,7 @@ respond_http(
   if (type)
   {
     if (!strcmp(type, "text/html"))
-      httpSetField(client->http, HTTP_FIELD_CONTENT_TYPE,
-                   "text/html; charset=utf-8");
+      httpSetField(client->http, HTTP_FIELD_CONTENT_TYPE, "text/html; charset=utf-8");
     else
       httpSetField(client->http, HTTP_FIELD_CONTENT_TYPE, type);
 
@@ -6754,40 +6739,31 @@ respond_http(
 
   httpSetLength(client->http, length);
 
-  if (httpWriteResponse(client->http, code) < 0)
-    return (0);
+  if (!httpWriteResponse(client->http, code))
+    return (false);
 
- /*
-  * Send the response data...
-  */
-
+  // Send the response data...
   if (message[0])
   {
-   /*
-    * Send a plain text message.
-    */
-
+    // Send a plain text message.
     if (httpPrintf(client->http, "%s", message) < 0)
-      return (0);
+      return (false);
 
     if (httpWrite(client->http, "", 0) < 0)
-      return (0);
+      return (false);
   }
   else if (client->response)
   {
-   /*
-    * Send an IPP response...
-    */
-
+    // Send an IPP response...
     debug_attributes("Response", client->response, 2);
 
     ippSetState(client->response, IPP_STATE_IDLE);
 
     if (ippWrite(client->http, client->response) != IPP_STATE_DATA)
-      return (0);
+      return (false);
   }
 
-  return (1);
+  return (true);
 }
 
 

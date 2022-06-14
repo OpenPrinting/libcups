@@ -2367,7 +2367,7 @@ list_service(ippfind_srv_t *service)	/* I - Service */
       return (0);
     }
 
-    if (httpGet(http, service->resource))
+    if (!httpWriteRequest(http, "GET", service->resource))
     {
       _cupsLangPrintf(stdout, "%s unavailable", service->uri);
       return (0);

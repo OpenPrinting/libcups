@@ -371,7 +371,7 @@ cups_create_localizations(
   httpGetHostname(http, http_hostname, sizeof(http_hostname));
 
   if (!_cups_strcasecmp(http_hostname, hostname) &&
-      port == httpAddrPort(http->hostaddr))
+      port == httpAddrGetPort(http->hostaddr))
   {
    /*
     * Use the same connection...
@@ -402,7 +402,7 @@ cups_create_localizations(
   * Get a temporary file...
   */
 
-  if ((temp = cupsTempFile(tempfile, sizeof(tempfile))) == NULL)
+  if ((temp = cupsTempFile(NULL, ".strings", tempfile, sizeof(tempfile))) == NULL)
   {
     DEBUG_printf(("4cups_create_localizations: Unable to create temporary "
                   "file: %s", cupsLastErrorString()));

@@ -110,7 +110,7 @@ cupsArrayAdd(cups_array_t *a,		/* I - Array */
 
 bool					/* O - `true` on success, `false` on failure */
 cupsArrayAddStrings(cups_array_t *a,	/* I - Array */
-                    const char   *s,	/* I - Delimited strings or `NULL` */
+                    const char   *s,	/* I - Delimited strings */
                     char         delim)	/* I - Delimiter character */
 {
   char		*buffer,		/* Copy of string */
@@ -121,10 +121,16 @@ cupsArrayAddStrings(cups_array_t *a,	/* I - Array */
 
   DEBUG_printf(("cupsArrayAddStrings(a=%p, s=\"%s\", delim='%c')", (void *)a, s, delim));
 
+  if (!a)
+  {
+    DEBUG_puts("1cupsArrayAddStrings: Returning false");
+    return (false);
+  }
+
   if (!a || !s || !*s)
   {
-    DEBUG_puts("1cupsArrayAddStrings: Returning 0");
-    return (false);
+    DEBUG_puts("1cupsArrayAddStrings: No strings, returning true");
+    return (true);
   }
 
   if (delim == ' ')
@@ -647,12 +653,10 @@ cupsArrayInsert(cups_array_t *a,	/* I - Array */
  * functions like `strcmp` can be used for sorted string arrays.
  *
  * ```
- * int                  // -1 if a < b, 0 if a == b, and 1 if a > b
- * compare_cb(void *a,  // First element
- *            void *b,  // Second element
- *            void *d)  // User data pointer
+ * int // Return -1 if a < b, 0 if a == b, and 1 if a > b
+ * compare_cb(void *a, void *b, void *d)
  * {
- *   ...
+ *   ... "a" and "b" are the elements, "d" is the user data pointer
  * }
  * ```
  *
@@ -663,11 +667,10 @@ cupsArrayInsert(cups_array_t *a,	/* I - Array */
  * provides at least 32-bits of resolution.
  *
  * ```
- * size_t            // Hash value from 0 to (hashsize - 1)
- * hash_cb(void *e,  // Element
- *         void *d)  // User data pointer
+ * size_t // Return hash value from 0 to (hashsize - 1)
+ * hash_cb(void *e, void *d)
  * {
- *   ...
+ *   ... "e" is the element, "d" is the user data pointer
  * }
  * ```
  *
@@ -677,11 +680,10 @@ cupsArrayInsert(cups_array_t *a,	/* I - Array */
  * user data pointer ("d") and returns a new pointer that is stored in the array.
  *
  * ```
- * void *            // Pointer to copied/retained element or NULL
- * copy_cb(void *e,  // Element to copy/retain
- *         void *d)  // User data pointer
+ * void * // Return pointer to copied/retained element or NULL
+ * copy_cb(void *e, void *d)
  * {
- *   ...
+ *   ... "e" is the element, "d" is the user data pointer
  * }
  * ```
  *
@@ -691,10 +693,9 @@ cupsArrayInsert(cups_array_t *a,	/* I - Array */
  *
  * ```
  * void
- * free_cb(void *e,  // Element to free/release
- *         void *d)  // User data pointer
+ * free_cb(void *e, void *d)
  * {
- *   ...
+ *   ... "e" is the element, "d" is the user data pointer
  * }
  * ```
  */

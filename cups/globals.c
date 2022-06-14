@@ -9,14 +9,10 @@
  * information.
  */
 
-/*
- * Include necessary headers...
- */
-
 #include "cups-private.h"
 #ifndef _WIN32
 #  include <pwd.h>
-#endif /* !_WIN32 */
+#endif // !_WIN32
 
 
 /*
@@ -25,16 +21,16 @@
 
 #ifdef DEBUG
 static int		cups_global_index = 0;
-					/* Next thread number */
-#endif /* DEBUG */
-static cups_threadkey_t cups_globals_key = CUPS_THREADKEY_INITIALIZER;
-					/* Thread local storage key */
+					// Next thread number
+#endif // DEBUG
+static cups_thread_key_t cups_globals_key = CUPS_THREADKEY_INITIALIZER;
+					// Thread local storage key
 #ifndef _WIN32
 static pthread_once_t	cups_globals_key_once = PTHREAD_ONCE_INIT;
-					/* One-time initialization object */
-#endif /* !_WIN32 */
+					// One-time initialization object
+#endif // !_WIN32
 static cups_mutex_t	cups_global_mutex = CUPS_MUTEX_INITIALIZER;
-					/* Global critical section */
+					// Global critical section
 
 
 /*
@@ -43,12 +39,12 @@ static cups_mutex_t	cups_global_mutex = CUPS_MUTEX_INITIALIZER;
 
 #ifdef _WIN32
 static void		cups_fix_path(char *path);
-#endif /* _WIN32 */
+#endif // _WIN32
 static _cups_globals_t	*cups_globals_alloc(void);
 static void		cups_globals_free(_cups_globals_t *g);
 #ifndef _WIN32
 static void		cups_globals_init(void);
-#endif /* !_WIN32 */
+#endif // !_WIN32
 
 
 /*
@@ -66,10 +62,10 @@ _cupsGlobalLock(void)
  * '_cupsGlobals()' - Return a pointer to thread local storage
  */
 
-_cups_globals_t *			/* O - Pointer to global data */
+_cups_globals_t *			// O - Pointer to global data
 _cupsGlobals(void)
 {
-  _cups_globals_t *cg;			/* Pointer to global data */
+  _cups_globals_t *cg;			// Pointer to global data
 
 
 #ifndef _WIN32
@@ -78,7 +74,7 @@ _cupsGlobals(void)
   */
 
   pthread_once(&cups_globals_key_once, cups_globals_init);
-#endif /* !_WIN32 */
+#endif // !_WIN32
 
  /*
   * See if we have allocated the data yet...
@@ -120,12 +116,12 @@ _cupsGlobalUnlock(void)
  * @private@
  */
 
-BOOL WINAPI				/* O - Success/failure */
-DllMain(HINSTANCE hinst,		/* I - DLL module handle */
-        DWORD     reason,		/* I - Reason */
-        LPVOID    reserved)		/* I - Unused */
+BOOL WINAPI				// O - Success/failure
+DllMain(HINSTANCE hinst,		// I - DLL module handle
+        DWORD     reason,		// I - Reason
+        LPVOID    reserved)		// I - Unused
 {
-  _cups_globals_t *cg;			/* Global data */
+  _cups_globals_t *cg;			// Global data
 
 
   (void)hinst;
@@ -133,19 +129,19 @@ DllMain(HINSTANCE hinst,		/* I - DLL module handle */
 
   switch (reason)
   {
-    case DLL_PROCESS_ATTACH :		/* Called on library initialization */
+    case DLL_PROCESS_ATTACH :		// Called on library initialization
         InitializeCriticalSection(&cups_global_mutex);
 
         if ((cups_globals_key = TlsAlloc()) == TLS_OUT_OF_INDEXES)
           return (FALSE);
         break;
 
-    case DLL_THREAD_DETACH :		/* Called when a thread terminates */
+    case DLL_THREAD_DETACH :		// Called when a thread terminates
         if ((cg = (_cups_globals_t *)TlsGetValue(cups_globals_key)) != NULL)
           cups_globals_free(cg);
         break;
 
-    case DLL_PROCESS_DETACH :		/* Called when library is unloaded */
+    case DLL_PROCESS_DETACH :		// Called when library is unloaded
         if ((cg = (_cups_globals_t *)TlsGetValue(cups_globals_key)) != NULL)
           cups_globals_free(cg);
 
@@ -159,25 +155,25 @@ DllMain(HINSTANCE hinst,		/* I - DLL module handle */
 
   return (TRUE);
 }
-#endif /* _WIN32 */
+#endif // _WIN32
 
 
 /*
  * 'cups_globals_alloc()' - Allocate and initialize global data.
  */
 
-static _cups_globals_t *		/* O - Pointer to global data */
+static _cups_globals_t *		// O - Pointer to global data
 cups_globals_alloc(void)
 {
   _cups_globals_t *cg = malloc(sizeof(_cups_globals_t));
-					/* Pointer to global data */
+					// Pointer to global data
 #ifdef _WIN32
-  HKEY		key;			/* Registry key */
-  DWORD		size;			/* Size of string */
-  static char	installdir[1024] = "",	/* Install directory */
-		confdir[1024] = "",	/* Server root directory */
-		localedir[1024] = "";	/* Locale directory */
-#endif /* _WIN32 */
+  HKEY		key;			// Registry key
+  DWORD		size;			// Size of string
+  static char	installdir[1024] = "",	// Install directory
+		confdir[1024] = "",	// Server root directory
+		localedir[1024] = "";	// Locale directory
+#endif // _WIN32
 
 
   if (!cg)
@@ -202,7 +198,7 @@ cups_globals_alloc(void)
   */
 
   cg->thread_id = ++ cups_global_index;
-#endif /* DEBUG */
+#endif // DEBUG
 
  /*
   * Then set directories as appropriate...
@@ -223,7 +219,7 @@ cups_globals_alloc(void)
       * Grab the installation directory...
       */
 
-      char  *ptr;			/* Pointer into installdir */
+      char  *ptr;			// Pointer into installdir
 
       size = sizeof(installdir);
       RegQueryValueExA(key, "installdir", NULL, NULL, installdir, &size);
@@ -236,10 +232,10 @@ cups_globals_alloc(void)
           if (ptr[1])
             *ptr++ = '/';
           else
-            *ptr = '\0';		/* Strip trailing \ */
+            *ptr = '\0';		// Strip trailing \
         }
         else if (*ptr == '/' && !ptr[1])
-          *ptr = '\0';			/* Strip trailing / */
+          *ptr = '\0';			// Strip trailing /
         else
           ptr ++;
       }
@@ -271,7 +267,7 @@ cups_globals_alloc(void)
   if ((geteuid() != getuid() && getuid()) || getegid() != getgid())
 #  else
   if (!getuid())
-#  endif /* HAVE_GETEUID */
+#  endif // HAVE_GETEUID
   {
    /*
     * When running setuid/setgid, don't allow environment variables to override
@@ -310,14 +306,14 @@ cups_globals_alloc(void)
 
   if (!cg->home)
   {
-    struct passwd	pw;		/* User info */
-    struct passwd	*result;	/* Auxiliary pointer */
+    struct passwd	pw;		// User info
+    struct passwd	*result;	// Auxiliary pointer
 
     getpwuid_r(getuid(), &pw, cg->pw_buf, PW_BUF_SIZE, &result);
     if (result)
       cg->home = _cupsStrAlloc(pw.pw_dir);
   }
-#endif /* _WIN32 */
+#endif // _WIN32
 
   return (cg);
 }
@@ -328,10 +324,10 @@ cups_globals_alloc(void)
  */
 
 static void
-cups_globals_free(_cups_globals_t *cg)	/* I - Pointer to global data */
+cups_globals_free(_cups_globals_t *cg)	// I - Pointer to global data
 {
-  _cups_buffer_t	*buffer,	/* Current read/write buffer */
-			*next;		/* Next buffer */
+  _cups_buffer_t	*buffer,	// Current read/write buffer
+			*next;		// Next buffer
 
 
   if (cg->last_status_message)
@@ -351,7 +347,7 @@ cups_globals_free(_cups_globals_t *cg)	/* I - Pointer to global data */
 
 #ifdef HAVE_TLS
   _httpFreeCredentials(cg->tls_credentials);
-#endif /* HAVE_TLS */
+#endif // HAVE_TLS
 
   cupsFileClose(cg->stdio_files[0]);
   cupsFileClose(cg->stdio_files[1]);
@@ -376,4 +372,4 @@ cups_globals_init(void)
 
   pthread_key_create(&cups_globals_key, (void (*)(void *))cups_globals_free);
 }
-#endif /* !_WIN32 */
+#endif // !_WIN32

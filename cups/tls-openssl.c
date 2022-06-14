@@ -646,7 +646,7 @@ httpCredentialsString(
  * 'httpLoadCredentials()' - Load X.509 credentials from a keychain file.
  */
 
-int					// O - 0 on success, -1 on error
+bool					// O - `true` on success, `false` on error
 httpLoadCredentials(
     const char   *path,			// I  - Keychain/PKCS#12 path
     cups_array_t **credentials,		// IO - Credentials
@@ -665,17 +665,17 @@ httpLoadCredentials(
 
 
   if (!credentials || !common_name)
-    return (-1);
+    return (false);
 
   if (!path)
     path = http_default_path(temp, sizeof(temp));
   if (!path)
-    return (-1);
+    return (false);
 
   http_make_path(filename, sizeof(filename), path, common_name, "crt");
 
   if ((fp = cupsFileOpen(filename, "r")) == NULL)
-    return (-1);
+    return (false);
 
   while (cupsFileGets(fp, line, sizeof(line)))
   {
@@ -767,7 +767,7 @@ httpLoadCredentials(
   if (data)
     free(data);
 
-  return (*credentials ? 0 : -1);
+  return (*credentials != NULL);
 }
 
 
@@ -775,7 +775,7 @@ httpLoadCredentials(
  * 'httpSaveCredentials()' - Save X.509 credentials to a keychain file.
  */
 
-int					// O - -1 on error, 0 on success
+bool					// O - `true` on success, `false` on error
 httpSaveCredentials(
     const char   *path,			// I - Keychain/PKCS#12 path
     cups_array_t *credentials,		// I - Credentials
@@ -792,18 +792,18 @@ httpSaveCredentials(
 
 
   if (!credentials || !common_name)
-    return (-1);
+    return (false);
 
   if (!path)
     path = http_default_path(temp, sizeof(temp));
   if (!path)
-    return (-1);
+    return (false);
 
   http_make_path(filename, sizeof(filename), path, common_name, "crt");
   snprintf(nfilename, sizeof(nfilename), "%s.N", filename);
 
   if ((fp = cupsFileOpen(nfilename, "w")) == NULL)
-    return (-1);
+    return (false);
 
 #ifndef _WIN32
   fchmod(cupsFileNumber(fp), 0600);
@@ -824,7 +824,7 @@ httpSaveCredentials(
 
   cupsFileClose(fp);
 
-  return (rename(nfilename, filename));
+  return (!rename(nfilename, filename));
 }
 
 
@@ -885,7 +885,7 @@ _httpTLSSetOptions(int options,		// I - Options
  * '_httpTLSStart()' - Set up SSL/TLS support on a connection.
  */
 
-int					// O - 0 on success, -1 on failure
+bool					/* O - `true` on success, `false` on failure */
 _httpTLSStart(http_t *http)		// I - Connection to server
 {
   BIO		*bio;			// Basic input/output context
@@ -925,7 +925,7 @@ _httpTLSStart(http_t *http)		// I - Connection to server
     http->status = HTTP_STATUS_ERROR;
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Server credentials not set."), 1);
 
-    return (-1);
+    return (false);
   }
 
   if (http->mode == _HTTP_MODE_CLIENT)
@@ -940,7 +940,7 @@ _httpTLSStart(http_t *http)		// I - Connection to server
 		keyfile[1024];		// Private key file
     const char	*cn,			// Common name to lookup
 		*cnptr;			// Pointer into common name
-    int		have_creds = 0;		// Have credentials?
+    bool	have_creds = false;	// Have credentials?
 
     context = SSL_CTX_new(TLS_server_method());
 
@@ -963,7 +963,7 @@ _httpTLSStart(http_t *http)		// I - Connection to server
 	DEBUG_printf(("4_httpTLSStart: Unable to get socket address: %s", strerror(errno)));
 	hostname[0] = '\0';
       }
-      else if (httpAddrLocalhost(&addr))
+      else if (httpAddrIsLocalhost(&addr))
       {
         // Local access top use default...
 	hostname[0] = '\0';
@@ -1032,7 +1032,7 @@ _httpTLSStart(http_t *http)		// I - Connection to server
 	_cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create server credentials."), 1);
 	SSL_CTX_free(context);
 
-	return (-1);
+	return (false);
       }
     }
 
@@ -1091,7 +1091,7 @@ _httpTLSStart(http_t *http)		// I - Connection to server
       SSL_free(http->tls);
       http->tls = NULL;
 
-      return (-1);
+      return (false);
     }
   }
   else
@@ -1111,11 +1111,11 @@ _httpTLSStart(http_t *http)		// I - Connection to server
       SSL_free(http->tls);
       http->tls = NULL;
 
-      return (-1);
+      return (false);
     }
   }
 
-  return (0);
+  return (true);
 }
 
 
