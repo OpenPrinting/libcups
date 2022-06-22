@@ -1,126 +1,121 @@
-/*
- * Sorted array routines for CUPS.
- *
- * Copyright © 2021-2022 by OpenPrinting.
- * Copyright © 2007-2014 by Apple Inc.
- * Copyright © 1997-2007 by Easy Software Products.
- *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more
- * information.
- */
-
-/*
- * Include necessary headers...
- */
+//
+// Sorted array routines for CUPS.
+//
+// Copyright © 2021-2022 by OpenPrinting.
+// Copyright © 2007-2014 by Apple Inc.
+// Copyright © 1997-2007 by Easy Software Products.
+//
+// Licensed under Apache License v2.0.  See the file "LICENSE" for more
+// information.
+//
 
 #include <cups/cups.h>
 #include "string-private.h"
 #include "debug-internal.h"
 
 
-/*
- * Limits...
- */
+//
+// Limits...
+//
 
-#define _CUPS_MAXSAVE	32		/**** Maximum number of saves ****/
+#define _CUPS_MAXSAVE	32		// Maximum number of saves
 
 
-/*
- * Types and structures...
- */
+//
+// Types and structures...
+//
 
-struct _cups_array_s			/**** CUPS array structure ****/
+struct _cups_array_s			// CUPS array structure
 {
- /*
-  * The current implementation uses an insertion sort into an array of
-  * sorted pointers.  We leave the array type private/opaque so that we
-  * can change the underlying implementation without affecting the users
-  * of this API.
-  */
+  // The current implementation uses an insertion sort into an array of
+  // sorted pointers.  We leave the array type private/opaque so that we
+  // can change the underlying implementation without affecting the users
+  // of this API.
 
-  size_t		num_elements,	/* Number of array elements */
-			alloc_elements,	/* Allocated array elements */
-			current,	/* Current element */
-			insert,		/* Last inserted element */
-			num_saved,	/* Number of saved elements */
+  size_t		num_elements,	// Number of array elements
+			alloc_elements,	// Allocated array elements
+			current,	// Current element
+			insert,		// Last inserted element
+			num_saved,	// Number of saved elements
 			saved[_CUPS_MAXSAVE];
-					/* Saved elements */
-  void			**elements;	/* Array elements */
-  cups_array_cb_t	compare;	/* Element comparison function */
-  bool			unique;		/* Are all elements unique? */
-  void			*data;		/* User data passed to compare */
-  cups_ahash_cb_t	hashfunc;	/* Hash function */
-  size_t		hashsize,	/* Size of hash */
-			*hash;		/* Hash array */
-  cups_acopy_cb_t	copyfunc;	/* Copy function */
-  cups_afree_cb_t	freefunc;	/* Free function */
+					// Saved elements
+  void			**elements;	// Array elements
+  cups_array_cb_t	compare;	// Element comparison function
+  bool			unique;		// Are all elements unique?
+  void			*data;		// User data passed to compare
+  cups_ahash_cb_t	hashfunc;	// Hash function
+  size_t		hashsize,	// Size of hash
+			*hash;		// Hash array
+  cups_acopy_cb_t	copyfunc;	// Copy function
+  cups_afree_cb_t	freefunc;	// Free function
 };
 
 
-/*
- * Local functions...
- */
+//
+// Local functions...
+//
 
 static bool	cups_array_add(cups_array_t *a, void *e, bool insert);
 static size_t	cups_array_find(cups_array_t *a, void *e, size_t prev, int *rdiff);
 
 
-/*
- * 'cupsArrayAdd()' - Add an element to an array.
- *
- * This function adds an element to an array.  When adding an element to a
- * sorted array, non-unique elements are appended at the end of the run of
- * identical elements.  For unsorted arrays, the element is appended to the end
- * of the array.
- */
+//
+// 'cupsArrayAdd()' - Add an element to an array.
+//
+// This function adds an element to an array.  When adding an element to a
+// sorted array, non-unique elements are appended at the end of the run of
+// identical elements.  For unsorted arrays, the element is appended to the end
+// of the array.
+//
 
-bool					/* O - `true` on success, `false` on failure */
-cupsArrayAdd(cups_array_t *a,		/* I - Array */
-             void         *e)		/* I - Element */
+bool					// O - `true` on success, `false` on failure
+cupsArrayAdd(cups_array_t *a,		// I - Array
+             void         *e)		// I - Element
 {
   DEBUG_printf(("2cupsArrayAdd(a=%p, e=%p)", (void *)a, e));
 
- /*
-  * Range check input...
-  */
-
+  // Range check input...
   if (!a || !e)
   {
     DEBUG_puts("3cupsArrayAdd: returning false");
     return (false);
   }
 
- /*
-  * Append the element...
-  */
-
+  // Append the element...
   return (cups_array_add(a, e, false));
 }
 
 
-/*
- * 'cupsArrayAddStrings()' - Add zero or more delimited strings to an array.
- *
- * This function adds zero or more delimited strings to an array created using
- * the @link cupsArrayNewStrings@ function. Duplicate strings are *not* added.
- * If the string pointer "s" is `NULL` or the empty string, no strings are
- * added to the array.  If "delim" is the space character, then all whitespace
- * is recognized as a delimiter.
- */
+//
+// 'cupsArrayAddStrings()' - Add zero or more delimited strings to an array.
+//
+// This function adds zero or more delimited strings to an array created using
+// the @link cupsArrayNewStrings@ function. Duplicate strings are *not* added.
+// If the string pointer "s" is `NULL` or the empty string, no strings are
+// added to the array.  If "delim" is the space character, then all whitespace
+// is recognized as a delimiter.
+//
+// Strings can be delimited by quotes ("foo", 'bar') and curly braces ("{foo}"),
+// and characters can be escaped using the backslash (\) character.  Outer
+// quotes are stripped but inner ones are preserved.
+//
 
-bool					/* O - `true` on success, `false` on failure */
-cupsArrayAddStrings(cups_array_t *a,	/* I - Array */
-                    const char   *s,	/* I - Delimited strings */
-                    char         delim)	/* I - Delimiter character */
+bool					// O - `true` on success, `false` on failure
+cupsArrayAddStrings(cups_array_t *a,	// I - Array
+                    const char   *s,	// I - Delimited strings
+                    char         delim)	// I - Delimiter character
 {
-  char		*buffer,		/* Copy of string */
-		*start,			/* Start of string */
-		*end;			/* End of string */
-  bool		status = true;		/* Status of add */
+  char		*buffer,		// Copy of string
+		*start,			// Start of string
+		*end;			// End of string
+  bool		status = true;		// Status of add
+  char		stack[_CUPS_MAXSAVE];	// Quoting stack
+  int		spos = -1;		// Stack position
 
 
   DEBUG_printf(("cupsArrayAddStrings(a=%p, s=\"%s\", delim='%c')", (void *)a, s, delim));
 
+  // Range check input...
   if (!a)
   {
     DEBUG_puts("1cupsArrayAddStrings: Returning false");
@@ -135,10 +130,7 @@ cupsArrayAddStrings(cups_array_t *a,	/* I - Array */
 
   if (delim == ' ')
   {
-   /*
-    * Skip leading whitespace...
-    */
-
+    // Skip leading whitespace...
     DEBUG_puts("1cupsArrayAddStrings: Skipping leading whitespace.");
 
     while (*s && isspace(*s & 255))
@@ -147,14 +139,10 @@ cupsArrayAddStrings(cups_array_t *a,	/* I - Array */
     DEBUG_printf(("1cupsArrayAddStrings: Remaining string \"%s\".", s));
   }
 
-  if (!strchr(s, delim) && (delim != ' ' || (!strchr(s, '\t') && !strchr(s, '\n'))))
+  if (!strchr(s, delim) && (delim != ' ' || (!strchr(s, '\t') && !strchr(s, '\n'))) && *s != '\'' && *s != '\"')
   {
-   /*
-    * String doesn't contain a delimiter, so add it as a single value...
-    */
-
-    DEBUG_puts("1cupsArrayAddStrings: No delimiter seen, adding a single "
-               "value.");
+    // String doesn't contain a delimiter, so add it as a single value...
+    DEBUG_puts("1cupsArrayAddStrings: No delimiter seen, adding a single value.");
 
     if (!cupsArrayFind(a, (void *)s))
       status = cupsArrayAdd(a, (void *)s);
@@ -168,22 +156,47 @@ cupsArrayAddStrings(cups_array_t *a,	/* I - Array */
   {
     for (start = end = buffer; *end; start = end)
     {
-     /*
-      * Find the end of the current delimited string and see if we need to add
-      * it...
-      */
-
-      if (delim == ' ')
+      // Find the end of the current delimited string and see if we need to add it...
+      while (*end)
       {
-        while (*end && !isspace(*end & 255))
+        if (*end == '\\' && end[1])
+        {
+          // Skip escaped character...
+          _cups_strcpy(end, end + 1);
           end ++;
-        while (*end && isspace(*end & 255))
+        }
+        else if (spos >= 0 && *end == stack[spos])
+        {
+          // End of quoted value...
+          spos --;
+          if (spos >= 0 || *end == '}')
+            end ++;
+          else
+            _cups_strcpy(end, end + 1);
+        }
+        else if (*end == '{' && spos < (int)(sizeof(stack) - 1))
+        {
+          // Value in curly braces...
+          spos ++;
+          stack[spos] = '}';
+        }
+        else if ((*end == '\'' || *end == '\"') && spos < (int)(sizeof(stack) - 1))
+        {
+          // Value in quotes...
+          spos ++;
+          stack[spos] = *end;
+          if (spos == 0)
+            _cups_strcpy(end, end + 1);
+        }
+        else if (*end == delim || (delim == ' ' && isspace(*end & 255)))
+        {
+          // Delimiter
           *end++ = '\0';
+          break;
+        }
+        else
+          end ++;
       }
-      else if ((end = strchr(start, delim)) != NULL)
-        *end++ = '\0';
-      else
-        end = start + strlen(start);
 
       DEBUG_printf(("1cupsArrayAddStrings: Adding \"%s\", end=\"%s\"", start, end));
 
@@ -200,41 +213,32 @@ cupsArrayAddStrings(cups_array_t *a,	/* I - Array */
 }
 
 
-/*
- * 'cupsArrayClear()' - Clear an array.
- *
- * This function is equivalent to removing all elements in the array, so the
- * free callback (if any) is called for each element that is removed.
- */
+//
+// 'cupsArrayClear()' - Clear an array.
+//
+// This function is equivalent to removing all elements in the array, so the
+// free callback (if any) is called for each element that is removed.
+//
 
 void
-cupsArrayClear(cups_array_t *a)		/* I - Array */
+cupsArrayClear(cups_array_t *a)		// I - Array
 {
- /*
-  * Range check input...
-  */
-
+  // Range check input...
   if (!a)
     return;
 
- /*
-  * Free the existing elements as needed..
-  */
-
+  // Free the existing elements as needed..
   if (a->freefunc)
   {
-    size_t	i;			/* Looping var */
-    void	**e;			/* Current element */
+    size_t	i;			// Looping var
+    void	**e;			// Current element
 
     for (i = a->num_elements, e = a->elements; i > 0; i --, e ++)
       (a->freefunc)(*e, a->data);
   }
 
- /*
-  * Set the number of elements to 0; we don't actually free the memory
-  * here - that is done in cupsArrayDelete()...
-  */
-
+  // Set the number of elements to 0; we don't actually free the memory
+  // here - that is done in cupsArrayDelete()...
   a->num_elements = 0;
   a->current      = SIZE_MAX;
   a->insert       = SIZE_MAX;
@@ -243,60 +247,45 @@ cupsArrayClear(cups_array_t *a)		/* I - Array */
 }
 
 
-/*
- * 'cupsArrayDelete()' - Free all memory used by an array.
- *
- * This function frees all memory used by an array.  The free callback (if any)
- * is called for each element in the array.
- */
+//
+// 'cupsArrayDelete()' - Free all memory used by an array.
+//
+// This function frees all memory used by an array.  The free callback (if any)
+// is called for each element in the array.
+//
 
 void
-cupsArrayDelete(cups_array_t *a)	/* I - Array */
+cupsArrayDelete(cups_array_t *a)	// I - Array
 {
- /*
-  * Range check input...
-  */
-
+  // Range check input...
   if (!a)
     return;
 
- /*
-  * Clear the array...
-  */
-
+  // Clear the array...
   cupsArrayClear(a);
 
- /*
-  * Free the other buffers...
-  */
-
+  // Free the other buffers...
   free(a->elements);
   free(a->hash);
   free(a);
 }
 
 
-/*
- * 'cupsArrayDup()' - Duplicate an array.
- */
+//
+// 'cupsArrayDup()' - Duplicate an array.
+//
 
-cups_array_t *				/* O - Duplicate array */
-cupsArrayDup(cups_array_t *a)		/* I - Array */
+cups_array_t *				// O - Duplicate array
+cupsArrayDup(cups_array_t *a)		// I - Array
 {
-  cups_array_t	*da;			/* Duplicate array */
+  cups_array_t	*da;			// Duplicate array
 
 
- /*
-  * Range check input...
-  */
-
+  // Range check input...
   if (!a)
     return (NULL);
 
- /*
-  * Allocate memory for the array...
-  */
-
+  // Allocate memory for the array...
   da = calloc(1, sizeof(cups_array_t));
   if (!da)
     return (NULL);
@@ -314,10 +303,7 @@ cupsArrayDup(cups_array_t *a)		/* I - Array */
 
   if (a->num_elements)
   {
-   /*
-    * Allocate memory for the elements...
-    */
-
+    // Allocate memory for the elements...
     da->elements = malloc((size_t)a->num_elements * sizeof(void *));
     if (!da->elements)
     {
@@ -325,27 +311,18 @@ cupsArrayDup(cups_array_t *a)		/* I - Array */
       return (NULL);
     }
 
-   /*
-    * Copy the element pointers...
-    */
-
+    // Copy the element pointers...
     if (a->copyfunc)
     {
-     /*
-      * Use the copy function to make a copy of each element...
-      */
-
-      size_t	i;			/* Looping var */
+      // Use the copy function to make a copy of each element...
+      size_t	i;			// Looping var
 
       for (i = 0; i < a->num_elements; i ++)
 	da->elements[i] = (a->copyfunc)(a->elements[i], a->data);
     }
     else
     {
-     /*
-      * Just copy raw pointers...
-      */
-
+      // Just copy raw pointers...
       memcpy(da->elements, a->elements, (size_t)a->num_elements * sizeof(void *));
     }
 
@@ -353,38 +330,29 @@ cupsArrayDup(cups_array_t *a)		/* I - Array */
     da->alloc_elements = a->num_elements;
   }
 
- /*
-  * Return the new array...
-  */
-
+  // Return the new array...
   return (da);
 }
 
 
-/*
- * 'cupsArrayFind()' - Find an element in an array.
- */
+//
+// 'cupsArrayFind()' - Find an element in an array.
+//
 
-void *					/* O - Element found or @code NULL@ */
-cupsArrayFind(cups_array_t *a,		/* I - Array */
-              void         *e)		/* I - Element */
+void *					// O - Element found or @code NULL@
+cupsArrayFind(cups_array_t *a,		// I - Array
+              void         *e)		// I - Element
 {
-  size_t	current,		/* Current element */
-		hash;			/* Hash index */
-  int		diff;			/* Difference */
+  size_t	current,		// Current element
+		hash;			// Hash index
+  int		diff;			// Difference
 
 
- /*
-  * Range check input...
-  */
-
+  // Range check input...
   if (!a || !a->num_elements || !e)
     return (NULL);
 
- /*
-  * Look for a match...
-  */
-
+  // Look for a match...
   if (a->hash)
   {
     if ((hash = (*(a->hashfunc))(e, a->data)) >= a->hashsize)
@@ -404,17 +372,11 @@ cupsArrayFind(cups_array_t *a,		/* I - Array */
   current = cups_array_find(a, e, current, &diff);
   if (!diff)
   {
-   /*
-    * Found a match!  If the array does not contain unique values, find
-    * the first element that is the same...
-    */
-
+    // Found a match!  If the array does not contain unique values, find the
+    // first element that is the same...
     if (!a->unique && a->compare)
     {
-     /*
-      * The array is not unique, find the first match...
-      */
-
+      // The array is not unique, find the first match...
       while (current > 0 && !(*(a->compare))(e, a->elements[current - 1], a->data))
         current --;
     }
@@ -428,10 +390,7 @@ cupsArrayFind(cups_array_t *a,		/* I - Array */
   }
   else
   {
-   /*
-    * No match...
-    */
-
+    // No match...
     a->current = SIZE_MAX;
 
     return (NULL);
@@ -439,39 +398,33 @@ cupsArrayFind(cups_array_t *a,		/* I - Array */
 }
 
 
-/*
- * 'cupsArrayGetCount()' - Get the number of elements in an array.
- */
+//
+// 'cupsArrayGetCount()' - Get the number of elements in an array.
+//
 
-size_t					/* O - Number of elements */
-cupsArrayGetCount(cups_array_t *a)	/* I - Array */
+size_t					// O - Number of elements
+cupsArrayGetCount(cups_array_t *a)	// I - Array
 {
   return (a ? a->num_elements : 0);
 }
 
 
-/*
- * 'cupsArrayGetCurrent()' - Return the current element in an array.
- *
- * This function returns the current element in an array.  The current element
- * is undefined until you call @link cupsArrayFind@, @link cupsArrayGetElement@,
- * @link cupsArrayGetFirst@, or @link cupsArrayGetLast@.
- */
+//
+// 'cupsArrayGetCurrent()' - Return the current element in an array.
+//
+// This function returns the current element in an array.  The current element
+// is undefined until you call @link cupsArrayFind@, @link cupsArrayGetElement@,
+// @link cupsArrayGetFirst@, or @link cupsArrayGetLast@.
+//
 
-void *					/* O - Element */
-cupsArrayGetCurrent(cups_array_t *a)	/* I - Array */
+void *					// O - Element
+cupsArrayGetCurrent(cups_array_t *a)	// I - Array
 {
- /*
-  * Range check input...
-  */
-
+  // Range check input...
   if (!a)
     return (NULL);
 
- /*
-  * Return the current element...
-  */
-
+  // Return the current element...
   if (a->current < a->num_elements)
     return (a->elements[a->current]);
   else
@@ -479,55 +432,56 @@ cupsArrayGetCurrent(cups_array_t *a)	/* I - Array */
 }
 
 
-/*
- * 'cupsArrayGetFirst()' - Get the first element in an array.
- */
+//
+// 'cupsArrayGetFirst()' - Get the first element in an array.
+//
 
-void *					/* O - First element or `NULL` if the array is empty */
-cupsArrayGetFirst(cups_array_t *a)	/* I - Array */
+void *					// O - First element or `NULL` if the array is empty
+cupsArrayGetFirst(cups_array_t *a)	// I - Array
 {
   return (cupsArrayGetElement(a, 0));
 }
 
 
-/*
- * 'cupsArrayGetIndex()' - Get the index of the current element.
- *
- * This function returns the index of the current element or `SIZE_MAX` if
- * there is no current element.  The current element is undefined until you call
- * @link cupsArrayFind@, @link cupsArrayGetElement@, @link cupsArrayGetFirst@,
- * or @link cupsArrayGetLast@.
- */
+//
+// 'cupsArrayGetIndex()' - Get the index of the current element.
+//
+// This function returns the index of the current element or `SIZE_MAX` if
+// there is no current element.  The current element is undefined until you call
+// @link cupsArrayFind@, @link cupsArrayGetElement@, @link cupsArrayGetFirst@,
+// or @link cupsArrayGetLast@.
+//
 
-size_t					/* O - Index of the current element, starting at 0 */
-cupsArrayGetIndex(cups_array_t *a)	/* I - Array */
+size_t					// O - Index of the current element, starting at 0
+cupsArrayGetIndex(cups_array_t *a)	// I - Array
 {
   return (a ? a->current : SIZE_MAX);
 }
 
 
-/*
- * 'cupsArrayGetInsert()' - Get the index of the last added or inserted element.
- *
- * This function returns the index of the last added or inserted element or
- * `SIZE_MAX` if no elements have been added or inserted.
- */
+//
+// 'cupsArrayGetInsert()' - Get the index of the last added or inserted element.
+//
+// This function returns the index of the last added or inserted element or
+// `SIZE_MAX` if no elements have been added or inserted.
+//
 
-size_t					/* O - Index of the last added or inserted element, starting at 0 */
-cupsArrayGetInsert(cups_array_t *a)	/* I - Array */
+size_t					// O - Index of the last added or inserted element, starting at 0
+cupsArrayGetInsert(cups_array_t *a)	// I - Array
 {
   return (a ? a->insert : SIZE_MAX);
 }
 
 
-/*
- * 'cupsArrayGetElement()' - Get the N-th element in the array.
- */
+//
+// 'cupsArrayGetElement()' - Get the N-th element in the array.
+//
 
-void *					/* O - N-th element or `NULL` */
-cupsArrayGetElement(cups_array_t *a,	/* I - Array */
-                    size_t       n)	/* I - Index into array, starting at 0 */
+void *					// O - N-th element or `NULL`
+cupsArrayGetElement(cups_array_t *a,	// I - Array
+                    size_t       n)	// I - Index into array, starting at 0
 {
+  // Range check input...
   if (!a || n >= a->num_elements)
     return (NULL);
 
@@ -537,40 +491,35 @@ cupsArrayGetElement(cups_array_t *a,	/* I - Array */
 }
 
 
-/*
- * 'cupsArrayGetLast()' - Get the last element in the array.
- */
+//
+// 'cupsArrayGetLast()' - Get the last element in the array.
+//
 
-void *					/* O - Last element or`NULL` if the array is empty */
-cupsArrayGetLast(cups_array_t *a)	/* I - Array */
+void *					// O - Last element or`NULL` if the array is empty
+cupsArrayGetLast(cups_array_t *a)	// I - Array
 {
- /*
-  * Range check input...
-  */
-
+  // Range check input...
   if (!a || a->num_elements == 0)
     return (NULL);
 
- /*
-  * Return the last element...
-  */
-
+  // Return the last element...
   return (cupsArrayGetElement(a, a->num_elements - 1));
 }
 
 
-/*
- * 'cupsArrayGetNext()' - Get the next element in an array.
- *
- * This function returns the next element in an array.  The next element is
- * undefined until you call @link cupsArrayFind@, @link cupsArrayGetElement@,
- * @link cupsArrayGetFirst@, or @link cupsArrayGetLast@ to set the current
- * element.
- */
+//
+// 'cupsArrayGetNext()' - Get the next element in an array.
+//
+// This function returns the next element in an array.  The next element is
+// undefined until you call @link cupsArrayFind@, @link cupsArrayGetElement@,
+// @link cupsArrayGetFirst@, or @link cupsArrayGetLast@ to set the current
+// element.
+//
 
-void *					/* O - Next element or @code NULL@ */
-cupsArrayGetNext(cups_array_t *a)	/* I - Array */
+void *					// O - Next element or @code NULL@
+cupsArrayGetNext(cups_array_t *a)	// I - Array
 {
+  // Range check input...
   if (!a || a->num_elements == 0)
     return (NULL);
   else if (a->current == SIZE_MAX)
@@ -580,18 +529,19 @@ cupsArrayGetNext(cups_array_t *a)	/* I - Array */
 }
 
 
-/*
- * 'cupsArrayGetPrev()' - Get the previous element in an array.
- *
- * This function returns the previous element in an array.  The previous element
- * is undefined until you call @link cupsArrayFind@, @link cupsArrayGetElement@,
- * @link cupsArrayGetFirst@, or @link cupsArrayGetLast@ to set the current
- * element.
- */
+//
+// 'cupsArrayGetPrev()' - Get the previous element in an array.
+//
+// This function returns the previous element in an array.  The previous element
+// is undefined until you call @link cupsArrayFind@, @link cupsArrayGetElement@,
+// @link cupsArrayGetFirst@, or @link cupsArrayGetLast@ to set the current
+// element.
+//
 
-void *					/* O - Previous element or @code NULL@ */
-cupsArrayGetPrev(cups_array_t *a)	/* I - Array */
+void *					// O - Previous element or @code NULL@
+cupsArrayGetPrev(cups_array_t *a)	// I - Array
 {
+  // Range check input...
   if (!a || a->num_elements == 0 || a->current == 0 || a->current == SIZE_MAX)
     return (NULL);
   else
@@ -599,122 +549,113 @@ cupsArrayGetPrev(cups_array_t *a)	/* I - Array */
 }
 
 
-/*
- * 'cupsArrayGetUserData()' - Return the user data for an array.
- */
+//
+// 'cupsArrayGetUserData()' - Return the user data for an array.
+//
 
-void *					/* O - User data */
-cupsArrayGetUserData(cups_array_t *a)	/* I - Array */
+void *					// O - User data
+cupsArrayGetUserData(cups_array_t *a)	// I - Array
 {
   return (a ? a->data : NULL);
 }
 
 
-/*
- * 'cupsArrayInsert()' - Insert an element in an array.
- *
- * This function inserts an element in an array.  When inserting an element
- * in a sorted array, non-unique elements are inserted at the beginning of the
- * run of identical elements.  For unsorted arrays, the element is inserted at
- * the beginning of the array.
- */
+//
+// 'cupsArrayInsert()' - Insert an element in an array.
+//
+// This function inserts an element in an array.  When inserting an element
+// in a sorted array, non-unique elements are inserted at the beginning of the
+// run of identical elements.  For unsorted arrays, the element is inserted at
+// the beginning of the array.
+//
 
-bool					/* O - `true` on success, `false` on failure */
-cupsArrayInsert(cups_array_t *a,	/* I - Array */
-		void         *e)	/* I - Element */
+bool					// O - `true` on success, `false` on failure
+cupsArrayInsert(cups_array_t *a,	// I - Array
+		void         *e)	// I - Element
 {
   DEBUG_printf(("2cupsArrayInsert(a=%p, e=%p)", (void *)a, e));
 
- /*
-  * Range check input...
-  */
-
+  // Range check input...
   if (!a || !e)
   {
     DEBUG_puts("3cupsArrayInsert: returning false");
     return (false);
   }
 
- /*
-  * Insert the element...
-  */
-
+  // Insert the element...
   return (cups_array_add(a, e, true));
 }
 
 
-/*
- * 'cupsArrayNew()' - Create a new array with callback functions.
- *
- * This function creates a new array with optional callback functions.  The
- * comparison callback function ("f") is used to create a sorted array.  The
- * function receives pointers to two elements and the user data pointer ("d").
- * The user data pointer argument can safely be omitted when not required so
- * functions like `strcmp` can be used for sorted string arrays.
- *
- * ```
- * int // Return -1 if a < b, 0 if a == b, and 1 if a > b
- * compare_cb(void *a, void *b, void *d)
- * {
- *   ... "a" and "b" are the elements, "d" is the user data pointer
- * }
- * ```
- *
- * The hash callback function ("hf") is used to implement cached lookups with
- * the specified hash size ("hsize").  The function receives a pointer to an
- * element and the user data pointer ("d") and returns an unsigned integer
- * representing a hash into the array.  The hash value is of type `size_t` which
- * provides at least 32-bits of resolution.
- *
- * ```
- * size_t // Return hash value from 0 to (hashsize - 1)
- * hash_cb(void *e, void *d)
- * {
- *   ... "e" is the element, "d" is the user data pointer
- * }
- * ```
- *
- * The copy callback function ("cf") is used to automatically copy/retain
- * elements when added to the array or the array is copied with
- * @link cupsArrayDup@.  The function receives a pointer to the element and the
- * user data pointer ("d") and returns a new pointer that is stored in the array.
- *
- * ```
- * void * // Return pointer to copied/retained element or NULL
- * copy_cb(void *e, void *d)
- * {
- *   ... "e" is the element, "d" is the user data pointer
- * }
- * ```
- *
- * Finally, the free callback function ("cf") is used to automatically
- * free/release elements when removed or the array is deleted.  The function
- * receives a pointer to the element and the user data pointer ("d").
- *
- * ```
- * void
- * free_cb(void *e, void *d)
- * {
- *   ... "e" is the element, "d" is the user data pointer
- * }
- * ```
- */
+//
+// 'cupsArrayNew()' - Create a new array with callback functions.
+//
+// This function creates a new array with optional callback functions.  The
+// comparison callback function ("f") is used to create a sorted array.  The
+// function receives pointers to two elements and the user data pointer ("d").
+// The user data pointer argument can safely be omitted when not required so
+// functions like `strcmp` can be used for sorted string arrays.
+//
+// ```
+// int // Return -1 if a < b, 0 if a == b, and 1 if a > b
+// compare_cb(void *a, void *b, void *d)
+// {
+//   ... "a" and "b" are the elements, "d" is the user data pointer
+// }
+// ```
+//
+// The hash callback function ("hf") is used to implement cached lookups with
+// the specified hash size ("hsize").  The function receives a pointer to an
+// element and the user data pointer ("d") and returns an unsigned integer
+// representing a hash into the array.  The hash value is of type `size_t` which
+// provides at least 32-bits of resolution.
+//
+// ```
+// size_t // Return hash value from 0 to (hashsize - 1)
+// hash_cb(void *e, void *d)
+// {
+//   ... "e" is the element, "d" is the user data pointer
+// }
+// ```
+//
+// The copy callback function ("cf") is used to automatically copy/retain
+// elements when added to the array or the array is copied with
+// @link cupsArrayDup@.  The function receives a pointer to the element and the
+// user data pointer ("d") and returns a new pointer that is stored in the array.
+//
+// ```
+// void * // Return pointer to copied/retained element or NULL
+// copy_cb(void *e, void *d)
+// {
+//   ... "e" is the element, "d" is the user data pointer
+// }
+// ```
+//
+// Finally, the free callback function ("cf") is used to automatically
+// free/release elements when removed or the array is deleted.  The function
+// receives a pointer to the element and the user data pointer ("d").
+//
+// ```
+// void
+// free_cb(void *e, void *d)
+// {
+//   ... "e" is the element, "d" is the user data pointer
+// }
+// ```
+//
 
-cups_array_t *				/* O - Array */
-cupsArrayNew(cups_array_cb_t  f,	/* I - Comparison callback function or `NULL` for an unsorted array */
-             void             *d,	/* I - User data or `NULL` */
-             cups_ahash_cb_t  hf,	/* I - Hash callback function or `NULL` for unhashed lookups */
-	     size_t           hsize,	/* I - Hash size (>= `0`) */
-	     cups_acopy_cb_t  cf,	/* I - Copy callback function or `NULL` for none */
-	     cups_afree_cb_t  ff)	/* I - Free callback function or `NULL` for none */
+cups_array_t *				// O - Array
+cupsArrayNew(cups_array_cb_t  f,	// I - Comparison callback function or `NULL` for an unsorted array
+             void             *d,	// I - User data or `NULL`
+             cups_ahash_cb_t  hf,	// I - Hash callback function or `NULL` for unhashed lookups
+	     size_t           hsize,	// I - Hash size (>= `0`)
+	     cups_acopy_cb_t  cf,	// I - Copy callback function or `NULL` for none
+	     cups_afree_cb_t  ff)	// I - Free callback function or `NULL` for none
 {
-  cups_array_t	*a;			/* Array  */
+  cups_array_t	*a;			// Array
 
 
- /*
-  * Allocate memory for the array...
-  */
-
+  // Allocate memory for the array...
   if ((a = calloc(1, sizeof(cups_array_t))) == NULL)
     return (NULL);
 
@@ -747,24 +688,24 @@ cupsArrayNew(cups_array_cb_t  f,	/* I - Comparison callback function or `NULL` f
 }
 
 
-/*
- * 'cupsArrayNewStrings()' - Create a new array of delimited strings.
- *
- * This function creates an array that holds zero or more strings.  The created
- * array automatically manages copies of the strings passed and sorts them in
- * ascending order using a case-sensitive comparison.  If the string pointer "s"
- * is `NULL` or the empty string, no strings are added to the newly created
- * array.
- *
- * Additional strings can be added using the @link cupsArrayAdd@ or
- * @link cupsArrayAddStrings@ functions.
- */
+//
+// 'cupsArrayNewStrings()' - Create a new array of delimited strings.
+//
+// This function creates an array that holds zero or more strings.  The created
+// array automatically manages copies of the strings passed and sorts them in
+// ascending order using a case-sensitive comparison.  If the string pointer "s"
+// is `NULL` or the empty string, no strings are added to the newly created
+// array.
+//
+// Additional strings can be added using the @link cupsArrayAdd@ or
+// @link cupsArrayAddStrings@ functions.
+//
 
-cups_array_t *				/* O - Array */
-cupsArrayNewStrings(const char *s,	/* I - Delimited strings or `NULL` to create an empty array */
-                    char       delim)	/* I - Delimiter character */
+cups_array_t *				// O - Array
+cupsArrayNewStrings(const char *s,	// I - Delimited strings or `NULL` to create an empty array
+                    char       delim)	// I - Delimiter character
 {
-  cups_array_t	*a;			/* Array */
+  cups_array_t	*a;			// Array
 
 
   if ((a = cupsArrayNew((cups_array_cb_t)strcmp, NULL, NULL, 0, (cups_acopy_cb_t)_cupsStrAlloc, (cups_afree_cb_t)_cupsStrFree)) != NULL)
@@ -774,41 +715,32 @@ cupsArrayNewStrings(const char *s,	/* I - Delimited strings or `NULL` to create 
 }
 
 
-/*
- * 'cupsArrayRemove()' - Remove an element from an array.
- *
- * This function removes an element from an array.  If more than one element
- * matches "e", only the first matching element is removed.
- */
+//
+// 'cupsArrayRemove()' - Remove an element from an array.
+//
+// This function removes an element from an array.  If more than one element
+// matches "e", only the first matching element is removed.
+//
 
-bool					/* O - `true` on success, `false` on failure */
-cupsArrayRemove(cups_array_t *a,	/* I - Array */
-                void         *e)	/* I - Element */
+bool					// O - `true` on success, `false` on failure
+cupsArrayRemove(cups_array_t *a,	// I - Array
+                void         *e)	// I - Element
 {
-  size_t	i,			/* Looping var */
-		current;		/* Current element */
-  int		diff;			/* Difference */
+  size_t	i,			// Looping var
+		current;		// Current element
+  int		diff;			// Difference
 
 
- /*
-  * Range check input...
-  */
-
+  // Range check input...
   if (!a || a->num_elements == 0 || !e)
     return (false);
 
- /*
-  * See if the element is in the array...
-  */
-
+  // See if the element is in the array...
   current = cups_array_find(a, e, a->current, &diff);
   if (diff)
     return (false);
 
- /*
-  * Yes, now remove it...
-  */
-
+  // Yes, now remove it...
   a->num_elements --;
 
   if (a->freefunc)
@@ -843,13 +775,14 @@ cupsArrayRemove(cups_array_t *a,	/* I - Array */
 }
 
 
-/*
- * 'cupsArrayRestore()' - Reset the current element to the last @link cupsArraySave@.
- */
+//
+// 'cupsArrayRestore()' - Reset the current element to the last @link cupsArraySave@.
+//
 
-void *					/* O - New current element */
-cupsArrayRestore(cups_array_t *a)	/* I - Array */
+void *					// O - New current element
+cupsArrayRestore(cups_array_t *a)	// I - Array
 {
+  // Range check input...
   if (!a || a->num_saved == 0)
     return (NULL);
 
@@ -863,19 +796,20 @@ cupsArrayRestore(cups_array_t *a)	/* I - Array */
 }
 
 
-/*
- * 'cupsArraySave()' - Mark the current element for a later @link cupsArrayRestore@.
- *
- * The current element is undefined until you call @link cupsArrayFind@,
- * @link cupsArrayGetElement@, @link cupsArrayGetFirst@, or
- * @link cupsArrayGetLast@ to set the current element.
- *
- * The save/restore stack is guaranteed to be at least 32 elements deep.
- */
+//
+// 'cupsArraySave()' - Mark the current element for a later @link cupsArrayRestore@.
+//
+// The current element is undefined until you call @link cupsArrayFind@,
+// @link cupsArrayGetElement@, @link cupsArrayGetFirst@, or
+// @link cupsArrayGetLast@ to set the current element.
+//
+// The save/restore stack is guaranteed to be at least 32 elements deep.
+//
 
-bool					/* O - `true` on success, `false` on failure */
-cupsArraySave(cups_array_t *a)		/* I - Array */
+bool					// O - `true` on success, `false` on failure
+cupsArraySave(cups_array_t *a)		// I - Array
 {
+  // Range check input...
   if (!a || a->num_saved >= _CUPS_MAXSAVE)
     return (false);
 
@@ -886,35 +820,29 @@ cupsArraySave(cups_array_t *a)		/* I - Array */
 }
 
 
-/*
- * 'cups_array_add()' - Insert or append an element to the array.
- */
+//
+// 'cups_array_add()' - Insert or append an element to the array.
+//
 
-static bool				/* O - `true` on success, `false` on failure */
-cups_array_add(cups_array_t *a,		/* I - Array */
-               void         *e,		/* I - Element to add */
-	       bool         insert)	/* I - `true` = insert, `false` = append */
+static bool				// O - `true` on success, `false` on failure
+cups_array_add(cups_array_t *a,		// I - Array
+               void         *e,		// I - Element to add
+	       bool         insert)	// I - `true` = insert, `false` = append
 {
-  size_t	i,			/* Looping var */
-		current;		/* Current element */
-  int		diff;			/* Comparison with current element */
+  size_t	i,			// Looping var
+		current;		// Current element
+  int		diff;			// Comparison with current element
 
 
   DEBUG_printf(("7cups_array_add(a=%p, e=%p, insert=%d)", (void *)a, e, insert));
 
- /*
-  * Verify we have room for the new element...
-  */
-
+  // Verify we have room for the new element...
   if (a->num_elements >= a->alloc_elements)
   {
-   /*
-    * Allocate additional elements; start with 16 elements, then double the
-    * size until 1024 elements, then add 1024 elements thereafter...
-    */
-
-    void	**temp;			/* New array elements */
-    size_t	count;			/* New allocation count */
+    // Allocate additional elements; start with 16 elements, then double the
+    // size until 1024 elements, then add 1024 elements thereafter...
+    void	**temp;			// New array elements
+    size_t	count;			// New allocation count
 
     if (a->alloc_elements == 0)
       count = 16;
@@ -935,62 +863,41 @@ cups_array_add(cups_array_t *a,		/* I - Array */
     a->elements       = temp;
   }
 
- /*
-  * Find the insertion point for the new element; if there is no
-  * compare function or elements, just add it to the beginning or end...
-  */
-
+  // Find the insertion point for the new element; if there is no compare
+  // function or elements, just add it to the beginning or end...
   if (!a->num_elements || !a->compare)
   {
-   /*
-    * No elements or comparison function, insert/append as needed...
-    */
-
+    // No elements or comparison function, insert/append as needed...
     if (insert)
-      current = 0;			/* Insert at beginning */
+      current = 0;			// Insert at beginning
     else
-      current = a->num_elements;	/* Append to the end */
+      current = a->num_elements;	// Append to the end
   }
   else
   {
-   /*
-    * Do a binary search for the insertion point...
-    */
-
+    // Do a binary search for the insertion point...
     current = cups_array_find(a, e, a->insert, &diff);
 
     if (diff > 0)
     {
-     /*
-      * Insert after the current element...
-      */
-
+      // Insert after the current element...
       current ++;
     }
     else if (!diff)
     {
-     /*
-      * Compared equal, make sure we add to the begining or end of
-      * the current run of equal elements...
-      */
-
+      // Compared equal, make sure we add to the begining or end of the current
+      // run of equal elements...
       a->unique = false;
 
       if (insert)
       {
-       /*
-        * Insert at beginning of run...
-	*/
-
+        // Insert at beginning of run...
 	while (current > 0 && !(*(a->compare))(e, a->elements[current - 1], a->data))
           current --;
       }
       else
       {
-       /*
-        * Append at end of run...
-	*/
-
+        // Append at end of run...
 	do
 	{
           current ++;
@@ -1000,16 +907,10 @@ cups_array_add(cups_array_t *a,		/* I - Array */
     }
   }
 
- /*
-  * Insert or append the element...
-  */
-
+  // Insert or append the element...
   if (current < a->num_elements)
   {
-   /*
-    * Shift other elements to the right...
-    */
-
+    // Shift other elements to the right...
     memmove(a->elements + current + 1, a->elements + current, (a->num_elements - current) * sizeof(void *));
 
     if (a->current >= current)
@@ -1026,7 +927,7 @@ cups_array_add(cups_array_t *a,		/* I - Array */
 #ifdef DEBUG
   else
     DEBUG_printf(("9cups_array_add: append element at " CUPS_LLFMT, CUPS_LLCAST current));
-#endif /* DEBUG */
+#endif // DEBUG
 
   if (a->copyfunc)
   {
@@ -1045,7 +946,7 @@ cups_array_add(cups_array_t *a,		/* I - Array */
 #ifdef DEBUG
   for (current = 0; current < a->num_elements; current ++)
     DEBUG_printf(("9cups_array_add: a->elements[" CUPS_LLFMT "]=%p", CUPS_LLCAST current, a->elements[current]));
-#endif /* DEBUG */
+#endif // DEBUG
 
   DEBUG_puts("9cups_array_add: returning true");
 
@@ -1053,46 +954,35 @@ cups_array_add(cups_array_t *a,		/* I - Array */
 }
 
 
-/*
- * 'cups_array_find()' - Find an element in the array.
- */
+//
+// 'cups_array_find()' - Find an element in the array.
+//
 
-static size_t				/* O - Index of match */
-cups_array_find(cups_array_t *a,	/* I - Array */
-        	void         *e,	/* I - Element */
-		size_t       prev,	/* I - Previous index */
-		int          *rdiff)	/* O - Difference of match */
+static size_t				// O - Index of match
+cups_array_find(cups_array_t *a,	// I - Array
+        	void         *e,	// I - Element
+		size_t       prev,	// I - Previous index
+		int          *rdiff)	// O - Difference of match
 {
-  size_t	left,			/* Left side of search */
-		right,			/* Right side of search */
-		current;		/* Current element */
-  int		diff;			/* Comparison with current element */
+  size_t	left,			// Left side of search
+		right,			// Right side of search
+		current;		// Current element
+  int		diff;			// Comparison with current element
 
 
   DEBUG_printf(("7cups_array_find(a=%p, e=%p, prev=%u, rdiff=%p)", (void *)a, e, (unsigned)prev, (void *)rdiff));
 
   if (a->compare)
   {
-   /*
-    * Do a binary search for the element...
-    */
-
+    // Do a binary search for the element...
     DEBUG_puts("9cups_array_find: binary search");
 
     if (prev < a->num_elements)
     {
-     /*
-      * Start search on either side of previous...
-      */
-
-      if ((diff = (*(a->compare))(e, a->elements[prev], a->data)) == 0 ||
-          (diff < 0 && prev == 0) ||
-	  (diff > 0 && prev == (a->num_elements - 1)))
+      // Start search on either side of previous...
+      if ((diff = (*(a->compare))(e, a->elements[prev], a->data)) == 0 || (diff < 0 && prev == 0) || (diff > 0 && prev == (a->num_elements - 1)))
       {
-       /*
-        * Exact or edge match, return it!
-	*/
-
+        // Exact or edge match, return it!
         DEBUG_printf(("9cups_array_find: Returning %u, diff=%d", (unsigned)prev, diff));
 
 	*rdiff = diff;
@@ -1101,29 +991,20 @@ cups_array_find(cups_array_t *a,	/* I - Array */
       }
       else if (diff < 0)
       {
-       /*
-        * Start with previous on right side...
-	*/
-
+        // Start with previous on right side...
 	left  = 0;
 	right = prev;
       }
       else
       {
-       /*
-        * Start wih previous on left side...
-	*/
-
+        // Start wih previous on left side...
         left  = prev;
 	right = a->num_elements - 1;
       }
     }
     else
     {
-     /*
-      * Start search in the middle...
-      */
-
+      // Start search in the middle...
       left  = 0;
       right = a->num_elements - 1;
     }
@@ -1146,10 +1027,7 @@ cups_array_find(cups_array_t *a,	/* I - Array */
 
     if (diff != 0)
     {
-     /*
-      * Check the last 1 or 2 elements...
-      */
-
+      // Check the last 1 or 2 elements...
       if ((diff = (*(a->compare))(e, a->elements[left], a->data)) <= 0)
       {
         current = left;
@@ -1163,10 +1041,7 @@ cups_array_find(cups_array_t *a,	/* I - Array */
   }
   else
   {
-   /*
-    * Do a linear pointer search...
-    */
-
+    // Do a linear pointer search...
     DEBUG_puts("9cups_array_find: linear search");
 
     diff = 1;
@@ -1181,10 +1056,7 @@ cups_array_find(cups_array_t *a,	/* I - Array */
     }
   }
 
- /*
-  * Return the closest element and the difference...
-  */
-
+  // Return the closest element and the difference...
   DEBUG_printf(("8cups_array_find: Returning %u, diff=%d", (unsigned)current, diff));
 
   *rdiff = diff;

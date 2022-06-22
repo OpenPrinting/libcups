@@ -395,7 +395,7 @@ main(void)
   else if (cupsArrayGetCount(array) != 4)
   {
     status = 1;
-    testEndMessage(false, "got %d elements, expected 4", cupsArrayGetCount(array));
+    testEndMessage(false, "got %u elements, expected 4", (unsigned)cupsArrayGetCount(array));
   }
   else if (strcmp(text = (char *)cupsArrayGetFirst(array), "bar"))
   {
@@ -405,17 +405,17 @@ main(void)
   else if (strcmp(text = (char *)cupsArrayGetNext(array), "boo"))
   {
     status = 1;
-    testEndMessage(false, "first element \"%s\", expected \"boo\"", text);
+    testEndMessage(false, "second element \"%s\", expected \"boo\"", text);
   }
   else if (strcmp(text = (char *)cupsArrayGetNext(array), "far"))
   {
     status = 1;
-    testEndMessage(false, "first element \"%s\", expected \"far\"", text);
+    testEndMessage(false, "third element \"%s\", expected \"far\"", text);
   }
   else if (strcmp(text = (char *)cupsArrayGetNext(array), "foo"))
   {
     status = 1;
-    testEndMessage(false, "first element \"%s\", expected \"foo\"", text);
+    testEndMessage(false, "fourth element \"%s\", expected \"foo\"", text);
   }
   else
     testEnd(true);
@@ -426,7 +426,7 @@ main(void)
   if (cupsArrayGetCount(array) != 6)
   {
     status = 1;
-    testEndMessage(false, "got %d elements, expected 6", cupsArrayGetCount(array));
+    testEndMessage(false, "got %u elements, expected 6", (unsigned)cupsArrayGetCount(array));
   }
   else if (strcmp(text = (char *)cupsArrayGetFirst(array), "bar"))
   {
@@ -436,27 +436,54 @@ main(void)
   else if (strcmp(text = (char *)cupsArrayGetNext(array), "bar2"))
   {
     status = 1;
-    testEndMessage(false, "first element \"%s\", expected \"bar2\"", text);
+    testEndMessage(false, "second element \"%s\", expected \"bar2\"", text);
   }
   else if (strcmp(text = (char *)cupsArrayGetNext(array), "boo"))
   {
     status = 1;
-    testEndMessage(false, "first element \"%s\", expected \"boo\"", text);
+    testEndMessage(false, "third element \"%s\", expected \"boo\"", text);
   }
   else if (strcmp(text = (char *)cupsArrayGetNext(array), "far"))
   {
     status = 1;
-    testEndMessage(false, "first element \"%s\", expected \"far\"", text);
+    testEndMessage(false, "fourth element \"%s\", expected \"far\"", text);
   }
   else if (strcmp(text = (char *)cupsArrayGetNext(array), "foo"))
   {
     status = 1;
-    testEndMessage(false, "first element \"%s\", expected \"foo\"", text);
+    testEndMessage(false, "fifth element \"%s\", expected \"foo\"", text);
   }
   else if (strcmp(text = (char *)cupsArrayGetNext(array), "foo2"))
   {
     status = 1;
-    testEndMessage(false, "first element \"%s\", expected \"foo2\"", text);
+    testEndMessage(false, "sixth element \"%s\", expected \"foo2\"", text);
+  }
+  else
+    testEnd(true);
+
+  cupsArrayDelete(array);
+
+  testBegin("cupsArrayNewStrings(\"{value='foo'},{value=\"bar\"}\", ',')");
+  array = cupsArrayNewStrings("{value='foo'},{value=\"bar\"}", ',');
+  if (!array)
+  {
+    status = 1;
+    testEndMessage(false, "unable to create array");
+  }
+  else if (cupsArrayGetCount(array) != 2)
+  {
+    status = 1;
+    testEndMessage(false, "got %u elements, expected 2", (unsigned)cupsArrayGetCount(array));
+  }
+  else if (strcmp(text = (char *)cupsArrayGetFirst(array), "{value=\"bar\"}"))
+  {
+    status = 1;
+    testEndMessage(false, "first element \"%s\", expected \"{value=\"var\"}\"", text);
+  }
+  else if (strcmp(text = (char *)cupsArrayGetNext(array), "{value='foo'}"))
+  {
+    status = 1;
+    testEndMessage(false, "second element \"%s\", expected \"{value='foo'}\"", text);
   }
   else
     testEnd(true);

@@ -1,13 +1,13 @@
-/*
- * Sorted array definitions for CUPS.
- *
- * Copyright © 2021-2022 by OpenPrinting.
- * Copyright © 2007-2010 by Apple Inc.
- * Copyright © 1997-2007 by Easy Software Products.
- *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more
- * information.
- */
+//
+// Sorted array definitions for CUPS.
+//
+// Copyright © 2021-2022 by OpenPrinting.
+// Copyright © 2007-2010 by Apple Inc.
+// Copyright © 1997-2007 by Easy Software Products.
+//
+// Licensed under Apache License v2.0.  See the file "LICENSE" for more
+// information.
+//
 
 #ifndef _CUPS_ARRAY_H_
 #  define _CUPS_ARRAY_H_
@@ -16,28 +16,28 @@
 #  include <limits.h>
 #  ifdef __cplusplus
 extern "C" {
-#  endif /* __cplusplus */
+#  endif // __cplusplus
 
 
-/*
- * Types and structures...
- */
+//
+// Types and structures...
+//
 
 typedef struct _cups_array_s cups_array_t;
-					/**** CUPS array type ****/
+					// CUPS array type
 typedef int (*cups_array_cb_t)(void *first, void *second, void *data);
-					/**** Array comparison function ****/
+					// Array comparison function
 typedef size_t (*cups_ahash_cb_t)(void *element, void *data);
-					/**** Array hash function ****/
+					// Array hash function
 typedef void *(*cups_acopy_cb_t)(void *element, void *data);
-					/**** Array element copy function ****/
+					// Array element copy function
 typedef void (*cups_afree_cb_t)(void *element, void *data);
-					/**** Array element free function ****/
+					// Array element free function
 
 
-/*
- * Functions...
- */
+//
+// Functions...
+//
 
 extern bool		cupsArrayAdd(cups_array_t *a, void *e) _CUPS_PUBLIC;
 extern bool		cupsArrayAddStrings(cups_array_t *a, const char *s, char delim) _CUPS_PUBLIC;
@@ -64,5 +64,5 @@ extern bool		cupsArraySave(cups_array_t *a) _CUPS_PUBLIC;
 
 #  ifdef __cplusplus
 }
-#  endif /* __cplusplus */
-#endif /* !_CUPS_ARRAY_H_ */
+#  endif // __cplusplus
+#endif // !_CUPS_ARRAY_H_
