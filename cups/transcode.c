@@ -368,7 +368,7 @@ cupsUTF8ToUTF32(
       * One-octet UTF-8 <= 127 (US-ASCII)...
       */
 
-      *dest++ = ch;
+      *dest++ = (cups_utf32_t)ch;
 
       DEBUG_printf(("4cupsUTF8ToUTF32: %02x => %08X", src[-1], ch));
       continue;

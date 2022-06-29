@@ -620,7 +620,7 @@ cupsConnectDest(
 
   if (httpSeparateURI(HTTP_URI_CODING_ALL, uri, scheme, sizeof(scheme),
                       userpass, sizeof(userpass), hostname, sizeof(hostname),
-                      &port, resource, (int)resourcesize) < HTTP_URI_STATUS_OK)
+                      &port, resource, resourcesize) < HTTP_URI_STATUS_OK)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad printer-uri."), 1);
 
@@ -1060,7 +1060,7 @@ _cupsGetDestResource(
 
     return (NULL);
   }
-  else if (httpSeparateURI(HTTP_URI_CODING_ALL, uri, scheme, sizeof(scheme), userpass, sizeof(userpass), hostname, sizeof(hostname), &port, resource, (int)resourcesize) < HTTP_URI_STATUS_OK)
+  else if (httpSeparateURI(HTTP_URI_CODING_ALL, uri, scheme, sizeof(scheme), userpass, sizeof(userpass), hostname, sizeof(hostname), &port, resource, resourcesize) < HTTP_URI_STATUS_OK)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad URI."), 1);
 

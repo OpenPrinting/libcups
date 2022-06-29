@@ -1436,7 +1436,7 @@ _httpDecodeURI(char       *dst,		// I - Destination buffer
                const char *src,		// I - Source URI
 	       size_t     dstsize)	// I - Size of destination buffer
 {
-  if (http_copy_decode(dst, src, (int)dstsize, NULL, true))
+  if (http_copy_decode(dst, src, dstsize, NULL, true))
     return (dst);
   else
     return (NULL);
@@ -2050,9 +2050,9 @@ http_resolve_cb(
 
   if ((!strcmp(scheme, "ipp") || !strcmp(scheme, "ipps")) &&
       !strcmp(uribuf->resource, "/cups"))
-    httpAssembleURIf(HTTP_URI_CODING_ALL, uribuf->buffer, (int)uribuf->bufsize, scheme, NULL, hostTarget, ntohs(port), "%s?snmp=false", resource);
+    httpAssembleURIf(HTTP_URI_CODING_ALL, uribuf->buffer, uribuf->bufsize, scheme, NULL, hostTarget, ntohs(port), "%s?snmp=false", resource);
   else
-    httpAssembleURI(HTTP_URI_CODING_ALL, uribuf->buffer, (int)uribuf->bufsize, scheme, NULL, hostTarget, ntohs(port), resource);
+    httpAssembleURI(HTTP_URI_CODING_ALL, uribuf->buffer, uribuf->bufsize, scheme, NULL, hostTarget, ntohs(port), resource);
 
   DEBUG_printf(("5http_resolve_cb: Resolved URI is \"%s\"...", uribuf->buffer));
 }

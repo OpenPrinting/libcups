@@ -2710,7 +2710,7 @@ get_string(ipp_attribute_t *attr,	/* I - IPP attribute */
 
   if (flags & IPPTOOL_WITH_HOSTNAME)
   {
-    if (httpSeparateURI(HTTP_URI_CODING_ALL, value, scheme, sizeof(scheme), userpass, sizeof(userpass), buffer, (int)bufsize, &port, resource, sizeof(resource)) < HTTP_URI_STATUS_OK)
+    if (httpSeparateURI(HTTP_URI_CODING_ALL, value, scheme, sizeof(scheme), userpass, sizeof(userpass), buffer, bufsize, &port, resource, sizeof(resource)) < HTTP_URI_STATUS_OK)
       buffer[0] = '\0';
 
     ptr = buffer + strlen(buffer) - 1;
@@ -2721,14 +2721,14 @@ get_string(ipp_attribute_t *attr,	/* I - IPP attribute */
   }
   else if (flags & IPPTOOL_WITH_RESOURCE)
   {
-    if (httpSeparateURI(HTTP_URI_CODING_ALL, value, scheme, sizeof(scheme), userpass, sizeof(userpass), hostname, sizeof(hostname), &port, buffer, (int)bufsize) < HTTP_URI_STATUS_OK)
+    if (httpSeparateURI(HTTP_URI_CODING_ALL, value, scheme, sizeof(scheme), userpass, sizeof(userpass), hostname, sizeof(hostname), &port, buffer, bufsize) < HTTP_URI_STATUS_OK)
       buffer[0] = '\0';
 
     return (buffer);
   }
   else if (flags & IPPTOOL_WITH_SCHEME)
   {
-    if (httpSeparateURI(HTTP_URI_CODING_ALL, value, buffer, (int)bufsize, userpass, sizeof(userpass), hostname, sizeof(hostname), &port, resource, sizeof(resource)) < HTTP_URI_STATUS_OK)
+    if (httpSeparateURI(HTTP_URI_CODING_ALL, value, buffer, bufsize, userpass, sizeof(userpass), hostname, sizeof(hostname), &port, resource, sizeof(resource)) < HTTP_URI_STATUS_OK)
       buffer[0] = '\0';
 
     return (buffer);
@@ -2754,7 +2754,7 @@ get_string(ipp_attribute_t *attr,	/* I - IPP attribute */
       if ((ptr = hostname + strlen(hostname) - 1) >= hostname && *ptr == '.')
 	*ptr = '\0';
 
-      httpAssembleURI(HTTP_URI_CODING_ALL, buffer, (int)bufsize, scheme, userpass, hostname, port, resource);
+      httpAssembleURI(HTTP_URI_CODING_ALL, buffer, bufsize, scheme, userpass, hostname, port, resource);
     }
 
     return (buffer);
