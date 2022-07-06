@@ -958,6 +958,13 @@ connect_printer(ipptool_test_t *data)	// I - Test data
   http_t	*http;			// HTTP connection
 
 
+  if (!scheme || !hostname || !port)
+  {
+    // This should never happen, but just in case...
+    print_fatal_error(data, "Missing printer/system URI.");
+    return (NULL);
+  }
+
   if (!_cups_strcasecmp(scheme, "https") || !_cups_strcasecmp(scheme, "ipps") || atoi(port) == 443)
     encryption = HTTP_ENCRYPTION_ALWAYS;
   else
@@ -3472,11 +3479,12 @@ parse_monitor_printer_state(
     ipp_file_t     *f,			/* I - IPP file data */
     ipptool_test_t *data)		/* I - Test data */
 {
-  char	token[256],			/* Token string */
-	name[1024],			/* Name string */
-	temp[1024],			/* Temporary string */
-	value[1024],			/* Value string */
-	*ptr;				/* Pointer into value */
+  char		token[256],		/* Token string */
+		name[1024],		/* Name string */
+		temp[1024],		/* Temporary string */
+		value[1024],		/* Value string */
+		*ptr;			/* Pointer into value */
+  const char	*uri;			/* Printer URI */
 
 
   if (!ippFileReadToken(f, temp, sizeof(temp)))
@@ -3498,10 +3506,10 @@ parse_monitor_printer_state(
       return (0);
     }
   }
-  else
+  else if ((uri = ippFileGetVar(data->parent, "uri")) != NULL)
   {
     // Use the default printer URI...
-    data->monitor_uri = strdup(ippFileGetVar(data->parent, "uri"));
+    data->monitor_uri = strdup(uri);
   }
 
   // Loop until we get a closing brace...
@@ -6076,6 +6084,8 @@ token_cb(ipp_file_t     *f,		/* I - IPP file data */
       * Start new test...
       */
 
+      const char *resource;		// Resource path
+
       if (data->show_header)
       {
 	if (data->output == IPPTOOL_OUTPUT_PLIST)
@@ -6087,6 +6097,9 @@ token_cb(ipp_file_t     *f,		/* I - IPP file data */
 	data->show_header = false;
       }
 
+      if ((resource = ippFileGetVar(data->parent, "resource")) == NULL)
+        resource = "/ipp/print";
+
       data->compression[0] = '\0';
       data->delay          = 0;
       data->num_expects    = 0;
@@ -6097,7 +6110,7 @@ token_cb(ipp_file_t     *f,		/* I - IPP file data */
       if ((ptr = strrchr(data->name, '.')) != NULL)
         *ptr = '\0';
       data->repeat_interval = 5000000;
-      cupsCopyString(data->resource, ippFileGetVar(data->parent, "resource"), sizeof(data->resource));
+      cupsCopyString(data->resource, resource, sizeof(data->resource));
       data->skip_previous = false;
       data->pass_test     = false;
       data->skip_test     = false;

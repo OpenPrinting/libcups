@@ -722,7 +722,7 @@ cupsCopyDest(cups_dest_t *dest,		/* I  - Destination to copy */
   * Range check input...
   */
 
-  if (!dest || num_dests < 0 || !dests)
+  if (!dest || !dests)
     return (num_dests);
 
  /*

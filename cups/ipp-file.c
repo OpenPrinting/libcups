@@ -878,7 +878,9 @@ ippFileRestorePosition(ipp_file_t *file)// I - IPP data file
     return (false);
 
   // Seek back to the saved position...
-  cupsFileSeek(file->fp, file->save_pos);
+  if (cupsFileSeek(file->fp, file->save_pos) != file->save_pos)
+    return (false);
+
   file->linenum   = file->save_line;
   file->save_pos  = 0;
   file->save_line = 0;
@@ -1271,7 +1273,10 @@ ippFileWriteComment(ipp_file_t *file,	// I - IPP data file
   if ((bufsize = vsnprintf(file->buffer, file->alloc_buffer, comment, ap2)) >= (int)file->alloc_buffer)
   {
     if (!expand_buffer(file, (size_t)bufsize + 1))
+    {
+      va_end(ap);
       return (false);
+    }
 
     vsnprintf(file->buffer, file->alloc_buffer, comment, ap);
   }
@@ -1429,7 +1434,10 @@ ippFileWriteTokenf(ipp_file_t *file,	// I - IPP data file
   if ((bufsize = vsnprintf(file->buffer, file->alloc_buffer, token, ap2)) >= (int)file->alloc_buffer)
   {
     if (!expand_buffer(file, (size_t)bufsize + 1))
+    {
+      va_end(ap);
       return (false);
+    }
 
     vsnprintf(file->buffer, file->alloc_buffer, token, ap);
   }
