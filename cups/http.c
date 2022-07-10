@@ -3085,6 +3085,7 @@ httpWriteResponse(http_t        *http,	// I - HTTP connection
 {
   http_encoding_t	old_encoding;	// Old data_encoding value
   off_t			old_remaining;	// Old data_remaining value
+  cups_lang_t		*lang;		// Response language
 
 
   // Range check input...
@@ -3145,12 +3146,15 @@ httpWriteResponse(http_t        *http,	// I - HTTP connection
   if (!http->fields[HTTP_FIELD_ACCEPT_ENCODING])
     httpSetField(http, HTTP_FIELD_ACCEPT_ENCODING, http->default_fields[HTTP_FIELD_ACCEPT_ENCODING] ? http->default_fields[HTTP_FIELD_ACCEPT_ENCODING] : "gzip, deflate, identity");
 
+  // Get the response language, if any...
+  lang = cupsLangGet(http->fields[HTTP_FIELD_CONTENT_LANGUAGE]);
+
   // Send the response header...
   old_encoding        = http->data_encoding;
   old_remaining       = http->data_remaining;
   http->data_encoding = HTTP_ENCODING_FIELDS;
 
-  if (httpPrintf(http, "HTTP/%d.%d %d %s\r\n", http->version / 100, http->version % 100, (int)status, httpStatusString(status)) < 0)
+  if (httpPrintf(http, "HTTP/%d.%d %d %s\r\n", http->version / 100, http->version % 100, (int)status, _httpStatusString(lang, status)) < 0)
   {
     http->status = HTTP_STATUS_ERROR;
     return (false);
