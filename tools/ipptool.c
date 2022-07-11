@@ -2574,8 +2574,10 @@ generate_file(
 {
   cups_raster_mode_t	mode;		// Raster output mode
   cups_raster_t		*ras;		// Raster stream
-  cups_page_header_t	header;		// Raster page header
-  pwg_media_t		*media;		// Media information
+  cups_page_header_t	header;		// Raster page header (front side)
+  cups_page_header_t	back_header;	// Raster page header (back side)
+  pwg_media_t		*pwg;		// PWG media information
+  cups_size_t		media;		// CUPS media information
 
 
   // Set the output mode...
@@ -2587,13 +2589,19 @@ generate_file(
     mode = CUPS_RASTER_WRITE_COMPRESSED;
 
   // Create the raster header...
-  if ((media = pwgMediaForPWG(params->media)) == NULL)
+  if ((pwg = pwgMediaForPWG(params->media)) == NULL)
   {
     fprintf(stderr, "ipptool: Unable to parse media size '%s'.\n", params->media);
     return (HTTP_STATUS_SERVER_ERROR);
   }
 
-  cupsRasterInitPWGHeader(&header, media, params->type, params->xdpi, params->ydpi, params->sides, params->sheet_back);
+  memset(&media, 0, sizeof(media));
+  cupsCopyString(media.media, pwg->pwg, sizeof(media.media));
+  media.width  = pwg->width;
+  media.length = pwg->length;
+
+  cupsRasterInitHeader(&header, &media, /*optimize*/NULL, IPP_QUALITY_NORMAL, /*intent*/NULL, params->orientation, params->sides, params->type, params->xdpi, params->ydpi, /*sheet_back*/NULL);
+  cupsRasterInitHeader(&back_header, &media, /*optimize*/NULL, IPP_QUALITY_NORMAL, /*intent*/NULL, params->orientation, params->sides, params->type, params->xdpi, params->ydpi, params->sheet_back);
 
 #if 0
   fprintf(stderr, "ipptool: media='%s'\n", params->media);
@@ -2612,7 +2620,7 @@ generate_file(
     return (HTTP_STATUS_SERVER_ERROR);
 
   // Write it...
-  if (!cupsRasterWriteTest(ras, &header, params->sheet_back, params->orientation, params->num_copies, params->num_pages))
+  if (!cupsRasterWriteTest(ras, &header, &back_header, params->sheet_back, params->orientation, params->num_copies, params->num_pages))
     return (HTTP_STATUS_SERVER_ERROR);
 
   cupsRasterClose(ras);

@@ -1,17 +1,17 @@
-/*
- * Raster benchmark program for CUPS.
- *
- * Copyright © 2021-2022 by OpenPrinting.
- * Copyright © 2007-2016 by Apple Inc.
- * Copyright © 1997-2006 by Easy Software Products.
- *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more
- * information.
- */
+//
+// Raster benchmark program for CUPS.
+//
+// Copyright © 2021-2022 by OpenPrinting.
+// Copyright © 2007-2016 by Apple Inc.
+// Copyright © 1997-2006 by Easy Software Products.
+//
+// Licensed under Apache License v2.0.  See the file "LICENSE" for more
+// information.
+//
 
-/*
- * Include necessary headers...
- */
+//
+// Include necessary headers...
+//
 
 #include <config.h>
 #include <cups/raster.h>
@@ -23,9 +23,9 @@
 #include <sys/wait.h>
 
 
-/*
- * Constants...
- */
+//
+// Constants...
+//
 
 #define TEST_WIDTH	1024
 #define TEST_HEIGHT	1024
@@ -33,9 +33,9 @@
 #define TEST_PASSES	20
 
 
-/*
- * Local functions...
- */
+//
+// Local functions...
+//
 
 static double	compute_median(double *secs);
 static double	get_time(void);
@@ -44,22 +44,22 @@ static int	run_read_test(void);
 static void	write_test(int fd, cups_raster_mode_t mode);
 
 
-/*
- * 'main()' - Benchmark the raster read/write functions.
- */
+//
+// 'main()' - Benchmark the raster read/write functions.
+//
 
-int					/* O - Exit status */
-main(int  argc,				/* I - Number of command-line args */
-     char *argv[])			/* I - Command-line arguments */
+int					// O - Exit status
+main(int  argc,				// I - Number of command-line args
+     char *argv[])			// I - Command-line arguments
 {
-  int		i;			/* Looping var */
-  int		ras_fd,			/* File descriptor for read process */
-		status;			/* Exit status of read process */
-  double	start_secs,		/* Start time */
-		write_secs,		/* Write time */
-		read_secs,		/* Read time */
-		pass_secs[TEST_PASSES];	/* Total test times */
-  cups_raster_mode_t mode;		/* Write mode */
+  int		i;			// Looping var
+  int		ras_fd,			// File descriptor for read process
+		status;			// Exit status of read process
+  double	start_secs,		// Start time
+		write_secs,		// Write time
+		read_secs,		// Read time
+		pass_secs[TEST_PASSES];	// Total test times
+  cups_raster_mode_t mode;		// Write mode
 
 
  /*
@@ -115,15 +115,15 @@ main(int  argc,				/* I - Number of command-line args */
 }
 
 
-/*
- * 'compute_median()' - Compute the median time for a test.
- */
+//
+// 'compute_median()' - Compute the median time for a test.
+//
 
-static double				/* O - Median time in seconds */
-compute_median(double *secs)		/* I - Array of time samples */
+static double				// O - Median time in seconds
+compute_median(double *secs)		// I - Array of time samples
 {
-  int		i, j;			/* Looping vars */
-  double	temp;			/* Swap variable */
+  int		i, j;			// Looping vars
+  double	temp;			// Swap variable
 
 
  /*
@@ -147,14 +147,14 @@ compute_median(double *secs)		/* I - Array of time samples */
 }
 
 
-/*
- * 'get_time()' - Get the current time in seconds.
- */
+//
+// 'get_time()' - Get the current time in seconds.
+//
 
-static double				/* O - Time in seconds */
+static double				// O - Time in seconds
 get_time(void)
 {
-  struct timeval	curtime;	/* Current time */
+  struct timeval	curtime;	// Current time
 
 
   gettimeofday(&curtime, NULL);
@@ -162,18 +162,18 @@ get_time(void)
 }
 
 
-/*
- * 'read_test()' - Benchmark the raster read functions.
- */
+//
+// 'read_test()' - Benchmark the raster read functions.
+//
 
 static void
-read_test(int fd)			/* I - File descriptor to read from */
+read_test(int fd)			// I - File descriptor to read from
 {
-  unsigned		y;		/* Looping var */
-  cups_raster_t		*r;		/* Raster stream */
-  cups_page_header_t	header;		/* Page header */
+  unsigned		y;		// Looping var
+  cups_raster_t		*r;		// Raster stream
+  cups_page_header_t	header;		// Page header
   unsigned char		buffer[8 * TEST_WIDTH];
-					/* Read buffer */
+					// Read buffer
 
 
  /*
@@ -196,15 +196,15 @@ read_test(int fd)			/* I - File descriptor to read from */
 }
 
 
-/*
- * 'run_read_test()' - Run the read test as a child process via pipes.
- */
+//
+// 'run_read_test()' - Run the read test as a child process via pipes.
+//
 
-static int				/* O - Standard input of child */
+static int				// O - Standard input of child
 run_read_test(void)
 {
-  int	ras_pipes[2];			/* Raster data pipes */
-  int	pid;				/* Child process ID */
+  int	ras_pipes[2];			// Raster data pipes
+  int	pid;				// Child process ID
 
 
   if (pipe(ras_pipes))
@@ -243,20 +243,20 @@ run_read_test(void)
 }
 
 
-/*
- * 'write_test()' - Benchmark the raster write functions.
- */
+//
+// 'write_test()' - Benchmark the raster write functions.
+//
 
 static void
-write_test(int                fd,	/* I - File descriptor to write to */
-           cups_raster_mode_t mode)	/* I - Write mode */
+write_test(int                fd,	// I - File descriptor to write to
+           cups_raster_mode_t mode)	// I - Write mode
 {
-  unsigned		page, x, y;	/* Looping vars */
-  unsigned		count;		/* Number of bytes to set */
-  cups_raster_t		*r;		/* Raster stream */
-  cups_page_header_t	header;		/* Page header */
+  unsigned		page, x, y;	// Looping vars
+  unsigned		count;		// Number of bytes to set
+  cups_raster_t		*r;		// Raster stream
+  cups_page_header_t	header;		// Page header
   unsigned char		data[32][8 * TEST_WIDTH];
-					/* Raster data to write */
+					// Raster data to write
 
 
  /*

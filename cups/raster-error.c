@@ -1,38 +1,38 @@
-/*
- * Raster error handling for CUPS.
- *
- * Copyright © 2022 by OpenPrinting.
- * Copyright © 2007-2018 by Apple Inc.
- * Copyright © 2007 by Easy Software Products.
- *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more
- * information.
- */
+//
+// Raster error handling for CUPS.
+//
+// Copyright © 2022 by OpenPrinting.
+// Copyright © 2007-2018 by Apple Inc.
+// Copyright © 2007 by Easy Software Products.
+//
+// Licensed under Apache License v2.0.  See the file "LICENSE" for more
+// information.
+//
 
-/*
- * Include necessary headers...
- */
+//
+// Include necessary headers...
+//
 
 #include "cups-private.h"
 #include "raster-private.h"
 #include "debug-internal.h"
 
 
-/*
- * '_cupsRasterAddError()' - Add an error message to the error buffer.
- */
+//
+// '_cupsRasterAddError()' - Add an error message to the error buffer.
+//
 
 void
-_cupsRasterAddError(const char *f,	/* I - Printf-style error message */
-                    ...)		/* I - Additional arguments as needed */
+_cupsRasterAddError(const char *f,	// I - Printf-style error message
+                    ...)		// I - Additional arguments as needed
 {
   _cups_globals_t	*cg = _cupsGlobals();
-					/* Thread globals */
+					// Thread globals
   _cups_raster_error_t	*buf = &cg->raster_error;
-					/* Error buffer */
-  va_list	ap;			/* Pointer to additional arguments */
-  char		s[2048];		/* Message string */
-  ssize_t	bytes;			/* Bytes in message string */
+					// Error buffer
+  va_list	ap;			// Pointer to additional arguments
+  char		s[2048];		// Message string
+  ssize_t	bytes;			// Bytes in message string
 
 
   DEBUG_printf(("_cupsRasterAddError(f=\"%s\", ...)", f));
@@ -57,8 +57,8 @@ _cupsRasterAddError(const char *f,	/* I - Printf-style error message */
     * Allocate more memory...
     */
 
-    char	*temp;			/* New buffer */
-    size_t	size;			/* Size of buffer */
+    char	*temp;			// New buffer
+    size_t	size;			// Size of buffer
 
 
     size = (size_t)(buf->end - buf->start + 2 * bytes + 1024);
@@ -89,17 +89,17 @@ _cupsRasterAddError(const char *f,	/* I - Printf-style error message */
 }
 
 
-/*
- * '_cupsRasterClearError()' - Clear the error buffer.
- */
+//
+// '_cupsRasterClearError()' - Clear the error buffer.
+//
 
 void
 _cupsRasterClearError(void)
 {
   _cups_globals_t	*cg = _cupsGlobals();
-					/* Thread globals */
+					// Thread globals
   _cups_raster_error_t	*buf = &cg->raster_error;
-					/* Error buffer */
+					// Error buffer
 
 
   buf->current = buf->start;
@@ -109,19 +109,19 @@ _cupsRasterClearError(void)
 }
 
 
-/*
- * 'cupsRasterErrorString()' - Return the last error from a raster function.
- *
- * If there are no recent errors, `NULL` is returned.
- */
+//
+// 'cupsRasterErrorString()' - Return the last error from a raster function.
+//
+// If there are no recent errors, `NULL` is returned.
+//
 
-const char *				/* O - Last error */
+const char *				// O - Last error
 cupsRasterErrorString(void)
 {
   _cups_globals_t	*cg = _cupsGlobals();
-					/* Thread globals */
+					// Thread globals
   _cups_raster_error_t	*buf = &cg->raster_error;
-					/* Error buffer */
+					// Error buffer
 
 
   if (buf->current == buf->start)

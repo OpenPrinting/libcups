@@ -414,7 +414,7 @@ span.string {
 <li><a href="#cupsRWUnlock">cupsRWUnlock</a></li>
 <li><a href="#cupsRasterClose">cupsRasterClose</a></li>
 <li><a href="#cupsRasterErrorString">cupsRasterErrorString</a></li>
-<li><a href="#cupsRasterInitPWGHeader">cupsRasterInitPWGHeader</a></li>
+<li><a href="#cupsRasterInitHeader">cupsRasterInitHeader</a></li>
 <li><a href="#cupsRasterOpen">cupsRasterOpen</a></li>
 <li><a href="#cupsRasterOpenIO">cupsRasterOpenIO</a></li>
 <li><a href="#cupsRasterReadHeader">cupsRasterReadHeader</a></li>
@@ -677,6 +677,7 @@ span.string {
 <li><a href="#cups_job_t">cups_job_t</a></li>
 <li><a href="#cups_jog_t">cups_jog_t</a></li>
 <li><a href="#cups_lang_t">cups_lang_t</a></li>
+<li><a href="#cups_mediapos_t">cups_mediapos_t</a></li>
 <li><a href="#cups_mutex_t">cups_mutex_t</a></li>
 <li><a href="#cups_oauth_cb_t">cups_oauth_cb_t</a></li>
 <li><a href="#cups_option_t">cups_option_t</a></li>
@@ -750,6 +751,7 @@ span.string {
 <li><a href="#cups_cut_e">cups_cut_e</a></li>
 <li><a href="#cups_edge_e">cups_edge_e</a></li>
 <li><a href="#cups_jog_e">cups_jog_e</a></li>
+<li><a href="#cups_mediapos_e">cups_mediapos_e</a></li>
 <li><a href="#cups_order_e">cups_order_e</a></li>
 <li><a href="#cups_orient_e">cups_orient_e</a></li>
 <li><a href="#cups_ptype_e">cups_ptype_e</a></li>
@@ -1560,6 +1562,9 @@ cups_password_cb(<span class="reserved">const</span> <span class="reserved">char
 <tr><td> <code>cupsGetPassword2</code></td>
 <td> <code>cupsGetPassword</code></td>
 </tr>
+<tr><td> <code>cupsRasterInitPWGHeader</code></td>
+<td> <code>cupsRasterInitHeader</code></td>
+</tr>
 <tr><td> <code>cupsRasterReadHeader2</code></td>
 <td> <code>cupsRasterReadHeader</code></td>
 </tr>
@@ -1828,7 +1833,11 @@ bool cupsArrayAddStrings(<a href="#cups_array_t">cups_array_t</a> *a, const char
 the <a href="#cupsArrayNewStrings"><code>cupsArrayNewStrings</code></a> function. Duplicate strings are <em>not</em> added.
 If the string pointer &quot;s&quot; is <code>NULL</code> or the empty string, no strings are
 added to the array.  If &quot;delim&quot; is the space character, then all whitespace
-is recognized as a delimiter.</p>
+is recognized as a delimiter.<br>
+<br>
+Strings can be delimited by quotes (&quot;foo&quot;, 'bar') and curly braces (&quot;{foo}&quot;),
+and characters can be escaped using the backslash () character.  Outer
+quotes are stripped but inner ones are preserved.</p>
 <h3 class="function"><a id="cupsArrayClear">cupsArrayClear</a></h3>
 <p class="description">Clear an array.</p>
 <p class="code">
@@ -3981,36 +3990,80 @@ const char *cupsRasterErrorString(void);</p>
 <p class="description">Last error</p>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">If there are no recent errors, <code>NULL</code> is returned.</p>
-<h3 class="function"><a id="cupsRasterInitPWGHeader">cupsRasterInitPWGHeader</a></h3>
+<h3 class="function"><a id="cupsRasterInitHeader">cupsRasterInitHeader</a></h3>
 <p class="description">Initialize a page header for PWG Raster output.</p>
 <p class="code">
-bool cupsRasterInitPWGHeader(<a href="#cups_page_header_t">cups_page_header_t</a> *h, <a href="#pwg_media_t">pwg_media_t</a> *media, const char *type, int xdpi, int ydpi, const char *sides, const char *sheet_back);</p>
+bool cupsRasterInitHeader(<a href="#cups_page_header_t">cups_page_header_t</a> *h, <a href="#cups_size_t">cups_size_t</a> *media, const char *optimize, <a href="#ipp_quality_t">ipp_quality_t</a> quality, const char *intent, <a href="#ipp_orient_t">ipp_orient_t</a> orientation, const char *sides, const char *type, int xdpi, int ydpi, const char *sheet_back);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>h</th>
 <td class="description">Page header</td></tr>
 <tr><th>media</th>
-<td class="description">PWG media information</td></tr>
+<td class="description">Media information</td></tr>
+<tr><th>optimize</th>
+<td class="description">IPP &quot;print-content-optimize&quot; value</td></tr>
+<tr><th>quality</th>
+<td class="description">IPP &quot;print-quality&quot; value</td></tr>
+<tr><th>intent</th>
+<td class="description">IPP &quot;print-rendering-intent&quot; value</td></tr>
+<tr><th>orientation</th>
+<td class="description">IPP &quot;orientation-requested&quot; value</td></tr>
+<tr><th>sides</th>
+<td class="description">IPP &quot;sides&quot; value</td></tr>
 <tr><th>type</th>
 <td class="description">PWG raster type string</td></tr>
 <tr><th>xdpi</th>
 <td class="description">Cross-feed direction (horizontal) resolution</td></tr>
 <tr><th>ydpi</th>
 <td class="description">Feed direction (vertical) resolution</td></tr>
-<tr><th>sides</th>
-<td class="description">IPP &quot;sides&quot; option value</td></tr>
 <tr><th>sheet_back</th>
 <td class="description">Transform for back side or <code>NULL</code> for none</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description"><code>true</code> on success, <code>false</code> on failure</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The &quot;media&quot; argument specifies the media to use.<br>
+<p class="discussion">The &quot;media&quot; argument specifies the media to use.  The &quot;optimize&quot;, &quot;quality&quot;,
+&quot;intent&quot;, &quot;orientation&quot;, and &quot;sides&quot; arguments specify additional IPP Job
+Template attribute values that are reflected in the raster header.<br>
 <br>
 The &quot;type&quot; argument specifies a &quot;pwg-raster-document-type-supported&quot; value
-that controls the color space and bit depth of the raster data.<br>
-<br>
-The &quot;xres&quot; and &quot;yres&quot; arguments specify the raster resolution in dots per
+that controls the color space and bit depth of the raster data.  Supported
+values include:
+
+</p><ul>
+<li>&quot;adobe-rgb_8&quot;: 8-bit per component (24-bit) AdobeRGB
+</li>
+<li>&quot;adobe-rgb_16&quot;: 16-bit per component (48-bit) AdobeRGB
+</li>
+<li>&quot;black_1&quot;: 1-bit black (K)
+</li>
+<li>&quot;black_8&quot;: 8-bit black (K)
+</li>
+<li>&quot;black_16&quot;: 16-bit black (K)
+</li>
+<li>&quot;cmyk_8&quot;: 8-bit per component (32-bit) CMYK
+</li>
+<li>&quot;cmyk_16&quot;: 16-bit per component (64-bit) CMYK
+</li>
+<li>&quot;device1_8&quot; to &quot;device15_8&quot;: 8-bit per component DeviceN
+</li>
+<li>&quot;device1_16&quot; to &quot;device15_16&quot;: 16-bit per component DeviceN
+</li>
+<li>&quot;rgb_8&quot;: 8-bit per component (24-bit) DeviceRGB
+</li>
+<li>&quot;rgb_16&quot;: 16-bit per component (32-bit) DeviceRGB
+</li>
+<li>&quot;sgray_1&quot;: 1-bit sGray
+</li>
+<li>&quot;sgray_8&quot;: 8-bit sGray
+</li>
+<li>&quot;sgray_16&quot;: 16-bit sGray
+</li>
+<li>&quot;srgb_8&quot;: 8-bit per component (24-bit) sRGB
+</li>
+<li>&quot;srgb_16&quot;: 16-bit per component (48-bit) sRGB</li>
+</ul>
+<p class="discussion">The &quot;xres&quot; and &quot;yres&quot; arguments specify the raster resolution in dots per
 inch.<br>
 <br>
 The &quot;sheet_back&quot; argument specifies a &quot;pwg-raster-document-sheet-back&quot; value
@@ -8304,6 +8357,11 @@ typedef enum <a href="#cups_jog_e">cups_jog_e</a> cups_jog_t;
 <p class="code">
 typedef struct <a href="#cups_lang_s">cups_lang_s</a> cups_lang_t;
 </p>
+<h3 class="typedef"><a id="cups_mediapos_t">cups_mediapos_t</a></h3>
+<p class="description">MediaPosition values</p>
+<p class="code">
+typedef enum <a href="#cups_mediapos_e">cups_mediapos_e</a> cups_mediapos_t;
+</p>
 <h3 class="typedef"><a id="cups_mutex_t">cups_mutex_t</a></h3>
 <p class="description">Mutual exclusion lock</p>
 <p class="code">
@@ -8976,6 +9034,61 @@ factor not applied)</td></tr>
 <tr><th>CUPS_JOG_JOB </th><td class="description">Move pages after this job</td></tr>
 <tr><th>CUPS_JOG_NONE </th><td class="description">Never move pages</td></tr>
 <tr><th>CUPS_JOG_SET </th><td class="description">Move pages after this set</td></tr>
+</tbody></table>
+<h3 class="enumeration"><a id="cups_mediapos_e">cups_mediapos_e</a></h3>
+<p class="description">MediaPosition values</p>
+<h4 class="constants">Constants</h4>
+<table class="list"><tbody>
+<tr><th>CUPS_MEDIAPOS_ALTERNATE </th><td class="description">'alternate'</td></tr>
+<tr><th>CUPS_MEDIAPOS_ALTERNATE_ROLL </th><td class="description">'alternate-roll'</td></tr>
+<tr><th>CUPS_MEDIAPOS_AUTO </th><td class="description">'auto'</td></tr>
+<tr><th>CUPS_MEDIAPOS_BOTTOM </th><td class="description">'bottom'</td></tr>
+<tr><th>CUPS_MEDIAPOS_BY_PASS_TRAY </th><td class="description">'by-pass-tray'</td></tr>
+<tr><th>CUPS_MEDIAPOS_CENTER </th><td class="description">'center'</td></tr>
+<tr><th>CUPS_MEDIAPOS_DISC </th><td class="description">'disc'</td></tr>
+<tr><th>CUPS_MEDIAPOS_ENVELOPE </th><td class="description">'envelope'</td></tr>
+<tr><th>CUPS_MEDIAPOS_HAGAKI </th><td class="description">'hagaki'</td></tr>
+<tr><th>CUPS_MEDIAPOS_LARGE_CAPACITY </th><td class="description">'large-capacity'</td></tr>
+<tr><th>CUPS_MEDIAPOS_LEFT </th><td class="description">'left'</td></tr>
+<tr><th>CUPS_MEDIAPOS_MAIN </th><td class="description">'main'</td></tr>
+<tr><th>CUPS_MEDIAPOS_MAIN_ROLL </th><td class="description">'main-roll'</td></tr>
+<tr><th>CUPS_MEDIAPOS_MANUAL </th><td class="description">'manual'</td></tr>
+<tr><th>CUPS_MEDIAPOS_MIDDLE </th><td class="description">'middle'</td></tr>
+<tr><th>CUPS_MEDIAPOS_PHOTO </th><td class="description">'photo'</td></tr>
+<tr><th>CUPS_MEDIAPOS_REAR </th><td class="description">'rear'</td></tr>
+<tr><th>CUPS_MEDIAPOS_RIGHT </th><td class="description">'right'</td></tr>
+<tr><th>CUPS_MEDIAPOS_ROLL_1 </th><td class="description">'roll-1'</td></tr>
+<tr><th>CUPS_MEDIAPOS_ROLL_10 </th><td class="description">'roll-10'</td></tr>
+<tr><th>CUPS_MEDIAPOS_ROLL_2 </th><td class="description">'roll-2'</td></tr>
+<tr><th>CUPS_MEDIAPOS_ROLL_3 </th><td class="description">'roll-3'</td></tr>
+<tr><th>CUPS_MEDIAPOS_ROLL_4 </th><td class="description">'roll-4'</td></tr>
+<tr><th>CUPS_MEDIAPOS_ROLL_5 </th><td class="description">'roll-5'</td></tr>
+<tr><th>CUPS_MEDIAPOS_ROLL_6 </th><td class="description">'roll-6'</td></tr>
+<tr><th>CUPS_MEDIAPOS_ROLL_7 </th><td class="description">'roll-7'</td></tr>
+<tr><th>CUPS_MEDIAPOS_ROLL_8 </th><td class="description">'roll-8'</td></tr>
+<tr><th>CUPS_MEDIAPOS_ROLL_9 </th><td class="description">'roll-9'</td></tr>
+<tr><th>CUPS_MEDIAPOS_SIDE </th><td class="description">'side'</td></tr>
+<tr><th>CUPS_MEDIAPOS_TOP </th><td class="description">'top'</td></tr>
+<tr><th>CUPS_MEDIAPOS_TRAY_1 </th><td class="description">'tray-1'</td></tr>
+<tr><th>CUPS_MEDIAPOS_TRAY_10 </th><td class="description">'tray-10'</td></tr>
+<tr><th>CUPS_MEDIAPOS_TRAY_11 </th><td class="description">'tray-11'</td></tr>
+<tr><th>CUPS_MEDIAPOS_TRAY_12 </th><td class="description">'tray-12'</td></tr>
+<tr><th>CUPS_MEDIAPOS_TRAY_13 </th><td class="description">'tray-13'</td></tr>
+<tr><th>CUPS_MEDIAPOS_TRAY_14 </th><td class="description">'tray-14'</td></tr>
+<tr><th>CUPS_MEDIAPOS_TRAY_15 </th><td class="description">'tray-15'</td></tr>
+<tr><th>CUPS_MEDIAPOS_TRAY_16 </th><td class="description">'tray-16'</td></tr>
+<tr><th>CUPS_MEDIAPOS_TRAY_17 </th><td class="description">'tray-17'</td></tr>
+<tr><th>CUPS_MEDIAPOS_TRAY_18 </th><td class="description">'tray-18'</td></tr>
+<tr><th>CUPS_MEDIAPOS_TRAY_19 </th><td class="description">'tray-19'</td></tr>
+<tr><th>CUPS_MEDIAPOS_TRAY_2 </th><td class="description">'tray-2'</td></tr>
+<tr><th>CUPS_MEDIAPOS_TRAY_20 </th><td class="description">'tray-20'</td></tr>
+<tr><th>CUPS_MEDIAPOS_TRAY_3 </th><td class="description">'tray-3'</td></tr>
+<tr><th>CUPS_MEDIAPOS_TRAY_4 </th><td class="description">'tray-4'</td></tr>
+<tr><th>CUPS_MEDIAPOS_TRAY_5 </th><td class="description">'tray-5'</td></tr>
+<tr><th>CUPS_MEDIAPOS_TRAY_6 </th><td class="description">'tray-6'</td></tr>
+<tr><th>CUPS_MEDIAPOS_TRAY_7 </th><td class="description">'tray-7'</td></tr>
+<tr><th>CUPS_MEDIAPOS_TRAY_8 </th><td class="description">'tray-8'</td></tr>
+<tr><th>CUPS_MEDIAPOS_TRAY_9 </th><td class="description">'tray-9'</td></tr>
 </tbody></table>
 <h3 class="enumeration"><a id="cups_order_e">cups_order_e</a></h3>
 <p class="description">cupsColorOrder attribute values</p>

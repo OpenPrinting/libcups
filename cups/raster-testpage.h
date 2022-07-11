@@ -31,7 +31,8 @@
 static bool				// O - `true` on success, `false` on failure
 cupsRasterWriteTest(
     cups_raster_t      *ras,		// I - Raster stream
-    cups_page_header_t *header,		// I - Raster page header
+    cups_page_header_t *header,		// I - Raster page header (front side)
+    cups_page_header_t *back_header,	// I - Raster page header (back side)
     const char         *sheet_back,	// I - Back side transform needed
     ipp_orient_t       orientation,	// I - Output orientation
     int	               num_copies,	// I - Number of copies
@@ -199,7 +200,10 @@ cupsRasterWriteTest(
       }
 
       // Start the page and show the borders...
-      cupsRasterWriteHeader(ras, header);
+      if (page & 1)
+	cupsRasterWriteHeader(ras, back_header);
+      else
+	cupsRasterWriteHeader(ras, header);
 
       if (bpp == 4)
       {
