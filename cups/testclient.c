@@ -286,7 +286,8 @@ make_raster_file(ipp_t      *response,  /* I - Printer attributes */
 			count;		/* Number of values */
   ipp_attribute_t       *attr;          /* Printer attribute */
   const char            *type = NULL;   /* Raster type (colorspace + bits) */
-  pwg_media_t           *media = NULL;  /* Media size */
+  pwg_media_t           *pwg = NULL;	/* Media size */
+  cups_size_t		media;		/* Media information */
   int                   xdpi = 0,       /* Horizontal resolution */
                         ydpi = 0;       /* Vertical resolution */
   int                   fd;             /* Temporary file */
@@ -402,11 +403,11 @@ make_raster_file(ipp_t      *response,  /* I - Printer attributes */
     */
 
     if (ippContainsString(attr, "na_letter_8.5x11in"))
-      media = pwgMediaForPWG("na_letter_8.5x11in");
+      pwg = pwgMediaForPWG("na_letter_8.5x11in");
     else if (ippContainsString(attr, "iso_a4_210x297mm"))
-      media = pwgMediaForPWG("iso_a4_210x297mm");
+      pwg = pwgMediaForPWG("iso_a4_210x297mm");
     else
-      media = pwgMediaForPWG(ippGetString(attr, 0, NULL));
+      pwg = pwgMediaForPWG(ippGetString(attr, 0, NULL));
   }
   else if ((attr = ippFindAttribute(response, "media-default", IPP_TAG_KEYWORD)) != NULL)
   {
@@ -414,7 +415,7 @@ make_raster_file(ipp_t      *response,  /* I - Printer attributes */
     * Use default media...
     */
 
-    media = pwgMediaForPWG(ippGetString(attr, 0, NULL));
+    pwg = pwgMediaForPWG(ippGetString(attr, 0, NULL));
   }
   else
   {
@@ -477,7 +478,12 @@ make_raster_file(ipp_t      *response,  /* I - Printer attributes */
   * Make the raster context and details...
   */
 
-  if (!cupsRasterInitPWGHeader(&header, media, type, xdpi, ydpi, "one-sided", NULL))
+  memset(&media, 0, sizeof(media));
+  cupsCopyString(media.media, pwg->pwg, sizeof(media.media));
+  media.width  = pwg->width;
+  media.length = pwg->length;
+
+  if (!cupsRasterInitHeader(&header, &media, /*optimize*/NULL, IPP_QUALITY_NORMAL, /*intent*/NULL, IPP_ORIENT_PORTRAIT, "one-sided", type, xdpi, ydpi, NULL))
   {
     printf("Unable to initialize raster context: %s\n", cupsRasterErrorString());
     return (NULL);

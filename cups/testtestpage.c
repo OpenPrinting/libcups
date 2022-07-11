@@ -53,8 +53,10 @@ main(int  argc,				// I - Number of command-line arguments
 					// Output orientation
   int			fd;		// File descriptor
   cups_raster_t		*ras;		// Raster stream
-  cups_page_header_t	header;		// Page header
-  pwg_media_t		*media;		// Media information
+  cups_page_header_t	header;		// Page header (front side)
+  cups_page_header_t	back_header;	// Page header (back side)
+  pwg_media_t		*pwg;		// Media size
+  cups_size_t		media;		// Media information
   static const char * const sheet_backs[4] =
   {					// Back side values
     "normal",
@@ -247,7 +249,7 @@ main(int  argc,				// I - Number of command-line arguments
         return (1);
       }
 
-      if ((media = pwgMediaForPWG(media_name)) == NULL)
+      if ((pwg = pwgMediaForPWG(media_name)) == NULL)
       {
         fprintf(stderr, "testtestpage: Unable to lookup media '%s'.\n", media_name);
         return (1);
@@ -271,8 +273,14 @@ main(int  argc,				// I - Number of command-line arguments
 	return (1);
       }
 
-      cupsRasterInitPWGHeader(&header, media, type, xres, yres, sides, sheet_back);
-      cupsRasterWriteTest(ras, &header, sheet_back, orientation, num_copies, num_pages);
+      memset(&media, 0, sizeof(media));
+      cupsCopyString(media.media, pwg->pwg, sizeof(media.media));
+      media.width  = pwg->width;
+      media.length = pwg->length;
+
+      cupsRasterInitHeader(&header, &media, /*optimize*/NULL, IPP_QUALITY_NORMAL, /*intent*/NULL, orientation, sides, type, xres, yres, NULL);
+      cupsRasterInitHeader(&back_header, &media, /*optimize*/NULL, IPP_QUALITY_NORMAL, /*intent*/NULL, orientation, sides, type, xres, yres, sheet_back);
+      cupsRasterWriteTest(ras, &header, &back_header, sheet_back, orientation, num_copies, num_pages);
       cupsRasterClose(ras);
     }
   }
@@ -296,12 +304,17 @@ main(int  argc,				// I - Number of command-line arguments
     }
     testEnd(true);
 
-    media = pwgMediaForPWG("na_letter_8.5x11in");
+    pwg = pwgMediaForPWG("na_letter_8.5x11in");
+
+    memset(&media, 0, sizeof(media));
+    cupsCopyString(media.media, pwg->pwg, sizeof(media.media));
+    media.width  = pwg->width;
+    media.length = pwg->length;
 
     for (orientation = IPP_ORIENT_PORTRAIT; orientation <= IPP_ORIENT_REVERSE_PORTRAIT; orientation ++)
     {
-      testBegin("cupsRasterInitPWGHeader(black_1)");
-      if (cupsRasterInitPWGHeader(&header, media, "black_1", 300, 300, "one-sided", "normal"))
+      testBegin("cupsRasterInitHeader(black_1)");
+      if (cupsRasterInitHeader(&header, &media, /*optimize*/NULL, IPP_QUALITY_NORMAL, /*intent*/NULL, IPP_ORIENT_PORTRAIT, "one-sided", "black_1", 300, 300, "normal"))
       {
         testEnd(true);
       }
@@ -314,7 +327,7 @@ main(int  argc,				// I - Number of command-line arguments
       if (orientation == IPP_ORIENT_PORTRAIT)
       {
         testBegin("cupsRasterWriteTest(2,3)");
-	if (cupsRasterWriteTest(ras, &header, "normal", orientation, 2, 3))
+	if (cupsRasterWriteTest(ras, &header, &header, "normal", orientation, 2, 3))
 	{
 	  testEnd(true);
 	}
@@ -327,7 +340,7 @@ main(int  argc,				// I - Number of command-line arguments
       else
       {
         testBegin("cupsRasterWriteTest(1,1)");
-	if (cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1))
+	if (cupsRasterWriteTest(ras, &header, &header, "normal", orientation, 1, 1))
 	{
 	  testEnd(true);
 	}
@@ -338,8 +351,8 @@ main(int  argc,				// I - Number of command-line arguments
 	}
       }
 
-      testBegin("cupsRasterInitPWGHeader(black_8)");
-      if (cupsRasterInitPWGHeader(&header, media, "black_8", 300, 300, "one-sided", "normal"))
+      testBegin("cupsRasterInitHeader(black_8)");
+      if (cupsRasterInitHeader(&header, &media, /*optimize*/NULL, IPP_QUALITY_NORMAL, /*intent*/NULL, IPP_ORIENT_PORTRAIT, "one-sided", "black_8", 300, 300, "normal"))
       {
         testEnd(true);
       }
@@ -350,7 +363,7 @@ main(int  argc,				// I - Number of command-line arguments
       }
 
       testBegin("cupsRasterWriteTest(1,1)");
-      if (cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1))
+      if (cupsRasterWriteTest(ras, &header, &header, "normal", orientation, 1, 1))
       {
 	testEnd(true);
       }
@@ -360,8 +373,8 @@ main(int  argc,				// I - Number of command-line arguments
 	ret = 1;
       }
 
-      testBegin("cupsRasterInitPWGHeader(black_16)");
-      if (cupsRasterInitPWGHeader(&header, media, "black_16", 300, 300, "one-sided", "normal"))
+      testBegin("cupsRasterInitHeader(black_16)");
+      if (cupsRasterInitHeader(&header, &media, /*optimize*/NULL, IPP_QUALITY_NORMAL, /*intent*/NULL, IPP_ORIENT_PORTRAIT, "one-sided", "black_16", 300, 300, "normal"))
       {
         testEnd(true);
       }
@@ -372,7 +385,7 @@ main(int  argc,				// I - Number of command-line arguments
       }
 
       testBegin("cupsRasterWriteTest(1,1)");
-      if (cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1))
+      if (cupsRasterWriteTest(ras, &header, &header, "normal", orientation, 1, 1))
       {
 	testEnd(true);
       }
@@ -382,8 +395,8 @@ main(int  argc,				// I - Number of command-line arguments
 	ret = 1;
       }
 
-      testBegin("cupsRasterInitPWGHeader(srgb_8)");
-      if (cupsRasterInitPWGHeader(&header, media, "srgb_8", 300, 300, "one-sided", "normal"))
+      testBegin("cupsRasterInitHeader(srgb_8)");
+      if (cupsRasterInitHeader(&header, &media, /*optimize*/NULL, IPP_QUALITY_NORMAL, /*intent*/NULL, IPP_ORIENT_PORTRAIT, "one-sided", "srgb_8", 300, 300, "normal"))
       {
         testEnd(true);
       }
@@ -394,7 +407,7 @@ main(int  argc,				// I - Number of command-line arguments
       }
 
       testBegin("cupsRasterWriteTest(1,1)");
-      if (cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1))
+      if (cupsRasterWriteTest(ras, &header, &header, "normal", orientation, 1, 1))
       {
 	testEnd(true);
       }
@@ -404,8 +417,8 @@ main(int  argc,				// I - Number of command-line arguments
 	ret = 1;
       }
 
-      testBegin("cupsRasterInitPWGHeader(srgb_16)");
-      if (cupsRasterInitPWGHeader(&header, media, "srgb_16", 300, 300, "one-sided", "normal"))
+      testBegin("cupsRasterInitHeader(srgb_16)");
+      if (cupsRasterInitHeader(&header, &media, /*optimize*/NULL, IPP_QUALITY_NORMAL, /*intent*/NULL, IPP_ORIENT_PORTRAIT, "one-sided", "srgb_16", 300, 300, "normal"))
       {
         testEnd(true);
       }
@@ -416,7 +429,7 @@ main(int  argc,				// I - Number of command-line arguments
       }
 
       testBegin("cupsRasterWriteTest(1,1)");
-      if (cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1))
+      if (cupsRasterWriteTest(ras, &header, &header, "normal", orientation, 1, 1))
       {
 	testEnd(true);
       }
@@ -426,8 +439,8 @@ main(int  argc,				// I - Number of command-line arguments
 	ret = 1;
       }
 
-      testBegin("cupsRasterInitPWGHeader(sgray_1)");
-      if (cupsRasterInitPWGHeader(&header, media, "sgray_1", 300, 300, "one-sided", "normal"))
+      testBegin("cupsRasterInitHeader(sgray_1)");
+      if (cupsRasterInitHeader(&header, &media, /*optimize*/NULL, IPP_QUALITY_NORMAL, /*intent*/NULL, IPP_ORIENT_PORTRAIT, "one-sided", "sgray_1", 300, 300, "normal"))
       {
         testEnd(true);
       }
@@ -438,7 +451,7 @@ main(int  argc,				// I - Number of command-line arguments
       }
 
       testBegin("cupsRasterWriteTest(1,1)");
-      if (cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1))
+      if (cupsRasterWriteTest(ras, &header, &header, "normal", orientation, 1, 1))
       {
 	testEnd(true);
       }
@@ -448,8 +461,8 @@ main(int  argc,				// I - Number of command-line arguments
 	ret = 1;
       }
 
-      testBegin("cupsRasterInitPWGHeader(sgray_8)");
-      if (cupsRasterInitPWGHeader(&header, media, "sgray_8", 300, 300, "one-sided", "normal"))
+      testBegin("cupsRasterInitHeader(sgray_8)");
+      if (cupsRasterInitHeader(&header, &media, /*optimize*/NULL, IPP_QUALITY_NORMAL, /*intent*/NULL, IPP_ORIENT_PORTRAIT, "one-sided", "sgray_8", 300, 300, "normal"))
       {
         testEnd(true);
       }
@@ -460,7 +473,7 @@ main(int  argc,				// I - Number of command-line arguments
       }
 
       testBegin("cupsRasterWriteTest(1,1)");
-      if (cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1))
+      if (cupsRasterWriteTest(ras, &header, &header, "normal", orientation, 1, 1))
       {
 	testEnd(true);
       }
@@ -470,8 +483,8 @@ main(int  argc,				// I - Number of command-line arguments
 	ret = 1;
       }
 
-      testBegin("cupsRasterInitPWGHeader(cmyk_8)");
-      if (cupsRasterInitPWGHeader(&header, media, "cmyk_8", 300, 300, "one-sided", "normal"))
+      testBegin("cupsRasterInitHeader(cmyk_8)");
+      if (cupsRasterInitHeader(&header, &media, /*optimize*/NULL, IPP_QUALITY_NORMAL, /*intent*/NULL, IPP_ORIENT_PORTRAIT, "one-sided", "cmyk_8", 300, 300, "normal"))
       {
         testEnd(true);
       }
@@ -482,7 +495,7 @@ main(int  argc,				// I - Number of command-line arguments
       }
 
       testBegin("cupsRasterWriteTest(1,1)");
-      if (cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1))
+      if (cupsRasterWriteTest(ras, &header, &header, "normal", orientation, 1, 1))
       {
 	testEnd(true);
       }
@@ -492,8 +505,8 @@ main(int  argc,				// I - Number of command-line arguments
 	ret = 1;
       }
 
-      testBegin("cupsRasterInitPWGHeader(cmyk_16)");
-      if (cupsRasterInitPWGHeader(&header, media, "cmyk_16", 300, 300, "one-sided", "normal"))
+      testBegin("cupsRasterInitHeader(cmyk_16)");
+      if (cupsRasterInitHeader(&header, &media, /*optimize*/NULL, IPP_QUALITY_NORMAL, /*intent*/NULL, IPP_ORIENT_PORTRAIT, "one-sided", "cmyk_16", 300, 300, "normal"))
       {
         testEnd(true);
       }
@@ -504,7 +517,7 @@ main(int  argc,				// I - Number of command-line arguments
       }
 
       testBegin("cupsRasterWriteTest(1,1)");
-      if (cupsRasterWriteTest(ras, &header, "normal", orientation, 1, 1))
+      if (cupsRasterWriteTest(ras, &header, &header, "normal", orientation, 1, 1))
       {
 	testEnd(true);
       }
@@ -519,8 +532,8 @@ main(int  argc,				// I - Number of command-line arguments
     {
       for (orientation = IPP_ORIENT_PORTRAIT; orientation <= IPP_ORIENT_REVERSE_PORTRAIT; orientation ++)
       {
-        testBegin("cupsRasterInitPWGHeader(black_1, %d, %s)", (int)orientation, sheet_backs[i]);
-	if (cupsRasterInitPWGHeader(&header, media, "black_1", 300, 300, "two-sided-long-edge", "normal"))
+        testBegin("cupsRasterInitHeader(black_1, %d, %s)", (int)orientation, sheet_backs[i]);
+	if (cupsRasterInitHeader(&header, &media, /*optimize*/NULL, IPP_QUALITY_NORMAL, /*intent*/NULL, orientation, "two-sided-long-edge", "black_1", 300, 300, sheet_backs[i]))
 	{
 	  testEnd(true);
 	}
@@ -531,7 +544,7 @@ main(int  argc,				// I - Number of command-line arguments
 	}
 
 	testBegin("cupsRasterWriteTest(1,2)");
-	if (cupsRasterWriteTest(ras, &header, sheet_backs[i], orientation, 1, 2))
+	if (cupsRasterWriteTest(ras, &header, &back_header, sheet_backs[i], orientation, 1, 2))
 	{
 	  testEnd(true);
 	}
@@ -541,30 +554,8 @@ main(int  argc,				// I - Number of command-line arguments
 	  ret = 1;
 	}
 
-	testBegin("cupsRasterInitPWGHeader(black_1, %d, %s)", (int)orientation, sheet_backs[i]);
-	if (cupsRasterInitPWGHeader(&header, media, "black_8", 300, 300, "two-sided-long-edge", sheet_backs[i]))
-	{
-	  testEnd(true);
-	}
-	else
-	{
-	  testEndMessage(false, "%s", cupsRasterErrorString());
-	  ret = 1;
-	}
-
-	testBegin("cupsRasterWriteTest(1,2)");
-	if (cupsRasterWriteTest(ras, &header, sheet_backs[i], orientation, 1, 2))
-	{
-	  testEnd(true);
-	}
-	else
-	{
-	  testEndMessage(false, "%s", cupsRasterErrorString());
-	  ret = 1;
-	}
-
-	testBegin("cupsRasterInitPWGHeader(black_1, %d, %s)", (int)orientation, sheet_backs[i]);
-	if (cupsRasterInitPWGHeader(&header, media, "srgb_8", 300, 300, "two-sided-long-edge", sheet_backs[i]))
+	testBegin("cupsRasterInitHeader(black_8, %d, %s)", (int)orientation, sheet_backs[i]);
+	if (cupsRasterInitHeader(&header, &media, /*optimize*/NULL, IPP_QUALITY_NORMAL, /*intent*/NULL, orientation, "two-sided-long-edge", "black_8", 300, 300, sheet_backs[i]))
 	{
 	  testEnd(true);
 	}
@@ -575,7 +566,7 @@ main(int  argc,				// I - Number of command-line arguments
 	}
 
 	testBegin("cupsRasterWriteTest(1,2)");
-	if (cupsRasterWriteTest(ras, &header, sheet_backs[i], orientation, 1, 2))
+	if (cupsRasterWriteTest(ras, &header, &back_header, sheet_backs[i], orientation, 1, 2))
 	{
 	  testEnd(true);
 	}
@@ -585,8 +576,8 @@ main(int  argc,				// I - Number of command-line arguments
 	  ret = 1;
 	}
 
-	testBegin("cupsRasterInitPWGHeader(black_1, %d, %s)", (int)orientation, sheet_backs[i]);
-	if (cupsRasterInitPWGHeader(&header, media, "cmyk_8", 300, 300, "two-sided-long-edge", sheet_backs[i]))
+	testBegin("cupsRasterInitHeader(srgb_8, %d, %s)", (int)orientation, sheet_backs[i]);
+	if (cupsRasterInitHeader(&header, &media, /*optimize*/NULL, IPP_QUALITY_NORMAL, /*intent*/NULL, orientation, "two-sided-long-edge", "srgb_8", 300, 300, sheet_backs[i]))
 	{
 	  testEnd(true);
 	}
@@ -597,7 +588,29 @@ main(int  argc,				// I - Number of command-line arguments
 	}
 
 	testBegin("cupsRasterWriteTest(1,2)");
-	if (cupsRasterWriteTest(ras, &header, sheet_backs[i], orientation, 1, 2))
+	if (cupsRasterWriteTest(ras, &header, &back_header, sheet_backs[i], orientation, 1, 2))
+	{
+	  testEnd(true);
+	}
+	else
+	{
+	  testEndMessage(false, "%s", cupsRasterErrorString());
+	  ret = 1;
+	}
+
+	testBegin("cupsRasterInitHeader(cmyk_8, %d, %s)", (int)orientation, sheet_backs[i]);
+	if (cupsRasterInitHeader(&header, &media, /*optimize*/NULL, IPP_QUALITY_NORMAL, /*intent*/NULL, orientation, "two-sided-long-edge", "cmyk_8", 300, 300, sheet_backs[i]))
+	{
+	  testEnd(true);
+	}
+	else
+	{
+	  testEndMessage(false, "%s", cupsRasterErrorString());
+	  ret = 1;
+	}
+
+	testBegin("cupsRasterWriteTest(1,2)");
+	if (cupsRasterWriteTest(ras, &header, &back_header, sheet_backs[i], orientation, 1, 2))
 	{
 	  testEnd(true);
 	}
