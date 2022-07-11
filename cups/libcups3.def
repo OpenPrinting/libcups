@@ -206,7 +206,7 @@ cupsRWLockWrite
 cupsRWUnlock
 cupsRasterClose
 cupsRasterErrorString
-cupsRasterInitPWGHeader
+cupsRasterInitHeader
 cupsRasterOpen
 cupsRasterOpenIO
 cupsRasterReadHeader
