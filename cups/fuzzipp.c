@@ -252,20 +252,20 @@ fuzz_data(_ippdata_t *data)		// I - Data buffer
   for (i = 0; i < 32; i ++)
   {
     // Each cycle replace or swap bytes
-    switch ((len = CUPS_RAND() & 7))
+    switch ((len = cupsGetRand() & 7))
     {
       case 0 :
           if (data->wused < data->wsize)
           {
             // Insert bytes
-	    len  = (CUPS_RAND() & 7) + 1;
+	    len  = (cupsGetRand() & 7) + 1;
 	    if (len > (size_t)(data->wsize - data->wused))
 	      len = (size_t)(data->wsize - data->wused);
 
-	    pos = CUPS_RAND() % (data->wused - len);
+	    pos = cupsGetRand() % (data->wused - len);
 	    memmove(data->wbuffer + pos + len, data->wbuffer + pos, data->wused - pos);
 	    for (i = 0; i < len; i ++)
-	      data->wbuffer[pos + i] = (ipp_uchar_t)CUPS_RAND();
+	      data->wbuffer[pos + i] = (ipp_uchar_t)cupsGetRand();
 	    break;
 	  }
 
@@ -277,19 +277,19 @@ fuzz_data(_ippdata_t *data)		// I - Data buffer
       case 6 :
           // Replace bytes
           len ++;
-          pos = CUPS_RAND() % (data->wused - len);
+          pos = cupsGetRand() % (data->wused - len);
           while (len > 0)
           {
-            data->wbuffer[pos ++] = (ipp_uchar_t)CUPS_RAND();
+            data->wbuffer[pos ++] = (ipp_uchar_t)cupsGetRand();
             len --;
           }
           break;
 
       case 7 :
           // Swap bytes
-          len  = (size_t)(CUPS_RAND() & 7) + 1;
-          pos  = (size_t)(CUPS_RAND() % (data->wused - len));
-          pos2 = (size_t)(CUPS_RAND() % (data->wused - len));
+          len  = (size_t)(cupsGetRand() & 7) + 1;
+          pos  = (size_t)(cupsGetRand() % (data->wused - len));
+          pos2 = (size_t)(cupsGetRand() % (data->wused - len));
           memmove(temp, data->wbuffer + pos, len);
           memmove(data->wbuffer + pos, data->wbuffer + pos2, len);
           memmove(data->wbuffer + pos2, temp, len);

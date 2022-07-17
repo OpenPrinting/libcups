@@ -6264,7 +6264,7 @@ process_job(ippeve_job_t *job)		/* I - Job */
     * Sleep for a random amount of time to simulate job processing.
     */
 
-    sleep((unsigned)(5 + (CUPS_RAND() % 11)));
+    sleep((unsigned)(5 + (cupsGetRand() % 11)));
   }
 
   if (job->cancel)

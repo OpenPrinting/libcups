@@ -425,7 +425,7 @@ httpAssembleUUID(const char *server,	// I - Server name
   //
   // Start with the MD5 sum of the server, port, object name and
   // number, and some random data on the end.
-  snprintf(data, sizeof(data), "%s:%d:%s:%d:%04x:%04x", server, port, name ? name : server, number, (unsigned)CUPS_RAND() & 0xffff, (unsigned)CUPS_RAND() & 0xffff);
+  snprintf(data, sizeof(data), "%s:%d:%s:%d:%04x:%04x", server, port, name ? name : server, number, (unsigned)cupsGetRand() & 0xffff, (unsigned)cupsGetRand() & 0xffff);
 
   cupsHashData("md5", (unsigned char *)data, strlen(data), md5sum, sizeof(md5sum));
 
@@ -1017,7 +1017,7 @@ _httpSetDigestAuthString(
     const char	*hashalg;		// Hashing algorithm
 
     for (i = 0; i < 64; i ++)
-      cnonce[i] = "0123456789ABCDEF"[CUPS_RAND() & 15];
+      cnonce[i] = "0123456789ABCDEF"[cupsGetRand() & 15];
     cnonce[64] = '\0';
 
     if (!_cups_strcasecmp(http->algorithm, "MD5"))

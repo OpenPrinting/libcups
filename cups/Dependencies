@@ -410,10 +410,7 @@ ipp.o: ipp.c cups-private.h string-private.h ../config.h base.h array.h \
   \
   language-private.h transcode.h pwg-private.h thread.h debug-internal.h \
   debug-private.h
-ipp-file.o: ipp-file.c ipp-private.h cups.h file.h base.h ipp.h http.h \
-  array.h language.h pwg.h string-private.h ../config.h debug-internal.h \
-  debug-private.h
-ipp-vars.o: ipp-vars.c cups-private.h string-private.h ../config.h base.h \
+ipp-file.o: ipp-file.c cups-private.h string-private.h ../config.h base.h \
   array.h ipp-private.h cups.h file.h ipp.h http.h language.h pwg.h \
   http-private.h ../cups/language.h \
   \
@@ -592,6 +589,7 @@ pwg-media.o: pwg-media.c cups-private.h string-private.h ../config.h \
   \
   language-private.h transcode.h pwg-private.h thread.h debug-internal.h \
   debug-private.h
+rand.o: rand.c cups.h file.h base.h ipp.h http.h array.h language.h pwg.h
 raster-error.o: raster-error.c cups-private.h string-private.h \
   ../config.h base.h array.h ipp-private.h cups.h file.h ipp.h http.h \
   language.h pwg.h http-private.h ../cups/language.h \
@@ -861,7 +859,8 @@ testcreds.o: testcreds.c cups-private.h string-private.h ../config.h \
 testdest.o: testdest.c cups.h file.h base.h ipp.h http.h array.h \
   language.h pwg.h
 testfile.o: testfile.c string-private.h ../config.h base.h \
-  debug-private.h file.h dir.h test-internal.h
+  debug-private.h cups.h file.h ipp.h http.h array.h language.h pwg.h \
+  dir.h test-internal.h
 testgetdests.o: testgetdests.c cups.h file.h base.h ipp.h http.h array.h \
   language.h pwg.h
 testhttp.o: testhttp.c cups-private.h string-private.h ../config.h base.h \

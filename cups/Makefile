@@ -41,6 +41,7 @@ LIBOBJS		= \
 		notify.o \
 		options.o \
 		pwg-media.o \
+		rand.o \
 		raster-error.o \
 		raster-stream.o \
 		request.o \

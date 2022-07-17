@@ -198,29 +198,6 @@
 
 
 /*
- * Which random number generator function to use...
- */
-
-#define HAVE_ARC4RANDOM 1
-/* #undef HAVE_RANDOM */
-/* #undef HAVE_LRAND48 */
-
-#ifdef HAVE_ARC4RANDOM
-#  define CUPS_RAND() arc4random()
-#  define CUPS_SRAND(v)
-#elif defined(HAVE_RANDOM)
-#  define CUPS_RAND() random()
-#  define CUPS_SRAND(v) srandom(v)
-#elif defined(HAVE_LRAND48)
-#  define CUPS_RAND() lrand48()
-#  define CUPS_SRAND(v) srand48(v)
-#else
-#  define CUPS_RAND() rand()
-#  define CUPS_SRAND(v) srand(v)
-#endif /* HAVE_ARC4RANDOM */
-
-
-/*
  * Do we have <iconv.h>?
  */
 

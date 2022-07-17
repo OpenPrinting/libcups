@@ -264,26 +264,24 @@ write_test(int                fd,	// I - File descriptor to write to
   * text with some whitespace.
   */
 
-  CUPS_SRAND(time(NULL));
-
   memset(data, 0, sizeof(data));
 
   for (y = 0; y < 28; y ++)
   {
-    for (x = CUPS_RAND() & 127, count = (CUPS_RAND() & 15) + 1;
+    for (x = cupsGetRand() & 127, count = (cupsGetRand() & 15) + 1;
          x < sizeof(data[0]);
          x ++, count --)
     {
       if (count <= 0)
       {
-	x     += (CUPS_RAND() & 15) + 1;
-	count = (CUPS_RAND() & 15) + 1;
+	x     += (cupsGetRand() & 15) + 1;
+	count = (cupsGetRand() & 15) + 1;
 
         if (x >= sizeof(data[0]))
 	  break;
       }
 
-      data[y][x] = (unsigned char)CUPS_RAND();
+      data[y][x] = (unsigned char)cupsGetRand();
     }
   }
 

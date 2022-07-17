@@ -320,6 +320,7 @@ extern size_t		cupsGetJobs(http_t *http, cups_job_t **jobs, const char *name, bo
 extern cups_dest_t	*cupsGetNamedDest(http_t *http, const char *name, const char *instance) _CUPS_PUBLIC;
 extern const char	*cupsGetOption(const char *name, size_t num_options, cups_option_t *options) _CUPS_PUBLIC;
 extern const char	*cupsGetPassword(const char *prompt, http_t *http, const char *method, const char *resource) _CUPS_PUBLIC;
+extern unsigned		cupsGetRand(void) _CUPS_PUBLIC;
 extern ipp_t		*cupsGetResponse(http_t *http, const char *resource) _CUPS_PUBLIC;
 extern const char	*cupsGetServer(void) _CUPS_PUBLIC;
 extern const char	*cupsGetUser(void) _CUPS_PUBLIC;

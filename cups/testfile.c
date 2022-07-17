@@ -15,6 +15,7 @@
 
 #include "string-private.h"
 #include "debug-private.h"
+#include "cups.h"
 #include "file.h"
 #include "dir.h"
 #include "test-internal.h"
@@ -471,9 +472,9 @@ random_tests(void)
 
     testBegin("cupsFileSeek(), cupsFileRead()");
 
-    for (num_records = (pass + 1) * 256, count = (pass + 1) * 256, record = ((int)CUPS_RAND() & 65535) % num_records;
+    for (num_records = (pass + 1) * 256, count = (pass + 1) * 256, record = ((int)cupsGetRand() & 65535) % num_records;
          count > 0;
-	 count --, record = (record + ((int)CUPS_RAND() & 31) - 16 + num_records) % num_records)
+	 count --, record = (record + ((int)cupsGetRand() & 31) - 16 + num_records) % num_records)
     {
      /*
       * The last record is always the first...
@@ -567,10 +568,8 @@ read_write_tests(bool compression)	/* I - Use compression? */
   * Initialize the write buffer with random data...
   */
 
-  CUPS_SRAND((unsigned)time(NULL));
-
   for (i = 0; i < (int)sizeof(writebuf); i ++)
-    writebuf[i] = (unsigned char)CUPS_RAND();
+    writebuf[i] = (unsigned char)cupsGetRand();
 
  /*
   * cupsFileOpen(write)

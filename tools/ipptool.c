@@ -804,7 +804,7 @@ alloc_data(void)
   data->errors       = cupsArrayNew(NULL, NULL, NULL, 0, (cups_acopy_cb_t)strdup, (cups_afree_cb_t)free);
   data->pass         = true;
   data->prev_pass    = true;
-  data->request_id   = (CUPS_RAND() % 1000) * 137;
+  data->request_id   = (cupsGetRand() % 1000) * 137;
   data->show_header  = true;
 
   ippFileSetVar(data->parent, "date-start", iso_date(ippTimeToDate(time(NULL))));
@@ -5237,7 +5237,7 @@ token_cb(ipp_file_t     *f,		/* I - IPP file data */
 	}
 	else if (!_cups_strcasecmp(temp, "random"))
 	{
-	  data->request_id = (CUPS_RAND() % 1000) * 137;
+	  data->request_id = (cupsGetRand() % 1000) * 137;
 	}
 	else
 	{

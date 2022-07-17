@@ -173,6 +173,7 @@ cupsGetJobs
 cupsGetNamedDest
 cupsGetOption
 cupsGetPassword
+cupsGetRand
 cupsGetResponse
 cupsGetServer
 cupsGetUser

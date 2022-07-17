@@ -381,13 +381,6 @@ AS_IF([test $have_tls = 0], [
 ])
 
 
-dnl Random number support...
-AC_CHECK_HEADER([sys/random.h], [
-    AC_DEFINE([HAVE_SYS_RANDOM_H], 1, [Have <sys/random.h> header?])
-])
-AC_CHECK_FUNCS([arc4random getrandom gnutls_rnd])
-
-
 dnl Library targets...
 AC_ARG_ENABLE([static], AS_HELP_STRING([--disable-static], [do not install static library]))
 AC_ARG_ENABLE([shared], AS_HELP_STRING([--disable-shared], [do not install shared library]))
