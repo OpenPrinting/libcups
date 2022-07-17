@@ -1274,6 +1274,7 @@ ippFileWriteComment(ipp_file_t *file,	// I - IPP data file
   {
     if (!expand_buffer(file, (size_t)bufsize + 1))
     {
+      va_end(ap2);
       va_end(ap);
       return (false);
     }
@@ -1281,6 +1282,7 @@ ippFileWriteComment(ipp_file_t *file,	// I - IPP data file
     vsnprintf(file->buffer, file->alloc_buffer, comment, ap);
   }
 
+  va_end(ap2);
   va_end(ap);
 
   // Make sure we start on a new line...
@@ -1435,6 +1437,7 @@ ippFileWriteTokenf(ipp_file_t *file,	// I - IPP data file
   {
     if (!expand_buffer(file, (size_t)bufsize + 1))
     {
+      va_end(ap2);
       va_end(ap);
       return (false);
     }
@@ -1442,6 +1445,7 @@ ippFileWriteTokenf(ipp_file_t *file,	// I - IPP data file
     vsnprintf(file->buffer, file->alloc_buffer, token, ap);
   }
 
+  va_end(ap2);
   va_end(ap);
 
   return (ippFileWriteToken(file, file->buffer));
