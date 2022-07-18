@@ -195,6 +195,9 @@
 		2778BBD3275DA09B0070DA11 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5C1926750C000F61D3 /* libz.dylib */; };
 		2778BBDB275DA0D80070DA11 /* fuzzipp.c in Sources */ = {isa = PBXBuildFile; fileRef = 2778BBDA275DA0D80070DA11 /* fuzzipp.c */; };
 		278C58E3136B647200836530 /* testhttp.c in Sources */ = {isa = PBXBuildFile; fileRef = 278C58E2136B647200836530 /* testhttp.c */; };
+		278CA9052884D9B100367E41 /* rand.c in Sources */ = {isa = PBXBuildFile; fileRef = 278CA9042884D9B100367E41 /* rand.c */; };
+		278CA9062884D9B100367E41 /* rand.c in Sources */ = {isa = PBXBuildFile; fileRef = 278CA9042884D9B100367E41 /* rand.c */; };
+		278CA9072884D9B100367E41 /* rand.c in Sources */ = {isa = PBXBuildFile; fileRef = 278CA9042884D9B100367E41 /* rand.c */; };
 		279AE6F52395B80F004DD600 /* libpam.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 279AE6F42395B80F004DD600 /* libpam.tbd */; };
 		27CAFC61282C895700FE02FC /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC5F282C895700FE02FC /* libssl.a */; };
 		27CAFC62282C895700FE02FC /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC60282C895700FE02FC /* libcrypto.a */; };
@@ -953,6 +956,7 @@
 		278C58E6136B64B000836530 /* Kerberos.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Kerberos.framework; path = /System/Library/Frameworks/Kerberos.framework; sourceTree = "<absolute>"; };
 		278C58E7136B64B000836530 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = /System/Library/Frameworks/Security.framework; sourceTree = "<absolute>"; };
 		278C58E8136B64B000836530 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = /System/Library/Frameworks/SystemConfiguration.framework; sourceTree = "<absolute>"; };
+		278CA9042884D9B100367E41 /* rand.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = rand.c; path = ../cups/rand.c; sourceTree = "<group>"; };
 		279AE6F42395B80F004DD600 /* libpam.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libpam.tbd; path = usr/lib/libpam.tbd; sourceTree = SDKROOT; };
 		27CAFC5F282C895700FE02FC /* libssl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libssl.a; path = ../../../../../usr/local/lib/libssl.a; sourceTree = "<group>"; };
 		27CAFC60282C895700FE02FC /* libcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcrypto.a; path = ../../../../../usr/local/lib/libcrypto.a; sourceTree = "<group>"; };
@@ -1492,6 +1496,7 @@
 		72220EB41333050100FCA411 /* libcups */ = {
 			isa = PBXGroup;
 			children = (
+				278CA9042884D9B100367E41 /* rand.c */,
 				72220EB91333056300FCA411 /* array.h */,
 				72220EB81333056300FCA411 /* array.c */,
 				72220EBB1333056300FCA411 /* auth.c */,
@@ -2256,6 +2261,7 @@
 				270696271CADF3E200FFE5FB /* pwg-media.c in Sources */,
 				270696281CADF3E200FFE5FB /* dest-localization.c in Sources */,
 				270696291CADF3E200FFE5FB /* request.c in Sources */,
+				278CA9062884D9B100367E41 /* rand.c in Sources */,
 				2706962D1CADF3E200FFE5FB /* string.c in Sources */,
 				7253C455216E980000494ADD /* raster-error.c in Sources */,
 				2706965B1CAE1A9A00FFE5FB /* util.c in Sources */,
@@ -2331,6 +2337,7 @@
 				274FF69C1333B1C400317ECB /* globals.c in Sources */,
 				274FF69D1333B1C400317ECB /* http-addr.c in Sources */,
 				274FF69E1333B1C400317ECB /* http-addrlist.c in Sources */,
+				278CA9072884D9B100367E41 /* rand.c in Sources */,
 				274FF69F1333B1C400317ECB /* http-support.c in Sources */,
 				274FF6A01333B1C400317ECB /* http.c in Sources */,
 				2767FC7419268F0C000F61D3 /* dest-options.c in Sources */,
@@ -2414,6 +2421,7 @@
 				72220F16133305BB00FCA411 /* getputfile.c in Sources */,
 				72220F17133305BB00FCA411 /* globals.c in Sources */,
 				72220F18133305BB00FCA411 /* http-addr.c in Sources */,
+				278CA9052884D9B100367E41 /* rand.c in Sources */,
 				72220F19133305BB00FCA411 /* http-addrlist.c in Sources */,
 				72220F1B133305BB00FCA411 /* http-support.c in Sources */,
 				72220F1C133305BB00FCA411 /* http.c in Sources */,

@@ -8,6 +8,11 @@
 //
 
 #include "cups.h"
+#if !defined(_WIN32) && !defined(__APPLE__)
+#  include <unistd.h>
+#  include <fcntl.h>
+#  include <pthread.h>
+#endif // !_WIN32 && !__APPLE__
 
 
 //
