@@ -4903,8 +4903,14 @@ then :
   withval=$with_dnssd;
 fi
 
+DNSSD=0
 
-if test "x$with_dnssd" != xmdnsresponder -a "x$with_dnssd" != xno -a "x$PKGCONFIG" != x -a x$host_os_name != xdarwin
+if test "x$with_dnssd" = xno
+then :
+
+    as_fn_error $? "Missing required Avahi/mDNSResponder DNS-SD library." "$LINENO" 5
+
+elif test "x$with_dnssd" != xmdnsresponder -a "x$PKGCONFIG" != x -a x$host_os_name != xdarwin
 then :
 
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for Avahi" >&5
@@ -4918,6 +4924,7 @@ printf "%s\n" "yes" >&6; }
 	LIBS="$LIBS $($PKGCONFIG --libs avahi-client)"
 	PKGCONFIG_LIBS_PRIVATE="$($PKGCONFIG --libs avahi-client) $PKGCONFIG_LIBS_PRIVATE"
 	PKGCONFIG_REQUIRES_PRIVATE="avahi-client, $PKGCONFIG_REQUIRES_PRIVATE"
+	DNSSD=1
 
 printf "%s\n" "#define HAVE_DNSSD 1" >>confdefs.h
 
@@ -4931,7 +4938,9 @@ else $as_nop
 printf "%s\n" "no" >&6; }
 	if test x$with_dnssd = xavahi
 then :
-  as_fn_error $? "libavahi-client-dev needed for --with-dnssd=avahi." "$LINENO" 5
+
+	    as_fn_error $? "libavahi-client-dev needed for --with-dnssd=avahi." "$LINENO" 5
+
 fi
 
 fi
@@ -4941,8 +4950,7 @@ then :
 
     as_fn_error $? "pkgconfig and libavahi-client-dev needed for --with-dnssd=avahi." "$LINENO" 5
 
-elif test x$with_dnssd != xavahi -a "x$with_dnssd" != xno
-then :
+else $as_nop
 
     ac_fn_c_check_header_compile "$LINENO" "dns_sd.h" "ac_cv_header_dns_sd_h" "$ac_includes_default"
 if test "x$ac_cv_header_dns_sd_h" = xyes
@@ -4952,6 +4960,7 @@ then :
   darwin*) :
 
 	    # Darwin and macOS...
+	    DNSSD=1
 
 printf "%s\n" "#define HAVE_DNSSD 1" >>confdefs.h
 
@@ -4989,6 +4998,7 @@ then :
 
 		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
+		DNSSD=1
 
 printf "%s\n" "#define HAVE_DNSSD 1" >>confdefs.h
 
@@ -5019,6 +5029,13 @@ fi
 
 fi
 
+
+if test $DNSSD = 0
+then :
+
+    as_fn_error $? "Missing required Avahi/mDNSResponder DNS-SD library." "$LINENO" 5
+
+fi
 
 
 
