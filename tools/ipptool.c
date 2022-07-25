@@ -2408,6 +2408,7 @@ expect_matches(
       else if ((ptr = strchr(paren + 1, ':')) != NULL)
       {
         lower = atoi(paren + 1);
+        ptr ++;
       }
       else
       {
