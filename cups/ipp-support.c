@@ -1917,6 +1917,7 @@ ippCreateRequestedArray(ipp_t *request)	// I - IPP request
     "power-event-policy-col",
     "power-timeout-policy-col",
     "printer-creation-attributes-supported",
+    "printer-service-type-supported",
     "resource-format-supported",
     "resource-type-supported",
     "resource-settable-attributes-supported",
