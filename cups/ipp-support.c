@@ -210,7 +210,7 @@ static const char * const ipp_std_ops[] =
   "Resume-All-Printers",		// IPP System
   "Set-System-Attributes",		// IPP System
   "Shutdown-All-Printers",		// IPP System
-  "Startup-All-Printers"		// IPP System
+  "Startup-All-Printers",		// IPP System
   "Get-Printer-Resources",		// IPP System
   "Get-User-Printer-Attributes",	// IPP Enterprise
   "Restart-One-Printer",		// IPP System
