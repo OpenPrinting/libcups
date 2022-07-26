@@ -3559,7 +3559,10 @@ ippSetDate(ipp_t             *ipp,	// I  - IPP message
 
   // Set the value and return...
   if ((value = ipp_set_value(ipp, attr, element)) != NULL)
+  {
+    (*attr)->value_tag = IPP_TAG_DATE;
     memcpy(value->date, datevalue, sizeof(value->date));
+  }
 
   return (value != NULL);
 }
