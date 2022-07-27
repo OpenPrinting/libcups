@@ -523,6 +523,78 @@ ippFileRead(ipp_file_t      *file,	// I - IPP data file
 	}
       }
     }
+    else if (file->attrs && (!_cups_strcasecmp(token, "ATTR-IF-DEFINED") || !_cups_strcasecmp(token, "ATTR-IF-NOT-DEFINED")))
+    {
+      // Conditional attribute definition...
+      char	varname[128],		// Variable name
+		syntax[128],		// Attribute syntax (value tag)
+		name[128];		// Attribute name
+      ipp_tag_t	value_tag;		// Value tag
+
+      if (!ippFileReadToken(file, varname, sizeof(varname)))
+      {
+        report_error(file, "Missing %s variable on line %d of '%s'.", token, file->linenum, file->filename);
+	ret = false;
+	break;
+      }
+
+      if (!ippFileReadToken(file, syntax, sizeof(syntax)))
+      {
+        report_error(file, "Missing %s syntax on line %d of '%s'.", token, file->linenum, file->filename);
+	ret = false;
+	break;
+      }
+      else if ((value_tag = ippTagValue(syntax)) < IPP_TAG_UNSUPPORTED_VALUE)
+      {
+        report_error(file, "Bad %s syntax \"%s\" on line %d of '%s'.", token, syntax, file->linenum, file->filename);
+	ret = false;
+	break;
+      }
+
+      if (!ippFileReadToken(file, name, sizeof(name)) || !name[0])
+      {
+        report_error(file, "Missing %s name on line %d of '%s'.", token, file->linenum, file->filename);
+	ret = false;
+	break;
+      }
+
+      if (!file->attr_cb || (*file->attr_cb)(file, file->cb_data, name))
+      {
+        // Add this attribute...
+        attrs = file->attrs;
+      }
+      else if (!_cups_strcasecmp(token, "ATTR-IF-DEFINED"))
+      {
+        if (ippFileGetVar(file, varname))
+          attrs = file->attrs;
+        else
+          attrs = ignored;
+      }
+      else			// ATTR-IF-NOT-DEFINED
+      {
+        if (ippFileGetVar(file, varname))
+          attrs = ignored;
+        else
+          attrs = file->attrs;
+      }
+
+      if (value_tag < IPP_TAG_INTEGER)
+      {
+        // Add out-of-band attribute - no value string needed...
+        ippAddOutOfBand(attrs, file->group_tag, value_tag, name);
+      }
+      else
+      {
+        // Add attribute with one or more values...
+        attr = ippAddString(attrs, file->group_tag, value_tag, name, NULL, NULL);
+
+        if (!parse_value(file, attrs, &attr, 0))
+        {
+	  ret = false;
+	  break;
+        }
+      }
+    }
     else if (attr && !_cups_strcasecmp(token, ","))
     {
       // Additional value...
