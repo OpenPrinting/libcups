@@ -23,8 +23,11 @@ IPPEVECOMMANDS	=	\
 			ippeveps
 IPPTOOLS	=	\
 			ippeveprinter \
+			ippeveprinter-static \
 			ippfind \
-			ipptool
+			ippfind-static \
+			ipptool \
+			ipptool-static
 TARGETS		=	\
 			$(IPPEVECOMMANDS) \
 			$(IPPTOOLS) \
@@ -58,7 +61,6 @@ unittests:
 
 clean:
 	$(RM) $(IPPTOOLS) $(IPPEVECOMMANDS) $(OBJS)
-	$(RM) ippeveprinter-static ippfind-static ipptool-static
 	$(RM) test.log test-cups.log
 
 
