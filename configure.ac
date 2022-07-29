@@ -273,8 +273,11 @@ AC_CHECK_HEADER([iconv.h], [
 
 dnl DNS-SD support...
 AC_ARG_WITH([dnssd], AS_HELP_STRING([--with-dnssd=LIBRARY], [set DNS-SD library (auto, avahi, mdnsresponder)]))
+DNSSD=0
 
-AS_IF([test "x$with_dnssd" != xmdnsresponder -a "x$with_dnssd" != xno -a "x$PKGCONFIG" != x -a x$host_os_name != xdarwin], [
+AS_IF([test "x$with_dnssd" = xno], [
+    AC_MSG_ERROR([Missing required Avahi/mDNSResponder DNS-SD library.])
+], [test "x$with_dnssd" != xmdnsresponder -a "x$PKGCONFIG" != x -a x$host_os_name != xdarwin], [
     AC_MSG_CHECKING([for Avahi])
     AS_IF([$PKGCONFIG --exists avahi-client], [
 	AC_MSG_RESULT([yes])
@@ -282,20 +285,23 @@ AS_IF([test "x$with_dnssd" != xmdnsresponder -a "x$with_dnssd" != xno -a "x$PKGC
 	LIBS="$LIBS $($PKGCONFIG --libs avahi-client)"
 	PKGCONFIG_LIBS_PRIVATE="$($PKGCONFIG --libs avahi-client) $PKGCONFIG_LIBS_PRIVATE"
 	PKGCONFIG_REQUIRES_PRIVATE="avahi-client, $PKGCONFIG_REQUIRES_PRIVATE"
+	DNSSD=1
 	AC_DEFINE([HAVE_DNSSD], 1, [Have DNS-SD support?])
 	AC_DEFINE([HAVE_AVAHI], 1, [Have Avahi?])
     ], [
 	AC_MSG_RESULT([no])
-	AS_IF([test x$with_dnssd = xavahi],
-	    AC_MSG_ERROR([libavahi-client-dev needed for --with-dnssd=avahi.]))
+	AS_IF([test x$with_dnssd = xavahi], [
+	    AC_MSG_ERROR([libavahi-client-dev needed for --with-dnssd=avahi.])
+	])
     ])
 ], [test x$with_dnssd = xavahi], [
     AC_MSG_ERROR([pkgconfig and libavahi-client-dev needed for --with-dnssd=avahi.])
-], [test x$with_dnssd != xavahi -a "x$with_dnssd" != xno], [
+], [
     AC_CHECK_HEADER(dns_sd.h, [
         AS_CASE(["$host_os_name"],
 	[darwin*], [
 	    # Darwin and macOS...
+	    DNSSD=1
 	    AC_DEFINE([HAVE_DNSSD], 1, [Have DNS-SD support?])
 	    AC_DEFINE([HAVE_MDNSRESPONDER], 1, [Have mDNSResponder?)])
 	    LIBS="$LIBS -framework CoreFoundation -framework SystemConfiguration"
@@ -312,6 +318,7 @@ AS_IF([test "x$with_dnssd" != xmdnsresponder -a "x$with_dnssd" != xno -a "x$PKGC
 		TXTRecordGetValuePtr(sizeof(txtRecord), txtRecord, "value", &valueLen);]])
 	    ],[
 		AC_MSG_RESULT([yes])
+		DNSSD=1
 		AC_DEFINE([HAVE_DNSSD], 1, [Have DNS-SD support?])
 		AC_DEFINE([HAVE_MDNSRESPONDER], 1, [Have mDNSResponder?)])
 		PKGCONFIG_LIBS_PRIVATE="$PKGCONFIG_LIBS_PRIVATE -ldns_sd"
@@ -325,6 +332,10 @@ AS_IF([test "x$with_dnssd" != xmdnsresponder -a "x$with_dnssd" != xno -a "x$PKGC
     ])
 ])
 AC_SUBST([PKGCONFIG_AVAHI])
+
+AS_IF([test $DNSSD = 0], [
+    AC_MSG_ERROR([Missing required Avahi/mDNSResponder DNS-SD library.])
+])
 
 
 dnl TLS support...

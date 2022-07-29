@@ -36,7 +36,7 @@
  * Limits...
  */
 
-#define MAX_EXPECT	200		// Maximum number of EXPECT directives
+#define MAX_EXPECT	1000		// Maximum number of EXPECT directives
 #define MAX_DISPLAY	200		// Maximum number of DISPLAY directives
 #define MAX_MONITOR	10		// Maximum number of MONITOR-PRINTER-STATE EXPECT directives
 
@@ -2408,6 +2408,7 @@ expect_matches(
       else if ((ptr = strchr(paren + 1, ':')) != NULL)
       {
         lower = atoi(paren + 1);
+        ptr ++;
       }
       else
       {
