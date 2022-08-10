@@ -899,13 +899,13 @@ _httpTLSStart(http_t *http)		// I - Connection to server
     TLS1_VERSION,			// TLS/1.0
     TLS1_1_VERSION,			// TLS/1.1
     TLS1_2_VERSION,			// TLS/1.2
-#ifdef TLS1_3_VERSION
-    TLS1_3_VERSION,			// TLS/1.3
-    TLS1_3_VERSION			// TLS/1.3 (max)
-#else
+//#ifdef TLS1_3_VERSION
+//    TLS1_3_VERSION,			// TLS/1.3
+//    TLS1_3_VERSION			// TLS/1.3 (max)
+//#else
     TLS1_2_VERSION,			// TLS/1.2
     TLS1_2_VERSION			// TLS/1.2 (max)
-#endif // TLS1_3_VERSION
+//#endif // TLS1_3_VERSION
   };
 
 
@@ -1049,6 +1049,8 @@ _httpTLSStart(http_t *http)		// I - Connection to server
   if (tls_options & _HTTP_TLS_DENY_CBC)
     cupsConcatString(cipherlist, ":!SHA1:!SHA256:!SHA384", sizeof(cipherlist));
   cupsConcatString(cipherlist, ":@STRENGTH", sizeof(cipherlist));
+
+  DEBUG_printf(("4_httpTLSStart: cipherlist='%s', tls_min_version=%d, tls_max_version=%d", cipherlist, tls_min_version, tls_max_version));
 
   SSL_CTX_set_min_proto_version(context, versions[tls_min_version]);
   SSL_CTX_set_max_proto_version(context, versions[tls_max_version]);
