@@ -17,6 +17,7 @@
 
 #include <sys/stat.h>
 #include <openssl/x509v3.h>
+#define USE_EC 0			// Set to 1 to generate EC certs
 
 
 /*
@@ -72,7 +73,11 @@ cupsMakeServerCredentials(
 {
   int		result = 0;		// Return value
   EVP_PKEY	*pkey;			// Private key
+#if defined(EVP_PKEY_EC) && defined(USE_EC)
+  EC_KEY	*ec;			// EC key
+#else
   RSA		*rsa;			// RSA key pair
+#endif // EVP_PKEY_EC && USE_EC
   X509		*cert;			// Certificate
   cups_lang_t	*language;		// Default language info
   time_t	curtime;		// Current time
@@ -101,20 +106,37 @@ cupsMakeServerCredentials(
   // Create the encryption key...
   DEBUG_puts("1cupsMakeServerCredentials: Creating key pair.");
 
-  if ((rsa = RSA_generate_key(2048, RSA_F4, NULL, NULL)) == NULL)
+#if defined(EVP_PKEY_EC) && defined(USE_EC)
+  if ((ec = EC_KEY_new_by_curve_name(NID_secp384r1)) == NULL)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create key pair."), 1);
     return (0);
   }
+#else
+  if ((rsa = RSA_generate_key(3072, RSA_F4, NULL, NULL)) == NULL)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create key pair."), 1);
+    return (0);
+  }
+#endif // EVP_PKEY_EC && USE_EC
 
   if ((pkey = EVP_PKEY_new()) == NULL)
   {
+#if defined(EVP_PKEY_EC) && defined(USE_EC)
+    EC_KEY_free(ec);
+#else
     RSA_free(rsa);
+#endif // EVP_PKEY_EC && USE_EC
+
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create private key."), 1);
     return (0);
   }
 
+#if defined(EVP_PKEY_EC) && defined(USE_EC)
+  EVP_PKEY_assign_EC_KEY(pkey, ec);
+#else
   EVP_PKEY_assign_RSA(pkey, rsa);
+#endif // EVP_PKEY_EC && USE_EC
 
   DEBUG_puts("1cupsMakeServerCredentials: Key pair created.");
 

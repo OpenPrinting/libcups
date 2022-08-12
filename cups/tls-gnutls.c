@@ -99,7 +99,7 @@ cupsMakeServerCredentials(
   DEBUG_puts("1cupsMakeServerCredentials: Creating key pair.");
 
   gnutls_x509_privkey_init(&key);
-  gnutls_x509_privkey_generate(key, GNUTLS_PK_RSA, 2048, 0);
+  gnutls_x509_privkey_generate(key, GNUTLS_PK_RSA, 3072, 0);
 
   DEBUG_puts("1cupsMakeServerCredentials: Key pair created.");
 
