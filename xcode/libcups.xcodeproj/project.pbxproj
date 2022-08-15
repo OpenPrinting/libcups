@@ -199,6 +199,12 @@
 		278CA9062884D9B100367E41 /* rand.c in Sources */ = {isa = PBXBuildFile; fileRef = 278CA9042884D9B100367E41 /* rand.c */; };
 		278CA9072884D9B100367E41 /* rand.c in Sources */ = {isa = PBXBuildFile; fileRef = 278CA9042884D9B100367E41 /* rand.c */; };
 		279AE6F52395B80F004DD600 /* libpam.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 279AE6F42395B80F004DD600 /* libpam.tbd */; };
+		27A8096128A9B9D500B20BC8 /* dnssd.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A8095F28A9B9D500B20BC8 /* dnssd.h */; };
+		27A8096228A9B9D500B20BC8 /* dnssd.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A8095F28A9B9D500B20BC8 /* dnssd.h */; };
+		27A8096328A9B9D500B20BC8 /* dnssd.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A8095F28A9B9D500B20BC8 /* dnssd.h */; };
+		27A8096428A9B9D500B20BC8 /* dnssd.c in Sources */ = {isa = PBXBuildFile; fileRef = 27A8096028A9B9D500B20BC8 /* dnssd.c */; };
+		27A8096528A9B9D500B20BC8 /* dnssd.c in Sources */ = {isa = PBXBuildFile; fileRef = 27A8096028A9B9D500B20BC8 /* dnssd.c */; };
+		27A8096628A9B9D500B20BC8 /* dnssd.c in Sources */ = {isa = PBXBuildFile; fileRef = 27A8096028A9B9D500B20BC8 /* dnssd.c */; };
 		27CAFC61282C895700FE02FC /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC5F282C895700FE02FC /* libssl.a */; };
 		27CAFC62282C895700FE02FC /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC60282C895700FE02FC /* libcrypto.a */; };
 		27CAFC63282C898300FE02FC /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC60282C895700FE02FC /* libcrypto.a */; };
@@ -958,6 +964,8 @@
 		278C58E8136B64B000836530 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = /System/Library/Frameworks/SystemConfiguration.framework; sourceTree = "<absolute>"; };
 		278CA9042884D9B100367E41 /* rand.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = rand.c; path = ../cups/rand.c; sourceTree = "<group>"; };
 		279AE6F42395B80F004DD600 /* libpam.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libpam.tbd; path = usr/lib/libpam.tbd; sourceTree = SDKROOT; };
+		27A8095F28A9B9D500B20BC8 /* dnssd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = dnssd.h; path = ../cups/dnssd.h; sourceTree = "<group>"; };
+		27A8096028A9B9D500B20BC8 /* dnssd.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = dnssd.c; path = ../cups/dnssd.c; sourceTree = "<group>"; };
 		27CAFC5F282C895700FE02FC /* libssl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libssl.a; path = ../../../../../usr/local/lib/libssl.a; sourceTree = "<group>"; };
 		27CAFC60282C895700FE02FC /* libcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcrypto.a; path = ../../../../../usr/local/lib/libcrypto.a; sourceTree = "<group>"; };
 		27CAFC6F282C8ADF00FE02FC /* tls-openssl.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = "tls-openssl.c"; path = "../cups/tls-openssl.c"; sourceTree = "<group>"; };
@@ -1514,6 +1522,8 @@
 				72CF95E218A13543000FCAE4 /* dest-options.c */,
 				72220ED4133305BB00FCA411 /* dir.h */,
 				72220ED3133305BB00FCA411 /* dir.c */,
+				27A8095F28A9B9D500B20BC8 /* dnssd.h */,
+				27A8096028A9B9D500B20BC8 /* dnssd.c */,
 				72220ED6133305BB00FCA411 /* encode.c */,
 				72220ED9133305BB00FCA411 /* file.h */,
 				72220ED7133305BB00FCA411 /* file-private.h */,
@@ -1658,6 +1668,7 @@
 				270696441CADF3E200FFE5FB /* ipp-private.h in Headers */,
 				270696451CADF3E200FFE5FB /* language-private.h in Headers */,
 				270696461CADF3E200FFE5FB /* md5-internal.h in Headers */,
+				27A8096228A9B9D500B20BC8 /* dnssd.h in Headers */,
 				270696481CADF3E200FFE5FB /* pwg-private.h in Headers */,
 				2706964A1CADF3E200FFE5FB /* string-private.h in Headers */,
 				7253C46C216ED5E500494ADD /* raster-private.h in Headers */,
@@ -1681,6 +1692,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27A8096328A9B9D500B20BC8 /* dnssd.h in Headers */,
 				722A24F52178D091000CAB20 /* debug-private.h in Headers */,
 				274FF6C61333B1C400317ECB /* dir.h in Headers */,
 				27D3966727BA81C6003D3D8E /* raster-testpage.h in Headers */,
@@ -1701,6 +1713,7 @@
 				72220F21133305BB00FCA411 /* ipp.h in Headers */,
 				72220F25133305BB00FCA411 /* language.h in Headers */,
 				722A24F32178D091000CAB20 /* debug-private.h in Headers */,
+				27A8096128A9B9D500B20BC8 /* dnssd.h in Headers */,
 				72220F41133305BB00FCA411 /* transcode.h in Headers */,
 				72220F44133305BB00FCA411 /* base.h in Headers */,
 				72220ECD1333056300FCA411 /* cups-private.h in Headers */,
@@ -2240,6 +2253,7 @@
 				270696091CADF3E200FFE5FB /* dir.c in Sources */,
 				2706960B1CADF3E200FFE5FB /* encode.c in Sources */,
 				2706960C1CADF3E200FFE5FB /* file.c in Sources */,
+				27A8096528A9B9D500B20BC8 /* dnssd.c in Sources */,
 				2706960F1CADF3E200FFE5FB /* getputfile.c in Sources */,
 				270696101CADF3E200FFE5FB /* globals.c in Sources */,
 				270696111CADF3E200FFE5FB /* http-addr.c in Sources */,
@@ -2360,6 +2374,7 @@
 				274FF6B51333B1C400317ECB /* thread.c in Sources */,
 				274FF6B61333B1C400317ECB /* transcode.c in Sources */,
 				274FF6B71333B1C400317ECB /* usersys.c in Sources */,
+				27A8096628A9B9D500B20BC8 /* dnssd.c in Sources */,
 				274FF6B81333B1C400317ECB /* util.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2444,6 +2459,7 @@
 				72220F40133305BB00FCA411 /* transcode.c in Sources */,
 				72220F42133305BB00FCA411 /* usersys.c in Sources */,
 				72220F43133305BB00FCA411 /* util.c in Sources */,
+				27A8096428A9B9D500B20BC8 /* dnssd.c in Sources */,
 				72CF95E318A13543000FCAE4 /* dest-job.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
