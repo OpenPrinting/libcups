@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "72220EAD1333047D00FCA411"
-               BuildableName = "libcups.dylib"
+               BuildableName = "libcups3.dylib"
                BlueprintName = "libcups3"
                ReferencedContainer = "container:libcups.xcodeproj">
             </BuildableReference>
@@ -51,7 +51,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "72220EAD1333047D00FCA411"
-            BuildableName = "libcups.dylib"
+            BuildableName = "libcups3.dylib"
             BlueprintName = "libcups3"
             ReferencedContainer = "container:libcups.xcodeproj">
          </BuildableReference>

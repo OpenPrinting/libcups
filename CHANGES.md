@@ -18,6 +18,7 @@ libcups v3.0b1 (Month DD, YYYY)
   files (Issue #3)
 - Added `ippFile` API for working with IPP data files as used by `ipptool`,
   `ippexeprinter`, and other tools (Issue #14)
+- Added a roll to the default color ippeveprinter printer.
 - Updated the CUPS API for consistency.
 - Removed all obsolete/deprecated CUPS 2.x APIs.
 - Removed (obsolete) Kerberos support.

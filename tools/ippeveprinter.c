@@ -268,8 +268,9 @@ static ippeve_client_t	*create_client(ippeve_printer_t *printer, int sock);
 static ippeve_job_t	*create_job(ippeve_client_t *client);
 static int		create_job_file(ippeve_job_t *job, char *fname, size_t fnamesize, const char *dir, const char *ext);
 static int		create_listener(const char *name, int port, int family);
-static ipp_t		*create_media_col(const char *media, const char *source, const char *type, int width, int length, int bottom, int left, int right, int top);
+static ipp_t		*create_media_col(const char *media, const char *source, const char *type, ipp_t *media_size, int bottom, int left, int right, int top);
 static ipp_t		*create_media_size(int width, int length);
+static ipp_t		*create_media_size_range(int min_width, int max_width, int min_length, int max_length);
 static ippeve_printer_t	*create_printer(const char *servername, int serverport, const char *name, const char *location, const char *icons, const char *strings, cups_array_t *docformats, const char *subtypes, const char *directory, const char *command, const char *device_uri, const char *output_format, ipp_t *attrs);
 static void		debug_attributes(const char *title, ipp_t *ipp, int response);
 static void		delete_client(ippeve_client_t *client);
@@ -1282,16 +1283,13 @@ static ipp_t *				/* O - media-col collection */
 create_media_col(const char *media,	/* I - Media name */
 		 const char *source,	/* I - Media source, if any */
 		 const char *type,	/* I - Media type, if any */
-		 int        width,	/* I - x-dimension in 2540ths */
-		 int        length,	/* I - y-dimension in 2540ths */
+		 ipp_t      *media_size,/* I - media-size collection value */
 		 int        bottom,	/* I - Bottom margin in 2540ths */
 		 int        left,	/* I - Left margin in 2540ths */
 		 int        right,	/* I - Right margin in 2540ths */
 		 int        top)	/* I - Top margin in 2540ths */
 {
-  ipp_t		*media_col = ippNew(),	/* media-col value */
-		*media_size = create_media_size(width, length);
-					/* media-size value */
+  ipp_t		*media_col = ippNew();	/* media-col value */
   char		media_key[256];		/* media-key value */
   const char	*media_key_suffix = "";	/* media-key suffix */
 
@@ -1299,18 +1297,22 @@ create_media_col(const char *media,	/* I - Media name */
   if (bottom == 0 && left == 0 && right == 0 && top == 0)
     media_key_suffix = "_borderless";
 
-  if (type && source)
-    snprintf(media_key, sizeof(media_key), "%s_%s_%s%s", media, source, type, media_key_suffix);
-  else if (type)
-    snprintf(media_key, sizeof(media_key), "%s__%s%s", media, type, media_key_suffix);
-  else if (source)
-    snprintf(media_key, sizeof(media_key), "%s_%s%s", media, source, media_key_suffix);
-  else
-    snprintf(media_key, sizeof(media_key), "%s%s", media, media_key_suffix);
+  if (media)
+  {
+    if (type && source)
+      snprintf(media_key, sizeof(media_key), "%s_%s_%s%s", media, source, type, media_key_suffix);
+    else if (type)
+      snprintf(media_key, sizeof(media_key), "%s__%s%s", media, type, media_key_suffix);
+    else if (source)
+      snprintf(media_key, sizeof(media_key), "%s_%s%s", media, source, media_key_suffix);
+    else
+      snprintf(media_key, sizeof(media_key), "%s%s", media, media_key_suffix);
 
-  ippAddString(media_col, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "media-key", NULL, media_key);
+    ippAddString(media_col, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "media-key", NULL, media_key);
+  }
   ippAddCollection(media_col, IPP_TAG_PRINTER, "media-size", media_size);
-  ippAddString(media_col, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "media-size-name", NULL, media);
+  if (media)
+    ippAddString(media_col, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "media-size-name", NULL, media);
   if (bottom >= 0)
     ippAddInteger(media_col, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "media-bottom-margin", bottom);
   if (left >= 0)
@@ -1341,8 +1343,28 @@ create_media_size(int width,		/* I - x-dimension in 2540ths */
   ipp_t	*media_size = ippNew();		/* media-size value */
 
 
-  ippAddInteger(media_size, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "x-dimension", width);
-  ippAddInteger(media_size, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "y-dimension", length);
+  ippAddInteger(media_size, IPP_TAG_ZERO, IPP_TAG_INTEGER, "x-dimension", width);
+  ippAddInteger(media_size, IPP_TAG_ZERO, IPP_TAG_INTEGER, "y-dimension", length);
+
+  return (media_size);
+}
+
+
+/*
+ * 'create_media_size_range()' - Create a ranged media-size value.
+ */
+
+static ipp_t *				/* O - media-col collection */
+create_media_size_range(int min_width,	/* I - Minimum x-dimension in 2540ths */
+			int max_width,	/* I - Maximum x-dimension in 2540ths */
+			int min_length,	/* I - Minimum x-dimension in 2540ths */
+			int max_length)	/* I - Maximum y-dimension in 2540ths */
+{
+  ipp_t	*media_size = ippNew();		/* media-size value */
+
+
+  ippAddRange(media_size, IPP_TAG_ZERO, "x-dimension", min_width, max_width);
+  ippAddRange(media_size, IPP_TAG_ZERO, "y-dimension", min_length, max_length);
 
   return (media_size);
 }
@@ -4238,6 +4260,8 @@ load_legacy_attributes(
     "iso_a6_105x148mm",			/* A6 */
     "na_5x7_5x7in",			/* Photo 5x7 aka 2L */
     "iso_a5_148x210mm",			/* A5 */
+    "roll_min_4x1in",			/* Roll */
+    "roll_max_8.5x39.6in"		/* Roll */
   };
   static const char * const media_ready[] =
   {					/* media-ready values */
@@ -4247,7 +4271,8 @@ load_legacy_attributes(
   static const char * const media_ready_color[] =
   {					/* media-ready values */
     "na_letter_8.5x11in",		/* Letter */
-    "na_index-4x6_4x6in"		/* Photo 4x6 */
+    "na_index-4x6_4x6in",		/* Photo 4x6 */
+    "roll_current_8.5x0in"		/* 8.5" roll */
   };
   static const char * const media_source_supported[] =
   {					/* media-source-supported values */
@@ -4260,7 +4285,8 @@ load_legacy_attributes(
   {					/* media-source-supported values */
     "auto",
     "main",
-    "photo"
+    "photo",
+    "roll"
   };
   static const char * const media_type_supported[] =
   {					/* media-type-supported values */
@@ -4360,7 +4386,8 @@ load_legacy_attributes(
   {					/* printer-input-tray values */
     "type=sheetFeedAutoRemovableTray;mediafeed=0;mediaxfeed=0;maxcapacity=-2;level=-2;status=0;name=auto",
     "type=sheetFeedAutoRemovableTray;mediafeed=0;mediaxfeed=0;maxcapacity=250;level=-2;status=0;name=main",
-    "type=sheetFeedAutoRemovableTray;mediafeed=0;mediaxfeed=0;maxcapacity=25;level=-2;status=0;name=photo"
+    "type=sheetFeedAutoRemovableTray;mediafeed=0;mediaxfeed=0;maxcapacity=25;level=-2;status=0;name=photo",
+    "type=continuousRoll;mediafeed=0;mediaxfeed=0;maxcapacity=100;level=-2;status=0;name=roll"
   };
   static const char * const printer_supply[] =
   {					/* printer-supply values */
@@ -4530,8 +4557,7 @@ load_legacy_attributes(
     ippAddIntegers(attrs, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "media-bottom-margin-supported", (int)(sizeof(media_bottom_margin_supported_color) / sizeof(media_bottom_margin_supported_color[0])), media_bottom_margin_supported_color);
 
   /* media-col-database and media-col-default */
-  attr = ippAddCollections(attrs, IPP_TAG_PRINTER, "media-col-database", num_media, NULL);
-  for (i = 0; i < num_media; i ++)
+  for (i = 0, attr = NULL; i < num_media; i ++)
   {
     int		bottom, left,		/* media-xxx-margins */
 		right, top;
@@ -4572,8 +4598,31 @@ load_legacy_attributes(
       top    = ppm_color > 0 ? media_top_margin_supported_color[1] : media_top_margin_supported[0];
     }
 
-    col = create_media_col(media[i], source, NULL, pwg->width, pwg->length, bottom, left, right, top);
-    ippSetCollection(attrs, &attr, i, col);
+    if (!strncmp(media[i], "roll_min_", 9) && i < (num_media - 1))
+    {
+      // Roll min/max range...
+      pwg_media_t	*pwg2;		// Max size
+      ipp_t		*media_size;	// media-size member attribute
+
+      i ++;
+      pwg2 = pwgMediaForPWG(media[i]);
+
+      media_size = ippNew();
+      ippAddRange(media_size, IPP_TAG_ZERO, "x-dimension", pwg->width, pwg2->width);
+      ippAddRange(media_size, IPP_TAG_ZERO, "y-dimension", pwg->length, pwg2->length);
+
+      col = create_media_col(NULL, source, NULL, media_size, bottom, left, right, top);
+    }
+    else
+    {
+      // Sheet size
+      col = create_media_col(media[i], source, NULL, create_media_size(pwg->width, pwg->length), bottom, left, right, top);
+    }
+
+    if (attr)
+      ippSetCollection(attrs, &attr, ippGetCount(attr), col);
+    else
+      attr = ippAddCollection(attrs, IPP_TAG_PRINTER, "media-col-database", col);
 
     ippDelete(col);
   }
@@ -4582,9 +4631,9 @@ load_legacy_attributes(
   pwg = pwgMediaForPWG(ready[0]);
 
   if (pwg->width == 21000)
-    col = create_media_col(ready[0], "main", "stationery", pwg->width, pwg->length, ppm_color > 0 ? media_bottom_margin_supported_color[1] : media_bottom_margin_supported[0], media_lr_margin_supported[0], media_lr_margin_supported[0], ppm_color > 0 ? media_top_margin_supported_color[1] : media_top_margin_supported[0]);
+    col = create_media_col(ready[0], "main", "stationery", create_media_size(pwg->width, pwg->length), ppm_color > 0 ? media_bottom_margin_supported_color[1] : media_bottom_margin_supported[0], media_lr_margin_supported[0], media_lr_margin_supported[0], ppm_color > 0 ? media_top_margin_supported_color[1] : media_top_margin_supported[0]);
   else
-    col = create_media_col(ready[0], "main", "stationery", pwg->width, pwg->length, ppm_color > 0 ? media_bottom_margin_supported_color[1] : media_bottom_margin_supported[0], media_lr_margin_supported[1], media_lr_margin_supported[1], ppm_color > 0 ? media_top_margin_supported_color[1] : media_top_margin_supported[0]);
+    col = create_media_col(ready[0], "main", "stationery", create_media_size(pwg->width, pwg->length), ppm_color > 0 ? media_bottom_margin_supported_color[1] : media_bottom_margin_supported[0], media_lr_margin_supported[1], media_lr_margin_supported[1], ppm_color > 0 ? media_top_margin_supported_color[1] : media_top_margin_supported[0]);
 
   ippAddCollection(attrs, IPP_TAG_PRINTER, "media-col-default", col);
 
@@ -4638,7 +4687,7 @@ load_legacy_attributes(
       top    = ppm_color > 0 ? media_top_margin_supported_color[1] : media_top_margin_supported[0];
     }
 
-    col = create_media_col(ready[i], source, type, pwg->width, pwg->length, bottom, left, right, top);
+    col = create_media_col(ready[i], source, type, create_media_size(pwg->width, pwg->length), bottom, left, right, top);
     ippSetCollection(attrs, &attr, i, col);
     ippDelete(col);
   }
@@ -4665,13 +4714,31 @@ load_legacy_attributes(
   ippAddStrings(attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "media-supported", num_media, NULL, media);
 
   /* media-size-supported */
-  attr = ippAddCollections(attrs, IPP_TAG_PRINTER, "media-size-supported", num_media, NULL);
-  for (i = 0; i < num_media; i ++)
+  for (i = 0, attr = NULL; i < num_media; i ++)
   {
     pwg = pwgMediaForPWG(media[i]);
-    col = create_media_size(pwg->width, pwg->length);
 
-    ippSetCollection(attrs, &attr, i, col);
+    if (!strncmp(media[i], "roll_min_", 9) && i < (num_media - 1))
+    {
+      // Roll min/max range...
+      pwg_media_t	*pwg2;		// Max size
+
+      i ++;
+      pwg2 = pwgMediaForPWG(media[i]);
+
+      col = create_media_size_range(pwg->width, pwg2->width, pwg->length, pwg2->length);
+    }
+    else
+    {
+      // Sheet size...
+      col = create_media_size(pwg->width, pwg->length);
+    }
+
+    if (attr)
+      ippSetCollection(attrs, &attr, ippGetCount(attr), col);
+    else
+      attr = ippAddCollection(attrs, IPP_TAG_PRINTER, "media-size-supported", col);
+
     ippDelete(col);
   }
 
@@ -7090,7 +7157,7 @@ show_media(ippeve_client_t  *client)	/* I - Client connection */
         else
           media_ready = ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "media-ready", NULL, media_size);
 
-        media_col = create_media_col(media_size, media_source, media_type, media->width, media->length, -1, -1, -1, -1);
+        media_col = create_media_col(media_size, media_source, media_type, create_media_size(media->width, media->length), -1, -1, -1, -1);
 
         if (media_col_ready)
           ippSetCollection(printer->attrs, &media_col_ready, ippGetCount(media_col_ready), media_col);
@@ -7107,7 +7174,10 @@ show_media(ippeve_client_t  *client)	/* I - Client connection */
       else
         ready_sheets = 0;
 
-      snprintf(tray_str, sizeof(tray_str), "type=sheetFeedAuto%sRemovableTray;mediafeed=%d;mediaxfeed=%d;maxcapacity=%d;level=%d;status=0;name=%s;", !strcmp(media_source, "by-pass-tray") ? "Non" : "", media ? media->length : 0, media ? media->width : 0, strcmp(media_source, "by-pass-tray") ? 250 : 25, ready_sheets, media_source);
+      if (!strcmp(media_source, "roll"))
+	snprintf(tray_str, sizeof(tray_str), "type=continuousRoll;mediafeed=%d;mediaxfeed=%d;maxcapacity=%d;level=%d;status=0;name=%s;", media ? media->length : 0, media ? media->width : 0, 100, ready_sheets, media_source);
+      else
+	snprintf(tray_str, sizeof(tray_str), "type=sheetFeedAuto%sRemovableTray;mediafeed=%d;mediaxfeed=%d;maxcapacity=%d;level=%d;status=0;name=%s;", !strcmp(media_source, "by-pass-tray") ? "Non" : "", media ? media->length : 0, media ? media->width : 0, strcmp(media_source, "by-pass-tray") ? 250 : 25, ready_sheets, media_source);
 
       ippSetOctetString(printer->attrs, &input_tray, i, tray_str, strlen(tray_str));
 
@@ -7148,6 +7218,9 @@ show_media(ippeve_client_t  *client)	/* I - Client connection */
       ready_source = ippGetString(ippFindAttribute(media_col, "media-source", IPP_TAG_ZERO), 0, NULL);
       ready_type   = ippGetString(ippFindAttribute(media_col, "media-type", IPP_TAG_ZERO), 0, NULL);
 
+      if (!ready_size)
+        ready_size = ippGetString(media_ready, j, NULL);
+
       if (ready_source && !strcmp(ready_source, media_source))
         break;
 
@@ -7165,11 +7238,13 @@ show_media(ippeve_client_t  *client)	/* I - Client connection */
     if (printer->web_forms)
     {
       html_printf(client, "<td><select name=\"size%u\"><option value=\"\">None</option>", (unsigned)i);
+      if (ready_size)
+        html_printf(client, "<option selected>%s</option>", ready_size);
       for (j = 0; j < num_sizes; j ++)
       {
 	media_size = ippGetString(media_sizes, j, NULL);
 
-	html_printf(client, "<option%s>%s</option>", (ready_size && !strcmp(ready_size, media_size)) ? " selected" : "", media_size);
+	html_printf(client, "<option>%s</option>", media_size);
       }
       html_printf(client, "</select>");
     }
