@@ -76,9 +76,12 @@ install:
 		echo Installing all in $$dir... ;\
 		(cd $$dir; $(MAKE) $(MFLAGS) install) || exit 1;\
 	done
-	echo Installing cups.pc file...
+	echo Installing $(CUPS_PC) file...
 	$(INSTALL_DIR) $(BUILDROOT)$(libdir)/pkgconfig
-	$(INSTALL_DATA) cups.pc $(BUILDROOT)$(libdir)/pkgconfig/cups.pc
+	$(INSTALL_DATA) cups3.pc $(BUILDROOT)$(libdir)/pkgconfig/cups3.pc
+	if test "$(CUPS_PC)" = cups.pc; then \
+		$(LN) cups3.pc $(BUILDROOT)$(libdir)/pkgconfig/cups.pc; \
+	fi
 
 
 #
@@ -90,7 +93,10 @@ uninstall:
 		echo Uninstalling in $$dir... ;\
 		(cd $$dir; $(MAKE) $(MFLAGS) uninstall) || exit 1;\
 	done
-	$(RM) $(BUILDROOT)$(libdir)/pkgconfig/cups.pc
+	$(RM) $(BUILDROOT)$(libdir)/pkgconfig/cups3.pc
+	if test "$(CUPS_PC)" = cups.pc; then \
+		$(RM) $(BUILDROOT)$(libdir)/pkgconfig/cups.pc; \
+	fi
 	-$(RMDIR) $(BUILDROOT)$(libdir)/pkgconfig
 
 

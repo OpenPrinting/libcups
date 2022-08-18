@@ -101,11 +101,28 @@ AC_SUBST([INSTALL])
 AC_MSG_RESULT([using $INSTALL])
 
 
+dnl Library prefix...
+AC_ARG_ENABLE([libcups3-prefix], AS_HELP_STRING([--disable-libcups3-prefix], [do not add libcups3 prefix to header/library files]))
+
+AS_IF([test x$enable_libcups3_prefix != xno], [
+    CUPS_PC="cups3.pc"
+    INCLUDE_PREFIX="/libcups3"
+    LIBCUPS_BASE="libcups3"
+    LINKCUPS="-lcups3"
+], [
+    CUPS_PC="cups.pc"
+    INCLUDE_PREFIX=""
+    LIBCUPS_BASE="libcups"
+    LINKCUPS="-lcups"
+])
+AC_SUBST([LINKCUPS])
+
+
 dnl Check for pkg-config, which is used for some other tests later on...
 AC_PATH_TOOL([PKGCONFIG], [pkg-config])
 
 PKGCONFIG_CFLAGS=""
-PKGCONFIG_LIBS="-L\${libdir} -lcups"
+PKGCONFIG_LIBS="-L\${libdir} $LINKCUPS"
 PKGCONFIG_LIBS_PRIVATE="-lz -lm"
 PKGCONFIG_REQUIRES=""
 PKGCONFIG_REQUIRES_PRIVATE="zlib"
@@ -396,22 +413,24 @@ dnl Library targets...
 AC_ARG_ENABLE([static], AS_HELP_STRING([--disable-static], [do not install static library]))
 AC_ARG_ENABLE([shared], AS_HELP_STRING([--disable-shared], [do not install shared library]))
 
+LIBCUPS_STATIC="$LIBCUPS_BASE.a"
+
 AS_IF([test x$enable_shared != xno], [
     AS_CASE(["$host_os_name"], [linux* | gnu* | *bsd*], [
-	LIBCUPS="libcups.so.3"
+	LIBCUPS="$LIBCUPS_BASE.so.3"
 	DSO="\$(CC)"
 	DSOFLAGS="$DSOFLAGS -Wl,-soname,\`basename \$@\` -shared"
     ], [darwin*], [
-	LIBCUPS="libcups.3.dylib"
+	LIBCUPS="$LIBCUPS_BASE.3.dylib"
 	DSO="\$(CC)"
 	DSOFLAGS="$DSOFLAGS -Wl,-no_warn_inits -dynamiclib -single_module -lc"
     ], [sunos*], [
-	LIBCUPS="libcups.so.3"
+	LIBCUPS="$LIBCUPS_BASE.so.3"
 	DSO="\$(CC)"
 	DSOFLAGS="$DSOFLAGS -Wl,-h,\`basename \$@\` -G"
     ], [*], [
 	AC_MSG_NOTICE([Warning: Shared libraries may not work, trying -shared option.])
-	LIBCUPS="libcups.so.3"
+	LIBCUPS="$LIBCUPS_BASE.so.3"
 	DSO="\$(CC)"
 	DSOFLAGS="$DSOFLAGS -Wl,-soname,\`basename \$@\` -shared"
     ])
@@ -419,21 +438,19 @@ AS_IF([test x$enable_shared != xno], [
     AS_IF([test x$enable_static != xno], [
 	AC_MSG_NOTICE([Installing static libraries...])
 	INSTALL_STATIC="install-static"
-        LIBCUPS_STATIC="libcups.a"
     ], [
 	INSTALL_STATIC=""
-	LIBCUPS_STATIC=""
     ])
 ], [
     INSTALL_STATIC=""
-    LIBCUPS="libcups.a"
-    LIBCUPS_STATIC=""
+    LIBCUPS="$LIBCUPS_BASE.a"
     PKGCONFIG_LIBS="$PKGCONFIG_LIBS $PKGCONFIG_LIBS_PRIVATE"
     PKGCONFIG_LIBS_PRIVATE=""
     PKGCONFIG_REQUIRES="$PKGCONFIG_REQUIRES $PKGCONFIG_REQUIRES_PRIVATE"
     PKGCONFIG_REQUIRES_PRIVATE=""
 ])
 
+AC_SUBST([CUPS_PC])
 AC_SUBST([INSTALL_STATIC])
 AC_SUBST([LIBCUPS])
 AC_SUBST([LIBCUPS_STATIC])
@@ -548,7 +565,8 @@ AC_ARG_WITH([ldflags], AS_HELP_STRING([--with-ldflags=...], [Specify additional 
     LDFLAGS="$withval $LDFLAGS"
 ])
 
-dnl State and run directories for root servers...
+
+dnl Fix prefix and includedir...
 AS_IF([test "$prefix" = NONE], [
     # Default prefix isn't bound until AC_OUTPUT...
     realprefix="/usr/local"
@@ -556,6 +574,12 @@ AS_IF([test "$prefix" = NONE], [
     realprefix="$prefix"
 ])
 
+AS_IF([test "$includedir" = NONE -o "$includedir" = "\${prefix}/include"], [
+    includedir="$realprefix/include$INCLUDE_PREFIX"
+])
+AS_IF([test "$includedir" != "/usr/include" -a "$includedir" != "/usr/local/include"], [
+    PKGCONFIG_CFLAGS="-I\${includedir} $PKGCONFIG_CFLAGS"
+])
 
 dnl Clean up pkg-config "requires" content...
 [PKGCONFIG_REQUIRES="$(echo $PKGCONFIG_REQUIRES | sed -e '1,$s/,$//')"]
@@ -563,5 +587,5 @@ dnl Clean up pkg-config "requires" content...
 
 
 dnl Provide autoconf with a list of files to generate and output them...
-AC_CONFIG_FILES([Makedefs cups.pc packaging/libcups.list])
+AC_CONFIG_FILES([Makedefs cups3.pc packaging/libcups.list])
 AC_OUTPUT

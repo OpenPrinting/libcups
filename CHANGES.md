@@ -11,6 +11,8 @@ libcups v3.0b1 (Month DD, YYYY)
 - Now require ZLIB.
 - Now require POSIX or Windows threading support.
 - Now require the `poll` function (`WSAPoll` on Windows).
+- Now install with a prefix by default to allow coexistance with CUPS 2.x
+  (Issue #21)
 - Added new `GENERATE-FILE` directive for `ipptool` test files.
 - Added new `ATTR-IF-DEFINED` and `ATTR-IF-NOT-DEFINED` directives to IPP data
   files (Issue #3)
