@@ -655,6 +655,7 @@ CSFLAGS
 LIBCUPS_STATIC
 LIBCUPS
 INSTALL_STATIC
+CUPS_PC
 PKGCONFIG_AVAHI
 PKGCONFIG_REQUIRES_PRIVATE
 PKGCONFIG_REQUIRES
@@ -662,6 +663,7 @@ PKGCONFIG_LIBS_PRIVATE
 PKGCONFIG_LIBS
 PKGCONFIG_CFLAGS
 PKGCONFIG
+LINKCUPS
 ARFLAGS
 LN
 RMDIR
@@ -734,6 +736,7 @@ SHELL'
 ac_subst_files=''
 ac_user_opts='
 enable_option_checking
+enable_libcups3_prefix
 with_dnssd
 with_tls
 enable_static
@@ -1374,6 +1377,8 @@ Optional Features:
   --disable-option-checking  ignore unrecognized --enable/--with options
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
+  --disable-libcups3-prefix
+                          do not add libcups3 prefix to header/library files
   --disable-static        do not install static library
   --disable-shared        do not install shared library
   --enable-debug          turn on debugging, default=no
@@ -4027,6 +4032,32 @@ INSTALL="$(pwd)/install-sh"
 printf "%s\n" "using $INSTALL" >&6; }
 
 
+# Check whether --enable-libcups3-prefix was given.
+if test ${enable_libcups3_prefix+y}
+then :
+  enableval=$enable_libcups3_prefix;
+fi
+
+
+if test x$enable_libcups3_prefix != xno
+then :
+
+    CUPS_PC="cups3.pc"
+    INCLUDE_PREFIX="/libcups3"
+    LIBCUPS_BASE="libcups3"
+    LINKCUPS="-lcups3"
+
+else $as_nop
+
+    CUPS_PC="cups.pc"
+    INCLUDE_PREFIX=""
+    LIBCUPS_BASE="libcups"
+    LINKCUPS="-lcups"
+
+fi
+
+
+
 if test -n "$ac_tool_prefix"; then
   # Extract the first word of "${ac_tool_prefix}pkg-config", so it can be a program name with args.
 set dummy ${ac_tool_prefix}pkg-config; ac_word=$2
@@ -4137,7 +4168,7 @@ fi
 
 
 PKGCONFIG_CFLAGS=""
-PKGCONFIG_LIBS="-L\${libdir} -lcups"
+PKGCONFIG_LIBS="-L\${libdir} $LINKCUPS"
 PKGCONFIG_LIBS_PRIVATE="-lz -lm"
 PKGCONFIG_REQUIRES=""
 PKGCONFIG_REQUIRES_PRIVATE="zlib"
@@ -5157,25 +5188,27 @@ then :
 fi
 
 
+LIBCUPS_STATIC="$LIBCUPS_BASE.a"
+
 if test x$enable_shared != xno
 then :
 
     case "$host_os_name" in #(
   linux* | gnu* | *bsd*) :
 
-	LIBCUPS="libcups.so.3"
+	LIBCUPS="$LIBCUPS_BASE.so.3"
 	DSO="\$(CC)"
 	DSOFLAGS="$DSOFLAGS -Wl,-soname,\`basename \$@\` -shared"
      ;; #(
   darwin*) :
 
-	LIBCUPS="libcups.3.dylib"
+	LIBCUPS="$LIBCUPS_BASE.3.dylib"
 	DSO="\$(CC)"
 	DSOFLAGS="$DSOFLAGS -Wl,-no_warn_inits -dynamiclib -single_module -lc"
      ;; #(
   sunos*) :
 
-	LIBCUPS="libcups.so.3"
+	LIBCUPS="$LIBCUPS_BASE.so.3"
 	DSO="\$(CC)"
 	DSOFLAGS="$DSOFLAGS -Wl,-h,\`basename \$@\` -G"
      ;; #(
@@ -5183,7 +5216,7 @@ then :
 
 	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: Warning: Shared libraries may not work, trying -shared option." >&5
 printf "%s\n" "$as_me: Warning: Shared libraries may not work, trying -shared option." >&6;}
-	LIBCUPS="libcups.so.3"
+	LIBCUPS="$LIBCUPS_BASE.so.3"
 	DSO="\$(CC)"
 	DSOFLAGS="$DSOFLAGS -Wl,-soname,\`basename \$@\` -shared"
      ;; #(
@@ -5197,26 +5230,24 @@ then :
 	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: Installing static libraries..." >&5
 printf "%s\n" "$as_me: Installing static libraries..." >&6;}
 	INSTALL_STATIC="install-static"
-        LIBCUPS_STATIC="libcups.a"
 
 else $as_nop
 
 	INSTALL_STATIC=""
-	LIBCUPS_STATIC=""
 
 fi
 
 else $as_nop
 
     INSTALL_STATIC=""
-    LIBCUPS="libcups.a"
-    LIBCUPS_STATIC=""
+    LIBCUPS="$LIBCUPS_BASE.a"
     PKGCONFIG_LIBS="$PKGCONFIG_LIBS $PKGCONFIG_LIBS_PRIVATE"
     PKGCONFIG_LIBS_PRIVATE=""
     PKGCONFIG_REQUIRES="$PKGCONFIG_REQUIRES $PKGCONFIG_REQUIRES_PRIVATE"
     PKGCONFIG_REQUIRES_PRIVATE=""
 
 fi
+
 
 
 
@@ -5446,6 +5477,7 @@ then :
 fi
 
 
+
 if test "$prefix" = NONE
 then :
 
@@ -5458,12 +5490,24 @@ else $as_nop
 
 fi
 
+if test "$includedir" = NONE -o "$includedir" = "\${prefix}/include"
+then :
+
+    includedir="$realprefix/include$INCLUDE_PREFIX"
+
+fi
+if test "$includedir" != "/usr/include" -a "$includedir" != "/usr/local/include"
+then :
+
+    PKGCONFIG_CFLAGS="-I\${includedir} $PKGCONFIG_CFLAGS"
+
+fi
 
 PKGCONFIG_REQUIRES="$(echo $PKGCONFIG_REQUIRES | sed -e '1,$s/,$//')"
 PKGCONFIG_REQUIRES_PRIVATE="$(echo $PKGCONFIG_REQUIRES_PRIVATE | sed -e '1,$s/,$//')"
 
 
-ac_config_files="$ac_config_files Makedefs cups.pc packaging/libcups.list"
+ac_config_files="$ac_config_files Makedefs cups3.pc packaging/libcups.list"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -6152,7 +6196,7 @@ do
   case $ac_config_target in
     "config.h") CONFIG_HEADERS="$CONFIG_HEADERS config.h" ;;
     "Makedefs") CONFIG_FILES="$CONFIG_FILES Makedefs" ;;
-    "cups.pc") CONFIG_FILES="$CONFIG_FILES cups.pc" ;;
+    "cups3.pc") CONFIG_FILES="$CONFIG_FILES cups3.pc" ;;
     "packaging/libcups.list") CONFIG_FILES="$CONFIG_FILES packaging/libcups.list" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;

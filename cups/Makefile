@@ -102,7 +102,7 @@ HEADERS	=	\
 #
 
 LIBTARGETS =	\
-		libcups.a \
+		$(LIBCUPS_STATIC) \
 		$(LIBCUPS)
 
 UNITTARGETS =	\
@@ -190,16 +190,16 @@ install:	all $(INSTALL_STATIC)
 	for file in $(HEADERS); do \
 		$(INSTALL_DATA) $$file $(BUILDROOT)$(includedir)/cups; \
 	done
-	echo "Installing libraries to $(BUILDROOT)$(libdir)..."
+	echo "Installing library to $(BUILDROOT)$(libdir)..."
 	$(INSTALL_DIR) $(BUILDROOT)$(libdir)
 	$(INSTALL_LIB) $(LIBCUPS) $(BUILDROOT)$(libdir)
-	if test $(LIBCUPS) = "libcups.so.3"; then \
+	if test $(LIBCUPS) = "libcups.so.3" -o $(LIBCUPS) = "libcups3.so.3"; then \
 		$(RM) $(BUILDROOT)$(libdir)/`basename $(LIBCUPS) .3`; \
 		$(LN) $(LIBCUPS) $(BUILDROOT)$(libdir)/`basename $(LIBCUPS) .3`; \
 	fi
-	if test $(LIBCUPS) = "libcups.3.dylib"; then \
-		$(RM) $(BUILDROOT)$(libdir)/libcups.dylib; \
-		$(LN) $(LIBCUPS) $(BUILDROOT)$(libdir)/libcups.dylib; \
+	if test $(LIBCUPS) = "libcups.3.dylib" -o $(LIBCUPS) = "libcups3.3.dylib"; then \
+		$(RM) $(BUILDROOT)$(libdir)/`basename $(LIBCUPS) .3.dylib`.dylib; \
+		$(LN) $(LIBCUPS) $(BUILDROOT)$(libdir)/`basename $(LIBCUPS) .3.dylib`.dylib; \
 	fi
 	if test "x$(SYMROOT)" != "x"; then \
 		echo "Copying debug symbols to $(SYMROOT)..."; \
@@ -209,10 +209,10 @@ install:	all $(INSTALL_STATIC)
 	fi
 
 install-static:
-	echo "Installing static libraries to $(BUILDROOT)$(libdir)..."
+	echo "Installing static library to $(BUILDROOT)$(libdir)..."
 	$(INSTALL_DIR) $(BUILDROOT)$(libdir)
-	$(INSTALL_LIB) libcups.a $(BUILDROOT)$(libdir)
-	$(RANLIB) $(BUILDROOT)$(libdir)/libcups.a
+	$(INSTALL_LIB) $(LIBCUPS_STATIC) $(BUILDROOT)$(libdir)
+	$(RANLIB) $(BUILDROOT)$(libdir)/$(LIBCUPS_STATIC)
 
 
 #
@@ -220,11 +220,14 @@ install-static:
 #
 
 uninstall:
-	$(RM) $(BUILDROOT)$(libdir)/libcups.3.dylib
-	$(RM) $(BUILDROOT)$(libdir)/libcups.a
-	$(RM) $(BUILDROOT)$(libdir)/libcups.dylib
-	$(RM) $(BUILDROOT)$(libdir)/libcups.so
-	$(RM) $(BUILDROOT)$(libdir)/libcups.so.3
+	$(RM) $(BUILDROOT)$(libdir)/$(LIBCUPS)
+	$(RM) $(BUILDROOT)$(libdir)/$(LIBCUPS_STATIC)
+	if test $(LIBCUPS) = "libcups.so.3" -o $(LIBCUPS) = "libcups3.so.3"; then \
+		$(RM) $(BUILDROOT)$(libdir)/`basename $(LIBCUPS) .3`; \
+	fi
+	if test $(LIBCUPS) = "libcups.3.dylib" -o $(LIBCUPS) = "libcups3.3.dylib"; then \
+		$(RM) $(BUILDROOT)$(libdir)/`basename $(LIBCUPS) .3.dylib`.dylib; \
+	fi
 	-$(RMDIR) $(BUILDROOT)$(libdir)
 	for file in $(HEADERS); do \
 		$(RM) $(BUILDROOT)$(includedir)/cups/$$file; \
@@ -233,10 +236,10 @@ uninstall:
 
 
 #
-# libcups.so.3
+# libcups.so.3 / libcups3.so.3
 #
 
-libcups.so.3:	$(LIBOBJS)
+libcups.so.3 libcups3.so.3:	$(LIBOBJS)
 	echo Linking $@...
 	$(CC) $(DSOFLAGS) $(OPTIM) -o $@ $(LIBOBJS) $(LIBS)
 	$(RM) `basename $@ .3`
@@ -244,24 +247,24 @@ libcups.so.3:	$(LIBOBJS)
 
 
 #
-# libcups.3.dylib
+# libcups.3.dylib / libcups3.3.dylib
 #
 
-libcups.3.dylib:	$(LIBOBJS)
+libcups.3.dylib libcups3.3.dylib:	$(LIBOBJS)
 	echo Linking $@...
 	$(CC) $(DSOFLAGS) $(OPTIM) -o $@ -install_name $(libdir)/$@ \
 		-current_version 3.0.0 -compatibility_version 3.0.0 \
 		$(LIBOBJS) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
-	$(RM) libcups.dylib
-	$(LN) $@ libcups.dylib
+	$(RM) `basename $@ .3.dylib`.dylib
+	$(LN) $@ `basename $@ .3.dylib`.dylib
 
 
 #
-# libcups.a
+# libcups.a / libcups3.a
 #
 
-libcups.a:	$(LIBOBJS)
+libcups.a / libcups3.a:	$(LIBOBJS)
 	echo Archiving $@...
 	$(RM) $@
 	$(AR) $(ARFLAGS) $@ $(LIBOBJS)
@@ -287,9 +290,9 @@ libcups3.def: $(LIBOBJS) $(IMAGEOBJS) Makefile
 # fuzzipp (dependency on static CUPS library is intentional)
 #
 
-fuzzipp:	fuzzipp.o libcups.a
+fuzzipp:	fuzzipp.o $(LIBCUPS_STATIC)
 	echo Linking $@...
-	$(CC) $(LDFLAGS) $(OPTIM) -o $@ fuzzipp.o libcups.a $(LIBS)
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ fuzzipp.o $(LIBCUPS_STATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 
@@ -297,9 +300,9 @@ fuzzipp:	fuzzipp.o libcups.a
 # rasterbench (dependency on static CUPS library is intentional)
 #
 
-rasterbench:	rasterbench.o libcups.a
+rasterbench:	rasterbench.o $(LIBCUPS_STATIC)
 	echo Linking $@...
-	$(CC) $(LDFLAGS) $(OPTIM) -o $@ rasterbench.o libcups.a $(LIBS)
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ rasterbench.o $(LIBCUPS_STATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 
@@ -307,9 +310,9 @@ rasterbench:	rasterbench.o libcups.a
 # testarray (dependency on static CUPS library is intentional)
 #
 
-testarray:	testarray.o libcups.a
+testarray:	testarray.o $(LIBCUPS_STATIC)
 	echo Linking $@...
-	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testarray.o libcups.a $(LIBS)
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testarray.o $(LIBCUPS_STATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 
@@ -317,9 +320,9 @@ testarray:	testarray.o libcups.a
 # testclient (dependency on static libraries is intentional)
 #
 
-testclient:	testclient.o libcups.a
+testclient:	testclient.o $(LIBCUPS_STATIC)
 	echo Linking $@...
-	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testclient.o libcups.a $(LIBS)
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testclient.o $(LIBCUPS_STATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 
@@ -327,9 +330,9 @@ testclient:	testclient.o libcups.a
 # testcreds (dependency on static CUPS library is intentional)
 #
 
-testcreds:	testcreds.o libcups.a
+testcreds:	testcreds.o $(LIBCUPS_STATIC)
 	echo Linking $@...
-	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testcreds.o libcups.a $(LIBS)
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testcreds.o $(LIBCUPS_STATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 
@@ -337,9 +340,9 @@ testcreds:	testcreds.o libcups.a
 # testcups (dependency on static CUPS library is intentional)
 #
 
-testcups:	testcups.o libcups.a
+testcups:	testcups.o $(LIBCUPS_STATIC)
 	echo Linking $@...
-	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testcups.o libcups.a $(LIBS)
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testcups.o $(LIBCUPS_STATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 
@@ -347,9 +350,9 @@ testcups:	testcups.o libcups.a
 # testdest (dependency on static CUPS library is intentional)
 #
 
-testdest:	testdest.o libcups.a
+testdest:	testdest.o $(LIBCUPS_STATIC)
 	echo Linking $@...
-	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testdest.o libcups.a $(LIBS)
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testdest.o $(LIBCUPS_STATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 
@@ -357,9 +360,9 @@ testdest:	testdest.o libcups.a
 # testfile (dependency on static CUPS library is intentional)
 #
 
-testfile:	testfile.o libcups.a
+testfile:	testfile.o $(LIBCUPS_STATIC)
 	echo Linking $@...
-	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testfile.o libcups.a $(LIBS)
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testfile.o $(LIBCUPS_STATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 
@@ -367,9 +370,9 @@ testfile:	testfile.o libcups.a
 # testgetdests (dependency on static CUPS library is intentional)
 #
 
-testgetdests:	testgetdests.o libcups.a
+testgetdests:	testgetdests.o $(LIBCUPS_STATIC)
 	echo Linking $@...
-	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testgetdests.o libcups.a $(LIBS)
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testgetdests.o $(LIBCUPS_STATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 
@@ -377,9 +380,9 @@ testgetdests:	testgetdests.o libcups.a
 # testhttp (dependency on static CUPS library is intentional)
 #
 
-testhttp:	testhttp.o libcups.a
+testhttp:	testhttp.o $(LIBCUPS_STATIC)
 	echo Linking $@...
-	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testhttp.o libcups.a $(LIBS)
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testhttp.o $(LIBCUPS_STATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 
@@ -387,9 +390,9 @@ testhttp:	testhttp.o libcups.a
 # testipp (dependency on static CUPS library is intentional)
 #
 
-testipp:	testipp.o libcups.a
+testipp:	testipp.o $(LIBCUPS_STATIC)
 	echo Linking $@...
-	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testipp.o libcups.a $(LIBS)
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testipp.o $(LIBCUPS_STATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 
@@ -397,9 +400,9 @@ testipp:	testipp.o libcups.a
 # testi18n (dependency on static CUPS library is intentional)
 #
 
-testi18n:	testi18n.o libcups.a
+testi18n:	testi18n.o $(LIBCUPS_STATIC)
 	echo Linking $@...
-	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testi18n.o libcups.a $(LIBS)
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testi18n.o $(LIBCUPS_STATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 
@@ -407,9 +410,9 @@ testi18n:	testi18n.o libcups.a
 # testlang (dependency on static CUPS library is intentional)
 #
 
-testlang:	testlang.o libcups.a
+testlang:	testlang.o $(LIBCUPS_STATIC)
 	echo Linking $@...
-	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testlang.o libcups.a $(LIBS)
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testlang.o $(LIBCUPS_STATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 	echo Creating locale directory structure...
 	$(RM) -r locale
@@ -428,9 +431,9 @@ testlang:	testlang.o libcups.a
 # testoptions (dependency on static CUPS library is intentional)
 #
 
-testoptions:	testoptions.o libcups.a
+testoptions:	testoptions.o $(LIBCUPS_STATIC)
 	echo Linking $@...
-	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testoptions.o libcups.a $(LIBS)
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testoptions.o $(LIBCUPS_STATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 
@@ -438,9 +441,9 @@ testoptions:	testoptions.o libcups.a
 # testpwg (dependency on static CUPS library is intentional)
 #
 
-testpwg:	testpwg.o libcups.a test.ppd
+testpwg:	testpwg.o $(LIBCUPS_STATIC) test.ppd
 	echo Linking $@...
-	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testpwg.o libcups.a $(LIBS)
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testpwg.o $(LIBCUPS_STATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 	echo Running PWG API tests...
 	./testpwg test.ppd
@@ -450,9 +453,9 @@ testpwg:	testpwg.o libcups.a test.ppd
 # testraster (dependency on static CUPS library is intentional)
 #
 
-testraster:	testraster.o libcups.a
+testraster:	testraster.o $(LIBCUPS_STATIC)
 	echo Linking $@...
-	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testraster.o libcups.a $(LIBS)
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testraster.o $(LIBCUPS_STATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 
@@ -460,9 +463,9 @@ testraster:	testraster.o libcups.a
 # testtestpage (dependency on static CUPS library is intentional)
 #
 
-testtestpage:	testtestpage.o libcups.a
+testtestpage:	testtestpage.o $(LIBCUPS_STATIC)
 	echo Compiling $@...
-	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testtestpage.o libcups.a $(LIBS)
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testtestpage.o $(LIBCUPS_STATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 
@@ -470,9 +473,9 @@ testtestpage:	testtestpage.o libcups.a
 # testthreads (dependency on static CUPS library is intentional)
 #
 
-testthreads:	testthreads.o libcups.a
+testthreads:	testthreads.o $(LIBCUPS_STATIC)
 	echo Linking $@...
-	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testthreads.o libcups.a $(LIBS)
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testthreads.o $(LIBCUPS_STATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 
@@ -480,9 +483,9 @@ testthreads:	testthreads.o libcups.a
 # tlscheck (dependency on static CUPS library is intentional)
 #
 
-tlscheck:	tlscheck.o libcups.a
+tlscheck:	tlscheck.o $(LIBCUPS_STATIC)
 	echo Linking $@...
-	$(CC) $(LDFLAGS) $(OPTIM) -o $@ tlscheck.o libcups.a $(LIBS)
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ tlscheck.o $(LIBCUPS_STATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 

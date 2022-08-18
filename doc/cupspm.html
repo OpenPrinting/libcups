@@ -382,6 +382,7 @@ span.string {
 <li><a href="#cupsGetNamedDest">cupsGetNamedDest</a></li>
 <li><a href="#cupsGetOption">cupsGetOption</a></li>
 <li><a href="#cupsGetPassword">cupsGetPassword</a></li>
+<li><a href="#cupsGetRand">cupsGetRand</a></li>
 <li><a href="#cupsGetResponse">cupsGetResponse</a></li>
 <li><a href="#cupsGetServer">cupsGetServer</a></li>
 <li><a href="#cupsGetUser">cupsGetUser</a></li>
@@ -831,11 +832,11 @@ span.string {
 </code></pre>
 <h4 id="compiling-with-xcode">Compiling with Xcode</h4>
 <p>In Xcode, choose <em>New Project...</em> from the <em>File</em> menu (or press SHIFT+CMD+N), then select the <em>Command Line Tool</em> under the macOS Application project type. Click <em>Next</em> and enter a name for the project, for example &quot;firstcups&quot;. Click <em>Next</em> and choose a project directory. The click <em>Next</em> to create the project.</p>
-<p>In the project window, click on the <em>Build Phases</em> group and expand the <em>Link Binary with Libraries</em> section. Click <em>+</em>, type &quot;libcups&quot; to show the library, and then double-click on <code>libcups.tbd</code>.</p>
+<p>In the project window, click on the <em>Build Phases</em> group and expand the <em>Link Binary with Libraries</em> section. Click <em>+</em>, choose &quot;Other...&quot;, and then find and choose the <code>libcups3.dylib</code> file in <code>/usr/local/lib</code>.</p>
 <p>Finally, click on the <code>main.c</code> file in the sidebar and copy the example program to the file. Build and run (CMD+R) to see the list of destinations.</p>
 <h4 id="compiling-with-gcc">Compiling with GCC</h4>
 <p>From the command-line, create a file called <code>simple.c</code> using your favorite editor, copy the example to this file, and save. Then run the following command to compile it with GCC and run it:</p>
-<pre><code>gcc -o simple `pkg-config --cflags cups` simple.c `pkg-config --libs cups`
+<pre><code>gcc -o simple `pkg-config --cflags cups3` simple.c `pkg-config --libs cups3`
 ./simple
 </code></pre>
 <p>The <code>pkg-config</code> command provides the compiler flags (<code>pkg-config --cflags cups</code>) and libraries (<code>pkg-config --libs cups</code>) needed for the local system.</p>
@@ -3574,6 +3575,16 @@ Note: The current password callback function is tracked separately for each
 thread in a program. Multi-threaded programs that override the setting via
 the <a href="#cupsSetPasswordCB"><code>cupsSetPasswordCB</code></a> function need to do so in each thread for the
 same function to be used.</p>
+<h3 class="function"><a id="cupsGetRand">cupsGetRand</a></h3>
+<p class="description">Return a 32-bit pseudo-random number.</p>
+<p class="code">
+unsigned cupsGetRand(void);</p>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Random number</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function returns a 32-bit pseudo-random number suitable for use as
+one-time identifiers or nonces.  The random numbers are generated/seeded
+using system entropy.</p>
 <h3 class="function"><a id="cupsGetResponse">cupsGetResponse</a></h3>
 <p class="description">Get a response to an IPP request.</p>
 <p class="code">

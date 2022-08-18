@@ -94,8 +94,8 @@ Click *Next* and enter a name for the project, for example "firstcups".  Click
 *Next* and choose a project directory. The click *Next* to create the project.
 
 In the project window, click on the *Build Phases* group and expand the
-*Link Binary with Libraries* section. Click *+*, type "libcups" to show the
-library, and then double-click on `libcups.tbd`.
+*Link Binary with Libraries* section. Click *+*, choose "Other...", and then
+find and choose the `libcups3.dylib` file in `/usr/local/lib`.
 
 Finally, click on the `main.c` file in the sidebar and copy the example program
 to the file.  Build and run (CMD+R) to see the list of destinations.
@@ -107,7 +107,7 @@ From the command-line, create a file called `simple.c` using your favorite
 editor, copy the example to this file, and save.  Then run the following command
 to compile it with GCC and run it:
 
-    gcc -o simple `pkg-config --cflags cups` simple.c `pkg-config --libs cups`
+    gcc -o simple `pkg-config --cflags cups3` simple.c `pkg-config --libs cups3`
     ./simple
 
 The `pkg-config` command provides the compiler flags
