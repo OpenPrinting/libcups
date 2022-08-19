@@ -66,7 +66,7 @@ typedef void (*cups_dnssd_error_cb_t)(void *cb_data, const char *message);
 
 typedef struct _cups_dnssd_query_s cups_dnssd_query_t;
 					// DNS query request
-typedef void (*cups_dnssd_query_cb_t)(cups_dnssd_query_t * query, void *cb_data, cups_dnssd_flags_t flags, uint32_t if_index, const char *fullname, uint16_t rrtype, const void *qdata, uint16_t qlen);
+typedef void (*cups_dnssd_query_cb_t)(cups_dnssd_query_t *query, void *cb_data, cups_dnssd_flags_t flags, uint32_t if_index, const char *fullname, uint16_t rrtype, const void *qdata, uint16_t qlen);
 					// DNS-SD query callback
 
 typedef struct _cups_dnssd_resolve_s cups_dnssd_resolve_t;
