@@ -156,7 +156,18 @@ cupsDNSSDAssembleFullName(
   if (!fullname || !fullsize || !name || !type)
     return (false);
 
-  return (snprintf(fullname, fullsize, "%s.%s.%s", name, type, domain ? domain : "local") < (int)(fullsize - 1));
+#if _WIN32
+  return (false);
+
+#elif defined(HAVE_MDNSRESPONDER)
+  if (fullsize < kDNSServiceMaxDomainName)
+    return (false);
+
+  return (DNSServiceConstructFullName(fullname, name, type, domain) == kDNSServiceErr_NoError);
+#else // HAVE_AVAHI
+
+  return (false);
+#endif // _WIN32
 }
 
 

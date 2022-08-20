@@ -34,7 +34,7 @@ typedef struct testdata_s		// Test data structure
 
 static void	browse_cb(cups_dnssd_browse_t *browse, void *cb_data, cups_dnssd_flags_t flags, uint32_t if_index, const char *name, const char *regtype, const char *domain);
 static void	error_cb(void *cb_data, const char *message);
-//static void	query_cb(cups_dnssd_query_t *query, void *cb_data, cups_dnssd_flags_t flags, uint32_t if_index, const char *fullname, uint16_t rrtype, const void *qdata, uint16_t qlen);
+static void	query_cb(cups_dnssd_query_t *query, void *cb_data, cups_dnssd_flags_t flags, uint32_t if_index, const char *fullname, uint16_t rrtype, const void *qdata, uint16_t qlen);
 static void	resolve_cb(cups_dnssd_resolve_t *res, void *cb_data, cups_dnssd_flags_t flags, uint32_t if_index, const char *fullname, const char *host, uint16_t port, size_t num_txt, cups_option_t *txt);
 static void	service_cb(cups_dnssd_service_t *service, void *cb_data, cups_dnssd_flags_t flags, const char *name, const char *regtype, const char *domain);
 static void	usage(const char *arg);
@@ -207,11 +207,15 @@ browse_cb(
   testdata_t	*data = (testdata_t *)cb_data;
 					// Test data
   char		message[1024];		// Message string
+  char		fullname[1024];		// Full service name
 
 
   snprintf(message, sizeof(message), "B flags=%02X if_index=%u name=\"%s\" regtype=\"%s\" domain=\"%s\"", flags, if_index, name, regtype, domain);
 
   cupsDNSSDResolveNew(cupsDNSSDBrowseGetContext(browse), CUPS_DNSSD_IF_INDEX_ANY, name, regtype, domain, resolve_cb, cb_data);
+
+  cupsDNSSDAssembleFullName(fullname, sizeof(fullname), name, regtype, domain);
+  cupsDNSSDQueryNew(cupsDNSSDBrowseGetContext(browse), CUPS_DNSSD_IF_INDEX_ANY, fullname, CUPS_DNSSD_RRTYPE_TXT, query_cb, cb_data);
 
   cupsMutexLock(&data->mutex);
   cupsArrayAdd(data->messages, message);
@@ -240,7 +244,6 @@ error_cb(void       *cb_data,		// I - Callback data
 }
 
 
-#if 0
 //
 // 'query_cb()' - Record query request callback usage.
 //
@@ -258,17 +261,26 @@ query_cb(
 {
   testdata_t	*data = (testdata_t *)cb_data;
 					// Test data
-  char		message[1024];		// Message string
+  uint16_t	i;			// Looping var
+  char		message[2048],		// Message string
+		*mptr;			// Pointer into message string
+  const unsigned char *qptr;		// Pointer into record data
 
 
-  snprintf(message, sizeof(message), "Q flags=%02X if_index=%u fullname=\"%s\" rrtype=%u qdata=%p qlen=%u", flags, if_index, fullname, rrtype, qdata, qlen);
+  snprintf(message, sizeof(message), "Q flags=%02X if_index=%u fullname=\"%s\" rrtype=%u qlen=%u qdata=<", flags, if_index, fullname, rrtype, qlen);
+  for (mptr = message + strlen(message), i = 0, qptr = (const unsigned char *)qdata; i < qlen; i ++, mptr += strlen(mptr), qptr ++)
+    snprintf(mptr, sizeof(message) - (size_t)(mptr - message), "%02X", *qptr);
+  if (mptr < (message + sizeof(message) - 1))
+  {
+    *mptr++ = '>';
+    *mptr   = '\0';
+  }
 
   cupsMutexLock(&data->mutex);
   cupsArrayAdd(data->messages, message);
   data->query_count ++;
   cupsMutexUnlock(&data->mutex);
 }
-#endif // 0
 
 
 //
@@ -292,7 +304,7 @@ resolve_cb(
   int		i;			// Looping var
   char		message[2048],		// Message string
 		*mptr;			// Pointer into message string
-  const char	*prefix = ", txt=";	// Prefix string
+  const char	*prefix = " txt=";	// Prefix string
 
 
   snprintf(message, sizeof(message), "R flags=%02X if_index=%u fullname=\"%s\" host=\"%s\" port=%u num_txt=%u", flags, if_index, fullname, host, port, (unsigned)num_txt);
