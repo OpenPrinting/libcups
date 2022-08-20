@@ -191,7 +191,7 @@ main(int  argc,				// I - Number of command-line arguments
 
 
 //
-// 'browse_cb()' - Browse callback.
+// 'browse_cb()' - Record browse request callback usage.
 //
 
 static void
@@ -242,19 +242,19 @@ error_cb(void       *cb_data,		// I - Callback data
 
 #if 0
 //
-// 'query_cb()' - Query callback.
+// 'query_cb()' - Record query request callback usage.
 //
 
 static void
 query_cb(
-    cups_dnssd_query_t *query,
-    void               *cb_data,
-    cups_dnssd_flags_t flags,
-    uint32_t           if_index,
-    const char         *fullname,
-    uint16_t           rrtype,
-    const void         *qdata,
-    uint16_t           qlen)
+    cups_dnssd_query_t *query,		// I - Query request
+    void               *cb_data,	// I - Callback data
+    cups_dnssd_flags_t flags,		// I - Flags
+    uint32_t           if_index,	// I - Interface index
+    const char         *fullname,	// I - Full service name
+    uint16_t           rrtype,		// I - Record type
+    const void         *qdata,		// I - Record data
+    uint16_t           qlen)		// I - Length of record data
 {
   testdata_t	*data = (testdata_t *)cb_data;
 					// Test data
@@ -271,17 +271,21 @@ query_cb(
 #endif // 0
 
 
+//
+// 'resolve_cb()' - Record resolve request callback usage.
+//
+
 static void
 resolve_cb(
-    cups_dnssd_resolve_t *res,
-    void                 *cb_data,
-    cups_dnssd_flags_t   flags,
-    uint32_t             if_index,
-    const char           *fullname,
-    const char           *host,
-    uint16_t             port,
-    size_t               num_txt,
-    cups_option_t        *txt)
+    cups_dnssd_resolve_t *res,		// I - Resolve request
+    void                 *cb_data,	// I - Callback data
+    cups_dnssd_flags_t   flags,		// I - Flags
+    uint32_t             if_index,	// I - Interface index
+    const char           *fullname,	// I - Full service name
+    const char           *host,		// I - Hostname
+    uint16_t             port,		// I - Port number
+    size_t               num_txt,	// I - Number of key/value pairs in TXT record
+    cups_option_t        *txt)		// I - Key/value pairs
 {
   testdata_t	*data = (testdata_t *)cb_data;
 					// Test data
@@ -305,14 +309,18 @@ resolve_cb(
 }
 
 
+//
+// 'service_cb()' - Record service registration callback usage.
+//
+
 static void
 service_cb(
-    cups_dnssd_service_t *service,
-    void                 *cb_data,
-    cups_dnssd_flags_t   flags,
-    const char           *name,
-    const char           *regtype,
-    const char           *domain)
+    cups_dnssd_service_t *service,	// I - Service registration
+    void                 *cb_data,	// I - Callback data
+    cups_dnssd_flags_t   flags,		// I - Flags
+    const char           *name,		// I - Service name
+    const char           *regtype,	// I - Registration type
+    const char           *domain)	// I - Domain name
 {
   testdata_t	*data = (testdata_t *)cb_data;
 					// Test data
