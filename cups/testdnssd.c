@@ -19,6 +19,7 @@
 typedef struct testdata_s		// Test data structure
 {
   cups_mutex_t	mutex;			// Mutex for access
+  cups_array_t	*messages;		// Messages from callbacks
   size_t	browse_count;		// Number of browse callbacks
   size_t	error_count;		// Number of error callbacks
   size_t	query_count;		// Number of query callbacks
@@ -34,7 +35,7 @@ typedef struct testdata_s		// Test data structure
 static void	browse_cb(cups_dnssd_browse_t *browse, void *cb_data, cups_dnssd_flags_t flags, uint32_t if_index, const char *name, const char *regtype, const char *domain);
 static void	error_cb(void *cb_data, const char *message);
 //static void	query_cb(cups_dnssd_query_t *query, void *cb_data, cups_dnssd_flags_t flags, uint32_t if_index, const char *fullname, uint16_t rrtype, const void *qdata, uint16_t qlen);
-//static void	resolve_cb(cups_dnssd_resolve_t *res, void *cb_data, cups_dnssd_flags_t flags, uint32_t if_index, const char *fullname, const char *host, uint16_t port, size_t num_txt, cups_option_t *txt);
+static void	resolve_cb(cups_dnssd_resolve_t *res, void *cb_data, cups_dnssd_flags_t flags, uint32_t if_index, const char *fullname, const char *host, uint16_t port, size_t num_txt, cups_option_t *txt);
 static void	service_cb(cups_dnssd_service_t *service, void *cb_data, cups_dnssd_flags_t flags, const char *name, const char *regtype, const char *domain);
 static void	usage(const char *arg);
 
@@ -47,11 +48,12 @@ int					// O - Exit status
 main(int  argc,				// I - Number of command-line arguments
      char *argv[])			// I - Command-line arguments
 {
-  int			i;		// Looping var
+  int			i,		// Looping var
+			ret = 0;	// Return value
   cups_dnssd_t		*dnssd;		// DNS-SD context
   cups_dnssd_browse_t	*browse;	// DNS-SD browse request
 //  cups_dnssd_query_t	*query;		// DNS-SD query request
-//  cups_dnssd_resolve_t	*resolve;	// DNS-SD resolve request
+  cups_dnssd_resolve_t	*resolve;	// DNS-SD resolve request
   cups_dnssd_service_t	*service;	// DNS-SD service registration
   size_t		num_txt;	// Number of TXT record key/value pairs
   cups_option_t		*txt;		// TXT record key/value pairs
@@ -60,6 +62,7 @@ main(int  argc,				// I - Number of command-line arguments
 
   // Clear test data...
   memset(&testdata, 0, sizeof(testdata));
+  testdata.messages = cupsArrayNew(NULL, NULL, NULL, 0, (cups_acopy_cb_t)strdup, (cups_afree_cb_t)free);
 
   if (argc == 1)
   {
@@ -72,37 +75,94 @@ main(int  argc,				// I - Number of command-line arguments
 
     testBegin("cupsDNSSDBrowseNew(_ipp._tcp)");
     if ((browse = cupsDNSSDBrowseNew(dnssd, CUPS_DNSSD_IF_INDEX_ANY, "_ipp._tcp", NULL, browse_cb, &testdata)) != NULL)
+    {
       testEnd(true);
+    }
     else
-      return (1);
+    {
+      ret = 1;
+      goto done;
+    }
+
+    testBegin("cupsDNSSDBrowseGetContext");
+    testEnd(cupsDNSSDBrowseGetContext(browse) == dnssd);
+
+    testBegin("cupsDNSSDBrowseNew(_http._tcp)");
+    if ((browse = cupsDNSSDBrowseNew(dnssd, CUPS_DNSSD_IF_INDEX_ANY, "_http._tcp", NULL, browse_cb, &testdata)) != NULL)
+    {
+      testEnd(true);
+    }
+    else
+    {
+      ret = 1;
+      goto done;
+    }
+
+    testBegin("cupsDNSSDBrowseGetContext");
+    testEnd(cupsDNSSDBrowseGetContext(browse) == dnssd);
 
     testBegin("cupsDNSSDServiceNew(Test Printer)");
     if ((service = cupsDNSSDServiceNew(dnssd, "Test Printer", service_cb, &testdata)) != NULL)
+    {
       testEnd(true);
+    }
     else
-      return (1);
+    {
+      ret = 1;
+      goto done;
+    }
 
     num_txt = cupsAddOption("rp", "ipp/print", 0, &txt);
 
     testBegin("cupsDNSSDServiceAdd(_http._tcp)");
     if (cupsDNSSDServiceAdd(service, CUPS_DNSSD_IF_INDEX_ANY, "_http._tcp,_printer", NULL, NULL, 631, 0, NULL))
+    {
       testEnd(true);
+    }
     else
-      return (1);
+    {
+      ret = 1;
+      goto done;
+    }
 
     testBegin("cupsDNSSDServiceAdd(_ipp._tcp)");
     if (cupsDNSSDServiceAdd(service, CUPS_DNSSD_IF_INDEX_ANY, "_ipp._tcp,_print", NULL, NULL, 631, num_txt, txt))
+    {
       testEnd(true);
+    }
     else
-      return (1);
+    {
+      ret = 1;
+      goto done;
+    }
+
+    testBegin("cupsDNSSDServicePublish");
+    testEnd(cupsDNSSDServicePublish(service));
+
+    testBegin("cupsDNSSDServiceGetContext");
+    testEnd(cupsDNSSDServiceGetContext(service) == dnssd);
 
     cupsFreeOptions(num_txt, txt);
+
+    testBegin("cupsDNSSDResolveNew(Test Printer._ipp._tcp.local.)");
+    if ((resolve = cupsDNSSDResolveNew(dnssd, CUPS_DNSSD_IF_INDEX_ANY, "Test Printer", "_ipp._tcp", "local.", resolve_cb, &testdata)) != NULL)
+    {
+      testEnd(true);
+    }
+    else
+    {
+      ret = 1;
+      goto done;
+    }
+
+    testBegin("cupsDNSSDResolveGetContext");
+    testEnd(cupsDNSSDResolveGetContext(resolve) == dnssd);
 
     testBegin("Wait for callbacks");
 
     for (i = 0; i < 30; i ++)
     {
-      if (testdata.service_count != 0 && testdata.browse_count != 0)
+      if (testdata.service_count != 0 && testdata.browse_count != 0 && testdata.resolve_count != 0)
         break;
 
       sleep(1);
@@ -110,14 +170,23 @@ main(int  argc,				// I - Number of command-line arguments
 
     testEnd(i < 30);
 
+    done:
+
     cupsDNSSDDelete(dnssd);
+
+    const char *message;		// Current message
+
+    for (message = (const char *)cupsArrayGetFirst(testdata.messages); message; message = (const char *)cupsArrayGetNext(testdata.messages))
+      puts(message);
+
+    cupsArrayDelete(testdata.messages);
   }
   else
   {
     usage(argv[1]);
   }
 
-  return (0);
+  return (ret);
 }
 
 
@@ -137,11 +206,15 @@ browse_cb(
 {
   testdata_t	*data = (testdata_t *)cb_data;
 					// Test data
+  char		message[1024];		// Message string
 
 
-  fprintf(stderr, "Browse flags=%02X if_index=%u name=\"%s\" regtype=\"%s\" domain=\"%s\"\n", flags, if_index, name, regtype, domain);
+  snprintf(message, sizeof(message), "B flags=%02X if_index=%u name=\"%s\" regtype=\"%s\" domain=\"%s\"", flags, if_index, name, regtype, domain);
+
+  cupsDNSSDResolveNew(cupsDNSSDBrowseGetContext(browse), CUPS_DNSSD_IF_INDEX_ANY, name, regtype, domain, resolve_cb, cb_data);
 
   cupsMutexLock(&data->mutex);
+  cupsArrayAdd(data->messages, message);
   data->browse_count ++;
   cupsMutexUnlock(&data->mutex);
 }
@@ -185,14 +258,17 @@ query_cb(
 {
   testdata_t	*data = (testdata_t *)cb_data;
 					// Test data
+  char		message[1024];		// Message string
 
 
-  fprintf(stderr, "Query: flags=%02X if_index=%u fullname=\"%s\" rrtype=%u qdata=%p qlen=%u\n", flags, if_index, fullname, rrtype, qdata, qlen);
+  snprintf(message, sizeof(message), "Q flags=%02X if_index=%u fullname=\"%s\" rrtype=%u qdata=%p qlen=%u", flags, if_index, fullname, rrtype, qdata, qlen);
 
   cupsMutexLock(&data->mutex);
+  cupsArrayAdd(data->messages, message);
   data->query_count ++;
   cupsMutexUnlock(&data->mutex);
 }
+#endif // 0
 
 
 static void
@@ -209,15 +285,24 @@ resolve_cb(
 {
   testdata_t	*data = (testdata_t *)cb_data;
 					// Test data
+  int		i;			// Looping var
+  char		message[2048],		// Message string
+		*mptr;			// Pointer into message string
+  const char	*prefix = ", txt=";	// Prefix string
 
 
-  fprintf(stderr, "Resolve: flags=%02X if_index=%u fullname=\"%s\" host=\"%s\" port=%u num_txt=%u, txt=%p\n", flags, if_index, fullname, host, port, (unsigned)num_txt, txt);
+  snprintf(message, sizeof(message), "R flags=%02X if_index=%u fullname=\"%s\" host=\"%s\" port=%u num_txt=%u", flags, if_index, fullname, host, port, (unsigned)num_txt);
+  for (mptr = message + strlen(message), i = 0; i < num_txt; i ++, mptr += strlen(mptr))
+  {
+    snprintf(mptr, sizeof(message) - (size_t)(mptr - message), "%s\"%s=%s\"", prefix, txt[i].name, txt[i].value);
+    prefix = ",";
+  }
 
   cupsMutexLock(&data->mutex);
+  cupsArrayAdd(data->messages, message);
   data->resolve_count ++;
   cupsMutexUnlock(&data->mutex);
 }
-#endif // 0
 
 
 static void
@@ -231,11 +316,13 @@ service_cb(
 {
   testdata_t	*data = (testdata_t *)cb_data;
 					// Test data
+  char		message[1024];		// Message string
 
 
-  fprintf(stderr, "Service: flags=%02X name=\"%s\" regtype=\"%s\" domain=\"%s\"\n", flags, name, regtype, domain);
+  snprintf(message, sizeof(message), "S flags=%02X name=\"%s\" regtype=\"%s\" domain=\"%s\"", flags, name, regtype, domain);
 
   cupsMutexLock(&data->mutex);
+  cupsArrayAdd(data->messages, message);
   data->service_count ++;
   cupsMutexUnlock(&data->mutex);
 }

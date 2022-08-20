@@ -360,7 +360,19 @@ cupsDNSSDBrowseDelete(
 
 
 //
-// 'cupsDNSSDBrowseNew()' - .
+// 'cupsDNSSDBrowseGetContext()' - Get the DNS-SD context for the browse request.
+//
+
+cups_dnssd_t *				// O - Context or `NULL`
+cupsDNSSDBrowseGetContext(
+    cups_dnssd_browse_t *browse)	// I - Browse request
+{
+  return (browse ? browse->dnssd : NULL);
+}
+
+
+//
+// 'cupsDNSSDBrowseNew()' - Create a new DNS-SD browse request.
 //
 
 cups_dnssd_browse_t *			// O - Browse request or `NULL` on error
@@ -450,6 +462,18 @@ cupsDNSSDQueryDelete(
 
 
 //
+// 'cupsDNSSDQueryGetContext()' - Get the DNS-SD context for the query request.
+//
+
+cups_dnssd_t *				// O - DNS-SD context or `NULL`
+cupsDNSSDQueryGetContext(
+    cups_dnssd_query_t *query)		// I - Query request
+{
+  return (query ? query->dnssd : NULL);
+}
+
+
+//
 // 'cupsDNSSDQueryNew()' - Create a new query request.
 //
 // This function creates a new DNS-SD query request for the specified record
@@ -525,7 +549,7 @@ cupsDNSSDQueryNew(
 
 
 //
-// 'cupsDNSSDResolveDelete()' - .
+// 'cupsDNSSDResolveDelete()' - Cancel and free a resolve request.
 //
 
 void
@@ -544,7 +568,19 @@ cupsDNSSDResolveDelete(
 
 
 //
-// 'cupsDNSSDResolveNew()' - .
+// 'cupsDNSSDResolveGetContext()' - Get the DNS-SD context for the resolve request.
+//
+
+cups_dnssd_t *				// O - DNS-SD context or `NULL`
+cupsDNSSDResolveGetContext(
+    cups_dnssd_resolve_t *resolve)	// I - Resolve request
+{
+  return (resolve ? resolve->dnssd : NULL);
+}
+
+
+//
+// 'cupsDNSSDResolveNew()' - Create a new DNS-SD resolve request.
 //
 
 cups_dnssd_resolve_t *			// O - Resolve request or `NULL` on error
@@ -615,7 +651,7 @@ cupsDNSSDResolveNew(
 
 
 //
-// 'cupsDNSSDServiceAdd()' - .
+// 'cupsDNSSDServiceAdd()' - Add a service instance.
 //
 
 bool					// O - `true` on success, `false` on failure
@@ -697,7 +733,7 @@ cupsDNSSDServiceAdd(
 
 
 //
-// 'cupsDNSSDServiceDelete()' - .
+// 'cupsDNSSDServiceDelete()' - Cancel and free a service registration.
 //
 
 void
@@ -716,7 +752,19 @@ cupsDNSSDServiceDelete(
 
 
 //
-// 'cupsDNSSDServiceNew()' - .
+// 'cupsDNSSDServiceGetContext()' - Get the DNS-SD context for the service registration.
+//
+
+cups_dnssd_t *				// O - DNS-SD context or `NULL`
+cupsDNSSDServiceGetContext(
+    cups_dnssd_service_t *service)	// I - Service registration
+{
+  return (service ? service->dnssd : NULL);
+}
+
+
+//
+// 'cupsDNSSDServiceNew()' - Create a new named service.
 //
 
 cups_dnssd_service_t *			// O - Service or `NULL` on error
@@ -767,7 +815,7 @@ cupsDNSSDServiceNew(
 
 
 //
-// 'cupsDNSSDServicePublish()' - .
+// 'cupsDNSSDServicePublish()' - Publish a service.
 //
 
 bool					// O - `true` on success, `false` on failure
