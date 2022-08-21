@@ -12,6 +12,12 @@
 #include "dnssd.h"
 #include "debug-internal.h"
 
+#ifdef __APPLE__
+#  include <nameser.h>
+#  include <CoreFoundation/CoreFoundation.h>
+#  include <SystemConfiguration/SystemConfiguration.h>
+#endif // __APPLE__
+
 #if _WIN32
 #  include <windns.h>
 #elif defined(HAVE_MDNSRESPONDER)
@@ -41,13 +47,17 @@ struct _cups_dns_srv_s			// DNS SRV record
 struct _cups_dnssd_s			// DNS-SD context
 {
   cups_mutex_t		mutex;		// Mutex for context
-  size_t		name_changes;	// Number of hostname changes
+  size_t		config_changes;	// Number of hostname/network changes
   cups_dnssd_error_cb_t	cb;		// Error callback function
   void			*cb_data;	// Error callback data
   cups_array_t		*browses,	// Browse requests
 			*queries,	// Query requests
 			*resolves,	// Resolve requests
 			*services;	// Registered services
+
+#ifdef __APPLE__
+  SCDynamicStoreRef	sc;		// Dyanmic store context for host info
+#endif // __APPLE__
 
 #if _WIN32
 
@@ -71,6 +81,7 @@ struct _cups_dnssd_browse_s		// DNS-SD browse request
 #elif defined(HAVE_MDNSRESPONDER)
   DNSServiceRef		ref;		// Browse reference
 #else // HAVE_AVAHI
+  AvahiServiceBrowser	*browser;	// Browser
 #endif // _WIN32
 };
 
@@ -84,6 +95,7 @@ struct _cups_dnssd_query_s		// DNS-SD query request
 #elif defined(HAVE_MDNSRESPONDER)
   DNSServiceRef		ref;		// Query reference
 #else // HAVE_AVAHI
+  AvahiRecordBrowser	*browser;	// Browser
 #endif // _WIN32
 };
 
@@ -97,6 +109,7 @@ struct _cups_dnssd_resolve_s		// DNS-SD resolve request
 #elif defined(HAVE_MDNSRESPONDER)
   DNSServiceRef		ref;		// Resolve reference
 #else // HAVE_AVAHI
+  AvahiServiceResolver	*resolver;	// Resolver
 #endif // _WIN32
 };
 
@@ -115,6 +128,7 @@ struct _cups_dnssd_service_s		// DNS-SD service registration
   DNSServiceRef		refs[16];	// Service references
   DNSRecordRef		loc_refs[16];	// Service location records
 #else // HAVE_AVAHI
+  AvahiEntryGroup	*group;		// Group of services under this name
 #endif // _WIN32
 };
 
@@ -127,8 +141,16 @@ static void		delete_browse(cups_dnssd_browse_t *browse);
 static void		delete_query(cups_dnssd_query_t *query);
 static void		delete_resolve(cups_dnssd_resolve_t *resolve);
 static void		delete_service(cups_dnssd_service_t *service);
+static void		record_config_change(cups_dnssd_t *dnssd, cups_dnssd_flags_t flags);
+static void		report_error(cups_dnssd_t *dnssd, const char *message, ...) _CUPS_FORMAT(2,3);
 
-#ifdef HAVE_MDNSRESPONDER
+#ifdef __APPLE__
+static void		apple_sc_cb(SCDynamicStoreRef sc, CFArrayRef changed, cups_dnssd_t *dnssd);
+#endif // __APPLE__
+
+#if _WIN32
+
+#elif defined(HAVE_MDNSRESPONDER)
 static void		*mdns_monitor(cups_dnssd_t *dnssd);
 static void		mdns_browse_cb(DNSServiceRef ref, DNSServiceFlags flags, uint32_t interfaceIndex, DNSServiceErrorType error, const char *name, const char *regtype, const char *domain, cups_dnssd_browse_t *browse);
 static void		mdns_query_cb(DNSServiceRef ref, DNSServiceFlags flags, uint32_t if_index, DNSServiceErrorType error, const char *name, uint16_t rrtype, uint16_t rrclass, uint16_t rdlen, const void *rdata, uint32_t ttl, cups_dnssd_query_t *query);
@@ -136,8 +158,14 @@ static void		mdns_resolve_cb(DNSServiceRef ref, DNSServiceFlags flags, uint32_t 
 static void		mdns_service_cb(DNSServiceRef ref, DNSServiceFlags flags, DNSServiceErrorType error, const char *name, const char *regtype, const char *domain, cups_dnssd_service_t *service);
 static const char	*mdns_strerror(DNSServiceErrorType errorCode);
 static cups_dnssd_flags_t mdns_to_cups(DNSServiceFlags flags, DNSServiceErrorType error);
-#endif // HAVE_MDNSRESPONDER
-static void		report_error(cups_dnssd_t *dnssd, const char *message, ...) _CUPS_FORMAT(2,3);
+
+#else // HAVE_AVAHI
+static void		avahi_browse_cb(AvahiServiceBrowser *browser, AvahiIfIndex if_index, AvahiProtocol protocol, AvahiBrowserEvent event, const char *name, const char *type, const char *domain, AvahiLookupResultFlags flags, cups_dnssd_browse_t *browse);
+static void		avahi_client_cb(AvahiClient *c, AvahiClientState state, cups_dnssd_t *dnssd);
+static void		avahi_query_cb(AvahiRecordBrowser *browser, AvahiIfIndex if_index, AvahiProtocol protocol, AvahiBrowserEvent event, const char *fullName, uint16_t rrclass, uint16_t rrtype, const void *rdata, size_t rdlen, AvahiLookupResultFlags flags, cups_dnssd_query_t *query);
+static void		avahi_resolve_cb(AvahiServiceResolver *resolver, AvahiIfIndex if_index, AvahiProtocol protocol, AvahiResolverEvent event, const char *name, const char *type, const char *domain, const char *host_name, const AvahiAddress *address, uint16_t port, AvahiStringList *txtrec, AvahiLookupResultFlags flags, cups_dnssd_resolve_t *resolve);
+static void		avahi_service_cb(AvahiEntryGroup *srv, AvahiEntryGroupState state, cups_dnssd_service_t *service);
+#endif // _WIN32
 
 
 //
@@ -164,9 +192,9 @@ cupsDNSSDAssembleFullName(
     return (false);
 
   return (DNSServiceConstructFullName(fullname, name, type, domain) == kDNSServiceErr_NoError);
-#else // HAVE_AVAHI
 
-  return (false);
+#else // HAVE_AVAHI
+  return (!avahi_service_name_join(fullname, fullsize, name, type, domain));
 #endif // _WIN32
 }
 
@@ -293,6 +321,78 @@ cupsDNSSDDelete(cups_dnssd_t *dnssd)	// I - DNS-SD context
 
 
 //
+// 'cupsDNSSDGetHostName()' - Get the current mDNS host name for the system.
+//
+// This function gets the current mDNS (".local") host name for the system.
+//
+
+const char *				// O - Local host name or `NULL` for none
+cupsDNSSDGetHostName(
+    cups_dnssd_t *dnssd,		// I - DNS-SD context
+    char         *buffer,		// I - Host name buffer
+    size_t       bufsize)		// I - Size of host name buffer
+{
+  // Range check input...
+  if (buffer)
+    *buffer = '\0';
+
+  if (!dnssd || !buffer || !bufsize)
+    return (NULL);
+
+#if _WIN32 || defined(HAVE_MDNSRESPONDER)
+  char		*bufptr;		// Pointer into buffer
+#  ifdef __APPLE__
+  CFStringRef	localname;		// Local host name as a CF string
+
+  if ((localname = SCDynamicStoreCopyLocalHostName(dnssd->sc)) != NULL)
+  {
+    CFStringGetCString(localname, buffer, (CFIndex)bufsize, kCFStringEncodingUTF8);
+    CFRelease(localname);
+  }
+  else
+#  endif // __APPLE__
+  gethostname(buffer, bufsize);
+
+  if ((bufptr = strchr(buffer, '.')) != NULL)
+  {
+    // Replace domain with .local as needed...
+    if (strcmp(bufptr, ".local"))
+      cupsCopyString(bufptr, ".local", bufsize - (size_t)(bufptr - buffer));
+  }
+  else
+  {
+    // Add .local...
+    cupsConcatString(buffer, ".local", bufsize);
+  }
+
+#else // HAVE_AVAHI
+  cupsCopyString(buffer, avahi_client_get_host_name_fqdn(dnssd->client), bufsize);
+#endif // _WIN32
+
+  return (buffer);
+}
+
+
+//
+// 'cupsDNSSDGetConfigChanges()' - Get the number of host name/network configuration changes seen.
+//
+// This function returns the numebr of host name or network configuration
+// changes that have been seen since the context was created.  The value can be
+// used to track when local services need to be updated.  Registered services
+// will also get a callback with the `CUPS_DNSSD_FLAGS_HOST_CHANGE` bit set in
+// the "flags" argument for host name changes and/or
+// `CUPS_DNSSD_FLAGS_NETWORK_CHANGE` for network changes.
+//
+
+size_t					// O - Number of host name changes
+cupsDNSSDGetConfigChanges(
+    cups_dnssd_t *dnssd)		// I - DNS-SD context
+{
+  return (dnssd ? dnssd->config_changes : 0);
+}
+
+
+//
 // 'cupsDNSSDNew()' - Create a new DNS-SD context.
 //
 // This function creates a new DNS-SD context for browsing, querying, resolving,
@@ -318,6 +418,16 @@ cupsDNSSDNew(
   // Initialize the mutex...
   cupsMutexInit(&dnssd->mutex);
 
+#ifdef __APPLE__
+  // Use the system configuration dynamic store for host info...
+  SCDynamicStoreContext	scinfo;		// Information for callback
+
+  memset(&scinfo, 0, sizeof(scinfo));
+  scinfo.info = dnssd;
+
+  dnssd->sc = SCDynamicStoreCreate(kCFAllocatorDefault, CFSTR("libcups3"), (SCDynamicStoreCallBack)apple_sc_cb, &scinfo);
+#endif // __APPLE__
+
   // Setup the DNS-SD connection and monitor thread...
 #if _WIN32
 
@@ -326,6 +436,7 @@ cupsDNSSDNew(
 
   if ((error = DNSServiceCreateConnection(&dnssd->ref)) == kDNSServiceErr_NoError)
   {
+    // Start the background monitoring thread...
     if ((dnssd->monitor = cupsThreadCreate((void *(*)(void *))mdns_monitor, dnssd)) == 0)
     {
       report_error(dnssd, "Unable to create DNS-SD thread: %s", strerror(errno));
@@ -337,13 +448,35 @@ cupsDNSSDNew(
   }
   else
   {
+    // Unable to create connection...
     report_error(dnssd, "Unable to initialize DNS-SD: %s", mdns_strerror(error));
     cupsDNSSDDelete(dnssd);
     return (NULL);
   }
 
 #else // HAVE_AVAHI
+  int error;				// Error code
 
+  if ((dnssd->monitor = avahi_threaded_poll_new()) == NULL)
+  {
+    // Unable to create the background thread...
+    report_error(dnssd, "Unable to initialize DNS-SD thread: %s", strerror(errno));
+    cupsDNSSDDelete(dnssd);
+    return (NULL);
+  }
+  else if ((dnssd->client = avahi_client_new(avahi_threaded_poll_get(dnssd->monitor), AVAHI_CLIENT_NO_FAIL, (AvahiClientCallback)avahi_client_cb, dnssd, &error)) == NULL)
+  {
+    // Unable to create the client...
+    report_error(dnssd, "Unable to initialize DNS-SD: %s", avahi_strerror(error));
+    avahi_threaded_poll_free(dnssd->monitor);
+    cupsDNSSDDelete(dnssd);
+    return (NULL);
+  }
+  else
+  {
+    // Start the background thread...
+    avahi_threaded_poll_start(dnssd->monitor);
+  }
 #endif // _WIN32
 
   return (dnssd);
@@ -439,7 +572,17 @@ cupsDNSSDBrowseNew(
   }
 
 #else // HAVE_AVAHI
+  avahi_threaded_poll_lock(dnssd->monitor);
+  browse->browser = avahi_service_browser_new(dnssd->client, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, types, NULL, 0, avahi_browse_cb, browse);
+  avahi_threaded_poll_unlock(dnssd->monitor);
 
+  if (!browse->browser)
+  {
+    report_error(dnssd, "Unable to create DNS-SD browse request: %s", avahi_strerror(avahi_client_errno(dnssd->client)));
+    free(browse);
+    browse = NULL;
+    goto done;
+  }
 #endif // _WIN32
 
   cupsArrayAdd(dnssd->browses, browse);
@@ -545,7 +688,17 @@ cupsDNSSDQueryNew(
   }
 
 #else // HAVE_AVAHI
+  avahi_threaded_poll_lock(dnssd->monitor);
+  query->browser = avahi_record_browser_new(dnssd->client, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, fullname, AVAHI_DNS_CLASS_IN, rrtype, 0, (AvahiRecordBrowserCallback)avahi_query_cb, query);
+  avahi_threaded_poll_unlock(dnssd->monitor);
 
+  if (!query->browser)
+  {
+    report_error(dnssd, "Unable to create DNS-SD query request: %s", avahi_strerror(avahi_client_errno(dnssd->client)));
+    free(query);
+    query = NULL;
+    goto done;
+  }
 #endif // _WIN32
 
   cupsArrayAdd(dnssd->queries, query);
@@ -648,7 +801,17 @@ cupsDNSSDResolveNew(
   }
 
 #else // HAVE_AVAHI
+  avahi_threaded_poll_lock(dnssd->monitor);
+  resolve->resolver = avahi_service_resolver_new(dnssd->client, if_index, AVAHI_PROTO_UNSPEC, name, type, domain, AVAHI_PROTO_UNSPEC, /*flags*/0, (AvahiServiceResolverCallback)avahi_resolve_cb, resolve);
+  avahi_threaded_poll_unlock(dnssd->monitor);
 
+  if (!resolve->resolver)
+  {
+    report_error(dnssd, "Unable to create DNS-SD resolve request: %s", avahi_strerror(avahi_client_errno(dnssd->client)));
+    free(resolve);
+    resolve = NULL;
+    goto done;
+  }
 #endif // _WIN32
 
   cupsArrayAdd(dnssd->resolves, resolve);
@@ -734,7 +897,61 @@ cupsDNSSDServiceAdd(
   service->num_refs ++;
 
 #else // HAVE_AVAHI
+  int			error;		// Error code
+  AvahiStringList	*txtrec = NULL;	// TXT record string list
+  char			*regtype,	// Registration type
+			*subtypes;	// Subtypes (if any)
 
+  // Build the string list from the TXT array...
+  for (i = 0; i < num_txt; i ++)
+    txtrec = avahi_string_list_add_printf(txtrec, "%s=%s", txt[i].name, txt[i].value);
+
+  // Copy the registration type...
+  if ((regtype = strdup(types)) == NULL)
+  {
+    report_error(service->dnssd, "Unable to duplicate registration types: %s", strerror(errno));
+    ret = false;
+    goto done;
+  }
+
+  if ((subtypes = strchr(regtype, ',')) != NULL)
+    *subtypes++ = '\0';
+
+  // Add the service entry...
+  avahi_threaded_poll_lock(service->dnssd->monitor);
+
+  if ((error = avahi_entry_group_add_service_strlst(service->group, if_index, AVAHI_PROTO_UNSPEC, /*flags*/0, service->name, regtype, domain, host, port, txt)) < 0)
+  {
+    report_error(service->dnssd, "Unable to register '%s.%s': %s", service->name, regtype, avahi_strerror(error));
+    ret = false;
+  }
+  else if (subtypes)
+  {
+    char	subtype[256];		// Subtype string
+    char 	*start, *end;		// Pointers into sub-types...
+
+    for (start = subtypes; ret && start && *start; start = end)
+    {
+      if ((end = strchr(start, ',')) != NULL)
+	*end++ = '\0';
+      else
+	end = start + strlen(start);
+
+      snprintf(subtype, sizeof(subtype), "%s._sub.%s", start, regtype);
+      if ((error = avahi_entry_group_add_service_subtype(service->group, if_index, AVAHI_PROTO_UNSPEC, /*flags*/0, service->name, regtype, domain, subtype)) < 0)
+      {
+        report_error(service->dnssd, "Unable to register '%s.%s': %s", service->name, subtype, avahi_strerror(error));
+        ret = false;
+      }
+    }
+  }
+
+  free(regtype);
+
+  avahi_threaded_poll_unlock(service->dnssd->monitor);
+
+  if (txt)
+    avahi_string_list_free(txt);
 #endif // _WIN32
 
   done:
@@ -775,6 +992,18 @@ cupsDNSSDServiceGetContext(
 
 
 //
+// 'cupsDNSSDServiceGetName()' - Get the service instance name for the service registration.
+//
+
+const char *				// O - Service instance name
+cupsDNSSDServiceGetName(
+    cups_dnssd_service_t *service)	// I - Service registration
+{
+  return (service ? service->name : NULL);
+}
+
+
+//
 // 'cupsDNSSDServiceNew()' - Create a new named service.
 //
 
@@ -792,7 +1021,7 @@ cupsDNSSDServiceNew(
   if (!dnssd || !name || !cb)
     return (NULL);
 
-  // Allocate memory for the queryr...
+  // Allocate memory for the service...
   if ((service = (cups_dnssd_service_t *)calloc(1, sizeof(cups_dnssd_service_t))) == NULL)
     return (NULL);
 
@@ -800,6 +1029,22 @@ cupsDNSSDServiceNew(
   service->cb      = cb;
   service->cb_data = cb_data;
   service->name    = strdup(name);
+
+#if _WIN32
+#elif defined(HAVE_MDNSRESPONDER)
+#else // HAVE_AVAHI
+  avahi_threaded_poll_lock(dnssd->monitor);
+  service->group = avahi_entry_group_new(dnssd->client, (AvahiEntryGroupCallback)avahi_service_cb, service);
+  avahi_threaded_poll_unlock(dnssd->monitor);
+
+  if (!service->group)
+  {
+    report_error(dnssd, "Unable to create DNS-SD service registration: %s", avahi_strerror(avahi_client_errno(dnssd->client)));
+    free(service);
+    service = NULL;
+    goto done;
+  }
+#endif // _WIN32
 
   cupsMutexLock(&dnssd->mutex);
 
@@ -836,7 +1081,15 @@ cupsDNSSDServicePublish(
   bool		ret = true;		// Return value
 
 
+#if _WIN32
   (void)service;
+#elif defined(HAVE_MDNSRESPONDER)
+  (void)service;
+#else // HAVE_AVAHI
+  avahi_threaded_poll_lock(service->dnssd->monitor);
+  avahi_entry_group_commit(service->group);
+  avahi_threaded_poll_unlock(service->dnssd->monitor);
+#endif // _WIN32
 
   return (ret);
 }
@@ -860,6 +1113,7 @@ cupsDNSSDServiceSetLocation(
     cups_dnssd_service_t *service,	// I - Service
     const char           *geo_uri)	// I - Geolocation as a 'geo:' URI
 {
+  bool		ret = true;		// Return value
   const char	*geo_ptr;		// Pointer into 'geo;' URI
   double	lat = 0.0, lon = 0.0;	// Latitude and longitude in degrees
   double	alt = 0.0;		// Altitude in meters
@@ -924,7 +1178,26 @@ cupsDNSSDServiceSetLocation(
 
   service->loc_set = true;
 
-  return (true);
+#if _WIN32
+  // Add LOC record in cupsDNSSDServiceAdd()
+
+#elif defined(HAVE_MDNSRESPONDER)
+  // Add LOC record in cupsDNSSDServiceAdd()
+
+#else // HAVE_AVAHI
+  // Add LOC record now...
+  avahi_threaded_poll_lock(service->dnssd->monitor);
+
+  if ((error = avahi_entry_group_add_record(service->group, if_index, AVAHI_PROTO_UNSPEC, /*flags*/0, service->name, AVAHI_DNS_CLASS_IN, AVAHI_DNS_TYPE_LOC, /*ttl*/75 * 60, service->loc, sizeof(service->loc))) < 0)
+  {
+    report_error(service->dnssd, "Unable to register LOC record for '%s': %s", service->name, avahi_strerror(error));
+    ret = false;
+  }
+
+  avahi_threaded_poll_unlock(service->dnssd->monitor);
+#endif // _WIN32
+
+  return (ret);
 }
 
 
@@ -941,6 +1214,9 @@ delete_browse(
   DNSServiceRefDeallocate(browse->ref);
 
 #else // HAVE_AVAHI
+  avahi_threaded_poll_lock(browse->dnssd->monitor);
+  avahi_service_browser_free(browse->browser);
+  avahi_threaded_poll_unlock(browse->dnssd->monitor);
 #endif // _WIN32
 
   free(browse);
@@ -961,7 +1237,9 @@ delete_query(
   DNSServiceRefDeallocate(query->ref);
 
 #else // HAVE_AVAHI
-
+  avahi_threaded_poll_lock(query->dnssd->monitor);
+  avahi_record_browser_free(query->browser);
+  avahi_threaded_poll_unlock(query->dnssd->monitor);
 #endif // _WIN32
 
 }
@@ -981,7 +1259,9 @@ delete_resolve(
   DNSServiceRefDeallocate(resolve->ref);
 
 #else // HAVE_AVAHI
-
+  avahi_threaded_poll_lock(resolve->dnssd->monitor);
+  avahi_service_resolver_free(resolve->resolver);
+  avahi_threaded_poll_unlock(resolve->dnssd->monitor);
 #endif // _WIN32
 
 }
@@ -1003,14 +1283,103 @@ delete_service(
 
   for (i = 0; i < service->num_refs; i ++)
     DNSServiceRefDeallocate(service->refs[i]);
+
 #else // HAVE_AVAHI
+  avahi_threaded_poll_lock(service->dnssd->monitor);
+  avahi_entry_group_free(service->group);
+  avahi_threaded_poll_unlock(service->dnssd->monitor);
 #endif // _WIN32
 
   free(service);
 }
 
 
-#ifdef HAVE_MDNSRESPONDER
+//
+// 'record_config_change()' - Record that the local hostname or network has
+//                            changed and notify any service callbacks.
+//
+
+static void
+record_config_change(cups_dnssd_t       *dnssd,	// I - DNS-SD context
+                     cups_dnssd_flags_t flags)	// I - Flags for what changed
+{
+  cups_dnssd_service_t	*service;		// Current service
+
+
+  cupsMutexLock(&dnssd->mutex);
+
+  dnssd->config_changes ++;
+
+  for (service = (cups_dnssd_service_t *)cupsArrayGetFirst(dnssd->services); service; service = (cups_dnssd_service_t *)cupsArrayGetNext(dnssd->services))
+    (service->cb)(service, service->cb_data, flags);
+
+  cupsMutexUnlock(&dnssd->mutex);
+}
+
+//
+// 'report_error()' - Report an error.
+//
+
+static void
+report_error(cups_dnssd_t *dnssd,	// I - DNS-SD context
+             const char   *message,	// I - printf-style message string
+             ...)			// I - Additional arguments as needed
+{
+  va_list	ap;			// Pointer to arguments
+  char		buffer[8192];		// Formatted message
+
+
+  // Format the message...
+  va_start(ap, message);
+  vsnprintf(buffer, sizeof(buffer), message, ap);
+  va_end(ap);
+
+  // Send it...
+  if (dnssd->cb)
+    (dnssd->cb)(dnssd->cb_data, buffer);
+  else
+    fprintf(stderr, "%s\n", buffer);
+}
+
+
+#ifdef __APPLE__
+//
+// 'apple_sc_cb()' - Track host name changes.
+//
+
+static void
+apple_sc_cb(SCDynamicStoreRef sc,	// I - Dynamic store context
+            CFArrayRef        changed,	// I - Changed keys
+            cups_dnssd_t      *dnssd)	// I - DNS-SD context
+{
+  cups_dnssd_flags_t	flags = CUPS_DNSSD_FLAGS_NETWORK_CHANGE;
+					// Change flags
+  CFIndex		i,		// Looping var
+			count;		// Number of values
+
+
+  (void)sc;
+
+  // See if we had a local hostname change - anything else will be a network
+  // change...
+  for (i = 0, count = CFArrayGetCount(changed); i < count; i ++)
+  {
+    if (CFArrayGetValueAtIndex(changed, i) == kSCPropNetLocalHostName)
+    {
+      flags = CUPS_DNSSD_FLAGS_HOST_CHANGE;
+      break;
+    }
+  }
+
+  // Record the change and do any callbacks as needed...
+  record_config_change(dnssd, flags);
+}
+#endif // __APPLE__
+
+
+#if _WIN32
+
+#elif defined(HAVE_MDNSRESPONDER)
 //
 // 'mdns_browse_cb()' - Handle DNS-SD browse callbacks from mDNSResponder.
 //
@@ -1136,11 +1505,14 @@ mdns_service_cb(
     cups_dnssd_service_t *service)	// I - Service registration
 {
   (void)ref;
+  (void)name;
+  (void)regtype;
+  (void)domain;
 
   if (error != kDNSServiceErr_NoError)
     report_error(service->dnssd, "DNS-SD service registration error: %s", mdns_strerror(error));
 
-  (service->cb)(service, service->cb_data, mdns_to_cups(flags, error), name, regtype, domain);
+  (service->cb)(service, service->cb_data, mdns_to_cups(flags, error));
 }
 
 
@@ -1279,30 +1651,177 @@ mdns_to_cups(
 
   return (cups_flags);
 }
-#endif // HAVE_MDNSRESPONDER
 
 
+#else // HAVE_AVAHI
 //
-// 'report_error()' - Report an error.
+// 'avahi_browse_cb()' - Handle browse callbacks from Avahi.
 //
 
 static void
-report_error(cups_dnssd_t *dnssd,	// I - DNS-SD context
-             const char   *message,	// I - printf-style message string
-             ...)			// I - Additional arguments as needed
+avahi_browse_cb(
+    AvahiServiceBrowser    *browser,	// I - Avahi browser
+    AvahiIfIndex           if_index,	// I - Interface index
+    AvahiProtocol          protocol,	// I - Network protocol (unused)
+    AvahiBrowserEvent      event,	// I - What happened
+    const char             *name,	// I - Service name
+    const char             *type,	// I - Service type
+    const char             *domain,	// I - Domain
+    AvahiLookupResultFlags flags,	// I - Flags
+    cups_dnssd_browse_t    *browse)	// I - CUPS browse request
 {
-  va_list	ap;			// Pointer to arguments
-  char		buffer[8192];		// Formatted message
+  cups_dnssd_flags_t	cups_flags;	// CUPS DNS-SD flags
 
 
-  // Format the message...
-  va_start(ap, message);
-  vsnprintf(buffer, sizeof(buffer), message, ap);
-  va_end(ap);
+  (void)protocol;
+  (void)flags;
 
-  // Send it...
-  if (dnssd->cb)
-    (dnssd->cb)(dnssd->cb_data, buffer);
-  else
-    fprintf(stderr, "%s\n", buffer);
+  switch (event)
+  {
+    case AVAHI_BROWSER_NEW :
+        cups_flags = CUPS_DNSSD_FLAGS_ADD;
+        break;
+    case AVAHI_BROWSE_DELETE :
+        cups_flags = CUPS_DNSSD_FLAGS_NONE;
+        break;
+    case AVAHI_BROWSE_ERROR :
+        cups_flags = CUPS_DNSSD_FLAGS_ERROR;
+        break;
+
+    default :
+        // Other events don't get passed through...
+        return;
+  }
+
+  (browse->cb)(browse, browse->cb_data, cups_flags, if_index, name, regtype, domain);
 }
+
+
+//
+// 'avahi_client_cb()' - Client callback for Avahi.
+//
+// Called whenever the client or server state changes...
+//
+
+static void
+avahi_client_cb(
+    AvahiClient      *c,		// I - Client
+    AvahiClientState state,		// I - Current state
+    cups_dnssd_t     *dnssd)		// I - DNS-SD context
+{
+  if (!c)
+    return;
+
+  if (state == AVAHI_CLIENT_FAILURE)
+  {
+    if (avahi_client_errno(c) == AVAHI_ERR_DISCONNECTED)
+      report_error(dnssd, "Avahi server crashed.");
+  }
+  else if (state == AVAHI_CLIENT_S_RUNNING)
+  {
+    dnssd->name_changes ++;
+  }
+}
+
+
+//
+// 'avahi_query_cb()' - Query callback for Avahi.
+//
+
+static void
+avahi_query_cb(
+    AvahiRecordBrowser     *browser,	// I - Browser
+    AvahiIfIndex           if_index,	// I - Interface index
+    AvahiProtocol          protocol,	// I - Network protocol (not used)
+    AvahiBrowserEvent      event,	// I - What happened
+    const char             *fullName,	// I - Full service name
+    uint16_t               rrclass,	// I - Record class (not used)
+    uint16_t               rrtype,	// I - Record type
+    const void             *rdata,	// I - Record data
+    size_t                 rdlen,	// I - Size of record data
+    AvahiLookupResultFlags flags,	// I - Flags
+    cups_dnssd_query_t     *query)	// I - Query request
+{
+  (void)browser;
+  (void)protocol;
+  (void)rrclass;
+
+  if (error != kDNSServiceErr_NoError)
+    report_error(query->dnssd, "DNS-SD query error: %s", mdns_strerror(error));
+
+  (query->cb)(query, query->cb_data, event == AVAHI_RESOLVER_FOUND ? CUPS_DNSSD_FLAGS_NONE : CUPS_DNSSD_FLAGS_ERROR, if_index, name, rrtype, rdata, rdlen);
+}
+
+
+//
+// 'avahi_resolve_cb()' - Resolver callback for Avahi.
+//
+
+static void
+avahi_resolve_cb(
+    AvahiServiceResolver   *resolver,	// I - Service resolver
+    AvahiIfIndex           if_index,	// I - Interface index
+    AvahiProtocol          protocol,	// I - Network protocol (not used)
+    AvahiResolverEvent     event,	// I - What happened
+    const char             *name,	// I - Service name
+    const char             *type,	// I - Service type
+    const char             *domain,	// I - Domain
+    const char             *host_name,	// I - Host name
+    const AvahiAddress     *address,	// I - Address
+    uint16_t               port,	// I - Port number
+    AvahiStringList        *txtrec,	// I - TXT record
+    AvahiLookupResultFlags flags,	// I - Flags
+    cups_dnssd_resolve_t   *resolve)	// I - Resolve request
+{
+  AvahiStringList *txtpair;		// Current pair
+  size_t	num_txt = 0;		// Number of TXT key/value pairs
+  cups_option_t	*txt = NULL;		// TXT key/value pairs
+  char		fullname[1024];		// Full service name
+
+
+  if (!resolver)
+    return;
+
+  (void)resolver;
+  (void)protocol;
+  (void)address;
+  (void)flags;
+
+  // Convert TXT key/value pairs into CUPS option array...
+  for (txtpair = txtrec; txtpair; txtpair = avahi_string_list_get_next(txtpair))
+  {
+    char *key, *value;			// Key and value
+
+    avahi_string_list_get_pair(txtpair, &key, &value, NULL);
+
+    num_txt = cupsAddOption(key, value, num_txt, txt);
+
+    avahi_free(key);
+    avahi_free(value);
+  }
+
+  // Create a full name for the service...
+  cupsDNSSDAssembleFullName(fullname, sizeof(fullname), name, type, domain);
+
+  // Do the resolve callback and free the TXT record stuff...
+  (resolve->cb)(resolve, resolve->cb_data, event == AVAHI_RESOLVER_FOUND ? CUPS_DNSSD_FLAGS_NONE : CUPS_DNSSD_FLAGS_ERROR, if_index, fullname, host, ntohs(port), num_txt, txt);
+
+  cupsFreeOptions(num_txt, txt);
+}
+
+
+//
+// 'avahi_service_cb()' - Service callback for Avahi.
+//
+
+static void
+avahi_service_cb(
+    AvahiEntryGroup      *srv,		// I - Service
+    AvahiEntryGroupState state,		// I - Registration state
+    cups_dnssd_service_t *service)	// I - Service registration
+{
+  (void)srv;
+
+  (service->cb)(service, service->cb_data, state == AVAHI_ENTRY_GROUP_COLLISION ? CUPS_DNSSD_FLAGS_COLLISION : CUPS_DNSSD_FLAGS_NONE);
+}
+#endif // _WIN32

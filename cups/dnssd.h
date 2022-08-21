@@ -27,9 +27,12 @@ typedef struct _cups_dnssd_s cups_dnssd_t;	// DNS-SD context
 enum cups_dnssd_flags_e			// DNS-SD callback flag values
 {
   CUPS_DNSSD_FLAGS_NONE = 0,		// No flags
-  CUPS_DNSSD_FLAGS_ADD = 1,		// Added
+  CUPS_DNSSD_FLAGS_ADD = 1,		// Added (removed if not set)
   CUPS_DNSSD_FLAGS_ERROR = 2,		// Error occurred
-  CUPS_DNSSD_FLAGS_MORE = 4		// More coming
+  CUPS_DNSSD_FLAGS_COLLISION = 4,	// Collision occurred
+  CUPS_DNSSD_FLAGS_HOST_CHANGE = 8,	// Host name changed
+  CUPS_DNSSD_FLAGS_NETWORK_CHANGE = 16,	// Network connection changed
+  CUPS_DNSSD_FLAGS_MORE = 128		// More coming
 };
 typedef unsigned cups_dnssd_flags_t;	// DNS-SD callback flag bitmask
 
@@ -76,7 +79,7 @@ typedef void (*cups_dnssd_resolve_cb_t)(cups_dnssd_resolve_t *res, void *cb_data
 
 typedef struct _cups_dnssd_service_s cups_dnssd_service_t;
 					// DNS service registration
-typedef void (*cups_dnssd_service_cb_t)(cups_dnssd_service_t *service, void *cb_data, cups_dnssd_flags_t flags, const char *name, const char *regtype, const char *domain);
+typedef void (*cups_dnssd_service_cb_t)(cups_dnssd_service_t *service, void *cb_data, cups_dnssd_flags_t flags);
 					// DNS-SD service registration callback
 
 
@@ -85,6 +88,8 @@ typedef void (*cups_dnssd_service_cb_t)(cups_dnssd_service_t *service, void *cb_
 //
 
 extern void		cupsDNSSDDelete(cups_dnssd_t *dnssd) _CUPS_PUBLIC;
+extern size_t		cupsDNSSDGetConfigChanges(cups_dnssd_t *dnssd) _CUPS_PUBLIC;
+extern const char	*cupsDNSSDGetHostName(cups_dnssd_t *dnssd, char *buffer, size_t bufsize) _CUPS_PUBLIC;
 extern cups_dnssd_t	*cupsDNSSDNew(cups_dnssd_error_cb_t error_cb, void *cb_data) _CUPS_PUBLIC;
 
 extern void		cupsDNSSDBrowseDelete(cups_dnssd_browse_t *browser) _CUPS_PUBLIC;
@@ -102,6 +107,7 @@ extern cups_dnssd_resolve_t *cupsDNSSDResolveNew(cups_dnssd_t *dnssd, uint32_t i
 extern bool		cupsDNSSDServiceAdd(cups_dnssd_service_t *service, uint32_t if_index, const char *types, const char *domain, const char *host, uint16_t port, size_t num_txt, cups_option_t *txt) _CUPS_PUBLIC;
 extern void		cupsDNSSDServiceDelete(cups_dnssd_service_t *service) _CUPS_PUBLIC;
 extern cups_dnssd_t	*cupsDNSSDServiceGetContext(cups_dnssd_service_t *service) _CUPS_PUBLIC;
+extern const char	*cupsDNSSDServiceGetName(cups_dnssd_service_t *service) _CUPS_PUBLIC;
 extern cups_dnssd_service_t *cupsDNSSDServiceNew(cups_dnssd_t *dnssd, const char *name, cups_dnssd_service_cb_t cb, void *cb_data) _CUPS_PUBLIC;
 extern bool		cupsDNSSDServicePublish(cups_dnssd_service_t *service) _CUPS_PUBLIC;
 extern bool		cupsDNSSDServiceSetLocation(cups_dnssd_service_t *service, const char *geo_uri) _CUPS_PUBLIC;

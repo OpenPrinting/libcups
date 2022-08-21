@@ -36,7 +36,7 @@ static void	browse_cb(cups_dnssd_browse_t *browse, void *cb_data, cups_dnssd_fla
 static void	error_cb(void *cb_data, const char *message);
 static void	query_cb(cups_dnssd_query_t *query, void *cb_data, cups_dnssd_flags_t flags, uint32_t if_index, const char *fullname, uint16_t rrtype, const void *qdata, uint16_t qlen);
 static void	resolve_cb(cups_dnssd_resolve_t *res, void *cb_data, cups_dnssd_flags_t flags, uint32_t if_index, const char *fullname, const char *host, uint16_t port, size_t num_txt, cups_option_t *txt);
-static void	service_cb(cups_dnssd_service_t *service, void *cb_data, cups_dnssd_flags_t flags, const char *name, const char *regtype, const char *domain);
+static void	service_cb(cups_dnssd_service_t *service, void *cb_data, cups_dnssd_flags_t flags);
 static void	usage(const char *arg);
 
 
@@ -267,6 +267,8 @@ query_cb(
   const unsigned char *qptr;		// Pointer into record data
 
 
+  (void)query;
+
   snprintf(message, sizeof(message), "Q flags=%02X if_index=%u fullname=\"%s\" rrtype=%u qlen=%u qdata=<", flags, if_index, fullname, rrtype, qlen);
   for (mptr = message + strlen(message), i = 0, qptr = (const unsigned char *)qdata; i < qlen; i ++, mptr += strlen(mptr), qptr ++)
     snprintf(mptr, sizeof(message) - (size_t)(mptr - message), "%02X", *qptr);
@@ -301,11 +303,13 @@ resolve_cb(
 {
   testdata_t	*data = (testdata_t *)cb_data;
 					// Test data
-  int		i;			// Looping var
+  size_t	i;			// Looping var
   char		message[2048],		// Message string
 		*mptr;			// Pointer into message string
   const char	*prefix = " txt=";	// Prefix string
 
+
+  (void)res;
 
   snprintf(message, sizeof(message), "R flags=%02X if_index=%u fullname=\"%s\" host=\"%s\" port=%u num_txt=%u", flags, if_index, fullname, host, port, (unsigned)num_txt);
   for (mptr = message + strlen(message), i = 0; i < num_txt; i ++, mptr += strlen(mptr))
@@ -329,17 +333,14 @@ static void
 service_cb(
     cups_dnssd_service_t *service,	// I - Service registration
     void                 *cb_data,	// I - Callback data
-    cups_dnssd_flags_t   flags,		// I - Flags
-    const char           *name,		// I - Service name
-    const char           *regtype,	// I - Registration type
-    const char           *domain)	// I - Domain name
+    cups_dnssd_flags_t   flags)		// I - Flags
 {
   testdata_t	*data = (testdata_t *)cb_data;
 					// Test data
   char		message[1024];		// Message string
 
 
-  snprintf(message, sizeof(message), "S flags=%02X name=\"%s\" regtype=\"%s\" domain=\"%s\"", flags, name, regtype, domain);
+  snprintf(message, sizeof(message), "S flags=%02X name=\"%s\"", flags, cupsDNSSDServiceGetName(service));
 
   cupsMutexLock(&data->mutex);
   cupsArrayAdd(data->messages, message);

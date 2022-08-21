@@ -208,6 +208,7 @@
 		2794E90528AFFC2400BEDC04 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5C1926750C000F61D3 /* libz.dylib */; };
 		2794E90628AFFC2400BEDC04 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5D1926750C000F61D3 /* Security.framework */; };
 		2794E90F28AFFC6600BEDC04 /* testdnssd.c in Sources */ = {isa = PBXBuildFile; fileRef = 2794E90E28AFFC6600BEDC04 /* testdnssd.c */; };
+		2794E91028B2E20A00BEDC04 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5E1926750C000F61D3 /* SystemConfiguration.framework */; };
 		279AE6F52395B80F004DD600 /* libpam.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 279AE6F42395B80F004DD600 /* libpam.tbd */; };
 		27A8096128A9B9D500B20BC8 /* dnssd.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A8095F28A9B9D500B20BC8 /* dnssd.h */; };
 		27A8096228A9B9D500B20BC8 /* dnssd.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A8095F28A9B9D500B20BC8 /* dnssd.h */; };
@@ -1281,6 +1282,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2794E91028B2E20A00BEDC04 /* SystemConfiguration.framework in Frameworks */,
 				2794E8FF28AFFC2400BEDC04 /* libcrypto.a in Frameworks */,
 				2794E90028AFFC2400BEDC04 /* libssl.a in Frameworks */,
 				2794E90128AFFC2400BEDC04 /* libcups_static.a in Frameworks */,
