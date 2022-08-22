@@ -1,5 +1,5 @@
 //
-// DNS-SD API definitions for CUPS.
+// DNS-SD API functions for CUPS.
 //
 // Copyright © 2022 by OpenPrinting.
 //
@@ -28,9 +28,11 @@
 #  include <avahi-client/lookup.h>
 #  include <avahi-client/publish.h>
 #  include <avahi-common/alternative.h>
+#  include <avahi-common/domain.h>
 #  include <avahi-common/error.h>
 #  include <avahi-common/malloc.h>
 #  include <avahi-common/thread-watch.h>
+#  define AVAHI_DNS_TYPE_LOC 29		// Per RFC 1876
 
 struct _cups_dns_srv_s			// DNS SRV record
 {
@@ -117,6 +119,7 @@ struct _cups_dnssd_service_s		// DNS-SD service registration
 {
   cups_dnssd_t		*dnssd;		// DNS-SD context
   char			*name;		// Service name
+  uint32_t		if_index;	// Interface index
   cups_dnssd_service_cb_t cb;		// Service callback
   void			*cb_data;	// Service callback data
   unsigned char		loc[16];	// LOC record data
@@ -573,7 +576,7 @@ cupsDNSSDBrowseNew(
 
 #else // HAVE_AVAHI
   avahi_threaded_poll_lock(dnssd->monitor);
-  browse->browser = avahi_service_browser_new(dnssd->client, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, types, NULL, 0, avahi_browse_cb, browse);
+  browse->browser = avahi_service_browser_new(dnssd->client, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, types, NULL, 0, (AvahiServiceBrowserCallback)avahi_browse_cb, browse);
   avahi_threaded_poll_unlock(dnssd->monitor);
 
   if (!browse->browser)
@@ -831,7 +834,6 @@ cupsDNSSDResolveNew(
 bool					// O - `true` on success, `false` on failure
 cupsDNSSDServiceAdd(
     cups_dnssd_service_t *service,	// I - Service
-    uint32_t             if_index,	// I - Interface index or `CUPS_DNSSD_IF_ANY` or `CUPS_DNSSD_IF_LOCAL`
     const char           *types,	// I - Service types
     const char           *domain,	// I - Domain name or `NULL` for default
     const char           *host,		// I - Host name or `NULL` for default
@@ -873,7 +875,7 @@ cupsDNSSDServiceAdd(
   }
 
   service->refs[service->num_refs] = service->dnssd->ref;
-  if ((error = DNSServiceRegister(service->refs + service->num_refs, kDNSServiceFlagsShareConnection | kDNSServiceFlagsNoAutoRename, if_index, service->name, types, domain, host, htons(port), txtptr ? TXTRecordGetLength(txtptr) : 0, txtptr ? TXTRecordGetBytesPtr(txtptr) : NULL, (DNSServiceRegisterReply)mdns_service_cb, service)) != kDNSServiceErr_NoError)
+  if ((error = DNSServiceRegister(service->refs + service->num_refs, kDNSServiceFlagsShareConnection | kDNSServiceFlagsNoAutoRename, service->if_index, service->name, types, domain, host, htons(port), txtptr ? TXTRecordGetLength(txtptr) : 0, txtptr ? TXTRecordGetBytesPtr(txtptr) : NULL, (DNSServiceRegisterReply)mdns_service_cb, service)) != kDNSServiceErr_NoError)
   {
     if (txtptr)
       TXTRecordDeallocate(txtptr);
@@ -920,7 +922,7 @@ cupsDNSSDServiceAdd(
   // Add the service entry...
   avahi_threaded_poll_lock(service->dnssd->monitor);
 
-  if ((error = avahi_entry_group_add_service_strlst(service->group, if_index, AVAHI_PROTO_UNSPEC, /*flags*/0, service->name, regtype, domain, host, port, txt)) < 0)
+  if ((error = avahi_entry_group_add_service_strlst(service->group, service->if_index, AVAHI_PROTO_UNSPEC, /*flags*/0, service->name, regtype, domain, host, port, txtrec)) < 0)
   {
     report_error(service->dnssd, "Unable to register '%s.%s': %s", service->name, regtype, avahi_strerror(error));
     ret = false;
@@ -938,7 +940,7 @@ cupsDNSSDServiceAdd(
 	end = start + strlen(start);
 
       snprintf(subtype, sizeof(subtype), "%s._sub.%s", start, regtype);
-      if ((error = avahi_entry_group_add_service_subtype(service->group, if_index, AVAHI_PROTO_UNSPEC, /*flags*/0, service->name, regtype, domain, subtype)) < 0)
+      if ((error = avahi_entry_group_add_service_subtype(service->group, service->if_index, AVAHI_PROTO_UNSPEC, /*flags*/0, service->name, regtype, domain, subtype)) < 0)
       {
         report_error(service->dnssd, "Unable to register '%s.%s': %s", service->name, subtype, avahi_strerror(error));
         ret = false;
@@ -950,8 +952,8 @@ cupsDNSSDServiceAdd(
 
   avahi_threaded_poll_unlock(service->dnssd->monitor);
 
-  if (txt)
-    avahi_string_list_free(txt);
+  if (txtrec)
+    avahi_string_list_free(txtrec);
 #endif // _WIN32
 
   done:
@@ -1010,6 +1012,7 @@ cupsDNSSDServiceGetName(
 cups_dnssd_service_t *			// O - Service or `NULL` on error
 cupsDNSSDServiceNew(
     cups_dnssd_t            *dnssd,	// I - DNS-SD context
+    uint32_t                if_index,	// I - Interface index or `CUPS_DNSSD_IF_ANY` or `CUPS_DNSSD_IF_LOCAL`
     const char              *name,	// I - Name of service
     cups_dnssd_service_cb_t cb,		// I - Service registration callback function
     void                    *cb_data)	// I - Service registration callback data
@@ -1025,10 +1028,11 @@ cupsDNSSDServiceNew(
   if ((service = (cups_dnssd_service_t *)calloc(1, sizeof(cups_dnssd_service_t))) == NULL)
     return (NULL);
 
-  service->dnssd   = dnssd;
-  service->cb      = cb;
-  service->cb_data = cb_data;
-  service->name    = strdup(name);
+  service->dnssd    = dnssd;
+  service->cb       = cb;
+  service->cb_data  = cb_data;
+  service->name     = strdup(name);
+  service->if_index = if_index;
 
 #if _WIN32
 #elif defined(HAVE_MDNSRESPONDER)
@@ -1186,9 +1190,11 @@ cupsDNSSDServiceSetLocation(
 
 #else // HAVE_AVAHI
   // Add LOC record now...
+  int error;				// Error code
+
   avahi_threaded_poll_lock(service->dnssd->monitor);
 
-  if ((error = avahi_entry_group_add_record(service->group, if_index, AVAHI_PROTO_UNSPEC, /*flags*/0, service->name, AVAHI_DNS_CLASS_IN, AVAHI_DNS_TYPE_LOC, /*ttl*/75 * 60, service->loc, sizeof(service->loc))) < 0)
+  if ((error = avahi_entry_group_add_record(service->group, service->if_index, AVAHI_PROTO_UNSPEC, /*flags*/0, service->name, AVAHI_DNS_CLASS_IN, AVAHI_DNS_TYPE_LOC, /*ttl*/75 * 60, service->loc, sizeof(service->loc))) < 0)
   {
     report_error(service->dnssd, "Unable to register LOC record for '%s': %s", service->name, avahi_strerror(error));
     ret = false;
@@ -1681,10 +1687,10 @@ avahi_browse_cb(
     case AVAHI_BROWSER_NEW :
         cups_flags = CUPS_DNSSD_FLAGS_ADD;
         break;
-    case AVAHI_BROWSE_DELETE :
+    case AVAHI_BROWSER_REMOVE :
         cups_flags = CUPS_DNSSD_FLAGS_NONE;
         break;
-    case AVAHI_BROWSE_ERROR :
+    case AVAHI_BROWSER_FAILURE :
         cups_flags = CUPS_DNSSD_FLAGS_ERROR;
         break;
 
@@ -1693,7 +1699,7 @@ avahi_browse_cb(
         return;
   }
 
-  (browse->cb)(browse, browse->cb_data, cups_flags, if_index, name, regtype, domain);
+  (browse->cb)(browse, browse->cb_data, cups_flags, if_index, name, type, domain);
 }
 
 
@@ -1719,7 +1725,7 @@ avahi_client_cb(
   }
   else if (state == AVAHI_CLIENT_S_RUNNING)
   {
-    dnssd->name_changes ++;
+    record_config_change(dnssd, CUPS_DNSSD_FLAGS_HOST_CHANGE);
   }
 }
 
@@ -1734,7 +1740,7 @@ avahi_query_cb(
     AvahiIfIndex           if_index,	// I - Interface index
     AvahiProtocol          protocol,	// I - Network protocol (not used)
     AvahiBrowserEvent      event,	// I - What happened
-    const char             *fullName,	// I - Full service name
+    const char             *fullname,	// I - Full service name
     uint16_t               rrclass,	// I - Record class (not used)
     uint16_t               rrtype,	// I - Record type
     const void             *rdata,	// I - Record data
@@ -1746,10 +1752,7 @@ avahi_query_cb(
   (void)protocol;
   (void)rrclass;
 
-  if (error != kDNSServiceErr_NoError)
-    report_error(query->dnssd, "DNS-SD query error: %s", mdns_strerror(error));
-
-  (query->cb)(query, query->cb_data, event == AVAHI_RESOLVER_FOUND ? CUPS_DNSSD_FLAGS_NONE : CUPS_DNSSD_FLAGS_ERROR, if_index, name, rrtype, rdata, rdlen);
+  (query->cb)(query, query->cb_data, event == AVAHI_BROWSER_NEW ? CUPS_DNSSD_FLAGS_NONE : CUPS_DNSSD_FLAGS_ERROR, if_index, fullname, rrtype, rdata, rdlen);
 }
 
 
@@ -1766,7 +1769,7 @@ avahi_resolve_cb(
     const char             *name,	// I - Service name
     const char             *type,	// I - Service type
     const char             *domain,	// I - Domain
-    const char             *host_name,	// I - Host name
+    const char             *host,	// I - Host name
     const AvahiAddress     *address,	// I - Address
     uint16_t               port,	// I - Port number
     AvahiStringList        *txtrec,	// I - TXT record
@@ -1794,7 +1797,7 @@ avahi_resolve_cb(
 
     avahi_string_list_get_pair(txtpair, &key, &value, NULL);
 
-    num_txt = cupsAddOption(key, value, num_txt, txt);
+    num_txt = cupsAddOption(key, value, num_txt, &txt);
 
     avahi_free(key);
     avahi_free(value);

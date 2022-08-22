@@ -104,11 +104,11 @@ extern void		cupsDNSSDResolveDelete(cups_dnssd_resolve_t *res) _CUPS_PUBLIC;
 extern cups_dnssd_t	*cupsDNSSDResolveGetContext(cups_dnssd_resolve_t *res) _CUPS_PUBLIC;
 extern cups_dnssd_resolve_t *cupsDNSSDResolveNew(cups_dnssd_t *dnssd, uint32_t if_index, const char *name, const char *type, const char *domain, cups_dnssd_resolve_cb_t resolve_cb, void *cb_data) _CUPS_PUBLIC;
 
-extern bool		cupsDNSSDServiceAdd(cups_dnssd_service_t *service, uint32_t if_index, const char *types, const char *domain, const char *host, uint16_t port, size_t num_txt, cups_option_t *txt) _CUPS_PUBLIC;
+extern bool		cupsDNSSDServiceAdd(cups_dnssd_service_t *service, const char *types, const char *domain, const char *host, uint16_t port, size_t num_txt, cups_option_t *txt) _CUPS_PUBLIC;
 extern void		cupsDNSSDServiceDelete(cups_dnssd_service_t *service) _CUPS_PUBLIC;
 extern cups_dnssd_t	*cupsDNSSDServiceGetContext(cups_dnssd_service_t *service) _CUPS_PUBLIC;
 extern const char	*cupsDNSSDServiceGetName(cups_dnssd_service_t *service) _CUPS_PUBLIC;
-extern cups_dnssd_service_t *cupsDNSSDServiceNew(cups_dnssd_t *dnssd, const char *name, cups_dnssd_service_cb_t cb, void *cb_data) _CUPS_PUBLIC;
+extern cups_dnssd_service_t *cupsDNSSDServiceNew(cups_dnssd_t *dnssd, uint32_t if_index, const char *name, cups_dnssd_service_cb_t cb, void *cb_data) _CUPS_PUBLIC;
 extern bool		cupsDNSSDServicePublish(cups_dnssd_service_t *service) _CUPS_PUBLIC;
 extern bool		cupsDNSSDServiceSetLocation(cups_dnssd_service_t *service, const char *geo_uri) _CUPS_PUBLIC;
 

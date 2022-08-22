@@ -102,7 +102,7 @@ main(int  argc,				// I - Number of command-line arguments
     testEnd(cupsDNSSDBrowseGetContext(browse) == dnssd);
 
     testBegin("cupsDNSSDServiceNew(Test Printer)");
-    if ((service = cupsDNSSDServiceNew(dnssd, "Test Printer", service_cb, &testdata)) != NULL)
+    if ((service = cupsDNSSDServiceNew(dnssd, CUPS_DNSSD_IF_INDEX_ANY, "Test Printer", service_cb, &testdata)) != NULL)
     {
       testEnd(true);
     }
@@ -115,7 +115,7 @@ main(int  argc,				// I - Number of command-line arguments
     num_txt = cupsAddOption("rp", "ipp/print", 0, &txt);
 
     testBegin("cupsDNSSDServiceAdd(_http._tcp)");
-    if (cupsDNSSDServiceAdd(service, CUPS_DNSSD_IF_INDEX_ANY, "_http._tcp,_printer", NULL, NULL, 631, 0, NULL))
+    if (cupsDNSSDServiceAdd(service, "_http._tcp,_printer", /*host*/NULL, /*domain*/NULL, 631, /*num_txt*/0, /*txt*/NULL))
     {
       testEnd(true);
     }
@@ -126,7 +126,7 @@ main(int  argc,				// I - Number of command-line arguments
     }
 
     testBegin("cupsDNSSDServiceAdd(_ipp._tcp)");
-    if (cupsDNSSDServiceAdd(service, CUPS_DNSSD_IF_INDEX_ANY, "_ipp._tcp,_print", NULL, NULL, 631, num_txt, txt))
+    if (cupsDNSSDServiceAdd(service, "_ipp._tcp,_print", /*host*/NULL, /*domain*/NULL, 631, num_txt, txt))
     {
       testEnd(true);
     }
