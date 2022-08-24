@@ -31,14 +31,9 @@
 #  include <avahi-common/domain.h>
 #  include <avahi-common/error.h>
 #  include <avahi-common/malloc.h>
-#  include <avahi-common/thread-watch.h>
+//#  include <avahi-common/thread-watch.h>
+#  include <avahi-common/simple-watch.h>
 #  define AVAHI_DNS_TYPE_LOC 29		// Per RFC 1876
-
-struct _cups_dns_srv_s			// DNS SRV record
-{
-  AvahiEntryGroup	*srv;		// SRV record
-  AvahiStringList	*txt;		// TXT record
-};
 #endif // _WIN32
 
 
@@ -69,7 +64,9 @@ struct _cups_dnssd_s			// DNS-SD context
 
 #else // HAVE_AVAHI
   AvahiClient		*client;	// Avahi client connection
-  AvahiThreadedPoll	*monitor;	// Monitoring thread
+//  AvahiThreadedPoll	*poll;		// Avahi poll class
+  AvahiSimplePoll	*poll;		// Avahi poll class
+  cups_thread_t		monitor;	// Monitoring thread
 #endif // _WIN32
 };
 
@@ -165,6 +162,7 @@ static cups_dnssd_flags_t mdns_to_cups(DNSServiceFlags flags, DNSServiceErrorTyp
 #else // HAVE_AVAHI
 static void		avahi_browse_cb(AvahiServiceBrowser *browser, AvahiIfIndex if_index, AvahiProtocol protocol, AvahiBrowserEvent event, const char *name, const char *type, const char *domain, AvahiLookupResultFlags flags, cups_dnssd_browse_t *browse);
 static void		avahi_client_cb(AvahiClient *c, AvahiClientState state, cups_dnssd_t *dnssd);
+static void		*avahi_monitor(cups_dnssd_t *dnssd);
 static void		avahi_query_cb(AvahiRecordBrowser *browser, AvahiIfIndex if_index, AvahiProtocol protocol, AvahiBrowserEvent event, const char *fullName, uint16_t rrclass, uint16_t rrtype, const void *rdata, size_t rdlen, AvahiLookupResultFlags flags, cups_dnssd_query_t *query);
 static void		avahi_resolve_cb(AvahiServiceResolver *resolver, AvahiIfIndex if_index, AvahiProtocol protocol, AvahiResolverEvent event, const char *name, const char *type, const char *domain, const char *host_name, const AvahiAddress *address, uint16_t port, AvahiStringList *txtrec, AvahiLookupResultFlags flags, cups_dnssd_resolve_t *resolve);
 static void		avahi_service_cb(AvahiEntryGroup *srv, AvahiEntryGroupState state, cups_dnssd_service_t *service);
@@ -308,13 +306,13 @@ cupsDNSSDDelete(cups_dnssd_t *dnssd)	// I - DNS-SD context
   cupsArrayDelete(dnssd->services);
 
 #if _WIN32
-  cupsThreadCancel(&dnssd->monitor);
+#elif defined(HAVE_MDNSRESPONDER)
+  cupsThreadCancel(dnssd->monitor);
   DNSServiceRefDeallocate(dnssd->ref);
 
-#elif defined(HAVE_MDNSRESPONDER)
-
 #else // HAVE_AVAHI
-
+  cupsThreadCancel(dnssd->monitor);
+  avahi_simple_poll_free(dnssd->poll);
 #endif // _WIN32
 
   cupsMutexUnlock(&dnssd->mutex);
@@ -460,31 +458,33 @@ cupsDNSSDNew(
 #else // HAVE_AVAHI
   int error;				// Error code
 
-  if ((dnssd->monitor = avahi_threaded_poll_new()) == NULL)
+  if ((dnssd->poll = avahi_simple_poll_new()) == NULL)
   {
     // Unable to create the background thread...
-    report_error(dnssd, "Unable to initialize DNS-SD thread: %s", strerror(errno));
+    report_error(dnssd, "Unable to initialize DNS-SD: %s", strerror(errno));
     cupsDNSSDDelete(dnssd);
     return (NULL);
   }
-  else if ((dnssd->client = avahi_client_new(avahi_threaded_poll_get(dnssd->monitor), AVAHI_CLIENT_NO_FAIL, (AvahiClientCallback)avahi_client_cb, dnssd, &error)) == NULL)
+  else if ((dnssd->client = avahi_client_new(avahi_simple_poll_get(dnssd->poll), AVAHI_CLIENT_NO_FAIL, (AvahiClientCallback)avahi_client_cb, dnssd, &error)) == NULL)
   {
     // Unable to create the client...
     report_error(dnssd, "Unable to initialize DNS-SD: %s", avahi_strerror(error));
-    avahi_threaded_poll_free(dnssd->monitor);
+    avahi_simple_poll_free(dnssd->poll);
     cupsDNSSDDelete(dnssd);
     return (NULL);
   }
-  else
+  else if ((dnssd->monitor = cupsThreadCreate((void *(*)(void *))avahi_monitor, dnssd)) == 0)
   {
-    // Start the background thread...
-    avahi_threaded_poll_start(dnssd->monitor);
+    report_error(dnssd, "Unable to create DNS-SD thread: %s", strerror(errno));
+    cupsDNSSDDelete(dnssd);
+    return (NULL);
   }
+
+  cupsThreadDetach(dnssd->monitor);
 #endif // _WIN32
 
   return (dnssd);
 }
-
 
 
 //
@@ -575,9 +575,9 @@ cupsDNSSDBrowseNew(
   }
 
 #else // HAVE_AVAHI
-  avahi_threaded_poll_lock(dnssd->monitor);
+//  avahi_threaded_poll_lock(dnssd->monitor);
   browse->browser = avahi_service_browser_new(dnssd->client, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, types, NULL, 0, (AvahiServiceBrowserCallback)avahi_browse_cb, browse);
-  avahi_threaded_poll_unlock(dnssd->monitor);
+  //avahi_threaded_poll_unlock(dnssd->monitor);
 
   if (!browse->browser)
   {
@@ -691,9 +691,9 @@ cupsDNSSDQueryNew(
   }
 
 #else // HAVE_AVAHI
-  avahi_threaded_poll_lock(dnssd->monitor);
+  //avahi_threaded_poll_lock(dnssd->monitor);
   query->browser = avahi_record_browser_new(dnssd->client, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, fullname, AVAHI_DNS_CLASS_IN, rrtype, 0, (AvahiRecordBrowserCallback)avahi_query_cb, query);
-  avahi_threaded_poll_unlock(dnssd->monitor);
+  //avahi_threaded_poll_unlock(dnssd->monitor);
 
   if (!query->browser)
   {
@@ -804,9 +804,9 @@ cupsDNSSDResolveNew(
   }
 
 #else // HAVE_AVAHI
-  avahi_threaded_poll_lock(dnssd->monitor);
+  //avahi_threaded_poll_lock(dnssd->monitor);
   resolve->resolver = avahi_service_resolver_new(dnssd->client, if_index, AVAHI_PROTO_UNSPEC, name, type, domain, AVAHI_PROTO_UNSPEC, /*flags*/0, (AvahiServiceResolverCallback)avahi_resolve_cb, resolve);
-  avahi_threaded_poll_unlock(dnssd->monitor);
+  //avahi_threaded_poll_unlock(dnssd->monitor);
 
   if (!resolve->resolver)
   {
@@ -920,7 +920,7 @@ cupsDNSSDServiceAdd(
     *subtypes++ = '\0';
 
   // Add the service entry...
-  avahi_threaded_poll_lock(service->dnssd->monitor);
+  //avahi_threaded_poll_lock(service->dnssd->monitor);
 
   if ((error = avahi_entry_group_add_service_strlst(service->group, service->if_index, AVAHI_PROTO_UNSPEC, /*flags*/0, service->name, regtype, domain, host, port, txtrec)) < 0)
   {
@@ -950,7 +950,7 @@ cupsDNSSDServiceAdd(
 
   free(regtype);
 
-  avahi_threaded_poll_unlock(service->dnssd->monitor);
+  //avahi_threaded_poll_unlock(service->dnssd->monitor);
 
   if (txtrec)
     avahi_string_list_free(txtrec);
@@ -1037,9 +1037,9 @@ cupsDNSSDServiceNew(
 #if _WIN32
 #elif defined(HAVE_MDNSRESPONDER)
 #else // HAVE_AVAHI
-  avahi_threaded_poll_lock(dnssd->monitor);
+  //avahi_threaded_poll_lock(dnssd->monitor);
   service->group = avahi_entry_group_new(dnssd->client, (AvahiEntryGroupCallback)avahi_service_cb, service);
-  avahi_threaded_poll_unlock(dnssd->monitor);
+  //avahi_threaded_poll_unlock(dnssd->monitor);
 
   if (!service->group)
   {
@@ -1090,9 +1090,9 @@ cupsDNSSDServicePublish(
 #elif defined(HAVE_MDNSRESPONDER)
   (void)service;
 #else // HAVE_AVAHI
-  avahi_threaded_poll_lock(service->dnssd->monitor);
+  //avahi_threaded_poll_lock(service->dnssd->monitor);
   avahi_entry_group_commit(service->group);
-  avahi_threaded_poll_unlock(service->dnssd->monitor);
+  //avahi_threaded_poll_unlock(service->dnssd->monitor);
 #endif // _WIN32
 
   return (ret);
@@ -1192,7 +1192,7 @@ cupsDNSSDServiceSetLocation(
   // Add LOC record now...
   int error;				// Error code
 
-  avahi_threaded_poll_lock(service->dnssd->monitor);
+  //avahi_threaded_poll_lock(service->dnssd->monitor);
 
   if ((error = avahi_entry_group_add_record(service->group, service->if_index, AVAHI_PROTO_UNSPEC, /*flags*/0, service->name, AVAHI_DNS_CLASS_IN, AVAHI_DNS_TYPE_LOC, /*ttl*/75 * 60, service->loc, sizeof(service->loc))) < 0)
   {
@@ -1200,7 +1200,7 @@ cupsDNSSDServiceSetLocation(
     ret = false;
   }
 
-  avahi_threaded_poll_unlock(service->dnssd->monitor);
+  //avahi_threaded_poll_unlock(service->dnssd->monitor);
 #endif // _WIN32
 
   return (ret);
@@ -1220,9 +1220,9 @@ delete_browse(
   DNSServiceRefDeallocate(browse->ref);
 
 #else // HAVE_AVAHI
-  avahi_threaded_poll_lock(browse->dnssd->monitor);
+  //avahi_threaded_poll_lock(browse->dnssd->monitor);
   avahi_service_browser_free(browse->browser);
-  avahi_threaded_poll_unlock(browse->dnssd->monitor);
+  //avahi_threaded_poll_unlock(browse->dnssd->monitor);
 #endif // _WIN32
 
   free(browse);
@@ -1243,9 +1243,9 @@ delete_query(
   DNSServiceRefDeallocate(query->ref);
 
 #else // HAVE_AVAHI
-  avahi_threaded_poll_lock(query->dnssd->monitor);
+  //avahi_threaded_poll_lock(query->dnssd->monitor);
   avahi_record_browser_free(query->browser);
-  avahi_threaded_poll_unlock(query->dnssd->monitor);
+  //avahi_threaded_poll_unlock(query->dnssd->monitor);
 #endif // _WIN32
 
 }
@@ -1265,9 +1265,9 @@ delete_resolve(
   DNSServiceRefDeallocate(resolve->ref);
 
 #else // HAVE_AVAHI
-  avahi_threaded_poll_lock(resolve->dnssd->monitor);
+  //avahi_threaded_poll_lock(resolve->dnssd->monitor);
   avahi_service_resolver_free(resolve->resolver);
-  avahi_threaded_poll_unlock(resolve->dnssd->monitor);
+  //avahi_threaded_poll_unlock(resolve->dnssd->monitor);
 #endif // _WIN32
 
 }
@@ -1291,9 +1291,9 @@ delete_service(
     DNSServiceRefDeallocate(service->refs[i]);
 
 #else // HAVE_AVAHI
-  avahi_threaded_poll_lock(service->dnssd->monitor);
+  //avahi_threaded_poll_lock(service->dnssd->monitor);
   avahi_entry_group_free(service->group);
-  avahi_threaded_poll_unlock(service->dnssd->monitor);
+  //avahi_threaded_poll_unlock(service->dnssd->monitor);
 #endif // _WIN32
 
   free(service);
@@ -1727,6 +1727,19 @@ avahi_client_cb(
   {
     record_config_change(dnssd, CUPS_DNSSD_FLAGS_HOST_CHANGE);
   }
+}
+
+
+//
+// 'avahi_monitor()' - Background thread for Avahi.
+//
+
+static void *				// O - Exit status
+avahi_monitor(cups_dnssd_t *dnssd)	// I - DNS-SD context
+{
+  avahi_simple_poll_loop(dnssd->poll);
+  fputs("avahi_monitor: DONE\n", stderr);
+  return (NULL);
 }
 
 

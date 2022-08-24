@@ -165,6 +165,7 @@ main(int  argc,				// I - Number of command-line arguments
       if (testdata.service_count != 0 && testdata.browse_count != 0 && testdata.resolve_count != 0)
         break;
 
+      testProgress();
       sleep(1);
     }
 
