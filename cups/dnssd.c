@@ -31,7 +31,6 @@
 #  include <avahi-common/domain.h>
 #  include <avahi-common/error.h>
 #  include <avahi-common/malloc.h>
-//#  include <avahi-common/thread-watch.h>
 #  include <avahi-common/simple-watch.h>
 #  define AVAHI_DNS_TYPE_LOC 29		// Per RFC 1876
 #endif // _WIN32
@@ -64,7 +63,6 @@ struct _cups_dnssd_s			// DNS-SD context
 
 #else // HAVE_AVAHI
   AvahiClient		*client;	// Avahi client connection
-//  AvahiThreadedPoll	*poll;		// Avahi poll class
   AvahiSimplePoll	*poll;		// Avahi poll class
   cups_thread_t		monitor;	// Monitoring thread
 #endif // _WIN32
@@ -173,6 +171,10 @@ static void		avahi_service_cb(AvahiEntryGroup *srv, AvahiEntryGroupState state, 
 // 'cupsDNSSDAssembleFullName()' - Create a full service name from the instance
 //                                 name, registration type, and domain.
 //
+// This function combines an instance name ("Example Name"), registration type
+// ("_ipp._tcp"), and domain ("local.") to create a properly escaped full
+// service name ("Example\032Name._ipp._tcp.local.").
+//
 
 bool					// O - `true` on success, `false` on failure
 cupsDNSSDAssembleFullName(
@@ -264,6 +266,10 @@ cupsDNSSDDecodeTXT(
 // 'cupsDNSSDSeparateFullName()' - Separate a full service name into an instance
 //                                 name, registration type, and domain.
 //
+// This function separates a full service name such as
+// "Example\032Name._ipp._tcp.local.") into its instance name ("Example Name"),
+// registration type ("_ipp._tcp"), and domain ("local.").
+//
 
 bool					// O - `true` on success, `false` on error
 cupsDNSSDSeparateFullName(
@@ -275,16 +281,105 @@ cupsDNSSDSeparateFullName(
     char       *domain,			// I - Domain name buffer
     size_t     domainsize)		// I - Size of domain name buffer
 {
-  // TODO: Implement cupsDNSSDSeparateFullName
-  (void)fullname;
-  (void)name;
-  (void)namesize;
-  (void)type;
-  (void)typesize;
-  (void)domain;
-  (void)domainsize;
+  // Range check input..
+  if (!fullname || !name || !namesize || type || !typesize || !domain || !domainsize)
+  {
+    if (name)
+      *name = '\0';
+    if (type)
+      *type = '\0';
+    if (domain)
+      *domain = '\0';
 
-  return (false);
+    return (false);
+  }
+
+#if _WIN32 || defined(HAVE_MDNSRESPONDER)
+  bool	ret = true;			// Return value
+  char	*ptr,				// Pointer into name/type/domain
+	*end;				// Pointer to end of name/type/domain
+
+  // Get the service name...
+  for (ptr = name, end = name + namesize - 1; *fullname; fullname ++)
+  {
+    if (*fullname == '.')
+    {
+      // Service type separator...
+      break;
+    }
+    else if (*fullname == '\\' && isdigit(fullname[1] & 255) && isdigit(fullname[2] & 255) && isdigit(fullname[3] & 255))
+    {
+      // Escaped character
+      if (ptr < end)
+        *ptr++ = (fullname[1] - '0') * 100 + (fullname[2] - '0') * 10 + fullname[3] - '0';
+      else
+        ret = false;
+
+      fullname += 3;
+    }
+    else if (ptr < end)
+      *ptr++ = *fullname;
+    else
+      ret = false;
+  }
+  *ptr = '\0';
+
+  if (*fullname)
+    fullname ++;
+
+  // Get the type...
+  for (ptr = type, end = type + typesize - 1; *fullname; fullname ++)
+  {
+    if (*fullname == '.' && fullname[1] != '_')
+    {
+      // Service type separator...
+      break;
+    }
+    else if (*fullname == '\\' && isdigit(fullname[1] & 255) && isdigit(fullname[2] & 255) && isdigit(fullname[3] & 255))
+    {
+      // Escaped character
+      if (ptr < end)
+        *ptr++ = (fullname[1] - '0') * 100 + (fullname[2] - '0') * 10 + fullname[3] - '0';
+      else
+        ret = false;
+
+      fullname += 3;
+    }
+    else if (ptr < end)
+      *ptr++ = *fullname;
+    else
+      ret = false;
+  }
+  *ptr = '\0';
+
+  if (*fullname)
+    fullname ++;
+
+  // Get the domain...
+  for (ptr = domain, end = domain + domainsize - 1; *fullname; fullname ++)
+  {
+    if (*fullname == '\\' && isdigit(fullname[1] & 255) && isdigit(fullname[2] & 255) && isdigit(fullname[3] & 255))
+    {
+      // Escaped character
+      if (ptr < end)
+        *ptr++ = (fullname[1] - '0') * 100 + (fullname[2] - '0') * 10 + fullname[3] - '0';
+      else
+        ret = false;
+
+      fullname += 3;
+    }
+    else if (ptr < end)
+      *ptr++ = *fullname;
+    else
+      ret = false;
+  }
+  *ptr = '\0';
+
+  return (ret);
+
+#else // HAVE_AVAHI
+  return (!avahi_service_name_split(fullname, name, namesize, type, typesize, domain, domainsize));
+#endif // _WIN32 || HAVE_MDNSRESPONDER
 }
 
 
@@ -375,9 +470,10 @@ cupsDNSSDGetHostName(
 
 
 //
-// 'cupsDNSSDGetConfigChanges()' - Get the number of host name/network configuration changes seen.
+// 'cupsDNSSDGetConfigChanges()' - Get the number of host name/network
+//                                 configuration changes seen.
 //
-// This function returns the numebr of host name or network configuration
+// This function returns the number of host name or network configuration
 // changes that have been seen since the context was created.  The value can be
 // used to track when local services need to be updated.  Registered services
 // will also get a callback with the `CUPS_DNSSD_FLAGS_HOST_CHANGE` bit set in
@@ -397,7 +493,9 @@ cupsDNSSDGetConfigChanges(
 // 'cupsDNSSDNew()' - Create a new DNS-SD context.
 //
 // This function creates a new DNS-SD context for browsing, querying, resolving,
-// and/or registering services.
+// and/or registering services.  Call @link cupsDNSSDDelete@ to stop any pending
+// browses, queries, or resolves, unregister any services, and free the DNS-SD
+// context.
 //
 
 cups_dnssd_t *				// O - DNS-SD context
@@ -521,11 +619,31 @@ cupsDNSSDBrowseGetContext(
 //
 // 'cupsDNSSDBrowseNew()' - Create a new DNS-SD browse request.
 //
+// This function creates a new DNS-SD browse request for the specified service
+// types and optional domain and interface index.  The "types" argument can be a
+// single service type ("_ipp._tcp") or a service type and comma-delimited list
+// of sub-types ("_ipp._tcp,_print,_universal").
+//
+// Newly discovered services are reported using the required browse callback
+// function, with the "flags" argument set to `CUPS_DNSSD_FLAGS_ADD` for newly
+// discovered services, `CUPS_DNSSD_FLAGS_NONE` for removed services, or
+// `CUPS_DNSSD_FLAGS_ERROR` on an error:
+//
+// ```
+// void
+// browse_cb(cups_dnssd_browse_t *browse, void *cb_data,
+// cups_dnssd_flags_t flags, uint32_t if_index,
+// const char *name, const char *regtype, const char *domain)
+// {
+// // Process added/removed service
+// }
+// ```
+//
 
 cups_dnssd_browse_t *			// O - Browse request or `NULL` on error
 cupsDNSSDBrowseNew(
     cups_dnssd_t           *dnssd,	// I - DNS-SD context
-    uint32_t               if_index,	// I - Interface index or `CUPS_DNSSD_IF_ANY` or `CUPS_DNSSD_IF_LOCAL`
+    uint32_t               if_index,	// I - Interface index, `CUPS_DNSSD_IF_ANY`, or `CUPS_DNSSD_IF_LOCAL`
     const char             *types,	// I - Service types
     const char             *domain,	// I - Domain name or `NULL` for default
     cups_dnssd_browse_cb_t browse_cb,	// I - Browse callback function
@@ -575,9 +693,7 @@ cupsDNSSDBrowseNew(
   }
 
 #else // HAVE_AVAHI
-//  avahi_threaded_poll_lock(dnssd->monitor);
   browse->browser = avahi_service_browser_new(dnssd->client, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, types, NULL, 0, (AvahiServiceBrowserCallback)avahi_browse_cb, browse);
-  //avahi_threaded_poll_unlock(dnssd->monitor);
 
   if (!browse->browser)
   {
@@ -633,9 +749,22 @@ cupsDNSSDQueryGetContext(
 //
 // 'cupsDNSSDQueryNew()' - Create a new query request.
 //
-// This function creates a new DNS-SD query request for the specified record
-// type.  The "fullname" parameter specifies the full DNS name of the service
-// (instance name, type, and domain) being queried.
+// This function creates a new DNS-SD query request for the specified full
+// service name and DNS record type.  The "fullname" parameter specifies the
+// full DNS name of the service (instance name, type, and domain) being queried.
+// Responses to the query are reported using the required query callback
+// function with the "flags" argument set to `CUPS_DNSSD_FLAGS_NONE` on success
+// or `CUPS_DNSSD_FLAGS_ERROR` on error:
+//
+// ```
+// void
+// query_cb(cups_dnssd_query_t *query, void *cb_data,
+// cups_dnssd_flags_t flags, uint32_t if_index,
+// const char *fullname, uint16_t rrtype, const void *qdata, uint16_t qlen)
+// {
+// // Process query record
+// }
+// ```
 //
 
 cups_dnssd_query_t *			// O - Query request or `NULL` on error
@@ -691,9 +820,7 @@ cupsDNSSDQueryNew(
   }
 
 #else // HAVE_AVAHI
-  //avahi_threaded_poll_lock(dnssd->monitor);
   query->browser = avahi_record_browser_new(dnssd->client, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, fullname, AVAHI_DNS_CLASS_IN, rrtype, 0, (AvahiRecordBrowserCallback)avahi_query_cb, query);
-  //avahi_threaded_poll_unlock(dnssd->monitor);
 
   if (!query->browser)
   {
@@ -748,6 +875,22 @@ cupsDNSSDResolveGetContext(
 
 //
 // 'cupsDNSSDResolveNew()' - Create a new DNS-SD resolve request.
+//
+// This function creates a new DNS-SD resolver for the specified instance name,
+// service type, and optional domain and interface index.  Resikved services
+// are reported using the required resolve callback function, with the "flags"
+// argument set to `CUPS_DNSSD_FLAGS_NONE` on success or
+// `CUPS_DNSSD_FLAGS_ERROR` on error:
+//
+// ```
+// void
+// resolve_cb(cups_dnssd_resolve_t *resolve, void *cb_data,
+// cups_dnssd_flags_t flags, uint32_t if_index, const char *fullname,
+// const char *host, uint16_t port, size_t num_txt, cups_option_t *txt)
+// {
+// // Process resolved service
+// }
+// ```
 //
 
 cups_dnssd_resolve_t *			// O - Resolve request or `NULL` on error
@@ -804,9 +947,7 @@ cupsDNSSDResolveNew(
   }
 
 #else // HAVE_AVAHI
-  //avahi_threaded_poll_lock(dnssd->monitor);
   resolve->resolver = avahi_service_resolver_new(dnssd->client, if_index, AVAHI_PROTO_UNSPEC, name, type, domain, AVAHI_PROTO_UNSPEC, /*flags*/0, (AvahiServiceResolverCallback)avahi_resolve_cb, resolve);
-  //avahi_threaded_poll_unlock(dnssd->monitor);
 
   if (!resolve->resolver)
   {
@@ -829,6 +970,14 @@ cupsDNSSDResolveNew(
 
 //
 // 'cupsDNSSDServiceAdd()' - Add a service instance.
+//
+// This function adds a service instance for the specified service types,
+// domain, host, and port.  The "types" argument can be a single service type
+// ("_ipp._tcp") or a service type and comma-delimited list of sub-types
+// ("_ipp._tcp,_print,_universal").
+//
+// Call the @link cupsDNSSDServicePublish@ function after all service instances
+// have been added.
 //
 
 bool					// O - `true` on success, `false` on failure
@@ -920,8 +1069,6 @@ cupsDNSSDServiceAdd(
     *subtypes++ = '\0';
 
   // Add the service entry...
-  //avahi_threaded_poll_lock(service->dnssd->monitor);
-
   if ((error = avahi_entry_group_add_service_strlst(service->group, service->if_index, AVAHI_PROTO_UNSPEC, /*flags*/0, service->name, regtype, domain, host, port, txtrec)) < 0)
   {
     report_error(service->dnssd, "Unable to register '%s.%s': %s", service->name, regtype, avahi_strerror(error));
@@ -949,8 +1096,6 @@ cupsDNSSDServiceAdd(
   }
 
   free(regtype);
-
-  //avahi_threaded_poll_unlock(service->dnssd->monitor);
 
   if (txtrec)
     avahi_string_list_free(txtrec);
@@ -982,7 +1127,8 @@ cupsDNSSDServiceDelete(
 
 
 //
-// 'cupsDNSSDServiceGetContext()' - Get the DNS-SD context for the service registration.
+// 'cupsDNSSDServiceGetContext()' - Get the DNS-SD context for the service
+//                                  registration.
 //
 
 cups_dnssd_t *				// O - DNS-SD context or `NULL`
@@ -1008,11 +1154,21 @@ cupsDNSSDServiceGetName(
 //
 // 'cupsDNSSDServiceNew()' - Create a new named service.
 //
+// This function creates a new DNS-SD service registration for the given service
+// instance name and interface.  Specific services using the name are added
+// using the @link cupsDNSSDServiceAdd@ function.
+//
+// The required service callback is called for select events, with the "flags"
+// argument set to `CUPS_DNSSD_FLAGS_NONE` for a successful registration,
+// `CUPS_DNSSD_FLAGS_COLLISION` when there is a name collision, or
+// `CUPS_DNSSD_FLAGS_ERROR` when there is a problem completing the service
+// registration.
+//
 
 cups_dnssd_service_t *			// O - Service or `NULL` on error
 cupsDNSSDServiceNew(
     cups_dnssd_t            *dnssd,	// I - DNS-SD context
-    uint32_t                if_index,	// I - Interface index or `CUPS_DNSSD_IF_ANY` or `CUPS_DNSSD_IF_LOCAL`
+    uint32_t                if_index,	// I - Interface index, `CUPS_DNSSD_IF_ANY`, or `CUPS_DNSSD_IF_LOCAL`
     const char              *name,	// I - Name of service
     cups_dnssd_service_cb_t cb,		// I - Service registration callback function
     void                    *cb_data)	// I - Service registration callback data
@@ -1037,9 +1193,7 @@ cupsDNSSDServiceNew(
 #if _WIN32
 #elif defined(HAVE_MDNSRESPONDER)
 #else // HAVE_AVAHI
-  //avahi_threaded_poll_lock(dnssd->monitor);
   service->group = avahi_entry_group_new(dnssd->client, (AvahiEntryGroupCallback)avahi_service_cb, service);
-  //avahi_threaded_poll_unlock(dnssd->monitor);
 
   if (!service->group)
   {
@@ -1077,6 +1231,9 @@ cupsDNSSDServiceNew(
 //
 // 'cupsDNSSDServicePublish()' - Publish a service.
 //
+// This function publishes the DNS-SD services added using the
+// @link cupsDNSSDServiceAdd@ function.
+//
 
 bool					// O - `true` on success, `false` on failure
 cupsDNSSDServicePublish(
@@ -1090,9 +1247,7 @@ cupsDNSSDServicePublish(
 #elif defined(HAVE_MDNSRESPONDER)
   (void)service;
 #else // HAVE_AVAHI
-  //avahi_threaded_poll_lock(service->dnssd->monitor);
   avahi_entry_group_commit(service->group);
-  //avahi_threaded_poll_unlock(service->dnssd->monitor);
 #endif // _WIN32
 
   return (ret);
@@ -1107,9 +1262,9 @@ cupsDNSSDServicePublish(
 // of the form
 // 'geo:LATITUDE,LONGITUDE[,ALTITUDE][;crs=CRSLABEL][;u=UNCERTAINTY]'.  The
 // specified coordinates and uncertainty are converted into a DNS LOC record
-// for the service name label.
+// for the service name label.  Only the "wgs84" CRSLABEL string is supported.
 //
-// Only the "wgs84" CRSLABEL string is supported.
+// You must call this function prior to @link cupsDNSSDServiceAdd@.
 //
 
 bool					// O - `true` on success, `false` on failure
@@ -1126,6 +1281,10 @@ cupsDNSSDServiceSetLocation(
   unsigned int	alt_cm;			// Altitude in centimeters, biased by 10,000,000cm
   unsigned char	prec;			// Precision value
 
+
+  // Range check input...
+  if (!service || !geo_uri)
+    return (false);
 
   // See if this is a WGS-84 coordinate...
   if ((geo_ptr = strstr(geo_uri, ";crs=")) != NULL && strncmp(geo_ptr + 5, "wgs84", 5))
@@ -1192,15 +1351,11 @@ cupsDNSSDServiceSetLocation(
   // Add LOC record now...
   int error;				// Error code
 
-  //avahi_threaded_poll_lock(service->dnssd->monitor);
-
   if ((error = avahi_entry_group_add_record(service->group, service->if_index, AVAHI_PROTO_UNSPEC, /*flags*/0, service->name, AVAHI_DNS_CLASS_IN, AVAHI_DNS_TYPE_LOC, /*ttl*/75 * 60, service->loc, sizeof(service->loc))) < 0)
   {
     report_error(service->dnssd, "Unable to register LOC record for '%s': %s", service->name, avahi_strerror(error));
     ret = false;
   }
-
-  //avahi_threaded_poll_unlock(service->dnssd->monitor);
 #endif // _WIN32
 
   return (ret);
@@ -1220,9 +1375,7 @@ delete_browse(
   DNSServiceRefDeallocate(browse->ref);
 
 #else // HAVE_AVAHI
-  //avahi_threaded_poll_lock(browse->dnssd->monitor);
   avahi_service_browser_free(browse->browser);
-  //avahi_threaded_poll_unlock(browse->dnssd->monitor);
 #endif // _WIN32
 
   free(browse);
@@ -1243,9 +1396,7 @@ delete_query(
   DNSServiceRefDeallocate(query->ref);
 
 #else // HAVE_AVAHI
-  //avahi_threaded_poll_lock(query->dnssd->monitor);
   avahi_record_browser_free(query->browser);
-  //avahi_threaded_poll_unlock(query->dnssd->monitor);
 #endif // _WIN32
 
 }
@@ -1265,9 +1416,7 @@ delete_resolve(
   DNSServiceRefDeallocate(resolve->ref);
 
 #else // HAVE_AVAHI
-  //avahi_threaded_poll_lock(resolve->dnssd->monitor);
   avahi_service_resolver_free(resolve->resolver);
-  //avahi_threaded_poll_unlock(resolve->dnssd->monitor);
 #endif // _WIN32
 
 }
@@ -1291,9 +1440,7 @@ delete_service(
     DNSServiceRefDeallocate(service->refs[i]);
 
 #else // HAVE_AVAHI
-  //avahi_threaded_poll_lock(service->dnssd->monitor);
   avahi_entry_group_free(service->group);
-  //avahi_threaded_poll_unlock(service->dnssd->monitor);
 #endif // _WIN32
 
   free(service);
@@ -1738,7 +1885,7 @@ static void *				// O - Exit status
 avahi_monitor(cups_dnssd_t *dnssd)	// I - DNS-SD context
 {
   avahi_simple_poll_loop(dnssd->poll);
-  fputs("avahi_monitor: DONE\n", stderr);
+
   return (NULL);
 }
 

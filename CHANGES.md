@@ -19,6 +19,7 @@ libcups v3.0b1 (Month DD, YYYY)
 - Added `ippFile` API for working with IPP data files as used by `ipptool`,
   `ippexeprinter`, and other tools (Issue #14)
 - Added a roll to the default color ippeveprinter printer.
+- Added new DNS-SD API (Issue #19)
 - Updated the CUPS API for consistency.
 - Removed all obsolete/deprecated CUPS 2.x APIs.
 - Removed (obsolete) Kerberos support.

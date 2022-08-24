@@ -19,10 +19,11 @@ extern "C" {
 // Types and constants...
 //
 
-#  define CUPS_DNSSD_IF_INDEX_ANY		0
+#  define CUPS_DNSSD_IF_INDEX_ANY	0
 #  define CUPS_DNSSD_IF_INDEX_LOCAL	((uint32_t)-1)
 
-typedef struct _cups_dnssd_s cups_dnssd_t;	// DNS-SD context
+typedef struct _cups_dnssd_s cups_dnssd_t;
+					// DNS-SD context
 
 enum cups_dnssd_flags_e			// DNS-SD callback flag values
 {
