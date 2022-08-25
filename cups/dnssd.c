@@ -282,7 +282,7 @@ cupsDNSSDSeparateFullName(
     size_t     domainsize)		// I - Size of domain name buffer
 {
   // Range check input..
-  if (!fullname || !name || !namesize || type || !typesize || !domain || !domainsize)
+  if (!fullname || !name || !namesize || !type || !typesize || !domain || !domainsize)
   {
     if (name)
       *name = '\0';
