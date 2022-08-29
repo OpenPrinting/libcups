@@ -631,11 +631,16 @@ cupsDNSSDBrowseGetContext(
 //
 // ```
 // void
-// browse_cb(cups_dnssd_browse_t *browse, void *cb_data,
-// cups_dnssd_flags_t flags, uint32_t if_index,
-// const char *name, const char *regtype, const char *domain)
+// browse_cb(
+//     cups_dnssd_browse_t *browse,
+//     void                *cb_data,
+//     cups_dnssd_flags_t  flags,
+//     uint32_t            if_index,
+//     const char          *name,
+//     const char          *regtype,
+//     const char          *domain)
 // {
-// // Process added/removed service
+//     // Process added/removed service
 // }
 // ```
 //
@@ -758,11 +763,17 @@ cupsDNSSDQueryGetContext(
 //
 // ```
 // void
-// query_cb(cups_dnssd_query_t *query, void *cb_data,
-// cups_dnssd_flags_t flags, uint32_t if_index,
-// const char *fullname, uint16_t rrtype, const void *qdata, uint16_t qlen)
+// query_cb(
+//     cups_dnssd_query_t *query,
+//     void               *cb_data,
+//     cups_dnssd_flags_t flags,
+//     uint32_t           if_index,
+//     const char         *fullname,
+//     uint16_t           rrtype,
+//     const void         *qdata,
+//     uint16_t           qlen)
 // {
-// // Process query record
+//     // Process query record
 // }
 // ```
 //
@@ -884,11 +895,18 @@ cupsDNSSDResolveGetContext(
 //
 // ```
 // void
-// resolve_cb(cups_dnssd_resolve_t *resolve, void *cb_data,
-// cups_dnssd_flags_t flags, uint32_t if_index, const char *fullname,
-// const char *host, uint16_t port, size_t num_txt, cups_option_t *txt)
+// resolve_cb(
+//     cups_dnssd_resolve_t *resolve,
+//     void                 *cb_data,
+//     cups_dnssd_flags_t   flags,
+//     uint32_t             if_index,
+//     const char           *fullname,
+//     const char           *host,
+//     uint16_t             port,
+//     size_t               num_txt,
+//     cups_option_t        *txt)
 // {
-// // Process resolved service
+//     // Process resolved service
 // }
 // ```
 //

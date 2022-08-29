@@ -721,7 +721,6 @@ span.string {
 <li><a href="#cups_page_header_t">cups_page_header_t</a></li>
 <li><a href="#cups_password_cb_t">cups_password_cb_t</a></li>
 <li><a href="#cups_ptype_t">cups_ptype_t</a></li>
-<li><a href="#cups_raster_cb_t">cups_raster_cb_t</a></li>
 <li><a href="#cups_raster_mode_t">cups_raster_mode_t</a></li>
 <li><a href="#cups_raster_t">cups_raster_t</a></li>
 <li><a href="#cups_rwlock_t">cups_rwlock_t</a></li>
@@ -2107,9 +2106,10 @@ functions like <code>strcmp</code> can be used for sorted string arrays.
 int // Return -1 if a &lt; b, 0 if a == b, and 1 if a &gt; b
 compare_cb(void *a, void *b, void *d)
 {
-... &quot;a&quot; and &quot;b&quot; are the elements, &quot;d&quot; is the user data pointer
+  ... &quot;a&quot; and &quot;b&quot; are the elements, &quot;d&quot; is the user data pointer
 }
 </pre>
+
 The hash callback function (&quot;hf&quot;) is used to implement cached lookups with
 the specified hash size (&quot;hsize&quot;).  The function receives a pointer to an
 element and the user data pointer (&quot;d&quot;) and returns an unsigned integer
@@ -2120,9 +2120,10 @@ provides at least 32-bits of resolution.
 size_t // Return hash value from 0 to (hashsize - 1)
 hash_cb(void *e, void *d)
 {
-... &quot;e&quot; is the element, &quot;d&quot; is the user data pointer
+  ... &quot;e&quot; is the element, &quot;d&quot; is the user data pointer
 }
 </pre>
+
 The copy callback function (&quot;cf&quot;) is used to automatically copy/retain
 elements when added to the array or the array is copied with
 <a href="#cupsArrayDup"><code>cupsArrayDup</code></a>.  The function receives a pointer to the element and the
@@ -2132,9 +2133,10 @@ user data pointer (&quot;d&quot;) and returns a new pointer that is stored in th
 void * // Return pointer to copied/retained element or NULL
 copy_cb(void *e, void *d)
 {
-... &quot;e&quot; is the element, &quot;d&quot; is the user data pointer
+  ... &quot;e&quot; is the element, &quot;d&quot; is the user data pointer
 }
 </pre>
+
 Finally, the free callback function (&quot;cf&quot;) is used to automatically
 free/release elements when removed or the array is deleted.  The function
 receives a pointer to the element and the user data pointer (&quot;d&quot;).
@@ -2143,9 +2145,9 @@ receives a pointer to the element and the user data pointer (&quot;d&quot;).
 void
 free_cb(void *e, void *d)
 {
-... &quot;e&quot; is the element, &quot;d&quot; is the user data pointer
+  ... &quot;e&quot; is the element, &quot;d&quot; is the user data pointer
 }
-```</pre>
+</pre>
 </p>
 <h3 class="function"><a id="cupsArrayNewStrings">cupsArrayNewStrings</a></h3>
 <p class="description">Create a new array of delimited strings.</p>
@@ -2253,7 +2255,7 @@ ssize_t cupsCharsetToUTF8(char *dest, const char *src, const size_t maxout, cons
 <p class="description">Count or <code>-1</code> on error</p>
 <h3 class="function"><a id="cupsCheckDestSupported">cupsCheckDestSupported</a></h3>
 <p class="description">Check that the option and value are supported
-by the destination.</p>
+                             by the destination.</p>
 <p class="code">
 bool cupsCheckDestSupported(<a href="#http_t">http_t</a> *http, <a href="#cups_dest_t">cups_dest_t</a> *dest, <a href="#cups_dinfo_t">cups_dinfo_t</a> *dinfo, const char *option, const char *value);</p>
 <h4 class="parameters">Parameters</h4>
@@ -2406,7 +2408,7 @@ copy) - for use with the <code>cupsEnumDests*</code> functions. The caller is
 responsible for calling <a href="#cupsFreeDests"><code>cupsFreeDests</code></a> on the returned object(s).</p>
 <h3 class="function"><a id="cupsCopyDestConflicts">cupsCopyDestConflicts</a></h3>
 <p class="description">Get conflicts and resolutions for a new
-option/value pair.</p>
+                            option/value pair.</p>
 <p class="code">
 int cupsCopyDestConflicts(<a href="#http_t">http_t</a> *http, <a href="#cups_dest_t">cups_dest_t</a> *dest, <a href="#cups_dinfo_t">cups_dinfo_t</a> *dinfo, size_t num_options, <a href="#cups_option_t">cups_option_t</a> *options, const char *new_option, const char *new_value, size_t *num_conflicts, <a href="#cups_option_t">cups_option_t</a> **conflicts, size_t *num_resolved, <a href="#cups_option_t">cups_option_t</a> **resolved);</p>
 <h4 class="parameters">Parameters</h4>
@@ -2453,7 +2455,7 @@ If cupsCopyDestConflicts returns 1 but &quot;num_resolved&quot; and &quot;resolv
 to 0 and <code>NULL</code>, respectively, then the conflict cannot be resolved.</p>
 <h3 class="function"><a id="cupsCopyDestInfo">cupsCopyDestInfo</a></h3>
 <p class="description">Get the supported values/capabilities for the
-destination.</p>
+                       destination.</p>
 <p class="code">
 <a href="#cups_dinfo_t">cups_dinfo_t</a> *cupsCopyDestInfo(<a href="#http_t">http_t</a> *http, <a href="#cups_dest_t">cups_dest_t</a> *dest);</p>
 <h4 class="parameters">Parameters</h4>
@@ -2511,7 +2513,7 @@ ipp_status_t cupsCreateDestJob(<a href="#http_t">http_t</a> *http, <a href="#cup
 in the variable pointed to by &quot;job_id&quot;.</p>
 <h3 class="function"><a id="cupsDNSSDAssembleFullName">cupsDNSSDAssembleFullName</a></h3>
 <p class="description">Create a full service name from the instance
-name, registration type, and domain.</p>
+                                name, registration type, and domain.</p>
 <p class="code">
 bool cupsDNSSDAssembleFullName(char *fullname, size_t fullsize, const char *name, const char *type, const char *domain);</p>
 <h4 class="parameters">Parameters</h4>
@@ -2587,15 +2589,19 @@ discovered services, <code>CUPS_DNSSD_FLAGS_NONE</code> for removed services, or
 
 <pre>
 void
-browse_cb(cups_dnssd_browse_t *browse, void *cb_data,
-cups_dnssd_flags_t flags, uint32_t if_index,
-const char *name, const char *regtype, const char *domain)
+browse_cb(
+    cups_dnssd_browse_t *browse,
+    void                *cb_data,
+    cups_dnssd_flags_t  flags,
+    uint32_t            if_index,
+    const char          *name,
+    const char          *regtype,
+    const char          *domain)
 {
-// Process added/removed service
+    // Process added/removed service
 }
-```</pre>
-gned integer
-representing a hash into the array.  The hash value is of type <code>size_t</code></p>
+</pre>
+</p>
 <h3 class="function"><a id="cupsDNSSDDecodeTXT">cupsDNSSDDecodeTXT</a></h3>
 <p class="description">Decode a TXT record into key/value pairs.</p>
 <p class="code">
@@ -2626,7 +2632,7 @@ void cupsDNSSDDelete(<a href="#cups_dnssd_t">cups_dnssd_t</a> *dnssd);</p>
 </tbody></table>
 <h3 class="function"><a id="cupsDNSSDGetConfigChanges">cupsDNSSDGetConfigChanges</a></h3>
 <p class="description">Get the number of host name/network
-configuration changes seen.</p>
+                                configuration changes seen.</p>
 <p class="code">
 size_t cupsDNSSDGetConfigChanges(<a href="#cups_dnssd_t">cups_dnssd_t</a> *dnssd);</p>
 <h4 class="parameters">Parameters</h4>
@@ -2729,19 +2735,20 @@ or <code>CUPS_DNSSD_FLAGS_ERROR</code> on error:
 
 <pre>
 void
-query_cb(cups_dnssd_query_t *query, void *cb_data,
-cups_dnssd_flags_t flags, uint32_t if_index,
-const char *fullname, uint16_t rrtype, const void *qdata, uint16_t qlen)
+query_cb(
+    cups_dnssd_query_t *query,
+    void               *cb_data,
+    cups_dnssd_flags_t flags,
+    uint32_t           if_index,
+    const char         *fullname,
+    uint16_t           rrtype,
+    const void         *qdata,
+    uint16_t           qlen)
 {
-// Process query record
+    // Process query record
 }
-```</pre>
-lags_t flags, uint32_t if_index,
-const char <em>name, const char </em>regtype, const char *domain)
-{
-// Process added/removed service
-}
-<code>`</code></p>
+</pre>
+</p>
 <h3 class="function"><a id="cupsDNSSDResolveDelete">cupsDNSSDResolveDelete</a></h3>
 <p class="description">Cancel and free a resolve request.</p>
 <p class="code">
@@ -2794,21 +2801,24 @@ argument set to <code>CUPS_DNSSD_FLAGS_NONE</code> on success or
 
 <pre>
 void
-resolve_cb(cups_dnssd_resolve_t *resolve, void *cb_data,
-cups_dnssd_flags_t flags, uint32_t if_index, const char *fullname,
-const char *host, uint16_t port, size_t num_txt, cups_option_t *txt)
+resolve_cb(
+    cups_dnssd_resolve_t *resolve,
+    void                 *cb_data,
+    cups_dnssd_flags_t   flags,
+    uint32_t             if_index,
+    const char           *fullname,
+    const char           *host,
+    uint16_t             port,
+    size_t               num_txt,
+    cups_option_t        *txt)
 {
-// Process resolved service
+    // Process resolved service
 }
-```</pre>
- *qdata, uint16_t qlen)
-{
-// Process query record
-}
-<code>`</code></p>
+</pre>
+</p>
 <h3 class="function"><a id="cupsDNSSDSeparateFullName">cupsDNSSDSeparateFullName</a></h3>
 <p class="description">Separate a full service name into an instance
-name, registration type, and domain.</p>
+                                name, registration type, and domain.</p>
 <p class="code">
 bool cupsDNSSDSeparateFullName(const char *fullname, char *name, size_t namesize, char *type, size_t typesize, char *domain, size_t domainsize);</p>
 <h4 class="parameters">Parameters</h4>
@@ -2876,7 +2886,7 @@ void cupsDNSSDServiceDelete(<a href="#cups_dnssd_service_t">cups_dnssd_service_t
 </tbody></table>
 <h3 class="function"><a id="cupsDNSSDServiceGetContext">cupsDNSSDServiceGetContext</a></h3>
 <p class="description">Get the DNS-SD context for the service
-registration.</p>
+                                 registration.</p>
 <p class="code">
 <a href="#cups_dnssd_t">cups_dnssd_t</a> *cupsDNSSDServiceGetContext(<a href="#cups_dnssd_service_t">cups_dnssd_service_t</a> *service);</p>
 <h4 class="parameters">Parameters</h4>
@@ -2942,7 +2952,7 @@ bool cupsDNSSDServicePublish(<a href="#cups_dnssd_service_t">cups_dnssd_service_
 <a href="#cupsDNSSDServiceAdd"><code>cupsDNSSDServiceAdd</code></a> function.</p>
 <h3 class="function"><a id="cupsDNSSDServiceSetLocation">cupsDNSSDServiceSetLocation</a></h3>
 <p class="description">Set the geolocation (LOC record) of a
-service.</p>
+                                  service.</p>
 <p class="code">
 bool cupsDNSSDServiceSetLocation(<a href="#cups_dnssd_service_t">cups_dnssd_service_t</a> *service, const char *geo_uri);</p>
 <h4 class="parameters">Parameters</h4>
@@ -3252,7 +3262,7 @@ char *cupsFileGetConf(<a href="#cups_file_t">cups_file_t</a> *fp, char *buf, siz
 <p class="description">Line read or <code>NULL</code> on end of file or error</p>
 <h3 class="function"><a id="cupsFileGetLine">cupsFileGetLine</a></h3>
 <p class="description">Get a CR and/or LF-terminated line that may
-contain binary data.</p>
+                      contain binary data.</p>
 <p class="code">
 size_t cupsFileGetLine(<a href="#cups_file_t">cups_file_t</a> *fp, char *buf, size_t buflen);</p>
 <h4 class="parameters">Parameters</h4>
@@ -3620,7 +3630,7 @@ ipp_status_t cupsFinishDestDocument(<a href="#http_t">http_t</a> *http, <a href=
 <p class="discussion">Returns <code>IPP_STATUS_OK</code> or <code>IPP_STATUS_OK_SUBST</code> on success.</p>
 <h3 class="function"><a id="cupsFreeDestInfo">cupsFreeDestInfo</a></h3>
 <p class="description">Free destination information obtained using
-<a href="#cupsCopyDestInfo"><code>cupsCopyDestInfo</code></a>.</p>
+                       <a href="#cupsCopyDestInfo"><code>cupsCopyDestInfo</code></a>.</p>
 <p class="code">
 void cupsFreeDestInfo(<a href="#cups_dinfo_t">cups_dinfo_t</a> *dinfo);</p>
 <h4 class="parameters">Parameters</h4>
@@ -3702,7 +3712,7 @@ the <a href="#cupsEnumDests"><code>cupsEnumDests</code></a> or <a href="#cupsGet
 supported destinations for the current user.</p>
 <h3 class="function"><a id="cupsGetDestMediaByIndex">cupsGetDestMediaByIndex</a></h3>
 <p class="description">Get a media name, dimension, and margins for a
-specific size.</p>
+                              specific size.</p>
 <p class="code">
 bool cupsGetDestMediaByIndex(<a href="#http_t">http_t</a> *http, <a href="#cups_dest_t">cups_dest_t</a> *dest, <a href="#cups_dinfo_t">cups_dinfo_t</a> *dinfo, size_t n, unsigned flags, <a href="#cups_size_t">cups_size_t</a> *size);</p>
 <h4 class="parameters">Parameters</h4>
@@ -3761,7 +3771,7 @@ guidance (multiple flags can be combined):
 <li><code>CUPS_MEDIA_FLAGS_EXACT</code>: find an exact match for the size, and
 </li>
 <li><code>CUPS_MEDIA_FLAGS_READY</code>: if the printer supports media sensing, find the
-size amongst the &quot;ready&quot; media.</li>
+  size amongst the &quot;ready&quot; media.</li>
 </ul>
 <p class="discussion">The matching result (if any) is returned in the <code>cups_size_t</code> structure.<br>
 <br>
@@ -3803,14 +3813,14 @@ bool cupsGetDestMediaBySize(<a href="#http_t">http_t</a> *http, <a href="#cups_d
 <li><code>CUPS_MEDIA_FLAGS_EXACT</code>: find an exact match for the size, and
 </li>
 <li><code>CUPS_MEDIA_FLAGS_READY</code>: if the printer supports media sensing, find the
-size amongst the &quot;ready&quot; media.</li>
+  size amongst the &quot;ready&quot; media.</li>
 </ul>
 <p class="discussion">The matching result (if any) is returned in the <code>cups_size_t</code> structure.<br>
 <br>
 Returns <code>true</code> when there is a match and <code>false</code> if there is not a match.</p>
 <h3 class="function"><a id="cupsGetDestMediaCount">cupsGetDestMediaCount</a></h3>
 <p class="description">Get the number of sizes supported by a
-destination.</p>
+                            destination.</p>
 <p class="code">
 size_t cupsGetDestMediaCount(<a href="#http_t">http_t</a> *http, <a href="#cups_dest_t">cups_dest_t</a> *dest, <a href="#cups_dinfo_t">cups_dinfo_t</a> *dinfo, unsigned flags);</p>
 <h4 class="parameters">Parameters</h4>
@@ -4040,7 +4050,7 @@ const char *cupsGetOption(const char *name, size_t num_options, <a href="#cups_o
 <p class="description">Option value or <code>NULL</code></p>
 <h3 class="function"><a id="cupsGetPassword">cupsGetPassword</a></h3>
 <p class="description">Get a password from the user using the current
-password callback.</p>
+                       password callback.</p>
 <p class="code">
 const char *cupsGetPassword(const char *prompt, <a href="#http_t">http_t</a> *http, const char *method, const char *resource);</p>
 <h4 class="parameters">Parameters</h4>
@@ -4183,7 +4193,7 @@ const char *cupsHashString(const unsigned char *hash, size_t hashsize, char *buf
 <p class="description">Language data</p>
 <h3 class="function"><a id="cupsLangEncoding">cupsLangEncoding</a></h3>
 <p class="description">Return the character encoding (us-ascii, etc.)
-for the given language.</p>
+                       for the given language.</p>
 <p class="code">
 const char *cupsLangEncoding(<a href="#cups_lang_t">cups_lang_t</a> *lang);</p>
 <h4 class="parameters">Parameters</h4>
@@ -4221,21 +4231,21 @@ void cupsLangFree(<a href="#cups_lang_t">cups_lang_t</a> *lang);</p>
 <p class="description">Language data</p>
 <h3 class="function"><a id="cupsLastError">cupsLastError</a></h3>
 <p class="description">Return the last IPP status code received on the current
-thread.</p>
+                    thread.</p>
 <p class="code">
 ipp_status_t cupsLastError(void);</p>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">IPP status code from last request</p>
 <h3 class="function"><a id="cupsLastErrorString">cupsLastErrorString</a></h3>
 <p class="description">Return the last IPP status-message received on the
-current thread.</p>
+                          current thread.</p>
 <p class="code">
 const char *cupsLastErrorString(void);</p>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">&quot;status-message&quot; text from last request</p>
 <h3 class="function"><a id="cupsLocalizeDestMedia">cupsLocalizeDestMedia</a></h3>
 <p class="description">Get the localized string for a destination media
-size.</p>
+                            size.</p>
 <p class="code">
 const char *cupsLocalizeDestMedia(<a href="#http_t">http_t</a> *http, <a href="#cups_dest_t">cups_dest_t</a> *dest, <a href="#cups_dinfo_t">cups_dinfo_t</a> *dinfo, unsigned flags, <a href="#cups_size_t">cups_size_t</a> *size);</p>
 <h4 class="parameters">Parameters</h4>
@@ -4258,7 +4268,7 @@ const char *cupsLocalizeDestMedia(<a href="#http_t">http_t</a> *http, <a href="#
 invalid if the destination information is deleted.</p>
 <h3 class="function"><a id="cupsLocalizeDestOption">cupsLocalizeDestOption</a></h3>
 <p class="description">Get the localized string for a destination
-option.</p>
+                             option.</p>
 <p class="code">
 const char *cupsLocalizeDestOption(<a href="#http_t">http_t</a> *http, <a href="#cups_dest_t">cups_dest_t</a> *dest, <a href="#cups_dinfo_t">cups_dinfo_t</a> *dinfo, const char *option);</p>
 <h4 class="parameters">Parameters</h4>
@@ -4279,7 +4289,7 @@ const char *cupsLocalizeDestOption(<a href="#http_t">http_t</a> *http, <a href="
 invalid if the destination information is deleted.</p>
 <h3 class="function"><a id="cupsLocalizeDestValue">cupsLocalizeDestValue</a></h3>
 <p class="description">Get the localized string for a destination
-option+value pair.</p>
+                            option+value pair.</p>
 <p class="code">
 const char *cupsLocalizeDestValue(<a href="#http_t">http_t</a> *http, <a href="#cups_dest_t">cups_dest_t</a> *dest, <a href="#cups_dinfo_t">cups_dinfo_t</a> *dinfo, const char *option, const char *value);</p>
 <h4 class="parameters">Parameters</h4>
@@ -4781,7 +4791,7 @@ in a program. Multi-threaded programs that override the callback need to do
 so in each thread for the same callback to be used.</p>
 <h3 class="function"><a id="cupsSetCredentials">cupsSetCredentials</a></h3>
 <p class="description">Set the default credentials to be used for SSL/TLS
-connections.</p>
+			    connections.</p>
 <p class="code">
 bool cupsSetCredentials(<a href="#cups_array_t">cups_array_t</a> *credentials);</p>
 <h4 class="parameters">Parameters</h4>
@@ -5149,7 +5159,7 @@ C string to a UTF-32 (32-bit encoding of Unicode) string.</p>
 after <a href="#cupsStartDocument"><code>cupsStartDocument</code></a> to provide a document file.</p>
 <h3 class="function"><a id="httpAcceptConnection">httpAcceptConnection</a></h3>
 <p class="description">Accept a new HTTP client connection from the
-specified listening socket.</p>
+                           specified listening socket.</p>
 <p class="code">
 <a href="#http_t">http_t</a> *httpAcceptConnection(int fd, bool blocking);</p>
 <h4 class="parameters">Parameters</h4>
@@ -5180,7 +5190,7 @@ bool httpAddCredential(<a href="#cups_array_t">cups_array_t</a> *credentials, co
 <p class="discussion">Use <code>httpCreateCredentials</code> to create a credentials array.</p>
 <h3 class="function"><a id="httpAddrClose">httpAddrClose</a></h3>
 <p class="description">Close a socket created by <a href="#httpAddrConnect"><code>httpAddrConnect</code></a> or
-<a href="#httpAddrListen"><code>httpAddrListen</code></a>.</p>
+                    <a href="#httpAddrListen"><code>httpAddrListen</code></a>.</p>
 <p class="code">
 bool httpAddrClose(<a href="#http_addr_t">http_addr_t</a> *addr, int fd);</p>
 <h4 class="parameters">Parameters</h4>
@@ -5198,7 +5208,7 @@ listen address for sockets created with <a href="#httpAddrListen"><code>httpAddr
 ensures that domain sockets are removed when closed.</p>
 <h3 class="function"><a id="httpAddrConnect">httpAddrConnect</a></h3>
 <p class="description">Connect to any of the addresses in the list with a
-timeout and optional cancel.</p>
+                      timeout and optional cancel.</p>
 <p class="code">
 <a href="#http_addrlist_t">http_addrlist_t</a> *httpAddrConnect(<a href="#http_addrlist_t">http_addrlist_t</a> *addrlist, int *sock, int msec, int *cancel);</p>
 <h4 class="parameters">Parameters</h4>
@@ -5373,7 +5383,7 @@ void httpAddrSetPort(<a href="#http_addr_t">http_addr_t</a> *addr, int port);</p
 </tbody></table>
 <h3 class="function"><a id="httpAssembleURI">httpAssembleURI</a></h3>
 <p class="description">Assemble a uniform resource identifier from its
-components.</p>
+                      components.</p>
 <p class="code">
 <a href="#http_uri_status_t">http_uri_status_t</a> httpAssembleURI(<a href="#http_uri_coding_t">http_uri_coding_t</a> encoding, char *uri, size_t urilen, const char *scheme, const char *username, const char *host, int port, const char *resource);</p>
 <h4 class="parameters">Parameters</h4>
@@ -5404,7 +5414,7 @@ place of traditional string functions whenever you need to create a
 URI string.</p>
 <h3 class="function"><a id="httpAssembleURIf">httpAssembleURIf</a></h3>
 <p class="description">Assemble a uniform resource identifier from its
-components with a formatted resource.</p>
+                       components with a formatted resource.</p>
 <p class="code">
 <a href="#http_uri_status_t">http_uri_status_t</a> httpAssembleURIf(<a href="#http_uri_coding_t">http_uri_coding_t</a> encoding, char *uri, size_t urilen, const char *scheme, const char *username, const char *host, int port, const char *resourcef, ...);</p>
 <h4 class="parameters">Parameters</h4>
@@ -5604,7 +5614,7 @@ int httpError(<a href="#http_t">http_t</a> *http);</p>
 <p class="description">Error code (errno) value</p>
 <h3 class="function"><a id="httpFieldValue">httpFieldValue</a></h3>
 <p class="description">Return the HTTP field enumeration value for a field
-name.</p>
+                     name.</p>
 <p class="code">
 <a href="#http_field_t">http_field_t</a> httpFieldValue(const char *name);</p>
 <h4 class="parameters">Parameters</h4>
@@ -5702,7 +5712,7 @@ bool httpGetBlocking(<a href="#http_t">http_t</a> *http);</p>
 <p class="description"><code>true</code> if blocking, <code>false</code> if non-blocking</p>
 <h3 class="function"><a id="httpGetContentEncoding">httpGetContentEncoding</a></h3>
 <p class="description">Get a common content encoding, if any, between
-the client and server.</p>
+                             the client and server.</p>
 <p class="code">
 const char *httpGetContentEncoding(<a href="#http_t">http_t</a> *http);</p>
 <h4 class="parameters">Parameters</h4>
@@ -5843,7 +5853,7 @@ When &quot;http&quot; is <code>NULL</code>, return the FQDN for the local system
 <p class="description">Keep-Alive state</p>
 <h3 class="function"><a id="httpGetLength">httpGetLength</a></h3>
 <p class="description">Get the amount of data remaining from the content-length
-or transfer-encoding fields.</p>
+                    or transfer-encoding fields.</p>
 <p class="code">
 off_t httpGetLength(<a href="#http_t">http_t</a> *http);</p>
 <h4 class="parameters">Parameters</h4>
@@ -5880,7 +5890,7 @@ size_t httpGetReady(<a href="#http_t">http_t</a> *http);</p>
 <p class="description">Number of bytes available</p>
 <h3 class="function"><a id="httpGetRemaining">httpGetRemaining</a></h3>
 <p class="description">Get the number of remaining bytes in the message
-body or current chunk.</p>
+                       body or current chunk.</p>
 <p class="code">
 size_t httpGetRemaining(<a href="#http_t">http_t</a> *http);</p>
 <h4 class="parameters">Parameters</h4>
@@ -5962,7 +5972,7 @@ char *httpGets(<a href="#http_t">http_t</a> *http, char *line, size_t length);</
 <p class="description">Line or <code>NULL</code></p>
 <h3 class="function"><a id="httpInitialize">httpInitialize</a></h3>
 <p class="description">Initialize the HTTP interface library and set the
-default HTTP proxy (if any).</p>
+                     default HTTP proxy (if any).</p>
 <p class="code">
 void httpInitialize(void);</p>
 <h3 class="function"><a id="httpIsChunked">httpIsChunked</a></h3>
@@ -6060,7 +6070,7 @@ bool httpReconnect(<a href="#http_t">http_t</a> *http, int msec, int *cancel);</
 <p class="description"><code>true</code> on success, <code>false</code> on failure</p>
 <h3 class="function"><a id="httpResolveHostname">httpResolveHostname</a></h3>
 <p class="description">Resolve the hostname of the HTTP connection
-address.</p>
+                          address.</p>
 <p class="code">
 const char *httpResolveHostname(<a href="#http_t">http_t</a> *http, char *buffer, size_t bufsize);</p>
 <h4 class="parameters">Parameters</h4>
@@ -6114,7 +6124,7 @@ is specified (&quot;cb&quot; is <code>NULL</code>), then this function will bloc
 to resolve the specified URI.</p>
 <h3 class="function"><a id="httpSeparateURI">httpSeparateURI</a></h3>
 <p class="description">Separate a Universal Resource Identifier into its
-components.</p>
+                      components.</p>
 <p class="code">
 <a href="#http_uri_status_t">http_uri_status_t</a> httpSeparateURI(<a href="#http_uri_coding_t">http_uri_coding_t</a> decoding, const char *uri, char *scheme, size_t schemelen, char *username, size_t usernamelen, char *host, size_t hostlen, int *port, char *resource, size_t resourcelen);</p>
 <h4 class="parameters">Parameters</h4>
@@ -6186,7 +6196,7 @@ void httpSetCookie(<a href="#http_t">http_t</a> *http, const char *cookie);</p>
 </tbody></table>
 <h3 class="function"><a id="httpSetCredentials">httpSetCredentials</a></h3>
 <p class="description">Set the credentials associated with an encrypted
-connection.</p>
+			    connection.</p>
 <p class="code">
 bool httpSetCredentials(<a href="#http_t">http_t</a> *http, <a href="#cups_array_t">cups_array_t</a> *credentials);</p>
 <h4 class="parameters">Parameters</h4>
@@ -6309,12 +6319,10 @@ connection pointer and a user data pointer, and returns <code>true</code> to con
 bool // true to continue, false to stop
 timeout_cb(http_t *http, void *user_data)
 {
-... &quot;http&quot; contains the HTTP connection, &quot;user_data&quot; contains the callback pointer
+  ... &quot;http&quot; contains the HTTP connection, &quot;user_data&quot; contains the callback pointer
 }
-```</pre>
-lution to be
-terminated.  The callback is provided the &quot;cb_data&quot; value and returns a
-<code>bool</code></p>
+</pre>
+</p>
 <h3 class="function"><a id="httpShutdown">httpShutdown</a></h3>
 <p class="description">Shutdown one side of an HTTP connection.</p>
 <p class="code">
@@ -7032,7 +7040,7 @@ buffer pointer can be NULL to get the required length, just like
 <code>(v)snprintf</code>.</p>
 <h3 class="function"><a id="ippContainsInteger">ippContainsInteger</a></h3>
 <p class="description">Determine whether an attribute contains the
-specified value or is within the list of ranges.</p>
+                         specified value or is within the list of ranges.</p>
 <p class="code">
 bool ippContainsInteger(<a href="#ipp_attribute_t">ipp_attribute_t</a> *attr, int value);</p>
 <h4 class="parameters">Parameters</h4>
@@ -7050,7 +7058,7 @@ integer or enum value, or the value falls within one of the rangeOfInteger
 values for the attribute.</p>
 <h3 class="function"><a id="ippContainsString">ippContainsString</a></h3>
 <p class="description">Determine whether an attribute contains the
-specified string value.</p>
+                        specified string value.</p>
 <p class="code">
 bool ippContainsString(<a href="#ipp_attribute_t">ipp_attribute_t</a> *attr, const char *value);</p>
 <h4 class="parameters">Parameters</h4>
@@ -7117,7 +7125,7 @@ attribute or <code>false</code> to skip it.  The function may also choose to do 
 partial copy of the source attribute itself.</p>
 <h3 class="function"><a id="ippCreateRequestedArray">ippCreateRequestedArray</a></h3>
 <p class="description">Create a CUPS array of attribute names from the
-given requested-attributes attribute.</p>
+                              given requested-attributes attribute.</p>
 <p class="code">
 <a href="#cups_array_t">cups_array_t</a> *ippCreateRequestedArray(<a href="#ipp_t">ipp_t</a> *request);</p>
 <h4 class="parameters">Parameters</h4>
@@ -7142,7 +7150,7 @@ result is a sorted array of attribute names, where
 array must be freed using <a href="#cupsArrayDelete"><code>cupsArrayDelete</code></a>.</p>
 <h3 class="function"><a id="ippDateToTime">ippDateToTime</a></h3>
 <p class="description">Convert from RFC 2579 Date/Time format to time in
-seconds.</p>
+                    seconds.</p>
 <p class="code">
 time_t ippDateToTime(const <a href="#ipp_uchar_t">ipp_uchar_t</a> *date);</p>
 <h4 class="parameters">Parameters</h4>
@@ -8657,7 +8665,7 @@ units string is <code>NULL</code>, otherwise inches (&quot;in&quot;) or millimet
 are used.</p>
 <h3 class="function"><a id="pwgInitSize">pwgInitSize</a></h3>
 <p class="description">Initialize a pwg_size_t structure using IPP Job Template
-attributes.</p>
+                  attributes.</p>
 <p class="code">
 bool pwgInitSize(<a href="#pwg_size_t">pwg_size_t</a> *size, <a href="#ipp_t">ipp_t</a> *job, bool *margins_set);</p>
 <h4 class="parameters">Parameters</h4>
@@ -8956,11 +8964,6 @@ typedef const char *(*)(const char *prompt, <a href="#http_t">http_t</a> *http, 
 <p class="description">Printer type/capability bits</p>
 <p class="code">
 typedef unsigned cups_ptype_t;
-</p>
-<h3 class="typedef"><a id="cups_raster_cb_t">cups_raster_cb_t</a></h3>
-<p class="description">cupsRasterOpenIO callback function</p>
-<p class="code">
-typedef ssize_t(*)(void *ctx, unsigned char *buffer, size_t length) cups_raster_cb_t;
 </p>
 <h3 class="typedef"><a id="cups_raster_mode_t">cups_raster_mode_t</a></h3>
 <p class="description">cupsRasterOpen modes</p>
