@@ -8,8 +8,7 @@ The CUPS Library v3 (libcups)
 [![LGTM Grade](https://img.shields.io/lgtm/grade/cpp/github/michaelrsweet/libcups)](https://lgtm.com/projects/g/michaelrsweet/libcups/?mode=list)
 
 > *Note:* This is a major release update of the CUPS library that breaks both
-> binary and source compatibility with prior releases of CUPS.  This library
-> is not yet ready for production use!
+> binary and source compatibility with prior releases of CUPS.
 
 The CUPS library (libcups) provides a common C API for HTTP/HTTPS and IPP
 communications on Unix®-like operating systems and Microsoft Windows®.  It is
