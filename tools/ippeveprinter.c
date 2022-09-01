@@ -1570,6 +1570,7 @@ create_printer(
   printer->ipv4           = -1;
   printer->ipv6           = -1;
   printer->name           = strdup(name);
+  printer->dnssd          = cupsDNSSDNew(NULL, NULL);
   printer->dnssd_name     = strdup(name);
   printer->dnssd_subtypes = subtypes ? strdup(subtypes) : NULL;
   printer->command        = command ? strdup(command) : NULL;
@@ -1615,21 +1616,9 @@ create_printer(
   }
   else
   {
-    char	temp[1024],		/* Temporary string */
-		*tempptr;		/* Pointer into temporary string */
+    char	temp[1024];		/* Temporary string */
 
-#ifdef HAVE_AVAHI
-    const char *avahi_name = avahi_client_get_host_name_fqdn(DNSSDClient);
-
-    if (avahi_name)
-      cupsCopyString(temp, avahi_name, sizeof(temp));
-    else
-#endif /* HAVE_AVAHI */
-
-    if ((tempptr = strstr(httpGetHostname(NULL, temp, sizeof(temp)), ".lan")) != NULL && !tempptr[5])
-      cupsCopyString(tempptr, ".local", sizeof(temp) - (size_t)(tempptr - temp));
-
-    printer->hostname = strdup(temp);
+    printer->hostname = strdup(cupsDNSSDGetHostName(printer->dnssd, temp, sizeof(temp)));
   }
 
   cupsRWInit(&(printer->rwlock));
@@ -6394,9 +6383,6 @@ register_printer(
   */
 
   if_index = !strcmp(printer->hostname, "localhost") ? CUPS_DNSSD_IF_INDEX_LOCAL : CUPS_DNSSD_IF_INDEX_ANY;
-
-  if (!printer->dnssd)
-    printer->dnssd = cupsDNSSDNew(NULL, NULL);
 
   cupsDNSSDServiceDelete(printer->services);
   if ((printer->services = cupsDNSSDServiceNew(printer->dnssd, if_index, printer->dnssd_name, (cups_dnssd_service_cb_t)dnssd_callback, printer)) == NULL)
