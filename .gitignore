@@ -22,6 +22,7 @@
 /cups/testcreds
 /cups/testcups
 /cups/testdest
+/cups/testdnssd
 /cups/testfile
 /cups/testgetdests
 /cups/testhttp

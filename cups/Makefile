@@ -23,6 +23,7 @@ LIBOBJS		= \
 		dest-localization.o \
 		dest-options.o \
 		dir.o \
+		dnssd.o \
 		encode.o \
 		file.o \
 		getputfile.o \
@@ -59,6 +60,7 @@ TESTOBJS	= \
 		testclient.o \
 		testcreds.o \
 		testdest.o \
+		testdnssd.o \
 		testfile.o \
 		testgetdests.o \
 		testhttp.o \
@@ -87,6 +89,7 @@ HEADERS	=	\
 		base.h \
 		cups.h \
 		dir.h \
+		dnssd.h \
 		file.h \
 		http.h \
 		ipp.h \
@@ -112,6 +115,7 @@ UNITTARGETS =	\
 		testclient \
 		testcreds \
 		testdest \
+		testdnssd \
 		testfile \
 		testgetdests \
 		testhttp \
@@ -353,6 +357,16 @@ testcups:	testcups.o $(LIBCUPS_STATIC)
 testdest:	testdest.o $(LIBCUPS_STATIC)
 	echo Linking $@...
 	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testdest.o $(LIBCUPS_STATIC) $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
+
+
+#
+# testdnssd (dependency on static CUPS library is intentional)
+#
+
+testdnssd:	testdnssd.o $(LIBCUPS_STATIC)
+	echo Linking $@...
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testdnssd.o $(LIBCUPS_STATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 
