@@ -20,7 +20,12 @@
 
 #ifdef HAVE_MDNSRESPONDER
 #  include <dns_sd.h>
-#  include <poll.h>
+#  if _WIN32
+#    include <winsock2.h>
+#    define poll WSAPoll
+#  else
+#    include <poll.h>
+#  endif // _WIN32
 #elif _WIN32
 #  include <windns.h>
 #else // HAVE_AVAHI
