@@ -1799,8 +1799,10 @@ mdns_strerror(
     case kDNSServiceErr_Timeout :
         return ("Timeout");
 
+#if !_WIN32 // Bonjour SDK for Windows doesn't define this...
     case kDNSServiceErr_DefunctConnection :
         return ("Connection lost");
+#endif // !_WIN32
   }
 }
 
