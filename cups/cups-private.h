@@ -12,10 +12,11 @@
 #ifndef _CUPS_CUPS_PRIVATE_H_
 #  define _CUPS_CUPS_PRIVATE_H_
 #  include "string-private.h"
+#  include "debug-internal.h"
 #  include "array.h"
 #  include "ipp-private.h"
 #  include "http-private.h"
-#  include "language-private.h"
+#  include "language.h"
 #  include "pwg-private.h"
 #  include "thread.h"
 #  include "cups.h"
@@ -26,6 +27,13 @@
 #  ifdef __cplusplus
 extern "C" {
 #  endif /* __cplusplus */
+
+
+//
+// Macro for localized text...
+//
+
+#  define _(x) x
 
 
 /*
@@ -111,11 +119,10 @@ typedef struct _cups_globals_s		/**** CUPS global state data ****/
   char			ipp_unknown[255];
 					/* Unknown error statuses */
 
-  /* language.c */
-  cups_lang_t		*lang_default;	/* Default language */
-#  ifdef __APPLE__
-  char			language[32];	/* Cached language */
-#  endif /* __APPLE__ */
+  /* lang*.c */
+  cups_lang_t		*lang_default;	/* Default (current) language */
+  cups_encoding_t	lang_encoding;	/* Current encoding */
+  char			lang_name[32];	/* Current language name */
 
   /* pwg-media.c */
   cups_array_t		*leg_size_lut,	/* Lookup table for legacy names */

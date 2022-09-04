@@ -96,7 +96,6 @@
 		270696421CADF3E200FFE5FB /* file-private.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220ED7133305BB00FCA411 /* file-private.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		270696431CADF3E200FFE5FB /* http-private.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220EE0133305BB00FCA411 /* http-private.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		270696441CADF3E200FFE5FB /* ipp-private.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220EE4133305BB00FCA411 /* ipp-private.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		270696451CADF3E200FFE5FB /* language-private.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220EE9133305BB00FCA411 /* language-private.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		270696461CADF3E200FFE5FB /* md5-internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220EEE133305BB00FCA411 /* md5-internal.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		270696481CADF3E200FFE5FB /* pwg-private.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220EF9133305BB00FCA411 /* pwg-private.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		2706964A1CADF3E200FFE5FB /* string-private.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220F01133305BB00FCA411 /* string-private.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -305,7 +304,6 @@
 		72220F20133305BB00FCA411 /* ipp.c in Sources */ = {isa = PBXBuildFile; fileRef = 72220EE6133305BB00FCA411 /* ipp.c */; };
 		72220F21133305BB00FCA411 /* ipp.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220EE7133305BB00FCA411 /* ipp.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		72220F22133305BB00FCA411 /* langprintf.c in Sources */ = {isa = PBXBuildFile; fileRef = 72220EE8133305BB00FCA411 /* langprintf.c */; };
-		72220F23133305BB00FCA411 /* language-private.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220EE9133305BB00FCA411 /* language-private.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		72220F24133305BB00FCA411 /* language.c in Sources */ = {isa = PBXBuildFile; fileRef = 72220EEA133305BB00FCA411 /* language.c */; };
 		72220F25133305BB00FCA411 /* language.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220EEB133305BB00FCA411 /* language.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		72220F28133305BB00FCA411 /* md5-internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220EEE133305BB00FCA411 /* md5-internal.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -1042,7 +1040,6 @@
 		72220EE6133305BB00FCA411 /* ipp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ipp.c; path = ../cups/ipp.c; sourceTree = "<group>"; };
 		72220EE7133305BB00FCA411 /* ipp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ipp.h; path = ../cups/ipp.h; sourceTree = "<group>"; };
 		72220EE8133305BB00FCA411 /* langprintf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = langprintf.c; path = ../cups/langprintf.c; sourceTree = "<group>"; };
-		72220EE9133305BB00FCA411 /* language-private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "language-private.h"; path = "../cups/language-private.h"; sourceTree = "<group>"; };
 		72220EEA133305BB00FCA411 /* language.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = language.c; path = ../cups/language.c; sourceTree = "<group>"; };
 		72220EEB133305BB00FCA411 /* language.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = language.h; path = ../cups/language.h; sourceTree = "<group>"; };
 		72220EEE133305BB00FCA411 /* md5-internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "md5-internal.h"; path = "../cups/md5-internal.h"; sourceTree = "<group>"; };
@@ -1599,7 +1596,6 @@
 				720E854120164E7A00C6C411 /* ipp-file.c */,
 				72220EE5133305BB00FCA411 /* ipp-support.c */,
 				72220EEB133305BB00FCA411 /* language.h */,
-				72220EE9133305BB00FCA411 /* language-private.h */,
 				72220EE8133305BB00FCA411 /* langprintf.c */,
 				72220EEA133305BB00FCA411 /* language.c */,
 				27D3037D134148CB00F022B1 /* libcups3.def */,
@@ -1722,7 +1718,6 @@
 				270696421CADF3E200FFE5FB /* file-private.h in Headers */,
 				270696431CADF3E200FFE5FB /* http-private.h in Headers */,
 				270696441CADF3E200FFE5FB /* ipp-private.h in Headers */,
-				270696451CADF3E200FFE5FB /* language-private.h in Headers */,
 				270696461CADF3E200FFE5FB /* md5-internal.h in Headers */,
 				27A8096228A9B9D500B20BC8 /* dnssd.h in Headers */,
 				270696481CADF3E200FFE5FB /* pwg-private.h in Headers */,
@@ -1776,7 +1771,6 @@
 				72220F11133305BB00FCA411 /* file-private.h in Headers */,
 				72220F1A133305BB00FCA411 /* http-private.h in Headers */,
 				72220F1E133305BB00FCA411 /* ipp-private.h in Headers */,
-				72220F23133305BB00FCA411 /* language-private.h in Headers */,
 				7253C46F216ED69200494ADD /* pwg.h in Headers */,
 				27D3966527BA81C6003D3D8E /* raster-testpage.h in Headers */,
 				72220F28133305BB00FCA411 /* md5-internal.h in Headers */,

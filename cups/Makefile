@@ -101,6 +101,25 @@ HEADERS	=	\
 
 
 #
+# Localization files...
+#
+
+STRINGS	=	\
+		ca.strings \
+		cs.strings \
+		da.strings \
+		de.strings \
+		en.strings \
+		es.strings \
+		fr.strings \
+		it.strings \
+		ja.strings \
+		pt_BR.strings \
+		ru.strings \
+		zh_CN.strings
+
+
+#
 # Targets in this directory...
 #
 
@@ -237,6 +256,27 @@ uninstall:
 		$(RM) $(BUILDROOT)$(includedir)/cups/$$file; \
 	done
 	-$(RMDIR) $(BUILDROOT)$(includedir)/cups
+
+
+#
+# Update strings files...
+#
+# Requires StringsUtil from <https://www.msweet.org/stringsutil/>.
+#
+
+strings:
+	echo Updating base.strings...
+	cp ipp.strings base.strings
+	stringsutil -f base.strings -n _ scan *.c ../tools/*.c
+	for file in $(STRINGS); do \
+		stringsutil -f strings/$$file -c merge base.strings; \
+	done
+
+stringsh:
+	echo Generating localization headers...
+	for file in $(STRINGS); do \
+		stringsutil -f strings/$$file export strings/`basename $$file .strings`_strings.h; \
+	done
 
 
 #
