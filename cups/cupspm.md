@@ -1113,6 +1113,8 @@ The following general changes have been made to the CUPS API:
 - `httpGets` now has the `http_t` pointer as the first argument.
 - The `cups_size_t` structure now includes "color", "source", and "type" members
   to allow specification of media color, source (input tray/roll), and type.
+- The `cups_encoding_t` enumeration values now use the `CUPS_ENCODING_` prefix
+  for consistency with other enumerated types.
 
 
 ## Removed Functions
@@ -1161,6 +1163,7 @@ The following functions have been renamed in CUPS 3.0:
 | `cupsFileCompression`     | `cupsFileIsCompressed`  |
 | `cupsGetDests2`           | `cupsGetDests`          |
 | `cupsGetPassword2`        | `cupsGetPassword`       |
+| `cupsLangGet`             | `cupsLangFind`          |
 | `cupsRasterInitPWGHeader` | `cupsRasterInitHeader`  |
 | `cupsRasterReadHeader2`   | `cupsRasterReadHeader`  |
 | `cupsRasterWriteHeader2`  | `cupsRasterWriteHeader` |

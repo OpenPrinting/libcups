@@ -4,7 +4,7 @@ Changes in libcups
 libcups v3.0b1 (Month DD, YYYY)
 -------------------------------
 
-- Split out libcups and tools from CUPS 2.4.0.
+- Split out libcups and tools from CUPS 2.x.
 - Simplified the configure script.
 - Now require a C99-capable C compiler.
 - Now require GNU TLS, LibreSSL, or OpenSSL.
@@ -20,6 +20,8 @@ libcups v3.0b1 (Month DD, YYYY)
   `ippexeprinter`, and other tools (Issue #14)
 - Added a roll to the default color ippeveprinter printer.
 - Added new DNS-SD API (Issue #19)
+- Added, modernized, and promoted the localization interfaces to public API
+  (Issue #24)
 - Updated the CUPS API for consistency.
 - Removed all obsolete/deprecated CUPS 2.x APIs.
 - Removed (obsolete) Kerberos support.

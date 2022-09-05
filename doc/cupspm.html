@@ -352,6 +352,8 @@ span.string {
 <li><a href="#cupsDoRequest">cupsDoRequest</a></li>
 <li><a href="#cupsEncodeOption">cupsEncodeOption</a></li>
 <li><a href="#cupsEncodeOptions">cupsEncodeOptions</a></li>
+<li><a href="#cupsEncodingString">cupsEncodingString</a></li>
+<li><a href="#cupsEncodingValue">cupsEncodingValue</a></li>
 <li><a href="#cupsEnumDests">cupsEnumDests</a></li>
 <li><a href="#cupsFileClose">cupsFileClose</a></li>
 <li><a href="#cupsFileEOF">cupsFileEOF</a></li>
@@ -412,11 +414,18 @@ span.string {
 <li><a href="#cupsGetUserAgent">cupsGetUserAgent</a></li>
 <li><a href="#cupsHashData">cupsHashData</a></li>
 <li><a href="#cupsHashString">cupsHashString</a></li>
+<li><a href="#cupsLangAddStrings">cupsLangAddStrings</a></li>
 <li><a href="#cupsLangDefault">cupsLangDefault</a></li>
-<li><a href="#cupsLangEncoding">cupsLangEncoding</a></li>
-<li><a href="#cupsLangFlush">cupsLangFlush</a></li>
-<li><a href="#cupsLangFree">cupsLangFree</a></li>
-<li><a href="#cupsLangGet">cupsLangGet</a></li>
+<li><a href="#cupsLangFind">cupsLangFind</a></li>
+<li><a href="#cupsLangFormatString">cupsLangFormatString</a></li>
+<li><a href="#cupsLangGetEncoding">cupsLangGetEncoding</a></li>
+<li><a href="#cupsLangGetName">cupsLangGetName</a></li>
+<li><a href="#cupsLangGetString">cupsLangGetString</a></li>
+<li><a href="#cupsLangLoadStrings">cupsLangLoadStrings</a></li>
+<li><a href="#cupsLangPrintf">cupsLangPrintf</a></li>
+<li><a href="#cupsLangPuts">cupsLangPuts</a></li>
+<li><a href="#cupsLangSetDirectory">cupsLangSetDirectory</a></li>
+<li><a href="#cupsLangSetLocale">cupsLangSetLocale</a></li>
 <li><a href="#cupsLastError">cupsLastError</a></li>
 <li><a href="#cupsLastErrorString">cupsLastErrorString</a></li>
 <li><a href="#cupsLocalizeDestMedia">cupsLocalizeDestMedia</a></li>
@@ -708,6 +717,7 @@ span.string {
 <li><a href="#cups_dnssd_service_t">cups_dnssd_service_t</a></li>
 <li><a href="#cups_dnssd_t">cups_dnssd_t</a></li>
 <li><a href="#cups_edge_t">cups_edge_t</a></li>
+<li><a href="#cups_utf32_t">cups_utf32_t</a></li>
 <li><a href="#cups_file_t">cups_file_t</a></li>
 <li><a href="#cups_job_t">cups_job_t</a></li>
 <li><a href="#cups_jog_t">cups_jog_t</a></li>
@@ -729,7 +739,6 @@ span.string {
 <li><a href="#cups_thread_func_t">cups_thread_func_t</a></li>
 <li><a href="#cups_thread_key_t">cups_thread_key_t</a></li>
 <li><a href="#cups_thread_t">cups_thread_t</a></li>
-<li><a href="#cups_utf32_t">cups_utf32_t</a></li>
 <li><a href="#cups_whichjobs_t">cups_whichjobs_t</a></li>
 <li><a href="#http_addr_t">http_addr_t</a></li>
 <li><a href="#http_addrlist_t">http_addrlist_t</a></li>
@@ -771,7 +780,6 @@ span.string {
 <li><a href="#cups_dentry_s">cups_dentry_s</a></li>
 <li><a href="#cups_dest_s">cups_dest_s</a></li>
 <li><a href="#cups_job_s">cups_job_s</a></li>
-<li><a href="#cups_lang_s">cups_lang_s</a></li>
 <li><a href="#cups_option_s">cups_option_s</a></li>
 <li><a href="#cups_page_header_s">cups_page_header_s</a></li>
 <li><a href="#cups_size_s">cups_size_s</a></li>
@@ -786,6 +794,7 @@ span.string {
 <li><a href="#cups_dnssd_flags_e">cups_dnssd_flags_e</a></li>
 <li><a href="#cups_dnssd_rrtype_e">cups_dnssd_rrtype_e</a></li>
 <li><a href="#cups_edge_e">cups_edge_e</a></li>
+<li><a href="#cups_encoding_e">cups_encoding_e</a></li>
 <li><a href="#cups_jog_e">cups_jog_e</a></li>
 <li><a href="#cups_mediapos_e">cups_mediapos_e</a></li>
 <li><a href="#cups_order_e">cups_order_e</a></li>
@@ -1538,6 +1547,8 @@ cups_password_cb(<span class="reserved">const</span> <span class="reserved">char
 </li>
 <li><p>The <code>cups_size_t</code> structure now includes &quot;color&quot;, &quot;source&quot;, and &quot;type&quot; members to allow specification of media color, source (input tray/roll), and type.</p>
 </li>
+<li><p>The <code>cups_encoding_t</code> enumeration values now use the <code>CUPS_ENCODING_</code> prefix for consistency with other enumerated types.</p>
+</li>
 </ul>
 <h3 class="title" id="removed-functions">Removed Functions</h3>
 <p>The following CUPS 2.x API functions have been removed from the CUPS library:</p>
@@ -1597,6 +1608,9 @@ cups_password_cb(<span class="reserved">const</span> <span class="reserved">char
 </tr>
 <tr><td> <code>cupsGetPassword2</code></td>
 <td> <code>cupsGetPassword</code></td>
+</tr>
+<tr><td> <code>cupsLangGet</code></td>
+<td> <code>cupsLangFind</code></td>
 </tr>
 <tr><td> <code>cupsRasterInitPWGHeader</code></td>
 <td> <code>cupsRasterInitHeader</code></td>
@@ -2239,7 +2253,7 @@ Returns <code>IPP_STATUS_OK</code> on success and
 <h3 class="function"><a id="cupsCharsetToUTF8">cupsCharsetToUTF8</a></h3>
 <p class="description">Convert legacy character set to UTF-8.</p>
 <p class="code">
-ssize_t cupsCharsetToUTF8(char *dest, const char *src, const size_t maxout, const <a href="#cups_encoding_t">cups_encoding_t</a> encoding);</p>
+ssize_t cupsCharsetToUTF8(char *dest, const char *src, const size_t maxout, const cups_encoding_t encoding);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>dest</th>
@@ -2247,12 +2261,12 @@ ssize_t cupsCharsetToUTF8(char *dest, const char *src, const size_t maxout, cons
 <tr><th>src</th>
 <td class="description">Source string</td></tr>
 <tr><th>maxout</th>
-<td class="description">Max output</td></tr>
+<td class="description">Max output size in bytes</td></tr>
 <tr><th>encoding</th>
 <td class="description">Encoding</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">Count or <code>-1</code> on error</p>
+<p class="description">Number of bytes or <code>-1</code> on error</p>
 <h3 class="function"><a id="cupsCheckDestSupported">cupsCheckDestSupported</a></h3>
 <p class="description">Check that the option and value are supported
                              by the destination.</p>
@@ -3133,6 +3147,30 @@ void cupsEncodeOptions(<a href="#ipp_t">ipp_t</a> *ipp, size_t num_options, <a h
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">This function encodes options as IPP attributes for a single group. Call this
 function multiple times for each group as needed.</p>
+<h3 class="function"><a id="cupsEncodingString">cupsEncodingString</a></h3>
+<p class="description">Return the character encoding name string for the
+                         given encoding enumeration.</p>
+<p class="code">
+const char *cupsEncodingString(cups_encoding_t value);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>value</th>
+<td class="description">Encoding value</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Character encoding string</p>
+<h3 class="function"><a id="cupsEncodingValue">cupsEncodingValue</a></h3>
+<p class="description">Return the encoding enumeration value for a given
+                        character encoding name string.</p>
+<p class="code">
+cups_encoding_t cupsEncodingValue(const char *s);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>s</th>
+<td class="description">Character encoding string</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Encoding value</p>
 <h3 class="function"><a id="cupsEnumDests">cupsEnumDests</a></h3>
 <p class="description">Enumerate available destinations with a callback function.</p>
 <p class="code">
@@ -4185,50 +4223,150 @@ const char *cupsHashString(const unsigned char *hash, size_t hashsize, char *buf
 <p class="description">Formatted string</p>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">The passed buffer must be at least 2 * hashsize + 1 characters in length.</p>
+<h3 class="function"><a id="cupsLangAddStrings">cupsLangAddStrings</a></h3>
+<p class="description">Add strings for the specified language.</p>
+<p class="code">
+bool cupsLangAddStrings(const char *language, const char *strings);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>language</th>
+<td class="description">Language name</td></tr>
+<tr><th>strings</th>
+<td class="description">Contents of &quot;.strings&quot; file</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description"><code>true</code> on success, <code>false</code> on failure</p>
 <h3 class="function"><a id="cupsLangDefault">cupsLangDefault</a></h3>
 <p class="description">Return the default language.</p>
 <p class="code">
 <a href="#cups_lang_t">cups_lang_t</a> *cupsLangDefault(void);</p>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Language data</p>
-<h3 class="function"><a id="cupsLangEncoding">cupsLangEncoding</a></h3>
-<p class="description">Return the character encoding (us-ascii, etc.)
-                       for the given language.</p>
+<h3 class="function"><a id="cupsLangFind">cupsLangFind</a></h3>
+<p class="description">Find a language localization.</p>
 <p class="code">
-const char *cupsLangEncoding(<a href="#cups_lang_t">cups_lang_t</a> *lang);</p>
+<a href="#cups_lang_t">cups_lang_t</a> *cupsLangFind(const char *language);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>language</th>
+<td class="description">Language or locale name</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Language data</p>
+<h3 class="function"><a id="cupsLangFormatString">cupsLangFormatString</a></h3>
+<p class="description">Create a localized formatted string.</p>
+<p class="code">
+const char *cupsLangFormatString(<a href="#cups_lang_t">cups_lang_t</a> *lang, char *buffer, size_t bufsize, const char *format, ...);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>lang</th>
+<td class="description">Language data</td></tr>
+<tr><th>buffer</th>
+<td class="description">Output buffer</td></tr>
+<tr><th>bufsize</th>
+<td class="description">Size of output buffer</td></tr>
+<tr><th>format</th>
+<td class="description">Printf-style format string</td></tr>
+<tr><th>...</th>
+<td class="description">Additional arguments</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Formatted string</p>
+<h3 class="function"><a id="cupsLangGetEncoding">cupsLangGetEncoding</a></h3>
+<p class="description">Get the default encoding for the current locale.</p>
+<p class="code">
+cups_encoding_t cupsLangGetEncoding(void);</p>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Character encoding</p>
+<h3 class="function"><a id="cupsLangGetName">cupsLangGetName</a></h3>
+<p class="description">Get the language name.</p>
+<p class="code">
+const char *cupsLangGetName(<a href="#cups_lang_t">cups_lang_t</a> *lang);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>lang</th>
 <td class="description">Language data</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">Character encoding</p>
-<h3 class="function"><a id="cupsLangFlush">cupsLangFlush</a></h3>
-<p class="description">Flush all language data out of the cache.</p>
+<p class="description">Language name</p>
+<h3 class="function"><a id="cupsLangGetString">cupsLangGetString</a></h3>
+<p class="description">Get a localized message string.</p>
 <p class="code">
-void cupsLangFlush(void);</p>
-<h3 class="function"><a id="cupsLangFree">cupsLangFree</a></h3>
-<p class="description">Free language data.</p>
-<p class="code">
-void cupsLangFree(<a href="#cups_lang_t">cups_lang_t</a> *lang);</p>
+const char *cupsLangGetString(<a href="#cups_lang_t">cups_lang_t</a> *lang, const char *message);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>lang</th>
-<td class="description">Language to free</td></tr>
-</tbody></table>
-<h4 class="discussion">Discussion</h4>
-<p class="discussion">This does not actually free anything; use <a href="#cupsLangFlush"><code>cupsLangFlush</code></a> for that.</p>
-<h3 class="function"><a id="cupsLangGet">cupsLangGet</a></h3>
-<p class="description">Get a language.</p>
-<p class="code">
-<a href="#cups_lang_t">cups_lang_t</a> *cupsLangGet(const char *language);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>language</th>
-<td class="description">Language or locale</td></tr>
+<td class="description">Language</td></tr>
+<tr><th>message</th>
+<td class="description">Message</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">Language data</p>
+<p class="description">Localized message</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function gets a localized UTF-8 message string for the specified
+language.  If the message is not localized, the original message pointer is
+returned.</p>
+<h3 class="function"><a id="cupsLangLoadStrings">cupsLangLoadStrings</a></h3>
+<p class="description">Load a message catalog for a language.</p>
+<p class="code">
+bool cupsLangLoadStrings(<a href="#cups_lang_t">cups_lang_t</a> *lang, const char *filename, const char *strings);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>lang</th>
+<td class="description">Language data</td></tr>
+<tr><th>filename</th>
+<td class="description">Filename of <code>NULL</code> for none</td></tr>
+<tr><th>strings</th>
+<td class="description">Strings or <code>NULL</code> for none</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description"><code>true</code> on success, <code>false</code> on failure</p>
+<h3 class="function"><a id="cupsLangPrintf">cupsLangPrintf</a></h3>
+<p class="description">Print a formatted message string to a file.</p>
+<p class="code">
+ssize_t cupsLangPrintf(FILE *fp, const char *format, ...);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>fp</th>
+<td class="description">File to write to</td></tr>
+<tr><th>format</th>
+<td class="description">Message string to use</td></tr>
+<tr><th>...</th>
+<td class="description">Additional arguments as needed</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Number of bytes written</p>
+<h3 class="function"><a id="cupsLangPuts">cupsLangPuts</a></h3>
+<p class="description">Print a static message string to a file.</p>
+<p class="code">
+ssize_t cupsLangPuts(FILE *fp, const char *message);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>fp</th>
+<td class="description">File to write to</td></tr>
+<tr><th>message</th>
+<td class="description">Message string to use</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Number of bytes written</p>
+<h3 class="function"><a id="cupsLangSetDirectory">cupsLangSetDirectory</a></h3>
+<p class="description">Set a directory containing localizations.</p>
+<p class="code">
+void cupsLangSetDirectory(const char *d);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>d</th>
+<td class="description">Directory name</td></tr>
+</tbody></table>
+<h3 class="function"><a id="cupsLangSetLocale">cupsLangSetLocale</a></h3>
+<p class="description">Set the current locale and transcode the command-line.</p>
+<p class="code">
+void cupsLangSetLocale(char *argv[]);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>argv[]</th>
+<td class="description">Command-line arguments</td></tr>
+</tbody></table>
 <h3 class="function"><a id="cupsLastError">cupsLastError</a></h3>
 <p class="description">Return the last IPP status code received on the current
                     thread.</p>
@@ -5097,17 +5235,17 @@ ssize_t cupsUTF32ToUTF8(char *dest, const <a href="#cups_utf32_t">cups_utf32_t</
 <tr><th>src</th>
 <td class="description">Source string</td></tr>
 <tr><th>maxout</th>
-<td class="description">Max output</td></tr>
+<td class="description">Max output in bytes</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">Count or <code>-1</code> on error</p>
+<p class="description">Number of bytes or <code>-1</code> on error</p>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">This function converts a UTF-32 (32-bit encoding of Unicode) string to a
 UTF-8 (8-bit encoding of Unicode) <code>nul</code>-terminated C string.</p>
 <h3 class="function"><a id="cupsUTF8ToCharset">cupsUTF8ToCharset</a></h3>
 <p class="description">Convert UTF-8 to legacy character set.</p>
 <p class="code">
-ssize_t cupsUTF8ToCharset(char *dest, const char *src, const size_t maxout, const <a href="#cups_encoding_t">cups_encoding_t</a> encoding);</p>
+ssize_t cupsUTF8ToCharset(char *dest, const char *src, const size_t maxout, const cups_encoding_t encoding);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>dest</th>
@@ -5115,12 +5253,12 @@ ssize_t cupsUTF8ToCharset(char *dest, const char *src, const size_t maxout, cons
 <tr><th>src</th>
 <td class="description">Source string</td></tr>
 <tr><th>maxout</th>
-<td class="description">Max output</td></tr>
+<td class="description">Max output in bytes</td></tr>
 <tr><th>encoding</th>
 <td class="description">Encoding</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">Count or <code>-1</code> on error</p>
+<p class="description">Number of bytes or <code>-1</code> on error</p>
 <h3 class="function"><a id="cupsUTF8ToUTF32">cupsUTF8ToUTF32</a></h3>
 <p class="description">Convert UTF-8 to UTF-32.</p>
 <p class="code">
@@ -5132,10 +5270,10 @@ ssize_t cupsUTF8ToUTF32(<a href="#cups_utf32_t">cups_utf32_t</a> *dest, const ch
 <tr><th>src</th>
 <td class="description">Source string</td></tr>
 <tr><th>maxout</th>
-<td class="description">Max output</td></tr>
+<td class="description">Max output in words</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">Count or <code>-1</code> on error</p>
+<p class="description">Number of words or <code>-1</code> on error</p>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">This function converts a UTF-8 (8-bit encoding of Unicode) <code>nul</code>-terminated
 C string to a UTF-32 (32-bit encoding of Unicode) string.</p>
@@ -8900,6 +9038,11 @@ typedef struct _cups_dnssd_s cups_dnssd_t;
 <p class="code">
 typedef enum <a href="#cups_edge_e">cups_edge_e</a> cups_edge_t;
 </p>
+<h3 class="typedef"><a id="cups_utf32_t">cups_utf32_t</a></h3>
+<p class="description">Language Encodings</p>
+<p class="code">
+typedef typedef unsigned long cups_utf32_t;
+</p>
 <h3 class="typedef"><a id="cups_file_t">cups_file_t</a></h3>
 <p class="description">CUPS file type</p>
 <p class="code">
@@ -8916,9 +9059,9 @@ typedef struct <a href="#cups_job_s">cups_job_s</a> cups_job_t;
 typedef enum <a href="#cups_jog_e">cups_jog_e</a> cups_jog_t;
 </p>
 <h3 class="typedef"><a id="cups_lang_t">cups_lang_t</a></h3>
-<p class="description">Language Cache Structure</p>
+<p class="description">Language Cache</p>
 <p class="code">
-typedef struct <a href="#cups_lang_s">cups_lang_s</a> cups_lang_t;
+typedef struct _cups_lang_s cups_lang_t;
 </p>
 <h3 class="typedef"><a id="cups_mediapos_t">cups_mediapos_t</a></h3>
 <p class="description">MediaPosition values</p>
@@ -9004,11 +9147,6 @@ typedef pthread_key_t cups_thread_key_t;
 <p class="description">Thread identifier</p>
 <p class="code">
 typedef pthread_t cups_thread_t;
-</p>
-<h3 class="typedef"><a id="cups_utf32_t">cups_utf32_t</a></h3>
-<p class="description">UTF-32 Unicode/ISO-10646 unit</p>
-<p class="code">
-typedef unsigned long cups_utf32_t;
 </p>
 <h3 class="typedef"><a id="cups_whichjobs_t">cups_whichjobs_t</a></h3>
 <p class="description">Which jobs for <a href="#cupsGetJobs"><code>cupsGetJobs</code></a></p>
@@ -9262,25 +9400,6 @@ typedef struct <a href="#pwg_media_s">pwg_media_s</a> pwg_media_t;
 <td class="description">Title/job name</td></tr>
 <tr><th>user </th>
 <td class="description">User that submitted the job</td></tr>
-</tbody></table>
-<h3 class="struct"><a id="cups_lang_s">cups_lang_s</a></h3>
-<p class="description">Language Cache Structure</p>
-<p class="code">struct cups_lang_s {<br>
-&#160;&#160;&#160;&#160;<a href="#cups_encoding_t">cups_encoding_t</a> encoding;<br>
-&#160;&#160;&#160;&#160;char language[16];<br>
-&#160;&#160;&#160;&#160;struct <a href="#cups_lang_s">cups_lang_s</a> *next;<br>
-&#160;&#160;&#160;&#160;int used;<br>
-};</p>
-<h4 class="members">Members</h4>
-<table class="list"><tbody>
-<tr><th>encoding </th>
-<td class="description">Text encoding</td></tr>
-<tr><th>language[16] </th>
-<td class="description">Language/locale name</td></tr>
-<tr><th>next </th>
-<td class="description">Next language in cache</td></tr>
-<tr><th>used </th>
-<td class="description">Number of times this entry has been used.</td></tr>
 </tbody></table>
 <h3 class="struct"><a id="cups_option_s">cups_option_s</a></h3>
 <p class="description">Printer Options</p>
@@ -9619,6 +9738,52 @@ factor not applied)</td></tr>
 <tr><th>CUPS_EDGE_LEFT </th><td class="description">Leading edge is the left of the page</td></tr>
 <tr><th>CUPS_EDGE_RIGHT </th><td class="description">Leading edge is the right of the page</td></tr>
 <tr><th>CUPS_EDGE_TOP </th><td class="description">Leading edge is the top of the page</td></tr>
+</tbody></table>
+<h3 class="enumeration"><a id="cups_encoding_e">cups_encoding_e</a></h3>
+<p class="description">Language Encodings</p>
+<h4 class="constants">Constants</h4>
+<table class="list"><tbody>
+<tr><th>CUPS_ENCODING_BG18030 </th><td class="description">Chinese GB 18030</td></tr>
+<tr><th>CUPS_ENCODING_EUC_CN </th><td class="description">EUC Simplified Chinese</td></tr>
+<tr><th>CUPS_ENCODING_EUC_JP </th><td class="description">EUC Japanese</td></tr>
+<tr><th>CUPS_ENCODING_EUC_KR </th><td class="description">EUC Korean</td></tr>
+<tr><th>CUPS_ENCODING_EUC_TW </th><td class="description">EUC Traditional Chinese</td></tr>
+<tr><th>CUPS_ENCODING_ISO8859_1 </th><td class="description">ISO-8859-1</td></tr>
+<tr><th>CUPS_ENCODING_ISO8859_10 </th><td class="description">ISO-8859-10</td></tr>
+<tr><th>CUPS_ENCODING_ISO8859_11 </th><td class="description">ISO-8859-11</td></tr>
+<tr><th>CUPS_ENCODING_ISO8859_13 </th><td class="description">ISO-8859-13</td></tr>
+<tr><th>CUPS_ENCODING_ISO8859_14 </th><td class="description">ISO-8859-14</td></tr>
+<tr><th>CUPS_ENCODING_ISO8859_15 </th><td class="description">ISO-8859-15</td></tr>
+<tr><th>CUPS_ENCODING_ISO8859_16 </th><td class="description">ISO-8859-16</td></tr>
+<tr><th>CUPS_ENCODING_ISO8859_2 </th><td class="description">ISO-8859-2</td></tr>
+<tr><th>CUPS_ENCODING_ISO8859_3 </th><td class="description">ISO-8859-3</td></tr>
+<tr><th>CUPS_ENCODING_ISO8859_4 </th><td class="description">ISO-8859-4</td></tr>
+<tr><th>CUPS_ENCODING_ISO8859_5 </th><td class="description">ISO-8859-5</td></tr>
+<tr><th>CUPS_ENCODING_ISO8859_6 </th><td class="description">ISO-8859-6</td></tr>
+<tr><th>CUPS_ENCODING_ISO8859_7 </th><td class="description">ISO-8859-7</td></tr>
+<tr><th>CUPS_ENCODING_ISO8859_8 </th><td class="description">ISO-8859-8</td></tr>
+<tr><th>CUPS_ENCODING_ISO8859_9 </th><td class="description">ISO-8859-9</td></tr>
+<tr><th>CUPS_ENCODING_JIS_X0213 </th><td class="description">JIS X0213 aka Shift JIS</td></tr>
+<tr><th>CUPS_ENCODING_KOI8_R </th><td class="description">KOI-8-R</td></tr>
+<tr><th>CUPS_ENCODING_KOI8_U </th><td class="description">KOI-8-U</td></tr>
+<tr><th>CUPS_ENCODING_MAC_ROMAN </th><td class="description">MacRoman</td></tr>
+<tr><th>CUPS_ENCODING_US_ASCII </th><td class="description">US ASCII</td></tr>
+<tr><th>CUPS_ENCODING_UTF_8 </th><td class="description">UTF-8</td></tr>
+<tr><th>CUPS_ENCODING_WINDOWS_1250 </th><td class="description">CP-1250</td></tr>
+<tr><th>CUPS_ENCODING_WINDOWS_1251 </th><td class="description">CP-1251</td></tr>
+<tr><th>CUPS_ENCODING_WINDOWS_1252 </th><td class="description">CP-1252</td></tr>
+<tr><th>CUPS_ENCODING_WINDOWS_1253 </th><td class="description">CP-1253</td></tr>
+<tr><th>CUPS_ENCODING_WINDOWS_1254 </th><td class="description">CP-1254</td></tr>
+<tr><th>CUPS_ENCODING_WINDOWS_1255 </th><td class="description">CP-1255</td></tr>
+<tr><th>CUPS_ENCODING_WINDOWS_1256 </th><td class="description">CP-1256</td></tr>
+<tr><th>CUPS_ENCODING_WINDOWS_1257 </th><td class="description">CP-1257</td></tr>
+<tr><th>CUPS_ENCODING_WINDOWS_1258 </th><td class="description">CP-1258</td></tr>
+<tr><th>CUPS_ENCODING_WINDOWS_1361 </th><td class="description">Korean Johab</td></tr>
+<tr><th>CUPS_ENCODING_WINDOWS_874 </th><td class="description">CP-874</td></tr>
+<tr><th>CUPS_ENCODING_WINDOWS_932 </th><td class="description">Japanese JIS X0208-1990</td></tr>
+<tr><th>CUPS_ENCODING_WINDOWS_936 </th><td class="description">Simplified Chinese GB 2312-80</td></tr>
+<tr><th>CUPS_ENCODING_WINDOWS_949 </th><td class="description">Korean KS C5601-1992</td></tr>
+<tr><th>CUPS_ENCODING_WINDOWS_950 </th><td class="description">Traditional Chinese Big Five</td></tr>
 </tbody></table>
 <h3 class="enumeration"><a id="cups_jog_e">cups_jog_e</a></h3>
 <p class="description">Jog attribute values</p>

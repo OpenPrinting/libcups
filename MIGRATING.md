@@ -68,6 +68,7 @@ Renamed Functions
 | `cupsFileCompression`     | `cupsFileIsCompressed`  |
 | `cupsGetDests2`           | `cupsGetDests`          |
 | `cupsGetPassword2`        | `cupsGetPassword`       |
+| `cupsLangGet`             | `cupsLangFind`          |
 | `cupsRasterInitPWGHeader` | `cupsRasterInitHeader`  |
 | `cupsRasterReadHeader2`   | `cupsRasterReadHeader`  |
 | `cupsRasterWriteHeader2`  | `cupsRasterWriteHeader` |
@@ -127,3 +128,5 @@ API Changes
 - `httpGets` now has the `http_t` pointer as the first argument.
 - The `cups_size_t` structure now includes `source` and `type` members to allow
   specification of media source (input tray/roll) and type.
+- The `cups_encoding_t` enumeration values now use the `CUPS_ENCODING_` prefix
+  for consistency with other enumerated types.
