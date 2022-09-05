@@ -9,10 +9,16 @@
 /cups3.pc
 /Makedefs
 /cups/fuzzipp
+/cups/libcups.a
 /cups/libcups.dylib
 /cups/libcups.3.dylib
 /cups/libcups.so
 /cups/libcups.so.3
+/cups/libcups3.a
+/cups/libcups3.dylib
+/cups/libcups3.3.dylib
+/cups/libcups3.so
+/cups/libcups3.so.3
 /cups/locale/
 /cups/rasterbench
 /cups/test.pwg
