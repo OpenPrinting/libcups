@@ -12,6 +12,7 @@
 #ifndef CUPS_CONFIG_H
 #define CUPS_CONFIG_H
 
+
 /*
  * Include necessary headers...
  */
@@ -21,6 +22,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <io.h>
+#include <fcntl.h>
 #include <direct.h>
 
 

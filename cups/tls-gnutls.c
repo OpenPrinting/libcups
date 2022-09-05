@@ -66,6 +66,7 @@ cupsMakeServerCredentials(
  			crtfile[1024],	/* Certificate filename */
 			keyfile[1024];	/* Private key filename */
   cups_lang_t		*language;	/* Default language info */
+  const char		*langname;	/* Default language name */
   cups_file_t		*fp;		/* Key/cert file */
   unsigned char		buffer[8192];	/* Buffer for x509 data */
   size_t		bytes;		/* Number of bytes of data */
@@ -137,6 +138,7 @@ cupsMakeServerCredentials(
   DEBUG_puts("1cupsMakeServerCredentials: Generating self-signed X.509 certificate.");
 
   language  = cupsLangDefault();
+  langname  = cupsLangGetName(language);
   curtime   = time(NULL);
   serial[0] = curtime >> 24;
   serial[1] = curtime >> 16;
@@ -144,12 +146,10 @@ cupsMakeServerCredentials(
   serial[3] = curtime;
 
   gnutls_x509_crt_init(&crt);
-  if (strlen(language->language) == 5)
-    gnutls_x509_crt_set_dn_by_oid(crt, GNUTLS_OID_X520_COUNTRY_NAME, 0,
-                                  language->language + 3, 2);
+  if (strlen(langname) == 5)
+    gnutls_x509_crt_set_dn_by_oid(crt, GNUTLS_OID_X520_COUNTRY_NAME, 0, langname + 3, 2);
   else
-    gnutls_x509_crt_set_dn_by_oid(crt, GNUTLS_OID_X520_COUNTRY_NAME, 0,
-                                  "US", 2);
+    gnutls_x509_crt_set_dn_by_oid(crt, GNUTLS_OID_X520_COUNTRY_NAME, 0, "US", 2);
   gnutls_x509_crt_set_dn_by_oid(crt, GNUTLS_OID_X520_COMMON_NAME, 0,
                                 common_name, strlen(common_name));
   gnutls_x509_crt_set_dn_by_oid(crt, GNUTLS_OID_X520_ORGANIZATION_NAME, 0,
