@@ -20,7 +20,7 @@
  * Local functions...
  */
 
-static void	cups_create_localizations(http_t *http, cups_dinfo_t *dinfo);
+static void	cups_load_localizations(http_t *http, cups_dinfo_t *dinfo);
 
 
 /*
@@ -98,7 +98,7 @@ cupsLocalizeDestMedia(
   lang = cupsLangDefault();
 
   if (!dinfo->localizations)
-    cups_create_localizations(http, dinfo);
+    cups_load_localizations(http, dinfo);
 
   snprintf(temp, sizeof(temp), "media.%s", size->media);
   if ((lsize = cupsLangGetString(lang, temp)) == temp)
@@ -197,15 +197,21 @@ cupsLocalizeDestOption(
     cups_dinfo_t *dinfo,		/* I - Destination information */
     const char   *option)		/* I - Option to localize */
 {
+  const char *localized;		// Localized string
+
+
   DEBUG_printf(("cupsLocalizeDestOption(http=%p, dest=%p, dinfo=%p, option=\"%s\")", (void *)http, (void *)dest, (void *)dinfo, option));
 
   if (!http || !dest || !dinfo)
-    return (option);
+    return (_cupsStrAlloc(option));
 
   if (!dinfo->localizations)
-    cups_create_localizations(http, dinfo);
+    cups_load_localizations(http, dinfo);
 
-  return (cupsLangGetString(cupsLangDefault(), option));
+  if ((localized = cupsLangGetString(cupsLangDefault(), option)) == option)
+    return (_cupsStrAlloc(option));
+  else
+    return (localized);
 }
 
 
@@ -232,7 +238,7 @@ cupsLocalizeDestValue(
   DEBUG_printf(("cupsLocalizeDestValue(http=%p, dest=%p, dinfo=%p, option=\"%s\", value=\"%s\")", (void *)http, (void *)dest, (void *)dinfo, option, value));
 
   if (!http || !dest || !dinfo)
-    return (value);
+    return (_cupsStrAlloc(value));
 
   if (!strcmp(option, "media"))
   {
@@ -253,23 +259,23 @@ cupsLocalizeDestValue(
   }
 
   if (!dinfo->localizations)
-    cups_create_localizations(http, dinfo);
+    cups_load_localizations(http, dinfo);
 
   snprintf(pair, sizeof(pair), "%s.%s", option, value);
   if ((localized = cupsLangGetString(cupsLangDefault(), pair)) == pair)
-    return (value);
+    return (_cupsStrAlloc(value));
   else
     return (localized);
 }
 
 
 /*
- * 'cups_create_localizations()' - Create the localizations array for a
- *                                 destination.
+ * 'cups_load_localizations()' - Load the localization strings for a
+ *                               destination.
  */
 
 static void
-cups_create_localizations(
+cups_load_localizations(
     http_t       *http,			/* I - Connection to destination */
     cups_dinfo_t *dinfo)		/* I - Destination informations */
 {
@@ -293,7 +299,7 @@ cups_create_localizations(
   {
     // Nope, create an empty message catalog...
     dinfo->localizations = true;
-    DEBUG_puts("4cups_create_localizations: No printer-strings-uri (uri) value.");
+    DEBUG_puts("4cups_load_localizations: No printer-strings-uri (uri) value.");
     return;
   }
 
@@ -302,7 +308,7 @@ cups_create_localizations(
   if (httpSeparateURI(HTTP_URI_CODING_ALL, attr->values[0].string.text, scheme, sizeof(scheme), userpass, sizeof(userpass), hostname, sizeof(hostname), &port, resource, sizeof(resource)) < HTTP_URI_STATUS_OK)
   {
     dinfo->localizations = true;
-    DEBUG_printf(("4cups_create_localizations: Bad printer-strings-uri value \"%s\".", attr->values[0].string.text));
+    DEBUG_printf(("4cups_load_localizations: Bad printer-strings-uri value \"%s\".", attr->values[0].string.text));
     return;
   }
 
@@ -324,7 +330,7 @@ cups_create_localizations(
 
     if ((http2 = httpConnect(hostname, port, NULL, AF_UNSPEC, encryption, 1, 30000, NULL)) == NULL)
     {
-      DEBUG_printf(("4cups_create_localizations: Unable to connect to %s:%d: %s", hostname, port, cupsLastErrorString()));
+      DEBUG_printf(("4cups_load_localizations: Unable to connect to %s:%d: %s", hostname, port, cupsLastErrorString()));
       return;
     }
   }
@@ -332,7 +338,7 @@ cups_create_localizations(
   // Get a temporary file...
   if ((temp = cupsTempFile(NULL, ".strings", tempfile, sizeof(tempfile))) == NULL)
   {
-    DEBUG_printf(("4cups_create_localizations: Unable to create temporary file: %s", cupsLastErrorString()));
+    DEBUG_printf(("4cups_load_localizations: Unable to create temporary file: %s", cupsLastErrorString()));
     if (http2 != http)
       httpClose(http2);
     return;
@@ -341,7 +347,7 @@ cups_create_localizations(
   status = cupsGetFd(http2, resource, cupsFileNumber(temp));
   cupsFileClose(temp);
 
-  DEBUG_printf(("4cups_create_localizations: GET %s = %s", resource, httpStatusString(status)));
+  DEBUG_printf(("4cups_load_localizations: GET %s = %s", resource, httpStatusString(status)));
 
   if (status == HTTP_STATUS_OK)
   {

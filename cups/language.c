@@ -104,6 +104,9 @@ cupsLangFind(const char *language)	// I - Language or locale name
 
   DEBUG_printf(("2cupsLangFind(language=\"%s\")", language));
 
+  if (!language)
+    return (cupsLangDefault());
+
   cupsMutexLock(&lang_mutex);
 
   cupsCopyString(langname, language, sizeof(langname));
@@ -507,11 +510,11 @@ cupsLangLoadStrings(
 
     m = lang->messages + num_messages;
 
-    if ((m->key = strdup(key)) == NULL || (m->text = strdup(text)) == NULL)
+    if ((m->key = _cupsStrAlloc(key)) == NULL || (m->text = _cupsStrAlloc(text)) == NULL)
     {
       _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
-      free(m->key);
-      free(m->text);
+      _cupsStrFree(m->key);
+      _cupsStrFree(m->text);
       ret = false;
       break;
     }
@@ -622,8 +625,8 @@ cups_lang_new(const char *language)	// I - Language name
 
     for (i = 0; i < lang->num_messages; i ++)
     {
-      free(lang->messages[i].key);
-      free(lang->messages[i].text);
+      _cupsStrFree(lang->messages[i].key);
+      _cupsStrFree(lang->messages[i].text);
     }
 
     free(lang->messages);
