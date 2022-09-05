@@ -264,6 +264,7 @@ uninstall:
 # Requires StringsUtil from <https://www.msweet.org/stringsutil/>.
 #
 
+.PHONY: strings
 strings:
 	echo Updating base.strings...
 	cp ipp.strings base.strings

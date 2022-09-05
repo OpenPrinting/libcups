@@ -17,6 +17,19 @@
 #  include <unistd.h>
 #endif // _WIN32
 
+#include "strings/ca_strings.h"
+#include "strings/cs_strings.h"
+#include "strings/da_strings.h"
+#include "strings/de_strings.h"
+#include "strings/en_strings.h"
+#include "strings/es_strings.h"
+#include "strings/fr_strings.h"
+#include "strings/it_strings.h"
+#include "strings/ja_strings.h"
+#include "strings/pt_BR_strings.h"
+#include "strings/ru_strings.h"
+#include "strings/zh_CN_strings.h"
+
 
 //
 // Types...
@@ -55,11 +68,8 @@ static char		*lang_directory = NULL;
 // Local functions...
 //
 
-static bool		cups_lang_load(cups_lang_t *lang, const char *filename, const char *strings);
 static cups_lang_t	*cups_lang_new(const char *language);
 static int		cups_message_compare(_cups_message_t *m1, _cups_message_t *m2);
-
-static cups_lang_t	*cups_cache_lookup(const char *name, cups_encoding_t encoding);
 
 
 //
@@ -75,7 +85,7 @@ cupsLangAddStrings(
 
 
   if ((lang = cupsLangFind(language)) != NULL)
-    return (cups_lang_load(lang, NULL, strings));
+    return (cupsLangLoadStrings(lang, NULL, strings));
   else
     return (false);
 }
@@ -119,6 +129,40 @@ cupsLangFind(const char *language)	// I - Language or locale name
 
 
 //
+// 'cupsLangFormatString()' - Create a localized formatted string.
+//
+
+const char *				// O - Formatted string
+cupsLangFormatString(
+    cups_lang_t *lang,			// I - Language data
+    char        *buffer,		// I - Output buffer
+    size_t      bufsize,		// I - Size of output buffer
+    const char  *format,		// I - Printf-style format string
+    ...)				// I - Additional arguments
+{
+  va_list	ap;			// Pointer to additional arguments
+
+
+  va_start(ap, format);
+  vsnprintf(buffer, bufsize, cupsLangGetString(lang, format), ap);
+  va_end(ap);
+
+  return (buffer);
+}
+
+
+//
+// 'cupsLangGetName()' - Get the language name.
+//
+
+const char *				// O - Language name
+cupsLangGetName(cups_lang_t *lang)	// I - Language data
+{
+  return (lang ? lang->language : NULL);
+}
+
+
+//
 // 'cupsLangGetString()' - Get a localized message string.
 //
 // This function gets a localized UTF-8 message string for the specified
@@ -154,30 +198,11 @@ cupsLangGetString(cups_lang_t *lang,	// I - Language
 
 
 //
-// 'cupsLangSetDirectory()' - Set a directory containing localizations.
+// 'cupsLangLoadStrings()' - Load a message catalog for a language.
 //
 
-void
-cupsLangSetDirectory(const char *d)	// I - Directory name
-{
-  if (d)
-  {
-    cupsMutexLock(&lang_mutex);
-
-    free(lang_directory);
-    lang_directory = strdup(d);
-
-    cupsMutexUnlock(&lang_mutex);
-  }
-}
-
-
-//
-// 'cups_lang_load()' - Load a message catalog for a language.
-//
-
-static bool				// O - `true` on success, `false` on failure
-cups_lang_load(
+bool				// O - `true` on success, `false` on failure
+cupsLangLoadStrings(
     cups_lang_t *lang,			// I - Language data
     const char  *filename,		// I - Filename of `NULL` for none
     const char  *strings)		// I - Strings or `NULL` for none
@@ -512,6 +537,25 @@ cups_lang_load(
 
 
 //
+// 'cupsLangSetDirectory()' - Set a directory containing localizations.
+//
+
+void
+cupsLangSetDirectory(const char *d)	// I - Directory name
+{
+  if (d)
+  {
+    cupsMutexLock(&lang_mutex);
+
+    free(lang_directory);
+    lang_directory = strdup(d);
+
+    cupsMutexUnlock(&lang_mutex);
+  }
+}
+
+
+//
 // 'cups_lang_new()' - Create a new language.
 //
 
@@ -531,12 +575,30 @@ cups_lang_new(const char *language)	// I - Language name
   cupsCopyString(lang->language, language, sizeof(lang->language));
 
   // Add strings...
-  if (!_cups_strncasecmp(language, "", 2))
-    status = cups_lang_load(lang, NULL, _strings);
-  else if (!_cups_strncasecmp(language, "", 2))
-    status = cups_lang_load(lang, NULL, _strings);
+  if (!_cups_strncasecmp(language, "ca", 2))
+    status = cupsLangLoadStrings(lang, NULL, ca_strings);
+  else if (!_cups_strncasecmp(language, "cs", 2))
+    status = cupsLangLoadStrings(lang, NULL, cs_strings);
+  else if (!_cups_strncasecmp(language, "da", 2))
+    status = cupsLangLoadStrings(lang, NULL, da_strings);
+  else if (!_cups_strncasecmp(language, "de", 2))
+    status = cupsLangLoadStrings(lang, NULL, de_strings);
+  else if (!_cups_strncasecmp(language, "es", 2))
+    status = cupsLangLoadStrings(lang, NULL, es_strings);
+  else if (!_cups_strncasecmp(language, "fr", 2))
+    status = cupsLangLoadStrings(lang, NULL, fr_strings);
+  else if (!_cups_strncasecmp(language, "it", 2))
+    status = cupsLangLoadStrings(lang, NULL, it_strings);
+  else if (!_cups_strncasecmp(language, "ja", 2))
+    status = cupsLangLoadStrings(lang, NULL, ja_strings);
+  else if (!_cups_strncasecmp(language, "pt", 2))
+    status = cupsLangLoadStrings(lang, NULL, pt_BR_strings);
+  else if (!_cups_strncasecmp(language, "ru", 2))
+    status = cupsLangLoadStrings(lang, NULL, ru_strings);
+  else if (!_cups_strncasecmp(language, "zh", 2))
+    status = cupsLangLoadStrings(lang, NULL, zh_CN_strings);
   else
-    status = cups_lang_load(lang, NULL, en_strings);
+    status = cupsLangLoadStrings(lang, NULL, en_strings);
 
   if (status && lang_directory)
   {
@@ -550,7 +612,7 @@ cups_lang_new(const char *language)	// I - Language name
     }
 
     if (!access(filename, 0))
-      status = cups_lang_load(lang, filename, NULL);
+      status = cupsLangLoadStrings(lang, filename, NULL);
   }
 
   if (!status)

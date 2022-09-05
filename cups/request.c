@@ -1063,15 +1063,13 @@ _cupsSetError(ipp_status_t status,	/* I - IPP status code */
       if (!cg->lang_default)
 	cg->lang_default = cupsLangDefault();
 
-      cg->last_status_message = _cupsStrAlloc(_cupsLangString(cg->lang_default,
-                                                              message));
+      cg->last_status_message = _cupsStrAlloc(cupsLangGetString(cg->lang_default, message));
     }
     else
       cg->last_status_message = _cupsStrAlloc(message);
   }
 
-  DEBUG_printf(("4_cupsSetError: last_error=%s, last_status_message=\"%s\"",
-                ippErrorString(cg->last_error), cg->last_status_message));
+  DEBUG_printf(("4_cupsSetError: last_error=%s, last_status_message=\"%s\"", ippErrorString(cg->last_error), cg->last_status_message));
 }
 
 
@@ -1129,8 +1127,7 @@ _cupsSetHTTPError(http_status_t status)	/* I - HTTP status code */
         break;
 
     default :
-	DEBUG_printf(("4_cupsSetHTTPError: HTTP error %d mapped to "
-	              "IPP_STATUS_ERROR_SERVICE_UNAVAILABLE!", status));
+	DEBUG_printf(("4_cupsSetHTTPError: HTTP error %d mapped to IPP_STATUS_ERROR_SERVICE_UNAVAILABLE!", status));
 	_cupsSetError(IPP_STATUS_ERROR_SERVICE_UNAVAILABLE, httpStatusString(status), 0);
 	break;
   }

@@ -214,7 +214,7 @@ struct _cups_dinfo_s			/* Destination capability and status
   cups_option_t		*defaults;	/* Default options */
   cups_array_t		*constraints;	/* Job constraints */
   cups_array_t		*resolvers;	/* Job resolvers */
-  cups_array_t		*localizations;	/* Localization information */
+  bool			localizations;	/* Localization information loaded? */
   cups_array_t		*media_db;	/* Media database */
   _cups_media_db_t	min_size,	/* Minimum size */
 			max_size;	/* Maximum size */

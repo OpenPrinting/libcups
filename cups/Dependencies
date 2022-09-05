@@ -1,9 +1,10 @@
 array.o: array.c ../cups/cups.h file.h base.h ipp.h http.h array.h \
-  language.h pwg.h string-private.h ../config.h debug-internal.h \
-  debug-private.h
-auth.o: auth.c cups-private.h string-private.h ../config.h base.h array.h \
-  ipp-private.h cups.h file.h ipp.h http.h language.h pwg.h \
-  http-private.h ../cups/language.h \
+  language.h transcode.h pwg.h string-private.h ../config.h \
+  debug-internal.h debug-private.h
+auth.o: auth.c cups-private.h string-private.h ../config.h base.h \
+  debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
+  ipp.h http.h language.h transcode.h pwg.h http-private.h \
+  ../cups/language.h \
   \
   \
   \
@@ -24,11 +25,11 @@ auth.o: auth.c cups-private.h string-private.h ../config.h base.h array.h \
   \
   \
   \
-  language-private.h transcode.h pwg-private.h thread.h debug-internal.h \
-  debug-private.h
+  pwg-private.h thread.h
 debug.o: debug.c cups-private.h string-private.h ../config.h base.h \
-  array.h ipp-private.h cups.h file.h ipp.h http.h language.h pwg.h \
-  http-private.h ../cups/language.h \
+  debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
+  ipp.h http.h language.h transcode.h pwg.h http-private.h \
+  ../cups/language.h \
   \
   \
   \
@@ -49,11 +50,11 @@ debug.o: debug.c cups-private.h string-private.h ../config.h base.h \
   \
   \
   \
-  language-private.h transcode.h pwg-private.h thread.h debug-internal.h \
-  debug-private.h
-dest.o: dest.c cups-private.h string-private.h ../config.h base.h array.h \
-  ipp-private.h cups.h file.h ipp.h http.h language.h pwg.h \
-  http-private.h ../cups/language.h \
+  pwg-private.h thread.h
+dest.o: dest.c cups-private.h string-private.h ../config.h base.h \
+  debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
+  ipp.h http.h language.h transcode.h pwg.h http-private.h \
+  ../cups/language.h \
   \
   \
   \
@@ -74,11 +75,11 @@ dest.o: dest.c cups-private.h string-private.h ../config.h base.h array.h \
   \
   \
   \
-  language-private.h transcode.h pwg-private.h thread.h debug-internal.h \
-  debug-private.h
+  pwg-private.h thread.h dnssd.h
 dest-job.o: dest-job.c cups-private.h string-private.h ../config.h base.h \
-  array.h ipp-private.h cups.h file.h ipp.h http.h language.h pwg.h \
-  http-private.h ../cups/language.h \
+  debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
+  ipp.h http.h language.h transcode.h pwg.h http-private.h \
+  ../cups/language.h \
   \
   \
   \
@@ -99,11 +100,11 @@ dest-job.o: dest-job.c cups-private.h string-private.h ../config.h base.h \
   \
   \
   \
-  language-private.h transcode.h pwg-private.h thread.h debug-internal.h \
-  debug-private.h
+  pwg-private.h thread.h
 dest-localization.o: dest-localization.c cups-private.h string-private.h \
-  ../config.h base.h array.h ipp-private.h cups.h file.h ipp.h http.h \
-  language.h pwg.h http-private.h ../cups/language.h \
+  ../config.h base.h debug-internal.h debug-private.h array.h \
+  ipp-private.h cups.h file.h ipp.h http.h language.h transcode.h pwg.h \
+  http-private.h ../cups/language.h \
   \
   \
   \
@@ -124,12 +125,11 @@ dest-localization.o: dest-localization.c cups-private.h string-private.h \
   \
   \
   \
-  \
-  language-private.h transcode.h pwg-private.h thread.h debug-internal.h \
-  debug-private.h
+  pwg-private.h thread.h
 dest-options.o: dest-options.c cups-private.h string-private.h \
-  ../config.h base.h array.h ipp-private.h cups.h file.h ipp.h http.h \
-  language.h pwg.h http-private.h ../cups/language.h \
+  ../config.h base.h debug-internal.h debug-private.h array.h \
+  ipp-private.h cups.h file.h ipp.h http.h language.h transcode.h pwg.h \
+  http-private.h ../cups/language.h \
   \
   \
   \
@@ -150,15 +150,39 @@ dest-options.o: dest-options.c cups-private.h string-private.h \
   \
   \
   \
-  \
-  language-private.h transcode.h pwg-private.h thread.h debug-internal.h \
-  debug-private.h
+  pwg-private.h thread.h
 dir.o: dir.c string-private.h ../config.h base.h debug-internal.h \
-  debug-private.h cups.h file.h ipp.h http.h array.h language.h pwg.h \
-  dir.h
+  debug-private.h cups.h file.h ipp.h http.h array.h language.h \
+  transcode.h pwg.h dir.h
+dnssd.o: dnssd.c ../config.h cups-private.h string-private.h base.h \
+  debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
+  ipp.h http.h language.h transcode.h pwg.h http-private.h \
+  ../cups/language.h \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  pwg-private.h thread.h dnssd.h
 encode.o: encode.c cups-private.h string-private.h ../config.h base.h \
-  array.h ipp-private.h cups.h file.h ipp.h http.h language.h pwg.h \
-  http-private.h ../cups/language.h \
+  debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
+  ipp.h http.h language.h transcode.h pwg.h http-private.h \
+  ../cups/language.h \
   \
   \
   \
@@ -179,11 +203,11 @@ encode.o: encode.c cups-private.h string-private.h ../config.h base.h \
   \
   \
   \
-  language-private.h transcode.h pwg-private.h thread.h debug-internal.h \
-  debug-private.h
+  pwg-private.h thread.h
 file.o: file.c file-private.h cups-private.h string-private.h ../config.h \
-  base.h array.h ipp-private.h cups.h file.h ipp.h http.h language.h \
-  pwg.h http-private.h ../cups/language.h \
+  base.h debug-internal.h debug-private.h array.h ipp-private.h cups.h \
+  file.h ipp.h http.h language.h transcode.h pwg.h http-private.h \
+  ../cups/language.h \
   \
   \
   \
@@ -204,12 +228,11 @@ file.o: file.c file-private.h cups-private.h string-private.h ../config.h \
   \
   \
   \
-  \
-  language-private.h transcode.h pwg-private.h thread.h debug-internal.h \
-  debug-private.h
+  pwg-private.h thread.h
 getputfile.o: getputfile.c cups-private.h string-private.h ../config.h \
-  base.h array.h ipp-private.h cups.h file.h ipp.h http.h language.h \
-  pwg.h http-private.h ../cups/language.h \
+  base.h debug-internal.h debug-private.h array.h ipp-private.h cups.h \
+  file.h ipp.h http.h language.h transcode.h pwg.h http-private.h \
+  ../cups/language.h \
   \
   \
   \
@@ -230,12 +253,11 @@ getputfile.o: getputfile.c cups-private.h string-private.h ../config.h \
   \
   \
   \
-  \
-  language-private.h transcode.h pwg-private.h thread.h debug-internal.h \
-  debug-private.h
+  pwg-private.h thread.h
 globals.o: globals.c cups-private.h string-private.h ../config.h base.h \
-  array.h ipp-private.h cups.h file.h ipp.h http.h language.h pwg.h \
-  http-private.h ../cups/language.h \
+  debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
+  ipp.h http.h language.h transcode.h pwg.h http-private.h \
+  ../cups/language.h \
   \
   \
   \
@@ -256,10 +278,11 @@ globals.o: globals.c cups-private.h string-private.h ../config.h base.h \
   \
   \
   \
-  language-private.h transcode.h pwg-private.h thread.h
-hash.o: hash.c cups-private.h string-private.h ../config.h base.h array.h \
-  ipp-private.h cups.h file.h ipp.h http.h language.h pwg.h \
-  http-private.h ../cups/language.h \
+  pwg-private.h thread.h
+hash.o: hash.c cups-private.h string-private.h ../config.h base.h \
+  debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
+  ipp.h http.h language.h transcode.h pwg.h http-private.h \
+  ../cups/language.h \
   \
   \
   \
@@ -280,11 +303,11 @@ hash.o: hash.c cups-private.h string-private.h ../config.h base.h array.h \
   \
   \
   \
-  language-private.h transcode.h pwg-private.h thread.h debug-internal.h \
-  debug-private.h
-http.o: http.c cups-private.h string-private.h ../config.h base.h array.h \
-  ipp-private.h cups.h file.h ipp.h http.h language.h pwg.h \
-  http-private.h ../cups/language.h \
+  pwg-private.h thread.h
+http.o: http.c cups-private.h string-private.h ../config.h base.h \
+  debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
+  ipp.h http.h language.h transcode.h pwg.h http-private.h \
+  ../cups/language.h \
   \
   \
   \
@@ -305,11 +328,11 @@ http.o: http.c cups-private.h string-private.h ../config.h base.h array.h \
   \
   \
   \
-  language-private.h transcode.h pwg-private.h thread.h debug-internal.h \
-  debug-private.h
+  pwg-private.h thread.h
 http-addr.o: http-addr.c cups-private.h string-private.h ../config.h \
-  base.h array.h ipp-private.h cups.h file.h ipp.h http.h language.h \
-  pwg.h http-private.h ../cups/language.h \
+  base.h debug-internal.h debug-private.h array.h ipp-private.h cups.h \
+  file.h ipp.h http.h language.h transcode.h pwg.h http-private.h \
+  ../cups/language.h \
   \
   \
   \
@@ -330,12 +353,11 @@ http-addr.o: http-addr.c cups-private.h string-private.h ../config.h \
   \
   \
   \
-  \
-  language-private.h transcode.h pwg-private.h thread.h debug-internal.h \
-  debug-private.h
+  pwg-private.h thread.h
 http-addrlist.o: http-addrlist.c cups-private.h string-private.h \
-  ../config.h base.h array.h ipp-private.h cups.h file.h ipp.h http.h \
-  language.h pwg.h http-private.h ../cups/language.h \
+  ../config.h base.h debug-internal.h debug-private.h array.h \
+  ipp-private.h cups.h file.h ipp.h http.h language.h transcode.h pwg.h \
+  http-private.h ../cups/language.h \
   \
   \
   \
@@ -356,37 +378,10 @@ http-addrlist.o: http-addrlist.c cups-private.h string-private.h \
   \
   \
   \
-  \
-  language-private.h transcode.h pwg-private.h thread.h debug-internal.h \
-  debug-private.h
+  pwg-private.h thread.h
 http-support.o: http-support.c cups-private.h string-private.h \
-  ../config.h base.h array.h ipp-private.h cups.h file.h ipp.h http.h \
-  language.h pwg.h http-private.h ../cups/language.h \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  language-private.h transcode.h pwg-private.h thread.h debug-internal.h \
-  debug-private.h
-ipp.o: ipp.c cups-private.h string-private.h ../config.h base.h array.h \
-  ipp-private.h cups.h file.h ipp.h http.h language.h pwg.h \
+  ../config.h base.h debug-internal.h debug-private.h array.h \
+  ipp-private.h cups.h file.h ipp.h http.h language.h transcode.h pwg.h \
   http-private.h ../cups/language.h \
   \
   \
@@ -408,11 +403,36 @@ ipp.o: ipp.c cups-private.h string-private.h ../config.h base.h array.h \
   \
   \
   \
-  language-private.h transcode.h pwg-private.h thread.h debug-internal.h \
-  debug-private.h
+  pwg-private.h thread.h dnssd.h
+ipp.o: ipp.c cups-private.h string-private.h ../config.h base.h \
+  debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
+  ipp.h http.h language.h transcode.h pwg.h http-private.h \
+  ../cups/language.h \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  pwg-private.h thread.h
 ipp-file.o: ipp-file.c cups-private.h string-private.h ../config.h base.h \
-  array.h ipp-private.h cups.h file.h ipp.h http.h language.h pwg.h \
-  http-private.h ../cups/language.h \
+  debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
+  ipp.h http.h language.h transcode.h pwg.h http-private.h \
+  ../cups/language.h \
   \
   \
   \
@@ -433,11 +453,11 @@ ipp-file.o: ipp-file.c cups-private.h string-private.h ../config.h base.h \
   \
   \
   \
-  language-private.h transcode.h pwg-private.h thread.h debug-internal.h \
-  debug-private.h
+  pwg-private.h thread.h
 ipp-support.o: ipp-support.c cups-private.h string-private.h ../config.h \
-  base.h array.h ipp-private.h cups.h file.h ipp.h http.h language.h \
-  pwg.h http-private.h ../cups/language.h \
+  base.h debug-internal.h debug-private.h array.h ipp-private.h cups.h \
+  file.h ipp.h http.h language.h transcode.h pwg.h http-private.h \
+  ../cups/language.h \
   \
   \
   \
@@ -458,12 +478,11 @@ ipp-support.o: ipp-support.c cups-private.h string-private.h ../config.h \
   \
   \
   \
-  \
-  language-private.h transcode.h pwg-private.h thread.h debug-internal.h \
-  debug-private.h
+  pwg-private.h thread.h
 langprintf.o: langprintf.c cups-private.h string-private.h ../config.h \
-  base.h array.h ipp-private.h cups.h file.h ipp.h http.h language.h \
-  pwg.h http-private.h ../cups/language.h \
+  base.h debug-internal.h debug-private.h array.h ipp-private.h cups.h \
+  file.h ipp.h http.h language.h transcode.h pwg.h http-private.h \
+  ../cups/language.h \
   \
   \
   \
@@ -484,12 +503,11 @@ langprintf.o: langprintf.c cups-private.h string-private.h ../config.h \
   \
   \
   \
-  \
-  language-private.h transcode.h pwg-private.h thread.h debug-internal.h \
-  debug-private.h
+  pwg-private.h thread.h
 language.o: language.c cups-private.h string-private.h ../config.h base.h \
-  array.h ipp-private.h cups.h file.h ipp.h http.h language.h pwg.h \
-  http-private.h ../cups/language.h \
+  debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
+  ipp.h http.h language.h transcode.h pwg.h http-private.h \
+  ../cups/language.h \
   \
   \
   \
@@ -510,12 +528,16 @@ language.o: language.c cups-private.h string-private.h ../config.h base.h \
   \
   \
   \
-  language-private.h transcode.h pwg-private.h thread.h debug-internal.h \
-  debug-private.h
+  pwg-private.h thread.h strings/ca_strings.h strings/cs_strings.h \
+  strings/da_strings.h strings/de_strings.h strings/en_strings.h \
+  strings/es_strings.h strings/fr_strings.h strings/it_strings.h \
+  strings/ja_strings.h strings/pt_BR_strings.h strings/ru_strings.h \
+  strings/zh_CN_strings.h
 md5.o: md5.c md5-internal.h base.h string-private.h ../config.h
 notify.o: notify.c cups-private.h string-private.h ../config.h base.h \
-  array.h ipp-private.h cups.h file.h ipp.h http.h language.h pwg.h \
-  http-private.h ../cups/language.h \
+  debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
+  ipp.h http.h language.h transcode.h pwg.h http-private.h \
+  ../cups/language.h \
   \
   \
   \
@@ -536,11 +558,11 @@ notify.o: notify.c cups-private.h string-private.h ../config.h base.h \
   \
   \
   \
-  language-private.h transcode.h pwg-private.h thread.h debug-internal.h \
-  debug-private.h
+  pwg-private.h thread.h
 options.o: options.c cups-private.h string-private.h ../config.h base.h \
-  array.h ipp-private.h cups.h file.h ipp.h http.h language.h pwg.h \
-  http-private.h ../cups/language.h \
+  debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
+  ipp.h http.h language.h transcode.h pwg.h http-private.h \
+  ../cups/language.h \
   \
   \
   \
@@ -561,11 +583,11 @@ options.o: options.c cups-private.h string-private.h ../config.h base.h \
   \
   \
   \
-  language-private.h transcode.h pwg-private.h thread.h debug-internal.h \
-  debug-private.h
+  pwg-private.h thread.h
 pwg-media.o: pwg-media.c cups-private.h string-private.h ../config.h \
-  base.h array.h ipp-private.h cups.h file.h ipp.h http.h language.h \
-  pwg.h http-private.h ../cups/language.h \
+  base.h debug-internal.h debug-private.h array.h ipp-private.h cups.h \
+  file.h ipp.h http.h language.h transcode.h pwg.h http-private.h \
+  ../cups/language.h \
   \
   \
   \
@@ -586,13 +608,13 @@ pwg-media.o: pwg-media.c cups-private.h string-private.h ../config.h \
   \
   \
   \
-  \
-  language-private.h transcode.h pwg-private.h thread.h debug-internal.h \
-  debug-private.h
-rand.o: rand.c cups.h file.h base.h ipp.h http.h array.h language.h pwg.h
+  pwg-private.h thread.h
+rand.o: rand.c cups.h file.h base.h ipp.h http.h array.h language.h \
+  transcode.h pwg.h
 raster-error.o: raster-error.c cups-private.h string-private.h \
-  ../config.h base.h array.h ipp-private.h cups.h file.h ipp.h http.h \
-  language.h pwg.h http-private.h ../cups/language.h \
+  ../config.h base.h debug-internal.h debug-private.h array.h \
+  ipp-private.h cups.h file.h ipp.h http.h language.h transcode.h pwg.h \
+  http-private.h ../cups/language.h \
   \
   \
   \
@@ -613,15 +635,14 @@ raster-error.o: raster-error.c cups-private.h string-private.h \
   \
   \
   \
-  \
-  language-private.h transcode.h pwg-private.h thread.h raster-private.h \
-  raster.h debug-private.h debug-internal.h
+  pwg-private.h thread.h raster-private.h raster.h
 raster-stream.o: raster-stream.c raster-private.h raster.h cups.h file.h \
-  base.h ipp.h http.h array.h language.h pwg.h debug-private.h \
-  string-private.h ../config.h debug-internal.h
+  base.h ipp.h http.h array.h language.h transcode.h pwg.h \
+  debug-private.h string-private.h ../config.h debug-internal.h
 request.o: request.c cups-private.h string-private.h ../config.h base.h \
-  array.h ipp-private.h cups.h file.h ipp.h http.h language.h pwg.h \
-  http-private.h ../cups/language.h \
+  debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
+  ipp.h http.h language.h transcode.h pwg.h http-private.h \
+  ../cups/language.h \
   \
   \
   \
@@ -642,11 +663,11 @@ request.o: request.c cups-private.h string-private.h ../config.h base.h \
   \
   \
   \
-  language-private.h transcode.h pwg-private.h thread.h debug-internal.h \
-  debug-private.h
+  pwg-private.h thread.h
 string.o: string.c cups-private.h string-private.h ../config.h base.h \
-  array.h ipp-private.h cups.h file.h ipp.h http.h language.h pwg.h \
-  http-private.h ../cups/language.h \
+  debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
+  ipp.h http.h language.h transcode.h pwg.h http-private.h \
+  ../cups/language.h \
   \
   \
   \
@@ -667,11 +688,11 @@ string.o: string.c cups-private.h string-private.h ../config.h base.h \
   \
   \
   \
-  language-private.h transcode.h pwg-private.h thread.h debug-internal.h \
-  debug-private.h
+  pwg-private.h thread.h
 tempfile.o: tempfile.c cups-private.h string-private.h ../config.h base.h \
-  array.h ipp-private.h cups.h file.h ipp.h http.h language.h pwg.h \
-  http-private.h ../cups/language.h \
+  debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
+  ipp.h http.h language.h transcode.h pwg.h http-private.h \
+  ../cups/language.h \
   \
   \
   \
@@ -692,11 +713,11 @@ tempfile.o: tempfile.c cups-private.h string-private.h ../config.h base.h \
   \
   \
   \
-  language-private.h transcode.h pwg-private.h thread.h debug-internal.h \
-  debug-private.h
+  pwg-private.h thread.h
 thread.o: thread.c cups-private.h string-private.h ../config.h base.h \
-  array.h ipp-private.h cups.h file.h ipp.h http.h language.h pwg.h \
-  http-private.h ../cups/language.h \
+  debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
+  ipp.h http.h language.h transcode.h pwg.h http-private.h \
+  ../cups/language.h \
   \
   \
   \
@@ -717,10 +738,11 @@ thread.o: thread.c cups-private.h string-private.h ../config.h base.h \
   \
   \
   \
-  language-private.h transcode.h pwg-private.h thread.h
-tls.o: tls.c cups-private.h string-private.h ../config.h base.h array.h \
-  ipp-private.h cups.h file.h ipp.h http.h language.h pwg.h \
-  http-private.h ../cups/language.h \
+  pwg-private.h thread.h
+tls.o: tls.c cups-private.h string-private.h ../config.h base.h \
+  debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
+  ipp.h http.h language.h transcode.h pwg.h http-private.h \
+  ../cups/language.h \
   \
   \
   \
@@ -741,38 +763,15 @@ tls.o: tls.c cups-private.h string-private.h ../config.h base.h array.h \
   \
   \
   \
-  language-private.h transcode.h pwg-private.h thread.h debug-internal.h \
-  debug-private.h tls-openssl.c \
+  pwg-private.h thread.h tls-openssl.c \
  
-transcode.o: transcode.c cups-private.h string-private.h ../config.h \
-  base.h array.h ipp-private.h cups.h file.h ipp.h http.h language.h \
-  pwg.h http-private.h ../cups/language.h \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  language-private.h transcode.h pwg-private.h thread.h debug-internal.h \
-  debug-private.h
+transcode.o: transcode.c cups.h file.h base.h ipp.h http.h array.h \
+  language.h transcode.h pwg.h thread.h debug-internal.h debug-private.h \
+  string-private.h ../config.h
 usersys.o: usersys.c cups-private.h string-private.h ../config.h base.h \
-  array.h ipp-private.h cups.h file.h ipp.h http.h language.h pwg.h \
-  http-private.h ../cups/language.h \
+  debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
+  ipp.h http.h language.h transcode.h pwg.h http-private.h \
+  ../cups/language.h \
   \
   \
   \
@@ -793,11 +792,11 @@ usersys.o: usersys.c cups-private.h string-private.h ../config.h base.h \
   \
   \
   \
-  language-private.h transcode.h pwg-private.h thread.h debug-internal.h \
-  debug-private.h
-util.o: util.c cups-private.h string-private.h ../config.h base.h array.h \
-  ipp-private.h cups.h file.h ipp.h http.h language.h pwg.h \
-  http-private.h ../cups/language.h \
+  pwg-private.h thread.h
+util.o: util.c cups-private.h string-private.h ../config.h base.h \
+  debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
+  ipp.h http.h language.h transcode.h pwg.h http-private.h \
+  ../cups/language.h \
   \
   \
   \
@@ -818,22 +817,22 @@ util.o: util.c cups-private.h string-private.h ../config.h base.h array.h \
   \
   \
   \
-  language-private.h transcode.h pwg-private.h thread.h debug-internal.h \
-  debug-private.h
+  pwg-private.h thread.h
 fuzzipp.o: fuzzipp.c file.h base.h string-private.h ../config.h \
-  ipp-private.h cups.h ipp.h http.h array.h language.h pwg.h \
+  ipp-private.h cups.h ipp.h http.h array.h language.h transcode.h pwg.h \
   test-internal.h
 rasterbench.o: rasterbench.c ../config.h ../cups/raster.h cups.h file.h \
-  base.h ipp.h http.h array.h language.h pwg.h
+  base.h ipp.h http.h array.h language.h transcode.h pwg.h
 testarray.o: testarray.c string-private.h ../config.h base.h \
-  debug-private.h cups.h file.h ipp.h http.h array.h language.h pwg.h \
-  dir.h test-internal.h
+  debug-private.h cups.h file.h ipp.h http.h array.h language.h \
+  transcode.h pwg.h dir.h test-internal.h
 testclient.o: testclient.c ../config.h ../cups/cups.h file.h base.h ipp.h \
-  http.h array.h language.h pwg.h ../cups/raster.h cups.h \
+  http.h array.h language.h transcode.h pwg.h ../cups/raster.h cups.h \
   ../cups/string-private.h ../cups/thread.h
 testcreds.o: testcreds.c cups-private.h string-private.h ../config.h \
-  base.h array.h ipp-private.h cups.h file.h ipp.h http.h language.h \
-  pwg.h http-private.h ../cups/language.h \
+  base.h debug-internal.h debug-private.h array.h ipp-private.h cups.h \
+  file.h ipp.h http.h language.h transcode.h pwg.h http-private.h \
+  ../cups/language.h \
   \
   \
   \
@@ -854,18 +853,20 @@ testcreds.o: testcreds.c cups-private.h string-private.h ../config.h \
   \
   \
   \
-  \
-  language-private.h transcode.h pwg-private.h thread.h
+  pwg-private.h thread.h
 testdest.o: testdest.c cups.h file.h base.h ipp.h http.h array.h \
-  language.h pwg.h
+  language.h transcode.h pwg.h
+testdnssd.o: testdnssd.c test-internal.h dnssd.h cups.h file.h base.h \
+  ipp.h http.h array.h language.h transcode.h pwg.h thread.h
 testfile.o: testfile.c string-private.h ../config.h base.h \
-  debug-private.h cups.h file.h ipp.h http.h array.h language.h pwg.h \
-  dir.h test-internal.h
+  debug-private.h cups.h file.h ipp.h http.h array.h language.h \
+  transcode.h pwg.h dir.h test-internal.h
 testgetdests.o: testgetdests.c cups.h file.h base.h ipp.h http.h array.h \
-  language.h pwg.h
+  language.h transcode.h pwg.h
 testhttp.o: testhttp.c cups-private.h string-private.h ../config.h base.h \
-  array.h ipp-private.h cups.h file.h ipp.h http.h language.h pwg.h \
-  http-private.h ../cups/language.h \
+  debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
+  ipp.h http.h language.h transcode.h pwg.h http-private.h \
+  ../cups/language.h \
   \
   \
   \
@@ -886,16 +887,16 @@ testhttp.o: testhttp.c cups-private.h string-private.h ../config.h base.h \
   \
   \
   \
-  language-private.h transcode.h pwg-private.h thread.h test-internal.h
-testi18n.o: testi18n.c string-private.h ../config.h base.h \
-  language-private.h transcode.h language.h array.h test-internal.h \
-  cups.h file.h ipp.h http.h pwg.h
+  pwg-private.h thread.h test-internal.h
+testi18n.o: testi18n.c string-private.h ../config.h base.h language.h \
+  transcode.h test-internal.h cups.h file.h ipp.h http.h array.h pwg.h
 testipp.o: testipp.c file.h base.h string-private.h ../config.h \
-  ipp-private.h cups.h ipp.h http.h array.h language.h pwg.h \
+  ipp-private.h cups.h ipp.h http.h array.h language.h transcode.h pwg.h \
   test-internal.h
 testoptions.o: testoptions.c cups-private.h string-private.h ../config.h \
-  base.h array.h ipp-private.h cups.h file.h ipp.h http.h language.h \
-  pwg.h http-private.h ../cups/language.h \
+  base.h debug-internal.h debug-private.h array.h ipp-private.h cups.h \
+  file.h ipp.h http.h language.h transcode.h pwg.h http-private.h \
+  ../cups/language.h \
   \
   \
   \
@@ -916,19 +917,20 @@ testoptions.o: testoptions.c cups-private.h string-private.h ../config.h \
   \
   \
   \
-  \
-  language-private.h transcode.h pwg-private.h thread.h test-internal.h
+  pwg-private.h thread.h test-internal.h
 testraster.o: testraster.c raster-private.h raster.h cups.h file.h base.h \
-  ipp.h http.h array.h language.h pwg.h debug-private.h string-private.h \
-  ../config.h test-internal.h
+  ipp.h http.h array.h language.h transcode.h pwg.h debug-private.h \
+  string-private.h ../config.h test-internal.h
 testtestpage.o: testtestpage.c raster-testpage.h raster-private.h \
-  raster.h cups.h file.h base.h ipp.h http.h array.h language.h pwg.h \
-  debug-private.h string-private.h ../config.h test-internal.h
+  raster.h cups.h file.h base.h ipp.h http.h array.h language.h \
+  transcode.h pwg.h debug-private.h string-private.h ../config.h \
+  test-internal.h
 testthreads.o: testthreads.c ../cups/cups.h file.h base.h ipp.h http.h \
-  array.h language.h pwg.h ../cups/thread.h
+  array.h language.h transcode.h pwg.h ../cups/thread.h
 tlscheck.o: tlscheck.c cups-private.h string-private.h ../config.h base.h \
-  array.h ipp-private.h cups.h file.h ipp.h http.h language.h pwg.h \
-  http-private.h ../cups/language.h \
+  debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
+  ipp.h http.h language.h transcode.h pwg.h http-private.h \
+  ../cups/language.h \
   \
   \
   \
@@ -949,4 +951,4 @@ tlscheck.o: tlscheck.c cups-private.h string-private.h ../config.h base.h \
   \
   \
   \
-  language-private.h transcode.h pwg-private.h thread.h
+  pwg-private.h thread.h

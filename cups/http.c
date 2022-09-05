@@ -3147,7 +3147,7 @@ httpWriteResponse(http_t        *http,	// I - HTTP connection
     httpSetField(http, HTTP_FIELD_ACCEPT_ENCODING, http->default_fields[HTTP_FIELD_ACCEPT_ENCODING] ? http->default_fields[HTTP_FIELD_ACCEPT_ENCODING] : "gzip, deflate, identity");
 
   // Get the response language, if any...
-  lang = cupsLangGet(http->fields[HTTP_FIELD_CONTENT_LANGUAGE]);
+  lang = cupsLangFind(http->fields[HTTP_FIELD_CONTENT_LANGUAGE]);
 
   // Send the response header...
   old_encoding        = http->data_encoding;

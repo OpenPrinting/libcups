@@ -102,7 +102,7 @@ static iconv_t		map_from_utf8 = (iconv_t)-1;
 					// Convert from UTF-8 to charset
 static iconv_t		map_to_utf8 = (iconv_t)-1;
 					// Convert from charset to UTF-8
-static cups_encoding_t	map_encoding = CUPS_AUTO_ENCODING;
+static cups_encoding_t	map_encoding = CUPS_ENCODING_AUTO;
 					// Which charset is cached
 #endif // HAVE_ICONV_H
 
@@ -706,6 +706,6 @@ flush_map(void)
     map_to_utf8 = (iconv_t)-1;
   }
 
-  map_encoding = CUPS_AUTO_ENCODING;
+  map_encoding = CUPS_ENCODING_AUTO;
 #endif // HAVE_ICONV_H
 }
