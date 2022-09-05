@@ -73,7 +73,7 @@ cupsMakeServerCredentials(
 {
   int		result = 0;		// Return value
   EVP_PKEY	*pkey;			// Private key
-#if defined(EVP_PKEY_EC) && defined(USE_EC)
+#if defined(EVP_PKEY_EC) && USE_EC
   EC_KEY	*ec;			// EC key
 #else
   RSA		*rsa;			// RSA key pair
@@ -107,7 +107,7 @@ cupsMakeServerCredentials(
   // Create the encryption key...
   DEBUG_puts("1cupsMakeServerCredentials: Creating key pair.");
 
-#if defined(EVP_PKEY_EC) && defined(USE_EC)
+#if defined(EVP_PKEY_EC) && USE_EC
   if ((ec = EC_KEY_new_by_curve_name(NID_secp384r1)) == NULL)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create key pair."), 1);
@@ -123,7 +123,7 @@ cupsMakeServerCredentials(
 
   if ((pkey = EVP_PKEY_new()) == NULL)
   {
-#if defined(EVP_PKEY_EC) && defined(USE_EC)
+#if defined(EVP_PKEY_EC) && USE_EC
     EC_KEY_free(ec);
 #else
     RSA_free(rsa);
@@ -133,7 +133,7 @@ cupsMakeServerCredentials(
     return (0);
   }
 
-#if defined(EVP_PKEY_EC) && defined(USE_EC)
+#if defined(EVP_PKEY_EC) && USE_EC
   EVP_PKEY_assign_EC_KEY(pkey, ec);
 #else
   EVP_PKEY_assign_RSA(pkey, rsa);

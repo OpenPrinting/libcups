@@ -192,7 +192,7 @@ test:		$(UNITTARGETS)
 
 clean:
 	$(RM) $(OBJS) $(TARGETS) $(UNITTARGETS)
-	$(RM) libcups.so libcups.dylib
+	$(RM) libcups.so libcups.dylib libcups3.so libcups3.dylib
 
 
 #
