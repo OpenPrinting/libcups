@@ -102,10 +102,6 @@ typedef int64_t ssize_t;			/* @private@ */
 #    define _CUPS_INTERNAL	__attribute__ ((visibility("hidden")))
 #    define _CUPS_PRIVATE	__attribute__ ((visibility("default")))
 #    define _CUPS_PUBLIC	__attribute__ ((visibility("default")))
-#  elif defined(_WIN32) && defined(LIBCUPS2_EXPORTS) && 0
-#    define _CUPS_INTERNAL
-#    define _CUPS_PRIVATE	__declspec(dllexport)
-#    define _CUPS_PUBLIC	__declspec(dllexport)
 #  else
 #    define _CUPS_INTERNAL
 #    define _CUPS_PRIVATE
