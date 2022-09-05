@@ -1289,7 +1289,7 @@ _httpStatusString(
         return (cg->http_status);
   }
 
-  return (_cupsLangString(lang, s));
+  return (cupsLangGetString(lang, s));
 }
 
 
@@ -1375,7 +1375,7 @@ httpURIStatusString(
 	break;
   }
 
-  return (_cupsLangString(cg->lang_default, s));
+  return (cupsLangGetString(cg->lang_default, s));
 }
 
 

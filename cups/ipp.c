@@ -2542,8 +2542,7 @@ ippNewRequest(ipp_op_t op)		// I - Operation code
 
   language = cupsLangDefault();
 
-  ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_LANGUAGE,
-               "attributes-natural-language", NULL, language->language);
+  ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_LANGUAGE, "attributes-natural-language", NULL, cupsLangGetName(language));
 
  /*
   * Return the new request...
@@ -2651,8 +2650,7 @@ ippNewResponse(ipp_t *request)		// I - IPP request message
     cups_lang_t *language = cupsLangDefault();
 					// Current locale
 
-    ippAddString(response, IPP_TAG_OPERATION, IPP_TAG_LANGUAGE,
-		 "attributes-natural-language", NULL, language->language);
+    ippAddString(response, IPP_TAG_OPERATION, IPP_TAG_LANGUAGE, "attributes-natural-language", NULL, cupsLangGetName(language));
   }
 
   return (response);
@@ -4240,7 +4238,7 @@ ippSetValueTag(
         {
           // Otherwise, use the language code corresponding to the locale...
 	  language = cupsLangDefault();
-	  (*attr)->values[0].string.language = _cupsStrAlloc(ipp_lang_code(language->language, code, sizeof(code)));
+	  (*attr)->values[0].string.language = _cupsStrAlloc(ipp_lang_code(cupsLangGetName(language), code, sizeof(code)));
         }
 
         for (i = (*attr)->num_values - 1, value = (*attr)->values + 1; i > 0; i --, value ++)
@@ -6312,7 +6310,7 @@ ipp_set_error(ipp_status_t status,	// I - Status code
 
 
   va_start(ap, format);
-  vsnprintf(buffer, sizeof(buffer), _cupsLangString(lang, format), ap);
+  vsnprintf(buffer, sizeof(buffer), cupsLangGetString(lang, format), ap);
   va_end(ap);
 
   _cupsSetError(status, buffer, 0);

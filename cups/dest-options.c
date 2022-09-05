@@ -968,8 +968,6 @@ cupsFreeDestInfo(cups_dinfo_t *dinfo)	/* I - Destination information */
   cupsArrayDelete(dinfo->constraints);
   cupsArrayDelete(dinfo->resolvers);
 
-  cupsArrayDelete(dinfo->localizations);
-
   cupsArrayDelete(dinfo->media_db);
 
   cupsArrayDelete(dinfo->cached_db);

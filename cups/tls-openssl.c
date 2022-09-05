@@ -80,6 +80,7 @@ cupsMakeServerCredentials(
 #endif // EVP_PKEY_EC && USE_EC
   X509		*cert;			// Certificate
   cups_lang_t	*language;		// Default language info
+  const char	*langname;		// Language name
   time_t	curtime;		// Current time
   X509_NAME	*name;			// Subject/issuer name
   BIO		*bio;			// Output file
@@ -158,9 +159,10 @@ cupsMakeServerCredentials(
   ASN1_INTEGER_set(X509_get_serialNumber(cert), (int)curtime);
   X509_set_pubkey(cert, pkey);
 
-  name = X509_get_subject_name(cert);
-  if (strlen(language->language) == 5)
-    X509_NAME_add_entry_by_txt(name, "C", MBSTRING_ASC, (unsigned char *)language->language + 3, -1, -1, 0);
+  name     = X509_get_subject_name(cert);
+  langname = cupsLangGetName(language);
+  if (strlen(langname) == 5)
+    X509_NAME_add_entry_by_txt(name, "C", MBSTRING_ASC, (unsigned char *)langname + 3, -1, -1, 0);
   else
     X509_NAME_add_entry_by_txt(name, "C", MBSTRING_ASC, (unsigned char *)"US", -1, -1, 0);
   X509_NAME_add_entry_by_txt(name, "O", MBSTRING_ASC, (unsigned char *)"Unknown", -1, -1, 0);

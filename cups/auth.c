@@ -180,7 +180,7 @@ cupsDoAuthentication(
       if (cups_auth_param(schemedata, "username", default_username, sizeof(default_username)))
 	cupsSetUser(default_username);
 
-      snprintf(prompt, sizeof(prompt), _cupsLangString(cg->lang_default, _("Password for %s on %s? ")), cupsGetUser(), http->hostname[0] == '/' ? "localhost" : http->hostname);
+      cupsLangFormatString(cg->lang_default, prompt, sizeof(prompt), _("Password for %s on %s? "), cupsGetUser(), http->hostname[0] == '/' ? "localhost" : http->hostname);
 
       http->digest_tries  = _cups_strncasecmp(scheme, "Digest", 6) != 0;
       http->userpass[0]   = '\0';

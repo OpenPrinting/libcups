@@ -96,7 +96,6 @@
 		270696421CADF3E200FFE5FB /* file-private.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220ED7133305BB00FCA411 /* file-private.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		270696431CADF3E200FFE5FB /* http-private.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220EE0133305BB00FCA411 /* http-private.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		270696441CADF3E200FFE5FB /* ipp-private.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220EE4133305BB00FCA411 /* ipp-private.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		270696451CADF3E200FFE5FB /* language-private.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220EE9133305BB00FCA411 /* language-private.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		270696461CADF3E200FFE5FB /* md5-internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220EEE133305BB00FCA411 /* md5-internal.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		270696481CADF3E200FFE5FB /* pwg-private.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220EF9133305BB00FCA411 /* pwg-private.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		2706964A1CADF3E200FFE5FB /* string-private.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220F01133305BB00FCA411 /* string-private.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -210,6 +209,23 @@
 		2794E90F28AFFC6600BEDC04 /* testdnssd.c in Sources */ = {isa = PBXBuildFile; fileRef = 2794E90E28AFFC6600BEDC04 /* testdnssd.c */; };
 		2794E91028B2E20A00BEDC04 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5E1926750C000F61D3 /* SystemConfiguration.framework */; };
 		279AE6F52395B80F004DD600 /* libpam.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 279AE6F42395B80F004DD600 /* libpam.tbd */; };
+		279B960028C57FAD00869E97 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5E1926750C000F61D3 /* SystemConfiguration.framework */; };
+		279B960128C57FBF00869E97 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5E1926750C000F61D3 /* SystemConfiguration.framework */; };
+		279B960228C57FCC00869E97 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5E1926750C000F61D3 /* SystemConfiguration.framework */; };
+		279B960328C5803600869E97 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5E1926750C000F61D3 /* SystemConfiguration.framework */; };
+		279B960428C5804300869E97 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5E1926750C000F61D3 /* SystemConfiguration.framework */; };
+		279B960528C5827C00869E97 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5E1926750C000F61D3 /* SystemConfiguration.framework */; };
+		279B960628C5828700869E97 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5E1926750C000F61D3 /* SystemConfiguration.framework */; };
+		279B960728C5829000869E97 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5E1926750C000F61D3 /* SystemConfiguration.framework */; };
+		279B960828C5829B00869E97 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5E1926750C000F61D3 /* SystemConfiguration.framework */; };
+		279B960928C582AB00869E97 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5E1926750C000F61D3 /* SystemConfiguration.framework */; };
+		279B960A28C582C300869E97 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5E1926750C000F61D3 /* SystemConfiguration.framework */; };
+		279B960B28C582CB00869E97 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5E1926750C000F61D3 /* SystemConfiguration.framework */; };
+		279B960C28C582E400869E97 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5E1926750C000F61D3 /* SystemConfiguration.framework */; };
+		279B960D28C582F000869E97 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5E1926750C000F61D3 /* SystemConfiguration.framework */; };
+		279B960E28C5830300869E97 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5E1926750C000F61D3 /* SystemConfiguration.framework */; };
+		279B960F28C5831000869E97 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5E1926750C000F61D3 /* SystemConfiguration.framework */; };
+		279B961028C5831A00869E97 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5E1926750C000F61D3 /* SystemConfiguration.framework */; };
 		27A8096128A9B9D500B20BC8 /* dnssd.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A8095F28A9B9D500B20BC8 /* dnssd.h */; };
 		27A8096228A9B9D500B20BC8 /* dnssd.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A8095F28A9B9D500B20BC8 /* dnssd.h */; };
 		27A8096328A9B9D500B20BC8 /* dnssd.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A8095F28A9B9D500B20BC8 /* dnssd.h */; };
@@ -305,7 +321,6 @@
 		72220F20133305BB00FCA411 /* ipp.c in Sources */ = {isa = PBXBuildFile; fileRef = 72220EE6133305BB00FCA411 /* ipp.c */; };
 		72220F21133305BB00FCA411 /* ipp.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220EE7133305BB00FCA411 /* ipp.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		72220F22133305BB00FCA411 /* langprintf.c in Sources */ = {isa = PBXBuildFile; fileRef = 72220EE8133305BB00FCA411 /* langprintf.c */; };
-		72220F23133305BB00FCA411 /* language-private.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220EE9133305BB00FCA411 /* language-private.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		72220F24133305BB00FCA411 /* language.c in Sources */ = {isa = PBXBuildFile; fileRef = 72220EEA133305BB00FCA411 /* language.c */; };
 		72220F25133305BB00FCA411 /* language.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220EEB133305BB00FCA411 /* language.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		72220F28133305BB00FCA411 /* md5-internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220EEE133305BB00FCA411 /* md5-internal.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -1042,7 +1057,6 @@
 		72220EE6133305BB00FCA411 /* ipp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ipp.c; path = ../cups/ipp.c; sourceTree = "<group>"; };
 		72220EE7133305BB00FCA411 /* ipp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ipp.h; path = ../cups/ipp.h; sourceTree = "<group>"; };
 		72220EE8133305BB00FCA411 /* langprintf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = langprintf.c; path = ../cups/langprintf.c; sourceTree = "<group>"; };
-		72220EE9133305BB00FCA411 /* language-private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "language-private.h"; path = "../cups/language-private.h"; sourceTree = "<group>"; };
 		72220EEA133305BB00FCA411 /* language.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = language.c; path = ../cups/language.c; sourceTree = "<group>"; };
 		72220EEB133305BB00FCA411 /* language.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = language.h; path = ../cups/language.h; sourceTree = "<group>"; };
 		72220EEE133305BB00FCA411 /* md5-internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "md5-internal.h"; path = "../cups/md5-internal.h"; sourceTree = "<group>"; };
@@ -1134,6 +1148,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				279B960A28C582C300869E97 /* SystemConfiguration.framework in Frameworks */,
 				27CAFC65282C899E00FE02FC /* libcrypto.a in Frameworks */,
 				27CAFC66282C899E00FE02FC /* libssl.a in Frameworks */,
 				270D02191D707E0200EA9403 /* libcups_static.a in Frameworks */,
@@ -1149,6 +1164,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				279B960528C5827C00869E97 /* SystemConfiguration.framework in Frameworks */,
 				27CAFC70282C8BCD00FE02FC /* libcrypto.a in Frameworks */,
 				27CAFC71282C8BCD00FE02FC /* libssl.a in Frameworks */,
 				27D3968327BB390D003D3D8E /* libresolv.tbd in Frameworks */,
@@ -1187,6 +1203,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				279B960B28C582CB00869E97 /* SystemConfiguration.framework in Frameworks */,
 				27CAFC67282C89CB00FE02FC /* libcrypto.a in Frameworks */,
 				27CAFC68282C89CB00FE02FC /* libssl.a in Frameworks */,
 				2767FC5F1926750C000F61D3 /* CoreFoundation.framework in Frameworks */,
@@ -1202,6 +1219,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				279B960728C5829000869E97 /* SystemConfiguration.framework in Frameworks */,
 				27CAFC72282C8C0200FE02FC /* libcrypto.a in Frameworks */,
 				27CAFC73282C8C0200FE02FC /* libssl.a in Frameworks */,
 				27D3968B27BB3963003D3D8E /* libresolv.tbd in Frameworks */,
@@ -1239,6 +1257,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				279B960928C582AB00869E97 /* SystemConfiguration.framework in Frameworks */,
 				27CAFC69282C89E000FE02FC /* libcrypto.a in Frameworks */,
 				27CAFC6A282C89E000FE02FC /* libssl.a in Frameworks */,
 				2767FC6B192685E6000F61D3 /* libcups_static.a in Frameworks */,
@@ -1254,6 +1273,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				279B960E28C5830300869E97 /* SystemConfiguration.framework in Frameworks */,
 				27CAFC84282C8DA100FE02FC /* libcrypto.a in Frameworks */,
 				27CAFC85282C8DA100FE02FC /* libssl.a in Frameworks */,
 				2778BBCF275DA09B0070DA11 /* libcups_static.a in Frameworks */,
@@ -1268,6 +1288,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				279B960828C5829B00869E97 /* SystemConfiguration.framework in Frameworks */,
 				27CAFC6D282C8A1800FE02FC /* libcrypto.a in Frameworks */,
 				27CAFC6E282C8A1800FE02FC /* libssl.a in Frameworks */,
 				72BFD5FB191AF0A30005DA37 /* libcups_static.a in Frameworks */,
@@ -1299,6 +1320,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				279B960628C5828700869E97 /* SystemConfiguration.framework in Frameworks */,
 				27CAFC80282C8C9300FE02FC /* libcrypto.a in Frameworks */,
 				27CAFC81282C8C9300FE02FC /* libssl.a in Frameworks */,
 				27D3968927BB394D003D3D8E /* libiconv.tbd in Frameworks */,
@@ -1327,6 +1349,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				279B960F28C5831000869E97 /* SystemConfiguration.framework in Frameworks */,
 				27CAFC82282C8D8100FE02FC /* libcrypto.a in Frameworks */,
 				27CAFC83282C8D8100FE02FC /* libssl.a in Frameworks */,
 				724FA53D1CC037370092477B /* CoreFoundation.framework in Frameworks */,
@@ -1341,6 +1364,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				279B960228C57FCC00869E97 /* SystemConfiguration.framework in Frameworks */,
 				27CAFC6B282C89FE00FE02FC /* libcrypto.a in Frameworks */,
 				27CAFC6C282C89FE00FE02FC /* libssl.a in Frameworks */,
 				724FA5761CC037810092477B /* libcups_static.a in Frameworks */,
@@ -1356,6 +1380,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				279B960428C5804300869E97 /* SystemConfiguration.framework in Frameworks */,
 				27CAFC76282C8C3300FE02FC /* libcrypto.a in Frameworks */,
 				27CAFC77282C8C3300FE02FC /* libssl.a in Frameworks */,
 				724FA5891CC037980092477B /* libcups_static.a in Frameworks */,
@@ -1370,6 +1395,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				279B960028C57FAD00869E97 /* SystemConfiguration.framework in Frameworks */,
 				27CAFC78282C8C4900FE02FC /* libcrypto.a in Frameworks */,
 				27CAFC79282C8C4900FE02FC /* libssl.a in Frameworks */,
 				724FA59C1CC037AA0092477B /* libcups_static.a in Frameworks */,
@@ -1384,6 +1410,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				279B960C28C582E400869E97 /* SystemConfiguration.framework in Frameworks */,
 				27CAFC7A282C8C5A00FE02FC /* libcrypto.a in Frameworks */,
 				27CAFC7B282C8C5A00FE02FC /* libssl.a in Frameworks */,
 				724FA5AF1CC037C60092477B /* libcups_static.a in Frameworks */,
@@ -1398,6 +1425,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				279B960128C57FBF00869E97 /* SystemConfiguration.framework in Frameworks */,
 				27CAFC74282C8C1900FE02FC /* libcrypto.a in Frameworks */,
 				27CAFC75282C8C1900FE02FC /* libssl.a in Frameworks */,
 				27D3968A27BB3957003D3D8E /* libresolv.tbd in Frameworks */,
@@ -1412,6 +1440,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				279B960D28C582F000869E97 /* SystemConfiguration.framework in Frameworks */,
 				27CAFC7C282C8C6F00FE02FC /* libcrypto.a in Frameworks */,
 				27CAFC7D282C8C6F00FE02FC /* libssl.a in Frameworks */,
 				724FA5FF1CC038190092477B /* libcups_static.a in Frameworks */,
@@ -1423,6 +1452,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				279B960328C5803600869E97 /* SystemConfiguration.framework in Frameworks */,
 				27CAFC7E282C8C8000FE02FC /* libcrypto.a in Frameworks */,
 				27CAFC7F282C8C8000FE02FC /* libssl.a in Frameworks */,
 				27D3968C27BB3972003D3D8E /* libresolv.tbd in Frameworks */,
@@ -1450,6 +1480,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				279B961028C5831A00869E97 /* SystemConfiguration.framework in Frameworks */,
 				27CAFC63282C898300FE02FC /* libcrypto.a in Frameworks */,
 				27CAFC64282C898300FE02FC /* libssl.a in Frameworks */,
 				27D3968E27BB3989003D3D8E /* libresolv.tbd in Frameworks */,
@@ -1599,7 +1630,6 @@
 				720E854120164E7A00C6C411 /* ipp-file.c */,
 				72220EE5133305BB00FCA411 /* ipp-support.c */,
 				72220EEB133305BB00FCA411 /* language.h */,
-				72220EE9133305BB00FCA411 /* language-private.h */,
 				72220EE8133305BB00FCA411 /* langprintf.c */,
 				72220EEA133305BB00FCA411 /* language.c */,
 				27D3037D134148CB00F022B1 /* libcups3.def */,
@@ -1722,7 +1752,6 @@
 				270696421CADF3E200FFE5FB /* file-private.h in Headers */,
 				270696431CADF3E200FFE5FB /* http-private.h in Headers */,
 				270696441CADF3E200FFE5FB /* ipp-private.h in Headers */,
-				270696451CADF3E200FFE5FB /* language-private.h in Headers */,
 				270696461CADF3E200FFE5FB /* md5-internal.h in Headers */,
 				27A8096228A9B9D500B20BC8 /* dnssd.h in Headers */,
 				270696481CADF3E200FFE5FB /* pwg-private.h in Headers */,
@@ -1776,7 +1805,6 @@
 				72220F11133305BB00FCA411 /* file-private.h in Headers */,
 				72220F1A133305BB00FCA411 /* http-private.h in Headers */,
 				72220F1E133305BB00FCA411 /* ipp-private.h in Headers */,
-				72220F23133305BB00FCA411 /* language-private.h in Headers */,
 				7253C46F216ED69200494ADD /* pwg.h in Headers */,
 				27D3966527BA81C6003D3D8E /* raster-testpage.h in Headers */,
 				72220F28133305BB00FCA411 /* md5-internal.h in Headers */,

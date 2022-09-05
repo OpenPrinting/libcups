@@ -349,6 +349,8 @@ main(int  argc,				/* I - Number of command-line args */
   ippeve_printer_t *printer;		/* Printer object */
 
 
+  cupsLangSetLocale(argv);
+
  /*
   * Parse command-line arguments...
   */
@@ -378,7 +380,7 @@ main(int  argc,				/* I - Number of command-line args */
     }
     else if (!strncmp(argv[i], "--", 2))
     {
-      _cupsLangPrintf(stderr, _("%s: Unknown option \"%s\"."), argv[0], argv[i]);
+      cupsLangPrintf(stderr, _("%s: Unknown option \"%s\"."), argv[0], argv[i]);
       usage(1);
     }
     else if (argv[i][0] == '-')
@@ -553,7 +555,7 @@ main(int  argc,				/* I - Number of command-line args */
 	      break;
 
           default : /* Unknown */
-	      _cupsLangPrintf(stderr, _("%s: Unknown option \"-%c\"."), argv[0], *opt);
+	      cupsLangPrintf(stderr, _("%s: Unknown option \"-%c\"."), argv[0], *opt);
 	      usage(1);
 	}
       }
@@ -564,7 +566,7 @@ main(int  argc,				/* I - Number of command-line args */
     }
     else
     {
-      _cupsLangPrintf(stderr, _("%s: Unknown option \"%s\"."), argv[0], argv[i]);
+      cupsLangPrintf(stderr, _("%s: Unknown option \"%s\"."), argv[0], argv[i]);
       usage(1);
     }
   }
@@ -598,12 +600,12 @@ main(int  argc,				/* I - Number of command-line args */
 
     if (mkdir(directory, 0755) && errno != EEXIST)
     {
-      _cupsLangPrintf(stderr, _("Unable to create spool directory \"%s\": %s"), directory, strerror(errno));
+      cupsLangPrintf(stderr, _("Unable to create spool directory \"%s\": %s"), directory, strerror(errno));
       usage(1);
     }
 
     if (Verbosity)
-      _cupsLangPrintf(stderr, _("Using spool directory \"%s\"."), directory);
+      cupsLangPrintf(stderr, _("Using spool directory \"%s\"."), directory);
   }
 
  /*
@@ -1538,7 +1540,7 @@ create_printer(
     {
       if (access(command, X_OK))
       {
-        _cupsLangPrintf(stderr, _("Unable to execute command \"%s\": %s"), command, strerror(errno));
+        cupsLangPrintf(stderr, _("Unable to execute command \"%s\": %s"), command, strerror(errno));
 	return (NULL);
       }
     }
@@ -1548,7 +1550,7 @@ create_printer(
 
       if (access(command, X_OK))
       {
-        _cupsLangPrintf(stderr, _("Unable to execute command \"%s\": %s"), command, strerror(errno));
+        cupsLangPrintf(stderr, _("Unable to execute command \"%s\": %s"), command, strerror(errno));
 	return (NULL);
       }
 
@@ -1563,7 +1565,7 @@ create_printer(
 
   if ((printer = calloc(1, sizeof(ippeve_printer_t))) == NULL)
   {
-    _cupsLangPrintf(stderr, _("Unable to allocate memory for printer: %s"), strerror(errno));
+    cupsLangPrintf(stderr, _("Unable to allocate memory for printer: %s"), strerror(errno));
     return (NULL);
   }
 
@@ -1663,7 +1665,7 @@ create_printer(
 
     if (serverport < 10000)
     {
-      _cupsLangPrintf(stderr, _("Listening on port %d."), serverport);
+      cupsLangPrintf(stderr, _("Listening on port %d."), serverport);
       printer->port = serverport;
     }
     else
@@ -3963,7 +3965,7 @@ ippserver_error_cb(
   (void)f;
   (void)user_data;
 
-  _cupsLangPrintf(stderr, "%s\n", error);
+  cupsLangPrintf(stderr, "%s\n", error);
 
   return (false);
 }
@@ -7339,33 +7341,33 @@ time_string(time_t tv,			/* I - Time value */
 static void
 usage(int status)			/* O - Exit status */
 {
-  _cupsLangPuts(stdout, _("Usage: ippeveprinter [options] \"name\""));
-  _cupsLangPuts(stdout, _("Options:"));
-  _cupsLangPuts(stdout, _("--help                  Show program help"));
-  _cupsLangPuts(stdout, _("--no-web-forms          Disable web forms for media and supplies"));
-  _cupsLangPuts(stdout, _("--pam-service service   Use the named PAM service"));
-  _cupsLangPuts(stdout, _("--version               Show program version"));
-  _cupsLangPuts(stdout, _("-2                      Set 2-sided printing support (default=1-sided)"));
-  _cupsLangPuts(stdout, _("-A                      Enable authentication"));
-  _cupsLangPuts(stdout, _("-D device-uri           Set the device URI for the printer"));
-  _cupsLangPuts(stdout, _("-F output-type/subtype  Set the output format for the printer"));
-  _cupsLangPuts(stdout, _("-K keypath              Set location of server X.509 certificates and keys."));
-  _cupsLangPuts(stdout, _("-M manufacturer         Set manufacturer name (default=Test)"));
-  _cupsLangPuts(stdout, _("-S filename.strings     Set strings file"));
-  _cupsLangPuts(stdout, _("-V version              Set default IPP version"));
-  _cupsLangPuts(stdout, _("-a filename.conf        Load printer attributes from conf file"));
-  _cupsLangPuts(stdout, _("-c command              Set print command"));
-  _cupsLangPuts(stdout, _("-d spool-directory      Set spool directory"));
-  _cupsLangPuts(stdout, _("-f type/subtype[,...]   Set supported file types"));
-  _cupsLangPuts(stdout, _("-i iconfile.png[,...]   Set icon file(s)"));
-  _cupsLangPuts(stdout, _("-k                      Keep job spool files"));
-  _cupsLangPuts(stdout, _("-l location             Set location of printer"));
-  _cupsLangPuts(stdout, _("-m model                Set model name (default=Printer)"));
-  _cupsLangPuts(stdout, _("-n hostname             Set hostname for printer"));
-  _cupsLangPuts(stdout, _("-p port                 Set port number for printer"));
-  _cupsLangPuts(stdout, _("-r subtype,[subtype]    Set DNS-SD service subtype"));
-  _cupsLangPuts(stdout, _("-s speed[,color-speed]  Set speed in pages per minute"));
-  _cupsLangPuts(stdout, _("-v                      Be verbose"));
+  cupsLangPuts(stdout, _("Usage: ippeveprinter [options] \"name\""));
+  cupsLangPuts(stdout, _("Options:"));
+  cupsLangPuts(stdout, _("--help                  Show program help"));
+  cupsLangPuts(stdout, _("--no-web-forms          Disable web forms for media and supplies"));
+  cupsLangPuts(stdout, _("--pam-service service   Use the named PAM service"));
+  cupsLangPuts(stdout, _("--version               Show program version"));
+  cupsLangPuts(stdout, _("-2                      Set 2-sided printing support (default=1-sided)"));
+  cupsLangPuts(stdout, _("-A                      Enable authentication"));
+  cupsLangPuts(stdout, _("-D device-uri           Set the device URI for the printer"));
+  cupsLangPuts(stdout, _("-F output-type/subtype  Set the output format for the printer"));
+  cupsLangPuts(stdout, _("-K keypath              Set location of server X.509 certificates and keys."));
+  cupsLangPuts(stdout, _("-M manufacturer         Set manufacturer name (default=Test)"));
+  cupsLangPuts(stdout, _("-S filename.strings     Set strings file"));
+  cupsLangPuts(stdout, _("-V version              Set default IPP version"));
+  cupsLangPuts(stdout, _("-a filename.conf        Load printer attributes from conf file"));
+  cupsLangPuts(stdout, _("-c command              Set print command"));
+  cupsLangPuts(stdout, _("-d spool-directory      Set spool directory"));
+  cupsLangPuts(stdout, _("-f type/subtype[,...]   Set supported file types"));
+  cupsLangPuts(stdout, _("-i iconfile.png[,...]   Set icon file(s)"));
+  cupsLangPuts(stdout, _("-k                      Keep job spool files"));
+  cupsLangPuts(stdout, _("-l location             Set location of printer"));
+  cupsLangPuts(stdout, _("-m model                Set model name (default=Printer)"));
+  cupsLangPuts(stdout, _("-n hostname             Set hostname for printer"));
+  cupsLangPuts(stdout, _("-p port                 Set port number for printer"));
+  cupsLangPuts(stdout, _("-r subtype,[subtype]    Set DNS-SD service subtype"));
+  cupsLangPuts(stdout, _("-s speed[,color-speed]  Set speed in pages per minute"));
+  cupsLangPuts(stdout, _("-v                      Be verbose"));
 
   exit(status);
 }

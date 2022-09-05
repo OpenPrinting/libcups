@@ -66,37 +66,37 @@ cupsNotifySubject(cups_lang_t *lang,	/* I - Language data */
     * Job event...
     */
 
-    prefix = _cupsLangString(lang, _("Print Job:"));
+    prefix = cupsLangGetString(lang, _("Print Job:"));
 
     switch (job_state->values[0].integer)
     {
       case IPP_JSTATE_PENDING :
-          state = _cupsLangString(lang, _("pending"));
+          state = cupsLangGetString(lang, _("pending"));
 	  break;
       case IPP_JSTATE_HELD :
-          state = _cupsLangString(lang, _("held"));
+          state = cupsLangGetString(lang, _("held"));
 	  break;
       case IPP_JSTATE_PROCESSING :
-          state = _cupsLangString(lang, _("processing"));
+          state = cupsLangGetString(lang, _("processing"));
 	  break;
       case IPP_JSTATE_STOPPED :
-          state = _cupsLangString(lang, _("stopped"));
+          state = cupsLangGetString(lang, _("stopped"));
 	  break;
       case IPP_JSTATE_CANCELED :
-          state = _cupsLangString(lang, _("canceled"));
+          state = cupsLangGetString(lang, _("canceled"));
 	  break;
       case IPP_JSTATE_ABORTED :
-          state = _cupsLangString(lang, _("aborted"));
+          state = cupsLangGetString(lang, _("aborted"));
 	  break;
       case IPP_JSTATE_COMPLETED :
-          state = _cupsLangString(lang, _("completed"));
+          state = cupsLangGetString(lang, _("completed"));
 	  break;
       default :
-          state = _cupsLangString(lang, _("unknown"));
+          state = cupsLangGetString(lang, _("unknown"));
 	  break;
     }
 
-    snprintf(buffer, sizeof(buffer), "%s %s-%d (%s) %s", prefix, printer_name->values[0].string.text, job_id->values[0].integer, job_name ? job_name->values[0].string.text : _cupsLangString(lang, _("untitled")), state);
+    snprintf(buffer, sizeof(buffer), "%s %s-%d (%s) %s", prefix, printer_name->values[0].string.text, job_id->values[0].integer, job_name ? job_name->values[0].string.text : cupsLangGetString(lang, _("untitled")), state);
   }
   else if (printer_uri && printer_name && printer_state)
   {
@@ -104,21 +104,21 @@ cupsNotifySubject(cups_lang_t *lang,	/* I - Language data */
     * Printer event...
     */
 
-    prefix = _cupsLangString(lang, _("Printer:"));
+    prefix = cupsLangGetString(lang, _("Printer:"));
 
     switch (printer_state->values[0].integer)
     {
       case IPP_PSTATE_IDLE :
-          state = _cupsLangString(lang, _("idle"));
+          state = cupsLangGetString(lang, _("idle"));
 	  break;
       case IPP_PSTATE_PROCESSING :
-          state = _cupsLangString(lang, _("processing"));
+          state = cupsLangGetString(lang, _("processing"));
 	  break;
       case IPP_PSTATE_STOPPED :
-          state = _cupsLangString(lang, _("stopped"));
+          state = cupsLangGetString(lang, _("stopped"));
 	  break;
       default :
-          state = _cupsLangString(lang, _("unknown"));
+          state = cupsLangGetString(lang, _("unknown"));
 	  break;
     }
 
