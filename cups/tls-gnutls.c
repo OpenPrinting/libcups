@@ -140,10 +140,10 @@ cupsMakeServerCredentials(
   language  = cupsLangDefault();
   langname  = cupsLangGetName(language);
   curtime   = time(NULL);
-  serial[0] = curtime >> 24;
-  serial[1] = curtime >> 16;
-  serial[2] = curtime >> 8;
-  serial[3] = curtime;
+  serial[0] = (unsigned char)(curtime >> 24);
+  serial[1] = (unsigned char)(curtime >> 16);
+  serial[2] = (unsigned char)(curtime >> 8);
+  serial[3] = (unsigned char)(curtime);
 
   gnutls_x509_crt_init(&crt);
   if (strlen(langname) == 5)
@@ -165,7 +165,7 @@ cupsMakeServerCredentials(
   gnutls_x509_crt_set_key(crt, key);
   gnutls_x509_crt_set_serial(crt, serial, sizeof(serial));
   gnutls_x509_crt_set_activation_time(crt, curtime);
-  gnutls_x509_crt_set_expiration_time(crt, curtime + 10 * 365 * 86400);
+  gnutls_x509_crt_set_expiration_time(crt, expiration_date);
   gnutls_x509_crt_set_ca_status(crt, 0);
   gnutls_x509_crt_set_subject_alt_name(crt, GNUTLS_SAN_DNSNAME, common_name, (unsigned)strlen(common_name), GNUTLS_FSAN_SET);
   if (!strchr(common_name, '.'))
@@ -1495,7 +1495,7 @@ _httpTLSStart(http_t *http)		/* I - Connection to server */
     {
       DEBUG_printf(("4_httpTLSStart: Auto-create credentials for \"%s\".", hostname[0] ? hostname : tls_common_name));
 
-      if (!cupsMakeServerCredentials(tls_keypath, hostname[0] ? hostname : tls_common_name, 0, NULL, time(NULL) + 365 * 86400))
+      if (!cupsMakeServerCredentials(tls_keypath, hostname[0] ? hostname : tls_common_name, 0, NULL, time(NULL) + 3650 * 86400))
       {
 	DEBUG_puts("4_httpTLSStart: cupsMakeServerCredentials failed.");
 	http->error  = errno = EINVAL;

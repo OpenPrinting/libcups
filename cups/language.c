@@ -561,7 +561,7 @@ cupsLangSetDirectory(const char *d)	// I - Directory name
 //
 // 'cups_lang_new()' - Create a new language.
 //
-
+  
 static cups_lang_t *			// O - Language data
 cups_lang_new(const char *language)	// I - Language name
 {

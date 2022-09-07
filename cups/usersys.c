@@ -1208,7 +1208,7 @@ cups_init_client_conf(
 #endif /* __APPLE__ && !TARGET_OS_OSX */
 
 #ifdef HAVE_TLS
-  cc->ssl_min_version = _HTTP_TLS_1_0;
+  cc->ssl_min_version = _HTTP_TLS_1_2;
   cc->ssl_max_version = _HTTP_TLS_MAX;
 #endif /* HAVE_TLS */
   cc->encryption      = (http_encryption_t)-1;
