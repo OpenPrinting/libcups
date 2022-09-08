@@ -1447,6 +1447,7 @@ _httpTLSStart(http_t *http)		/* I - Connection to server */
 	http->error  = errno = EINVAL;
 	http->status = HTTP_STATUS_ERROR;
 	_cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create server credentials."), 1);
+	cupsMutexUnlock(&tls_mutex);
 
 	return (false);
       }
