@@ -181,14 +181,14 @@ cupsMakeServerCredentials(
     X509_NAME_add_entry_by_txt(name, SN_countryName, MBSTRING_ASC, (unsigned char *)langname + 3, -1, -1, 0);
   else
     X509_NAME_add_entry_by_txt(name, SN_countryName, MBSTRING_ASC, (unsigned char *)"US", -1, -1, 0);
-  X509_NAME_add_entry_by_txt(name, SN_organizationName, MBSTRING_ASC, (unsigned char *)"Unknown", -1, -1, 0);
+  X509_NAME_add_entry_by_txt(name, SN_organizationName, MBSTRING_ASC, (unsigned char *)common_name, -1, -1, 0);
   X509_NAME_add_entry_by_txt(name, SN_organizationalUnitName, MBSTRING_ASC, (unsigned char *)"Unknown", -1, -1, 0);
   X509_NAME_add_entry_by_txt(name, SN_localityName, MBSTRING_ASC, (unsigned char *)"Unknown", -1, -1, 0);
   X509_NAME_add_entry_by_txt(name, SN_stateOrProvinceName, MBSTRING_ASC, (unsigned char *)"Unknown", -1, -1, 0);
   X509_NAME_add_entry_by_txt(name, SN_commonName, MBSTRING_ASC, (unsigned char *)common_name, -1, -1, 0);
 
-  X509_set_subject_name(cert, name);
   X509_set_issuer_name(cert, name);
+  X509_set_subject_name(cert, name);
   X509_NAME_free(name);
 
   http_x509_add_san(cert, common_name);
@@ -218,9 +218,11 @@ cupsMakeServerCredentials(
   }
 
   // Add extensions that are required to make Chrome happy...
-  http_x509_add_ext(cert, NID_basic_constraints, "cA:FALSE");
-  http_x509_add_ext(cert, NID_key_usage, "digitalSignature,keyEncipherment");
+  http_x509_add_ext(cert, NID_basic_constraints, "CA:FALSE,pathlen:0");
+  http_x509_add_ext(cert, NID_key_usage, "critical,digitalSignature,keyEncipherment");
   http_x509_add_ext(cert, NID_ext_key_usage, "1.3.6.1.5.5.7.3.1");
+  http_x509_add_ext(cert, NID_subject_key_identifier, "hash");
+  X509_set_version(cert, 3);
 
   X509_sign(cert, pkey, EVP_sha256());
 
@@ -1034,6 +1036,8 @@ _httpTLSStart(http_t *http)		// I - Connection to server
     else
       cn = tls_common_name;
 
+    cupsMutexLock(&tls_mutex);
+
     if (cn)
     {
       // First look in the CUPS keystore...
@@ -1081,10 +1085,13 @@ _httpTLSStart(http_t *http)		// I - Connection to server
 	http->status = HTTP_STATUS_ERROR;
 	_cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create server credentials."), 1);
 	SSL_CTX_free(context);
+        cupsMutexUnlock(&tls_mutex);
 
 	return (false);
       }
     }
+
+    cupsMutexUnlock(&tls_mutex);
 
     DEBUG_printf(("4_httpTLSStart: Using private key file '%s'.", keyfile));
     SSL_CTX_use_PrivateKey_file(context, keyfile, SSL_FILETYPE_PEM);
