@@ -1399,8 +1399,6 @@ _httpTLSStart(http_t *http)		/* I - Connection to server */
     else
       cn = tls_common_name;
 
-    cupsMutexLock(&tls_mutex);
-
     if (cn)
     {
       // First look in the CUPS keystore...
