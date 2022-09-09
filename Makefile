@@ -22,14 +22,14 @@ DIRS	=	cups tools
 #
 
 all:
-	echo Using CC="$(CC)"
-	echo Using CFLAGS="-I.. -D_CUPS_SOURCE $(CPPFLAGS) $(CFLAGS) $(OPTIM) $(WARNINGS)"
-	echo Using CPPFLAGS="-I.. -D_CUPS_SOURCE $(CPPFLAGS) $(OPTIONS)"
-	echo Using DSOFLAGS="$(DSOFLAGS)"
-	echo Using LDFLAGS="$(LDFLAGS)"
-	echo Using LIBS="$(LIBS)"
+	echo "Using CC=\"$(CC)\""
+	echo "Using CFLAGS=\"-I.. -D_CUPS_SOURCE $(CPPFLAGS) $(CFLAGS) $(OPTIM) $(WARNINGS)\""
+	echo "Using CPPFLAGS=\"-I.. -D_CUPS_SOURCE $(CPPFLAGS) $(OPTIONS)\""
+	echo "Using DSOFLAGS=\"$(DSOFLAGS)\""
+	echo "Using LDFLAGS=\"$(LDFLAGS)\""
+	echo "Using LIBS=\"$(LIBS)\""
 	for dir in $(DIRS); do\
-		echo Making all in $$dir... ;\
+		echo "======== all in $$dir ========" ;\
 		(cd $$dir ; $(MAKE) $(MFLAGS) all) || exit 1;\
 	done
 
@@ -40,7 +40,7 @@ all:
 
 clean:
 	for dir in $(DIRS); do\
-		echo Cleaning in $$dir... ;\
+		echo "======== clean in $$dir ========" ;\
 		(cd $$dir; $(MAKE) $(MFLAGS) clean) || exit 1;\
 	done
 
@@ -59,10 +59,10 @@ distclean:	clean
 #
 
 depend:
-	echo Using CC="$(CC)"
-	echo Using CPPFLAGS="-I.. -D_CUPS_SOURCE $(CPPFLAGS) $(OPTIONS)"
+	echo "Using CC=\"$(CC)\""
+	echo "Using CPPFLAGS=\"-I.. -D_CUPS_SOURCE $(CPPFLAGS) $(OPTIONS)\""
 	for dir in $(DIRS); do\
-		echo Making dependencies in $$dir... ;\
+		echo "======== depend in $$dir ========" ;\
 		(cd $$dir; $(MAKE) $(MFLAGS) depend) || exit 1;\
 	done
 
@@ -72,16 +72,16 @@ depend:
 #
 
 install:
-	for dir in $(DIRS); do\
-		echo Installing all in $$dir... ;\
-		(cd $$dir; $(MAKE) $(MFLAGS) install) || exit 1;\
-	done
-	echo Installing $(CUPS_PC) file...
+	echo "Installing $(CUPS_PC) file to $(BUILDROOT)$(libdir)/pkgconfig..."
 	$(INSTALL_DIR) $(BUILDROOT)$(libdir)/pkgconfig
 	$(INSTALL_DATA) cups3.pc $(BUILDROOT)$(libdir)/pkgconfig/cups3.pc
 	if test "$(CUPS_PC)" = cups.pc; then \
 		$(LN) cups3.pc $(BUILDROOT)$(libdir)/pkgconfig/cups.pc; \
 	fi
+	for dir in $(DIRS); do\
+		echo "======== install in $$dir ========" ;\
+		(cd $$dir; $(MAKE) $(MFLAGS) install) || exit 1;\
+	done
 
 
 #
@@ -89,15 +89,15 @@ install:
 #
 
 uninstall:
-	for dir in $(DIRS); do\
-		echo Uninstalling in $$dir... ;\
-		(cd $$dir; $(MAKE) $(MFLAGS) uninstall) || exit 1;\
-	done
 	$(RM) $(BUILDROOT)$(libdir)/pkgconfig/cups3.pc
 	if test "$(CUPS_PC)" = cups.pc; then \
 		$(RM) $(BUILDROOT)$(libdir)/pkgconfig/cups.pc; \
 	fi
 	-$(RMDIR) $(BUILDROOT)$(libdir)/pkgconfig
+	for dir in $(DIRS); do\
+		echo "======== uninstall in $$dir ========";\
+		(cd $$dir; $(MAKE) $(MFLAGS) uninstall) || exit 1;\
+	done
 
 
 #
@@ -106,7 +106,7 @@ uninstall:
 
 test:		all
 	for dir in $(DIRS); do\
-		echo Making all in $$dir... ;\
+		echo "======== test in $$dir ========";\
 		(cd $$dir ; $(MAKE) $(MFLAGS) test) || exit 1;\
 	done
 
@@ -116,6 +116,7 @@ test:		all
 #
 
 doc:
+	echo "======== doc in cups ========"
 	cd cups; $(MAKE) $(MFLAGS) doc
 
 
@@ -125,6 +126,7 @@ doc:
 
 sloc:
 	for dir in $(DIRS); do \
+		echo "======== sloc in $$dir ========";\
 		(cd $$dir; $(MAKE) $(MFLAGS) sloc) || exit 1;\
 	done
 
