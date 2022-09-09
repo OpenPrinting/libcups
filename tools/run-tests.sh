@@ -13,7 +13,7 @@ name="Test Printer $(date +%H%M%S)"
 status=0
 
 echo "Running ippeveprinter..."
-CUPS_DEBUG_LOG=test-cups.log CUPS_DEBUG_LEVEL=4 CUPS_DEBUG_FILTER='^(http|_http|ipp|_ipp|cupsDo|cupsGet|cupsSend)' ./ippeveprinter-static -vvv -a test.conf "$name" 2>test.log &
+CUPS_DEBUG_LOG=test-cups.log CUPS_DEBUG_LEVEL=4 CUPS_DEBUG_FILTER='^(http|_http|ipp|_ipp|cupsDNSSD|cupsDo|cupsGet|cupsSend)' ./ippeveprinter-static -vvv -a test.conf "$name" 2>test.log &
 ippeveprinter=$!
 
 # Test the instance...
