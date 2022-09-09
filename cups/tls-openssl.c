@@ -181,11 +181,11 @@ cupsMakeServerCredentials(
     X509_NAME_add_entry_by_txt(name, SN_countryName, MBSTRING_ASC, (unsigned char *)langname + 3, -1, -1, 0);
   else
     X509_NAME_add_entry_by_txt(name, SN_countryName, MBSTRING_ASC, (unsigned char *)"US", -1, -1, 0);
+  X509_NAME_add_entry_by_txt(name, SN_commonName, MBSTRING_ASC, (unsigned char *)common_name, -1, -1, 0);
   X509_NAME_add_entry_by_txt(name, SN_organizationName, MBSTRING_ASC, (unsigned char *)common_name, -1, -1, 0);
   X509_NAME_add_entry_by_txt(name, SN_organizationalUnitName, MBSTRING_ASC, (unsigned char *)"Unknown", -1, -1, 0);
-  X509_NAME_add_entry_by_txt(name, SN_localityName, MBSTRING_ASC, (unsigned char *)"Unknown", -1, -1, 0);
   X509_NAME_add_entry_by_txt(name, SN_stateOrProvinceName, MBSTRING_ASC, (unsigned char *)"Unknown", -1, -1, 0);
-  X509_NAME_add_entry_by_txt(name, SN_commonName, MBSTRING_ASC, (unsigned char *)common_name, -1, -1, 0);
+  X509_NAME_add_entry_by_txt(name, SN_localityName, MBSTRING_ASC, (unsigned char *)"Unknown", -1, -1, 0);
 
   X509_set_issuer_name(cert, name);
   X509_set_subject_name(cert, name);
@@ -218,15 +218,16 @@ cupsMakeServerCredentials(
   }
 
   // Add extensions that are required to make Chrome happy...
-  http_x509_add_ext(cert, NID_basic_constraints, "CA:FALSE,pathlen:0");
+  http_x509_add_ext(cert, NID_basic_constraints, "critical,CA:FALSE,pathlen:0");
   http_x509_add_ext(cert, NID_key_usage, "critical,digitalSignature,keyEncipherment");
   http_x509_add_ext(cert, NID_ext_key_usage, "1.3.6.1.5.5.7.3.1");
   http_x509_add_ext(cert, NID_subject_key_identifier, "hash");
-  X509_set_version(cert, 3);
+  http_x509_add_ext(cert, NID_authority_key_identifier, "keyid,issuer");
+  X509_set_version(cert, 2); // v3
 
   X509_sign(cert, pkey, EVP_sha256());
 
-  // Save them...
+   // Save them...
   if ((bio = BIO_new_file(keyfile, "wb")) == NULL)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
@@ -1667,24 +1668,9 @@ http_x509_add_san(X509       *cert,	// I - Certificate
                   const char *name)	// I - Hostname
 {
   char		dns_name[1024];		// DNS: prefixed hostname
-  X509_EXTENSION *san_ext;		// Extension for subjectAltName
-  ASN1_OCTET_STRING *san_asn1;		// ASN1 string
 
 
   // The subjectAltName value for DNS names starts with a DNS: prefix...
-  snprintf(dns_name, sizeof(dns_name), "DNS: %s", name);
-
-  if ((san_asn1 = ASN1_OCTET_STRING_new()) == NULL)
-    return;
-
-  ASN1_OCTET_STRING_set(san_asn1, (unsigned char *)dns_name, strlen(dns_name));
-  if ((san_ext = X509_EXTENSION_create_by_NID(NULL, NID_subject_alt_name, 0, san_asn1)) == NULL)
-  {
-    ASN1_OCTET_STRING_free(san_asn1);
-    return;
-  }
-
-  X509_add_ext(cert, san_ext, -1);
-  X509_EXTENSION_free(san_ext);
-  ASN1_OCTET_STRING_free(san_asn1);
+  snprintf(dns_name, sizeof(dns_name), "DNS:%s", name);
+  http_x509_add_ext(cert, NID_subject_alt_name, dns_name);
 }
