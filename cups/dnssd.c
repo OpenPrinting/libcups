@@ -512,9 +512,14 @@ cupsDNSSDNew(
   cups_dnssd_t	*dnssd;			// DNS-SD context
 
 
+  DEBUG_printf(("cupsDNSSDNew(error_cb=%p, cb_data=%p)", (void *)error_cb, cb_data));
+
   // Allocate memory...
   if ((dnssd = (cups_dnssd_t *)calloc(1, sizeof(cups_dnssd_t))) == NULL)
+  {
+    DEBUG_puts("2cupsDNSSDNew: Unable to allocate memory, returning NULL.");
     return (NULL);
+  }
 
   // Save the error callback...
   dnssd->cb      = error_cb;
@@ -537,25 +542,26 @@ cupsDNSSDNew(
 #ifdef HAVE_MDNSRESPONDER
   DNSServiceErrorType error;		// Error code
 
-  if ((error = DNSServiceCreateConnection(&dnssd->ref)) == kDNSServiceErr_NoError)
-  {
-    // Start the background monitoring thread...
-    if ((dnssd->monitor = cupsThreadCreate((void *(*)(void *))mdns_monitor, dnssd)) == 0)
-    {
-      report_error(dnssd, "Unable to create DNS-SD thread: %s", strerror(errno));
-      cupsDNSSDDelete(dnssd);
-      return (NULL);
-    }
-
-    cupsThreadDetach(dnssd->monitor);
-  }
-  else
+  if ((error = DNSServiceCreateConnection(&dnssd->ref)) != kDNSServiceErr_NoError)
   {
     // Unable to create connection...
     report_error(dnssd, "Unable to initialize DNS-SD: %s", mdns_strerror(error));
     cupsDNSSDDelete(dnssd);
+    DEBUG_puts("2cupsDNSSDNew: Unable to create DNS-SD thread - returning NULL.");
     return (NULL);
   }
+
+  // Start the background monitoring thread...
+  if ((dnssd->monitor = cupsThreadCreate((void *(*)(void *))mdns_monitor, dnssd)) == 0)
+  {
+    report_error(dnssd, "Unable to create DNS-SD thread: %s", strerror(errno));
+    cupsDNSSDDelete(dnssd);
+    DEBUG_puts("2cupsDNSSDNew: Unable to create DNS-SD thread - returning NULL.");
+    return (NULL);
+  }
+
+  cupsThreadDetach(dnssd->monitor);
+  DEBUG_printf(("2cupsDNSSDNew: dnssd->monitor=%p", (void *)dnssd->monitor));
 
 #elif _WIN32
 
@@ -567,25 +573,38 @@ cupsDNSSDNew(
     // Unable to create the background thread...
     report_error(dnssd, "Unable to initialize DNS-SD: %s", strerror(errno));
     cupsDNSSDDelete(dnssd);
+    DEBUG_puts("2cupsDNSSDNew: Unable to create simple poll - returning NULL.");
     return (NULL);
   }
-  else if ((dnssd->client = avahi_client_new(avahi_simple_poll_get(dnssd->poll), AVAHI_CLIENT_NO_FAIL, (AvahiClientCallback)avahi_client_cb, dnssd, &error)) == NULL)
+
+  DEBUG_printf(("2cupsDNSSDNew: dnssd->poll=%p", (void *)dnssd->poll));
+
+  if ((dnssd->client = avahi_client_new(avahi_simple_poll_get(dnssd->poll), AVAHI_CLIENT_NO_FAIL, (AvahiClientCallback)avahi_client_cb, dnssd, &error)) == NULL)
   {
     // Unable to create the client...
     report_error(dnssd, "Unable to initialize DNS-SD: %s", avahi_strerror(error));
     avahi_simple_poll_free(dnssd->poll);
     cupsDNSSDDelete(dnssd);
+    DEBUG_puts("2cupsDNSSDNew: Unable to create Avahi client - returning NULL.");
     return (NULL);
   }
-  else if ((dnssd->monitor = cupsThreadCreate((void *(*)(void *))avahi_monitor, dnssd)) == 0)
+
+
+  DEBUG_printf(("2cupsDNSSDNew: dnssd->client=%p", (void *)dnssd->client));
+
+  if ((dnssd->monitor = cupsThreadCreate((void *(*)(void *))avahi_monitor, dnssd)) == 0)
   {
     report_error(dnssd, "Unable to create DNS-SD thread: %s", strerror(errno));
     cupsDNSSDDelete(dnssd);
+    DEBUG_puts("2cupsDNSSDNew: Unable to create DNS-SD thread - returning NULL.");
     return (NULL);
   }
 
   cupsThreadDetach(dnssd->monitor);
+  DEBUG_printf(("2cupsDNSSDNew: dnssd->monitor=%p", (void *)dnssd->monitor));
 #endif // HAVE_MDNSRESPONDER
+
+  DEBUG_printf(("2cupsDNSSDNew: Returning %p.", (void *)dnssd));
 
   return (dnssd);
 }
@@ -1018,6 +1037,8 @@ cupsDNSSDServiceAdd(
   size_t	i;			// Looping var
 
 
+  DEBUG_printf(("cupsDNSSDServiceAdd(service=%p, types=\"%s\", domain=\"%s\", host=\"%s\", port=%u, num_txt=%u, txt=%p)", (void *)service, types, domain, host, port, (unsigned)num_txt, (void *)txt));
+
   // Range check input...
   if (!service || !types)
     return (false);
@@ -1127,6 +1148,7 @@ cupsDNSSDServiceAdd(
 
   done:
 
+  DEBUG_printf(("2cupsDNSSDServiceAdd: Returning %s.", ret ? "true" : "false"));
   return (ret);
 }
 
@@ -1139,6 +1161,8 @@ void
 cupsDNSSDServiceDelete(
     cups_dnssd_service_t *service)	// I - Service
 {
+  DEBUG_printf(("cupsDNSSDServiceDelete(service=%p)", (void *)service));
+
   if (service)
   {
     cups_dnssd_t *dnssd = service->dnssd;
@@ -1200,6 +1224,8 @@ cupsDNSSDServiceNew(
   cups_dnssd_service_t	*service;	// Service registration
 
 
+  DEBUG_printf(("cupsDNSSDServiceNew(dnssd=%p, if_index=%u, name=\"%s\", cb=%p, cb_data=%p)", (void *)dnssd, (unsigned)if_index, name, (void *)cb, cb_data));
+
   // Range check input...
   if (!dnssd || !name || !cb)
     return (NULL);
@@ -1248,6 +1274,7 @@ cupsDNSSDServiceNew(
 
   cupsMutexUnlock(&dnssd->mutex);
 
+  DEBUG_printf(("2cupsDNSSDServiceNew: Returning %p.", (void *)service));
   return (service);
 }
 
@@ -1266,6 +1293,8 @@ cupsDNSSDServicePublish(
   bool		ret = true;		// Return value
 
 
+  DEBUG_printf(("cupsDNSSDServicePublish(service=%p)", (void *)service));
+
 #if _WIN32
   (void)service;
 #elif defined(HAVE_MDNSRESPONDER)
@@ -1274,6 +1303,7 @@ cupsDNSSDServicePublish(
   avahi_entry_group_commit(service->group);
 #endif // _WIN32
 
+  DEBUG_printf(("2cupsDNSSDServicePublish: Returning %s.", ret ? "true" : "false"));
   return (ret);
 }
 
