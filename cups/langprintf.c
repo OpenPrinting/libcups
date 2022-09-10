@@ -375,6 +375,8 @@ cups_lang_default(void)
 
     DEBUG_printf(("3cups_lang_default: Current locale is \"%s\".", lang));
 
+    charset[0] = '\0';
+
     if (!lang || !strcmp(lang, "C") || !strcmp(lang, "POSIX"))
     {
       // Get the character set from the LC_xxx locale setting...

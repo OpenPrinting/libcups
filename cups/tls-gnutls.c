@@ -924,14 +924,11 @@ http_gnutls_default_path(char   *buffer,/* I - Path buffer */
 #else
     snprintf(buffer, bufsize, "%s/.cups", cg->home);
 #endif // __APPLE__
-    if (access(buffer, 0))
+
+    if (mkdir(buffer, 0755) && errno != EEXIST)
     {
-      DEBUG_printf(("1http_gnutls_default_path: Making directory \"%s\".", buffer));
-      if (mkdir(buffer, 0700))
-      {
-        DEBUG_printf(("1http_gnutls_default_path: Failed to make directory: %s", strerror(errno)));
-        return (NULL);
-      }
+      DEBUG_printf(("1http_gnutls_default_path: Failed to make directory: %s", strerror(errno)));
+      return (NULL);
     }
 
 #ifdef __APPLE__
@@ -939,14 +936,11 @@ http_gnutls_default_path(char   *buffer,/* I - Path buffer */
 #else
     snprintf(buffer, bufsize, "%s/.cups/ssl", cg->home);
 #endif // __APPLE__
-    if (access(buffer, 0))
+
+    if (mkdir(buffer, 0700) && errno != EEXIST)
     {
-      DEBUG_printf(("1http_gnutls_default_path: Making directory \"%s\".", buffer));
-      if (mkdir(buffer, 0700))
-      {
-        DEBUG_printf(("1http_gnutls_default_path: Failed to make directory: %s", strerror(errno)));
-        return (NULL);
-      }
+      DEBUG_printf(("1http_gnutls_default_path: Failed to make directory: %s", strerror(errno)));
+      return (NULL);
     }
   }
   else

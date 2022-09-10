@@ -368,20 +368,32 @@ cupsPutFd(http_t     *http,		/* I - Connection to server or @code CUPS_HTTP_DEFA
       lseek(fd, 0, SEEK_SET);
 
       while ((bytes = read(fd, buffer, sizeof(buffer))) > 0)
+      {
 	if (httpCheck(http))
 	{
           if ((status = httpUpdate(http)) != HTTP_STATUS_CONTINUE)
             break;
 	}
-	else
-          httpWrite(http, buffer, (size_t)bytes);
+	else if (httpWrite(http, buffer, (size_t)bytes) < 0)
+	{
+	  status = HTTP_STATUS_ERROR;
+	  break;
+	}
+      }
     }
 
     if (status == HTTP_STATUS_CONTINUE)
     {
-      httpWrite(http, buffer, 0);
-
-      while ((status = httpUpdate(http)) == HTTP_STATUS_CONTINUE);
+      // Write 0-length chunk...
+      if (httpWrite(http, buffer, 0) < 0)
+      {
+        status = HTTP_STATUS_ERROR;
+      }
+      else
+      {
+        // Wait for response...
+        while ((status = httpUpdate(http)) == HTTP_STATUS_CONTINUE);
+      }
     }
 
     if (status == HTTP_STATUS_ERROR && !retries)

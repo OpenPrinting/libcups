@@ -911,9 +911,10 @@ cupsFileOpenFd(int        fd,		/* I - File descriptor */
   switch (*mode)
   {
     case 'a' :
-        fp->pos = lseek(fd, 0, SEEK_END);
-
     case 'w' :
+        if (*mode == 'a')
+          fp->pos = lseek(fd, 0, SEEK_END);
+
 	fp->mode = 'w';
 	fp->ptr  = fp->buf;
 	fp->end  = fp->buf + sizeof(fp->buf);
@@ -977,7 +978,8 @@ cupsFileOpenFd(int        fd,		/* I - File descriptor */
   */
 
 #ifndef _WIN32
-  fcntl(fp->fd, F_SETFD, fcntl(fp->fd, F_GETFD) | FD_CLOEXEC);
+  if (fcntl(fp->fd, F_SETFD, fcntl(fp->fd, F_GETFD) | FD_CLOEXEC))
+    DEBUG_printf(("cupsFileOpenFd: fcntl(F_SETFD, FD_CLOEXEC) failed - %s", strerror(errno)));
 #endif /* !_WIN32 */
 
   return (fp);

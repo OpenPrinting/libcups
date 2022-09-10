@@ -216,7 +216,8 @@ httpAcceptConnection(int  fd,		// I - Listen socket file descriptor
   */
 
   val = 1;
-  setsockopt(http->fd, SOL_SOCKET, SO_NOSIGPIPE, CUPS_SOCAST &val, sizeof(val));
+  if (setsockopt(http->fd, SOL_SOCKET, SO_NOSIGPIPE, CUPS_SOCAST &val, sizeof(val)))
+    DEBUG_printf(("httpAcceptConnection: setsockopt(SO_NOSIGPIPE) failed - %s", strerror(errno)));
 #endif // SO_NOSIGPIPE
 
  /*
@@ -227,14 +228,16 @@ httpAcceptConnection(int  fd,		// I - Listen socket file descriptor
   */
 
   val = 1;
-  setsockopt(http->fd, IPPROTO_TCP, TCP_NODELAY, CUPS_SOCAST &val, sizeof(val));
+  if (setsockopt(http->fd, IPPROTO_TCP, TCP_NODELAY, CUPS_SOCAST &val, sizeof(val)))
+    DEBUG_printf(("httpAcceptConnection: setsockopt(TCP_NODELAY) failed - %s", strerror(errno)));
 
 #ifdef FD_CLOEXEC
  /*
   * Close this socket when starting another process...
   */
 
-  fcntl(http->fd, F_SETFD, FD_CLOEXEC);
+  if (fcntl(http->fd, F_SETFD, FD_CLOEXEC))
+    DEBUG_printf(("httpAcceptConnection: fcntl(F_SETFD, FD_CLOEXEC) failed - %s", strerror(errno)));
 #endif // FD_CLOEXEC
 
   return (http);
@@ -1588,6 +1591,8 @@ httpPeek(http_t *http,			// I - HTTP connection
   {
     int		zerr;			// Decompressor error
     z_stream	stream;			// Copy of decompressor stream
+
+    memset(&stream, 0, sizeof(stream));
 
     if (http->used > 0 && ((z_stream *)http->stream)->avail_in < HTTP_MAX_BUFFER)
     {
@@ -4211,8 +4216,11 @@ http_set_timeout(int    fd,		// I - File descriptor
   DWORD tv = (DWORD)(timeout * 1000);
 				      // Timeout in milliseconds
 
-  setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, CUPS_SOCAST &tv, sizeof(tv));
-  setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, CUPS_SOCAST &tv, sizeof(tv));
+  if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, CUPS_SOCAST &tv, sizeof(tv)))
+    DEBUG_printf(("http_set_timeout: setsockopt(SO_RCVTIMEO) failed - %s", strerror(errno)));
+
+  if (setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, CUPS_SOCAST &tv, sizeof(tv)))
+    DEBUG_printf(("http_set_timeout: setsockopt(SO_SNDTIMEO) failed - %s", strerror(errno)));
 
 #else
   struct timeval tv;			// Timeout in secs and usecs
@@ -4220,8 +4228,10 @@ http_set_timeout(int    fd,		// I - File descriptor
   tv.tv_sec  = (int)timeout;
   tv.tv_usec = (int)(1000000 * fmod(timeout, 1.0));
 
-  setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, CUPS_SOCAST &tv, sizeof(tv));
-  setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, CUPS_SOCAST &tv, sizeof(tv));
+  if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, CUPS_SOCAST &tv, sizeof(tv)))
+    DEBUG_printf(("http_set_timeout: setsockopt(SO_RCVTIMEO) failed - %s", strerror(errno)));
+  if (setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, CUPS_SOCAST &tv, sizeof(tv)))
+    DEBUG_printf(("http_set_timeout: setsockopt(SO_SNDTIMEO) failed - %s", strerror(errno)));
 #endif // _WIN32
 }
 

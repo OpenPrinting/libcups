@@ -103,7 +103,7 @@ httpAddrConnect(
       * Create the socket...
       */
 
-      DEBUG_printf(("2httpAddrConnect2: Trying %s:%d...", httpAddrGetString(&(addrlist->addr), temp, sizeof(temp)), httpAddrGetPort(&(addrlist->addr))));
+      DEBUG_printf(("2httpAddrConnect: Trying %s:%d...", httpAddrGetString(&(addrlist->addr), temp, sizeof(temp)), httpAddrGetPort(&(addrlist->addr))));
 
       if ((fds[nfds] = (int)socket(httpAddrGetFamily(&(addrlist->addr)), SOCK_STREAM, 0)) < 0)
       {
@@ -123,16 +123,19 @@ httpAddrConnect(
       */
 
       val = 1;
-      setsockopt(fds[nfds], SOL_SOCKET, SO_REUSEADDR, CUPS_SOCAST &val, sizeof(val));
+      if (setsockopt(fds[nfds], SOL_SOCKET, SO_REUSEADDR, CUPS_SOCAST &val, sizeof(val)))
+	DEBUG_printf(("httpAddrConnect: setsockopt(SO_REUSEADDR) failed - %s", strerror(errno)));
 
 #ifdef SO_REUSEPORT
       val = 1;
-      setsockopt(fds[nfds], SOL_SOCKET, SO_REUSEPORT, CUPS_SOCAST &val, sizeof(val));
+      if (setsockopt(fds[nfds], SOL_SOCKET, SO_REUSEPORT, CUPS_SOCAST &val, sizeof(val)))
+	DEBUG_printf(("httpAddrConnect: setsockopt(SO_REUSEPORT) failed - %s", strerror(errno)));
 #endif /* SO_REUSEPORT */
 
 #ifdef SO_NOSIGPIPE
       val = 1;
-      setsockopt(fds[nfds], SOL_SOCKET, SO_NOSIGPIPE, CUPS_SOCAST &val, sizeof(val));
+      if (setsockopt(fds[nfds], SOL_SOCKET, SO_NOSIGPIPE, CUPS_SOCAST &val, sizeof(val)))
+	DEBUG_printf(("httpAddrConnect: setsockopt(SO_NOSIGPIPE) failed - %s", strerror(errno)));
 #endif /* SO_NOSIGPIPE */
 
      /*
@@ -141,14 +144,16 @@ httpAddrConnect(
       */
 
       val = 1;
-      setsockopt(fds[nfds], IPPROTO_TCP, TCP_NODELAY, CUPS_SOCAST &val, sizeof(val));
+      if (setsockopt(fds[nfds], IPPROTO_TCP, TCP_NODELAY, CUPS_SOCAST &val, sizeof(val)))
+	DEBUG_printf(("httpAddrConnect: setsockopt(TCP_NODELAY) failed - %s", strerror(errno)));
 
 #ifdef FD_CLOEXEC
      /*
       * Close this socket when starting another process...
       */
 
-      fcntl(fds[nfds], F_SETFD, FD_CLOEXEC);
+      if (fcntl(fds[nfds], F_SETFD, FD_CLOEXEC))
+	DEBUG_printf(("httpAddrConnect: fcntl(F_SETFD, FD_CLOEXEC) failed - %s", strerror(errno)));
 #endif /* FD_CLOEXEC */
 
 #ifdef O_NONBLOCK
@@ -156,10 +161,11 @@ httpAddrConnect(
       * Do an asynchronous connect by setting the socket non-blocking...
       */
 
-      DEBUG_printf(("httpAddrConnect2: Setting non-blocking connect()"));
+      DEBUG_printf(("httpAddrConnect: Setting non-blocking connect()"));
 
       flags = fcntl(fds[nfds], F_GETFL, 0);
-      fcntl(fds[nfds], F_SETFL, flags | O_NONBLOCK);
+      if (fcntl(fds[nfds], F_SETFL, flags | O_NONBLOCK))
+	DEBUG_printf(("httpAddrConnect: fcntl(F_SETFL, O_NONBLOCK) failed - %s", strerror(errno)));
 #endif /* O_NONBLOCK */
 
      /*
@@ -168,10 +174,11 @@ httpAddrConnect(
 
       if (!connect(fds[nfds], &(addrlist->addr.addr), (socklen_t)httpAddrGetLength(&(addrlist->addr))))
       {
-	DEBUG_printf(("1httpAddrConnect2: Connected to %s:%d...", httpAddrGetString(&(addrlist->addr), temp, sizeof(temp)), httpAddrGetPort(&(addrlist->addr))));
+	DEBUG_printf(("1httpAddrConnect: Connected to %s:%d...", httpAddrGetString(&(addrlist->addr), temp, sizeof(temp)), httpAddrGetPort(&(addrlist->addr))));
 
 #ifdef O_NONBLOCK
-	fcntl(fds[nfds], F_SETFL, flags);
+	if (fcntl(fds[nfds], F_SETFL, flags))
+	  DEBUG_printf(("httpAddrConnect: fcntl(F_SETFL, 0) failed - %s", strerror(errno)));
 #endif /* O_NONBLOCK */
 
 	*sock = fds[nfds];
@@ -191,14 +198,15 @@ httpAddrConnect(
       if (errno != EINPROGRESS && errno != EWOULDBLOCK)
 #endif /* _WIN32 */
       {
-	DEBUG_printf(("1httpAddrConnect2: Unable to connect to %s:%d: %s", httpAddrGetString(&(addrlist->addr), temp, sizeof(temp)), httpAddrGetPort(&(addrlist->addr)), strerror(errno)));
+	DEBUG_printf(("1httpAddrConnect: Unable to connect to %s:%d: %s", httpAddrGetString(&(addrlist->addr), temp, sizeof(temp)), httpAddrGetPort(&(addrlist->addr)), strerror(errno)));
 	httpAddrClose(NULL, fds[nfds]);
 	addrlist = addrlist->next;
 	continue;
       }
 
 #ifndef _WIN32
-      fcntl(fds[nfds], F_SETFL, flags);
+      if (fcntl(fds[nfds], F_SETFL, flags))
+	DEBUG_printf(("httpAddrConnect: fcntl(F_SETFL, 0) failed - %s", strerror(errno)));
 #endif /* !_WIN32 */
 
       addrs[nfds] = addrlist;
@@ -221,7 +229,7 @@ httpAddrConnect(
     */
 
 #ifdef O_NONBLOCK
-    DEBUG_puts("1httpAddrConnect2: Finishing async connect()");
+    DEBUG_puts("1httpAddrConnect: Finishing async connect()");
 
     do
     {
@@ -231,7 +239,7 @@ httpAddrConnect(
 	* Close this socket and return...
 	*/
 
-	DEBUG_puts("1httpAddrConnect2: Canceled connect()");
+	DEBUG_puts("1httpAddrConnect: Canceled connect()");
 
 	while (nfds > 0)
 	{
@@ -252,7 +260,7 @@ httpAddrConnect(
 
       result = poll(pfds, (nfds_t)nfds, addrlist ? 100 : remaining > 250 ? 250 : remaining);
 
-      DEBUG_printf(("1httpAddrConnect2: poll() returned %d (%d)", result, errno));
+      DEBUG_printf(("1httpAddrConnect: poll() returned %d (%d)", result, errno));
     }
 #  ifdef _WIN32
     while (result < 0 && (WSAGetLastError() == WSAEINTR || WSAGetLastError() == WSAEWOULDBLOCK));
@@ -275,7 +283,7 @@ httpAddrConnect(
 #  ifdef DEBUG
 	  len   = sizeof(peer);
 	  if (!getpeername(fds[i], (struct sockaddr *)&peer, &len))
-	    DEBUG_printf(("1httpAddrConnect2: Connected to %s:%d...", httpAddrGetString(&peer, temp, sizeof(temp)), httpAddrGetPort(&peer)));
+	    DEBUG_printf(("1httpAddrConnect: Connected to %s:%d...", httpAddrGetString(&peer, temp, sizeof(temp)), httpAddrGetPort(&peer)));
 #  endif /* DEBUG */
 
           break;

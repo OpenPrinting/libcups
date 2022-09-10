@@ -1,20 +1,20 @@
-/*
- * IPP Everywhere printer application for CUPS.
- *
- * Copyright © 2021-2022 by OpenPrinting.
- * Copyright © 2020 by the IEEE-ISTO Printer Working Group.
- * Copyright © 2010-2021 by Apple Inc.
- *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more
- * information.
- *
- * Note: This program began life as the "ippserver" sample code that first
- * appeared in CUPS 1.4.  The name has been changed in order to distinguish it
- * from the PWG's much more ambitious "ippserver" program, which supports
- * different kinds of IPP services and multiple services per instance - the
- * "ippeveprinter" program exposes a single print service conforming to the
- * current IPP Everywhere specification, thus the new name.
- */
+//
+// IPP Everywhere printer application for CUPS.
+//
+// Copyright © 2021-2022 by OpenPrinting.
+// Copyright © 2020 by the IEEE-ISTO Printer Working Group.
+// Copyright © 2010-2021 by Apple Inc.
+//
+// Licensed under Apache License v2.0.  See the file "LICENSE" for more
+// information.
+//
+// Note: This program began life as the "ippserver" sample code that first
+// appeared in CUPS 1.4.  The name has been changed in order to distinguish it
+// from the PWG's much more ambitious "ippserver" program, which supports
+// different kinds of IPP services and multiple services per instance - the
+// "ippeveprinter" program exposes a single print service conforming to the
+// current IPP Everywhere specification, thus the new name.
+//
 
 #include <cups/cups-private.h>
 #include <cups/debug-private.h>
@@ -254,10 +254,10 @@ static void		finish_document_data(ippeve_client_t *client, ippeve_job_t *job);
 static void		finish_document_uri(ippeve_client_t *client, ippeve_job_t *job);
 static void		flush_document_data(ippeve_client_t *client);
 static int		have_document_data(ippeve_client_t *client);
-static void		html_escape(ippeve_client_t *client, const char *s, size_t slen);
-static void		html_footer(ippeve_client_t *client);
-static void		html_header(ippeve_client_t *client, const char *title, int refresh);
-static void		html_printf(ippeve_client_t *client, const char *format, ...) _CUPS_FORMAT(2, 3);
+static bool		html_escape(ippeve_client_t *client, const char *s, size_t slen);
+static bool		html_footer(ippeve_client_t *client);
+static bool		html_header(ippeve_client_t *client, const char *title, int refresh);
+static bool		html_printf(ippeve_client_t *client, const char *format, ...) _CUPS_FORMAT(2, 3);
 static void		ipp_cancel_job(ippeve_client_t *client);
 static void		ipp_cancel_my_jobs(ippeve_client_t *client);
 static void		ipp_close_job(ippeve_client_t *client);
@@ -2366,13 +2366,6 @@ finish_document_uri(
     goto abort_job;
   }
 
-  if (!strcmp(scheme, "file") && access(resource, R_OK))
-  {
-    respond_ipp(client, IPP_STATUS_ERROR_DOCUMENT_ACCESS, "Unable to access URI: %s", strerror(errno));
-
-    goto abort_job;
-  }
-
  /*
   * Get the document format for the job...
   */
@@ -2608,13 +2601,13 @@ have_document_data(
  * 'html_escape()' - Write a HTML-safe string.
  */
 
-static void
-html_escape(ippeve_client_t *client,	/* I - Client */
-	    const char    *s,		/* I - String to write */
-	    size_t        slen)		/* I - Number of characters to write */
+static bool				// O - `true` on success, `false` on error
+html_escape(ippeve_client_t *client,	// I - Client
+	    const char    *s,		// I - String to write
+	    size_t        slen)		// I - Number of characters to write
 {
-  const char	*start,			/* Start of segment */
-		*end;			/* End of string */
+  const char	*start,			// Start of segment
+		*end;			// End of string
 
 
   start = s;
@@ -2625,12 +2618,18 @@ html_escape(ippeve_client_t *client,	/* I - Client */
     if (*s == '&' || *s == '<')
     {
       if (s > start)
-        httpWrite(client->http, start, (size_t)(s - start));
+      {
+        if (httpWrite(client->http, start, (size_t)(s - start)) < 0)
+          return (false);
+      }
 
       if (*s == '&')
-        httpWrite(client->http, "&amp;", 5);
-      else
-        httpWrite(client->http, "&lt;", 4);
+      {
+        if (httpWrite(client->http, "&amp;", 5) < 0)
+          return (false);
+      }
+      else if (httpWrite(client->http, "&lt;", 4) < 0)
+        return (false);
 
       start = s + 1;
     }
@@ -2639,7 +2638,12 @@ html_escape(ippeve_client_t *client,	/* I - Client */
   }
 
   if (s > start)
-    httpWrite(client->http, start, (size_t)(s - start));
+  {
+    if (httpWrite(client->http, start, (size_t)(s - start)) < 0)
+      return (false);
+  }
+
+  return (true);
 }
 
 
@@ -2649,14 +2653,16 @@ html_escape(ippeve_client_t *client,	/* I - Client */
  * This function also writes the trailing 0-length chunk.
  */
 
-static void
-html_footer(ippeve_client_t *client)	/* I - Client */
+static bool				// O - `true` on success, `false` on error
+html_footer(ippeve_client_t *client)	// I - Client
 {
-  html_printf(client,
-	      "</div>\n"
-	      "</body>\n"
-	      "</html>\n");
-  httpWrite(client->http, "", 0);
+  if (!html_printf(client,
+		   "</div>\n"
+		   "</body>\n"
+		   "</html>\n"))
+    return (false);
+
+  return (httpWrite(client->http, "", 0) >= 0);
 }
 
 
@@ -2664,53 +2670,57 @@ html_footer(ippeve_client_t *client)	/* I - Client */
  * 'html_header()' - Show the web interface header and title.
  */
 
-static void
+static bool				// O - `true` on success, `false` on error
 html_header(ippeve_client_t *client,	/* I - Client */
             const char    *title,	/* I - Title */
             int           refresh)	/* I - Refresh timer, if any */
 {
-  html_printf(client,
-	      "<!doctype html>\n"
-	      "<html>\n"
-	      "<head>\n"
-	      "<title>%s</title>\n"
-	      "<link rel=\"shortcut icon\" href=\"/icon.png\" type=\"image/png\">\n"
-	      "<link rel=\"apple-touch-icon\" href=\"/icon.png\" type=\"image/png\">\n"
-	      "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=9\">\n", title);
+  bool ret = true;			// Return value
+
+  ret &= html_printf(client,
+		     "<!doctype html>\n"
+		     "<html>\n"
+		     "<head>\n"
+		     "<title>%s</title>\n"
+		     "<link rel=\"shortcut icon\" href=\"/icon.png\" type=\"image/png\">\n"
+		     "<link rel=\"apple-touch-icon\" href=\"/icon.png\" type=\"image/png\">\n"
+		     "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=9\">\n", title);
   if (refresh > 0)
-    html_printf(client, "<meta http-equiv=\"refresh\" content=\"%d\">\n", refresh);
-  html_printf(client,
-	      "<meta name=\"viewport\" content=\"width=device-width\">\n"
-	      "<style>\n"
-	      "body { font-family: sans-serif; margin: 0; }\n"
-	      "div.body { padding: 0px 10px 10px; }\n"
-	      "span.badge { background: #090; border-radius: 5px; color: #fff; padding: 5px 10px; }\n"
-	      "span.bar { box-shadow: 0px 1px 5px #333; font-size: 75%%; }\n"
-	      "table.form { border-collapse: collapse; margin-left: auto; margin-right: auto; margin-top: 10px; width: auto; }\n"
-	      "table.form td, table.form th { padding: 5px 2px; }\n"
-	      "table.form td.meter { border-right: solid 1px #ccc; padding: 0px; width: 400px; }\n"
-	      "table.form th { text-align: right; }\n"
-	      "table.striped { border-bottom: solid thin black; border-collapse: collapse; width: 100%%; }\n"
-	      "table.striped tr:nth-child(even) { background: #fcfcfc; }\n"
-	      "table.striped tr:nth-child(odd) { background: #f0f0f0; }\n"
-	      "table.striped th { background: white; border-bottom: solid thin black; text-align: left; vertical-align: bottom; }\n"
-	      "table.striped td { margin: 0; padding: 5px; vertical-align: top; }\n"
-	      "table.nav { border-collapse: collapse; width: 100%%; }\n"
-	      "table.nav td { margin: 0; text-align: center; }\n"
-	      "td.nav a, td.nav a:active, td.nav a:hover, td.nav a:hover:link, td.nav a:hover:link:visited, td.nav a:link, td.nav a:link:visited, td.nav a:visited { background: inherit; color: inherit; font-size: 80%%; text-decoration: none; }\n"
-	      "td.nav { background: #333; color: #fff; padding: 4px 8px; width: 33%%; }\n"
-	      "td.nav.sel { background: #fff; color: #000; font-weight: bold; }\n"
-	      "td.nav:hover { background: #666; color: #fff; }\n"
-	      "td.nav:active { background: #000; color: #ff0; }\n"
-	      "</style>\n"
-	      "</head>\n"
-	      "<body>\n"
-	      "<table class=\"nav\"><tr>"
-	      "<td class=\"nav%s\"><a href=\"/\">Status</a></td>"
-	      "<td class=\"nav%s\"><a href=\"/supplies\">Supplies</a></td>"
-	      "<td class=\"nav%s\"><a href=\"/media\">Media</a></td>"
-	      "</tr></table>\n"
-	      "<div class=\"body\">\n", !strcmp(client->uri, "/") ? " sel" : "", !strcmp(client->uri, "/supplies") ? " sel" : "", !strcmp(client->uri, "/media") ? " sel" : "");
+    ret &= html_printf(client, "<meta http-equiv=\"refresh\" content=\"%d\">\n", refresh);
+  ret &= html_printf(client,
+		     "<meta name=\"viewport\" content=\"width=device-width\">\n"
+		     "<style>\n"
+		     "body { font-family: sans-serif; margin: 0; }\n"
+		     "div.body { padding: 0px 10px 10px; }\n"
+		     "span.badge { background: #090; border-radius: 5px; color: #fff; padding: 5px 10px; }\n"
+		     "span.bar { box-shadow: 0px 1px 5px #333; font-size: 75%%; }\n"
+		     "table.form { border-collapse: collapse; margin-left: auto; margin-right: auto; margin-top: 10px; width: auto; }\n"
+		     "table.form td, table.form th { padding: 5px 2px; }\n"
+		     "table.form td.meter { border-right: solid 1px #ccc; padding: 0px; width: 400px; }\n"
+		     "table.form th { text-align: right; }\n"
+		     "table.striped { border-bottom: solid thin black; border-collapse: collapse; width: 100%%; }\n"
+		     "table.striped tr:nth-child(even) { background: #fcfcfc; }\n"
+		     "table.striped tr:nth-child(odd) { background: #f0f0f0; }\n"
+		     "table.striped th { background: white; border-bottom: solid thin black; text-align: left; vertical-align: bottom; }\n"
+		     "table.striped td { margin: 0; padding: 5px; vertical-align: top; }\n"
+		     "table.nav { border-collapse: collapse; width: 100%%; }\n"
+		     "table.nav td { margin: 0; text-align: center; }\n"
+		     "td.nav a, td.nav a:active, td.nav a:hover, td.nav a:hover:link, td.nav a:hover:link:visited, td.nav a:link, td.nav a:link:visited, td.nav a:visited { background: inherit; color: inherit; font-size: 80%%; text-decoration: none; }\n"
+		     "td.nav { background: #333; color: #fff; padding: 4px 8px; width: 33%%; }\n"
+		     "td.nav.sel { background: #fff; color: #000; font-weight: bold; }\n"
+		     "td.nav:hover { background: #666; color: #fff; }\n"
+		     "td.nav:active { background: #000; color: #ff0; }\n"
+		     "</style>\n"
+		     "</head>\n"
+		     "<body>\n"
+		     "<table class=\"nav\"><tr>"
+		     "<td class=\"nav%s\"><a href=\"/\">Status</a></td>"
+		     "<td class=\"nav%s\"><a href=\"/supplies\">Supplies</a></td>"
+		     "<td class=\"nav%s\"><a href=\"/media\">Media</a></td>"
+		     "</tr></table>\n"
+		     "<div class=\"body\">\n", !strcmp(client->uri, "/") ? " sel" : "", !strcmp(client->uri, "/supplies") ? " sel" : "", !strcmp(client->uri, "/media") ? " sel" : "");
+
+  return (ret);
 }
 
 
@@ -2718,11 +2728,12 @@ html_header(ippeve_client_t *client,	/* I - Client */
  * 'html_printf()' - Send formatted text to the client, quoting as needed.
  */
 
-static void
+static bool				// O - `true` on success, `false` on error
 html_printf(ippeve_client_t *client,	/* I - Client */
 	    const char      *format,	/* I - Printf-style format string */
 	    ...)			/* I - Additional arguments as needed */
 {
+  bool		ret = false;		// Return value
   va_list	ap;			/* Pointer to arguments */
   const char	*start;			/* Start of string */
   char		size,			/* Size character (h, l, L) */
@@ -2940,9 +2951,13 @@ html_printf(ippeve_client_t *client,	/* I - Client */
       goto error;
   }
 
+  ret = true;
+
   error:
 
   va_end(ap);
+
+  return (ret);
 }
 
 
@@ -5214,9 +5229,14 @@ process_http(ippeve_client_t *client)	/* I - Client connection */
 	    char	buffer[4096];	/* Copy buffer */
 	    ssize_t	bytes;		/* Bytes */
 
-	    if (!stat(client->printer->strings, &fileinfo) && (fd = open(client->printer->strings, O_RDONLY | O_BINARY)) >= 0)
+	    if ((fd = open(client->printer->strings, O_RDONLY | O_BINARY)) >= 0)
 	    {
-	      if (!respond_http(client, HTTP_STATUS_OK, NULL, "text/strings", (size_t)fileinfo.st_size))
+	      if (fstat(fd, &fileinfo))
+	      {
+		close(fd);
+		return (0);
+	      }
+	      else if (!respond_http(client, HTTP_STATUS_OK, NULL, "text/strings", (size_t)fileinfo.st_size))
 	      {
 		close(fd);
 		return (0);
@@ -5248,9 +5268,14 @@ process_http(ippeve_client_t *client)	/* I - Client connection */
 	    char	buffer[4096];	/* Copy buffer */
 	    ssize_t	bytes;		/* Bytes */
 
-	    if (!stat(client->printer->icons[1], &fileinfo) && (fd = open(client->printer->icons[1], O_RDONLY | O_BINARY)) >= 0)
+	    if ((fd = open(client->printer->icons[1], O_RDONLY | O_BINARY)) >= 0)
 	    {
-	      if (!respond_http(client, HTTP_STATUS_OK, NULL, "image/png", (size_t)fileinfo.st_size))
+	      if (fstat(fd, &fileinfo))
+	      {
+		close(fd);
+		return (0);
+	      }
+	      else if (!respond_http(client, HTTP_STATUS_OK, NULL, "image/png", (size_t)fileinfo.st_size))
 	      {
 		close(fd);
 		return (0);
@@ -5290,9 +5315,14 @@ process_http(ippeve_client_t *client)	/* I - Client connection */
 	    char	buffer[4096];	/* Copy buffer */
 	    ssize_t	bytes;		/* Bytes */
 
-	    if (!stat(client->printer->icons[2], &fileinfo) && (fd = open(client->printer->icons[2], O_RDONLY | O_BINARY)) >= 0)
+	    if ((fd = open(client->printer->icons[2], O_RDONLY | O_BINARY)) >= 0)
 	    {
-	      if (!respond_http(client, HTTP_STATUS_OK, NULL, "image/png", (size_t)fileinfo.st_size))
+	      if (fstat(fd, &fileinfo))
+	      {
+		close(fd);
+		return (0);
+	      }
+	      else if (!respond_http(client, HTTP_STATUS_OK, NULL, "image/png", (size_t)fileinfo.st_size))
 	      {
 		close(fd);
 		return (0);
@@ -5332,9 +5362,14 @@ process_http(ippeve_client_t *client)	/* I - Client connection */
 	    char	buffer[4096];	/* Copy buffer */
 	    ssize_t	bytes;		/* Bytes */
 
-	    if (!stat(client->printer->icons[0], &fileinfo) && (fd = open(client->printer->icons[0], O_RDONLY | O_BINARY)) >= 0)
+	    if ((fd = open(client->printer->icons[0], O_RDONLY | O_BINARY)) >= 0)
 	    {
-	      if (!respond_http(client, HTTP_STATUS_OK, NULL, "image/png", (size_t)fileinfo.st_size))
+	      if (fstat(fd, &fileinfo))
+	      {
+		close(fd);
+		return (0);
+	      }
+	      else if (!respond_http(client, HTTP_STATUS_OK, NULL, "image/png", (size_t)fileinfo.st_size))
 	      {
 		close(fd);
 		return (0);
@@ -5984,14 +6019,20 @@ process_job(ippeve_job_t *job)		/* I - Job */
       * Child comes here...
       */
 
-      close(1);
-      dup2(mystdout, 1);
-      close(mystdout);
+      if (mystdout >= 0)
+      {
+        close(1);
+        dup2(mystdout, 1);
+        close(mystdout);
+      }
 
-      close(2);
-      dup2(mypipe[1], 2);
-      close(mypipe[0]);
-      close(mypipe[1]);
+      if (mypipe[1] >= 0)
+      {
+        close(2);
+	dup2(mypipe[1], 2);
+	close(mypipe[0]);
+	close(mypipe[1]);
+      }
 
       execve(job->printer->command, myargv, myenvp);
       exit(errno);
@@ -6388,10 +6429,10 @@ register_printer(
 
   cupsDNSSDServiceDelete(printer->services);
   if ((printer->services = cupsDNSSDServiceNew(printer->dnssd, if_index, printer->dnssd_name, (cups_dnssd_service_cb_t)dnssd_callback, printer)) == NULL)
-    return (false);
+    goto error;
 
   if (!cupsDNSSDServiceAdd(printer->services, "_printer._tcp", /*domain*/NULL, printer->hostname, /*port*/0, /*num_txt*/0, /*txt*/NULL))
-    return (false);
+    goto error;
 
  /*
   * Then register the _ipp._tcp (IPP) service type with the real port number to
@@ -6404,7 +6445,7 @@ register_printer(
     cupsCopyString(regtype, "_ipp._tcp", sizeof(regtype));
 
   if (!cupsDNSSDServiceAdd(printer->services, regtype, /*domain*/NULL, printer->hostname, (uint16_t)printer->port, num_txt, txt))
-    return (false);
+    goto error;
 
  /*
   * Then register the _ipps._tcp (IPP) service type with the real port number to
@@ -6417,7 +6458,7 @@ register_printer(
     cupsCopyString(regtype, "_ipps._tcp", sizeof(regtype));
 
   if (!cupsDNSSDServiceAdd(printer->services, regtype, /*domain*/NULL, printer->hostname, (uint16_t)printer->port, num_txt, txt))
-    return (false);
+    goto error;
 
  /*
   * Similarly, register the _http._tcp,_printer (HTTP) service type with the
@@ -6425,7 +6466,7 @@ register_printer(
   */
 
   if (!cupsDNSSDServiceAdd(printer->services, "_http._tcp,_printer", /*domain*/NULL, printer->hostname, (uint16_t)printer->port, num_txt, txt))
-    return (false);
+    goto error;
 
   cupsFreeOptions(num_txt, txt);
 
@@ -6434,6 +6475,12 @@ register_printer(
   */
 
   return (cupsDNSSDServicePublish(printer->services));
+
+  // If we get here there was a problem...
+  error:
+
+  cupsFreeOptions(num_txt, txt);
+  return (false);
 }
 
 

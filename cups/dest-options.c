@@ -265,6 +265,13 @@ cupsCheckDestSupported(
           if (map && map->value_tag == IPP_TAG_STRING)
             return (strlen(value) <= (size_t)attr->values[0].integer);
 
+          int_value = atoi(value);
+
+          for (i = 0; i < attr->num_values; i ++)
+            if (attr->values[i].integer == int_value)
+              return (true);
+          break;
+
       case IPP_TAG_ENUM :
           int_value = atoi(value);
 

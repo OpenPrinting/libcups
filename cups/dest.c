@@ -1586,6 +1586,8 @@ cupsGetNamedDest(http_t     *http,	/* I - Connection to server or @code CUPS_HTT
 
 #if _WIN32
       snprintf(filename, sizeof(filename), "%s/AppData/Local/cups/lpoptions", cg->home);
+#elif defined(__APPLE__)
+      snprintf(filename, sizeof(filename), "%s/Library/Application Support/cups/lpoptions", cg->home);
 #else
       snprintf(filename, sizeof(filename), "%s/.cups/lpoptions", cg->home);
 #endif // _WIN32
@@ -1665,8 +1667,8 @@ cupsGetNamedDest(http_t     *http,	/* I - Connection to server or @code CUPS_HTT
               _cupsSetError(IPP_STATUS_ERROR_NOT_FOUND, _("No default destination."), 1);
             break;
 
-        case 2 : /* Set from ~/.cups/lpoptions */
-	    _cupsSetError(IPP_STATUS_ERROR_NOT_FOUND, _("~/.cups/lpoptions file names default destination that does not exist."), 1);
+        case 2 : /* Set from ~/.../lpoptions */
+	    _cupsSetError(IPP_STATUS_ERROR_NOT_FOUND, _("~/.../lpoptions file names default destination that does not exist."), 1);
             break;
 
         case 3 : /* Set from /etc/cups/lpoptions */
@@ -1701,6 +1703,8 @@ cupsGetNamedDest(http_t     *http,	/* I - Connection to server or @code CUPS_HTT
   {
 #if _WIN32
     snprintf(filename, sizeof(filename), "%s/AppData/Local/cups/lpoptions", cg->home);
+#elif defined(__APPLE__)
+    snprintf(filename, sizeof(filename), "%s/Library/Application Support/cups/lpoptions", cg->home);
 #else
     snprintf(filename, sizeof(filename), "%s/.cups/lpoptions", cg->home);
 #endif // _WIN32
@@ -1804,9 +1808,7 @@ cupsSetDefaultDest(
  * 'cupsSetDests()' - Save the list of destinations for the specified server.
  *
  * This function saves the destinations to /etc/cups/lpoptions when run
- * as root and ~/.cups/lpoptions when run as a normal user.
- *
- *
+ * as root and ~/.../lpoptions when run as a normal user.
  */
 
 bool					/* O - `true` on success, `false` on error */
@@ -1861,20 +1863,21 @@ cupsSetDests(http_t      *http,		/* I - Connection to server or @code CUPS_HTTP_
 
 #if _WIN32
     snprintf(filename, sizeof(filename), "%s/AppData/Local/cups", cg->home);
+#elif defined(__APPLE__)
+    snprintf(filename, sizeof(filename), "%s/Library/Application Support/cups", cg->home);
 #else
     snprintf(filename, sizeof(filename), "%s/.cups", cg->home);
 #endif // _WIN32
-    if (access(filename, 0))
+    if (mkdir(filename, 0700) && errno != EEXIST)
     {
-      if (mkdir(filename, 0700) && errno != EEXIST)
-      {
-	cupsFreeDests(num_temps, temps);
-        return (false);
-      }
+      cupsFreeDests(num_temps, temps);
+      return (false);
     }
 
 #if _WIN32
     snprintf(filename, sizeof(filename), "%s/AppData/Local/cups/lpoptions", cg->home);
+#elif defined(__APPLE__)
+    snprintf(filename, sizeof(filename), "%s/Library/Application Support/cups/lpoptions", cg->home);
 #else
     snprintf(filename, sizeof(filename), "%s/.cups/lpoptions", cg->home);
 #endif // _WIN32
@@ -3020,6 +3023,8 @@ cups_enum_dests(
   {
 #if _WIN32
     snprintf(filename, sizeof(filename), "%s/AppData/Local/cups/lpoptions", cg->home);
+#elif defined(__APPLE__)
+    snprintf(filename, sizeof(filename), "%s/Library/Application Support/cups/lpoptions", cg->home);
 #else
     snprintf(filename, sizeof(filename), "%s/.cups/lpoptions", cg->home);
 #endif // _WIN32
