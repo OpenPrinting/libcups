@@ -4357,13 +4357,16 @@ http_write(http_t     *http,		// I - HTTP connection
 	pfd.fd     = http->fd;
 	pfd.events = POLLOUT;
 
-	while ((nfds = poll(&pfd, 1, http->wait_value)) < 0 &&
+	while ((nfds = poll(&pfd, 1, http->wait_value)) < 0)
+	{
 #ifdef _WIN32
-               (WSAGetLastError() == WSAEINTR || WSAGetLastError() == WSAEWOULDBLOCK))
+          if (WSAGetLastError() == WSAEINTR || WSAGetLastError() == WSAEWOULDBLOCK)
+            break;
 #else
-	       (errno == EINTR || errno == EAGAIN))
+	  if (errno == EINTR || errno == EAGAIN)
+	    break;
 #endif // _WIN32
-	  // do nothing;
+        }
 
         if (nfds < 0)
 	{

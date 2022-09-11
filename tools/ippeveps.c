@@ -586,6 +586,9 @@ jpeg_to_ps(const char    *filename,	/* I - Filename */
 
   dsc_trailer(0);
 
+  if (filename)
+    close(fd);
+
   return (0);
 }
 
