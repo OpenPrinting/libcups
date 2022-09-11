@@ -1406,9 +1406,9 @@ http_default_path(
     snprintf(buffer, bufsize, "%s/.cups", cg->home);
 #endif // __APPLE__
 
-    if (mkdir(buffer, 0755) )
+    if (mkdir(buffer, 0755) && errno != EEXIST)
     {
-      DEBUG_printf(("1http_default_path: Failed to make directory: %s", strerror(errno)));
+      DEBUG_printf(("1http_default_path: Failed to make directory '%s': %s", buffer, strerror(errno)));
       return (NULL);
     }
 
@@ -1420,7 +1420,7 @@ http_default_path(
 
     if (mkdir(buffer, 0700) && errno != EEXIST)
     {
-      DEBUG_printf(("1http_default_path: Failed to make directory: %s", strerror(errno)));
+      DEBUG_printf(("1http_default_path: Failed to make directory '%s': %s", buffer, strerror(errno)));
       return (NULL);
     }
   }
