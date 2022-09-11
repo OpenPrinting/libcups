@@ -165,6 +165,7 @@ static cups_dnssd_flags_t mdns_to_cups(DNSServiceFlags flags, DNSServiceErrorTyp
 #else // HAVE_AVAHI
 static void		avahi_browse_cb(AvahiServiceBrowser *browser, AvahiIfIndex if_index, AvahiProtocol protocol, AvahiBrowserEvent event, const char *name, const char *type, const char *domain, AvahiLookupResultFlags flags, cups_dnssd_browse_t *browse);
 static void		avahi_client_cb(AvahiClient *c, AvahiClientState state, cups_dnssd_t *dnssd);
+static AvahiIfIndex	avahi_if_index(uint32_t if_index);
 static void		*avahi_monitor(cups_dnssd_t *dnssd);
 static void		avahi_query_cb(AvahiRecordBrowser *browser, AvahiIfIndex if_index, AvahiProtocol protocol, AvahiBrowserEvent event, const char *fullName, uint16_t rrclass, uint16_t rrtype, const void *rdata, size_t rdlen, AvahiLookupResultFlags flags, cups_dnssd_query_t *query);
 static void		avahi_resolve_cb(AvahiServiceResolver *resolver, AvahiIfIndex if_index, AvahiProtocol protocol, AvahiResolverEvent event, const char *name, const char *type, const char *domain, const char *host_name, const AvahiAddress *address, uint16_t port, AvahiStringList *txtrec, AvahiLookupResultFlags flags, cups_dnssd_resolve_t *resolve);
@@ -723,7 +724,7 @@ cupsDNSSDBrowseNew(
 #elif _WIN32
 
 #else // HAVE_AVAHI
-  browse->browser = avahi_service_browser_new(dnssd->client, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, types, NULL, 0, (AvahiServiceBrowserCallback)avahi_browse_cb, browse);
+  browse->browser = avahi_service_browser_new(dnssd->client, avahi_if_index(if_index), AVAHI_PROTO_UNSPEC, types, NULL, 0, (AvahiServiceBrowserCallback)avahi_browse_cb, browse);
 
   if (!browse->browser)
   {
@@ -856,7 +857,7 @@ cupsDNSSDQueryNew(
 #elif _WIN32
 
 #else // HAVE_AVAHI
-  query->browser = avahi_record_browser_new(dnssd->client, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, fullname, AVAHI_DNS_CLASS_IN, rrtype, 0, (AvahiRecordBrowserCallback)avahi_query_cb, query);
+  query->browser = avahi_record_browser_new(dnssd->client, avahi_if_index(if_index), AVAHI_PROTO_UNSPEC, fullname, AVAHI_DNS_CLASS_IN, rrtype, 0, (AvahiRecordBrowserCallback)avahi_query_cb, query);
 
   if (!query->browser)
   {
@@ -949,6 +950,8 @@ cupsDNSSDResolveNew(
   cups_dnssd_resolve_t	*resolve;	// Resolve request
 
 
+  DEBUG_printf(("cupsDNSSDResolveNew(dnssd=%p, if_index=%u, name=\"%s\", type=\"%s\", domain=\"%s\", resolve_cb=%p, cb_data=%p)", (void *)dnssd, (unsigned)if_index, name, type, domain, (void *)resolve_cb, cb_data));
+
   // Range check input...
   if (!dnssd || !name || !type || !resolve_cb)
     return (NULL);
@@ -990,7 +993,7 @@ cupsDNSSDResolveNew(
 #elif _WIN32
 
 #else // HAVE_AVAHI
-  resolve->resolver = avahi_service_resolver_new(dnssd->client, if_index, AVAHI_PROTO_UNSPEC, name, type, domain, AVAHI_PROTO_UNSPEC, /*flags*/0, (AvahiServiceResolverCallback)avahi_resolve_cb, resolve);
+  resolve->resolver = avahi_service_resolver_new(dnssd->client, avahi_if_index(if_index), AVAHI_PROTO_UNSPEC, name, type, domain, AVAHI_PROTO_UNSPEC, /*flags*/0, (AvahiServiceResolverCallback)avahi_resolve_cb, resolve);
 
   if (!resolve->resolver)
   {
@@ -1114,7 +1117,7 @@ cupsDNSSDServiceAdd(
     *subtypes++ = '\0';
 
   // Add the service entry...
-  if ((error = avahi_entry_group_add_service_strlst(service->group, service->if_index, AVAHI_PROTO_UNSPEC, /*flags*/0, service->name, regtype, domain, host, port, txtrec)) < 0)
+  if ((error = avahi_entry_group_add_service_strlst(service->group, avahi_if_index(service->if_index), AVAHI_PROTO_UNSPEC, /*flags*/0, service->name, regtype, domain, host, port, txtrec)) < 0)
   {
     report_error(service->dnssd, "Unable to register '%s.%s': %s", service->name, regtype, avahi_strerror(error));
     ret = false;
@@ -1124,6 +1127,8 @@ cupsDNSSDServiceAdd(
     char	subtype[256];		// Subtype string
     char 	*start, *end;		// Pointers into sub-types...
 
+    DEBUG_printf(("cupsDNSSDServiceAdd: Registered '%s.%s.%s'.", service->name, regtype, domain));
+
     for (start = subtypes; ret && start && *start; start = end)
     {
       if ((end = strchr(start, ',')) != NULL)
@@ -1132,11 +1137,13 @@ cupsDNSSDServiceAdd(
 	end = start + strlen(start);
 
       snprintf(subtype, sizeof(subtype), "%s._sub.%s", start, regtype);
-      if ((error = avahi_entry_group_add_service_subtype(service->group, service->if_index, AVAHI_PROTO_UNSPEC, /*flags*/0, service->name, regtype, domain, subtype)) < 0)
+      if ((error = avahi_entry_group_add_service_subtype(service->group, avahi_if_index(service->if_index), AVAHI_PROTO_UNSPEC, /*flags*/0, service->name, regtype, domain, subtype)) < 0)
       {
         report_error(service->dnssd, "Unable to register '%s.%s': %s", service->name, subtype, avahi_strerror(error));
         ret = false;
       }
+
+      DEBUG_printf(("cupsDNSSDServiceAdd: Registered '%s.%s.%s'.", service->name, subtype, domain));
     }
   }
 
@@ -1301,6 +1308,7 @@ cupsDNSSDServicePublish(
   (void)service;
 #else // HAVE_AVAHI
   avahi_entry_group_commit(service->group);
+  avahi_simple_poll_wakeup(service->dnssd->poll);
 #endif // _WIN32
 
   DEBUG_printf(("2cupsDNSSDServicePublish: Returning %s.", ret ? "true" : "false"));
@@ -1405,7 +1413,7 @@ cupsDNSSDServiceSetLocation(
   // Add LOC record now...
   int error;				// Error code
 
-  if ((error = avahi_entry_group_add_record(service->group, service->if_index, AVAHI_PROTO_UNSPEC, /*flags*/0, service->name, AVAHI_DNS_CLASS_IN, AVAHI_DNS_TYPE_LOC, /*ttl*/75 * 60, service->loc, sizeof(service->loc))) < 0)
+  if ((error = avahi_entry_group_add_record(service->group, avahi_if_index(service->if_index), AVAHI_PROTO_UNSPEC, /*flags*/0, service->name, AVAHI_DNS_CLASS_IN, AVAHI_DNS_TYPE_LOC, /*ttl*/75 * 60, service->loc, sizeof(service->loc))) < 0)
   {
     report_error(service->dnssd, "Unable to register LOC record for '%s': %s", service->name, avahi_strerror(error));
     ret = false;
@@ -1904,7 +1912,7 @@ avahi_browse_cb(
         return;
   }
 
-  (browse->cb)(browse, browse->cb_data, cups_flags, if_index, name, type, domain);
+  (browse->cb)(browse, browse->cb_data, cups_flags, (uint32_t)if_index, name, type, domain);
 }
 
 
@@ -1932,6 +1940,22 @@ avahi_client_cb(
   {
     record_config_change(dnssd, CUPS_DNSSD_FLAGS_HOST_CHANGE);
   }
+}
+
+
+//
+// 'avahi_if_index()' - Convert the DNS-SD interface index to an Avahi interface index.
+//
+
+static AvahiIfIndex			// O - Avahi interface index
+avahi_if_index(uint32_t if_index)	// I - DNS-SD interface index
+{
+  if (if_index == CUPS_DNSSD_IF_INDEX_ANY)
+    return (AVAHI_IF_UNSPEC);
+  else if (if_index == CUPS_DNSSD_IF_INDEX_LOCAL)
+    return (0);
+  else
+    return ((int)if_index);
 }
 
 
@@ -1970,7 +1994,7 @@ avahi_query_cb(
   (void)protocol;
   (void)rrclass;
 
-  (query->cb)(query, query->cb_data, event == AVAHI_BROWSER_NEW ? CUPS_DNSSD_FLAGS_NONE : CUPS_DNSSD_FLAGS_ERROR, if_index, fullname, rrtype, rdata, rdlen);
+  (query->cb)(query, query->cb_data, event == AVAHI_BROWSER_NEW ? CUPS_DNSSD_FLAGS_NONE : CUPS_DNSSD_FLAGS_ERROR, (uint32_t)if_index, fullname, rrtype, rdata, rdlen);
 }
 
 
@@ -2000,6 +2024,8 @@ avahi_resolve_cb(
   char		fullname[1024];		// Full service name
 
 
+  DEBUG_printf(("avahi_resolve_cb(resolver=%p, if_index=%d, protocol=%d, event=%d, name=\"%s\", type=\"%s\", domain=\"%s\", host=\"%s\", address=%p, port=%u, txtrec=%p, flags=%u, resolve=%p)", (void *)resolver, if_index, protocol, event, name, type, domain, host, (void *)address, (unsigned)port, (void *)txtrec, (unsigned)flags, (void *)resolve));
+
   if (!resolver)
     return;
 
@@ -2025,7 +2051,7 @@ avahi_resolve_cb(
   cupsDNSSDAssembleFullName(fullname, sizeof(fullname), name, type, domain);
 
   // Do the resolve callback and free the TXT record stuff...
-  (resolve->cb)(resolve, resolve->cb_data, event == AVAHI_RESOLVER_FOUND ? CUPS_DNSSD_FLAGS_NONE : CUPS_DNSSD_FLAGS_ERROR, if_index, fullname, host, ntohs(port), num_txt, txt);
+  (resolve->cb)(resolve, resolve->cb_data, event == AVAHI_RESOLVER_FOUND ? CUPS_DNSSD_FLAGS_NONE : CUPS_DNSSD_FLAGS_ERROR, (uint32_t)if_index, fullname, host, ntohs(port), num_txt, txt);
 
   cupsFreeOptions(num_txt, txt);
 }

@@ -20,7 +20,8 @@ typedef struct testdata_s		// Test data structure
 {
   cups_mutex_t	mutex;			// Mutex for access
   cups_array_t	*messages;		// Messages from callbacks
-  size_t	browse_count;		// Number of browse callbacks
+  size_t	browse_dnssd_count;	// Number of testdnssd browse callbacks
+  size_t	browse_ipp_count;	// Number of IPP browse callbacks
   size_t	error_count;		// Number of error callbacks
   size_t	query_count;		// Number of query callbacks
   size_t	resolve_count;		// Number of resolve callbacks
@@ -87,8 +88,8 @@ main(int  argc,				// I - Number of command-line arguments
     testBegin("cupsDNSSDBrowseGetContext");
     testEnd(cupsDNSSDBrowseGetContext(browse) == dnssd);
 
-    testBegin("cupsDNSSDBrowseNew(_http._tcp)");
-    if ((browse = cupsDNSSDBrowseNew(dnssd, CUPS_DNSSD_IF_INDEX_ANY, "_http._tcp", NULL, browse_cb, &testdata)) != NULL)
+    testBegin("cupsDNSSDBrowseNew(_testdnssd._tcp)");
+    if ((browse = cupsDNSSDBrowseNew(dnssd, CUPS_DNSSD_IF_INDEX_ANY, "_testdnssd._tcp", NULL, browse_cb, &testdata)) != NULL)
     {
       testEnd(true);
     }
@@ -136,6 +137,17 @@ main(int  argc,				// I - Number of command-line arguments
       goto done;
     }
 
+    testBegin("cupsDNSSDServiceAdd(_testdnssd._tcp)");
+    if (cupsDNSSDServiceAdd(service, "_testdnssd._tcp", /*host*/NULL, /*domain*/NULL, 631, num_txt, txt))
+    {
+      testEnd(true);
+    }
+    else
+    {
+      ret = 1;
+      goto done;
+    }
+
     testBegin("cupsDNSSDServicePublish");
     testEnd(cupsDNSSDServicePublish(service));
 
@@ -162,7 +174,7 @@ main(int  argc,				// I - Number of command-line arguments
 
     for (i = 0; i < 30; i ++)
     {
-      if (testdata.service_count != 0 && testdata.browse_count != 0 && testdata.resolve_count != 0)
+      if (testdata.service_count != 0 && testdata.browse_dnssd_count != 0 && testdata.browse_ipp_count != 0 && testdata.resolve_count != 0)
         break;
 
       testProgress();
@@ -220,7 +232,10 @@ browse_cb(
 
   cupsMutexLock(&data->mutex);
   cupsArrayAdd(data->messages, message);
-  data->browse_count ++;
+  if (!strncmp(regtype, "_ipp.", 5))
+    data->browse_ipp_count ++;
+  else if (!strncmp(regtype, "_testdnssd.", 11))
+    data->browse_dnssd_count ++;
   cupsMutexUnlock(&data->mutex);
 }
 
