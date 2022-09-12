@@ -23,6 +23,7 @@ libcups v3.0b1 (Month DD, YYYY)
 - Added, modernized, and promoted the localization interfaces to public API
   (Issue #24)
 - Updated the CUPS API for consistency.
+- Fixed ipptool's support for octetString values (Issue #23)
 - Removed all obsolete/deprecated CUPS 2.x APIs.
 - Removed (obsolete) Kerberos support.
 - Removed support for SecureTransport (macOS) due to deprecation of the platform

@@ -1749,7 +1749,7 @@ parse_value(ipp_file_t      *file,	// I  - IPP data file
           valueptr = value + 1;
           tempptr  = temp;
 
-          while (*valueptr && *valueptr != '>')
+          while (*valueptr && *valueptr != '>' && tempptr < (temp + sizeof(temp)))
           {
 	    if (!isxdigit(valueptr[0] & 255) || !isxdigit(valueptr[1] & 255))
 	    {
@@ -1768,7 +1768,18 @@ parse_value(ipp_file_t      *file,	// I  - IPP data file
               *tempptr |= (tolower(valueptr[1]) - 'a' + 10);
 
             tempptr ++;
+            valueptr += 2;
           }
+
+	  if (*valueptr != '>')
+	  {
+	    if (*valueptr)
+	      report_error(file, "octetString value too long on line %d of '%s'.", file->linenum, file->filename);
+	    else
+	      report_error(file, "Bad octetString value on line %d of '%s'.", file->linenum, file->filename);
+
+	    return (false);
+	  }
 
           return (ippSetOctetString(ipp, attr, element, temp, (size_t)(tempptr - temp)));
         }
