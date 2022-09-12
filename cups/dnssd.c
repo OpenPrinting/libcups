@@ -167,6 +167,7 @@ static void		avahi_browse_cb(AvahiServiceBrowser *browser, AvahiIfIndex if_index
 static void		avahi_client_cb(AvahiClient *c, AvahiClientState state, cups_dnssd_t *dnssd);
 static AvahiIfIndex	avahi_if_index(uint32_t if_index);
 static void		*avahi_monitor(cups_dnssd_t *dnssd);
+static int		avahi_poll_cb(struct pollfd *ufds, unsigned int nfds, int timeout, cups_dnssd_t *dnssd);
 static void		avahi_query_cb(AvahiRecordBrowser *browser, AvahiIfIndex if_index, AvahiProtocol protocol, AvahiBrowserEvent event, const char *fullName, uint16_t rrclass, uint16_t rrtype, const void *rdata, size_t rdlen, AvahiLookupResultFlags flags, cups_dnssd_query_t *query);
 static void		avahi_resolve_cb(AvahiServiceResolver *resolver, AvahiIfIndex if_index, AvahiProtocol protocol, AvahiResolverEvent event, const char *name, const char *type, const char *domain, const char *host_name, const AvahiAddress *address, uint16_t port, AvahiStringList *txtrec, AvahiLookupResultFlags flags, cups_dnssd_resolve_t *resolve);
 static void		avahi_service_cb(AvahiEntryGroup *srv, AvahiEntryGroupState state, cups_dnssd_service_t *service);
@@ -578,6 +579,8 @@ cupsDNSSDNew(
     return (NULL);
   }
 
+  avahi_simple_poll_set_func(dnssd->poll, (AvahiPollFunc)avahi_poll_cb, dnssd);
+
   DEBUG_printf(("2cupsDNSSDNew: dnssd->poll=%p", (void *)dnssd->poll));
 
   if ((dnssd->client = avahi_client_new(avahi_simple_poll_get(dnssd->poll), AVAHI_CLIENT_NO_FAIL, (AvahiClientCallback)avahi_client_cb, dnssd, &error)) == NULL)
@@ -589,7 +592,6 @@ cupsDNSSDNew(
     DEBUG_puts("2cupsDNSSDNew: Unable to create Avahi client - returning NULL.");
     return (NULL);
   }
-
 
   DEBUG_printf(("2cupsDNSSDNew: dnssd->client=%p", (void *)dnssd->client));
 
@@ -725,6 +727,7 @@ cupsDNSSDBrowseNew(
 
 #else // HAVE_AVAHI
   browse->browser = avahi_service_browser_new(dnssd->client, avahi_if_index(if_index), AVAHI_PROTO_UNSPEC, types, NULL, 0, (AvahiServiceBrowserCallback)avahi_browse_cb, browse);
+  avahi_simple_poll_wakeup(dnssd->poll);
 
   if (!browse->browser)
   {
@@ -858,6 +861,7 @@ cupsDNSSDQueryNew(
 
 #else // HAVE_AVAHI
   query->browser = avahi_record_browser_new(dnssd->client, avahi_if_index(if_index), AVAHI_PROTO_UNSPEC, fullname, AVAHI_DNS_CLASS_IN, rrtype, 0, (AvahiRecordBrowserCallback)avahi_query_cb, query);
+  avahi_simple_poll_wakeup(dnssd->poll);
 
   if (!query->browser)
   {
@@ -994,6 +998,7 @@ cupsDNSSDResolveNew(
 
 #else // HAVE_AVAHI
   resolve->resolver = avahi_service_resolver_new(dnssd->client, avahi_if_index(if_index), AVAHI_PROTO_UNSPEC, name, type, domain, AVAHI_PROTO_UNSPEC, /*flags*/0, (AvahiServiceResolverCallback)avahi_resolve_cb, resolve);
+  avahi_simple_poll_wakeup(dnssd->poll);
 
   if (!resolve->resolver)
   {
@@ -1966,9 +1971,43 @@ avahi_if_index(uint32_t if_index)	// I - DNS-SD interface index
 static void *				// O - Exit status
 avahi_monitor(cups_dnssd_t *dnssd)	// I - DNS-SD context
 {
+  DEBUG_printf(("avahi_monitor(dnssd=%p)", (void *)dnssd));
+
+  DEBUG_puts("2avahi_monitor: Locking mutex.");
+  cupsMutexLock(&dnssd->mutex);
+
+  DEBUG_puts("2avahi_monitor: Running poll loop.");
   avahi_simple_poll_loop(dnssd->poll);
 
+  DEBUG_puts("2avahi_monitor: Unlocking mutex.");
+  cupsMutexUnlock(&dnssd->mutex);
+
   return (NULL);
+}
+
+
+//
+// 'avahi_poll_cb()' - Poll callback for Avahi event handler...
+//
+
+static int				// O - Number of file descriptors or `-1` on error
+avahi_poll_cb(struct pollfd *ufds,	// I - File descriptors for poll
+              unsigned int  nfds,	// I - Number of file descriptors
+              int           timeout,	// I - Timeout in milliseconds
+              cups_dnssd_t  *dnssd)	// I - DNS-SD context
+{
+  int	ret;				// Return value
+
+
+  DEBUG_printf(("avahi_poll_cb(ufds=%p, nfds=%u, timeout=%d, dnssd=%p)", (void *)ufds, nfds, timeout, (void *)dnssd));
+
+  cupsMutexUnlock(&dnssd->mutex);
+  DEBUG_puts("2avahi_poll_cb: Polling sockets...");
+  ret = poll(ufds, nfds, timeout);
+  DEBUG_printf(("2avahi_poll_cb: poll() returned %d...", ret));
+  cupsMutexLock(&dnssd->mutex);
+
+  return (ret);
 }
 
 
