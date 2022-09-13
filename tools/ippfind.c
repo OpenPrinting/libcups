@@ -2114,7 +2114,7 @@ resolve_callback(
 
   service->is_resolved = true;
   service->host        = strdup(hostTarget);
-  service->port        = ntohs(port);
+  service->port        = port;
 
   value = service->host + strlen(service->host) - 1;
   if (value >= service->host && *value == '.')
