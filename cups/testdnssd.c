@@ -20,6 +20,7 @@ typedef struct testdata_s		// Test data structure
 {
   cups_mutex_t	mutex;			// Mutex for access
   cups_array_t	*messages;		// Messages from callbacks
+  char		name[256];		// Service name
   size_t	browse_dnssd_count;	// Number of testdnssd browse callbacks
   size_t	browse_ipp_count;	// Number of IPP browse callbacks
   size_t	error_count;		// Number of error callbacks
@@ -64,6 +65,11 @@ main(int  argc,				// I - Number of command-line arguments
   // Clear test data...
   memset(&testdata, 0, sizeof(testdata));
   testdata.messages = cupsArrayNew(NULL, NULL, NULL, 0, (cups_acopy_cb_t)strdup, (cups_afree_cb_t)free);
+#if _WIN32
+  snprintf(testdata.name, sizeof(testdata.name), "Test Service %d", (int)GetCurrentProcessId());
+#else
+  snprintf(testdata.name, sizeof(testdata.name), "Test Service %d", (int)getpid());
+#endif // _WIN32
 
   if (argc == 1)
   {
@@ -102,8 +108,8 @@ main(int  argc,				// I - Number of command-line arguments
     testBegin("cupsDNSSDBrowseGetContext");
     testEnd(cupsDNSSDBrowseGetContext(browse) == dnssd);
 
-    testBegin("cupsDNSSDServiceNew(Test Printer)");
-    if ((service = cupsDNSSDServiceNew(dnssd, CUPS_DNSSD_IF_INDEX_ANY, "Test Printer", service_cb, &testdata)) != NULL)
+    testBegin("cupsDNSSDServiceNew(%s)", testdata.name);
+    if ((service = cupsDNSSDServiceNew(dnssd, CUPS_DNSSD_IF_INDEX_ANY, testdata.name, service_cb, &testdata)) != NULL)
     {
       testEnd(true);
     }
@@ -138,7 +144,7 @@ main(int  argc,				// I - Number of command-line arguments
     }
 
     testBegin("cupsDNSSDServiceAdd(_testdnssd._tcp)");
-    if (cupsDNSSDServiceAdd(service, "_testdnssd._tcp", /*host*/NULL, /*domain*/NULL, 631, num_txt, txt))
+    if (cupsDNSSDServiceAdd(service, "_testdnssd._tcp", /*host*/NULL, /*domain*/NULL, 54321, num_txt, txt))
     {
       testEnd(true);
     }
@@ -156,8 +162,8 @@ main(int  argc,				// I - Number of command-line arguments
 
     cupsFreeOptions(num_txt, txt);
 
-    testBegin("cupsDNSSDResolveNew(Test Printer._ipp._tcp.local.)");
-    if ((resolve = cupsDNSSDResolveNew(dnssd, CUPS_DNSSD_IF_INDEX_ANY, "Test Printer", "_ipp._tcp", "local.", resolve_cb, &testdata)) != NULL)
+    testBegin("cupsDNSSDResolveNew(%s._testdnssd._tcp.local.)", testdata.name);
+    if ((resolve = cupsDNSSDResolveNew(dnssd, CUPS_DNSSD_IF_INDEX_ANY, testdata.name, "_testdnssd._tcp", "local.", resolve_cb, &testdata)) != NULL)
     {
       testEnd(true);
     }
@@ -181,16 +187,21 @@ main(int  argc,				// I - Number of command-line arguments
       sleep(1);
     }
 
-    testEnd(i < 30);
+    testEndMessage(i < 30, "Bdnssd=%u Bipp=%u Q=%u R=%u S=%u", (unsigned)testdata.browse_dnssd_count, (unsigned)testdata.browse_ipp_count, (unsigned)testdata.query_count, (unsigned)testdata.resolve_count, (unsigned)testdata.service_count);
+    if (i >= 30)
+      ret = 1;
 
     done:
 
     cupsDNSSDDelete(dnssd);
 
-    const char *message;		// Current message
+    if (ret || getenv("TESTDNSSD_DEBUG"))
+    {
+      const char *message;		// Current message
 
-    for (message = (const char *)cupsArrayGetFirst(testdata.messages); message; message = (const char *)cupsArrayGetNext(testdata.messages))
-      puts(message);
+      for (message = (const char *)cupsArrayGetFirst(testdata.messages); message; message = (const char *)cupsArrayGetNext(testdata.messages))
+	puts(message);
+    }
 
     cupsArrayDelete(testdata.messages);
   }
@@ -323,6 +334,9 @@ resolve_cb(
   char		message[2048],		// Message string
 		*mptr;			// Pointer into message string
   const char	*prefix = " txt=";	// Prefix string
+  char		name[256],		// Service name
+		regtype[256],		// Registration type
+		domain[256];		// Domain name
 
 
   (void)res;
@@ -335,8 +349,33 @@ resolve_cb(
   }
 
   cupsMutexLock(&data->mutex);
+
   cupsArrayAdd(data->messages, message);
-  data->resolve_count ++;
+
+  if (!cupsDNSSDSeparateFullName(fullname, name, sizeof(name), regtype, sizeof(regtype), domain, sizeof(domain)))
+  {
+    // Separation failed...
+    snprintf(message, sizeof(message), "R ==== ERROR: Unable to separate fullname \"%s\" into components ====", fullname);
+    cupsArrayAdd(data->messages, message);
+  }
+  else if (!strcmp(regtype, "_testdnssd._tcp"))
+  {
+    if (strcmp(name, data->name))
+    {
+      snprintf(message, sizeof(message), "R ==== ERROR: Expected name \"%s\", got \"%s\" ====", data->name, name);
+      cupsArrayAdd(data->messages, message);
+    }
+    else if (port != 54321)
+    {
+      snprintf(message, sizeof(message), "R ==== ERROR: Expected port 54321, got %u ====", port);
+      cupsArrayAdd(data->messages, message);
+    }
+    else
+    {
+      data->resolve_count ++;
+    }
+  }
+
   cupsMutexUnlock(&data->mutex);
 }
 
