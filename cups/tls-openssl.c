@@ -912,7 +912,12 @@ _httpTLSRead(http_t *http,		// I - Connection to server
 	     char   *buf,		// I - Buffer to store data
 	     int    len)		// I - Length of buffer
 {
-  return (SSL_read((SSL *)(http->tls), buf, len));
+  int bytes = SSL_read((SSL *)(http->tls), buf, len);
+					// Bytes read
+
+  DEBUG_printf(("7_httpTLSRead(http=%p, buf=%p, len=%d) returning %d", (void *)http, (void *)buf, len, bytes));
+
+  return (bytes);
 }
 
 
@@ -952,13 +957,13 @@ _httpTLSStart(http_t *http)		// I - Connection to server
     TLS1_VERSION,			// TLS/1.0
     TLS1_1_VERSION,			// TLS/1.1
     TLS1_2_VERSION,			// TLS/1.2
-//#ifdef TLS1_3_VERSION
-//    TLS1_3_VERSION,			// TLS/1.3
-//    TLS1_3_VERSION			// TLS/1.3 (max)
-//#else
+#ifdef TLS1_3_VERSION
+    TLS1_3_VERSION,			// TLS/1.3
+    TLS1_3_VERSION			// TLS/1.3 (max)
+#else
     TLS1_2_VERSION,			// TLS/1.2
     TLS1_2_VERSION			// TLS/1.2 (max)
-//#endif // TLS1_3_VERSION
+#endif // TLS1_3_VERSION
   };
 
 
@@ -1139,6 +1144,7 @@ _httpTLSStart(http_t *http)		// I - Connection to server
   if (http->mode == _HTTP_MODE_CLIENT)
   {
     // Negotiate as a server...
+    DEBUG_puts("4_httpTLSStart: Calling SSL_connect...");
     if (SSL_connect(http->tls) < 1)
     {
       // Failed
@@ -1153,12 +1159,15 @@ _httpTLSStart(http_t *http)		// I - Connection to server
       SSL_free(http->tls);
       http->tls = NULL;
 
+      DEBUG_printf(("4_httpTLSStart: Returning false (%s)", ERR_error_string(error, NULL)));
+
       return (false);
     }
   }
   else
   {
     // Negotiate as a server...
+    DEBUG_puts("4_httpTLSStart: Calling SSL_accept...");
     if (SSL_accept(http->tls) < 1)
     {
       // Failed
@@ -1173,9 +1182,13 @@ _httpTLSStart(http_t *http)		// I - Connection to server
       SSL_free(http->tls);
       http->tls = NULL;
 
+      DEBUG_printf(("4_httpTLSStart: Returning false (%s)", ERR_error_string(error, NULL)));
+
       return (false);
     }
   }
+
+  DEBUG_puts("4_httpTLSStart: Returning true.");
 
   return (true);
 }
@@ -1224,6 +1237,8 @@ http_bio_ctrl(BIO  *h,			// I - BIO data
 	      long arg1,		// I - First argument
 	      void *arg2)		// I - Second argument
 {
+  DEBUG_printf(("8http_bio_ctl(h=%p, cmd=%d, arg1=%ld, arg2=%p)", (void *)h, cmd, arg1, arg2));
+
   (void)arg1;
 
   switch (cmd)
@@ -1263,6 +1278,8 @@ http_bio_ctrl(BIO  *h,			// I - BIO data
 static int				// O - 1 on success, 0 on failure
 http_bio_free(BIO *h)			// I - BIO data
 {
+  DEBUG_printf(("8http_bio_free(h=%p)", (void *)h));
+
   if (!h)
     return (0);
 
@@ -1280,6 +1297,8 @@ http_bio_free(BIO *h)			// I - BIO data
 static int				// O - 1 on success, 0 on failure
 http_bio_new(BIO *h)			// I - BIO data
 {
+  DEBUG_printf(("8http_bio_new(h=%p)", (void *)h));
+
   if (!h)
     return (0);
 
@@ -1298,6 +1317,8 @@ static int				// O - Bytes written
 http_bio_puts(BIO        *h,		// I - BIO data
               const char *str)		// I - String to write
 {
+  DEBUG_printf(("8http_bio_puts(h=%p, str=\"%s\")", (void *)h, str));
+
 #ifdef WIN32
   return (send(((http_t *)BIO_get_data(h))->fd, str, (int)strlen(str), 0));
 #else
@@ -1316,16 +1337,17 @@ http_bio_read(BIO  *h,			// I - BIO data
 	      int  size)		// I - Number of bytes to read
 {
   http_t	*http;			// HTTP connection
+  int		bytes;			// Bytes read
 
+
+  DEBUG_printf(("8http_bio_read(h=%p, buf=%p, size=%d)", (void *)h, (void *)buf, size));
 
   http = (http_t *)BIO_get_data(h);
+  DEBUG_printf(("9http_bio_read: http=%p", (void *)http));
 
   if (!http->blocking)
   {
-   /*
-    * Make sure we have data before we read...
-    */
-
+    // Make sure we have data before we read...
     if (!_httpWait(http, 10000, 0))
     {
 #ifdef WIN32
@@ -1334,11 +1356,15 @@ http_bio_read(BIO  *h,			// I - BIO data
       http->error = ETIMEDOUT;
 #endif // WIN32
 
+      DEBUG_puts("9http_bio_read: Timeout, returning -1.");
       return (-1);
     }
   }
 
-  return ((int)recv(http->fd, buf, (size_t)size, 0));
+  bytes = (int)recv(http->fd, buf, (size_t)size, 0);
+  DEBUG_printf(("9http_bio_read: Returning %d.", bytes));
+
+  return (bytes);
 }
 
 
@@ -1351,7 +1377,15 @@ http_bio_write(BIO        *h,		// I - BIO data
                const char *buf,		// I - Buffer to write
 	       int        num)		// I - Number of bytes to write
 {
-  return (send(((http_t *)BIO_get_data(h))->fd, buf, (size_t)num, 0));
+  int	bytes;				// Bytes written
+
+
+  DEBUG_printf(("8http_bio_write(h=%p, buf=%p, num=%d)", (void *)h, (void *)buf, num));
+
+  bytes = (int)send(((http_t *)BIO_get_data(h))->fd, buf, (size_t)num, 0);
+
+  DEBUG_printf(("9http_bio_write: Returning %d.", bytes));
+  return (bytes);
 }
 
 
