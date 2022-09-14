@@ -1113,7 +1113,6 @@ _httpTLSStart(http_t *http)		// I - Connection to server
       http->error  = EIO;
 
       SSL_CTX_free(context);
-      cupsMutexUnlock(&tls_mutex);
 
       return (false);
     }
@@ -1157,7 +1156,7 @@ _httpTLSStart(http_t *http)		// I - Connection to server
 
   if (http->mode == _HTTP_MODE_CLIENT)
   {
-    // Negotiate as a server...
+    // Negotiate as a client...
     DEBUG_puts("4_httpTLSStart: Calling SSL_connect...");
     if (SSL_connect(http->tls) < 1)
     {
