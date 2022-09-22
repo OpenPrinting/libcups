@@ -227,7 +227,7 @@ cupsMakeServerCredentials(
 
   X509_sign(cert, pkey, EVP_sha256());
 
-   // Save them...
+  // Save them...
   if ((bio = BIO_new_file(keyfile, "wb")) == NULL)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
@@ -862,9 +862,7 @@ httpSaveCredentials(
   fchmod(cupsFileNumber(fp), 0600);
 #endif // !_WIN32
 
-  for (cred = (http_credential_t *)cupsArrayGetFirst(credentials);
-       cred;
-       cred = (http_credential_t *)cupsArrayGetNext(credentials))
+  for (cred = (http_credential_t *)cupsArrayGetFirst(credentials); cred; cred = (http_credential_t *)cupsArrayGetNext(credentials))
   {
     cupsFilePuts(fp, "-----BEGIN CERTIFICATE-----\n");
     for (ptr = cred->data, remaining = (ssize_t)cred->datalen; remaining > 0; remaining -= 45, ptr += 45)
