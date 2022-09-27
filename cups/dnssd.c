@@ -2090,7 +2090,7 @@ avahi_resolve_cb(
   cupsDNSSDAssembleFullName(fullname, sizeof(fullname), name, type, domain);
 
   // Do the resolve callback and free the TXT record stuff...
-  (resolve->cb)(resolve, resolve->cb_data, event == AVAHI_RESOLVER_FOUND ? CUPS_DNSSD_FLAGS_NONE : CUPS_DNSSD_FLAGS_ERROR, (uint32_t)if_index, fullname, host, ntohs(port), num_txt, txt);
+  (resolve->cb)(resolve, resolve->cb_data, event == AVAHI_RESOLVER_FOUND ? CUPS_DNSSD_FLAGS_NONE : CUPS_DNSSD_FLAGS_ERROR, (uint32_t)if_index, fullname, host, port, num_txt, txt);
 
   cupsFreeOptions(num_txt, txt);
 }
