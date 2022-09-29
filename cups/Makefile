@@ -143,6 +143,7 @@ UNITTARGETS =	\
 		testhttp \
 		testi18n \
 		testipp \
+		testjson \
 		testoptions \
 		testraster \
 		testtestpage \
