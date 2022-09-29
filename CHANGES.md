@@ -22,6 +22,7 @@ libcups v3.0b1 (Month DD, YYYY)
 - Added new DNS-SD API (Issue #19)
 - Added, modernized, and promoted the localization interfaces to public API
   (Issue #24)
+- Added public JSON API (Issue #31)
 - Updated the CUPS API for consistency.
 - Fixed ipptool's support for octetString values (Issue #23)
 - Removed all obsolete/deprecated CUPS 2.x APIs.

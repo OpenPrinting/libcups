@@ -36,6 +36,7 @@ LIBOBJS		= \
 		ipp.o \
 		ipp-file.o \
 		ipp-support.o \
+		json.o \
 		langprintf.o \
 		language.o \
 		md5.o \
@@ -66,6 +67,7 @@ TESTOBJS	= \
 		testhttp.o \
 		testi18n.o \
 		testipp.o \
+		testjson.o \
 		testoptions.o \
 		testraster.o \
 		testtestpage.o \
@@ -93,6 +95,7 @@ HEADERS	=	\
 		file.h \
 		http.h \
 		ipp.h \
+		json.h \
 		language.h \
 		pwg.h \
 		raster.h \
@@ -179,6 +182,8 @@ test:		$(UNITTARGETS)
 	./fuzzipp 2>>test.log
 	echo Running internationalization API tests...
 	./testi18n 2>>test.log
+	echo Running JSON API tests...
+	./testjson 2>>test.log
 	echo Running option API tests...
 	./testoptions 2>>test.log
 	echo Running raster API tests...
@@ -458,6 +463,16 @@ testipp:	testipp.o $(LIBCUPS_STATIC)
 testi18n:	testi18n.o $(LIBCUPS_STATIC)
 	echo Linking $@...
 	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testi18n.o $(LIBCUPS_STATIC) $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
+
+
+#
+# testjson (dependency on static CUPS library is intentional)
+#
+
+testjson:	testjson.o $(LIBCUPS_STATIC)
+	echo Linking $@...
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testjson.o $(LIBCUPS_STATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 

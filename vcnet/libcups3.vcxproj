@@ -126,6 +126,7 @@
     <ClCompile Include="..\cups\ipp-file.c" />
     <ClCompile Include="..\cups\ipp-support.c" />
     <ClCompile Include="..\cups\ipp.c" />
+    <ClCompile Include="..\cups\json.c" />
     <ClCompile Include="..\cups\langprintf.c" />
     <ClCompile Include="..\cups\language.c" />
     <ClCompile Include="..\cups\md5.c" />
@@ -162,6 +163,7 @@
     <ClInclude Include="..\cups\http.h" />
     <ClInclude Include="..\cups\ipp-private.h" />
     <ClInclude Include="..\cups\ipp.h" />
+    <ClInclude Include="..\cups\json.h" />
     <ClInclude Include="..\cups\language-private.h" />
     <ClInclude Include="..\cups\language.h" />
     <ClInclude Include="..\cups\md5-private.h" />

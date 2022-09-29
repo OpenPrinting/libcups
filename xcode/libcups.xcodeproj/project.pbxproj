@@ -24,6 +24,7 @@
 				278C58D6136B641D00836530 /* PBXTargetDependency */,
 				271284AF1CC11FA500E517C7 /* PBXTargetDependency */,
 				271284B11CC11FA500E517C7 /* PBXTargetDependency */,
+				2797D73728E5D24E0056D546 /* PBXTargetDependency */,
 				271284B91CC11FA500E517C7 /* PBXTargetDependency */,
 				271284BF1CC11FA500E517C7 /* PBXTargetDependency */,
 				27D3967927BA8224003D3D8E /* PBXTargetDependency */,
@@ -208,6 +209,22 @@
 		2794E90628AFFC2400BEDC04 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5D1926750C000F61D3 /* Security.framework */; };
 		2794E90F28AFFC6600BEDC04 /* testdnssd.c in Sources */ = {isa = PBXBuildFile; fileRef = 2794E90E28AFFC6600BEDC04 /* testdnssd.c */; };
 		2794E91028B2E20A00BEDC04 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5E1926750C000F61D3 /* SystemConfiguration.framework */; };
+		2797D71C28E5D1F90056D546 /* json.h in Headers */ = {isa = PBXBuildFile; fileRef = 2797D71A28E5D1F90056D546 /* json.h */; };
+		2797D71D28E5D1F90056D546 /* json.h in Headers */ = {isa = PBXBuildFile; fileRef = 2797D71A28E5D1F90056D546 /* json.h */; };
+		2797D71E28E5D1F90056D546 /* json.h in Headers */ = {isa = PBXBuildFile; fileRef = 2797D71A28E5D1F90056D546 /* json.h */; };
+		2797D71F28E5D1F90056D546 /* json.c in Sources */ = {isa = PBXBuildFile; fileRef = 2797D71B28E5D1F90056D546 /* json.c */; };
+		2797D72028E5D1F90056D546 /* json.c in Sources */ = {isa = PBXBuildFile; fileRef = 2797D71B28E5D1F90056D546 /* json.c */; };
+		2797D72128E5D1F90056D546 /* json.c in Sources */ = {isa = PBXBuildFile; fileRef = 2797D71B28E5D1F90056D546 /* json.c */; };
+		2797D72828E5D2360056D546 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5E1926750C000F61D3 /* SystemConfiguration.framework */; };
+		2797D72928E5D2360056D546 /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC60282C895700FE02FC /* libcrypto.a */; };
+		2797D72A28E5D2360056D546 /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC5F282C895700FE02FC /* libssl.a */; };
+		2797D72B28E5D2360056D546 /* libresolv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D3968227BB390D003D3D8E /* libresolv.tbd */; };
+		2797D72C28E5D2360056D546 /* libiconv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D3967E27BB38E6003D3D8E /* libiconv.tbd */; };
+		2797D72D28E5D2360056D546 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D3967A27BB389C003D3D8E /* libz.tbd */; };
+		2797D72E28E5D2360056D546 /* libcups_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 72A4332F155844CF002E172D /* libcups_static.a */; };
+		2797D72F28E5D2360056D546 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 278C58E5136B64AF00836530 /* CoreFoundation.framework */; };
+		2797D73028E5D2360056D546 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 278C58E7136B64B000836530 /* Security.framework */; };
+		2797D73928E5D2770056D546 /* testjson.c in Sources */ = {isa = PBXBuildFile; fileRef = 2797D73828E5D2760056D546 /* testjson.c */; };
 		279AE6F52395B80F004DD600 /* libpam.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 279AE6F42395B80F004DD600 /* libpam.tbd */; };
 		279B960028C57FAD00869E97 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5E1926750C000F61D3 /* SystemConfiguration.framework */; };
 		279B960128C57FBF00869E97 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5E1926750C000F61D3 /* SystemConfiguration.framework */; };
@@ -644,6 +661,20 @@
 			remoteGlobalIDString = 2794E8F928AFFC2400BEDC04;
 			remoteInfo = testdnssd;
 		};
+		2797D72428E5D2360056D546 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 72BF96371333042100B1EAD7 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 274FF6891333B1C400317ECB;
+			remoteInfo = libcups_static;
+		};
+		2797D73628E5D24E0056D546 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 72BF96371333042100B1EAD7 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 2797D72228E5D2360056D546;
+			remoteInfo = testjson;
+		};
 		27D3966A27BA81D3003D3D8E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 72BF96371333042100B1EAD7 /* Project object */;
@@ -858,6 +889,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
+		2797D73128E5D2360056D546 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
 		27D3967127BA81D3003D3D8E /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1014,6 +1054,10 @@
 		278CA9042884D9B100367E41 /* rand.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = rand.c; path = ../cups/rand.c; sourceTree = "<group>"; };
 		2794E90B28AFFC2400BEDC04 /* testdnssd */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = testdnssd; sourceTree = BUILT_PRODUCTS_DIR; };
 		2794E90E28AFFC6600BEDC04 /* testdnssd.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = testdnssd.c; path = ../cups/testdnssd.c; sourceTree = "<group>"; };
+		2797D71A28E5D1F90056D546 /* json.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = json.h; path = ../cups/json.h; sourceTree = "<group>"; };
+		2797D71B28E5D1F90056D546 /* json.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = json.c; path = ../cups/json.c; sourceTree = "<group>"; };
+		2797D73528E5D2360056D546 /* testjson */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = testjson; sourceTree = BUILT_PRODUCTS_DIR; };
+		2797D73828E5D2760056D546 /* testjson.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = testjson.c; path = ../cups/testjson.c; sourceTree = "<group>"; };
 		279AE6F42395B80F004DD600 /* libpam.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libpam.tbd; path = usr/lib/libpam.tbd; sourceTree = SDKROOT; };
 		27A8095F28A9B9D500B20BC8 /* dnssd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = dnssd.h; path = ../cups/dnssd.h; sourceTree = "<group>"; };
 		27A8096028A9B9D500B20BC8 /* dnssd.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = dnssd.c; path = ../cups/dnssd.c; sourceTree = "<group>"; };
@@ -1315,6 +1359,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		2797D72728E5D2360056D546 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2797D72828E5D2360056D546 /* SystemConfiguration.framework in Frameworks */,
+				2797D72928E5D2360056D546 /* libcrypto.a in Frameworks */,
+				2797D72A28E5D2360056D546 /* libssl.a in Frameworks */,
+				2797D72B28E5D2360056D546 /* libresolv.tbd in Frameworks */,
+				2797D72C28E5D2360056D546 /* libiconv.tbd in Frameworks */,
+				2797D72D28E5D2360056D546 /* libz.tbd in Frameworks */,
+				2797D72E28E5D2360056D546 /* libcups_static.a in Frameworks */,
+				2797D72F28E5D2360056D546 /* CoreFoundation.framework in Frameworks */,
+				2797D73028E5D2360056D546 /* Security.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		27D3966D27BA81D3003D3D8E /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -1529,6 +1589,7 @@
 				278C58E2136B647200836530 /* testhttp.c */,
 				727EF046192E3544001EF690 /* testi18n.c */,
 				727EF047192E3544001EF690 /* testipp.c */,
+				2797D73828E5D2760056D546 /* testjson.c */,
 				727EF048192E3544001EF690 /* testlang.c */,
 				727EF049192E3544001EF690 /* testoptions.c */,
 				727EF04B192E3544001EF690 /* testpwg.c */,
@@ -1583,6 +1644,7 @@
 				2778BBD9275DA09B0070DA11 /* fuzzipp */,
 				27D3967527BA81D3003D3D8E /* testtestpage */,
 				2794E90B28AFFC2400BEDC04 /* testdnssd */,
+				2797D73528E5D2360056D546 /* testjson */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1627,6 +1689,8 @@
 				72220EE6133305BB00FCA411 /* ipp.c */,
 				720E854120164E7A00C6C411 /* ipp-file.c */,
 				72220EE5133305BB00FCA411 /* ipp-support.c */,
+				2797D71A28E5D1F90056D546 /* json.h */,
+				2797D71B28E5D1F90056D546 /* json.c */,
 				72220EEB133305BB00FCA411 /* language.h */,
 				72220EE8133305BB00FCA411 /* langprintf.c */,
 				72220EEA133305BB00FCA411 /* language.c */,
@@ -1743,6 +1807,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2797D71D28E5D1F90056D546 /* json.h in Headers */,
 				2706963E1CADF3E200FFE5FB /* array.h in Headers */,
 				7253C469216ED5D400494ADD /* raster.h in Headers */,
 				722A24F42178D091000CAB20 /* debug-private.h in Headers */,
@@ -1775,6 +1840,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2797D71E28E5D1F90056D546 /* json.h in Headers */,
 				27A8096328A9B9D500B20BC8 /* dnssd.h in Headers */,
 				722A24F52178D091000CAB20 /* debug-private.h in Headers */,
 				274FF6C61333B1C400317ECB /* dir.h in Headers */,
@@ -1787,6 +1853,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2797D71C28E5D1F90056D546 /* json.h in Headers */,
 				72220EC61333056300FCA411 /* array.h in Headers */,
 				72220ECE1333056300FCA411 /* cups.h in Headers */,
 				7253C46B216ED5E400494ADD /* raster-private.h in Headers */,
@@ -2050,6 +2117,24 @@
 			productReference = 2794E90B28AFFC2400BEDC04 /* testdnssd */;
 			productType = "com.apple.product-type.tool";
 		};
+		2797D72228E5D2360056D546 /* testjson */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2797D73228E5D2360056D546 /* Build configuration list for PBXNativeTarget "testjson" */;
+			buildPhases = (
+				2797D72528E5D2360056D546 /* Sources */,
+				2797D72728E5D2360056D546 /* Frameworks */,
+				2797D73128E5D2360056D546 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				2797D72328E5D2360056D546 /* PBXTargetDependency */,
+			);
+			name = testjson;
+			productName = testmime;
+			productReference = 2797D73528E5D2360056D546 /* testjson */;
+			productType = "com.apple.product-type.tool";
+		};
 		27D3966827BA81D3003D3D8E /* testtestpage */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 27D3967227BA81D3003D3D8E /* Build configuration list for PBXNativeTarget "testtestpage" */;
@@ -2289,7 +2374,7 @@
 		72BF96371333042100B1EAD7 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1220;
+				LastUpgradeCheck = 1400;
 				ORGANIZATIONNAME = "Apple Inc.";
 				TargetAttributes = {
 					270695FD1CADF3E200FFE5FB = {
@@ -2331,6 +2416,7 @@
 				278C58CA136B640300836530 /* testhttp */,
 				724FA5831CC037980092477B /* testi18n */,
 				724FA5961CC037AA0092477B /* testipp */,
+				2797D72228E5D2360056D546 /* testjson */,
 				724FA5A91CC037C60092477B /* testlang */,
 				724FA5CF1CC037F00092477B /* testoptions */,
 				724FA5F71CC038190092477B /* testpwg */,
@@ -2370,6 +2456,7 @@
 				2706961D1CADF3E200FFE5FB /* md5.c in Sources */,
 				2706961F1CADF3E200FFE5FB /* hash.c in Sources */,
 				270696201CADF3E200FFE5FB /* notify.c in Sources */,
+				2797D72028E5D1F90056D546 /* json.c in Sources */,
 				270696211CADF3E200FFE5FB /* options.c in Sources */,
 				270696221CADF3E200FFE5FB /* tls.c in Sources */,
 				270696251CADF3E200FFE5FB /* dest-job.c in Sources */,
@@ -2465,6 +2552,7 @@
 				274FF6A91333B1C400317ECB /* notify.c in Sources */,
 				274FF6AA1333B1C400317ECB /* options.c in Sources */,
 				727AD5B819100A58009F6862 /* tls.c in Sources */,
+				2797D72128E5D1F90056D546 /* json.c in Sources */,
 				7253C456216E980200494ADD /* raster-error.c in Sources */,
 				2767FC7219268F06000F61D3 /* dest-job.c in Sources */,
 				274FF6AE1333B1C400317ECB /* pwg-media.c in Sources */,
@@ -2520,6 +2608,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		2797D72528E5D2360056D546 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2797D73928E5D2770056D546 /* testjson.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		27D3966B27BA81D3003D3D8E /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -2558,6 +2654,7 @@
 				7284F9F01BFCCDB10026F886 /* hash.c in Sources */,
 				72220F2B133305BB00FCA411 /* notify.c in Sources */,
 				72220F2C133305BB00FCA411 /* options.c in Sources */,
+				2797D71F28E5D1F90056D546 /* json.c in Sources */,
 				7253C454216E97FF00494ADD /* raster-error.c in Sources */,
 				72220F32133305BB00FCA411 /* pwg-media.c in Sources */,
 				72220F35133305BB00FCA411 /* request.c in Sources */,
@@ -2814,6 +2911,16 @@
 			target = 2794E8F928AFFC2400BEDC04 /* testdnssd */;
 			targetProxy = 2794E90C28AFFC3F00BEDC04 /* PBXContainerItemProxy */;
 		};
+		2797D72328E5D2360056D546 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 274FF6891333B1C400317ECB /* libcups3_static */;
+			targetProxy = 2797D72428E5D2360056D546 /* PBXContainerItemProxy */;
+		};
+		2797D73728E5D24E0056D546 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 2797D72228E5D2360056D546 /* testjson */;
+			targetProxy = 2797D73628E5D24E0056D546 /* PBXContainerItemProxy */;
+		};
 		27D3966927BA81D3003D3D8E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 274FF6891333B1C400317ECB /* libcups3_static */;
@@ -2942,6 +3049,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -2951,6 +3059,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -2960,6 +3069,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -2969,6 +3079,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -2978,6 +3089,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				INSTALL_PATH = /usr/libexec/cups/ippeveprinter;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -2988,6 +3100,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				INSTALL_PATH = /usr/libexec/cups/ippeveprinter;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -2998,6 +3111,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				INSTALL_PATH = /usr/libexec/cups/ippeveprinter;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -3008,6 +3122,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				INSTALL_PATH = /usr/libexec/cups/ippeveprinter;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -3018,6 +3133,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -3027,6 +3143,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -3035,6 +3152,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -3043,6 +3161,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -3052,6 +3171,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -3061,6 +3181,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -3069,6 +3190,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 			};
@@ -3078,6 +3200,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 			};
@@ -3088,6 +3211,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				EXECUTABLE_EXTENSION = a;
 				EXECUTABLE_PREFIX = "";
 				INSTALL_PATH = /usr/local/lib;
@@ -3104,6 +3228,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				EXECUTABLE_EXTENSION = a;
 				EXECUTABLE_PREFIX = "";
 				INSTALL_PATH = /usr/local/lib;
@@ -3120,6 +3245,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				INSTALL_PATH = /usr/bin;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -3130,6 +3256,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				INSTALL_PATH = /usr/bin;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -3140,6 +3267,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = testdest;
 			};
 			name = Debug;
@@ -3149,6 +3277,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = testdest;
 			};
 			name = Release;
@@ -3158,6 +3287,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -3167,6 +3297,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -3176,6 +3307,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -3185,6 +3317,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -3194,6 +3327,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -3203,6 +3337,27 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		2797D73328E5D2360056D546 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		2797D73428E5D2360056D546 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -3212,6 +3367,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -3221,6 +3377,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -3230,6 +3387,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				DYLIB_COMPATIBILITY_VERSION = 3.0.0;
 				DYLIB_CURRENT_VERSION = "$(CURRENT_PROJECT_VERSION)";
 				EXECUTABLE_PREFIX = "";
@@ -3245,6 +3403,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				DYLIB_COMPATIBILITY_VERSION = 3.0.0;
 				DYLIB_CURRENT_VERSION = "$(CURRENT_PROJECT_VERSION)";
 				EXECUTABLE_PREFIX = "";
@@ -3260,6 +3419,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -3269,6 +3429,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -3278,6 +3439,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -3287,6 +3449,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -3296,6 +3459,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -3305,6 +3469,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -3314,6 +3479,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -3323,6 +3489,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -3332,6 +3499,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -3341,6 +3509,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -3350,6 +3519,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -3359,6 +3529,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -3368,6 +3539,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -3377,6 +3549,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -3386,6 +3559,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -3395,6 +3569,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -3404,6 +3579,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				INSTALL_PATH = /usr/bin;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -3414,6 +3590,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				INSTALL_PATH = /usr/bin;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -3424,6 +3601,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -3433,6 +3611,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -3466,6 +3645,7 @@
 				CLANG_WARN__EXIT_TIME_DESTRUCTORS = YES;
 				CODE_SIGN_IDENTITY = "-";
 				CURRENT_PROJECT_VERSION = 3.0.0;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -3535,6 +3715,7 @@
 				CLANG_WARN__EXIT_TIME_DESTRUCTORS = YES;
 				CODE_SIGN_IDENTITY = "-";
 				CURRENT_PROJECT_VERSION = 3.0.0;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -3578,6 +3759,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				INSTALL_PATH = /usr/bin;
 				PRODUCT_NAME = "ipptool copy";
 			};
@@ -3588,6 +3770,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				INSTALL_PATH = /usr/bin;
 				PRODUCT_NAME = "ipptool copy";
 			};
@@ -3727,6 +3910,15 @@
 			buildConfigurations = (
 				2794E90928AFFC2400BEDC04 /* Debug */,
 				2794E90A28AFFC2400BEDC04 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		2797D73228E5D2360056D546 /* Build configuration list for PBXNativeTarget "testjson" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2797D73328E5D2360056D546 /* Debug */,
+				2797D73428E5D2360056D546 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
