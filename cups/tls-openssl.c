@@ -867,7 +867,7 @@ httpSaveCredentials(
     cupsFilePuts(fp, "-----BEGIN CERTIFICATE-----\n");
     for (ptr = cred->data, remaining = (ssize_t)cred->datalen; remaining > 0; remaining -= 45, ptr += 45)
     {
-      httpEncode64(line, sizeof(line), (char *)ptr, remaining > 45 ? 45 : (size_t)remaining);
+      httpEncode64(line, sizeof(line), (char *)ptr, remaining > 45 ? 45 : (size_t)remaining, false);
       cupsFilePrintf(fp, "%s\n", line);
     }
     cupsFilePuts(fp, "-----END CERTIFICATE-----\n");

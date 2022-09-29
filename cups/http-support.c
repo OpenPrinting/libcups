@@ -417,9 +417,11 @@ httpAssembleUUID(const char *server,	// I - Server name
 //
 // 'httpDecode64()' - Base64-decode a string.
 //
-// The caller must initialize "outlen" to the maximum size of the decoded
-// string before calling @code httpDecode64_2@.  On return "outlen" contains the
-// decoded length of the string.
+// This function decodes a Base64 string as defined by RFC 4648.  The caller
+// must initialize "outlen" to the maximum size of the decoded string.  On
+// return "outlen" contains the decoded length of the string.
+//
+// This function supports both Base64 and Base64url strings.
 //
 
 char *					// O  - Decoded string
@@ -455,9 +457,9 @@ httpDecode64(char       *out,		// I  - String to write to
       base64 = (unsigned)(*in - 'a' + 26);
     else if (*in >= '0' && *in <= '9')
       base64 = (unsigned)(*in - '0' + 52);
-    else if (*in == '+')
+    else if (*in == '+' || *in == '-')
       base64 = 62;
-    else if (*in == '/')
+    else if (*in == '/' || *in == '_')
       base64 = 63;
     else if (*in == '=')
       break;
@@ -506,38 +508,46 @@ httpDecode64(char       *out,		// I  - String to write to
 //
 // 'httpEncode64()' - Base64-encode a string.
 //
+// This function encodes a Base64 string as defined by RFC 4648.  The "url"
+// parameter controls whether the original Base64 ("url" = `false`) or the
+// Base64url ("url" = `true`) alphabet is used.
+//
 
 char *					// O - Encoded string
 httpEncode64(char       *out,		// I - String to write to
 	     size_t     outlen,		// I - Maximum size of output string
              const char *in,		// I - String to read from
-	     size_t     inlen)		// I - Size of input string
+	     size_t     inlen,		// I - Size of input string
+	     bool       url)		// I - `true` for Base64url, `false` for Base64
 {
   char		*outptr,		// Output pointer
 		*outend;		// End of output buffer
-  static const char base64[] =		// Base64 characters...
-  {
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
-  };
+  const char	*alpha;			// Alphabet
+  static const char *base64 =		// Base64 alphabet
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  static const char *base64url =	// Base64url alphabet
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 
 
   // Range check input...
   if (!out || outlen < 1 || !in)
     return (NULL);
 
-  // Convert bytes to base-64...
+  // Encode bytes...
+  alpha = url ? base64url : base64;
+
   for (outptr = out, outend = out + outlen - 1; inlen > 0; in ++, inlen --)
   {
     // Encode the up to 3 characters as 4 Base64 numbers...
     if (outptr < outend)
-      *outptr ++ = base64[(in[0] & 255) >> 2];
+      *outptr ++ = alpha[(in[0] & 255) >> 2];
 
     if (outptr < outend)
     {
       if (inlen > 1)
-        *outptr ++ = base64[(((in[0] & 255) << 4) | ((in[1] & 255) >> 4)) & 63];
+        *outptr ++ = alpha[(((in[0] & 255) << 4) | ((in[1] & 255) >> 4)) & 63];
       else
-        *outptr ++ = base64[((in[0] & 255) << 4) & 63];
+        *outptr ++ = alpha[((in[0] & 255) << 4) & 63];
     }
 
     in ++;
@@ -554,9 +564,9 @@ httpEncode64(char       *out,		// I - String to write to
     if (outptr < outend)
     {
       if (inlen > 1)
-        *outptr ++ = base64[(((in[0] & 255) << 2) | ((in[1] & 255) >> 6)) & 63];
+        *outptr ++ = alpha[(((in[0] & 255) << 2) | ((in[1] & 255) >> 6)) & 63];
       else
-        *outptr ++ = base64[((in[0] & 255) << 2) & 63];
+        *outptr ++ = alpha[((in[0] & 255) << 2) & 63];
     }
 
     in ++;
@@ -569,7 +579,7 @@ httpEncode64(char       *out,		// I - String to write to
     }
 
     if (outptr < outend)
-      *outptr ++ = base64[in[0] & 63];
+      *outptr ++ = alpha[in[0] & 63];
   }
 
   *outptr = '\0';

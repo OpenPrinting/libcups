@@ -4130,7 +4130,7 @@ print_attr(cups_file_t      *outfile,	/* I  - Output file */
 	    char	buffer[IPP_MAX_LENGTH * 5 / 4 + 1];
 					/* Base64 output buffer */
 
-	    cupsFilePrintf(outfile, "<data>%s</data>\n", httpEncode64(buffer, sizeof(buffer), data, datalen));
+	    cupsFilePrintf(outfile, "<data>%s</data>\n", httpEncode64(buffer, sizeof(buffer), data, datalen, false));
           }
           break;
 

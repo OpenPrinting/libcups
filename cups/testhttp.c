@@ -292,14 +292,14 @@ main(int  argc,				/* I - Number of command-line arguments */
     }
 
    /*
-    * httpDecode64_2()/httpEncode64_2()
+    * httpDecode64()/httpEncode64()
     */
 
-    testBegin("httpDecode64_2()/httpEncode64_2()");
+    testBegin("httpDecode64()/httpEncode64()");
 
     for (i = 0, j = 0; i < (int)(sizeof(base64_tests) / sizeof(base64_tests[0])); i ++)
     {
-      httpEncode64(encode, sizeof(encode), base64_tests[i][0], strlen(base64_tests[i][0]));
+      httpEncode64(encode, sizeof(encode), base64_tests[i][0], strlen(base64_tests[i][0]), false);
       decodelen = sizeof(decode);
       httpDecode64(decode, &decodelen, base64_tests[i][1]);
 
@@ -313,7 +313,7 @@ main(int  argc,				/* I - Number of command-line arguments */
 	  j = 1;
 	}
 
-        testError("httpDecode64_2() returned \"%s\", expected \"%s\".", decode, base64_tests[i][0]);
+        testError("httpDecode64() returned \"%s\", expected \"%s\".", decode, base64_tests[i][0]);
       }
 
       if (strcmp(encode, base64_tests[i][1]))
@@ -326,7 +326,7 @@ main(int  argc,				/* I - Number of command-line arguments */
 	  j = 1;
 	}
 
-        testError("httpEncode64_2() returned \"%s\", expected \"%s\".", encode, base64_tests[i][1]);
+        testError("httpEncode64() returned \"%s\", expected \"%s\".", encode, base64_tests[i][1]);
       }
     }
 
