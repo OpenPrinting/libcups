@@ -46,6 +46,7 @@ extern "C" {
 // functions are provided to write a test summary to stdout and the details to stderr.
 //
 
+static bool test_all_pass = true;	// All tests passed?
 static int test_progress;		// Current progress
 
 // Start a test
@@ -78,6 +79,9 @@ testEnd(bool pass)			// I - `true` if the test passed, `false` otherwise
   // Send the test result to stdout and stderr
   if (test_progress)
     putchar('\b');
+
+  if (!pass)
+    test_all_pass = false;
 
   puts(pass ? "PASS" : "FAIL");
   if (!isatty(2))

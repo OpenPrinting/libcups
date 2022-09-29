@@ -353,6 +353,7 @@ cupsJSONLoadString(const char *s)	// I - JSON string
 		*prev = NULL,		// Previous node
 		*current;		// Current node
   size_t	count;			// Number of children
+  struct lconv	*loc;			// Locale data
   static const char *sep = ",]} \n\r\t";// Separator chars
 
 
@@ -376,6 +377,7 @@ cupsJSONLoadString(const char *s)	// I - JSON string
   // Parse until we get to the end...
   parent = json;
   count  = 0;
+  loc    = localeconv();
   s ++;
 
   while (*s)
@@ -603,7 +605,7 @@ cupsJSONLoadString(const char *s)	// I - JSON string
       if ((current = cupsJSONNew(parent, prev, CUPS_JTYPE_NUMBER)) == NULL)
         goto error;
 
-      current->value.number = strtod(s, (char **)&s);
+      current->value.number = _cupsStrScand(s, (char **)&s, loc);
       count ++;
       prev = current;
 
@@ -881,9 +883,37 @@ bool					// O - `true` on success, `false` on failure
 cupsJSONSaveFile(cups_json_t *json,	// I - JSON root node
                  const char  *filename)	// I - JSON filename
 {
-  (void)json;
-  (void)filename;
-  return (false);
+  char	*s;				// JSON string
+  int	fd;				// JSON file
+
+
+  DEBUG_printf(("cupsJSONSaveFile(json=%p, filename=\"%s\")", (void *)json, filename));
+
+  // Get the JSON as a string...
+  if ((s = cupsJSONSaveString(json)) == NULL)
+    return (false);
+
+  // Create the file...
+  if ((fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0666)) < 0)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
+    free(s);
+    return (false);
+  }
+
+  if (write(fd, s, strlen(s)) < 0)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
+    close(fd);
+    unlink(filename);
+    free(s);
+    return (false);
+  }
+
+  close(fd);
+  free(s);
+
+  return (true);
 }
 
 
@@ -897,8 +927,247 @@ cupsJSONSaveFile(cups_json_t *json,	// I - JSON root node
 char *					// O - JSON string or `NULL` on error
 cupsJSONSaveString(cups_json_t *json)	// I - JSON root node
 {
-  (void)json;
-  return (NULL);
+  cups_json_t	*current;		// Current node
+  size_t	length;			// Length of JSON data as a string
+  char		*s,			// JSON string
+		*ptr;			// Pointer into string
+  const char	*value;			// Pointer into string value
+  struct lconv	*loc;			// Locale data
+
+
+  DEBUG_printf(("cupsJSONSaveString(json=%p)", (void *)json));
+
+  // Range check input...
+  if (!json)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), 0);
+    DEBUG_puts("3cupsJSONSaveString: Returning NULL.");
+    return (NULL);
+  }
+
+  // Figure out the necessary space needed in the string
+  current = json;
+  length  = 1;				// nul
+
+  while (current)
+  {
+    if (current->parent && current->parent->value.child != current)
+      length ++;			// Comma or colon separator
+
+    switch (current->type)
+    {
+      case CUPS_JTYPE_NULL :
+      case CUPS_JTYPE_TRUE :
+          length += 4;
+          break;
+
+      case CUPS_JTYPE_FALSE :
+          length += 5;
+          break;
+
+      case CUPS_JTYPE_ARRAY :
+      case CUPS_JTYPE_OBJECT :
+          length += 2;			// Brackets/braces
+          break;
+
+      case CUPS_JTYPE_NUMBER :
+          length += 32;
+          break;
+
+      case CUPS_JTYPE_KEY :
+      case CUPS_JTYPE_STRING :
+          length += 2;			// Quotes
+          for (value = current->value.string; *value; value ++)
+          {
+	    if (strchr("\\\"\b\f\n\r\t", *value))
+	      length += 2;		// Simple escaped char
+            else if ((*value & 255) < ' ')
+              length += 6;		// Worst case for control char
+	    else
+	      length ++;		// Literal char
+          }
+          break;
+    }
+
+    // Get next node...
+    if ((current->type == CUPS_JTYPE_ARRAY || current->type == CUPS_JTYPE_OBJECT) && current->value.child)
+    {
+      // Descend
+      current = current->value.child;
+    }
+    else if (current->sibling)
+    {
+      // Visit silbling
+      current = current->sibling;
+    }
+    else
+    {
+      // Ascend and continue...
+      current = current->parent;
+      while (current)
+      {
+        if (current->sibling)
+	{
+	  current = current->sibling;
+	  break;
+	}
+	else
+        {
+          current = current->parent;
+	}
+      }
+    }
+  }
+
+  DEBUG_printf(("2cupsJSONSaveString: length=%u", (unsigned)length));
+
+  // Allocate memory and fill it up...
+  if ((s = malloc(length)) == NULL)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
+    DEBUG_puts("3cupsJSONSaveString: Returning NULL.");
+    return (NULL);
+  }
+
+  current = json;
+  ptr     = s;
+  loc     = localeconv();
+
+  while (current)
+  {
+    if (current->parent && current->parent->value.child != current)
+    {
+      // Add separator
+      if (current->type == CUPS_JTYPE_KEY || current->parent->type == CUPS_JTYPE_ARRAY)
+        *ptr++ = ',';
+      else
+        *ptr++ = ':';
+    }
+
+    switch (current->type)
+    {
+      case CUPS_JTYPE_NULL :
+          memcpy(ptr, "null", 4);
+          ptr += 4;
+          break;
+
+      case CUPS_JTYPE_TRUE :
+          memcpy(ptr, "true", 4);
+          ptr += 4;
+          break;
+
+      case CUPS_JTYPE_FALSE :
+          memcpy(ptr, "false", 5);
+          ptr += 5;
+          break;
+
+      case CUPS_JTYPE_ARRAY :
+          *ptr++ = '[';
+          break;
+
+      case CUPS_JTYPE_OBJECT :
+          *ptr++ = '{';
+          break;
+
+      case CUPS_JTYPE_NUMBER :
+          _cupsStrFormatd(ptr, s + length, current->value.number, loc);
+          ptr += strlen(ptr);
+          break;
+
+      case CUPS_JTYPE_KEY :
+      case CUPS_JTYPE_STRING :
+          *ptr++ = '\"';
+
+          for (value = current->value.string; *value; value ++)
+          {
+            // Quote/escape as needed...
+	    if (*value == '\\' || *value == '\"')
+	    {
+	      *ptr++ = '\\';
+	      *ptr++ = *value;
+	    }
+	    else if (*value == '\b')
+	    {
+	      *ptr++ = '\\';
+	      *ptr++ = 'b';
+	    }
+	    else if (*value == '\f')
+	    {
+	      *ptr++ = '\\';
+	      *ptr++ = 'f';
+	    }
+	    else if (*value == '\n')
+	    {
+	      *ptr++ = '\\';
+	      *ptr++ = 'n';
+	    }
+	    else if (*value == '\r')
+	    {
+	      *ptr++ = '\\';
+	      *ptr++ = 'r';
+	    }
+	    else if (*value == '\t')
+	    {
+	      *ptr++ = '\\';
+	      *ptr++ = 't';
+	    }
+            if ((*value & 255) < ' ')
+            {
+              snprintf(ptr, length - (size_t)(ptr - s), "\\u%04x", *value);
+              ptr += 6;
+	    }
+	    else
+	    {
+	      *ptr++ = *value;
+	    }
+          }
+
+          *ptr++ = '\"';
+          break;
+    }
+
+    // Get next node...
+    if ((current->type == CUPS_JTYPE_ARRAY || current->type == CUPS_JTYPE_OBJECT) && current->value.child)
+    {
+      // Descend
+      current = current->value.child;
+    }
+    else if (current->sibling)
+    {
+      // Visit silbling
+      current = current->sibling;
+    }
+    else if ((current = current->parent) != NULL)
+    {
+      // Ascend and continue...
+      if (current->type == CUPS_JTYPE_ARRAY)
+        *ptr++ = ']';
+      else
+        *ptr++ = '}';
+
+      while (current)
+      {
+        if (current->sibling)
+	{
+	  current = current->sibling;
+	  break;
+	}
+	else if ((current = current->parent) != NULL)
+	{
+	  if (current->type == CUPS_JTYPE_ARRAY)
+	    *ptr++ = ']';
+	  else
+	    *ptr++ = '}';
+	}
+      }
+    }
+  }
+
+  *ptr = '\0';
+
+  DEBUG_printf(("3cupsJSONSaveString: Returning \"%s\".", s));
+
+  return (s);
 }
 
 
