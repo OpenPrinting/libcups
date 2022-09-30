@@ -555,6 +555,48 @@ main(int  argc,				/* I - Number of command-line arguments */
       return (0);
     }
   }
+  else if (!strcmp(argv[1], "-d") && argc == 3)
+  {
+    // Test httpDecode64
+    char	buffer[2048];		// Output buffer
+    size_t	bufsize = sizeof(buffer) - 1;
+					// Output size
+
+    if (httpDecode64(buffer, &bufsize, argv[2]))
+    {
+      buffer[bufsize] = '\0';
+      puts(buffer);
+      return (0);
+    }
+
+    return (1);
+  }
+  else if (!strcmp(argv[1], "-e") && argc == 3)
+  {
+    // Test httpEncode64 for Base64
+    char	buffer[2048];		// Output buffer
+
+    if (httpEncode64(buffer, sizeof(buffer), argv[2], strlen(argv[2]), false))
+    {
+      puts(buffer);
+      return (0);
+    }
+
+    return (1);
+  }
+  else if (!strcmp(argv[1], "-E") && argc == 3)
+  {
+    // Test httpEncode64 for Base64url
+    char	buffer[2048];		// Output buffer
+
+    if (httpEncode64(buffer, sizeof(buffer), argv[2], strlen(argv[2]), true))
+    {
+      puts(buffer);
+      return (0);
+    }
+
+    return (1);
+  }
   else if (!strcmp(argv[1], "-u") && argc == 3)
   {
    /*
