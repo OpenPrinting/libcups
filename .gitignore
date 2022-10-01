@@ -21,6 +21,7 @@
 /cups/libcups3.so.3
 /cups/locale/
 /cups/rasterbench
+/cups/test.json
 /cups/test.pwg
 /cups/test.raster
 /cups/testarray
