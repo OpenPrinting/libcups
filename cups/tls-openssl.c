@@ -717,6 +717,9 @@ httpLoadCredentials(
 					// In a certificate?
 
 
+  if (credentials)
+    *credentials = NULL;
+
   if (!credentials || !common_name)
     return (false);
 
