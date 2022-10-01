@@ -414,6 +414,24 @@ span.string {
 <li><a href="#cupsGetUserAgent">cupsGetUserAgent</a></li>
 <li><a href="#cupsHashData">cupsHashData</a></li>
 <li><a href="#cupsHashString">cupsHashString</a></li>
+<li><a href="#cupsJSONDelete">cupsJSONDelete</a></li>
+<li><a href="#cupsJSONFind">cupsJSONFind</a></li>
+<li><a href="#cupsJSONGetChild">cupsJSONGetChild</a></li>
+<li><a href="#cupsJSONGetCount">cupsJSONGetCount</a></li>
+<li><a href="#cupsJSONGetKey">cupsJSONGetKey</a></li>
+<li><a href="#cupsJSONGetNumber">cupsJSONGetNumber</a></li>
+<li><a href="#cupsJSONGetParent">cupsJSONGetParent</a></li>
+<li><a href="#cupsJSONGetSibling">cupsJSONGetSibling</a></li>
+<li><a href="#cupsJSONGetString">cupsJSONGetString</a></li>
+<li><a href="#cupsJSONGetType">cupsJSONGetType</a></li>
+<li><a href="#cupsJSONLoadFile">cupsJSONLoadFile</a></li>
+<li><a href="#cupsJSONLoadString">cupsJSONLoadString</a></li>
+<li><a href="#cupsJSONNew">cupsJSONNew</a></li>
+<li><a href="#cupsJSONNewKey">cupsJSONNewKey</a></li>
+<li><a href="#cupsJSONNewNumber">cupsJSONNewNumber</a></li>
+<li><a href="#cupsJSONNewString">cupsJSONNewString</a></li>
+<li><a href="#cupsJSONSaveFile">cupsJSONSaveFile</a></li>
+<li><a href="#cupsJSONSaveString">cupsJSONSaveString</a></li>
 <li><a href="#cupsLangAddStrings">cupsLangAddStrings</a></li>
 <li><a href="#cupsLangDefault">cupsLangDefault</a></li>
 <li><a href="#cupsLangFind">cupsLangFind</a></li>
@@ -721,6 +739,8 @@ span.string {
 <li><a href="#cups_file_t">cups_file_t</a></li>
 <li><a href="#cups_job_t">cups_job_t</a></li>
 <li><a href="#cups_jog_t">cups_jog_t</a></li>
+<li><a href="#cups_json_t">cups_json_t</a></li>
+<li><a href="#cups_jtype_t">cups_jtype_t</a></li>
 <li><a href="#cups_lang_t">cups_lang_t</a></li>
 <li><a href="#cups_mediapos_t">cups_mediapos_t</a></li>
 <li><a href="#cups_mutex_t">cups_mutex_t</a></li>
@@ -796,6 +816,7 @@ span.string {
 <li><a href="#cups_edge_e">cups_edge_e</a></li>
 <li><a href="#cups_encoding_e">cups_encoding_e</a></li>
 <li><a href="#cups_jog_e">cups_jog_e</a></li>
+<li><a href="#cups_jtype_e">cups_jtype_e</a></li>
 <li><a href="#cups_mediapos_e">cups_mediapos_e</a></li>
 <li><a href="#cups_order_e">cups_order_e</a></li>
 <li><a href="#cups_orient_e">cups_orient_e</a></li>
@@ -4223,6 +4244,236 @@ const char *cupsHashString(const unsigned char *hash, size_t hashsize, char *buf
 <p class="description">Formatted string</p>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">The passed buffer must be at least 2 * hashsize + 1 characters in length.</p>
+<h3 class="function"><a id="cupsJSONDelete">cupsJSONDelete</a></h3>
+<p class="description">Delete a JSON node and all of its children.</p>
+<p class="code">
+void cupsJSONDelete(<a href="#cups_json_t">cups_json_t</a> *json);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>json</th>
+<td class="description">JSON node</td></tr>
+</tbody></table>
+<h3 class="function"><a id="cupsJSONFind">cupsJSONFind</a></h3>
+<p class="description">Find the value(s) associated with a given key.</p>
+<p class="code">
+<a href="#cups_json_t">cups_json_t</a> *cupsJSONFind(<a href="#cups_json_t">cups_json_t</a> *json, const char *key);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>json</th>
+<td class="description">JSON object node</td></tr>
+<tr><th>key</th>
+<td class="description">Object key</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">JSON value or <code>NULL</code></p>
+<h3 class="function"><a id="cupsJSONGetChild">cupsJSONGetChild</a></h3>
+<p class="description">Get the first child node of an array or object node.</p>
+<p class="code">
+<a href="#cups_json_t">cups_json_t</a> *cupsJSONGetChild(<a href="#cups_json_t">cups_json_t</a> *json, size_t n);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>json</th>
+<td class="description">JSON array or object node</td></tr>
+<tr><th>n</th>
+<td class="description">Child node number (starting at <code>0</code>)</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">First child node or <code>NULL</code></p>
+<h3 class="function"><a id="cupsJSONGetCount">cupsJSONGetCount</a></h3>
+<p class="description">Get the number of child nodes.</p>
+<p class="code">
+size_t cupsJSONGetCount(<a href="#cups_json_t">cups_json_t</a> *json);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>json</th>
+<td class="description">JSON array or object node</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Number of child nodes</p>
+<h3 class="function"><a id="cupsJSONGetKey">cupsJSONGetKey</a></h3>
+<p class="description">Get the key string, if any.</p>
+<p class="code">
+const char *cupsJSONGetKey(<a href="#cups_json_t">cups_json_t</a> *json);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>json</th>
+<td class="description">JSON string node</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">String value</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function returns the key string for a JSON key node or <code>NULL</code> if
+the node is not a key.</p>
+<h3 class="function"><a id="cupsJSONGetNumber">cupsJSONGetNumber</a></h3>
+<p class="description">Get the number value, if any.</p>
+<p class="code">
+double cupsJSONGetNumber(<a href="#cups_json_t">cups_json_t</a> *json);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>json</th>
+<td class="description">JSON number node</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Number value</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function returns the number value for a JSON number node or <code>0.0</code> if
+the node is not a number.</p>
+<h3 class="function"><a id="cupsJSONGetParent">cupsJSONGetParent</a></h3>
+<p class="description">Get the parent node, if any.</p>
+<p class="code">
+<a href="#cups_json_t">cups_json_t</a> *cupsJSONGetParent(<a href="#cups_json_t">cups_json_t</a> *json);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>json</th>
+<td class="description">JSON node</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Parent node or <code>NULL</code> if none</p>
+<h3 class="function"><a id="cupsJSONGetSibling">cupsJSONGetSibling</a></h3>
+<p class="description">Get the next sibling node, if any.</p>
+<p class="code">
+<a href="#cups_json_t">cups_json_t</a> *cupsJSONGetSibling(<a href="#cups_json_t">cups_json_t</a> *json);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>json</th>
+<td class="description">JSON node</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Sibling node or <code>NULL</code> if none</p>
+<h3 class="function"><a id="cupsJSONGetString">cupsJSONGetString</a></h3>
+<p class="description">Get the string value, if any.</p>
+<p class="code">
+const char *cupsJSONGetString(<a href="#cups_json_t">cups_json_t</a> *json);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>json</th>
+<td class="description">JSON string node</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">String value</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function returns the string value for a JSON string node or <code>NULL</code> if
+the node is not a string.</p>
+<h3 class="function"><a id="cupsJSONGetType">cupsJSONGetType</a></h3>
+<p class="description">Get the type of a JSON node.</p>
+<p class="code">
+<a href="#cups_jtype_t">cups_jtype_t</a> cupsJSONGetType(<a href="#cups_json_t">cups_json_t</a> *json);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>json</th>
+<td class="description">JSON node</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">JSON node type</p>
+<h3 class="function"><a id="cupsJSONLoadFile">cupsJSONLoadFile</a></h3>
+<p class="description">Load a JSON object file.</p>
+<p class="code">
+<a href="#cups_json_t">cups_json_t</a> *cupsJSONLoadFile(const char *filename);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>filename</th>
+<td class="description">JSON filename</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Root JSON object node</p>
+<h3 class="function"><a id="cupsJSONLoadString">cupsJSONLoadString</a></h3>
+<p class="description">Load a JSON object from a string.</p>
+<p class="code">
+<a href="#cups_json_t">cups_json_t</a> *cupsJSONLoadString(const char *s);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>s</th>
+<td class="description">JSON string</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Root JSON object node</p>
+<h3 class="function"><a id="cupsJSONNew">cupsJSONNew</a></h3>
+<p class="description">Create a new JSON node.</p>
+<p class="code">
+<a href="#cups_json_t">cups_json_t</a> *cupsJSONNew(<a href="#cups_json_t">cups_json_t</a> *parent, <a href="#cups_json_t">cups_json_t</a> *after, <a href="#cups_jtype_t">cups_jtype_t</a> type);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>parent</th>
+<td class="description">Parent JSON node or <code>NULL</code> for a root node</td></tr>
+<tr><th>after</th>
+<td class="description">Previous sibling node or <code>NULL</code> to append to the end</td></tr>
+<tr><th>type</th>
+<td class="description">JSON node type</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">JSON node</p>
+<h3 class="function"><a id="cupsJSONNewKey">cupsJSONNewKey</a></h3>
+<p class="description">Create a new JSON key node.</p>
+<p class="code">
+<a href="#cups_json_t">cups_json_t</a> *cupsJSONNewKey(<a href="#cups_json_t">cups_json_t</a> *parent, <a href="#cups_json_t">cups_json_t</a> *after, const char *value);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>parent</th>
+<td class="description">Parent JSON node or <code>NULL</code> for a root node</td></tr>
+<tr><th>after</th>
+<td class="description">Previous sibling node or <code>NULL</code> to append to the end</td></tr>
+<tr><th>value</th>
+<td class="description">Key string</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">JSON node</p>
+<h3 class="function"><a id="cupsJSONNewNumber">cupsJSONNewNumber</a></h3>
+<p class="description">Create a new JSON number node.</p>
+<p class="code">
+<a href="#cups_json_t">cups_json_t</a> *cupsJSONNewNumber(<a href="#cups_json_t">cups_json_t</a> *parent, <a href="#cups_json_t">cups_json_t</a> *after, double value);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>parent</th>
+<td class="description">Parent JSON node or <code>NULL</code> for a root node</td></tr>
+<tr><th>after</th>
+<td class="description">Previous sibling node or <code>NULL</code> to append to the end</td></tr>
+<tr><th>value</th>
+<td class="description">Number value</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">JSON node</p>
+<h3 class="function"><a id="cupsJSONNewString">cupsJSONNewString</a></h3>
+<p class="description">Create a new JSON string node.</p>
+<p class="code">
+<a href="#cups_json_t">cups_json_t</a> *cupsJSONNewString(<a href="#cups_json_t">cups_json_t</a> *parent, <a href="#cups_json_t">cups_json_t</a> *after, const char *value);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>parent</th>
+<td class="description">Parent JSON node or <code>NULL</code> for a root node</td></tr>
+<tr><th>after</th>
+<td class="description">Previous sibling node or <code>NULL</code> to append to the end</td></tr>
+<tr><th>value</th>
+<td class="description">String value</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">JSON node</p>
+<h3 class="function"><a id="cupsJSONSaveFile">cupsJSONSaveFile</a></h3>
+<p class="description">Save a JSON node tree to a file.</p>
+<p class="code">
+bool cupsJSONSaveFile(<a href="#cups_json_t">cups_json_t</a> *json, const char *filename);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>json</th>
+<td class="description">JSON root node</td></tr>
+<tr><th>filename</th>
+<td class="description">JSON filename</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description"><code>true</code> on success, <code>false</code> on failure</p>
+<h3 class="function"><a id="cupsJSONSaveString">cupsJSONSaveString</a></h3>
+<p class="description">Save a JSON node tree to a string.</p>
+<p class="code">
+char *cupsJSONSaveString(<a href="#cups_json_t">cups_json_t</a> *json);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>json</th>
+<td class="description">JSON root node</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">JSON string or <code>NULL</code> on error</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function saves a JSON node tree to an allocated string.  The resulting
+string must be freed using the <code>free</code> function.</p>
 <h3 class="function"><a id="cupsLangAddStrings">cupsLangAddStrings</a></h3>
 <p class="description">Add strings for the specified language.</p>
 <p class="code">
@@ -4975,7 +5226,7 @@ bool cupsSetDests(<a href="#http_t">http_t</a> *http, size_t num_dests, <a href=
 <p class="description"><code>true</code> on success, <code>false</code> on error</p>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">This function saves the destinations to /etc/cups/lpoptions when run
-as root and ~/.cups/lpoptions when run as a normal user.</p>
+as root and ~/.../lpoptions when run as a normal user.</p>
 <h3 class="function"><a id="cupsSetEncryption">cupsSetEncryption</a></h3>
 <p class="description">Set the encryption preference.</p>
 <p class="code">
@@ -5203,7 +5454,7 @@ void cupsThreadCancel(<a href="#cups_thread_t">cups_thread_t</a> thread);</p>
 <td class="description">Entry point context</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">Thread</p>
+<p class="description">Thread ID or <code>CUPS_THREAD_INVALID</code> on failure</p>
 <h3 class="function"><a id="cupsThreadDetach">cupsThreadDetach</a></h3>
 <p class="description">Tell the OS that the thread is running independently.</p>
 <p class="code">
@@ -5719,13 +5970,15 @@ char *httpDecode64(char *out, size_t *outlen, const char *in);</p>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Decoded string</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The caller must initialize &quot;outlen&quot; to the maximum size of the decoded
-string before calling <code>httpDecode64_2</code>.  On return &quot;outlen&quot; contains the
-decoded length of the string.</p>
+<p class="discussion">This function decodes a Base64 string as defined by RFC 4648.  The caller
+must initialize &quot;outlen&quot; to the maximum size of the decoded string.  On
+return &quot;outlen&quot; contains the decoded length of the string.<br>
+<br>
+This function supports both Base64 and Base64url strings.</p>
 <h3 class="function"><a id="httpEncode64">httpEncode64</a></h3>
 <p class="description">Base64-encode a string.</p>
 <p class="code">
-char *httpEncode64(char *out, size_t outlen, const char *in, size_t inlen);</p>
+char *httpEncode64(char *out, size_t outlen, const char *in, size_t inlen, bool url);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>out</th>
@@ -5736,9 +5989,15 @@ char *httpEncode64(char *out, size_t outlen, const char *in, size_t inlen);</p>
 <td class="description">String to read from</td></tr>
 <tr><th>inlen</th>
 <td class="description">Size of input string</td></tr>
+<tr><th>url</th>
+<td class="description"><code>true</code> for Base64url, <code>false</code> for Base64</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Encoded string</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function encodes a Base64 string as defined by RFC 4648.  The &quot;url&quot;
+parameter controls whether the original Base64 (&quot;url&quot; = <code>false</code>) or the
+Base64url (&quot;url&quot; = <code>true</code>) alphabet is used.</p>
 <h3 class="function"><a id="httpError">httpError</a></h3>
 <p class="description">Get the last error on a connection.</p>
 <p class="code">
@@ -9058,6 +9317,16 @@ typedef struct <a href="#cups_job_s">cups_job_s</a> cups_job_t;
 <p class="code">
 typedef enum <a href="#cups_jog_e">cups_jog_e</a> cups_jog_t;
 </p>
+<h3 class="typedef"><a id="cups_json_t">cups_json_t</a></h3>
+<p class="description">JSON node</p>
+<p class="code">
+typedef struct _cups_json_s cups_json_t;
+</p>
+<h3 class="typedef"><a id="cups_jtype_t">cups_jtype_t</a></h3>
+<p class="description">JSON node type</p>
+<p class="code">
+typedef enum <a href="#cups_jtype_e">cups_jtype_e</a> cups_jtype_t;
+</p>
 <h3 class="typedef"><a id="cups_lang_t">cups_lang_t</a></h3>
 <p class="description">Language Cache</p>
 <p class="code">
@@ -9793,6 +10062,19 @@ factor not applied)</td></tr>
 <tr><th>CUPS_JOG_JOB </th><td class="description">Move pages after this job</td></tr>
 <tr><th>CUPS_JOG_NONE </th><td class="description">Never move pages</td></tr>
 <tr><th>CUPS_JOG_SET </th><td class="description">Move pages after this set</td></tr>
+</tbody></table>
+<h3 class="enumeration"><a id="cups_jtype_e">cups_jtype_e</a></h3>
+<p class="description">JSON node type</p>
+<h4 class="constants">Constants</h4>
+<table class="list"><tbody>
+<tr><th>CUPS_JTYPE_ARRAY </th><td class="description">Array value</td></tr>
+<tr><th>CUPS_JTYPE_FALSE </th><td class="description">Boolean false value</td></tr>
+<tr><th>CUPS_JTYPE_KEY </th><td class="description">Object key (string)</td></tr>
+<tr><th>CUPS_JTYPE_NULL </th><td class="description">Null value</td></tr>
+<tr><th>CUPS_JTYPE_NUMBER </th><td class="description">Number value</td></tr>
+<tr><th>CUPS_JTYPE_OBJECT </th><td class="description">Object value</td></tr>
+<tr><th>CUPS_JTYPE_STRING </th><td class="description">String value</td></tr>
+<tr><th>CUPS_JTYPE_TRUE </th><td class="description">Boolean true value</td></tr>
 </tbody></table>
 <h3 class="enumeration"><a id="cups_mediapos_e">cups_mediapos_e</a></h3>
 <p class="description">MediaPosition values</p>

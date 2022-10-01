@@ -61,6 +61,7 @@ typedef pthread_key_t	cups_thread_key_t;
 #    define cupsThreadGetData(k) pthread_getspecific(k)
 #    define cupsThreadSetData(k,p) pthread_setspecific(k,p)
 #  endif // _WIN32
+#  define CUPS_THREAD_INVALID (cups_thread_t)0
 
 
 //

@@ -234,7 +234,7 @@ cupsThreadCancel(cups_thread_t thread)// I - Thread ID
 // 'cupsThreadCreate()' - Create a thread.
 //
 
-cups_thread_t				// O - Thread ID
+cups_thread_t				// O - Thread ID or `CUPS_THREAD_INVALID` on failure
 cupsThreadCreate(
     cups_thread_func_t func,		// I - Entry point
     void               *arg)		// I - Entry point context
@@ -243,10 +243,10 @@ cupsThreadCreate(
 
 
   if (!func)
-    return (NULL);
+    return (CUPS_THREAD_INVALID);
 
   if ((thread = (cups_thread_t)calloc(1, sizeof(struct _cups_thread_s))) == NULL)
-    return (NULL);
+    return (CUPS_THREAD_INVALID);
 
   thread->func = func;
   thread->arg  = arg;
@@ -255,7 +255,7 @@ cupsThreadCreate(
   if (thread->h == 0 || thread->h == (HANDLE)-1)
   {
     free(thread);
-    return (NULL);
+    return (CUPS_THREAD_INVALID);
   }
 
   return (thread);
@@ -592,7 +592,7 @@ cupsThreadCancel(cups_thread_t thread)// I - Thread ID
 // 'cupsThreadCreate()' - Create a thread.
 //
 
-cups_thread_t				// O - Thread
+cups_thread_t				// O - Thread ID or `CUPS_THREAD_INVALID` on failure
 cupsThreadCreate(
     cups_thread_func_t func,		// I - Entry point
     void               *arg)		// I - Entry point context
@@ -601,7 +601,7 @@ cupsThreadCreate(
 
 
   if (pthread_create(&thread, NULL, (void *(*)(void *))func, arg))
-    return (0);
+    return (CUPS_THREAD_INVALID);
   else
     return (thread);
 }
