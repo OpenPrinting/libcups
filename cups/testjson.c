@@ -217,7 +217,7 @@ main(int  argc,				// I - Number of command-line arguments
     cupsJSONDelete(json);
     testEnd(true);
 
-    if (!test_all_pass)
+    if (!testsPassed)
       return (1);
   }
   else
