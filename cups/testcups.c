@@ -1,69 +1,71 @@
-/*
- * CUPS API test program for CUPS.
- *
- * Copyright © 2007-2018 by Apple Inc.
- * Copyright © 2007 by Easy Software Products.
- *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more information.
- */
-
-/*
- * Include necessary headers...
- */
+//
+// CUPS API test program for CUPS.
+//
+// Copyright © 2007-2018 by Apple Inc.
+// Copyright © 2007 by Easy Software Products.
+//
+// Licensed under Apache License v2.0.  See the file "LICENSE" for more information.
+//
 
 #undef _CUPS_NO_DEPRECATED
 #include "cups-private.h"
-#include "ppd.h"
 #include <stdlib.h>
+#include "test-internal.h"
 
 
-/*
- * Local functions...
- */
+//
+// Local functions...
+//
 
-static int	dests_equal(cups_dest_t *a, cups_dest_t *b);
-static int	enum_cb(void *user_data, unsigned flags, cups_dest_t *dest);
+static bool	dests_equal(cups_dest_t *a, cups_dest_t *b);
+static bool	enum_cb(void *user_data, unsigned flags, cups_dest_t *dest);
 static void	show_diffs(cups_dest_t *a, cups_dest_t *b);
 
 
-/*
- * 'main()' - Main entry.
- */
+//
+// 'main()' - Main entry.
+//
 
-int					/* O - Exit status */
-main(int  argc,				/* I - Number of command-line arguments */
-     char *argv[])			/* I - Command-line arguments */
+int					// O - Exit status
+main(int  argc,				// I - Number of command-line arguments
+     char *argv[])			// I - Command-line arguments
 {
-  http_t	*http,			/* First HTTP connection */
-		*http2;			/* Second HTTP connection */
-  int		status = 0,		/* Exit status */
-		i,			/* Looping var */
-		num_dests;		/* Number of destinations */
-  cups_dest_t	*dests,			/* Destinations */
-		*dest,			/* Current destination */
-		*named_dest;		/* Current named destination */
-  const char	*dest_name,             /* Destination name */
-                *dval,                  /* Destination value */
-                *ppdfile;		/* PPD file */
-  ppd_file_t	*ppd;			/* PPD file data */
-  int		num_jobs;		/* Number of jobs for queue */
-  cups_job_t	*jobs;			/* Jobs for queue */
+  unsigned	numbers[100];		// Random numbers
+  http_t	*http,			// First HTTP connection
+		*http2;			// Second HTTP connection
+  int		status = 0,		// Exit status
+		i;			// Looping var
+  size_t	num_dests;		// Number of destinations
+  cups_dest_t	*dests,			// Destinations
+		*dest,			// Current destination
+		*named_dest;		// Current named destination
+  const char	*dest_name,		// Destination name
+		*dval;			// Destination value
+#if 0
+  int		num_jobs;		// Number of jobs for queue
+  cups_job_t	*jobs;			// Jobs for queue
+#endif // 0
 
 
   if (argc > 1)
   {
     if (!strcmp(argv[1], "enum"))
     {
+      // ./testcups enum [bw color mono duplex simplex staple copies collate
+      //                  punch cover bind sort mfp printer large medium small]
       cups_ptype_t	mask = CUPS_PRINTER_LOCAL,
-					/* Printer type mask */
+					// Printer type mask
 			type = CUPS_PRINTER_LOCAL;
-					/* Printer type */
-      int		msec = 0;	/* Timeout in milliseconds */
+					// Printer type
+      int		msec = 0;	// Timeout in milliseconds
 
 
       for (i = 2; i < argc; i ++)
+      {
         if (isdigit(argv[i][0] & 255) || argv[i][0] == '.')
+        {
           msec = (int)(atof(argv[i]) * 1000);
+        }
         else if (!_cups_strcasecmp(argv[i], "bw"))
         {
           mask |= CUPS_PRINTER_BW;
@@ -147,67 +149,61 @@ main(int  argc,				/* I - Number of command-line arguments */
           type |= CUPS_PRINTER_SMALL;
         }
         else
+        {
           fprintf(stderr, "Unknown argument \"%s\" ignored...\n", argv[i]);
+        }
+      }
 
       cupsEnumDests(CUPS_DEST_FLAGS_NONE, msec, NULL, type, mask, enum_cb, NULL);
     }
     else if (!strcmp(argv[1], "password"))
     {
-      const char *pass = cupsGetPassword("Password:");
-					  /* Password string */
+      const char *pass = cupsGetPassword("Password:", NULL, NULL, NULL);
+					  // Password string
 
       if (pass)
 	printf("Password entered: %s\n", pass);
       else
 	puts("No password entered.");
     }
-    else if (!strcmp(argv[1], "ppd") && argc == 3)
-    {
-     /*
-      * ./testcups ppd printer
-      */
-
-      http_status_t	http_status;	/* Status */
-      char		buffer[1024];	/* PPD filename */
-      time_t		modtime = 0;	/* Last modified */
-
-      if ((http_status = cupsGetPPD3(CUPS_HTTP_DEFAULT, argv[2], &modtime,
-                                     buffer, sizeof(buffer))) != HTTP_STATUS_OK)
-        printf("Unable to get PPD: %d (%s)\n", (int)http_status,
-               cupsLastErrorString());
-      else
-        puts(buffer);
-    }
     else if (!strcmp(argv[1], "print") && argc == 5)
     {
-     /*
-      * ./testcups print printer file interval
-      */
+      // ./testcups print printer file interval
+      cups_dest_t	*dest;		// Destination
+      cups_dinfo_t	*dinfo;		// Destination information
+      int		interval,	// Interval between writes
+			job_id;		// Job ID
+      cups_file_t	*fp;		// Print file
+      char		buffer[16384];	// Read/write buffer
+      ssize_t		bytes;		// Bytes read/written
 
-      int		interval,	/* Interval between writes */
-			job_id;		/* Job ID */
-      cups_file_t	*fp;		/* Print file */
-      char		buffer[16384];	/* Read/write buffer */
-      ssize_t		bytes;		/* Bytes read/written */
+      if ((dest = cupsGetNamedDest(CUPS_HTTP_DEFAULT, argv[2], NULL)) == NULL)
+      {
+        printf("Unable to find printer '%s': %s\n", argv[2], cupsLastErrorString());
+        return (1);
+      }
+
+      if ((dinfo = cupsCopyDestInfo(CUPS_HTTP_DEFAULT, dest)) == NULL)
+      {
+        printf("Unable to get information about printer '%s': %s\n", argv[2], cupsLastErrorString());
+        return (1);
+      }
 
       if ((fp = cupsFileOpen(argv[3], "r")) == NULL)
       {
-	printf("Unable to open \"%s\": %s\n", argv[2], strerror(errno));
+	printf("Unable to open \"%s\": %s\n", argv[3], strerror(errno));
 	return (1);
       }
 
-      if ((job_id = cupsCreateJob(CUPS_HTTP_DEFAULT, argv[2], "testcups", 0,
-				  NULL)) <= 0)
+      if (cupsCreateDestJob(CUPS_HTTP_DEFAULT, dest, dinfo, &job_id, "testcups", 0, NULL) > IPP_STATUS_OK_CONFLICTING)
       {
-	printf("Unable to create print job on %s: %s\n", argv[1],
-	       cupsLastErrorString());
+	printf("Unable to create print job on '%s': %s\n", argv[2], cupsLastErrorString());
 	return (1);
       }
 
       interval = atoi(argv[4]);
 
-      if (cupsStartDocument(CUPS_HTTP_DEFAULT, argv[1], job_id, argv[2],
-			    CUPS_FORMAT_AUTO, 1) != HTTP_STATUS_CONTINUE)
+      if (cupsStartDestDocument(CUPS_HTTP_DEFAULT, dest, dinfo, job_id, argv[3], CUPS_FORMAT_AUTO, 0, NULL, true) != HTTP_STATUS_CONTINUE)
       {
 	puts("Unable to start document!");
 	return (1);
@@ -229,8 +225,7 @@ main(int  argc,				/* I - Number of command-line arguments */
 
       cupsFileClose(fp);
 
-      if (cupsFinishDocument(CUPS_HTTP_DEFAULT,
-                             argv[1]) > IPP_STATUS_OK_IGNORED_OR_SUBSTITUTED)
+      if (cupsFinishDestDocument(CUPS_HTTP_DEFAULT, dest, dinfo) > IPP_STATUS_OK_IGNORED_OR_SUBSTITUTED)
       {
 	puts("Unable to finish document!");
 	return (1);
@@ -254,8 +249,6 @@ main(int  argc,				/* I - Number of command-line arguments */
       puts("");
       puts("Get the PPD file:");
       puts("");
-      puts("    ./testcups ppd printer");
-      puts("");
       puts("Print a file (interval controls delay between buffers in seconds):");
       puts("");
       puts("    ./testcups print printer file interval");
@@ -265,117 +258,138 @@ main(int  argc,				/* I - Number of command-line arguments */
     return (0);
   }
 
- /*
-  * _cupsConnect() connection reuse...
-  */
+  //
+  // cupsGetRand()
+  //
 
-  fputs("_cupsConnect: ", stdout);
+  testBegin("cupsGetRand");
+  for (i = 0; i < 100; i ++)
+    numbers[i] = cupsGetRand();
+  for (i = 0; i < 99; i ++)
+  {
+    if (numbers[i] != numbers[i + 1])
+      break;
+  }
+  testEnd(i < 99);
+  if (i >= 99)
+  {
+    for (i = 0; i < 100; i ++)
+      testMessage("    numbers[%d]=%u", i, numbers[i]);
+  }
+
+
+  //
+  // _cupsConnect() connection reuse...
+  //
+
+  testBegin("_cupsConnect");
   http  = _cupsConnect();
   http2 = _cupsConnect();
 
   if (http == http2)
   {
-    puts("PASS");
+    testEnd(true);
   }
   else
   {
-    puts("FAIL (different connections)");
+    testEndMessage(false, "different connections");
     return (1);
   }
 
- /*
-  * cupsGetDests()
-  */
+  //
+  // cupsGetDests()
+  //
 
-  fputs("cupsGetDests: ", stdout);
-  fflush(stdout);
+  testBegin("cupsGetDests");
 
-  num_dests = cupsGetDests(&dests);
+  num_dests = cupsGetDests(CUPS_HTTP_DEFAULT, &dests);
 
   if (num_dests == 0)
   {
-    puts("FAIL");
-    return (1);
+    testEnd(false);
+    status = 1;
   }
   else
   {
-    printf("PASS (%d dests)\n", num_dests);
+    size_t count;			// Count
 
-    for (i = num_dests, dest = dests; i > 0; i --, dest ++)
+    testEndMessage(true, "%d dests", num_dests);
+
+    for (count = num_dests, dest = dests; count > 0; count --, dest ++)
     {
-      printf("    %s", dest->name);
-
       if (dest->instance)
-        printf("    /%s", dest->instance);
-
-      if (dest->is_default)
-        puts(" ***DEFAULT***");
+        testMessage("    %s/%s%s", dest->name, dest->instance, dest->is_default ? " **DEFAULT**" : "");
       else
-        putchar('\n');
+        testMessage("    %s %s", dest->name, dest->is_default ? " **DEFAULT**" : "");
     }
   }
 
- /*
-  * cupsGetDest(NULL)
-  */
+  //
+  // cupsGetDest(NULL)
+  //
 
-  fputs("cupsGetDest(NULL): ", stdout);
-  fflush(stdout);
+  testBegin("cupsGetDest(NULL)");
 
   if ((dest = cupsGetDest(NULL, NULL, num_dests, dests)) == NULL)
   {
-    for (i = num_dests, dest = dests; i > 0; i --, dest ++)
+    size_t count;			// Count
+
+    for (count = num_dests, dest = dests; count > 0; count --, dest ++)
+    {
       if (dest->is_default)
         break;
+    }
 
-    if (i)
+    if (count)
     {
       status = 1;
-      puts("FAIL");
+      testEnd(false);
     }
     else
-      puts("PASS (no default)");
+    {
+      testEndMessage(true, "no default");
+    }
 
     dest = NULL;
   }
   else
-    printf("PASS (%s)\n", dest->name);
+    testEndMessage(true, "%s", dest->name);
 
- /*
-  * cupsGetNamedDest(NULL, NULL, NULL)
-  */
+  //
+  // cupsGetNamedDest(NULL, NULL, NULL)
+  //
 
-  fputs("cupsGetNamedDest(NULL, NULL, NULL): ", stdout);
-  fflush(stdout);
+  testBegin("cupsGetNamedDest(NULL, NULL, NULL)");
 
-  if ((named_dest = cupsGetNamedDest(NULL, NULL, NULL)) == NULL ||
-      !dests_equal(dest, named_dest))
+  if ((named_dest = cupsGetNamedDest(NULL, NULL, NULL)) == NULL || !dests_equal(dest, named_dest))
   {
     if (!dest)
-      puts("PASS (no default)");
+    {
+      testEndMessage(true, "no default");
+    }
     else if (named_dest)
     {
-      puts("FAIL (different values)");
+      testEndMessage(false, "different values");
       show_diffs(dest, named_dest);
       status = 1;
     }
     else
     {
-      puts("FAIL (no default)");
+      testEndMessage(false, "no default");
       status = 1;
     }
   }
   else
-    printf("PASS (%s)\n", named_dest->name);
+    testEndMessage(true, "%s", named_dest->name);
 
   if (named_dest)
     cupsFreeDests(1, named_dest);
 
- /*
-  * cupsGetDest(printer)
-  */
+  //
+  // cupsGetDest(printer)
+  //
 
-  for (i = 0, dest_name = NULL; i < num_dests; i ++)
+  for (i = 0, dest_name = NULL; i < (int)num_dests; i ++)
   {
     if ((dval = cupsGetOption("printer-is-temporary", dests[i].num_options, dest[i].options)) != NULL && !strcmp(dval, "false"))
     {
@@ -384,166 +398,132 @@ main(int  argc,				/* I - Number of command-line arguments */
     }
   }
 
-  printf("cupsGetDest(\"%s\"): ", dest_name ? dest_name : "(null)");
-  fflush(stdout);
+  testBegin("cupsGetDest(\"%s\"): ", dest_name);
 
   if ((dest = cupsGetDest(dest_name, NULL, num_dests, dests)) == NULL)
   {
-    puts("FAIL");
-    return (1);
-  }
-  else
-    puts("PASS");
-
- /*
-  * cupsGetNamedDest(NULL, printer, instance)
-  */
-
-  printf("cupsGetNamedDest(NULL, \"%s\", \"%s\"): ", dest->name,
-         dest->instance ? dest->instance : "(null)");
-  fflush(stdout);
-
-  if ((named_dest = cupsGetNamedDest(NULL, dest->name, dest->instance)) == NULL ||
-      !dests_equal(dest, named_dest))
-  {
-    if (named_dest)
-    {
-      puts("FAIL (different values)");
-      show_diffs(dest, named_dest);
-    }
-    else
-      puts("FAIL (no destination)");
-
-
+    testEnd(false);
     status = 1;
   }
   else
-    puts("PASS");
+  {
+    testEnd(true);
 
-  if (named_dest)
-    cupsFreeDests(1, named_dest);
+    //
+    // cupsGetNamedDest(NULL, printer, instance)
+    //
 
- /*
-  * cupsPrintFile()
-  */
+    testBegin("cupsGetNamedDest(NULL, \"%s\", \"%s\"): ", dest->name, dest->instance);
 
-  fputs("cupsPrintFile: ", stdout);
+    if ((named_dest = cupsGetNamedDest(NULL, dest->name, dest->instance)) == NULL || !dests_equal(dest, named_dest))
+    {
+      if (named_dest)
+      {
+	testEndMessage(false, "different values");
+	show_diffs(dest, named_dest);
+      }
+      else
+      {
+	testEndMessage(false, "no destination");
+      }
+
+      status = 1;
+    }
+    else
+    {
+      testEnd(true);
+    }
+
+    if (named_dest)
+      cupsFreeDests(1, named_dest);
+  }
+
+#if 0
+  //
+  // cupsPrintFile()
+  //
+
+  testBegin("cupsPrintFile");
   fflush(stdout);
 
   if (cupsPrintFile(dest->name, "../test/testfile.pdf", "Test Page",
                     dest->num_options, dest->options) <= 0)
   {
-    printf("FAIL (%s)\n", cupsLastErrorString());
+    testEndMessage(false, "%s", cupsLastErrorString());
     return (1);
   }
   else
-    puts("PASS");
+    testEnd(true);
 
- /*
-  * cupsGetPPD(printer)
-  */
 
-  fputs("cupsGetPPD: ", stdout);
-  fflush(stdout);
+  //
+  // cupsGetJobs()
+  //
 
-  if ((ppdfile = cupsGetPPD(dest->name)) == NULL)
-  {
-    puts("FAIL");
-  }
-  else
-  {
-    puts("PASS");
-
-   /*
-    * ppdOpenFile()
-    */
-
-    fputs("ppdOpenFile: ", stdout);
-    fflush(stdout);
-
-    if ((ppd = ppdOpenFile(ppdfile)) == NULL)
-    {
-      puts("FAIL");
-      return (1);
-    }
-    else
-      puts("PASS");
-
-    ppdClose(ppd);
-    unlink(ppdfile);
-  }
-
- /*
-  * cupsGetJobs()
-  */
-
-  fputs("cupsGetJobs: ", stdout);
+  testBegin("cupsGetJobs");
   fflush(stdout);
 
   num_jobs = cupsGetJobs(&jobs, NULL, 0, -1);
 
   if (num_jobs == 0)
   {
-    puts("FAIL");
+    testEnd(false);
     return (1);
   }
   else
-    puts("PASS");
+    testEnd(true);
 
   cupsFreeJobs(num_jobs, jobs);
   cupsFreeDests(num_dests, dests);
+#endif // 0
 
   return (status);
 }
 
 
-/*
- * 'dests_equal()' - Determine whether two destinations are equal.
- */
+//
+// 'dests_equal()' - Determine whether two destinations are equal.
+//
 
-static int				/* O - 1 if equal, 0 if not equal */
-dests_equal(cups_dest_t *a,		/* I - First destination */
-            cups_dest_t *b)		/* I - Second destination */
+static bool				// O - `true` if equal, `false` if not equal
+dests_equal(cups_dest_t *a,		// I - First destination
+            cups_dest_t *b)		// I - Second destination
 {
-  int		i;			/* Looping var */
-  cups_option_t	*aoption;		/* Current option */
-  const char	*bval;			/* Option value */
+  size_t	i;			// Looping var
+  cups_option_t	*aoption;		// Current option
+  const char	*bval;			// Option value
 
 
   if (a == b)
-    return (1);
+    return (true);
 
   if (!a || !b)
-    return (0);
+    return (false);
 
-  if (_cups_strcasecmp(a->name, b->name) ||
-      (a->instance && !b->instance) ||
-      (!a->instance && b->instance) ||
-      (a->instance && _cups_strcasecmp(a->instance, b->instance)) ||
-      a->num_options != b->num_options)
-    return (0);
+  if (_cups_strcasecmp(a->name, b->name) || (a->instance && !b->instance) || (!a->instance && b->instance) || (a->instance && _cups_strcasecmp(a->instance, b->instance)) || a->num_options != b->num_options)
+    return (false);
 
   for (i = a->num_options, aoption = a->options; i > 0; i --, aoption ++)
-    if ((bval = cupsGetOption(aoption->name, b->num_options,
-                              b->options)) == NULL ||
-        strcmp(aoption->value, bval))
-      return (0);
+  {
+    if ((bval = cupsGetOption(aoption->name, b->num_options, b->options)) == NULL || strcmp(aoption->value, bval))
+      return (false);
+  }
 
-  return (1);
+  return (true);
 }
 
 
-/*
- * 'enum_cb()' - Report additions and removals.
- */
+//
+// 'enum_cb()' - Report additions and removals.
+//
 
-static int				/* O - 1 to continue, 0 to stop */
-enum_cb(void        *user_data,		/* I - User data (unused) */
-        unsigned    flags,		/* I - Destination flags */
-        cups_dest_t *dest)		/* I - Destination */
+static bool				// O - `true` to continue, `false` to stop
+enum_cb(void        *user_data,		// I - User data (unused)
+        unsigned    flags,		// I - Destination flags
+        cups_dest_t *dest)		// I - Destination
 {
-  int		i;			/* Looping var */
-  cups_option_t	*option;		/* Current option */
+  int		i;			// Looping var
+  cups_option_t	*option;		// Current option
 
 
   (void)user_data;
@@ -558,22 +538,22 @@ enum_cb(void        *user_data,		/* I - User data (unused) */
 
   putchar('\n');
 
-  return (1);
+  return (true);
 }
 
 
-/*
- * 'show_diffs()' - Show differences between two destinations.
- */
+//
+// 'show_diffs()' - Show differences between two destinations.
+//
 
 static void
-show_diffs(cups_dest_t *a,		/* I - First destination */
-           cups_dest_t *b)		/* I - Second destination */
+show_diffs(cups_dest_t *a,		// I - First destination
+           cups_dest_t *b)		// I - Second destination
 {
-  int		i;			/* Looping var */
-  cups_option_t	*aoption;		/* Current option */
-  cups_option_t	*boption;		/* Current option */
-  const char	*bval;			/* Option value */
+  size_t	i;			// Looping var
+  cups_option_t	*aoption;		// Current option
+  cups_option_t	*boption;		// Current option
+  const char	*bval;			// Option value
 
 
   if (!a || !b)
@@ -593,18 +573,17 @@ show_diffs(cups_dest_t *a,		/* I - First destination */
 	   b->instance ? b->instance : "(null)");
 
   if (a->num_options != b->num_options)
-    printf("    num_options           %-24d  %-24d\n", a->num_options,
-           b->num_options);
+    printf("    num_options           %-24u  %-24u\n", (unsigned)a->num_options, (unsigned)b->num_options);
 
   for (i = a->num_options, aoption = a->options; i > 0; i --, aoption ++)
-    if ((bval = cupsGetOption(aoption->name, b->num_options,
-                              b->options)) == NULL ||
-        strcmp(aoption->value, bval))
-      printf("    %-20.20s  %-24.24s  %-24.24s\n", aoption->name,
-             aoption->value, bval ? bval : "(null)");
+  {
+    if ((bval = cupsGetOption(aoption->name, b->num_options, b->options)) == NULL || strcmp(aoption->value, bval))
+      printf("    %-20.20s  %-24.24s  %-24.24s\n", aoption->name, aoption->value, bval ? bval : "(null)");
+  }
 
   for (i = b->num_options, boption = b->options; i > 0; i --, boption ++)
+  {
     if (!cupsGetOption(boption->name, a->num_options, a->options))
-      printf("    %-20.20s  %-24.24s  %-24.24s\n", boption->name,
-             boption->value, "(null)");
+      printf("    %-20.20s  %-24.24s  %-24.24s\n", boption->name, boption->value, "(null)");
+  }
 }

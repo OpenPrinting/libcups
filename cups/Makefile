@@ -60,6 +60,7 @@ TESTOBJS	= \
 		testarray.o \
 		testclient.o \
 		testcreds.o \
+		testcups.o \
 		testdest.o \
 		testdnssd.o \
 		testfile.o \
@@ -77,7 +78,6 @@ OBJS	=	\
 		$(LIBOBJS) \
 		$(TESTOBJS)
 
-#		testcups.o \
 #		testlang.o \
 #		testpwg.o \
 
@@ -136,6 +136,7 @@ UNITTARGETS =	\
 		testarray \
 		testclient \
 		testcreds \
+		testcups \
 		testdest \
 		testdnssd \
 		testfile \
@@ -150,7 +151,6 @@ UNITTARGETS =	\
 		testthreads \
 		tlscheck
 
-#		testcups \
 #		testlang \
 #		testpwg \
 
@@ -173,6 +173,8 @@ test:		$(UNITTARGETS)
 	rm -f test.log
 	echo Running array API tests...
 	./testarray 2>>test.log
+	echo Running CUPS API tests...
+	./testcups 2>>test.log
 	echo Running file API tests...
 	./testfile 2>>test.log
 	echo Running HTTP API tests...

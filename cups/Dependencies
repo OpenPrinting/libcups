@@ -879,6 +879,31 @@ testcreds.o: testcreds.c cups-private.h string-private.h ../config.h \
   \
   \
   pwg-private.h thread.h
+testcups.o: testcups.c cups-private.h string-private.h ../config.h base.h \
+  debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
+  ipp.h http.h language.h transcode.h pwg.h http-private.h \
+  ../cups/language.h \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  pwg-private.h thread.h test-internal.h
 testdest.o: testdest.c cups.h file.h base.h ipp.h http.h array.h \
   language.h transcode.h pwg.h
 testdnssd.o: testdnssd.c test-internal.h dnssd.h cups.h file.h base.h \
