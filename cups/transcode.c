@@ -133,14 +133,11 @@ cupsCharsetToUTF8(
 
 
   // Check for valid arguments...
-  DEBUG_printf(("2cupsCharsetToUTF8(dest=%p, src=\"%s\", maxout=%u, encoding=%d)", (void *)dest, src, (unsigned)maxout, encoding));
-
   if (!dest || !src || maxout < 1)
   {
     if (dest)
       *dest = '\0';
 
-    DEBUG_puts("3cupsCharsetToUTF8: Bad arguments, returning -1");
     return (-1);
   }
 
@@ -232,15 +229,9 @@ cupsEncodingString(
     cups_encoding_t value)		// I - Encoding value
 {
   if (value < CUPS_ENCODING_US_ASCII || value >= (cups_encoding_t)(sizeof(map_encodings) / sizeof(map_encodings[0])))
-  {
-    DEBUG_printf(("1cupsEncodingString(encoding=%d) = out of range (\"%s\")", value, map_encodings[0]));
     return (map_encodings[0]);
-  }
   else
-  {
-    DEBUG_printf(("1cupsEncodingString(encoding=%d)=\"%s\"", value, map_encodings[value]));
     return (map_encodings[value]);
-  }
 }
 
 
@@ -406,17 +397,11 @@ cupsUTF8ToUTF32(
 
 
   // Check for valid arguments and clear output...
-  DEBUG_printf(("2cupsUTF8ToUTF32(dest=%p, src=\"%s\", maxout=%u)", (void *)dest, src, (unsigned)maxout));
-
   if (dest)
     *dest = 0;
 
   if (!dest || !src || maxout < 1 || maxout > CUPS_MAX_USTRING)
-  {
-    DEBUG_puts("3cupsUTF8ToUTF32: Returning -1 (bad arguments)");
-
     return (-1);
-  }
 
   // Convert input UTF-8 to output UTF-32...
   for (i = maxout - 1; *src && i > 0; i --)
@@ -428,8 +413,6 @@ cupsUTF8ToUTF32(
     {
       // One-octet UTF-8 <= 127 (US-ASCII)...
       *dest++ = (cups_utf32_t)ch;
-
-      DEBUG_printf(("4cupsUTF8ToUTF32: %02x => %08X", src[-1], ch));
       continue;
     }
     else if ((ch & 0xe0) == 0xc0)
@@ -437,111 +420,67 @@ cupsUTF8ToUTF32(
       // Two-octet UTF-8 <= 2047 (Latin-x)...
       next = *src++;
       if ((next & 0xc0) != 0x80)
-      {
-        DEBUG_puts("3cupsUTF8ToUTF32: Returning -1 (bad UTF-8 sequence)");
-
 	return (-1);
-      }
 
       ch32 = (cups_utf32_t)((ch & 0x1f) << 6) | (cups_utf32_t)(next & 0x3f);
 
       // Check for non-shortest form (invalid UTF-8)...
       if (ch32 < 0x80)
-      {
-        DEBUG_puts("3cupsUTF8ToUTF32: Returning -1 (bad UTF-8 sequence)");
-
 	return (-1);
-      }
 
       *dest++ = ch32;
-
-      DEBUG_printf(("4cupsUTF8ToUTF32: %02x %02x => %08X", src[-2], src[-1], (unsigned)ch32));
     }
     else if ((ch & 0xf0) == 0xe0)
     {
       // Three-octet UTF-8 <= 65535 (Plane 0 - BMP)...
       next = *src++;
       if ((next & 0xc0) != 0x80)
-      {
-        DEBUG_puts("3cupsUTF8ToUTF32: Returning -1 (bad UTF-8 sequence)");
-
 	return (-1);
-      }
 
       ch32 = (cups_utf32_t)((ch & 0x0f) << 6) | (cups_utf32_t)(next & 0x3f);
 
       next = *src++;
       if ((next & 0xc0) != 0x80)
-      {
-        DEBUG_puts("3cupsUTF8ToUTF32: Returning -1 (bad UTF-8 sequence)");
-
 	return (-1);
-      }
 
       ch32 = (ch32 << 6) | (cups_utf32_t)(next & 0x3f);
 
       // Check for non-shortest form (invalid UTF-8)...
       if (ch32 < 0x800)
-      {
-        DEBUG_puts("3cupsUTF8ToUTF32: Returning -1 (bad UTF-8 sequence)");
-
 	return (-1);
-      }
 
       *dest++ = ch32;
-
-      DEBUG_printf(("4cupsUTF8ToUTF32: %02x %02x %02x => %08X", src[-3], src[-2], src[-1], (unsigned)ch32));
     }
     else if ((ch & 0xf8) == 0xf0)
     {
       // Four-octet UTF-8...
       next = *src++;
       if ((next & 0xc0) != 0x80)
-      {
-        DEBUG_puts("3cupsUTF8ToUTF32: Returning -1 (bad UTF-8 sequence)");
-
 	return (-1);
-      }
 
       ch32 = (cups_utf32_t)((ch & 0x07) << 6) | (cups_utf32_t)(next & 0x3f);
 
       next = *src++;
       if ((next & 0xc0) != 0x80)
-      {
-        DEBUG_puts("3cupsUTF8ToUTF32: Returning -1 (bad UTF-8 sequence)");
-
 	return (-1);
-      }
 
       ch32 = (ch32 << 6) | (cups_utf32_t)(next & 0x3f);
 
       next = *src++;
       if ((next & 0xc0) != 0x80)
-      {
-        DEBUG_puts("3cupsUTF8ToUTF32: Returning -1 (bad UTF-8 sequence)");
-
 	return (-1);
-      }
 
       ch32 = (ch32 << 6) | (cups_utf32_t)(next & 0x3f);
 
       // Check for non-shortest form (invalid UTF-8)...
       if (ch32 < 0x10000)
-      {
-        DEBUG_puts("3cupsUTF8ToUTF32: Returning -1 (bad UTF-8 sequence)");
-
 	return (-1);
-      }
 
       *dest++ = ch32;
-
-      DEBUG_printf(("4cupsUTF8ToUTF32: %02x %02x %02x %02x => %08X", src[-4], src[-3], src[-2], src[-1], (unsigned)ch32));
     }
     else
     {
       // More than 4-octet (invalid UTF-8 sequence)...
-      DEBUG_puts("3cupsUTF8ToUTF32: Returning -1 (bad UTF-8 sequence)");
-
       return (-1);
     }
 
@@ -551,8 +490,6 @@ cupsUTF8ToUTF32(
   }
 
   *dest = 0;
-
-  DEBUG_printf(("3cupsUTF8ToUTF32: Returning %u characters", (unsigned)(maxout - 1 - i)));
 
   return ((ssize_t)(maxout - 1 - i));
 }
@@ -578,23 +515,15 @@ cupsUTF32ToUTF8(
 
 
   // Check for valid arguments and clear output...
-  DEBUG_printf(("2cupsUTF32ToUTF8(dest=%p, src=%p, maxout=%u)", (void *)dest, (void *)src, (unsigned)maxout));
-
   if (dest)
     *dest = '\0';
 
   if (!dest || !src || maxout < 1)
-  {
-    DEBUG_puts("3cupsUTF32ToUTF8: Returning -1 (bad args)");
-
     return (-1);
-  }
 
   // Check for leading BOM in UTF-32 and inverted BOM...
   start = dest;
   swap  = *src == 0xfffe0000;
-
-  DEBUG_printf(("4cupsUTF32ToUTF8: swap=%d", swap));
 
   if (*src == 0xfffe0000 || *src == 0xfeff)
     src ++;
@@ -610,11 +539,7 @@ cupsUTF32ToUTF8(
 
     // Check for beyond Plane 16 (invalid UTF-32)...
     if (ch > 0x10ffff)
-    {
-      DEBUG_puts("3cupsUTF32ToUTF8: Returning -1 (character out of range)");
-
       return (-1);
-    }
 
     // Convert UTF-32 character to UTF-8 character(s)...
     if (ch < 0x80)
@@ -622,65 +547,43 @@ cupsUTF32ToUTF8(
       // One-octet UTF-8 <= 127 (US-ASCII)...
       *dest++ = (char)ch;
       i --;
-
-      DEBUG_printf(("4cupsUTF32ToUTF8: %08x => %02x", (unsigned)ch, dest[-1]));
     }
     else if (ch < 0x800)
     {
       // Two-octet UTF-8 <= 2047 (Latin-x)...
       if (i < 2)
-      {
-        DEBUG_puts("3cupsUTF32ToUTF8: Returning -1 (too long 2)");
-
         return (-1);
-      }
 
       *dest++ = (char)(0xc0 | ((ch >> 6) & 0x1f));
       *dest++ = (char)(0x80 | (ch & 0x3f));
       i -= 2;
-
-      DEBUG_printf(("4cupsUTF32ToUTF8: %08x => %02x %02x", (unsigned)ch, dest[-2], dest[-1]));
     }
     else if (ch < 0x10000)
     {
       // Three-octet UTF-8 <= 65535 (Plane 0 - BMP)...
       if (i < 3)
-      {
-        DEBUG_puts("3cupsUTF32ToUTF8: Returning -1 (too long 3)");
-
         return (-1);
-      }
 
       *dest++ = (char)(0xe0 | ((ch >> 12) & 0x0f));
       *dest++ = (char)(0x80 | ((ch >> 6) & 0x3f));
       *dest++ = (char)(0x80 | (ch & 0x3f));
       i -= 3;
-
-      DEBUG_printf(("4cupsUTF32ToUTF8: %08x => %02x %02x %02x", (unsigned)ch, dest[-3], dest[-2], dest[-1]));
     }
     else
     {
       // Four-octet UTF-8...
       if (i < 4)
-      {
-        DEBUG_puts("3cupsUTF32ToUTF8: Returning -1 (too long 4)");
-
         return (-1);
-      }
 
       *dest++ = (char)(0xf0 | ((ch >> 18) & 0x07));
       *dest++ = (char)(0x80 | ((ch >> 12) & 0x3f));
       *dest++ = (char)(0x80 | ((ch >> 6) & 0x3f));
       *dest++ = (char)(0x80 | (ch & 0x3f));
       i -= 4;
-
-      DEBUG_printf(("4cupsUTF32ToUTF8: %08x => %02x %02x %02x %02x", (unsigned)ch, dest[-4], dest[-3], dest[-2], dest[-1]));
     }
   }
 
   *dest = '\0';
-
-  DEBUG_printf(("3cupsUTF32ToUTF8: Returning %d", (int)(dest - start)));
 
   return ((ssize_t)(dest - start));
 }

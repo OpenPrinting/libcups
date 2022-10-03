@@ -72,14 +72,9 @@ bool					// O - `true` on success, `false` on failure
 cupsArrayAdd(cups_array_t *a,		// I - Array
              void         *e)		// I - Element
 {
-  DEBUG_printf(("2cupsArrayAdd(a=%p, e=%p)", (void *)a, e));
-
   // Range check input...
   if (!a || !e)
-  {
-    DEBUG_puts("3cupsArrayAdd: returning false");
     return (false);
-  }
 
   // Append the element...
   return (cups_array_add(a, e, false));
@@ -113,43 +108,28 @@ cupsArrayAddStrings(cups_array_t *a,	// I - Array
   int		spos = -1;		// Stack position
 
 
-  DEBUG_printf(("cupsArrayAddStrings(a=%p, s=\"%s\", delim='%c')", (void *)a, s, delim));
-
   // Range check input...
   if (!a)
-  {
-    DEBUG_puts("1cupsArrayAddStrings: Returning false");
     return (false);
-  }
 
   if (!a || !s || !*s)
-  {
-    DEBUG_puts("1cupsArrayAddStrings: No strings, returning true");
     return (true);
-  }
 
   if (delim == ' ')
   {
     // Skip leading whitespace...
-    DEBUG_puts("1cupsArrayAddStrings: Skipping leading whitespace.");
-
     while (*s && isspace(*s & 255))
       s ++;
-
-    DEBUG_printf(("1cupsArrayAddStrings: Remaining string \"%s\".", s));
   }
 
   if (!strchr(s, delim) && (delim != ' ' || (!strchr(s, '\t') && !strchr(s, '\n'))) && *s != '\'' && *s != '\"')
   {
     // String doesn't contain a delimiter, so add it as a single value...
-    DEBUG_puts("1cupsArrayAddStrings: No delimiter seen, adding a single value.");
-
     if (!cupsArrayFind(a, (void *)s))
       status = cupsArrayAdd(a, (void *)s);
   }
   else if ((buffer = strdup(s)) == NULL)
   {
-    DEBUG_puts("1cupsArrayAddStrings: Unable to duplicate string.");
     status = false;
   }
   else
@@ -198,16 +178,12 @@ cupsArrayAddStrings(cups_array_t *a,	// I - Array
           end ++;
       }
 
-      DEBUG_printf(("1cupsArrayAddStrings: Adding \"%s\", end=\"%s\"", start, end));
-
       if (!cupsArrayFind(a, start))
         status &= cupsArrayAdd(a, start);
     }
 
     free(buffer);
   }
-
-  DEBUG_printf(("1cupsArrayAddStrings: Returning %s.", status ? "true" : "false"));
 
   return (status);
 }
@@ -573,14 +549,9 @@ bool					// O - `true` on success, `false` on failure
 cupsArrayInsert(cups_array_t *a,	// I - Array
 		void         *e)	// I - Element
 {
-  DEBUG_printf(("2cupsArrayInsert(a=%p, e=%p)", (void *)a, e));
-
   // Range check input...
   if (!a || !e)
-  {
-    DEBUG_puts("3cupsArrayInsert: returning false");
     return (false);
-  }
 
   // Insert the element...
   return (cups_array_add(a, e, true));
@@ -834,8 +805,6 @@ cups_array_add(cups_array_t *a,		// I - Array
   int		diff;			// Comparison with current element
 
 
-  DEBUG_printf(("7cups_array_add(a=%p, e=%p, insert=%d)", (void *)a, e, insert));
-
   // Verify we have room for the new element...
   if (a->num_elements >= a->alloc_elements)
   {
@@ -851,13 +820,8 @@ cups_array_add(cups_array_t *a,		// I - Array
     else
       count = a->alloc_elements + 1024;
 
-    DEBUG_printf(("9cups_array_add: count=" CUPS_LLFMT, CUPS_LLCAST count));
-
     if ((temp = realloc(a->elements, count * sizeof(void *))) == NULL)
-    {
-      DEBUG_puts("9cups_array_add: allocation failed, returning false");
       return (false);
-    }
 
     a->alloc_elements = count;
     a->elements       = temp;
@@ -921,34 +885,20 @@ cups_array_add(cups_array_t *a,		// I - Array
       if (a->saved[i] >= current)
 	a->saved[i] ++;
     }
-
-    DEBUG_printf(("9cups_array_add: insert element at index " CUPS_LLFMT, CUPS_LLCAST current));
   }
-#ifdef DEBUG
-  else
-    DEBUG_printf(("9cups_array_add: append element at " CUPS_LLFMT, CUPS_LLCAST current));
-#endif // DEBUG
 
   if (a->copyfunc)
   {
     if ((a->elements[current] = (a->copyfunc)(e, a->data)) == NULL)
-    {
-      DEBUG_puts("8cups_array_add: Copy function returned NULL, returning false");
       return (false);
-    }
   }
   else
+  {
     a->elements[current] = e;
+  }
 
   a->num_elements ++;
   a->insert = current;
-
-#ifdef DEBUG
-  for (current = 0; current < a->num_elements; current ++)
-    DEBUG_printf(("9cups_array_add: a->elements[" CUPS_LLFMT "]=%p", CUPS_LLCAST current, a->elements[current]));
-#endif // DEBUG
-
-  DEBUG_puts("9cups_array_add: returning true");
 
   return (true);
 }
@@ -970,21 +920,15 @@ cups_array_find(cups_array_t *a,	// I - Array
   int		diff;			// Comparison with current element
 
 
-  DEBUG_printf(("7cups_array_find(a=%p, e=%p, prev=%u, rdiff=%p)", (void *)a, e, (unsigned)prev, (void *)rdiff));
-
   if (a->compare)
   {
     // Do a binary search for the element...
-    DEBUG_puts("9cups_array_find: binary search");
-
     if (prev < a->num_elements)
     {
       // Start search on either side of previous...
       if ((diff = (*(a->compare))(e, a->elements[prev], a->data)) == 0 || (diff < 0 && prev == 0) || (diff > 0 && prev == (a->num_elements - 1)))
       {
         // Exact or edge match, return it!
-        DEBUG_printf(("9cups_array_find: Returning %u, diff=%d", (unsigned)prev, diff));
-
 	*rdiff = diff;
 
 	return (prev);
@@ -1014,8 +958,6 @@ cups_array_find(cups_array_t *a,	// I - Array
       current = (left + right) / 2;
       diff    = (*(a->compare))(e, a->elements[current], a->data);
 
-      DEBUG_printf(("9cups_array_find: left=%u, right=%u, current=%u, diff=%d", (unsigned)left, (unsigned)right, (unsigned)current, diff));
-
       if (diff == 0)
 	break;
       else if (diff < 0)
@@ -1042,8 +984,6 @@ cups_array_find(cups_array_t *a,	// I - Array
   else
   {
     // Do a linear pointer search...
-    DEBUG_puts("9cups_array_find: linear search");
-
     diff = 1;
 
     for (current = 0; current < a->num_elements; current ++)
@@ -1057,8 +997,6 @@ cups_array_find(cups_array_t *a,	// I - Array
   }
 
   // Return the closest element and the difference...
-  DEBUG_printf(("8cups_array_find: Returning %u, diff=%d", (unsigned)current, diff));
-
   *rdiff = diff;
 
   return (current);

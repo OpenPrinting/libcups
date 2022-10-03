@@ -74,8 +74,6 @@ cupsFileClose(cups_file_t *fp)		/* I - CUPS file */
   bool	status;				/* Return status */
 
 
-  DEBUG_printf(("cupsFileClose(fp=%p)", (void *)fp));
-
  /*
   * Range check...
   */
@@ -222,8 +220,6 @@ cupsFileFind(const char *filename,	/* I - File to find */
   * Range check input...
   */
 
-  DEBUG_printf(("cupsFileFind(filename=\"%s\", path=\"%s\", executable=%d, buffer=%p, bufsize=%u)", filename, path, executable, (void *)buffer, (unsigned)bufsize));
-
   if (!filename || !buffer || bufsize < 2)
     return (NULL);
 
@@ -267,10 +263,7 @@ cupsFileFind(const char *filename,	/* I - File to find */
 #else
       if (!access(buffer, executable ? X_OK : 0))
 #endif /* _WIN32 */
-      {
-        DEBUG_printf(("1cupsFileFind: Returning \"%s\"", buffer));
         return (buffer);
-      }
 
       bufptr = buffer;
     }
@@ -290,15 +283,9 @@ cupsFileFind(const char *filename,	/* I - File to find */
   cupsCopyString(bufptr, filename, (size_t)(bufend - bufptr));
 
   if (!access(buffer, 0))
-  {
-    DEBUG_printf(("1cupsFileFind: Returning \"%s\"", buffer));
     return (buffer);
-  }
   else
-  {
-    DEBUG_puts("1cupsFileFind: Returning NULL");
     return (NULL);
-  }
 }
 
 
@@ -313,22 +300,14 @@ cupsFileFlush(cups_file_t *fp)		/* I - CUPS file */
   bool		ret;			/* Return value */
 
 
-  DEBUG_printf(("cupsFileFlush(fp=%p)", (void *)fp));
-
  /*
   * Range check input...
   */
 
   if (!fp || fp->mode != 'w')
-  {
-    DEBUG_puts("1cupsFileFlush: Attempt to flush a read-only file...");
     return (false);
-  }
 
   bytes = (ssize_t)(fp->ptr - fp->buf);
-
-  DEBUG_printf(("2cupsFileFlush: Flushing " CUPS_LLFMT " bytes...",
-                CUPS_LLCAST bytes));
 
   if (bytes > 0)
   {
@@ -357,44 +336,27 @@ cupsFileGetChar(cups_file_t *fp)	/* I - CUPS file */
   * Range check input...
   */
 
-  DEBUG_printf(("4cupsFileGetChar(fp=%p)", (void *)fp));
-
   if (!fp || (fp->mode != 'r' && fp->mode != 's'))
-  {
-    DEBUG_puts("5cupsFileGetChar: Bad arguments!");
     return (-1);
-  }
 
   if (fp->eof)
-  {
-    DEBUG_puts("5cupsFileGetChar: End-of-file!");
     return (-1);
-  }
 
  /*
   * If the input buffer is empty, try to read more data...
   */
 
-  DEBUG_printf(("5cupsFileGetChar: fp->eof=%d, fp->ptr=%p, fp->end=%p", fp->eof, (void *)fp->ptr, (void *)fp->end));
-
   if (fp->ptr >= fp->end)
   {
     if (cups_fill(fp) <= 0)
-    {
-      DEBUG_puts("5cupsFileGetChar: Unable to fill buffer!");
       return (-1);
-    }
   }
 
  /*
   * Return the next character in the buffer...
   */
 
-  DEBUG_printf(("5cupsFileGetChar: Returning %d...", *(fp->ptr) & 255));
-
   fp->pos ++;
-
-  DEBUG_printf(("6cupsFileGetChar: pos=" CUPS_LLFMT, CUPS_LLCAST fp->pos));
 
   return (*(fp->ptr)++ & 255);
 }
@@ -417,9 +379,6 @@ cupsFileGetConf(cups_file_t *fp,	/* I  - CUPS file */
  /*
   * Range check input...
   */
-
-  DEBUG_printf(("2cupsFileGetConf(fp=%p, buf=%p, buflen=" CUPS_LLFMT
-                ", value=%p, linenum=%p)", (void *)fp, (void *)buf, CUPS_LLCAST buflen, (void *)value, (void *)linenum));
 
   if (!fp || (fp->mode != 'r' && fp->mode != 's') ||
       !buf || buflen < 2 || !value)
@@ -559,8 +518,6 @@ cupsFileGetLine(cups_file_t *fp,	/* I - File to read from */
   * Range check input...
   */
 
-  DEBUG_printf(("2cupsFileGetLine(fp=%p, buf=%p, buflen=" CUPS_LLFMT ")", (void *)fp, (void *)buf, CUPS_LLCAST buflen));
-
   if (!fp || (fp->mode != 'r' && fp->mode != 's') || !buf || buflen < 3)
     return (0);
 
@@ -607,8 +564,6 @@ cupsFileGetLine(cups_file_t *fp,	/* I - File to read from */
 
   *ptr = '\0';
 
-  DEBUG_printf(("4cupsFileGetLine: pos=" CUPS_LLFMT, CUPS_LLCAST fp->pos));
-
   return ((size_t)(ptr - buf));
 }
 
@@ -630,8 +585,6 @@ cupsFileGets(cups_file_t *fp,		/* I - CUPS file */
  /*
   * Range check input...
   */
-
-  DEBUG_printf(("2cupsFileGets(fp=%p, buf=%p, buflen=" CUPS_LLFMT ")", (void *)fp, (void *)buf, CUPS_LLCAST buflen));
 
   if (!fp || (fp->mode != 'r' && fp->mode != 's') || !buf || buflen < 2)
     return (NULL);
@@ -685,8 +638,6 @@ cupsFileGets(cups_file_t *fp,		/* I - CUPS file */
   }
 
   *ptr = '\0';
-
-  DEBUG_printf(("4cupsFileGets: pos=" CUPS_LLFMT, CUPS_LLCAST fp->pos));
 
   return (buf);
 }
@@ -771,9 +722,6 @@ cupsFileOpen(const char *filename,	/* I - Name of file */
 		*portname;		/* Port "name" (number or service) */
   http_addrlist_t *addrlist;		/* Host address list */
 
-
-  DEBUG_printf(("cupsFileOpen(filename=\"%s\", mode=\"%s\")", filename,
-                mode));
 
  /*
   * Range check input...
@@ -885,8 +833,6 @@ cupsFileOpenFd(int        fd,		/* I - File descriptor */
 {
   cups_file_t	*fp;			/* New CUPS file */
 
-
-  DEBUG_printf(("cupsFileOpenFd(fd=%d, mode=\"%s\")", fd, mode));
 
  /*
   * Range check input...
@@ -1041,8 +987,6 @@ cupsFilePrintf(cups_file_t *fp,		/* I - CUPS file */
   ssize_t	bytes;			/* Formatted size */
 
 
-  DEBUG_printf(("2cupsFilePrintf(fp=%p, format=\"%s\", ...)", (void *)fp, format));
-
   if (!fp || !format || (fp->mode != 'w' && fp->mode != 's'))
     return (false);
 
@@ -1092,8 +1036,6 @@ cupsFilePrintf(cups_file_t *fp,		/* I - CUPS file */
 
     fp->pos += bytes;
 
-    DEBUG_printf(("4cupsFilePrintf: pos=" CUPS_LLFMT, CUPS_LLCAST fp->pos));
-
     return ((int)bytes);
   }
 
@@ -1104,8 +1046,6 @@ cupsFilePrintf(cups_file_t *fp,		/* I - CUPS file */
   }
 
   fp->pos += bytes;
-
-  DEBUG_printf(("4cupsFilePrintf: pos=" CUPS_LLFMT, CUPS_LLCAST fp->pos));
 
   if ((size_t)bytes > sizeof(fp->buf))
   {
@@ -1172,8 +1112,6 @@ cupsFilePutChar(cups_file_t *fp,	/* I - CUPS file */
   }
 
   fp->pos ++;
-
-  DEBUG_printf(("4cupsFilePutChar: pos=" CUPS_LLFMT, CUPS_LLCAST fp->pos));
 
   return (true);
 }
@@ -1260,8 +1198,6 @@ cupsFilePuts(cups_file_t *fp,		/* I - CUPS file */
 
     fp->pos += bytes;
 
-    DEBUG_printf(("4cupsFilePuts: pos=" CUPS_LLFMT, CUPS_LLCAST fp->pos));
-
     return (true);
   }
 
@@ -1272,8 +1208,6 @@ cupsFilePuts(cups_file_t *fp,		/* I - CUPS file */
   }
 
   fp->pos += bytes;
-
-  DEBUG_printf(("4cupsFilePuts: pos=" CUPS_LLFMT, CUPS_LLCAST fp->pos));
 
   if (bytes > sizeof(fp->buf))
   {
@@ -1308,8 +1242,6 @@ cupsFileRead(cups_file_t *fp,		/* I - CUPS file */
   ssize_t	count;			/* Bytes read */
 
 
-  DEBUG_printf(("2cupsFileRead(fp=%p, buf=%p, bytes=" CUPS_LLFMT ")", (void *)fp, (void *)buf, CUPS_LLCAST bytes));
-
  /*
   * Range check input...
   */
@@ -1321,10 +1253,7 @@ cupsFileRead(cups_file_t *fp,		/* I - CUPS file */
     return (0);
 
   if (fp->eof)
-  {
-    DEBUG_puts("5cupsFileRead: End-of-file!");
     return (-1);
-  }
 
  /*
   * Loop until all bytes are read...
@@ -1337,9 +1266,6 @@ cupsFileRead(cups_file_t *fp,		/* I - CUPS file */
     {
       if (cups_fill(fp) <= 0)
       {
-        DEBUG_printf(("4cupsFileRead: cups_fill() returned -1, total="
-	              CUPS_LLFMT, CUPS_LLCAST total));
-
         if (total > 0)
           return ((ssize_t)total);
 	else
@@ -1355,8 +1281,6 @@ cupsFileRead(cups_file_t *fp,		/* I - CUPS file */
     fp->ptr += count;
     fp->pos += count;
 
-    DEBUG_printf(("4cupsFileRead: pos=" CUPS_LLFMT, CUPS_LLCAST fp->pos));
-
    /*
     * Update the counts for the last read...
     */
@@ -1369,8 +1293,6 @@ cupsFileRead(cups_file_t *fp,		/* I - CUPS file */
  /*
   * Return the total number of bytes read...
   */
-
-  DEBUG_printf(("3cupsFileRead: total=" CUPS_LLFMT, CUPS_LLCAST total));
 
   return ((ssize_t)total);
 }
@@ -1387,12 +1309,8 @@ cupsFileRewind(cups_file_t *fp)		/* I - CUPS file */
   * Range check input...
   */
 
-  DEBUG_printf(("cupsFileRewind(fp=%p)", (void *)fp));
-
   if (!fp || fp->mode != 'r')
     return (-1);
-
-  DEBUG_printf(("2cupsFileRewind: pos=" CUPS_LLFMT, CUPS_LLCAST fp->pos));
 
  /*
   * Handle special cases...
@@ -1412,8 +1330,6 @@ cupsFileRewind(cups_file_t *fp)		/* I - CUPS file */
       fp->eof = false;
     }
 
-    DEBUG_printf(("2cupsFileRewind: pos=" CUPS_LLFMT, CUPS_LLCAST fp->pos));
-
     return (0);
   }
 
@@ -1428,18 +1344,13 @@ cupsFileRewind(cups_file_t *fp)		/* I - CUPS file */
   }
 
   if (lseek(fp->fd, 0, SEEK_SET))
-  {
-    DEBUG_printf(("1cupsFileRewind: lseek failed: %s", strerror(errno)));
     return (-1);
-  }
 
   fp->bufpos = 0;
   fp->pos    = 0;
   fp->ptr    = NULL;
   fp->end    = NULL;
   fp->eof    = false;
-
-  DEBUG_printf(("2cupsFileRewind: pos=" CUPS_LLFMT, CUPS_LLCAST fp->pos));
 
   return (0);
 }
@@ -1456,17 +1367,12 @@ cupsFileSeek(cups_file_t *fp,		/* I - CUPS file */
   ssize_t	bytes;			/* Number bytes in buffer */
 
 
-  DEBUG_printf(("cupsFileSeek(fp=%p, pos=" CUPS_LLFMT ")", (void *)fp, CUPS_LLCAST pos));
-
  /*
   * Range check input...
   */
 
   if (!fp || pos < 0 || fp->mode != 'r')
     return (-1);
-
-  DEBUG_printf(("2cupsFileSeek: fp->pos=" CUPS_LLFMT, CUPS_LLCAST fp->pos));
-  DEBUG_printf(("2cupsFileSeek: fp->ptr=%p, fp->end=%p", (void *)fp->ptr, (void *)fp->end));
 
  /*
   * Handle special cases...
@@ -1478,8 +1384,6 @@ cupsFileSeek(cups_file_t *fp,		/* I - CUPS file */
   if (fp->ptr)
   {
     bytes = (ssize_t)(fp->end - fp->buf);
-
-    DEBUG_printf(("2cupsFileSeek: bytes=" CUPS_LLFMT, CUPS_LLCAST bytes));
 
     if (pos >= fp->bufpos && pos < (fp->bufpos + bytes))
     {
@@ -1517,8 +1421,6 @@ cupsFileSeek(cups_file_t *fp,		/* I - CUPS file */
     * Need to seek backwards...
     */
 
-    DEBUG_puts("2cupsFileSeek: SEEK BACKWARDS");
-
     if (fp->compressed)
     {
       inflateEnd(&fp->stream);
@@ -1545,9 +1447,6 @@ cupsFileSeek(cups_file_t *fp,		/* I - CUPS file */
       fp->pos    = fp->bufpos;
       fp->ptr    = NULL;
       fp->end    = NULL;
-
-      DEBUG_printf(("2cupsFileSeek: lseek() returned " CUPS_LLFMT,
-                    CUPS_LLCAST fp->pos));
     }
   }
   else
@@ -1555,8 +1454,6 @@ cupsFileSeek(cups_file_t *fp,		/* I - CUPS file */
    /*
     * Need to seek forwards...
     */
-
-    DEBUG_puts("2cupsFileSeek: SEEK FORWARDS");
 
     if (fp->compressed)
     {
@@ -1578,13 +1475,8 @@ cupsFileSeek(cups_file_t *fp,		/* I - CUPS file */
       fp->pos    = fp->bufpos;
       fp->ptr    = NULL;
       fp->end    = NULL;
-
-      DEBUG_printf(("2cupsFileSeek: lseek() returned " CUPS_LLFMT,
-                    CUPS_LLCAST fp->pos));
     }
   }
-
-  DEBUG_printf(("2cupsFileSeek: pos=" CUPS_LLFMT, CUPS_LLCAST fp->pos));
 
   return (fp->pos);
 }
@@ -1693,9 +1585,6 @@ cupsFileStdout(void)
 off_t					/* O - File position */
 cupsFileTell(cups_file_t *fp)		/* I - CUPS file */
 {
-  DEBUG_printf(("2cupsFileTell(fp=%p)", (void *)fp));
-  DEBUG_printf(("3cupsFileTell: pos=" CUPS_LLFMT, CUPS_LLCAST (fp ? fp->pos : -1)));
-
   return (fp ? fp->pos : 0);
 }
 
@@ -1710,8 +1599,6 @@ cupsFileUnlock(cups_file_t *fp)		/* I - CUPS file */
  /*
   * Range check...
   */
-
-  DEBUG_printf(("cupsFileUnlock(fp=%p)", (void *)fp));
 
   if (!fp || fp->mode == 's')
     return (false);
@@ -1741,8 +1628,6 @@ cupsFileWrite(cups_file_t *fp,		/* I - CUPS file */
   * Range check input...
   */
 
-  DEBUG_printf(("2cupsFileWrite(fp=%p, buf=%p, bytes=" CUPS_LLFMT ")", (void *)fp, (void *)buf, CUPS_LLCAST bytes));
-
   if (!fp || !buf || (fp->mode != 'w' && fp->mode != 's'))
     return (false);
 
@@ -1760,8 +1645,6 @@ cupsFileWrite(cups_file_t *fp,		/* I - CUPS file */
 
     fp->pos += (off_t)bytes;
 
-    DEBUG_printf(("4cupsFileWrite: pos=" CUPS_LLFMT, CUPS_LLCAST fp->pos));
-
     return (true);
   }
 
@@ -1772,8 +1655,6 @@ cupsFileWrite(cups_file_t *fp,		/* I - CUPS file */
   }
 
   fp->pos += (off_t)bytes;
-
-  DEBUG_printf(("4cupsFileWrite: pos=" CUPS_LLFMT, CUPS_LLCAST fp->pos));
 
   if (bytes > sizeof(fp->buf))
   {
@@ -1803,8 +1684,6 @@ cups_compress(cups_file_t *fp,		/* I - CUPS file */
   int	status;				/* Deflate status */
 
 
-  DEBUG_printf(("7cups_compress(fp=%p, buf=%p, bytes=" CUPS_LLFMT ")", (void *)fp, (void *)buf, CUPS_LLCAST bytes));
-
  /*
   * Update the CRC...
   */
@@ -1823,9 +1702,6 @@ cups_compress(cups_file_t *fp,		/* I - CUPS file */
    /*
     * Flush the current buffer...
     */
-
-    DEBUG_printf(("9cups_compress: avail_in=%d, avail_out=%d",
-                  fp->stream.avail_in, fp->stream.avail_out));
 
     if (fp->stream.avail_out < (uInt)(sizeof(fp->cbuf) / 8))
     {
@@ -1857,13 +1733,8 @@ cups_fill(cups_file_t *fp)		/* I - CUPS file */
 			*end;		/* End of buffer */
 
 
-  DEBUG_printf(("7cups_fill(fp=%p)", (void *)fp));
-  DEBUG_printf(("9cups_fill: fp->ptr=%p, fp->end=%p, fp->buf=%p, fp->bufpos=" CUPS_LLFMT ", fp->eof=%d", (void *)fp->ptr, (void *)fp->end, (void *)fp->buf, CUPS_LLCAST fp->bufpos, fp->eof));
-
   if (fp->ptr && fp->end)
     fp->bufpos += fp->end - fp->buf;
-
-  DEBUG_printf(("9cups_fill: fp->compressed=%s", fp->compressed ? "true" : "false"));
 
   while (!fp->ptr || fp->compressed)
   {
@@ -1891,9 +1762,6 @@ cups_fill(cups_file_t *fp)		/* I - CUPS file */
 	* Can't read from file!
 	*/
 
-        DEBUG_printf(("9cups_fill: cups_read() returned " CUPS_LLFMT,
-	              CUPS_LLCAST bytes));
-
         fp->eof = true;
 
 	return (-1);
@@ -1909,9 +1777,6 @@ cups_fill(cups_file_t *fp)		/* I - CUPS file */
 
 	fp->ptr = fp->buf;
 	fp->end = fp->buf + bytes;
-
-        DEBUG_printf(("9cups_fill: Returning " CUPS_LLFMT,
-	              CUPS_LLCAST bytes));
 
 	return (bytes);
       }
@@ -1935,8 +1800,6 @@ cups_fill(cups_file_t *fp)		/* I - CUPS file */
 	  * Can't read from file!
 	  */
 
-	  DEBUG_puts("9cups_fill: Extra gzip header data missing, returning -1.");
-
           fp->eof = true;
 	  errno   = EIO;
 
@@ -1951,8 +1814,6 @@ cups_fill(cups_file_t *fp)		/* I - CUPS file */
 	 /*
 	  * Can't read from file!
 	  */
-
-	  DEBUG_puts("9cups_fill: Extra gzip header data does not fit in initial buffer, returning -1.");
 
           fp->eof = true;
 	  errno   = EIO;
@@ -1978,8 +1839,6 @@ cups_fill(cups_file_t *fp)		/* I - CUPS file */
 	  * Can't read from file!
 	  */
 
-	  DEBUG_puts("9cups_fill: Original filename in gzip header data does not fit in initial buffer, returning -1.");
-
           fp->eof = true;
 	  errno   = EIO;
 
@@ -2004,8 +1863,6 @@ cups_fill(cups_file_t *fp)		/* I - CUPS file */
 	  * Can't read from file!
 	  */
 
-	  DEBUG_puts("9cups_fill: Comment in gzip header data does not fit in initial buffer, returning -1.");
-
           fp->eof = true;
 	  errno   = EIO;
 
@@ -2026,8 +1883,6 @@ cups_fill(cups_file_t *fp)		/* I - CUPS file */
 	 /*
 	  * Can't read from file!
 	  */
-
-	  DEBUG_puts("9cups_fill: Header CRC in gzip header data does not fit in initial buffer, returning -1.");
 
           fp->eof = true;
 	  errno   = EIO;
@@ -2058,8 +1913,6 @@ cups_fill(cups_file_t *fp)		/* I - CUPS file */
 
       if ((status = inflateInit2(&(fp->stream), -15)) != Z_OK)
       {
-	DEBUG_printf(("9cups_fill: inflateInit2 returned %d, returning -1.", status));
-
         fp->eof = true;
         errno   = EIO;
 
@@ -2076,11 +1929,7 @@ cups_fill(cups_file_t *fp)		/* I - CUPS file */
       */
 
       if (fp->eof)
-      {
-        DEBUG_puts("9cups_fill: EOF, returning 0.");
-
 	return (0);
-      }
 
      /*
       * Fill the decompression buffer as needed...
@@ -2090,8 +1939,6 @@ cups_fill(cups_file_t *fp)		/* I - CUPS file */
       {
 	if ((bytes = cups_read(fp, (char *)fp->cbuf, sizeof(fp->cbuf))) <= 0)
 	{
-	  DEBUG_printf(("9cups_fill: cups_read error, returning %d.", (int)bytes));
-
 	  fp->eof = true;
 
           return (bytes);
@@ -2144,8 +1991,6 @@ cups_fill(cups_file_t *fp)		/* I - CUPS file */
 	    * Can't get it, so mark end-of-file...
 	    */
 
-	    DEBUG_puts("9cups_fill: Unable to read gzip CRC trailer, returning -1.");
-
 	    fp->eof = true;
 	    errno   = EIO;
 
@@ -2161,8 +2006,6 @@ cups_fill(cups_file_t *fp)		/* I - CUPS file */
 	 /*
 	  * Bad CRC, mark end-of-file...
 	  */
-
-	  DEBUG_printf(("9cups_fill: tcrc=%08x != fp->crc=%08x, returning -1.", (unsigned int)tcrc, (unsigned int)fp->crc));
 
 	  fp->eof = true;
 	  errno   = EIO;
@@ -2181,8 +2024,6 @@ cups_fill(cups_file_t *fp)		/* I - CUPS file */
       }
       else if (status < Z_OK)
       {
-	DEBUG_printf(("9cups_fill: inflate returned %d, returning -1.", status));
-
         fp->eof = true;
         errno   = EIO;
 
@@ -2199,10 +2040,7 @@ cups_fill(cups_file_t *fp)		/* I - CUPS file */
       fp->end = fp->buf + bytes;
 
       if (bytes)
-      {
-        DEBUG_printf(("9cups_fill: Returning %d.", (int)bytes));
 	return (bytes);
-      }
     }
   }
 
@@ -2230,8 +2068,6 @@ cups_fill(cups_file_t *fp)		/* I - CUPS file */
     fp->ptr = fp->buf;
     fp->end = fp->buf + bytes;
   }
-
-  DEBUG_printf(("9cups_fill: Not gzip, returning %d.", (int)bytes));
 
   return (bytes);
 }
@@ -2337,8 +2173,6 @@ cups_read(cups_file_t *fp,		/* I - CUPS file */
   ssize_t	total;			/* Total bytes read */
 
 
-  DEBUG_printf(("7cups_read(fp=%p, buf=%p, bytes=" CUPS_LLFMT ")", (void *)fp, (void *)buf, CUPS_LLCAST bytes));
-
  /*
   * Loop until we read at least 0 bytes...
   */
@@ -2356,8 +2190,6 @@ cups_read(cups_file_t *fp,		/* I - CUPS file */
     else
       total = read(fp->fd, buf, bytes);
 #endif /* _WIN32 */
-
-    DEBUG_printf(("9cups_read: total=" CUPS_LLFMT, CUPS_LLCAST total));
 
     if (total >= 0)
       break;
@@ -2392,8 +2224,6 @@ cups_write(cups_file_t *fp,		/* I - CUPS file */
   ssize_t	count;			/* Count this time */
 
 
-  DEBUG_printf(("7cups_write(fp=%p, buf=%p, bytes=" CUPS_LLFMT ")", (void *)fp, (void *)buf, CUPS_LLCAST bytes));
-
  /*
   * Loop until all bytes are written...
   */
@@ -2411,8 +2241,6 @@ cups_write(cups_file_t *fp,		/* I - CUPS file */
     else
       count = write(fp->fd, buf, bytes);
 #endif /* _WIN32 */
-
-    DEBUG_printf(("9cups_write: count=" CUPS_LLFMT, CUPS_LLCAST count));
 
     if (count < 0)
     {

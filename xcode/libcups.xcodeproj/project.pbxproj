@@ -1652,7 +1652,6 @@
 		72220EB41333050100FCA411 /* libcups */ = {
 			isa = PBXGroup;
 			children = (
-				278CA9042884D9B100367E41 /* rand.c */,
 				72220EB91333056300FCA411 /* array.h */,
 				72220EB81333056300FCA411 /* array.c */,
 				72220EBB1333056300FCA411 /* auth.c */,
@@ -1702,6 +1701,7 @@
 				2767FC7519269687000F61D3 /* pwg.h */,
 				72220EF9133305BB00FCA411 /* pwg-private.h */,
 				72220EF8133305BB00FCA411 /* pwg-media.c */,
+				278CA9042884D9B100367E41 /* rand.c */,
 				72220EFA133305BB00FCA411 /* raster.h */,
 				2767FC76192696A0000F61D3 /* raster-private.h */,
 				27D3966427BA81C6003D3D8E /* raster-testpage.h */,

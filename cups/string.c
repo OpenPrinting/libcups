@@ -87,9 +87,7 @@ _cupsStrAlloc(const char *s)		/* I - String */
     item->ref_count ++;
 
 #ifdef DEBUG_GUARDS
-    DEBUG_printf(("5_cupsStrAlloc: Using string %p(%s) for \"%s\", guard=%08x, "
-                  "ref_count=%d", item, item->str, s, item->guard,
-		  item->ref_count));
+    DEBUG_printf(("5_cupsStrAlloc: Using string %p(%s) for \"%s\", guard=%08x, ref_count=%d", item, item->str, s, item->guard, item->ref_count));
 
     if (item->guard != _CUPS_STR_GUARD)
       abort();
@@ -119,9 +117,7 @@ _cupsStrAlloc(const char *s)		/* I - String */
 #ifdef DEBUG_GUARDS
   item->guard = _CUPS_STR_GUARD;
 
-  DEBUG_printf(("5_cupsStrAlloc: Created string %p(%s) for \"%s\", guard=%08x, "
-		"ref_count=%d", item, item->str, s, item->guard,
-		item->ref_count));
+  DEBUG_printf(("5_cupsStrAlloc: Created string %p(%s) for \"%s\", guard=%08x, ref_count=%d", item, item->str, s, item->guard, item->ref_count));
 #endif /* DEBUG_GUARDS */
 
  /*
