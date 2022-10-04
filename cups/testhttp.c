@@ -565,7 +565,7 @@ main(int  argc,				/* I - Number of command-line arguments */
     if (httpDecode64(buffer, &bufsize, argv[2]))
     {
       buffer[bufsize] = '\0';
-      puts(buffer);
+      fwrite(buffer, 1, bufsize, stdout);
       return (0);
     }
 
