@@ -313,7 +313,7 @@ main(int  argc,				// I - Number of command-line arguments
   {
     size_t count;			// Count
 
-    testEndMessage(true, "%d dests", num_dests);
+    testEndMessage(true, "%u dests", (unsigned)num_dests);
 
     for (count = num_dests, dest = dests; count > 0; count --, dest ++)
     {
@@ -380,7 +380,9 @@ main(int  argc,				// I - Number of command-line arguments
     }
   }
   else
+  {
     testEndMessage(true, "%s", named_dest->name);
+  }
 
   if (named_dest)
     cupsFreeDests(1, named_dest);

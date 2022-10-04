@@ -1071,6 +1071,7 @@
 		27D3967A27BB389C003D3D8E /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
 		27D3967E27BB38E6003D3D8E /* libiconv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.tbd; path = usr/lib/libiconv.tbd; sourceTree = SDKROOT; };
 		27D3968227BB390D003D3D8E /* libresolv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libresolv.tbd; path = usr/lib/libresolv.tbd; sourceTree = SDKROOT; };
+		27DD4F1A28ECE86300F20662 /* test-internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "test-internal.h"; path = "../cups/test-internal.h"; sourceTree = "<group>"; };
 		27F89DA21B3AC43B00E5A4B7 /* testraster.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = testraster.c; path = ../cups/testraster.c; sourceTree = "<group>"; };
 		720E854120164E7A00C6C411 /* ipp-file.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "ipp-file.c"; path = "../cups/ipp-file.c"; sourceTree = "<group>"; };
 		72220EAE1333047D00FCA411 /* libcups3.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libcups3.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1577,6 +1578,7 @@
 		273BF6B81333B4A90022CAAB /* tests */ = {
 			isa = PBXGroup;
 			children = (
+				27DD4F1A28ECE86300F20662 /* test-internal.h */,
 				2778BBDA275DA0D80070DA11 /* fuzzipp.c */,
 				2712866A1CC130FF00E517C7 /* rasterbench.c */,
 				727EF042192E3544001EF690 /* testarray.c */,
