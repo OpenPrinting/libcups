@@ -5957,7 +5957,7 @@ bool httpCompareCredentials(<a href="#cups_array_t">cups_array_t</a> *cred1, <a 
 <h3 class="function"><a id="httpDecode64">httpDecode64</a></h3>
 <p class="description">Base64-decode a string.</p>
 <p class="code">
-char *httpDecode64(char *out, size_t *outlen, const char *in);</p>
+char *httpDecode64(char *out, size_t *outlen, const char *in, const char **end);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>out</th>
@@ -5966,13 +5966,22 @@ char *httpDecode64(char *out, size_t *outlen, const char *in);</p>
 <td class="description">Size of output string</td></tr>
 <tr><th>in</th>
 <td class="description">String to read from</td></tr>
+<tr><th>end</th>
+<td class="description">Pointer to end of Base64 data (<code>NULL</code> if don't care)</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">Decoded string</p>
+<p class="description">Decoded string or <code>NULL</code> on error</p>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">This function decodes a Base64 string as defined by RFC 4648.  The caller
 must initialize &quot;outlen&quot; to the maximum size of the decoded string.  On
-return &quot;outlen&quot; contains the decoded length of the string.<br>
+return &quot;outlen&quot; contains the decoded length of the string and &quot;end&quot; (if not
+<code>NULL</code>) points to the end of the Base64 data that has been decoded.<br>
+<br>
+This function always reserves one byte in the output buffer for a nul
+terminating character, even if the result is not a regular string.  Callers
+should ensure that the output buffer is at least one byte larger than the
+expected size, for example 33 bytes for a SHA-256 hash which is 32 bytes in
+length.<br>
 <br>
 This function supports both Base64 and Base64url strings.</p>
 <h3 class="function"><a id="httpEncode64">httpEncode64</a></h3>

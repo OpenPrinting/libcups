@@ -229,6 +229,7 @@ main(int  argc,				/* I - Number of command-line arguments */
   char		encode[256],		/* Base64-encoded string */
 		decode[256];		/* Base64-decoded string */
   size_t	decodelen;		/* Length of decoded string */
+  const char	*decodeptr;		/* Pointer into Base64 string */
   char		scheme[HTTP_MAX_URI],	/* Scheme from URI */
 		hostname[HTTP_MAX_URI],	/* Hostname from URI */
 		username[HTTP_MAX_URI],	/* Username:password from URI */
@@ -301,7 +302,7 @@ main(int  argc,				/* I - Number of command-line arguments */
     {
       httpEncode64(encode, sizeof(encode), base64_tests[i][0], strlen(base64_tests[i][0]), false);
       decodelen = sizeof(decode);
-      httpDecode64(decode, &decodelen, base64_tests[i][1]);
+      httpDecode64(decode, &decodelen, base64_tests[i][1], &decodeptr);
 
       if (strcmp(decode, base64_tests[i][0]))
       {
@@ -314,6 +315,18 @@ main(int  argc,				/* I - Number of command-line arguments */
 	}
 
         testError("httpDecode64() returned \"%s\", expected \"%s\".", decode, base64_tests[i][0]);
+      }
+      else if (*decodeptr)
+      {
+        failures ++;
+
+        if (j)
+        {
+          testEnd(false);
+          j = 1;
+	}
+
+        testError("httpDecode64() returned \"%s\", expected end of string.", decodeptr);
       }
 
       if (strcmp(encode, base64_tests[i][1]))
@@ -558,13 +571,11 @@ main(int  argc,				/* I - Number of command-line arguments */
   else if (!strcmp(argv[1], "-d") && argc == 3)
   {
     // Test httpDecode64
-    char	buffer[2048];		// Output buffer
-    size_t	bufsize = sizeof(buffer) - 1;
+    size_t	bufsize = sizeof(buffer);
 					// Output size
 
-    if (httpDecode64(buffer, &bufsize, argv[2]))
+    if (httpDecode64(buffer, &bufsize, argv[2], NULL))
     {
-      buffer[bufsize] = '\0';
       fwrite(buffer, 1, bufsize, stdout);
       return (0);
     }
@@ -574,8 +585,6 @@ main(int  argc,				/* I - Number of command-line arguments */
   else if (!strcmp(argv[1], "-e") && argc == 3)
   {
     // Test httpEncode64 for Base64
-    char	buffer[2048];		// Output buffer
-
     if (httpEncode64(buffer, sizeof(buffer), argv[2], strlen(argv[2]), false))
     {
       puts(buffer);
@@ -587,8 +596,6 @@ main(int  argc,				/* I - Number of command-line arguments */
   else if (!strcmp(argv[1], "-E") && argc == 3)
   {
     // Test httpEncode64 for Base64url
-    char	buffer[2048];		// Output buffer
-
     if (httpEncode64(buffer, sizeof(buffer), argv[2], strlen(argv[2]), true))
     {
       puts(buffer);

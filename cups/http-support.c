@@ -419,15 +419,23 @@ httpAssembleUUID(const char *server,	// I - Server name
 //
 // This function decodes a Base64 string as defined by RFC 4648.  The caller
 // must initialize "outlen" to the maximum size of the decoded string.  On
-// return "outlen" contains the decoded length of the string.
+// return "outlen" contains the decoded length of the string and "end" (if not
+// `NULL`) points to the end of the Base64 data that has been decoded.
+//
+// This function always reserves one byte in the output buffer for a nul
+// terminating character, even if the result is not a regular string.  Callers
+// should ensure that the output buffer is at least one byte larger than the
+// expected size, for example 33 bytes for a SHA-256 hash which is 32 bytes in
+// length.
 //
 // This function supports both Base64 and Base64url strings.
 //
 
-char *					// O  - Decoded string
+char *					// O  - Decoded string or `NULL` on error
 httpDecode64(char       *out,		// I  - String to write to
 	     size_t     *outlen,	// IO - Size of output string
-             const char *in)		// I  - String to read from
+             const char *in,		// I  - String to read from
+             const char **end)		// O  - Pointer to end of Base64 data (`NULL` if don't care)
 {
   int		pos;			// Bit position
   unsigned	base64;			// Value of this character
@@ -443,6 +451,9 @@ httpDecode64(char       *out,		// I  - String to write to
   {
     *out    = '\0';
     *outlen = 0;
+
+    if (end)
+      *end = in;
 
     return (out);
   }
@@ -463,8 +474,10 @@ httpDecode64(char       *out,		// I  - String to write to
       base64 = 63;
     else if (*in == '=')
       break;
-    else
+    else if (isspace(*in & 255))
       continue;
+    else
+      break;
 
     // Store the result in the appropriate chars...
     switch (pos)
@@ -496,10 +509,18 @@ httpDecode64(char       *out,		// I  - String to write to
     }
   }
 
+  // Add a trailing nul...
   *outptr = '\0';
 
-  // Return the decoded string and size...
+  // Skip trailing '='...
+  while (*in == '=')
+    in ++;
+
+  // Return the decoded string, next input pointer, and size...
   *outlen = (size_t)(outptr - out);
+
+  if (end)
+    *end = in;
 
   return (out);
 }

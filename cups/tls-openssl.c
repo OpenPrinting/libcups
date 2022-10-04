@@ -803,7 +803,7 @@ httpLoadCredentials(
       }
 
       decoded = alloc_data - num_data;
-      httpDecode64((char *)data + num_data, &decoded, line);
+      httpDecode64((char *)data + num_data, &decoded, line, NULL);
       num_data += (size_t)decoded;
     }
   }
@@ -1606,7 +1606,7 @@ http_load_crl(void)
 	  }
 
 	  decoded = alloc_data - num_data;
-	  httpDecode64((char *)data + num_data, &decoded, line);
+	  httpDecode64((char *)data + num_data, &decoded, line, NULL);
 	  num_data += (size_t)decoded;
 	}
       }

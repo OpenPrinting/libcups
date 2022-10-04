@@ -463,7 +463,7 @@ extern int		httpCredentialsAreValidForName(cups_array_t *credentials, const char
 extern time_t		httpCredentialsGetExpiration(cups_array_t *credentials) _CUPS_PUBLIC;
 extern http_trust_t	httpCredentialsGetTrust(cups_array_t *credentials, const char *common_name) _CUPS_PUBLIC;
 extern size_t		httpCredentialsString(cups_array_t *credentials, char *buffer, size_t bufsize) _CUPS_PUBLIC;
-extern char		*httpDecode64(char *out, size_t *outlen, const char *in) _CUPS_PUBLIC;
+extern char		*httpDecode64(char *out, size_t *outlen, const char *in, const char **end) _CUPS_PUBLIC;
 extern char		*httpEncode64(char *out, size_t outlen, const char *in, size_t inlen, bool url) _CUPS_PUBLIC;
 extern int		httpError(http_t *http) _CUPS_PUBLIC;
 extern http_field_t	httpFieldValue(const char *name) _CUPS_PUBLIC;
