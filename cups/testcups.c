@@ -391,7 +391,7 @@ main(int  argc,				// I - Number of command-line arguments
 
   for (i = 0, dest_name = NULL; i < (int)num_dests; i ++)
   {
-    if ((dval = cupsGetOption("printer-is-temporary", dests[i].num_options, dest[i].options)) != NULL && !strcmp(dval, "false"))
+    if ((dval = cupsGetOption("printer-is-temporary", dests[i].num_options, dests[i].options)) != NULL && !strcmp(dval, "false"))
     {
       dest_name = dests[i].name;
       break;
