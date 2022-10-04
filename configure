@@ -746,6 +746,7 @@ enable_maintainer
 enable_sanitizer
 with_dsoflags
 with_ldflags
+with_domainsocket
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1392,6 +1393,7 @@ Optional Packages:
   --with-tls=...          use gnutls or openssl/libressl for TLS support
   --with-dsoflags=...     Specify additional DSOFLAGS
   --with-ldflags=...      Specify additional LDFLAGS
+  --with-domainsocket     set unix domain socket name
 
 Some influential environment variables:
   CC          C compiler command
@@ -5502,6 +5504,57 @@ then :
     PKGCONFIG_CFLAGS="-I\${includedir} $PKGCONFIG_CFLAGS"
 
 fi
+
+
+CUPS_DEFAULT_DOMAINSOCKET=""
+
+
+# Check whether --with-domainsocket was given.
+if test ${with_domainsocket+y}
+then :
+  withval=$with_domainsocket;
+    default_domainsocket="$withval"
+
+else $as_nop
+
+    default_domainsocket=""
+
+fi
+
+
+if test x$default_domainsocket != xno
+then :
+
+    if test "x$default_domainsocket" = x
+then :
+
+        case "$host_os_name" in #(
+  darwin*) :
+
+	    # Darwin and macOS do their own thing...
+	    CUPS_DEFAULT_DOMAINSOCKET="/private/var/run/cupsd"
+	 ;; #(
+  *) :
+
+	    # All others use FHS standard...
+	    CUPS_DEFAULT_DOMAINSOCKET="/var/run/cups.sock"
+	 ;; #(
+  *) :
+     ;;
+esac
+
+else $as_nop
+
+	CUPS_DEFAULT_DOMAINSOCKET="$default_domainsocket"
+
+fi
+
+
+printf "%s\n" "#define CUPS_DEFAULT_DOMAINSOCKET \"$CUPS_DEFAULT_DOMAINSOCKET\"" >>confdefs.h
+
+
+fi
+
 
 PKGCONFIG_REQUIRES="$(echo $PKGCONFIG_REQUIRES | sed -e '1,$s/,$//')"
 PKGCONFIG_REQUIRES_PRIVATE="$(echo $PKGCONFIG_REQUIRES_PRIVATE | sed -e '1,$s/,$//')"

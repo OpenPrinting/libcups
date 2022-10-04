@@ -581,6 +581,33 @@ AS_IF([test "$includedir" != "/usr/include" -a "$includedir" != "/usr/local/incl
     PKGCONFIG_CFLAGS="-I\${includedir} $PKGCONFIG_CFLAGS"
 ])
 
+
+dnl Domain socket support...
+CUPS_DEFAULT_DOMAINSOCKET=""
+
+AC_ARG_WITH([domainsocket], AS_HELP_STRING([--with-domainsocket], [set unix domain socket name]), [
+    default_domainsocket="$withval"
+], [
+    default_domainsocket=""
+])
+
+AS_IF([test x$default_domainsocket != xno], [
+    AS_IF([test "x$default_domainsocket" = x], [
+        AS_CASE(["$host_os_name"], [darwin*], [
+	    # Darwin and macOS do their own thing...
+	    CUPS_DEFAULT_DOMAINSOCKET="/private/var/run/cupsd"
+	], [*], [
+	    # All others use FHS standard...
+	    CUPS_DEFAULT_DOMAINSOCKET="/var/run/cups.sock"
+	])
+    ], [
+	CUPS_DEFAULT_DOMAINSOCKET="$default_domainsocket"
+    ])
+
+    AC_DEFINE_UNQUOTED([CUPS_DEFAULT_DOMAINSOCKET], ["$CUPS_DEFAULT_DOMAINSOCKET"], [Domain socket path.])
+])
+
+
 dnl Clean up pkg-config "requires" content...
 [PKGCONFIG_REQUIRES="$(echo $PKGCONFIG_REQUIRES | sed -e '1,$s/,$//')"]
 [PKGCONFIG_REQUIRES_PRIVATE="$(echo $PKGCONFIG_REQUIRES_PRIVATE | sed -e '1,$s/,$//')"]
