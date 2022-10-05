@@ -169,7 +169,6 @@ main(int  argc,				// I - Number of command-line arguments
     else if (!strcmp(argv[1], "print") && argc == 5)
     {
       // ./testcups print printer file interval
-      cups_dest_t	*dest;		// Destination
       cups_dinfo_t	*dinfo;		// Destination information
       int		interval,	// Interval between writes
 			job_id;		// Job ID

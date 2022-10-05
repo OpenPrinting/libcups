@@ -1911,7 +1911,7 @@ cups_fill(cups_file_t *fp)		/* I - CUPS file */
       fp->stream.avail_out = 0;
       fp->crc              = crc32(0L, Z_NULL, 0);
 
-      if ((status = inflateInit2(&(fp->stream), -15)) != Z_OK)
+      if (inflateInit2(&(fp->stream), -15) != Z_OK)
       {
         fp->eof = true;
         errno   = EIO;
