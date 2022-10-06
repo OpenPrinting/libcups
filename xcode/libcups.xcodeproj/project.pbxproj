@@ -1016,10 +1016,6 @@
 		271286671CC1309000E517C7 /* tlscheck */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tlscheck; sourceTree = BUILT_PRODUCTS_DIR; };
 		271286681CC130BD00E517C7 /* tlscheck.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = tlscheck.c; path = ../cups/tlscheck.c; sourceTree = "<group>"; };
 		2712866A1CC130FF00E517C7 /* rasterbench.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = rasterbench.c; path = ../cups/rasterbench.c; sourceTree = "<group>"; };
-		271286831CC13D9600E517C7 /* checkpo.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = checkpo.c; path = ../locale/checkpo.c; sourceTree = "<group>"; };
-		271286841CC13D9600E517C7 /* cups.pot */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = cups.pot; path = ../locale/cups.pot; sourceTree = "<group>"; };
-		271286851CC13D9600E517C7 /* po2strings.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = po2strings.c; path = ../locale/po2strings.c; sourceTree = "<group>"; };
-		271286861CC13D9600E517C7 /* strings2po.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = strings2po.c; path = ../locale/strings2po.c; sourceTree = "<group>"; };
 		271287191CC13FDB00E517C7 /* mantohtml.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = mantohtml.c; path = ../man/mantohtml.c; sourceTree = "<group>"; };
 		273B1EAA226B3E4800428143 /* ippevepcl */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ippevepcl; sourceTree = BUILT_PRODUCTS_DIR; };
 		273B1EBB226B3E5200428143 /* ippeveps */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ippeveps; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1563,18 +1559,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		271286821CC13D7600E517C7 /* tools */ = {
-			isa = PBXGroup;
-			children = (
-				271286831CC13D9600E517C7 /* checkpo.c */,
-				271286841CC13D9600E517C7 /* cups.pot */,
-				271287191CC13FDB00E517C7 /* mantohtml.c */,
-				271286851CC13D9600E517C7 /* po2strings.c */,
-				271286861CC13D9600E517C7 /* strings2po.c */,
-			);
-			name = tools;
-			sourceTree = "<group>";
-		};
 		273BF6B81333B4A90022CAAB /* tests */ = {
 			isa = PBXGroup;
 			children = (
@@ -1613,6 +1597,7 @@
 				273B1EBC226B3EE300428143 /* ippeveps.c */,
 				72CF95F218A19165000FCAE4 /* ippfind.c */,
 				276683F91337F7A9000D33D0 /* ipptool.c */,
+				271287191CC13FDB00E517C7 /* mantohtml.c */,
 			);
 			name = commands;
 			sourceTree = "<group>";
@@ -1766,7 +1751,6 @@
 				72220EB41333050100FCA411 /* libcups */,
 				274FF67313333B0A00317ECB /* commands */,
 				273BF6B81333B4A90022CAAB /* tests */,
-				271286821CC13D7600E517C7 /* tools */,
 				72220FB113330B4A00FCA411 /* Frameworks */,
 				72220EAF1333047D00FCA411 /* Products */,
 			);
