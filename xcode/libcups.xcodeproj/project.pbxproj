@@ -1016,7 +1016,6 @@
 		271286671CC1309000E517C7 /* tlscheck */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tlscheck; sourceTree = BUILT_PRODUCTS_DIR; };
 		271286681CC130BD00E517C7 /* tlscheck.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = tlscheck.c; path = ../cups/tlscheck.c; sourceTree = "<group>"; };
 		2712866A1CC130FF00E517C7 /* rasterbench.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = rasterbench.c; path = ../cups/rasterbench.c; sourceTree = "<group>"; };
-		271287191CC13FDB00E517C7 /* mantohtml.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = mantohtml.c; path = ../man/mantohtml.c; sourceTree = "<group>"; };
 		273B1EAA226B3E4800428143 /* ippevepcl */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ippevepcl; sourceTree = BUILT_PRODUCTS_DIR; };
 		273B1EBB226B3E5200428143 /* ippeveps */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ippeveps; sourceTree = BUILT_PRODUCTS_DIR; };
 		273B1EBC226B3EE300428143 /* ippeveps.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = ippeveps.c; path = ../tools/ippeveps.c; sourceTree = "<group>"; };
@@ -1597,7 +1596,6 @@
 				273B1EBC226B3EE300428143 /* ippeveps.c */,
 				72CF95F218A19165000FCAE4 /* ippfind.c */,
 				276683F91337F7A9000D33D0 /* ipptool.c */,
-				271287191CC13FDB00E517C7 /* mantohtml.c */,
 			);
 			name = commands;
 			sourceTree = "<group>";
