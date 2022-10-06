@@ -115,13 +115,13 @@ html:
 	echo Converting man pages to HTML...
 	for file in $(MAN1); do \
 		echo "    $$file..."; \
-		mantohtml $$file >../doc/`basename $$file .1`.html; \
+		mantohtml --css man.css $$file >../doc/`basename $$file .1`.html; \
 	done
 	for file in $(MAN5); do \
 		echo "    $$file..."; \
-		mantohtml $$file >../doc/`basename $$file .5`.html; \
+		mantohtml --css man.css $$file >../doc/`basename $$file .5`.html; \
 	done
 	for file in $(MAN7); do \
 		echo "    $$file..."; \
-		mantohtml $$file >../doc/`basename $$file .7`.html; \
+		mantohtml --css man.css $$file >../doc/`basename $$file .7`.html; \
 	done

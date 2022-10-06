@@ -1,0 +1,13 @@
+body {
+  font-family: sans-serif;
+  font-size: 16pt;
+  margin: 54pt 36pt;
+}
+
+code, kbd, pre, tt {
+  font-family: monospace;
+}
+
+p {
+  text-align: justify;
+}
