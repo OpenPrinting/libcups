@@ -20,6 +20,7 @@ libcups v3.0b1 (Month DD, YYYY)
   `ippexeprinter`, and other tools (Issue #14)
 - Added a roll to the default color ippeveprinter printer.
 - Added new DNS-SD API (Issue #19)
+- Added new PWG media sizes.
 - Added, modernized, and promoted the localization interfaces to public API
   (Issue #24)
 - Added public JSON API (Issue #31)

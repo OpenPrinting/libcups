@@ -86,6 +86,7 @@ static pwg_media_t const cups_pwg_media[] =
   _PWG_MEDIA_MM("iso_b9_44x62mm", "iso-b9", "ISOB9", 44, 62),
   _PWG_MEDIA_MM("iso_b8_62x88mm", "iso-b8", "ISOB8", 62, 88),
   _PWG_MEDIA_MM("iso_b7_88x125mm", "iso-b7", "ISOB7", 88, 125),
+  /* iso_id-3 is iso_b7_88x125mm. */
   _PWG_MEDIA_MM("iso_b6_125x176mm", "iso-b6", "ISOB6", 125, 176),
   _PWG_MEDIA_MM("iso_b6c4_125x324mm", NULL, "125x324mm", 125, 324),
   _PWG_MEDIA_MM("iso_b5_176x250mm", "iso-b5", "ISOB5", 176, 250),
@@ -202,12 +203,18 @@ static pwg_media_t const cups_pwg_media[] =
   _PWG_MEDIA_IN("na_arch-c_18x24in", "arch-c", "ARCHC", 18, 24),
   _PWG_MEDIA_IN("na_d_22x34in", "d", "AnsiD", 22, 34),
   _PWG_MEDIA_IN("na_arch-d_24x36in", "arch-d", "ARCHD", 24, 36),
+  _PWG_MEDIA_IN("na_arch-e2_26x38in", NULL, "26x38", 26, 38),
+  _PWG_MEDIA_IN("na_arch-e3_27x39in", NULL, "27x39", 27, 39),
   _PWG_MEDIA_IN("na_wide-format_30x42in", NULL, "30x42", 30, 42),
   _PWG_MEDIA_IN("na_e_34x44in", "e", "AnsiE", 34, 44),
   _PWG_MEDIA_IN("na_arch-e_36x48in", "arch-e", "ARCHE", 36, 48),
   _PWG_MEDIA_IN("na_f_44x68in", NULL, "AnsiF", 44, 68),
 
   // Other English Standard Sheet Media Sizes
+  _PWG_MEDIA_IN("oe_12x16_12x16in", NULL, "12x16", 12, 16),
+  _PWG_MEDIA_IN("oe_14x17_14x17in", NULL, "14x17", 14, 17),
+  _PWG_MEDIA_IN("oe_18x22_18x22in", NULL, "18x22", 18, 22),
+  _PWG_MEDIA_IN("oe_a2plus_17x24in", NULL, "17x24", 17, 24),
   _PWG_MEDIA_IN("oe_business-card_2x3.5in", NULL, "2x3.5", 2, 3.5),
   _PWG_MEDIA_IN("oe_photo-10r_10x12in", NULL, "10x12", 10, 12),
   _PWG_MEDIA_IN("oe_photo-12r_12x15in", NULL, "12x15", 12, 15),
@@ -221,18 +228,25 @@ static pwg_media_t const cups_pwg_media[] =
   _PWG_MEDIA_IN("oe_photo-30r_30x40in", NULL, "30x40", 30, 40),
   _PWG_MEDIA_IN("oe_photo-l_3.5x5in", NULL, "3.5x5", 3.5, 5),
   _PWG_MEDIA_IN("oe_photo-s8r_8x12in", NULL, "8x12", 8, 12),
-  _PWG_MEDIA_IN("oe_photo-s10r_10x15in", NULL, "10x15", 10, 15),
+  /* oe_photo-s10r is na_10x15_10x15in. */
   _PWG_MEDIA_IN("oe_square-photo_4x4in", NULL, "4x4", 4, 4),
   _PWG_MEDIA_IN("oe_square-photo_5x5in", NULL, "5x5", 5, 5),
 
   // Other Metric Standard Sheet Media Sizes
+  _PWG_MEDIA_MM("om_16k_184x260mm", NULL, "184x260mm", 184, 260),
+  _PWG_MEDIA_MM("om_16k_195x270mm", NULL, "195x270mm", 195, 270),
+  _PWG_MEDIA_MM("om_business-card_55x85mm", NULL, "55x85mm", 55, 85),
+  _PWG_MEDIA_MM("om_business-card_55x91mm", NULL, "55x91mm", 55, 91),
+  _PWG_MEDIA_MM("om_card_54x86mm", NULL, "54x86mm", 54, 86),
   _PWG_MEDIA_MM("om_dai-pa-kai_275x395mm", NULL, "275x395mm", 275, 395),
+  _PWG_MEDIA_MM("om_dsc-photo_89x119mm", NULL, "89x119mm", 89, 119),
   _PWG_MEDIA_MM("om_folio_210x330mm", "folio", "Folio", 210, 330),
   _PWG_MEDIA_MM("om_folio-sp_215x315mm", NULL, "FolioSP", 215, 315),
   _PWG_MEDIA_MM("om_invite_220x220mm", NULL, "EnvInvite", 220, 220),
   _PWG_MEDIA_MM("om_italian_110x230mm", NULL, "EnvItalian", 110, 230),
   _PWG_MEDIA_MM("om_juuro-ku-kai_198x275mm", NULL, "198x275mm", 198, 275),
-  _PWG_MEDIA_MM("om_large-photo_200x300", NULL, "200x300mm", 200, 300),
+  _PWG_MEDIA_MM("om_large-photo_200x300mm", NULL, "200x300mm", 200, 300),
+  _PWG_MEDIA_MM("om_medium-photo_130x180mm", NULL, "130x180mm", 130, 180),
   _PWG_MEDIA_MM("om_pa-kai_267x389mm", NULL, "267x389mm", 267, 389),
   _PWG_MEDIA_MM("om_photo-30x40_300x400mm", NULL, "300x400mm", 300, 400),
   _PWG_MEDIA_MM("om_photo-30x45_300x450mm", NULL, "300x450mm", 300, 450),
@@ -241,6 +255,7 @@ static pwg_media_t const cups_pwg_media[] =
   _PWG_MEDIA_MM("om_photo-50x75_500x750mm", NULL, "500x750mm", 500, 750),
   _PWG_MEDIA_MM("om_photo-50x76_500x760mm", NULL, "500x760mm", 500, 760),
   _PWG_MEDIA_MM("om_photo-60x90_600x900mm", NULL, "600x900mm", 600, 900),
+  /* om_postfix is iso_c6c5_114x229mm. */
   _PWG_MEDIA_MM("om_small-photo_100x150mm", NULL, "100x150mm", 100, 150),
   _PWG_MEDIA_MM("om_square-photo_89x89mm", NULL, "89x89mm", 89, 89),
   _PWG_MEDIA_MM("om_wide-photo_100x200mm", NULL, "100x200mm", 100, 200),
@@ -249,11 +264,14 @@ static pwg_media_t const cups_pwg_media[] =
   _PWG_MEDIA_MM("prc_1_102x165mm", NULL, "EnvPRC1", 102, 165),
   _PWG_MEDIA_MM("prc_16k_146x215mm", NULL, "PRC16K", 146, 215),
   _PWG_MEDIA_MM("prc_2_102x176mm", NULL, "EnvPRC2", 102, 176),
+  /* prc_3 is iso_b6_125x176mm. */
   _PWG_MEDIA_MM("prc_32k_97x151mm", NULL, "PRC32K", 97, 151),
   _PWG_MEDIA_MM("prc_4_110x208mm", NULL, "EnvPRC4", 110, 208),
+  /* prc_5 is iso_dl_110x220mm. */
   _PWG_MEDIA_MM("prc_8_120x309mm", NULL, "EnvPRC8", 120, 309),
   _PWG_MEDIA_MM("prc_6_120x320mm", NULL, NULL, 120, 320),
   _PWG_MEDIA_MM("prc_7_160x230mm", NULL, "EnvPRC7", 160, 230),
+  /* prc_10 is iso_c3_324x458mm. */
 
   // Chinese Standard Sheet Media Inch Sizes
   _PWG_MEDIA_IN("roc_16k_7.75x10.75in", NULL, "roc16k", 7.75, 10.75),
