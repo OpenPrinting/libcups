@@ -97,6 +97,7 @@ HEADERS	=	\
 		ipp.h \
 		json.h \
 		language.h \
+		ppd.h \
 		pwg.h \
 		raster.h \
 		thread.h \
