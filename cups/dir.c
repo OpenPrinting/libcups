@@ -184,7 +184,7 @@ cupsDirRead(cups_dir_t *dp)		/* I - Directory pointer */
   if (entry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
     dp->entry.fileinfo.st_mode = 0755 | S_IFDIR;
   else
-    dp->entry.fileinfo.st_mode = 0644;
+    dp->entry.fileinfo.st_mode = 0644 | S_IFREG;
 
   dp->entry.fileinfo.st_atime = _cups_dir_time(entry.ftLastAccessTime);
   dp->entry.fileinfo.st_ctime = _cups_dir_time(entry.ftCreationTime);
