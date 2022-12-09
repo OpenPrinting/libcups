@@ -1,7 +1,7 @@
 paths-ignore:
   - '**/test*.c'
 
-queries:
+query-filters:
   - exclude:
       id: cpp/integer-multiplication-cast-to-long
   - exclude:
