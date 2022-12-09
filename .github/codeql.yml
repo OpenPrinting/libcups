@@ -1,0 +1,14 @@
+paths-ignore:
+  - '**/test*.c'
+
+queries:
+  - exclude:
+      id: cpp/integer-multiplication-cast-to-long
+  - exclude:
+      id: cpp/missing-header-guard
+  - exclude:
+      id: cpp/short-global-name
+  - exclude:
+      id: cpp/tainted-format-string
+  - exclude:
+      id: cpp/toctou-race-condition
