@@ -174,10 +174,10 @@ test:		$(UNITTARGETS)
 	rm -f test.log
 	echo Running array API tests...
 	./testarray 2>>test.log
-	if test `uname` != Darwin; then \
-		echo Running CUPS API tests...; \
-		./testcups 2>>test.log; \
-	fi
+#	if test `uname` != Darwin; then \
+#		echo Running CUPS API tests...; \
+#		./testcups 2>>test.log; \
+#	fi
 	echo Running file API tests...
 	./testfile 2>>test.log
 	echo Running HTTP API tests...
