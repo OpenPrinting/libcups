@@ -334,8 +334,10 @@ cupsRasterInitHeader(
   h->cupsPageSize[0] = 72.0f * media->width / 2540.0f;
   h->cupsPageSize[1] = 72.0f * media->length / 2540.0f;
 
-  h->ImagingBoundingBox[2] = h->PageSize[0];
-  h->ImagingBoundingBox[3] = h->PageSize[1];
+  h->ImagingBoundingBox[0] = 72.0f * media->left / 2540.0f;
+  h->ImagingBoundingBox[1] = 72.0f * media->bottom / 2540.0f;
+  h->ImagingBoundingBox[2] = 72.0f * (media->width - media->right) / 2540.0f;
+  h->ImagingBoundingBox[3] = 72.0f * (media->length - media->top) / 2540.0f;
 
   h->HWResolution[0] = (unsigned)xdpi;
   h->HWResolution[1] = (unsigned)ydpi;
@@ -349,8 +351,10 @@ cupsRasterInitHeader(
     return (false);
   }
 
-  h->cupsInteger[CUPS_RASTER_PWG_ImageBoxRight]  = h->cupsWidth;
-  h->cupsInteger[CUPS_RASTER_PWG_ImageBoxBottom] = h->cupsHeight;
+  h->cupsInteger[CUPS_RASTER_PWG_ImageBoxBottom] = (unsigned)(ydpi * (media->length - media->bottom) / 2540);
+  h->cupsInteger[CUPS_RASTER_PWG_ImageBoxLeft]   = (unsigned)(xdpi * media->left / 2540);
+  h->cupsInteger[CUPS_RASTER_PWG_ImageBoxRight]  = (unsigned)(xdpi * (media->width - media->right) / 2540 - 1);
+  h->cupsInteger[CUPS_RASTER_PWG_ImageBoxTop]    = (unsigned)(ydpi * media->top / 2540 - 1);
 
   // Colorspace and bytes per line...
   if (!strcmp(type, "adobe-rgb_8"))
