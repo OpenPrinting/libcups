@@ -285,6 +285,7 @@ static void		*process_job(ippeve_job_t *job);
 static void		process_state_message(ippeve_job_t *job, char *message);
 static bool		register_printer(ippeve_printer_t *printer);
 static bool		respond_http(ippeve_client_t *client, http_status_t code, const char *content_coding, const char *type, size_t length);
+static void		respond_ignored(ippeve_client_t *client, ipp_attribute_t *attr);
 static void		respond_ipp(ippeve_client_t *client, ipp_status_t status, const char *message, ...) _CUPS_FORMAT(3, 4);
 static void		respond_unsupported(ippeve_client_t *client, ipp_attribute_t *attr);
 static void		run_printer(ippeve_printer_t *printer);
@@ -6574,6 +6575,26 @@ respond_http(
 
 
 /*
+ * 'respond_ignored()' - Respond with an ignored attribute.
+ */
+
+static void
+respond_ignored(
+    ippeve_client_t *client,		/* I - Client */
+    ipp_attribute_t *attr)		/* I - Attribute */
+{
+  ipp_attribute_t	*temp;		/* Copy of attribute */
+
+
+  if (!ippGetStatusCode(client->response))
+    respond_ipp(client, IPP_STATUS_OK_IGNORED_OR_SUBSTITUTED, "Unsupported %s %s%s value.", ippGetName(attr), ippGetCount(attr) > 1 ? "1setOf " : "", ippTagString(ippGetValueTag(attr)));
+
+  temp = ippCopyAttribute(client->response, attr, 0);
+  ippSetGroupTag(client->response, &temp, IPP_TAG_UNSUPPORTED_GROUP);
+}
+
+
+/*
  * 'respond_ipp()' - Send an IPP response.
  */
 
@@ -6616,7 +6637,7 @@ respond_ipp(ippeve_client_t *client,	/* I - Client */
 
 static void
 respond_unsupported(
-    ippeve_client_t   *client,		/* I - Client */
+    ippeve_client_t *client,		/* I - Client */
     ipp_attribute_t *attr)		/* I - Atribute */
 {
   ipp_attribute_t	*temp;		/* Copy of attribute */
@@ -7578,7 +7599,8 @@ valid_job_attributes(
 {
   size_t		i,		/* Looping var */
 			count;		/* Number of values */
-  bool			valid = true;	/* Valid attributes? */
+  bool			fidelity,	/* "ipp-attribute-fidelity" value */
+			valid = true;	/* Valid attributes? */
   ipp_attribute_t	*attr,		/* Current attribute */
 			*supported;	/* xxx-supported attribute */
 
@@ -7593,22 +7615,32 @@ valid_job_attributes(
   * Check the various job template attributes...
   */
 
-  if ((attr = ippFindAttribute(client->request, "copies", IPP_TAG_ZERO)) != NULL)
-  {
-    if (ippGetCount(attr) != 1 || ippGetValueTag(attr) != IPP_TAG_INTEGER ||
-        ippGetInteger(attr, 0) < 1 || ippGetInteger(attr, 0) > 999)
-    {
-      respond_unsupported(client, attr);
-      valid = false;
-    }
-  }
-
   if ((attr = ippFindAttribute(client->request, "ipp-attribute-fidelity", IPP_TAG_ZERO)) != NULL)
   {
     if (ippGetCount(attr) != 1 || ippGetValueTag(attr) != IPP_TAG_BOOLEAN)
     {
       respond_unsupported(client, attr);
       valid = false;
+    }
+  }
+
+  fidelity = ippGetBoolean(attr, 0);
+
+  if ((attr = ippFindAttribute(client->request, "copies", IPP_TAG_ZERO)) != NULL)
+  {
+    if (ippGetCount(attr) != 1 || ippGetValueTag(attr) != IPP_TAG_INTEGER ||
+        ippGetInteger(attr, 0) < 1 || ippGetInteger(attr, 0) > 999)
+    {
+      if (fidelity)
+      {
+        respond_unsupported(client, attr);
+        valid = false;
+      }
+      else
+      {
+        respond_ignored(client, attr);
+        ippDeleteAttribute(client->request, attr);
+      }
     }
   }
 
@@ -7647,7 +7679,9 @@ valid_job_attributes(
     ippSetGroupTag(client->request, &attr, IPP_TAG_JOB);
   }
   else
+  {
     ippAddString(client->request, IPP_TAG_JOB, IPP_TAG_NAME, "job-name", NULL, "Untitled");
+  }
 
   if ((attr = ippFindAttribute(client->request, "job-priority", IPP_TAG_ZERO)) != NULL)
   {
@@ -7688,8 +7722,16 @@ valid_job_attributes(
 
       if (!ippContainsString(supported, ippGetString(attr, 0, NULL)))
       {
-	respond_unsupported(client, attr);
-	valid = false;
+        if (fidelity)
+        {
+	  respond_unsupported(client, attr);
+	  valid = false;
+	}
+	else
+	{
+	  respond_ignored(client, attr);
+	  ippDeleteAttribute(client->request, attr);
+	}
       }
     }
   }
@@ -7729,8 +7771,16 @@ valid_job_attributes(
 
 	if (!ippContainsString(supported, ippGetString(member, 0, NULL)))
 	{
-	  respond_unsupported(client, attr);
-	  valid = false;
+	  if (fidelity)
+	  {
+	    respond_unsupported(client, attr);
+	    valid = false;
+	  }
+	  else
+	  {
+	    respond_ignored(client, attr);
+	    ippDeleteAttribute(client->request, attr);
+	  }
 	}
       }
     }
@@ -7793,8 +7843,16 @@ valid_job_attributes(
 
 	  if (i >= count)
 	  {
-	    respond_unsupported(client, attr);
-	    valid = false;
+	    if (fidelity)
+	    {
+	      respond_unsupported(client, attr);
+	      valid = false;
+	    }
+	    else
+	    {
+	      respond_ignored(client, attr);
+	      ippDeleteAttribute(client->request, attr);
+	    }
 	  }
 	}
       }
@@ -7874,8 +7932,16 @@ valid_job_attributes(
 
       if (i >= count)
       {
-	respond_unsupported(client, attr);
-	valid = false;
+        if (fidelity)
+        {
+	  respond_unsupported(client, attr);
+	  valid = false;
+	}
+	else
+	{
+	  respond_ignored(client, attr);
+	  ippDeleteAttribute(client->request, attr);
+	}
       }
     }
   }
@@ -7894,14 +7960,30 @@ valid_job_attributes(
     {
       if (!ippContainsString(supported, sides))
       {
-	respond_unsupported(client, attr);
-	valid = false;
+        if (fidelity)
+        {
+	  respond_unsupported(client, attr);
+	  valid = false;
+	}
+	else
+	{
+	  respond_ignored(client, attr);
+	  ippDeleteAttribute(client->request, attr);
+	}
       }
     }
     else if (strcmp(sides, "one-sided"))
     {
-      respond_unsupported(client, attr);
-      valid = false;
+      if (fidelity)
+      {
+	respond_unsupported(client, attr);
+	valid = false;
+      }
+      else
+      {
+        respond_ignored(client, attr);
+        ippDeleteAttribute(client->request, attr);
+      }
     }
   }
 
