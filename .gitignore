@@ -1,6 +1,7 @@
 *.a
 *.bck
 *.o
+/.vs
 /autom4te.cache
 /config.h
 /config.log
