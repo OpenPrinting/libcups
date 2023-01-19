@@ -1,7 +1,7 @@
 /*
  * ipptool command for CUPS.
  *
- * Copyright © 2021-2022 by OpenPrinting.
+ * Copyright © 2021-2023 by OpenPrinting.
  * Copyright © 2020 by The Printer Working Group.
  * Copyright © 2007-2021 by Apple Inc.
  * Copyright © 1997-2007 by Easy Software Products.
@@ -45,12 +45,13 @@
  * Types...
  */
 
-typedef enum ipptool_transfer_e		/**** How to send request data ****/
+typedef enum ipptool_content_e		/**** Content Validation ****/
 {
-  IPPTOOL_TRANSFER_AUTO,		/* Chunk for files, length for static */
-  IPPTOOL_TRANSFER_CHUNKED,		/* Chunk always */
-  IPPTOOL_TRANSFER_LENGTH		/* Length always */
-} ipptool_transfer_t;
+  IPPTOOL_CONTENT_NONE,			/* No content validation */
+  IPPTOOL_CONTENT_AVAILABLE,		/* Accessible resource */
+  IPPTOOL_CONTENT_VALID,		/* Valid resource */
+  IPPTOOL_CONTENT_VALID_ICON		/* Valid icon resource */
+} ipptool_content_t;
 
 typedef enum ipptool_output_e		/**** Output mode ****/
 {
@@ -62,6 +63,13 @@ typedef enum ipptool_output_e		/**** Output mode ****/
   IPPTOOL_OUTPUT_CSV,			/* Comma-separated values output */
   IPPTOOL_OUTPUT_JSON			/* JSON output */
 } ipptool_output_t;
+
+typedef enum ipptool_transfer_e		/**** How to send request data ****/
+{
+  IPPTOOL_TRANSFER_AUTO,		/* Chunk for files, length for static */
+  IPPTOOL_TRANSFER_CHUNKED,		/* Chunk always */
+  IPPTOOL_TRANSFER_LENGTH		/* Length always */
+} ipptool_transfer_t;
 
 typedef enum ipptool_with_e		/**** WITH flags ****/
 {
@@ -89,6 +97,9 @@ typedef struct ipptool_expect_s		/**** Expected attribute info ****/
 		*define_no_match,	/* Variable to define on no-match */
 		*define_value,		/* Variable to define with value */
 		*display_match;		/* Message to display on a match */
+  ipptool_content_t with_content;	/* WITH-*-CONTENT value */
+  cups_array_t	*with_mime_types;	/* WITH-*-MIME-TYPES value(s) */
+  char		*save_filespec;		/* SAVE-*-CONTENT filespec */
   int		repeat_limit;		/* Maximum number of times to repeat */
   bool		repeat_match,		/* Repeat test on match */
 		repeat_no_match,	/* Repeat test on no match */
@@ -246,6 +257,7 @@ static void	sigterm_handler(int sig);
 static bool	timeout_cb(http_t *http, void *user_data);
 static bool	token_cb(ipp_file_t *f, ipptool_test_t *data, const char *token);
 static void	usage(void) _CUPS_NORETURN;
+static bool	with_content(cups_array_t *errors, ipp_attribute_t *attr, ipptool_content_t content, cups_array_t *mime_types, const char *filespec);
 static bool	with_distinct_values(cups_array_t *errors, ipp_attribute_t *attr);
 static const char *with_flags_string(int flags);
 static bool	with_value(ipptool_test_t *data, cups_array_t *errors, char *value, int flags, ipp_attribute_t *attr, char *matchbuf, size_t matchlen);
@@ -848,6 +860,8 @@ clear_data(ipptool_test_t *data)	// I - Test data
     free(expect->define_no_match);
     free(expect->define_value);
     free(expect->display_match);
+    cupsArrayDelete(expect->with_mime_types);
+    free(expect->save_filespec);
   }
   data->num_expects = 0;
 
@@ -1926,11 +1940,21 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
 
 	    if (expect->repeat_no_match && repeat_count < expect->repeat_limit)
 	      repeat_test = true;
-	    break;
+
+	    continue;
 	  }
 
 	  if (found)
 	    ippAttributeString(found, data->buffer, sizeof(data->buffer));
+
+          if (found && (expect->with_content || expect->with_mime_types || expect->save_filespec) && !with_content(exp_errors, found, expect->with_content, expect->with_mime_types, expect->save_filespec))
+          {
+	    if (expect->define_no_match)
+	    {
+	      ippFileSetVar(data->parent, expect->define_no_match, "1");
+	      exp_pass = true;
+	    }
+          }
 
 	  if (found && expect->with_value_from && !with_value_from(NULL, ippFindAttribute(response, expect->with_value_from, IPP_TAG_ZERO), found, data->buffer, sizeof(data->buffer)))
 	  {
@@ -1949,7 +1973,7 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
 	    if (expect->repeat_no_match && repeat_count < expect->repeat_limit)
 	      repeat_test = true;
 
-	    break;
+	    continue;
 	  }
 	  else if (found && !with_value(data, NULL, expect->with_value, expect->with_flags, found, data->buffer, sizeof(data->buffer)))
 	  {
@@ -1972,7 +1996,7 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
 	    if (expect->repeat_no_match && repeat_count < expect->repeat_limit)
 	      repeat_test = true;
 
-	    break;
+	    continue;
 	  }
 	  else if (expect->with_value)
 	  {
@@ -1994,7 +2018,7 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
 	    if (expect->repeat_no_match && repeat_count < expect->repeat_limit)
 	      repeat_test = true;
 
-	    break;
+	    continue;
 	  }
 
 	  if (found && expect->same_count_as)
@@ -2020,7 +2044,7 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
 	      if (expect->repeat_no_match && repeat_count < expect->repeat_limit)
 		repeat_test = true;
 
-	      break;
+	      continue;
 	    }
 	  }
 
@@ -5131,13 +5155,19 @@ token_cb(ipp_file_t     *f,		/* I - IPP file data */
 	_cups_strcasecmp(token, "REPEAT-MATCH") &&
 	_cups_strcasecmp(token, "REPEAT-NO-MATCH") &&
 	_cups_strcasecmp(token, "SAME-COUNT-AS") &&
+	_cups_strcasecmp(token, "SAVE-ALL-CONTENT") &&
+	_cups_strcasecmp(token, "SAVE-CONTENT") &&
+	_cups_strcasecmp(token, "WITH-ALL-CONTENT") &&
+	_cups_strcasecmp(token, "WITH-ALL-MIME-TYPES") &&
 	_cups_strcasecmp(token, "WITH-ALL-VALUES") &&
 	_cups_strcasecmp(token, "WITH-ALL-VALUES-FROM") &&
 	_cups_strcasecmp(token, "WITH-ALL-HOSTNAMES") &&
 	_cups_strcasecmp(token, "WITH-ALL-RESOURCES") &&
 	_cups_strcasecmp(token, "WITH-ALL-SCHEMES") &&
+	_cups_strcasecmp(token, "WITH-CONTENT") &&
 	_cups_strcasecmp(token, "WITH-DISTINCT-VALUES") &&
 	_cups_strcasecmp(token, "WITH-HOSTNAME") &&
+	_cups_strcasecmp(token, "WITH-MIME-TYPES") &&
 	_cups_strcasecmp(token, "WITH-RESOURCE") &&
 	_cups_strcasecmp(token, "WITH-SCHEME") &&
 	_cups_strcasecmp(token, "WITH-VALUE") &&
@@ -5906,6 +5936,24 @@ token_cb(ipp_file_t     *f,		/* I - IPP file data */
 	return (false);
       }
     }
+    else if (!_cups_strcasecmp(token, "SAVE-ALL-CONTENT") || !_cups_strcasecmp(token, "SAVE-CONTENT"))
+    {
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
+      {
+	print_fatal_error(data, "Missing %s filespec on line %d of '%s'.", token, ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
+      }
+
+      if (data->last_expect)
+      {
+	data->last_expect->save_filespec = strdup(temp);
+      }
+      else
+      {
+	print_fatal_error(data, "%s without a preceding EXPECT on line %d of '%s'.", token, ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
+      }
+    }
     else if (!_cups_strcasecmp(token, "IF-DEFINED"))
     {
       if (!ippFileReadToken(f, temp, sizeof(temp)))
@@ -5947,6 +5995,58 @@ token_cb(ipp_file_t     *f,		/* I - IPP file data */
       else
       {
 	print_fatal_error(data, "IF-NOT-DEFINED without a preceding EXPECT or STATUS on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
+      }
+    }
+    else if (!_cups_strcasecmp(token, "WITH-ALL-CONTENT") || !_cups_strcasecmp(token, "WITH-CONTENT"))
+    {
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
+      {
+	print_fatal_error(data, "Missing %s condition on line %d of '%s'.", token, ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
+      }
+
+      if (data->last_expect)
+      {
+        if (!_cups_strcasecmp(temp, "available"))
+        {
+          data->last_expect->with_content = IPPTOOL_CONTENT_AVAILABLE;
+        }
+        else if (!_cups_strcasecmp(temp, "valid"))
+        {
+          data->last_expect->with_content = IPPTOOL_CONTENT_VALID;
+        }
+        else if (!_cups_strcasecmp(temp, "valid-icon"))
+        {
+          data->last_expect->with_content = IPPTOOL_CONTENT_VALID_ICON;
+        }
+        else
+        {
+	  print_fatal_error(data, "Unsupported %s %s on line %d of '%s'.", token, temp, ippFileGetLineNumber(f), ippFileGetFilename(f));
+	  return (false);
+        }
+      }
+      else
+      {
+	print_fatal_error(data, "%s without a preceding EXPECT on line %d of '%s'.", token, ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
+      }
+    }
+    else if (!_cups_strcasecmp(token, "WITH-ALL-MIME-TYPES") || !_cups_strcasecmp(token, "WITH-MIME-TYPES"))
+    {
+      if (!ippFileReadToken(f, temp, sizeof(temp)))
+      {
+	print_fatal_error(data, "Missing %s MIME media type(s) on line %d of '%s'.", token, ippFileGetLineNumber(f), ippFileGetFilename(f));
+	return (false);
+      }
+
+      if (data->last_expect)
+      {
+	data->last_expect->with_mime_types = cupsArrayNewStrings(temp, ',');
+      }
+      else
+      {
+	print_fatal_error(data, "%s without a preceding EXPECT on line %d of '%s'.", token, ippFileGetLineNumber(f), ippFileGetFilename(f));
 	return (false);
       }
     }
@@ -6563,6 +6663,30 @@ usage(void)
   cupsLangPuts(stderr, _("-v                      Be verbose"));
 
   exit(1);
+}
+
+
+/*
+ * 'with_content()' - Verify that URIs meet content/MIME media type requirements
+ *                    and save as needed.
+ */
+
+static bool				// O - `true` if valid, `false` otherwise
+with_content(
+    cups_array_t      *errors,		// I - Array of errors
+    ipp_attribute_t   *attr,		// I - Attribute
+    ipptool_content_t content,		// I - Content validation rule
+    cups_array_t      *mime_types,	// I - Comma-delimited list of MIME media types
+    const char        *filespec)	// I - Output filename specification
+{
+  // TODO: Implement me
+  (void)errors;
+  (void)attr;
+  (void)content;
+  (void)mime_types;
+  (void)filespec;
+
+  return (true);
 }
 
 
