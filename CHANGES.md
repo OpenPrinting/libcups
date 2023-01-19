@@ -26,6 +26,7 @@ libcups v3.0b1 (Month DD, YYYY)
 - Added, modernized, and promoted the localization interfaces to public API
   (Issue #24)
 - Added public JSON API (Issue #31)
+- Added new `basename` variable for use in ipptool files (Issue #44)
 - Updated the CUPS API for consistency.
 - Fixed ipptool's handling of EXPECT for member attributes (Issue #4)
 - Fixed ipptool's support for octetString values (Issue #23)

@@ -267,7 +267,8 @@ main(int  argc,				/* I - Number of command-line args */
 			*value,		/* Pointer to value */
 			filename[1024],	/* Real filename */
 			testname[1024];	/* Real test filename */
-  const char		*ext,		/* Extension on filename */
+  const char		*base,		/* Base filename */
+			*ext,		/* Extension on filename */
 			*testfile;	/* Test file to use */
   int			interval,	/* Test interval in microseconds */
 			repeat;		/* Repeat count */
@@ -527,6 +528,11 @@ main(int  argc,				/* I - Number of command-line args */
 		cupsCopyString(filename, argv[i], sizeof(filename));
 
 	      ippFileSetVar(data->parent, "filename", filename);
+
+	      if ((base = strrchr(filename, '/')) != NULL)
+	        ippFileSetVar(data->parent, "basename", base + 1);
+	      else
+	        ippFileSetVar(data->parent, "basename", filename);
 
               if ((ext = strrchr(filename, '.')) != NULL)
               {
