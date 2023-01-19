@@ -368,6 +368,10 @@ Requires that all values of the \fBEXPECT\fR attribute match the boolean value g
 Requires that all values of the \fBEXPECT\fR attribute match the regular expression, which must conform to the POSIX regular expression syntax.
 Comparisons are case-sensitive.
 .TP 5
+\fBWITH\-ALL\-VALUES\-FROM \fIattribute-name\fR
+Requires that all value(s) of the \fBEXPECT\fR attribute matches the value(s) in the specified attribute.
+For example, "EXPECT-ALL media\-col\-database/media\-source WITH\-ALL\-VALUES\-FROM media\-source\-supported" requires that all the "media\-source" values are listed as a value of the "media\-source\-supported" attribute.
+.TP 5
 \fBWITH\-DISTINCT\-VALUES\fR
 Requires that all values of the \fBEXPECT\fR attribute are unique.
 Comparisons are case-sensitive.

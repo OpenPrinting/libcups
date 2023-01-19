@@ -395,6 +395,10 @@ Requires that all values of the <strong>EXPECT</strong> attribute match the bool
 Requires that all values of the <strong>EXPECT</strong> attribute match the regular expression, which must conform to the POSIX regular expression syntax.
 Comparisons are case-sensitive.
 </p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>WITH-ALL-VALUES-FROM </strong><em>attribute-name</em><br>
+Requires that all value(s) of the <strong>EXPECT</strong> attribute matches the value(s) in the specified attribute.
+For example, &quot;EXPECT-ALL media-col-database/media-source WITH-ALL-VALUES-FROM media-source-supported&quot; requires that all the &quot;media-source&quot; values are listed as a value of the &quot;media-source-supported&quot; attribute.
+</p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>WITH-DISTINCT-VALUES</strong><br>
 Requires that all values of the <strong>EXPECT</strong> attribute are unique.
 Comparisons are case-sensitive.

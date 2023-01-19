@@ -5126,6 +5126,7 @@ token_cb(ipp_file_t     *f,		/* I - IPP file data */
 	_cups_strcasecmp(token, "REPEAT-NO-MATCH") &&
 	_cups_strcasecmp(token, "SAME-COUNT-AS") &&
 	_cups_strcasecmp(token, "WITH-ALL-VALUES") &&
+	_cups_strcasecmp(token, "WITH-ALL-VALUES-FROM") &&
 	_cups_strcasecmp(token, "WITH-ALL-HOSTNAMES") &&
 	_cups_strcasecmp(token, "WITH-ALL-RESOURCES") &&
 	_cups_strcasecmp(token, "WITH-ALL-SCHEMES") &&
@@ -6073,7 +6074,8 @@ token_cb(ipp_file_t     *f,		/* I - IPP file data */
 	return (false);
       }
     }
-    else if (!_cups_strcasecmp(token, "WITH-VALUE-FROM"))
+    else if (!_cups_strcasecmp(token, "WITH-ALL-VALUES-FROM") ||
+	     !_cups_strcasecmp(token, "WITH-VALUE-FROM"))
     {
       if (!ippFileReadToken(f, temp, sizeof(temp)))
       {
@@ -6091,6 +6093,9 @@ token_cb(ipp_file_t     *f,		/* I - IPP file data */
 
 	data->last_expect->with_value_from = strdup(value);
 	data->last_expect->with_flags      = IPPTOOL_WITH_LITERAL;
+
+	if (!_cups_strncasecmp(token, "WITH-ALL-", 9))
+	  data->last_expect->with_flags |= IPPTOOL_WITH_ALL;
       }
       else
       {
