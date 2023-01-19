@@ -1844,7 +1844,9 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
 
       for (i = data->num_expects, expect = data->expects; i > 0; i --, expect ++)
       {
-	ipp_attribute_t *group_found;	/* Found parent attribute for group tests */
+        cups_array_t	*exp_errors;	// Temporary list of errors
+        bool		exp_pass;	// Did this expect pass?
+	ipp_attribute_t	*group_found;	// Found parent attribute for group tests
 
 	if (expect->if_defined && !ippFileGetVar(f, expect->if_defined))
 	  continue;
@@ -1858,6 +1860,9 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
 	    if (expect->in_group == ippGetGroupTag(found))
 	      break;
 	}
+
+	exp_pass   = false;
+	exp_errors = cupsArrayNew(NULL, NULL, NULL, 0, (cups_acopy_cb_t)strdup, (cups_afree_cb_t)free);
 
 	do
 	{
@@ -1882,27 +1887,34 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
 	      (expect->with_distinct && !with_distinct_values(NULL, found)))
 	  {
 	    if (expect->define_no_match)
+	    {
 	      ippFileSetVar(data->parent, expect->define_no_match, "1");
+	      exp_pass = true;
+	    }
 	    else if (!expect->define_match && !expect->define_value)
 	    {
 	      if (found && expect->not_expect && !expect->with_value && !expect->with_value_from)
-		add_stringf(data->errors, "NOT EXPECTED: %s", expect->name);
+	      {
+		add_stringf(exp_errors, "NOT EXPECTED: %s", expect->name);
+	      }
 	      else if (!found && !(expect->not_expect || expect->optional))
-		add_stringf(data->errors, "EXPECTED: %s", expect->name);
+	      {
+		add_stringf(exp_errors, "EXPECTED: %s", expect->name);
+	      }
 	      else if (found)
 	      {
 		if (!expect_matches(expect, found))
-		  add_stringf(data->errors, "EXPECTED: %s OF-TYPE %s (got %s)",
+		  add_stringf(exp_errors, "EXPECTED: %s OF-TYPE %s (got %s)",
 			      expect->name, expect->of_type,
 			      ippTagString(ippGetValueTag(found)));
 
 		if (expect->in_group && ippGetGroupTag(group_found) != expect->in_group)
-		  add_stringf(data->errors, "EXPECTED: %s IN-GROUP %s (got %s).",
+		  add_stringf(exp_errors, "EXPECTED: %s IN-GROUP %s (got %s).",
 			      expect->name, ippTagString(expect->in_group),
 			      ippTagString(ippGetGroupTag(group_found)));
 
                 if (expect->with_distinct)
-                  with_distinct_values(data->errors, found);
+                  with_distinct_values(exp_errors, found);
 	      }
 	    }
 
@@ -1917,12 +1929,15 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
 	  if (found && expect->with_value_from && !with_value_from(NULL, ippFindAttribute(response, expect->with_value_from, IPP_TAG_ZERO), found, data->buffer, sizeof(data->buffer)))
 	  {
 	    if (expect->define_no_match)
+	    {
 	      ippFileSetVar(data->parent, expect->define_no_match, "1");
+	      exp_pass = true;
+	    }
 	    else if (!expect->define_match && !expect->define_value && ((!expect->repeat_match && !expect->repeat_no_match) || repeat_count >= expect->repeat_limit))
 	    {
-	      add_stringf(data->errors, "EXPECTED: %s WITH-VALUES-FROM %s", expect->name, expect->with_value_from);
+	      add_stringf(exp_errors, "EXPECTED: %s WITH-VALUES-FROM %s", expect->name, expect->with_value_from);
 
-	      with_value_from(data->errors, ippFindAttribute(response, expect->with_value_from, IPP_TAG_ZERO), found, data->buffer, sizeof(data->buffer));
+	      with_value_from(exp_errors, ippFindAttribute(response, expect->with_value_from, IPP_TAG_ZERO), found, data->buffer, sizeof(data->buffer));
 	    }
 
 	    if (expect->repeat_no_match && repeat_count < expect->repeat_limit)
@@ -1933,16 +1948,19 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
 	  else if (found && !with_value(data, NULL, expect->with_value, expect->with_flags, found, data->buffer, sizeof(data->buffer)))
 	  {
 	    if (expect->define_no_match)
+	    {
 	      ippFileSetVar(data->parent, expect->define_no_match, "1");
+	      exp_pass = true;
+	    }
 	    else if (!expect->define_match && !expect->define_value &&
 		     !expect->repeat_match && (!expect->repeat_no_match || repeat_count >= expect->repeat_limit))
 	    {
 	      if (expect->with_flags & IPPTOOL_WITH_REGEX)
-		add_stringf(data->errors, "EXPECTED: %s %s /%s/", expect->name, with_flags_string(expect->with_flags), expect->with_value);
+		add_stringf(exp_errors, "EXPECTED: %s %s /%s/", expect->name, with_flags_string(expect->with_flags), expect->with_value);
 	      else
-		add_stringf(data->errors, "EXPECTED: %s %s \"%s\"", expect->name, with_flags_string(expect->with_flags), expect->with_value);
+		add_stringf(exp_errors, "EXPECTED: %s %s \"%s\"", expect->name, with_flags_string(expect->with_flags), expect->with_value);
 
-	      with_value(data, data->errors, expect->with_value, expect->with_flags, found, data->buffer, sizeof(data->buffer));
+	      with_value(data, exp_errors, expect->with_value, expect->with_flags, found, data->buffer, sizeof(data->buffer));
 	    }
 
 	    if (expect->repeat_no_match && repeat_count < expect->repeat_limit)
@@ -1950,14 +1968,21 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
 
 	    break;
 	  }
+	  else if (expect->with_value)
+	  {
+	    exp_pass = true;
+	  }
 
 	  if (found && expect->count > 0 && ippGetCount(found) != expect->count)
 	  {
 	    if (expect->define_no_match)
+	    {
 	      ippFileSetVar(data->parent, expect->define_no_match, "1");
+	      exp_pass = true;
+	    }
 	    else if (!expect->define_match && !expect->define_value)
 	    {
-	      add_stringf(data->errors, "EXPECTED: %s COUNT %u (got %u)", expect->name, (unsigned)expect->count, (unsigned)ippGetCount(found));
+	      add_stringf(exp_errors, "EXPECTED: %s COUNT %u (got %u)", expect->name, (unsigned)expect->count, (unsigned)ippGetCount(found));
 	    }
 
 	    if (expect->repeat_no_match && repeat_count < expect->repeat_limit)
@@ -1974,13 +1999,16 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
 	    if (!attrptr || ippGetCount(attrptr) != ippGetCount(found))
 	    {
 	      if (expect->define_no_match)
+	      {
 		ippFileSetVar(data->parent, expect->define_no_match, "1");
+	        exp_pass = true;
+	      }
 	      else if (!expect->define_match && !expect->define_value)
 	      {
 		if (!attrptr)
-		  add_stringf(data->errors, "EXPECTED: %s (%u values) SAME-COUNT-AS %s (not returned)", expect->name, (unsigned)ippGetCount(found), expect->same_count_as);
+		  add_stringf(exp_errors, "EXPECTED: %s (%u values) SAME-COUNT-AS %s (not returned)", expect->name, (unsigned)ippGetCount(found), expect->same_count_as);
 		else if (ippGetCount(attrptr) != ippGetCount(found))
-		  add_stringf(data->errors, "EXPECTED: %s (%u values) SAME-COUNT-AS %s (%u values)", expect->name, (unsigned)ippGetCount(found), expect->same_count_as, (unsigned)ippGetCount(attrptr));
+		  add_stringf(exp_errors, "EXPECTED: %s (%u values) SAME-COUNT-AS %s (%u values)", expect->name, (unsigned)ippGetCount(found), expect->same_count_as, (unsigned)ippGetCount(attrptr));
 	      }
 
 	      if (expect->repeat_no_match && repeat_count < expect->repeat_limit)
@@ -1994,10 +2022,14 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
 	    cupsFilePrintf(cupsFileStdout(), "\n%s\n\n", expect->display_match);
 
 	  if (found && expect->define_match)
+	  {
 	    ippFileSetVar(data->parent, expect->define_match, "1");
+	    exp_pass = true;
+	  }
 
 	  if (found && expect->define_value)
 	  {
+	    exp_pass = true;
 	    if (!expect->with_value)
 	    {
 	      size_t last = ippGetCount(found) - 1;
@@ -2057,7 +2089,19 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
 	  if (found && expect->repeat_match && repeat_count < expect->repeat_limit)
 	    repeat_test = 1;
 	}
-	while (expect->expect_all && (found = ippFindNextAttribute(response, expect->name, IPP_TAG_ZERO)) != NULL);
+	while ((expect->expect_all || !exp_pass) && (found = ippFindNextAttribute(response, expect->name, IPP_TAG_ZERO)) != NULL);
+
+        // Handle results of the EXPECT checks...
+	if (!exp_pass)
+	{
+	  // Copy errors...
+	  char *e;			// Current error
+
+	  for (e = (char *)cupsArrayGetFirst(exp_errors); e; e = (char *)cupsArrayGetNext(exp_errors))
+	    cupsArrayAdd(data->errors, e);
+	}
+
+	cupsArrayDelete(exp_errors);
       }
     }
 

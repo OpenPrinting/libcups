@@ -26,6 +26,7 @@ libcups v3.0b1 (Month DD, YYYY)
   (Issue #24)
 - Added public JSON API (Issue #31)
 - Updated the CUPS API for consistency.
+- Fixed ipptool's handling of EXPECT for member attributes (Issue #4)
 - Fixed ipptool's support for octetString values (Issue #23)
 - Removed all obsolete/deprecated CUPS 2.x APIs.
 - Removed (obsolete) Kerberos support.
