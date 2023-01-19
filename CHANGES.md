@@ -4,6 +4,7 @@ Changes in libcups
 libcups v3.0b1 (Month DD, YYYY)
 -------------------------------
 
+- Documentation updates (Issue #32)
 - Split out libcups and tools from CUPS 2.x.
 - Simplified the configure script.
 - Now require a C99-capable C compiler.

@@ -16,7 +16,7 @@ p {
   text-align: justify;
 }
 --></style>
-    <meta name="creator" content="mantohtml v2022.1005">
+    <meta name="creator" content="mantohtml v2.0">
     <title>Documentation</title>
   </head>
   <body>
@@ -113,7 +113,7 @@ Disable the web interface forms used to update the media and supply levels.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>--pam-service </strong><em>service</em><br>
 Set the PAM service name.
-The default service is "cups".
+The default service is &quot;cups&quot;.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>--version</strong><br>
 Show the CUPS version.
@@ -128,25 +128,25 @@ uses PAM to authenticate HTTP Basic credentials.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-D </strong><em>device-uri</em><br>
 Set the device URI for print output.
-The URI can be a filename, directory, or a network socket URI of the form "socket://ADDRESS[:PORT]" (where the default port number is 9100).
+The URI can be a filename, directory, or a network socket URI of the form &quot;socket://ADDRESS[:PORT]&quot; (where the default port number is 9100).
 When specifying a directory,
 <strong>ippeveprinter</strong>
 will create an output file using the job ID and name.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-F </strong><em>output-type/subtype[,...]</em><br>
 Specifies the output MIME media type.
-The default is "application/postscript" when the <strong>-P</strong> option is specified.
+The default is &quot;application/postscript&quot; when the <strong>-P</strong> option is specified.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-M </strong><em>manufacturer</em><br>
 Set the manufacturer of the printer.
-The default is "Example".
+The default is &quot;Example&quot;.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-P </strong><em>filename.ppd</em><br>
 Load printer attributes from the specified PPD file.
 This option is typically used in conjunction with the
 <strong>ippeveps</strong>(7)
 
-printer command ("-c ippeveps").
+printer command (&quot;-c ippeveps&quot;).
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-V 1.1</strong><br>
 </p>
@@ -156,13 +156,13 @@ Specifies the maximum IPP version to report.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-c </strong><em>command</em><br>
 Run the specified command for each document that is printed.
-If "command" is not an absolute path ("/path/to/command"),
+If &quot;command&quot; is not an absolute path (&quot;/path/to/command&quot;),
 <strong>ippeveprinter</strong>
-looks for the command in the "command" subdirectory of the CUPS binary directory, typically /usr/lib/cups/command or /usr/libexec/cups/command.
+looks for the command in the &quot;command&quot; subdirectory of the CUPS binary directory, typically /usr/lib/cups/command or /usr/libexec/cups/command.
 The
 <strong>cups-config</strong>(1)
 
-command can be used to discover the correct binary directory ("cups-config --serverbin").
+command can be used to discover the correct binary directory (&quot;cups-config --serverbin&quot;).
 In addition, the CUPS_SERVERBIN environment variable can be used to override the default location of this directory - see the
 <strong>cups</strong>(1)
 
@@ -190,7 +190,7 @@ The default is the empty string.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-m </strong><em>model</em><br>
 Specifies the model name of the printer.
-The default is "Printer".
+The default is &quot;Printer&quot;.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-n </strong><em>hostname</em><br>
 Specifies the hostname that is reported by the server.
@@ -209,12 +209,12 @@ Turns off DNS-SD service advertisements entirely.
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-r </strong><em>subtype[,subtype]</em><br>
 Specifies the DNS-SD subtype(s) to advertise.
 Separate multiple subtypes with a comma.
-The default is "_print".
+The default is &quot;_print&quot;.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-s </strong><em>speed[,color-speed]</em><br>
 Specifies the printer speed in pages per minute.
 If two numbers are specified and the second number is greater than zero, the server will report support for color printing.
-The default is "10,0".
+The default is &quot;10,0&quot;.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-v[vvv]</strong><br>
 Be (very) verbose when logging activity to standard error.
@@ -234,17 +234,17 @@ program is unique to CUPS and conforms to the IPP Everywhere (PWG 5100.14) speci
 </p>
     <h2 id="ippeveprinter-1.environment">Environment</h2>
 <p><strong>ippeveprinter</strong>
-adds environment variables starting with "IPP_" for all IPP Job attributes in the print request.
-For example, when executing a command for an IPP Job containing the "media" Job Template attribute, the "IPP_MEDIA" environment variable will be set to the value of that attribute.
+adds environment variables starting with &quot;IPP_&quot; for all IPP Job attributes in the print request.
+For example, when executing a command for an IPP Job containing the &quot;media&quot; Job Template attribute, the &quot;IPP_MEDIA&quot; environment variable will be set to the value of that attribute.
 </p>
-    <p>In addition, all IPP "xxx-default" and "pwg-xxx" Printer Description attributes are added to the environment.
-For example, the "IPP_MEDIA_DEFAULT" environment variable will be set to the default value for the "media" Job Template attribute.
+    <p>In addition, all IPP &quot;xxx-default&quot; and &quot;pwg-xxx&quot; Printer Description attributes are added to the environment.
+For example, the &quot;IPP_MEDIA_DEFAULT&quot; environment variable will be set to the default value for the &quot;media&quot; Job Template attribute.
 </p>
     <p>Enumerated values are converted to their keyword equivalents.
-For example, a "print-quality" Job Template attribute with a enum value of 3 will become the "IPP_PRINT_QUALITY" environment variable with a value of "draft".
-This string conversion only happens for standard Job Template attributes, currently "finishings", "orientation-requested", and "print-quality".
+For example, a &quot;print-quality&quot; Job Template attribute with a enum value of 3 will become the &quot;IPP_PRINT_QUALITY&quot; environment variable with a value of &quot;draft&quot;.
+This string conversion only happens for standard Job Template attributes, currently &quot;finishings&quot;, &quot;orientation-requested&quot;, and &quot;print-quality&quot;.
 </p>
-    <p>Finally, the "CONTENT_TYPE" environment variable contains the MIME media type of the document being printed, the "DEVICE_URI" environment variable contains the device URI as specified with the "-D" option, the "OUTPUT_FORMAT" environment variable contains the output MIME media type, and the "PPD" environment variable contains the PPD filename as specified with the "-P" option.
+    <p>Finally, the &quot;CONTENT_TYPE&quot; environment variable contains the MIME media type of the document being printed, the &quot;DEVICE_URI&quot; environment variable contains the device URI as specified with the &quot;-D&quot; option, the &quot;OUTPUT_FORMAT&quot; environment variable contains the output MIME media type, and the &quot;PPD&quot; environment variable contains the PPD filename as specified with the &quot;-P&quot; option.
 </p>
     <h2 id="ippeveprinter-1.command-output">Command Output</h2>
 <p>Unless they communicate directly with a printer, print commands send printer-ready data to the standard output.
@@ -255,25 +255,25 @@ on the standard error with one of the following prefixes:
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>ATTR: </strong><em>attribute=value[ attribute=value]</em><br>
 Sets the named attribute(s) to the given values.
-Currently only the "job-impressions" and "job-impressions-completed" Job Status attributes and the "marker-xxx", "printer-alert", "printer-alert-description", "printer-supply", and "printer-supply-description" Printer Status attributes can be set.
+Currently only the &quot;job-impressions&quot; and &quot;job-impressions-completed&quot; Job Status attributes and the &quot;marker-xxx&quot;, &quot;printer-alert&quot;, &quot;printer-alert-description&quot;, &quot;printer-supply&quot;, and &quot;printer-supply-description&quot; Printer Status attributes can be set.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>DEBUG: </strong><em>Debugging message</em><br>
 Logs a debugging message if at least two -v's have been specified.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>ERROR: </strong><em>Error message</em><br>
-Logs an error message and copies the message to the "job-state-message" attribute.
+Logs an error message and copies the message to the &quot;job-state-message&quot; attribute.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>INFO: </strong><em>Informational message</em><br>
-Logs an informational/progress message if -v has been specified and copies the message to the "job-state-message" attribute unless an error has been reported.
+Logs an informational/progress message if -v has been specified and copies the message to the &quot;job-state-message&quot; attribute unless an error has been reported.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>STATE: </strong><em>keyword[,keyword,...]</em><br>
-Sets the printer's "printer-state-reasons" attribute to the listed keywords.
+Sets the printer's &quot;printer-state-reasons&quot; attribute to the listed keywords.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>STATE: -</strong><em>keyword[,keyword,...]</em><br>
-Removes the listed keywords from the printer's "printer-state-reasons" attribute.
+Removes the listed keywords from the printer's &quot;printer-state-reasons&quot; attribute.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>STATE: +</strong><em>keyword[,keyword,...]</em><br>
-Adds the listed keywords to the printer's "printer-state-reasons" attribute.
+Adds the listed keywords to the printer's &quot;printer-state-reasons&quot; attribute.
 </p>
     <h2 id="ippeveprinter-1.examples">Examples</h2>
 <p>Run
@@ -281,7 +281,7 @@ Adds the listed keywords to the printer's "printer-state-reasons" attribute.
 with a service name of My Cool Printer:
 </p>
     <pre>
-    ippeveprinter "My Cool Printer"
+    ippeveprinter &quot;My Cool Printer&quot;
 </pre>
     <p>Run the
 <strong>file</strong>(1)
@@ -289,7 +289,7 @@ with a service name of My Cool Printer:
 command whenever a job is sent to the server:
 </p>
     <pre>
-    ippeveprinter -c /usr/bin/file "My Cool Printer"
+    ippeveprinter -c /usr/bin/file &quot;My Cool Printer&quot;
 </pre>
     <h2 id="ippeveprinter-1.see-also">See Also</h2>
 <p><strong>ippevepcl</strong>(7),

@@ -1,13 +1,13 @@
 .\"
 .\" ipptoolfile man page.
 .\"
-.\" Copyright © 2021-2022 by OpenPrinting.
+.\" Copyright © 2021-2023 by OpenPrinting.
 .\" Copyright © 2010-2021 by Apple Inc.
 .\"
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH ipptoolfile 5 "CUPS" "2022-02-14" "OpenPrinting"
+.TH ipptoolfile 5 "CUPS" "2023-01-19" "OpenPrinting"
 .SH NAME
 ipptoolfile \- ipptool file format
 .SH DESCRIPTION
@@ -783,7 +783,7 @@ The default is "portrait".
 .TP 5
 \fBRESOLUTION \fIresolution\fBdpi\fR
 .TP 5
-\fBRESOLUTION \fIhorzontal\fBx\fIvertical\fBdpi\fR
+\fBRESOLUTION \fIhorizontal\fBx\fIvertical\fBdpi\fR
 Specifies the output resolution using the printer's supported resolutions or as specified in dots per inch or dots per centimeter.
 "default" uses the median resolution of the printer and is the default, "min" uses the lowest resolution of the printer, and "max" uses the highest resolution of the printer.
 .TP 5
@@ -794,6 +794,40 @@ Specifies the output resolution using the printer's supported resolutions or as 
 \fB SIDES two-sided-short-edge\fR
 Specifies whether to print on one or both sides of the media.
 The default is "two-sided-long-edge" for portrait output and "two-sided-short-edge" for landscape output when supported by the printer, otherwise "one-sided" is used.
+.SH EXAMPLES
+Query the "foo-default" and "foo-supported" Printer Description attributes and validate that all of its values are 'bar', 'baz', or 'none':
+.nf
+{
+  NAME "Validate 'foo' Attribute"
+  OPERATION Get-Printer-Attributes
+  GROUP operation-attributes-tag
+  ATTR charset attributes-charset utf-8
+  ATTR language attributes-natural-language en
+  ATTR uri printer-uri $uri
+  ATTR keyword requested-attributes foo-default,foo-supported
+  EXPECT foo-default OF-TYPE keyword IN-GROUP printer-attributes-tag
+      COUNT 1 WITH-VALUE "/^(bar|baz|none)$$/"
+  EXPECT foo-supported OF-TYPE keyword IN-GROUP printer-attributes-tag
+      WITH-ALL-VALUES "/^(bar|baz|none)$$/"
+}
+.fi
+Query the "media-col-ready" Printer Status attribute and validate that the collection values contain "media-size" and "media-source" member attributes:
+.nf
+{
+  NAME "Validate 'foo' Attribute"
+  OPERATION Get-Printer-Attributes
+  GROUP operation-attributes-tag
+  ATTR charset attributes-charset utf-8
+  ATTR language attributes-natural-language en
+  ATTR uri printer-uri $uri
+  ATTR keyword requested-attributes media-col-ready
+  EXPECT media-col-ready OF-TYPE collection IN-GROUP printer-attributes-tag
+  EXPECT-ALL media-col-ready/media-size OF-TYPE collection COUNT 1
+  EXPECT-ALL media-col-ready/media-size/x-dimension OF-TYPE integer(1:MAX) COUNT 1
+  EXPECT-ALL media-col-ready/media-size/y-dimension OF-TYPE integer(0:MAX) COUNT 1
+  EXPECT-ALL media-col-ready/media-source OF-TYPE keyword|name COUNT 1
+}
+.fi
 .SH SEE ALSO
 .BR ipptool (1)
 .PP
