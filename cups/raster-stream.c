@@ -334,10 +334,10 @@ cupsRasterInitHeader(
   h->cupsPageSize[0] = 72.0f * media->width / 2540.0f;
   h->cupsPageSize[1] = 72.0f * media->length / 2540.0f;
 
-  h->ImagingBoundingBox[0] = 72.0f * media->left / 2540.0f;
-  h->ImagingBoundingBox[1] = 72.0f * media->bottom / 2540.0f;
-  h->ImagingBoundingBox[2] = 72.0f * (media->width - media->right) / 2540.0f;
-  h->ImagingBoundingBox[3] = 72.0f * (media->length - media->top) / 2540.0f;
+  h->ImagingBoundingBox[0] = (unsigned)(72.0f * media->left / 2540.0f);
+  h->ImagingBoundingBox[1] = (unsigned)(72.0f * media->bottom / 2540.0f);
+  h->ImagingBoundingBox[2] = (unsigned)(72.0f * (media->width - media->right) / 2540.0f);
+  h->ImagingBoundingBox[3] = (unsigned)(72.0f * (media->length - media->top) / 2540.0f);
 
   h->HWResolution[0] = (unsigned)xdpi;
   h->HWResolution[1] = (unsigned)ydpi;
