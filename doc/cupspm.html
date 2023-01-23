@@ -8,7 +8,7 @@
 <meta name="generator" content="codedoc v3.7">
 <meta name="author" content="Michael R Sweet">
 <meta name="language" content="en-US">
-<meta name="copyright" content="Copyright © 2021-2022 by OpenPrinting. All Rights Reserved.">
+<meta name="copyright" content="Copyright © 2021-2023 by OpenPrinting. All Rights Reserved.">
 <meta name="version" content="3.0.0">
 <style type="text/css"><!--
 body {
@@ -248,7 +248,7 @@ span.string {
 <div class="header">
 <h1 class="title">CUPS Programming Manual</h1>
 <p>Michael R Sweet</p>
-<p>Copyright © 2021-2022 by OpenPrinting. All Rights Reserved.</p>
+<p>Copyright © 2021-2023 by OpenPrinting. All Rights Reserved.</p>
 </div>
 <div class="contents">
 <h2 class="title">Contents</h2>
@@ -671,6 +671,8 @@ span.string {
 <li><a href="#ippRead">ippRead</a></li>
 <li><a href="#ippReadFile">ippReadFile</a></li>
 <li><a href="#ippReadIO">ippReadIO</a></li>
+<li><a href="#ippRestore">ippRestore</a></li>
+<li><a href="#ippSave">ippSave</a></li>
 <li><a href="#ippSetBoolean">ippSetBoolean</a></li>
 <li><a href="#ippSetCollection">ippSetCollection</a></li>
 <li><a href="#ippSetDate">ippSetDate</a></li>
@@ -1499,6 +1501,51 @@ ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD,
 </code></pre>
 <h3 class="title" id="processing-the-ipp-response">Processing the IPP Response</h3>
 <p>Each response to an IPP request is also an IPP message (<code>ipp_t</code>) with its own IPP attributes (<code>ipp_attribute_t</code>) that includes a status code (<code>IPP_STATUS_OK</code>, <code>IPP_STATUS_ERROR_BAD_REQUEST</code>, etc.) and the corresponding 32-bit integer identifier from the request.</p>
+<p>CUPS provides many functions to access the attributes and values in an IPP response message:</p>
+<ul>
+<li><p><a href="#ippFindAttribute"><code>ippFindAttribute</code></a> finds the first occurrence of an attribute.</p>
+</li>
+<li><p><a href="#ippFindNextAttribute"><code>ippFindNextAttribute</code></a> finds the next occurrence of an attribute.</p>
+</li>
+<li><p><a href="#ippGetBoolean"><code>ippGetBoolean</code></a> gets a boolean value for an attribute.</p>
+</li>
+<li><p><a href="#ippGetCollection"><code>ippGetCollection</code></a> gets a collection value for an attribute.</p>
+</li>
+<li><p><a href="#ippGetCount"><code>ippGetCount</code></a> gets the number of values in an attribute.</p>
+</li>
+<li><p><a href="#ippGetDate"><code>ippGetDate</code></a> gets a date value for an attribute.</p>
+</li>
+<li><p><a href="#ippGetFirstAttribute"><code>ippGetFirstAttribute</code></a> gets the first attribute in the IPP response.</p>
+</li>
+<li><p><a href="#ippGetGroupTag"><code>ippGetGroupTag</code></a> gets the group tag associated with an attribute.</p>
+</li>
+<li><p><a href="#ippGetInteger"><code>ippGetInteger</code></a> gets the integer or enum value for an attribute.</p>
+</li>
+<li><p><a href="#ippGetName"><code>ippGetName</code></a> gets the name of an attribute.</p>
+</li>
+<li><p><a href="#ippGetNextAttribute"><code>ippGetNextAttribute</code></a> gets the next attribute in the IPP response.</p>
+</li>
+<li><p><a href="#ippGetOctetString"><code>ippGetOctetString</code></a> gets an octetString value for an attribute.</p>
+</li>
+<li><p><a href="#ippGetRange"><code>ippGetRange</code></a> gets a rangeOfInteger value for an attribute.</p>
+</li>
+<li><p><a href="#ippGetRequestId"><code>ippGetRequestId</code></a> gets the request ID number for the IPP response.</p>
+</li>
+<li><p><a href="#ippGetResolution"><code>ippGetResolution</code></a> gets a resolution value for an attribute.</p>
+</li>
+<li><p><a href="#ippGetStatusCode"><code>ippGetStatusCode</code></a> gets the status code for the IPP response.</p>
+</li>
+<li><p><a href="#ippGetString"><code>ippGetString</code></a> gets a string value for an attribute.</p>
+</li>
+<li><p><a href="#ippGetValueTag"><code>ippGetValueTag</code></a> gets the value tag (&quot;syntax&quot;) for an attribute.</p>
+</li>
+<li><p><a href="#ippGetVersion"><code>ippGetVersion</code></a> gets the IPP version used for the IPP response.</p>
+</li>
+<li><p><a href="#ippRestore"><code>ippRestore</code></a> restores a previous position in the IPP response.</p>
+</li>
+<li><p><a href="#ippSave"><code>ippSave</code></a> saves the current position in the IPP response.</p>
+</li>
+</ul>
 <p>For example, the following code finds the printer state attributes and prints their values:</p>
 <pre><code class="language-c">ipp_attribute_t *attr;
 
@@ -1509,7 +1556,9 @@ ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD,
          ippEnumString(<span class="string">&quot;printer-state&quot;</span>, ippGetInteger(attr, <span class="number">0</span>)));
 }
 <span class="reserved">else</span>
+{
   puts(<span class="string">&quot;printer-state=unknown&quot;</span>);
+}
 
 <span class="reserved">if</span> ((attr = ippFindAttribute(response, <span class="string">&quot;printer-state-message&quot;</span>,
                              IPP_TAG_TEXT)) != NULL)
@@ -1528,9 +1577,6 @@ ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD,
     printf(<span class="string">&quot;    %s\n&quot;</span>, ippGetString(attr, i, NULL)));
 }
 </code></pre>
-<p>The <a href="#ippGetCount"><code>ippGetCount</code></a> function returns the number of values in an attribute.</p>
-<p>The <a href="#ippGetInteger"><code>ippGetInteger</code></a> and <a href="#ippGetString"><code>ippGetString</code></a> functions return a single integer or string value from an attribute.</p>
-<p>The <a href="#ippEnumString"><code>ippEnumString</code></a> function converts a enum value to its keyword (string) equivalent.</p>
 <p>Once you are done using the IPP response message, free it using the <a href="#ippDelete"><code>ippDelete</code></a> function:</p>
 <pre><code>ippDelete(response);
 </code></pre>
@@ -8465,6 +8511,24 @@ const char *ippOpString(<a href="#ipp_op_t">ipp_op_t</a> op);</p>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Current state</p>
+<h3 class="function"><a id="ippRestore">ippRestore</a></h3>
+<p class="description">Restore a previously saved find position.</p>
+<p class="code">
+void ippRestore(<a href="#ipp_t">ipp_t</a> *ipp);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>ipp</th>
+<td class="description">IPP message</td></tr>
+</tbody></table>
+<h3 class="function"><a id="ippSave">ippSave</a></h3>
+<p class="description">Save the current find position.</p>
+<p class="code">
+void ippSave(<a href="#ipp_t">ipp_t</a> *ipp);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>ipp</th>
+<td class="description">IPP message</td></tr>
+</tbody></table>
 <h3 class="function"><a id="ippSetBoolean">ippSetBoolean</a></h3>
 <p class="description">Set a boolean value in an attribute.</p>
 <p class="code">

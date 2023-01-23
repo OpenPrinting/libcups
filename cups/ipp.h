@@ -1,7 +1,7 @@
 //
 // Internet Printing Protocol definitions for CUPS.
 //
-// Copyright © 2021-2022 by OpenPrinting.
+// Copyright © 2021-2023 by OpenPrinting.
 // Copyright © 2007-2018 by Apple Inc.
 // Copyright © 1997-2006 by Easy Software Products.
 //
@@ -631,7 +631,9 @@ extern ipp_op_t		ippOpValue(const char *name) _CUPS_PUBLIC;
 extern ipp_state_t	ippRead(http_t *http, ipp_t *ipp) _CUPS_PUBLIC;
 extern ipp_state_t	ippReadFile(int fd, ipp_t *ipp) _CUPS_PUBLIC;
 extern ipp_state_t	ippReadIO(void *src, ipp_io_cb_t cb, bool blocking, ipp_t *parent, ipp_t *ipp) _CUPS_PUBLIC;
+extern void		ippRestore(ipp_t *ipp) _CUPS_PUBLIC;
 
+extern void		ippSave(ipp_t *ipp) _CUPS_PUBLIC;
 extern bool		ippSetBoolean(ipp_t *ipp, ipp_attribute_t **attr, size_t element, bool boolvalue) _CUPS_PUBLIC;
 extern bool		ippSetCollection(ipp_t *ipp, ipp_attribute_t **attr, size_t element, ipp_t *colvalue) _CUPS_PUBLIC;
 extern bool		ippSetDate(ipp_t *ipp, ipp_attribute_t **attr, size_t element, const ipp_uchar_t *datevalue) _CUPS_PUBLIC;

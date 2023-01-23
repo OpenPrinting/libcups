@@ -1865,7 +1865,8 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
       for (i = data->num_expects, expect = data->expects; i > 0; i --, expect ++)
       {
         cups_array_t	*exp_errors;	// Temporary list of errors
-        bool		exp_pass;	// Did this expect pass?
+        bool		exp_member,	// Expect for member attribute?
+			exp_pass;	// Did this expect pass?
 	ipp_attribute_t	*group_found;	// Found parent attribute for group tests
 
 	if (expect->if_defined && !ippFileGetVar(f, expect->if_defined))
@@ -1881,12 +1882,15 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
 	      break;
 	}
 
-	exp_pass   = false;
 	exp_errors = cupsArrayNew(NULL, NULL, NULL, 0, (cups_acopy_cb_t)strdup, (cups_afree_cb_t)free);
+	exp_member = strchr(expect->name, '/') != NULL;
+	exp_pass   = false;
 
 	do
 	{
 	  group_found = found;
+
+	  ippSave(response);
 
           if (expect->in_group && strchr(expect->name, '/'))
           {
@@ -1941,7 +1945,8 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
 	    if (expect->repeat_no_match && repeat_count < expect->repeat_limit)
 	      repeat_test = true;
 
-	    continue;
+            ippRestore(response);
+	    break;
 	  }
 
 	  if (found)
@@ -1973,7 +1978,8 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
 	    if (expect->repeat_no_match && repeat_count < expect->repeat_limit)
 	      repeat_test = true;
 
-	    continue;
+            ippRestore(response);
+	    break;
 	  }
 	  else if (found && !with_value(data, NULL, expect->with_value, expect->with_flags, found, data->buffer, sizeof(data->buffer)))
 	  {
@@ -1996,7 +2002,8 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
 	    if (expect->repeat_no_match && repeat_count < expect->repeat_limit)
 	      repeat_test = true;
 
-	    continue;
+            ippRestore(response);
+	    break;
 	  }
 	  else if (expect->with_value)
 	  {
@@ -2018,7 +2025,8 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
 	    if (expect->repeat_no_match && repeat_count < expect->repeat_limit)
 	      repeat_test = true;
 
-	    continue;
+            ippRestore(response);
+	    break;
 	  }
 
 	  if (found && expect->same_count_as)
@@ -2044,7 +2052,8 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
 	      if (expect->repeat_no_match && repeat_count < expect->repeat_limit)
 		repeat_test = true;
 
-	      continue;
+	      ippRestore(response);
+	      break;
 	    }
 	  }
 
@@ -2118,8 +2127,10 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
 
 	  if (found && expect->repeat_match && repeat_count < expect->repeat_limit)
 	    repeat_test = 1;
+
+	  ippRestore(response);
 	}
-	while ((expect->expect_all || !exp_pass) && (found = ippFindNextAttribute(response, expect->name, IPP_TAG_ZERO)) != NULL);
+	while ((expect->expect_all || !exp_member) && (found = ippFindNextAttribute(response, expect->name, IPP_TAG_ZERO)) != NULL);
 
         // Handle results of the EXPECT checks...
 	if (!exp_pass)

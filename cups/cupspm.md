@@ -1,7 +1,7 @@
 ---
 title: CUPS Programming Manual
 author: Michael R Sweet
-copyright: Copyright © 2021-2022 by OpenPrinting. All Rights Reserved.
+copyright: Copyright © 2021-2023 by OpenPrinting. All Rights Reserved.
 version: 3.0.0
 ...
 
@@ -1002,6 +1002,31 @@ IPP attributes (`ipp_attribute_t`) that includes a status code (`IPP_STATUS_OK`,
 `IPP_STATUS_ERROR_BAD_REQUEST`, etc.) and the corresponding 32-bit integer
 identifier from the request.
 
+CUPS provides many functions to access the attributes and values in an IPP
+response message:
+
+- [`ippFindAttribute`](@@) finds the first occurrence of an attribute.
+- [`ippFindNextAttribute`](@@) finds the next occurrence of an attribute.
+- [`ippGetBoolean`](@@) gets a boolean value for an attribute.
+- [`ippGetCollection`](@@) gets a collection value for an attribute.
+- [`ippGetCount`](@@) gets the number of values in an attribute.
+- [`ippGetDate`](@@) gets a date value for an attribute.
+- [`ippGetFirstAttribute`](@@) gets the first attribute in the IPP response.
+- [`ippGetGroupTag`](@@) gets the group tag associated with an attribute.
+- [`ippGetInteger`](@@) gets the integer or enum value for an attribute.
+- [`ippGetName`](@@) gets the name of an attribute.
+- [`ippGetNextAttribute`](@@) gets the next attribute in the IPP response.
+- [`ippGetOctetString`](@@) gets an octetString value for an attribute.
+- [`ippGetRange`](@@) gets a rangeOfInteger value for an attribute.
+- [`ippGetRequestId`](@@) gets the request ID number for the IPP response.
+- [`ippGetResolution`](@@) gets a resolution value for an attribute.
+- [`ippGetStatusCode`](@@) gets the status code for the IPP response.
+- [`ippGetString`](@@) gets a string value for an attribute.
+- [`ippGetValueTag`](@@) gets the value tag ("syntax") for an attribute.
+- [`ippGetVersion`](@@) gets the IPP version used for the IPP response.
+- [`ippRestore`](@@) restores a previous position in the IPP response.
+- [`ippSave`](@@) saves the current position in the IPP response.
+
 For example, the following code finds the printer state attributes and prints
 their values:
 
@@ -1015,7 +1040,9 @@ if ((attr = ippFindAttribute(response, "printer-state",
          ippEnumString("printer-state", ippGetInteger(attr, 0)));
 }
 else
+{
   puts("printer-state=unknown");
+}
 
 if ((attr = ippFindAttribute(response, "printer-state-message",
                              IPP_TAG_TEXT)) != NULL)
@@ -1034,14 +1061,6 @@ if ((attr = ippFindAttribute(response, "printer-state-reasons",
     printf("    %s\n", ippGetString(attr, i, NULL)));
 }
 ```
-
-The [`ippGetCount`](@@) function returns the number of values in an attribute.
-
-The [`ippGetInteger`](@@) and [`ippGetString`](@@) functions return a single
-integer or string value from an attribute.
-
-The [`ippEnumString`](@@) function converts a enum value to its keyword (string)
-equivalent.
 
 Once you are done using the IPP response message, free it using the
 [`ippDelete`](@@) function:

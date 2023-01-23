@@ -1,7 +1,7 @@
 //
 // Private IPP definitions for CUPS.
 //
-// Copyright © 2021-2022 by OpenPrinting.
+// Copyright © 2021-2023 by OpenPrinting.
 // Copyright © 2007-2018 by Apple Inc.
 // Copyright © 1997-2006 by Easy Software Products.
 //
@@ -23,6 +23,7 @@ extern "C" {
 
 #  define IPP_BUF_SIZE	(IPP_MAX_LENGTH + 2)
 					// Size of buffer
+#  define _IPP_MAX_FIND	8		// Size of find stack
 
 
 //
@@ -106,6 +107,13 @@ struct _ipp_attribute_s			// IPP attribute
   _ipp_value_t	values[1];		// Values
 };
 
+typedef struct _ipp_find_s		// IPP find data
+{
+  ipp_attribute_t	*attr;		// Current attribute
+  size_t		idx;		// Current attribute index for hierarchical search
+  bool			atend;		// At the end of the message?
+} _ipp_find_t;
+
 struct _ipp_s				// IPP Request/Response/Notification
 {
   ipp_state_t		state;		// State of request
@@ -114,11 +122,12 @@ struct _ipp_s				// IPP Request/Response/Notification
   ipp_attribute_t	*last;		// Last attribute in list
   ipp_attribute_t	*current;	// Current attribute (for read/write)
   ipp_tag_t		curtag;		// Current attribute group tag
-
   ipp_attribute_t	*prev;		// Previous attribute (for read)
   size_t		use;		// Use count
-  bool			atend;		// At end of list?
-  size_t		curindex;	// Current attribute index for hierarchical search
+
+  _ipp_find_t		fstack[_IPP_MAX_FIND];
+					// Find stack
+  _ipp_find_t		*find;		// Current find
 };
 
 typedef struct _ipp_option_s		// Attribute mapping data

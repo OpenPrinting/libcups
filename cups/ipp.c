@@ -1,7 +1,7 @@
 /*
  * Internet Printing Protocol functions for CUPS.
  *
- * Copyright © 2021-2022 by OpenPrinting.
+ * Copyright © 2021-2023 by OpenPrinting.
  * Copyright © 2007-2021 by Apple Inc.
  * Copyright © 1997-2007 by Easy Software Products, all rights reserved.
  *
@@ -1819,8 +1819,9 @@ ippFindAttribute(ipp_t      *ipp,	// I - IPP message
     return (NULL);
 
   // Reset the current attribute pointer...
-  ipp->current = NULL;
-  ipp->atend   = false;
+  ipp->find->attr  = NULL;
+  ipp->find->idx   = 0;
+  ipp->find->atend = false;
 
   // Search for the attribute...
   return (ippFindNextAttribute(ipp, name, type));
@@ -1853,9 +1854,9 @@ ippFindNextAttribute(ipp_t      *ipp,	// I - IPP message
   if (!ipp || !name)
     return (NULL);
 
-  DEBUG_printf(("3ippFindNextAttribute: atend=%s", ipp->atend ? "true" : "false"));
+  DEBUG_printf(("3ippFindNextAttribute: atend=%s", ipp->find->atend ? "true" : "false"));
 
-  if (ipp->atend)
+  if (ipp->find->atend)
     return (NULL);
 
   if (strchr(name, '/'))
@@ -1870,51 +1871,47 @@ ippFindNextAttribute(ipp_t      *ipp,	// I - IPP message
 
     *child++ = '\0';
 
-    if (ipp->current && ipp->current->name && ipp->current->value_tag == IPP_TAG_BEGIN_COLLECTION && !strcmp(parent, ipp->current->name))
+    if (ipp->find->attr && ipp->find->attr->name && ipp->find->attr->value_tag == IPP_TAG_BEGIN_COLLECTION && !strcmp(parent, ipp->find->attr->name))
     {
-      while (ipp->curindex < ipp->current->num_values)
+      while (ipp->find->idx < ipp->find->attr->num_values)
       {
-        if ((childattr = ippFindNextAttribute(ipp->current->values[ipp->curindex].collection, child, type)) != NULL)
+        if ((childattr = ippFindNextAttribute(ipp->find->attr->values[ipp->find->idx].collection, child, type)) != NULL)
           return (childattr);
 
-        ipp->curindex ++;
-        if (ipp->curindex < ipp->current->num_values && ipp->current->values[ipp->curindex].collection)
-          ipp->current->values[ipp->curindex].collection->current = NULL;
+        ipp->find->idx ++;
+        if (ipp->find->idx < ipp->find->attr->num_values && ipp->find->attr->values[ipp->find->idx].collection)
+          ipp->find->attr->values[ipp->find->idx].collection->find->attr = NULL;
       }
 
-      ipp->prev     = ipp->current;
-      ipp->current  = ipp->current->next;
-      ipp->curindex = 0;
+      ipp->find->attr = ipp->find->attr->next;
+      ipp->find->idx  = 0;
 
-      if (!ipp->current)
+      if (!ipp->find->attr)
       {
-        ipp->atend = true;
+        ipp->find->atend = true;
         return (NULL);
       }
     }
 
-    if (!ipp->current)
+    if (!ipp->find->attr)
     {
-      ipp->prev     = NULL;
-      ipp->current  = ipp->attrs;
-      ipp->curindex = 0;
+      ipp->find->attr = ipp->attrs;
+      ipp->find->idx  = 0;
     }
 
     name = parent;
-    attr = ipp->current;
+    attr = ipp->find->attr;
   }
-  else if (ipp->current)
+  else if (ipp->find->attr)
   {
-    ipp->prev = ipp->current;
-    attr      = ipp->current->next;
+    attr = ipp->find->attr->next;
   }
   else
   {
-    ipp->prev = NULL;
-    attr      = ipp->attrs;
+    attr = ipp->attrs;
   }
 
-  for (; attr != NULL; ipp->prev = attr, attr = attr->next)
+  for (; attr != NULL; attr = attr->next)
   {
     DEBUG_printf(("4ippFindAttribute: attr=%p, name=\"%s\"", (void *)attr, attr->name));
 
@@ -1922,7 +1919,7 @@ ippFindNextAttribute(ipp_t      *ipp,	// I - IPP message
 
     if (attr->name != NULL && _cups_strcasecmp(attr->name, name) == 0 && (value_tag == type || type == IPP_TAG_ZERO || name == parent || (value_tag == IPP_TAG_TEXTLANG && type == IPP_TAG_TEXT) || (value_tag == IPP_TAG_NAMELANG && type == IPP_TAG_NAME)))
     {
-      ipp->current = attr;
+      ipp->find->attr = attr;
 
       if (name == parent && attr->value_tag == IPP_TAG_BEGIN_COLLECTION)
       {
@@ -1932,20 +1929,21 @@ ippFindNextAttribute(ipp_t      *ipp,	// I - IPP message
         {
 	  if ((childattr = ippFindAttribute(attr->values[i].collection, child, type)) != NULL)
 	  {
-	    attr->values[0].collection->curindex = i;
+	    attr->values[0].collection->find->idx = i;
 	    return (childattr);
 	  }
         }
       }
       else
+      {
         return (attr);
+      }
     }
   }
 
   // If we get this far, we didn't find it...
-  ipp->current = NULL;
-  ipp->prev    = NULL;
-  ipp->atend   = true;
+  ipp->find->attr  = NULL;
+  ipp->find->atend = true;
 
   return (NULL);
 }
@@ -2063,8 +2061,15 @@ ippGetFirstAttribute(ipp_t *ipp)	// I - IPP message
   if (!ipp)
     return (NULL);
 
+  if (!ipp->find)
+    ipp->find = ipp->fstack;
+
+  ipp->find->attr  = ipp->attrs;
+  ipp->find->idx   = 0;
+  ipp->find->atend = ipp->find->attr == NULL;
+
   // Return the first attribute...
-  return (ipp->current = ipp->attrs);
+  return (ipp->find->attr);
 }
 
 
@@ -2146,11 +2151,14 @@ ipp_attribute_t *			// O - Next attribute or `NULL` if none
 ippGetNextAttribute(ipp_t *ipp)		// I - IPP message
 {
   // Range check input...
-  if (!ipp || !ipp->current)
+  if (!ipp || !ipp->find || !ipp->find->attr)
     return (NULL);
 
+  ipp->find->attr  = ipp->find->attr->next;
+  ipp->find->atend = ipp->find->attr == NULL;
+
   // Return the next attribute...
-  return (ipp->current = ipp->current->next);
+  return (ipp->find->attr);
 }
 
 
@@ -2483,6 +2491,7 @@ ippNew(void)
     temp->request.any.version[0] = (ipp_uchar_t)(cg->server_version / 10);
     temp->request.any.version[1] = (ipp_uchar_t)(cg->server_version % 10);
     temp->use                    = 1;
+    temp->find                   = temp->fstack;
   }
 
   DEBUG_printf(("1ippNew: Returning %p", (void *)temp));
@@ -3454,6 +3463,38 @@ ippReadIO(void        *src,		// I - Data source
     ippDeleteAttribute(ipp, attr);
 
   return (IPP_STATE_ERROR);
+}
+
+
+//
+// 'ippRestore()' - Restore a previously saved find position.
+//
+
+void
+ippRestore(ipp_t *ipp)			// I - IPP message
+{
+  if (ipp)
+  {
+    if (ipp->find > ipp->fstack)
+      ipp->find --;
+    else
+      ipp->find = NULL;
+  }
+}
+
+
+//
+// 'ippSave()' - Save the current find position.
+//
+
+void
+ippSave(ipp_t *ipp)			// I - IPP message
+{
+  if (ipp && ipp->find < (ipp->fstack + _IPP_MAX_FIND))
+  {
+    ipp->find[1] = ipp->find[0];
+    ipp->find ++;
+  }
 }
 
 
