@@ -1,0 +1,14 @@
+{
+    NAME "Test Resources"
+    OPERATION Get-Printer-Attributes
+    GROUP operation-attributes-tag
+        ATTR charset attributes-charset utf-8
+        ATTR naturalLanguage attributes-natural-language en
+        ATTR uri printer-uri $uri
+
+    STATUS successful-ok
+    EXPECT printer-icons OF-TYPE uri IN-GROUP printer-attributes-tag WITH-CONTENT valid-icon SAVE-CONTENT "icon-%index%.png"
+    EXPECT printer-more-info OF-TYPE uri IN-GROUP printer-attributes-tag COUNT 1 WITH-CONTENT available WITH-MIME-TYPES "text/html"
+    EXPECT ?printer-strings-uri OF-TYPE uri IN-GROUP printer-attributes-tag COUNT 1 WITH-CONTENT valid WITH-MIME-TYPES "text/strings"
+    EXPECT ?printer-supply-info-uri OF-TYPE uri IN-GROUP printer-attributes-tag COUNT 1 WITH-CONTENT valid WITH-MIME-TYPES "text/html" SAVE-CONTENT "%basename%.html"
+}

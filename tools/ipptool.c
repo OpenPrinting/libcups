@@ -226,6 +226,7 @@ static void	clear_data(ipptool_test_t *data);
 static int	compare_uris(const char *a, const char *b);
 static http_t	*connect_printer(ipptool_test_t *data);
 static void	copy_hex_string(char *buffer, unsigned char *data, int datalen, size_t bufsize);
+static int	create_file(const char *filespec, const char *resource, size_t idx, char *filename, size_t filenamesize);
 static void	*do_monitor_printer_state(ipptool_test_t *data);
 static bool	do_test(ipp_file_t *file, ipptool_test_t *data);
 static bool	do_tests(const char *testfile, ipptool_test_t *data);
@@ -257,6 +258,7 @@ static void	sigterm_handler(int sig);
 static bool	timeout_cb(http_t *http, void *user_data);
 static bool	token_cb(ipp_file_t *f, ipptool_test_t *data, const char *token);
 static void	usage(void) _CUPS_NORETURN;
+static bool	valid_image(const char *filename, int *width, int *height, int *depth);
 static bool	with_content(cups_array_t *errors, ipp_attribute_t *attr, ipptool_content_t content, cups_array_t *mime_types, const char *filespec);
 static bool	with_distinct_values(cups_array_t *errors, ipp_attribute_t *attr);
 static const char *with_flags_string(int flags);
@@ -1065,6 +1067,86 @@ copy_hex_string(char          *buffer,	/* I - String buffer */
     memcpy(buffer, data, (size_t)datalen);
     buffer[datalen] = '\0';
   }
+}
+
+
+//
+// 'create_file()' - Create a file for content checks.
+//
+
+static int				// O - File descriptor or -1 on error
+create_file(const char *filespec,	// I - Filespec string or NULL
+            const char *resource,	// I - Resource name
+            size_t     idx,		// I - Value index
+            char       *filename,	// I - Filename buffer
+            size_t     filenamesize)	// I - Filename buffer size
+{
+  char	*ptr,				// Pointer into filename
+	*end,				// End of filename buffer
+	base_resource[256],		// Base name for resource
+	*base_ext;			// Extension for resource
+
+
+  // If there is no filespec, just create a temporary file...
+  if (!filespec)
+    return (cupsTempFd(NULL, NULL, filename, filenamesize));
+
+  // Convert resource path to base name...
+  if ((ptr = strrchr(resource, '/')) != NULL)
+    cupsCopyString(base_resource, ptr + 1, sizeof(base_resource));
+  else
+    cupsCopyString(base_resource, resource, sizeof(base_resource));
+
+  if ((base_ext = strrchr(base_resource, '.')) != NULL)
+    *base_ext++ = '\0';
+  else
+    base_ext = base_resource + strlen(base_resource);
+
+  // Format the filename...
+  for (ptr = filename, end = filename + filenamesize - 1; *filespec && ptr < end;)
+  {
+    if (!strncmp(filespec, "%basename%", 10))
+    {
+      cupsCopyString(ptr, base_resource, (size_t)(end - ptr + 1));
+      ptr += strlen(ptr);
+      filespec += 10;
+    }
+    else if (!strncmp(filespec, "%ext%", 5))
+    {
+      cupsCopyString(ptr, base_ext, (size_t)(end - ptr + 1));
+      ptr += strlen(ptr);
+      filespec += 5;
+    }
+    else if (!strncmp(filespec, "%index%", 7))
+    {
+      snprintf(ptr, (size_t)(end - ptr + 1), "%u", (unsigned)idx);
+      ptr += strlen(ptr);
+      filespec += 7;
+    }
+    else if (*filespec == '%')
+    {
+      filespec ++;
+
+      if (*filespec == '%')
+        *ptr++ = '%';
+
+      while (*filespec != '%')
+        filespec ++;
+
+      if (*filespec)
+        filespec ++;
+    }
+    else
+    {
+      // Copy literal character...
+      *ptr++ = *filespec++;
+    }
+  }
+
+  *ptr = '\0';
+
+  // Try creating the file...
+  return (open(filename, O_CREAT | O_WRONLY | O_TRUNC, 0666));
 }
 
 
@@ -6677,10 +6759,145 @@ usage(void)
 }
 
 
-/*
- * 'with_content()' - Verify that URIs meet content/MIME media type requirements
- *                    and save as needed.
- */
+//
+// 'valid_image()' - Validate an image.
+//
+// Supports JPEG and PNG images.
+//
+
+static bool				// O - `true` if valid, `false` if not
+valid_image(const char *filename,	// I - Image filename
+            int        *width,		// O - Width in columns
+            int        *height,		// O - Height in lines
+            int        *depth)		// O - Number of color planes
+{
+  bool		ret = true;		// Return value
+  int		fd;			// File descriptor
+  unsigned char	buffer[16384],		// Read buffer
+		*bufptr,		// Pointer into buffer
+	        *bufend;		// End of buffer
+  ssize_t	bytes;			// Number of bytes read
+
+
+  // Initialize things...
+  *width = *height = *depth = 0;
+
+  // Try opening the file and reading from it...
+  if ((fd = open(filename, O_RDONLY | O_BINARY)) < 0)
+  {
+    // Unable to open...
+    ret = false;
+  }
+  else if ((bytes = read(fd, buffer, sizeof(buffer))) < 16)
+  {
+    // Unable to read...
+    ret = false;
+  }
+  else if (!memcmp(buffer, "\211PNG\015\012\032\012\000\000\000\015IHDR", 16) && bytes > 25)
+  {
+    // PNG image...
+    *width  = (int)((buffer[16] << 24) | (buffer[17] << 16) | (buffer[18] << 8) | buffer[19]);
+    *height = (int)((buffer[20] << 24) | (buffer[21] << 16) | (buffer[22] << 8) | buffer[23]);
+    *depth  = ((buffer[25] & 3) == 0 ? 1 : 3) + ((buffer[25] & 4) ? 1 : 0);
+  }
+  else if (!memcmp(buffer, "\377\330\377", 3))
+  {
+    // JPEG image...
+    size_t	length;			// Length of chunk
+
+    for (bufptr = buffer + 2, bufend = buffer + bytes; bufptr < bufend;)
+    {
+      if (*bufptr == 0xff)
+      {
+	bufptr ++;
+
+	if (bufptr >= bufend)
+	{
+	  // If we are at the end of the current buffer, re-fill and continue...
+	  if ((bytes = read(fd, buffer, sizeof(buffer))) <= 0)
+	    break;
+
+	  bufptr = buffer;
+	  bufend = buffer + bytes;
+	}
+
+	if (*bufptr == 0xff)
+	  continue;
+
+	if ((bufptr + 16) >= bufend)
+	{
+	  // Read more of the marker...
+	  bytes = bufend - bufptr;
+
+	  memmove(buffer, bufptr, (size_t)bytes);
+	  bufptr = buffer;
+	  bufend = buffer + bytes;
+
+	  if ((bytes = read(fd, bufend, sizeof(buffer) - (size_t)bytes)) <= 0)
+	    break;
+
+	  bufend += bytes;
+	}
+
+	length = (size_t)((bufptr[1] << 8) | bufptr[2]);
+
+	if ((*bufptr >= 0xc0 && *bufptr <= 0xc3) || (*bufptr >= 0xc5 && *bufptr <= 0xc7) || (*bufptr >= 0xc9 && *bufptr <= 0xcb) || (*bufptr >= 0xcd && *bufptr <= 0xcf))
+	{
+	  // SOFn marker, look for dimensions...
+	  if (bufptr[3] != 8)
+	  {
+	    ret = false;
+	    break;
+	  }
+
+	  *width  = (int)((bufptr[6] << 8) | bufptr[7]);
+	  *height = (int)((bufptr[4] << 8) | bufptr[5]);
+	  *depth  = (int)bufptr[8];
+	  break;
+	}
+
+	// Skip past this marker...
+	bufptr ++;
+	bytes = bufend - bufptr;
+
+	while (length >= (size_t)bytes)
+	{
+	  length -= (size_t)bytes;
+
+	  if ((bytes = read(fd, buffer, sizeof(buffer))) <= 0)
+	    break;
+
+	  bufptr = buffer;
+	  bufend = buffer + bytes;
+	}
+
+	if (length > (size_t)bytes)
+	  break;
+
+	bufptr += length;
+      }
+    }
+
+    if (*width == 0 || *height == 0 || (*depth != 1 && *depth != 3))
+      ret = false;
+  }
+  else
+  {
+    // Something we don't recognize...
+    ret = false;
+  }
+
+  if (fd >= 0)
+    close(fd);
+
+  return (ret);
+}
+
+
+//
+// 'with_content()' - Verify that URIs meet content/MIME media type requirements
+//                    and save as needed.
+//
 
 static bool				// O - `true` if valid, `false` otherwise
 with_content(
@@ -6690,14 +6907,211 @@ with_content(
     cups_array_t      *mime_types,	// I - Comma-delimited list of MIME media types
     const char        *filespec)	// I - Output filename specification
 {
-  // TODO: Implement me
-  (void)errors;
-  (void)attr;
-  (void)content;
-  (void)mime_types;
-  (void)filespec;
+  bool		ret = true;		// Return value
+  size_t	i,			// Looping var
+		count;			// Number of values
+  const char	*uri;			// URI value
+  char		scheme[256],		// Scheme
+		userpass[256],		// Username:password (not used)
+		host[256],		// Hostname
+		resource[256];		// Resource path
+  int		port;			// Port number
+  http_encryption_t encryption;		// Encryption  mode
+  http_uri_status_t uri_status;		// URI decoding status
+  http_t	*http;			// Connection to server
+  http_status_t	status;			// Request status
+  const char	*content_type;		// Content-Type header
 
-  return (true);
+
+  for (i = 0, count = ippGetCount(attr); i < count; i ++)
+  {
+    uri = ippGetString(attr, i, NULL);
+
+    if ((uri_status = httpSeparateURI(HTTP_URI_CODING_ALL, uri, scheme, sizeof(scheme), userpass, sizeof(userpass), host, sizeof(host), &port, resource, sizeof(resource))) < HTTP_URI_STATUS_OK)
+    {
+      add_stringf(errors, "Bad URI value '%s': %s", uri, httpURIStatusString(uri_status));
+      ret = false;
+      continue;
+    }
+
+    if (strcmp(scheme, "http") && strcmp(scheme, "https") && strcmp(scheme, "ipp") && strcmp(scheme, "ipps"))
+    {
+      add_stringf(errors, "Unsupported URI scheme for '%s'.", uri);
+      ret = false;
+      continue;
+    }
+
+    encryption = (!strcmp(scheme, "https") || !strcmp(scheme, "ipps") || port == 443) ? HTTP_ENCRYPTION_ALWAYS : HTTP_ENCRYPTION_IF_REQUESTED;
+
+    if ((http = httpConnect(host, port, NULL, AF_UNSPEC, encryption, 1, 30000, NULL)) == NULL)
+    {
+      add_stringf(errors, "Unable to connect to '%s' on port %d: %s", host, port, cupsLastErrorString());
+      ret = false;
+      continue;
+    }
+
+    if (content == IPPTOOL_CONTENT_AVAILABLE)
+    {
+      if (!httpWriteRequest(http, "HEAD", resource))
+      {
+	add_stringf(errors, "Unable to send HEAD request to '%s': %s", uri, cupsLastErrorString());
+	ret = false;
+	goto http_done;
+      }
+
+      while ((status = httpUpdate(http)) == HTTP_STATUS_CONTINUE)
+      {
+        // Do nothing
+      }
+
+      if (status != HTTP_STATUS_OK)
+      {
+        add_stringf(errors, "Got unexpected status %d for HEAD request to '%s'.", (int)status, uri);
+	ret = false;
+	goto http_done;
+      }
+
+      content_type = httpGetField(http, HTTP_FIELD_CONTENT_TYPE);
+      if ((!strcmp(scheme, "ipp") || !strcmp(scheme, "ipps")) != !_cups_strcasecmp(content_type, "application/ipp") || (mime_types && !cupsArrayFind(mime_types, (void *)content_type)))
+      {
+        add_stringf(errors, "Got unexpected Content-Type '%s' for HEAD request to '%s'.", content_type, uri);
+	ret = false;
+	goto http_done;
+      }
+    }
+    else if (!strcmp(scheme, "http") || !strcmp(scheme, "https"))
+    {
+      // Check HTTP resource with a GET...
+      char	filename[1024];		// Temporary filename
+      int	fd;			// Temporary file
+      struct stat fileinfo;		// Temporary file information
+      int	width,			// Image width
+		height,			// Image height
+		depth;			// Image color depth
+
+      if ((fd = create_file(filespec, resource, i + 1, filename, sizeof(filename))) < 0)
+      {
+        add_stringf(errors, "Unable to create temporary file for WITH-CONTENT: %s", strerror(errno));
+	ret = false;
+	goto http_done;
+      }
+
+      status = cupsGetFd(http, resource, fd);
+      fstat(fd, &fileinfo);
+      close(fd);
+
+      if (status != HTTP_STATUS_OK)
+      {
+        add_stringf(errors, "Got unexpected status %d for HEAD request to '%s'.", (int)status, uri);
+        ret = false;
+        goto get_done;
+      }
+
+      content_type = httpGetField(http, HTTP_FIELD_CONTENT_TYPE);
+
+      if (mime_types && !cupsArrayFind(mime_types, (void *)content_type))
+      {
+        add_stringf(errors, "Got unexpected Content-Type '%s' for GET request to '%s'.", content_type, uri);
+        ret = false;
+        goto get_done;
+      }
+
+      if (content == IPPTOOL_CONTENT_VALID_ICON)
+      {
+        if (_cups_strcasecmp(content_type, "image/png"))
+        {
+	  add_stringf(errors, "Got unexpected Content-Type '%s' for HEAD request to '%s'.", content_type, uri);
+	  ret = false;
+	  goto get_done;
+        }
+
+        if (!valid_image(filename, &width, &height, &depth))
+        {
+	  add_stringf(errors, "Unable to load image '%s'.", uri);
+	  ret = false;
+	  goto get_done;
+        }
+        else if (width != height || (width != 48 && width != 128 && width != 512))
+        {
+          add_stringf(errors, "Image '%s' has bad dimensions %dx%d.", uri, width, height);
+	  ret = false;
+	  goto get_done;
+        }
+        else if (depth & 1)
+        {
+          add_stringf(errors, "Image '%s' doesn't have transparency information.", uri);
+	  ret = false;
+	  goto get_done;
+        }
+      }
+      else if (!_cups_strcasecmp(content_type, "application/pdf"))
+      {
+        // TODO: Validate PDF file
+      }
+      else if (!_cups_strcasecmp(content_type, "application/ipp"))
+      {
+        // TODO: Validate IPP message file
+      }
+      else if (!_cups_strcasecmp(content_type, "application/vnd.iccprofile"))
+      {
+        // TODO: Validate ICC profile file
+      }
+      else if (!_cups_strcasecmp(content_type, "image/jpeg") || !_cups_strcasecmp(content_type, "image/png"))
+      {
+        if (!valid_image(filename, &width, &height, &depth))
+        {
+	  add_stringf(errors, "Unable to load image '%s'.", uri);
+	  ret = false;
+	  goto get_done;
+        }
+      }
+      else if (!_cups_strcasecmp(content_type, "text/css"))
+      {
+        // TODO: Validate CSS file
+      }
+      else if (!_cups_strcasecmp(content_type, "text/html"))
+      {
+        // TODO: Validate HTML file
+      }
+      else if (!_cups_strcasecmp(content_type, "text/strings"))
+      {
+        // TODO: Validate strings file
+      }
+      else
+      {
+	add_stringf(errors, "Got unexpected Content-Type '%s' for HEAD request to '%s'.", content_type, uri);
+	ret = false;
+	goto get_done;
+      }
+
+      get_done:
+
+      if (!filespec)
+        unlink(filename);
+    }
+    else
+    {
+      // Check IPP resource...
+      ipp_t	*request;		// IPP Get-Printer-Attributes request
+
+      request = ippNewRequest(IPP_OP_GET_PRINTER_ATTRIBUTES);
+      ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, uri);
+
+      ippDelete(cupsDoRequest(http, request, resource));
+
+      if (cupsLastError() > IPP_STATUS_OK_EVENTS_COMPLETE)
+      {
+        add_stringf(errors, "Got unexpected status-code '%s' (%s) for Get-Printer-Attributes request to '%s'.", ippErrorString(cupsLastError()), cupsLastErrorString(), uri);
+        ret = false;
+      }
+    }
+
+    http_done:
+
+    httpClose(http);
+  }
+
+  return (ret);
 }
 
 
