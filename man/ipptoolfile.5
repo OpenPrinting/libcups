@@ -7,7 +7,7 @@
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH ipptoolfile 5 "CUPS" "2023-01-19" "OpenPrinting"
+.TH ipptoolfile 5 "CUPS" "2023-01-28" "OpenPrinting"
 .SH NAME
 ipptoolfile \- ipptool file format
 .SH DESCRIPTION
@@ -338,10 +338,38 @@ Requires the \fBEXPECT\fR attribute to have the same number of values as the spe
 Saves all "http" or "https" URI values to the specified location.
 The filespec value is a filename or directory path and can contain the special strings "%basename%" to insert the base filename from the URI, "%ext%" to insert the extension from the URI, and "%index%" to insert the value number starting at 1.
 .TP 5
+\fBWITH\-ALL\-CONTENT available\fR
+.TP 5
+\fBWITH\-CONTENT available\fR
+Requires that all URI values be accessible.
+A "http" or "https" URI must respond to a GET request while a "ipp" or "ipps" URI must respond to a HEAD request.
+.TP 5
+\fBWITH\-ALL\-CONTENT valid\fR
+.TP 5
+\fBWITH\-CONTENT valid\fR
+Requires that all "http" and "https" URI values be accessible and provide valid content.
+.TP 5
+\fBWITH\-ALL\-CONTENT valid-icon\fR
+.TP 5
+\fBWITH\-CONTENT valid-icon\fR
+Requires that all "http" and "https" URI values be accessible and provide valid PNG images for icons - 48x48, 128x128, or 512x512 in size with transparency.
+.TP 5
 \fBWITH\-ALL\-HOSTNAMES "\fIliteral string\fB"\fR
 .TP 5
 \fBWITH\-ALL\-HOSTNAMES "/\fIregular expression\fB/"\fR
 Requires that all URI values contain a matching hostname.
+.TP 5
+\fBWITH\-ALL\-MIME\-TYPES \fImime/type[,...,mime/type]\fR
+.TP 5
+\fBWITH\-MIME\-TYPES \fImime/type[,...,mime/type]\fR
+Requires that all URI values provide one of the listed MIME media types.
+For non-content tests, the target Printer must respond to HTTP HEAD requests with the MIME media type that would be returned by a GET or POST requests.
+For "http" and "https" content tests,
+.B ipptool
+sends a HTTP GET request.
+For "ipp" and "ipps" content tests,
+.B ipptool
+sends an IPP Get-Printer-Attributes request.
 .TP 5
 \fBWITH\-ALL\-RESOURCES "\fIliteral string\fB"\fR
 .TP 5
@@ -350,7 +378,7 @@ Requires that all URI values contain a matching resource (including leading /).
 .TP 5
 \fBWITH\-ALL\-SCHEMES "\fIliteral string\fB"\fR
 .TP 5
-\fBWITH\-ALL-SCHEMES "/\fIregular expression\fB/"\fR
+\fBWITH\-ALL\-SCHEMES "/\fIregular expression\fB/"\fR
 Requires that all URI values contain a matching scheme.
 .TP 5
 \fBWITH\-ALL\-VALUES "\fIliteral string\fB"\fR
@@ -377,22 +405,6 @@ Comparisons are case-sensitive.
 \fBWITH\-ALL\-VALUES\-FROM \fIattribute-name\fR
 Requires that all value(s) of the \fBEXPECT\fR attribute matches the value(s) in the specified attribute.
 For example, "EXPECT-ALL media\-col\-database/media\-source WITH\-ALL\-VALUES\-FROM media\-source\-supported" requires that all the "media\-source" values are listed as a value of the "media\-source\-supported" attribute.
-.TP 5
-\fBWITH\-CONTENT available\fR
-.TP 5
-\fBWITH\-ALL\-CONTENT available\fR
-Requires that all URI values be accessible.
-A "http" or "https" URI must respond to a GET request while a "ipp" or "ipps" URI must respond to a HEAD request.
-.TP 5
-\fBWITH\-CONTENT valid\fR
-.TP 5
-\fBWITH\-ALL\-CONTENT valid\fR
-Requires that all "http" and "https" URI values be accessible and provide valid content.
-.TP 5
-\fBWITH\-CONTENT valid-icon\fR
-.TP 5
-\fBWITH\-ALL\-CONTENT valid-icon\fR
-Requires that all "http" and "https" URI values be accessible and provide valid PNG images for icons - 48x48, 128x128, or 512x512 in size with transparency.
 .TP 5
 \fBWITH\-DISTINCT\-VALUES\fR
 Requires that all values of the \fBEXPECT\fR attribute are unique.
@@ -870,4 +882,4 @@ PWG 5101.1-2013: PWG Media Standardized Names v2.0 (https://ftp.pwg.org/pub/pwg/
 .PP
 RFC 8011 (https://datatracker.ietf.org/doc/html/rfc8011)
 .SH COPYRIGHT
-Copyright \[co] 2021-2022 by OpenPrinting.
+Copyright \[co] 2021-2023 by OpenPrinting.

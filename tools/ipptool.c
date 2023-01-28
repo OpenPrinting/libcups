@@ -7020,7 +7020,7 @@ with_content(
       {
         if (_cups_strcasecmp(content_type, "image/png"))
         {
-	  add_stringf(errors, "Got unexpected Content-Type '%s' for HEAD request to '%s'.", content_type, uri);
+	  add_stringf(errors, "Got unexpected Content-Type '%s' for GET request to '%s'.", content_type, uri);
 	  ret = false;
 	  goto get_done;
         }
@@ -7044,18 +7044,6 @@ with_content(
 	  goto get_done;
         }
       }
-      else if (!_cups_strcasecmp(content_type, "application/pdf"))
-      {
-        // TODO: Validate PDF file
-      }
-      else if (!_cups_strcasecmp(content_type, "application/ipp"))
-      {
-        // TODO: Validate IPP message file
-      }
-      else if (!_cups_strcasecmp(content_type, "application/vnd.iccprofile"))
-      {
-        // TODO: Validate ICC profile file
-      }
       else if (!_cups_strcasecmp(content_type, "image/jpeg") || !_cups_strcasecmp(content_type, "image/png"))
       {
         if (!valid_image(filename, &width, &height, &depth))
@@ -7065,17 +7053,15 @@ with_content(
 	  goto get_done;
         }
       }
-      else if (!_cups_strcasecmp(content_type, "text/css"))
+      else if (!_cups_strcasecmp(content_type, "application/pdf") || !_cups_strcasecmp(content_type, "application/ipp") || !_cups_strcasecmp(content_type, "application/vnd.iccprofile") || !_cups_strcasecmp(content_type, "text/css") || !_cups_strcasecmp(content_type, "text/html") || !_cups_strcasecmp(content_type, "text/strings"))
       {
-        // TODO: Validate CSS file
-      }
-      else if (!_cups_strcasecmp(content_type, "text/html"))
-      {
-        // TODO: Validate HTML file
-      }
-      else if (!_cups_strcasecmp(content_type, "text/strings"))
-      {
-        // TODO: Validate strings file
+        // Just require these files to be non-empty for now, might add more checks in the future...
+        if (fileinfo.st_size == 0)
+        {
+	  add_stringf(errors, "Empty resource '%s'.", uri);
+	  ret = false;
+	  goto get_done;
+        }
       }
       else
       {
