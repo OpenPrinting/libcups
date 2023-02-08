@@ -540,12 +540,14 @@ cups_local_auth(http_t *http)		/* I - HTTP connection to server */
 
   return (1);
 #else
-  char			filename[1024];	/* Certificate filename */
+#  ifdef DEBUG
+  char			hostaddr[256];	// Host address string
+#  endif // DEBUG
   const char		*www_auth;	/* WWW-Authenticate header */
   _cups_globals_t *cg = _cupsGlobals();	/* Global data */
 
 
-  DEBUG_printf(("7cups_local_auth(http=%p) hostaddr=%s, hostname=\"%s\"", (void *)http, httpAddrGetString(http->hostaddr, filename, sizeof(filename)), http->hostname));
+  DEBUG_printf(("7cups_local_auth(http=%p) hostaddr=%s, hostname=\"%s\"", (void *)http, httpAddrGetString(http->hostaddr, hostaddr, sizeof(hostaddr)), http->hostname));
 
  /*
   * See if we are accessing localhost...
