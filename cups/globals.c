@@ -172,7 +172,7 @@ cups_globals_alloc(void)
   DWORD		size;			// Size of string
   static char	installdir[1024] = "",	// Install directory
 		userconfig[1024] = "",	// User configuration directory
-		sysconf[1024] = "";	// Server configuration directory
+		sysconfig[1024] = "";	// Server configuration directory
 #endif // _WIN32
 
 
@@ -252,7 +252,7 @@ cups_globals_alloc(void)
   {
     const char	*userprofile = getenv("USERPROFILE");
 				// User profile (home) directory
-    char	*homeptr;	// Pointer into homedir
+    char	*userptr;	// Pointer into user profile
 
     DEBUG_printf(("cups_globals_alloc: USERPROFILE=\"%s\"", userprofile));
 
