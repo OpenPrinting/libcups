@@ -309,7 +309,7 @@ cups_globals_alloc(void)
 #  ifdef __APPLE__
   if (!home)
 #else
-  if (!home && (!xdg_config_home || !xdg_state_home))
+  if (!home && !xdg_config_home)
 #  endif // __APPLE__
   {
     struct passwd	pw;		// User info
