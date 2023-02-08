@@ -920,34 +920,38 @@ http_gnutls_default_path(char   *buffer,/* I - Path buffer */
 					/* Pointer to library globals */
 
 
-  if (cg->home && getuid())
+  if (cg->userconfig)
   {
-#ifdef __APPLE__
-    snprintf(buffer, bufsize, "%s/Library/Application Support/cups", cg->home);
-#else
-    snprintf(buffer, bufsize, "%s/.cups", cg->home);
-#endif // __APPLE__
-
-    if (mkdir(buffer, 0755) && errno != EEXIST)
+    if (mkdir(cg->userconfig, 0755) && errno != EEXIST)
     {
-      DEBUG_printf(("1http_gnutls_default_path: Failed to make directory: %s", strerror(errno)));
+      DEBUG_printf(("1http_gnutls_default_path: Failed to make directory '%s': %s", cg->userconfig, strerror(errno)));
       return (NULL);
     }
 
-#ifdef __APPLE__
-    snprintf(buffer, bufsize, "%s/Library/Application Support/cups/ssl", cg->home);
-#else
-    snprintf(buffer, bufsize, "%s/.cups/ssl", cg->home);
-#endif // __APPLE__
+    snprintf(buffer, bufsize, "%s/ssl", cg->userconfig);
 
     if (mkdir(buffer, 0700) && errno != EEXIST)
     {
-      DEBUG_printf(("1http_gnutls_default_path: Failed to make directory: %s", strerror(errno)));
+      DEBUG_printf(("1http_gnutls_default_path: Failed to make directory '%s': %s", buffer, strerror(errno)));
       return (NULL);
     }
   }
   else
-    cupsCopyString(buffer, CUPS_SERVERROOT "/ssl", bufsize);
+  {
+    if (mkdir(cg->sysconfig, 0755) && errno != EEXIST)
+    {
+      DEBUG_printf(("1http_gnutls_default_path: Failed to make directory '%s': %s", cg->sysconfig, strerror(errno)));
+      return (NULL);
+    }
+
+    snprintf(buffer, bufsize, "%s/ssl", cg->sysconfig);
+
+    if (mkdir(buffer, 0700) && errno != EEXIST)
+    {
+      DEBUG_printf(("1http_gnutls_default_path: Failed to make directory '%s': %s", buffer, strerror(errno)));
+      return (NULL);
+    }
+  }
 
   DEBUG_printf(("1http_gnutls_default_path: Using default path \"%s\".", buffer));
 

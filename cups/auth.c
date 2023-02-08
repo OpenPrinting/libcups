@@ -540,16 +540,14 @@ cups_local_auth(http_t *http)		/* I - HTTP connection to server */
 
   return (1);
 #else
-  int			pid;		/* Current process ID */
-  FILE			*fp;		/* Certificate file */
-  char			trc[16],	/* Try Root Certificate parameter */
-			filename[1024];	/* Certificate filename */
-  const char		*www_auth,	/* WWW-Authenticate header */
-			*schemedata;	/* Data for the named auth scheme */
+#  ifdef DEBUG
+  char			hostaddr[256];	// Host address string
+#  endif // DEBUG
+  const char		*www_auth;	/* WWW-Authenticate header */
   _cups_globals_t *cg = _cupsGlobals();	/* Global data */
 
 
-  DEBUG_printf(("7cups_local_auth(http=%p) hostaddr=%s, hostname=\"%s\"", (void *)http, httpAddrGetString(http->hostaddr, filename, sizeof(filename)), http->hostname));
+  DEBUG_printf(("7cups_local_auth(http=%p) hostaddr=%s, hostname=\"%s\"", (void *)http, httpAddrGetString(http->hostaddr, hostaddr, sizeof(hostaddr)), http->hostname));
 
  /*
   * See if we are accessing localhost...
@@ -596,65 +594,6 @@ cups_local_auth(http_t *http)		/* I - HTTP connection to server */
     }
   }
 #  endif /* SO_PEERCRED && AF_LOCAL */
-
-  if ((schemedata = cups_auth_find(www_auth, "Local")) == NULL)
-    return (1);
-
- /*
-  * Try opening a certificate file for this PID.  If that fails,
-  * try the root certificate...
-  */
-
-  pid = getpid();
-  snprintf(filename, sizeof(filename), "%s/certs/%d", cg->cups_statedir, pid);
-  if ((fp = fopen(filename, "r")) == NULL && pid > 0)
-  {
-   /*
-    * No certificate for this PID; see if we can get the root certificate...
-    */
-
-    DEBUG_printf(("9cups_local_auth: Unable to open file \"%s\": %s", filename, strerror(errno)));
-
-    if (!cups_auth_param(schemedata, "trc", trc, sizeof(trc)))
-    {
-     /*
-      * Scheduler doesn't want us to use the root certificate...
-      */
-
-      return (1);
-    }
-
-    snprintf(filename, sizeof(filename), "%s/certs/0", cg->cups_statedir);
-    if ((fp = fopen(filename, "r")) == NULL)
-      DEBUG_printf(("9cups_local_auth: Unable to open file \"%s\": %s", filename, strerror(errno)));
-  }
-
-  if (fp)
-  {
-   /*
-    * Read the certificate from the file...
-    */
-
-    char	certificate[33],	/* Certificate string */
-		*certptr;		/* Pointer to certificate string */
-
-    certptr = fgets(certificate, sizeof(certificate), fp);
-    fclose(fp);
-
-    if (certptr)
-    {
-     /*
-      * Set the authorization string and return...
-      */
-
-      httpSetAuthString(http, "Local", certificate);
-
-      DEBUG_printf(("8cups_local_auth: Returning authstring=\"%s\"",
-		    http->authstring));
-
-      return (0);
-    }
-  }
 
   return (1);
 #endif /* _WIN32 || __EMX__ */
