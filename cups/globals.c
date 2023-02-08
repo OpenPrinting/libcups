@@ -269,7 +269,7 @@ cups_globals_alloc(void)
 
     DEBUG_printf(("cups_globals_alloc: USERPROFILE=\"%s\"", userprofile));
 
-    strlcpy(homedir, userprofile, sizeof(homedir));
+    snprintf(homedir, sizeof(homedir), "%s/AppData/Local/cups", userprofile);
     for (homeptr = homedir; *homeptr; homeptr ++)
     {
       // Convert back slashes to forward slashes
@@ -283,6 +283,15 @@ cups_globals_alloc(void)
   cg->home = homedir;
 
 #else
+  const char	*home = getenv("HOME");	// HOME environment variable
+  char		homedir[1024],		// Home directory from account
+		temp[1024];		// Temporary directory string
+#  ifndef __APPLE__
+  const char	*snap_common = getenv("SNAP_COMMON"),
+		*xdg_config_home = getenv("XDG_CONFIG_HOME");
+					// Environment variables
+#  endif // !__APPLE__
+
 #  ifdef HAVE_GETEUID
   if ((geteuid() != getuid() && getuid()) || getegid() != getgid())
 #  else
@@ -291,14 +300,11 @@ cups_globals_alloc(void)
   {
    /*
     * When running setuid/setgid, don't allow environment variables to override
-    * the directories...
+    * the system directories...
     */
 
-    cg->cups_datadir    = CUPS_DATADIR;
-    cg->cups_serverbin  = CUPS_SERVERBIN;
-    cg->cups_serverroot = CUPS_SERVERROOT;
-    cg->cups_statedir   = CUPS_STATEDIR;
-    cg->localedir       = CUPS_LOCALEDIR;
+    cg->datadir   = CUPS_DATADIR;
+    cg->sysconfig = CUPS_SERVERROOT;
   }
   else
   {
@@ -306,33 +312,67 @@ cups_globals_alloc(void)
     * Allow directories to be overridden by environment variables.
     */
 
-    if ((cg->cups_datadir = getenv("CUPS_DATADIR")) == NULL)
-      cg->cups_datadir = CUPS_DATADIR;
+    if ((cg->datadir = getenv("CUPS_DATADIR")) == NULL)
+      cg->datadir = CUPS_DATADIR;
 
-    if ((cg->cups_serverbin = getenv("CUPS_SERVERBIN")) == NULL)
-      cg->cups_serverbin = CUPS_SERVERBIN;
-
-    if ((cg->cups_serverroot = getenv("CUPS_SERVERROOT")) == NULL)
-      cg->cups_serverroot = CUPS_SERVERROOT;
-
-    if ((cg->cups_statedir = getenv("CUPS_STATEDIR")) == NULL)
-      cg->cups_statedir = CUPS_STATEDIR;
-
-    if ((cg->localedir = getenv("LOCALEDIR")) == NULL)
-      cg->localedir = CUPS_LOCALEDIR;
-
-    cg->home = getenv("HOME");
+    if ((cg->sysconfig = getenv("CUPS_SERVERROOT")) == NULL)
+      cg->sysconfig = CUPS_SERVERROOT;
   }
 
-  if (!cg->home)
+#  ifdef __APPLE__
+  if (!home)
+#else
+  if (!home && (!xdg_config_home || !xdg_state_home))
+#  endif // __APPLE__
   {
     struct passwd	pw;		// User info
     struct passwd	*result;	// Auxiliary pointer
 
     getpwuid_r(getuid(), &pw, cg->pw_buf, PW_BUF_SIZE, &result);
     if (result)
-      cg->home = _cupsStrAlloc(pw.pw_dir);
+    {
+      cupsCopyString(homedir, pw.pw_dir, sizeof(homedir));
+      home = homedir;
+    }
   }
+
+#  ifdef __APPLE__
+  if (home)
+  {
+    snprintf(temp, sizeof(temp), "%s/Library/Application Support/cups", home);
+    cg->userconfig = _cupsStrAlloc(temp);
+  }
+  else
+  {
+    snprintf(temp, sizeof(temp), "/private/tmp/cups%u", (unsigned)getuid());
+    cg->userconfig = _cupsStrAlloc(temp);
+  }
+
+#  else
+  if (snap_common)
+  {
+    snprintf(temp, sizeof(temp), "%s/cups", snap_common);
+    cg->userconfig = _cupsStrAlloc(temp);
+  }
+  else if (xdg_config_home)
+  {
+    snprintf(temp, sizeof(temp), "%s/cups", xdg_config_home);
+    cg->userconfig = _cupsStrAlloc(temp);
+  }
+  else if (home)
+  {
+    // Use ~/.cups if it exists, otherwise ~/.config/cups
+    snprintf(temp, sizeof(temp), "%s/.cups", home);
+    if (access(temp, 0))
+      snprintf(temp, sizeof(temp), "%s/.config/cups", home);
+    cg->userconfig = _cupsStrAlloc(temp);
+  }
+  else
+  {
+    snprintf(temp, sizeof(temp), "/tmp/cups%u", (unsigned)getuid());
+    cg->userconfig = _cupsStrAlloc(temp);
+  }
+#  endif // __APPLE__
 #endif // _WIN32
 
   return (cg);
