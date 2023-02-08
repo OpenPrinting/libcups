@@ -1363,8 +1363,6 @@ create_printer(
   const char		*sup_attrs[100];/* Supported attributes */
   char			xxx_supported[256];
 					/* Name of -supported attribute */
-  _cups_globals_t	*cg = _cupsGlobals();
-					/* Global path values */
 #ifdef HAVE_STATVFS
   struct statvfs	spoolinfo;	/* FS info for spool directory */
   double		spoolsize;	/* FS size */
@@ -1535,27 +1533,18 @@ create_printer(
   * If a command was specified, make sure it exists and is executable...
   */
 
-  if (command)
+  if (command && access(command, X_OK))
   {
-    if (*command == '/' || !strncmp(command, "./", 2))
+    if (cupsFileFind(command, getenv("PATH"), true, path, sizeof(path)))
     {
-      if (access(command, X_OK))
-      {
-        cupsLangPrintf(stderr, _("Unable to execute command \"%s\": %s"), command, strerror(errno));
-	return (NULL);
-      }
+      // Found the command in the current path...
+      command = path;
     }
     else
     {
-      snprintf(path, sizeof(path), "%s/command/%s", cg->cups_serverbin, command);
-
-      if (access(command, X_OK))
-      {
-        cupsLangPrintf(stderr, _("Unable to execute command \"%s\": %s"), command, strerror(errno));
-	return (NULL);
-      }
-
-      command = path;
+      // No command...
+      cupsLangPrintf(stderr, _("Unable to execute command \"%s\": %s"), command, strerror(errno));
+      return (NULL);
     }
   }
 #endif /* !_WIN32 */
@@ -7834,7 +7823,7 @@ valid_job_attributes(
             }
             else
             {
-              y_min = ippGetRange(y_dim, 0, &x_max);
+              y_min = ippGetRange(y_dim, 0, &y_max);
             }
 
 	    if ((x_value < x_min || x_value > x_max) && (y_value < y_min || y_value > y_max))

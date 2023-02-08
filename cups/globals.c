@@ -170,10 +170,9 @@ cups_globals_alloc(void)
 #ifdef _WIN32
   HKEY		key;			// Registry key
   DWORD		size;			// Size of string
-  static char	homedir[1024] = "",	// Home directory
-		installdir[1024] = "",	// Install directory
-		confdir[1024] = "",	// Server root directory
-		localedir[1024] = "";	// Locale directory
+  static char	installdir[1024] = "",	// Install directory
+		userconfig[1024] = "",	// User configuration directory
+		sysconf[1024] = "";	// Server configuration directory
 #endif // _WIN32
 
 
@@ -208,18 +207,12 @@ cups_globals_alloc(void)
 #ifdef _WIN32
   if (!installdir[0])
   {
-   /*
-    * Open the registry...
-    */
-
+    // Open the registry...
     cupsCopyString(installdir, "C:/Program Files/cups.org", sizeof(installdir));
 
     if (!RegOpenKeyExA(HKEY_LOCAL_MACHINE, "SOFTWARE\\cups.org", 0, KEY_READ, &key))
     {
-     /*
-      * Grab the installation directory...
-      */
-
+      // Grab the installation directory...
       char  *ptr;			// Pointer into installdir
 
       size = sizeof(installdir);
@@ -236,32 +229,26 @@ cups_globals_alloc(void)
             *ptr = '\0';		// Strip trailing "\"
         }
         else if (*ptr == '/' && !ptr[1])
+        {
           *ptr = '\0';			// Strip trailing "/"
+        }
         else
+        {
           ptr ++;
+	}
       }
     }
 
-    snprintf(confdir, sizeof(confdir), "%s/conf", installdir);
-    snprintf(localedir, sizeof(localedir), "%s/locale", installdir);
+    snprintf(sysconfig, sizeof(sysconfig), "%s/conf", installdir);
   }
 
-  if ((cg->cups_datadir = getenv("CUPS_DATADIR")) == NULL)
-    cg->cups_datadir = installdir;
+  if ((cg->datadir = getenv("CUPS_DATADIR")) == NULL)
+    cg->datadir = installdir;
 
-  if ((cg->cups_serverbin = getenv("CUPS_SERVERBIN")) == NULL)
-    cg->cups_serverbin = installdir;
+  if ((cg->sysconfig = getenv("CUPS_SERVERROOT")) == NULL)
+    cg->sysconfig = sysconfig;
 
-  if ((cg->cups_serverroot = getenv("CUPS_SERVERROOT")) == NULL)
-    cg->cups_serverroot = confdir;
-
-  if ((cg->cups_statedir = getenv("CUPS_STATEDIR")) == NULL)
-    cg->cups_statedir = confdir;
-
-  if ((cg->localedir = getenv("LOCALEDIR")) == NULL)
-    cg->localedir = localedir;
-
-  if (!homedir[0])
+  if (!userconfig[0])
   {
     const char	*userprofile = getenv("USERPROFILE");
 				// User profile (home) directory
@@ -269,18 +256,18 @@ cups_globals_alloc(void)
 
     DEBUG_printf(("cups_globals_alloc: USERPROFILE=\"%s\"", userprofile));
 
-    snprintf(homedir, sizeof(homedir), "%s/AppData/Local/cups", userprofile);
-    for (homeptr = homedir; *homeptr; homeptr ++)
+    snprintf(userconfig, sizeof(userconfig), "%s/AppData/Local/cups", userprofile);
+    for (userptr = userconfig; *userptr; userptr ++)
     {
       // Convert back slashes to forward slashes
-      if (*homeptr == '\\')
-        *homeptr = '/';
+      if (*userptr == '\\')
+        *userptr = '/';
     }
 
-    DEBUG_printf(("cups_globals_alloc: homedir=\"%s\"", homedir));
+    DEBUG_printf(("cups_globals_alloc: userconfig=\"%s\"", userconfig));
   }
 
-  cg->home = homedir;
+  cg->userconfig = userconfig;
 
 #else
   const char	*home = getenv("HOME");	// HOME environment variable
@@ -339,40 +326,41 @@ cups_globals_alloc(void)
 #  ifdef __APPLE__
   if (home)
   {
+    // macOS uses ~/Library/Application Support/FOO
     snprintf(temp, sizeof(temp), "%s/Library/Application Support/cups", home);
-    cg->userconfig = _cupsStrAlloc(temp);
   }
   else
   {
+    // Something went wrong, use temporary directory...
     snprintf(temp, sizeof(temp), "/private/tmp/cups%u", (unsigned)getuid());
-    cg->userconfig = _cupsStrAlloc(temp);
   }
 
 #  else
   if (snap_common)
   {
+    // Snaps use $SNAP_COMMON/FOO
     snprintf(temp, sizeof(temp), "%s/cups", snap_common);
-    cg->userconfig = _cupsStrAlloc(temp);
   }
   else if (xdg_config_home)
   {
+    // XDG uses $XDG_CONFIG_HOME/FOO
     snprintf(temp, sizeof(temp), "%s/cups", xdg_config_home);
-    cg->userconfig = _cupsStrAlloc(temp);
   }
   else if (home)
   {
-    // Use ~/.cups if it exists, otherwise ~/.config/cups
+    // Use ~/.cups if it exists, otherwise ~/.config/cups (XDG standard)
     snprintf(temp, sizeof(temp), "%s/.cups", home);
     if (access(temp, 0))
       snprintf(temp, sizeof(temp), "%s/.config/cups", home);
-    cg->userconfig = _cupsStrAlloc(temp);
   }
   else
   {
+    // Something went wrong, use temporary directory...
     snprintf(temp, sizeof(temp), "/tmp/cups%u", (unsigned)getuid());
-    cg->userconfig = _cupsStrAlloc(temp);
   }
 #  endif // __APPLE__
+
+  cg->userconfig = _cupsStrAlloc(temp);
 #endif // _WIN32
 
   return (cg);

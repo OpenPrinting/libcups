@@ -529,10 +529,10 @@ main(int  argc,				/* I - Number of command-line args */
 #endif /* _WIN32 */
                     )
 		{
-		  snprintf(filename, sizeof(filename), "%s/ipptool/%s", cg->cups_datadir, argv[i]);
+		  snprintf(filename, sizeof(filename), "%s/ipptool/%s", cg->datadir, argv[i]);
 		  if (access(filename, 0))
 		  {
-		    snprintf(filename, sizeof(filename), "%s/ipptool/%s.gz", cg->cups_datadir, argv[i]);
+		    snprintf(filename, sizeof(filename), "%s/ipptool/%s.gz", cg->datadir, argv[i]);
 		    if (access(filename, 0))
 		      cupsCopyString(filename, argv[i], sizeof(filename));
 		  }
@@ -701,7 +701,7 @@ main(int  argc,				/* I - Number of command-line args */
 #endif /* _WIN32 */
           )
       {
-        snprintf(testname, sizeof(testname), "%s/ipptool/%s", cg->cups_datadir, argv[i]);
+        snprintf(testname, sizeof(testname), "%s/ipptool/%s", cg->datadir, argv[i]);
         if (access(testname, 0))
           testfile = argv[i];
         else
@@ -2818,7 +2818,7 @@ get_filename(const char *testfile,	/* I - Current test file */
     * Map <filename> to CUPS_DATADIR/ipptool/filename...
     */
 
-    snprintf(dst, dstsize, "%s/ipptool/%s", cg->cups_datadir, src + 1);
+    snprintf(dst, dstsize, "%s/ipptool/%s", cg->datadir, src + 1);
     dstptr = dst + strlen(dst) - 1;
     if (*dstptr == '>')
       *dstptr = '\0';
