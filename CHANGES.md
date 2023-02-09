@@ -1,8 +1,8 @@
 Changes in libcups
 ==================
 
-libcups v3.0b1 (Month DD, YYYY)
--------------------------------
+libcups v3.0b1 (February 9, 2023)
+---------------------------------
 
 - Documentation updates (Issue #32)
 - Split out libcups and tools from CUPS 2.x.
