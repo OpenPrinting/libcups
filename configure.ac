@@ -613,8 +613,8 @@ AS_IF([test "$sysconfdir" = "\${prefix}/etc"], [
 
 
 dnl CUPS_DATADIR and CUPS_SERVERROOT
-CUPS_DATADIR="$datadir/cups"
-AC_DEFINE_UNQUOTED([CUPS_DATADIR], ["$datadir/cups"], [Location of data files.])
+CUPS_DATADIR="$datadir/libcups3"
+AC_DEFINE_UNQUOTED([CUPS_DATADIR], ["$datadir/libcups3"], [Location of data files.])
 AC_SUBST([CUPS_DATADIR])
 
 CUPS_SERVERROOT="$sysconfdir/cups"

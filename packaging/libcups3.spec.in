@@ -76,9 +76,9 @@ rm -rf $RPM_BUILD_ROOT
 
 /usr/lib/libcups3.so.3
 
-%dir /usr/share/cups
-%dir /usr/share/cups/ipptool
-/usr/share/cups/ipptool/*
+%dir /usr/share/libcups3
+%dir /usr/share/libcups3/ipptool
+/usr/share/libcups3/ipptool/*
 
 %dir /usr/share/doc/libcups3
 /usr/share/doc/libcups3/ipp*.html

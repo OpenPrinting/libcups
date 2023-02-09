@@ -5570,9 +5570,9 @@ fi
 fi
 
 
-CUPS_DATADIR="$datadir/cups"
+CUPS_DATADIR="$datadir/libcups3"
 
-printf "%s\n" "#define CUPS_DATADIR \"$datadir/cups\"" >>confdefs.h
+printf "%s\n" "#define CUPS_DATADIR \"$datadir/libcups3\"" >>confdefs.h
 
 
 
