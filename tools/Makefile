@@ -1,7 +1,7 @@
 #
 # IPP tools makefile for libcups.
 #
-# Copyright © 2021-2022 by OpenPrinting.
+# Copyright © 2021-2023 by OpenPrinting.
 # Copyright © 2007-2019 by Apple Inc.
 # Copyright © 1997-2006 by Easy Software Products, all rights reserved.
 #
@@ -18,18 +18,13 @@ OBJS		=	\
 			ippeveps.o \
 			ippfind.o \
 			ipptool.o
-IPPEVECOMMANDS	=	\
-			ippevepcl \
-			ippeveps
 IPPTOOLS	=	\
+			ippevepcl \
 			ippeveprinter \
-			ippeveprinter-static \
+			ippeveps \
 			ippfind \
-			ippfind-static \
-			ipptool \
-			ipptool-static
+			ipptool
 TARGETS		=	\
-			$(IPPEVECOMMANDS) \
 			$(IPPTOOLS) \
 			$(LOCALTARGET)
 
@@ -60,7 +55,7 @@ unittests:
 #
 
 clean:
-	$(RM) $(IPPTOOLS) $(IPPEVECOMMANDS) $(OBJS)
+	$(RM) $(IPPTOOLS) $(OBJS)
 	$(RM) test.log test-cups.log
 
 
@@ -82,16 +77,10 @@ install:	all
 	for file in $(IPPTOOLS); do \
 		$(INSTALL_BIN) $$file $(BUILDROOT)$(bindir); \
 	done
-	echo "Installing printer commands to $(BUILDROOT)$(libexecdir)/command..."
-	$(INSTALL_DIR) $(BUILDROOT)$(libexecdir)/command
-	for file in $(IPPEVECOMMANDS); do \
-		$(INSTALL_BIN) $$file $(BUILDROOT)$(bindir); \
-		$(LN) $(bindir)/$$file $(BUILDROOT)$(libexecdir)/ippeveprinter; \
-	done
 	if test "x$(SYMROOT)" != "x"; then \
 		echo "Copying debug symbols to $(SYMROOT)..."; \
 		$(INSTALL_DIR) $(SYMROOT); \
-		for file in $(IPPTOOLS) $(IPPEVECOMMANDS); do \
+		for file in $(IPPTOOLS); do \
 			cp $$file $(SYMROOT); \
 			dsymutil $(SYMROOT)/$$file; \
 		done; \
@@ -108,12 +97,6 @@ uninstall:
 		$(RM) $(BUILDROOT)$(bindir)/$$file; \
 	done
 	-$(RMDIR) $(BUILDROOT)$(bindir)
-	echo "Uninstalling print commands from $(BUILDROOT)$(libexecdir)/command..."
-	for file in $(IPPEVECOMMANDS); do \
-		$(RM) $(BUILDROOT)$(bindir)/$$file; \
-		$(RM) $(BUILDROOT)$(libexecdir)/command/$$file; \
-	done
-	-$(RMDIR) $(BUILDROOT)$(libexecdir)/command
 
 
 #
@@ -135,7 +118,7 @@ test:		local
 # ippeveprinter
 #
 
-ippeveprinter:	ippeveprinter.o ../cups/$(LIBCUPS)
+ippeveprinter:	ippeveprinter.o ../cups/$(LIBCUPS) ippeveprinter-static
 	echo Linking $@...
 	$(CC) $(LDFLAGS) $(OPTIM) -o $@ ippeveprinter.o $(LINKCUPS) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
@@ -175,7 +158,7 @@ ippeveps:	ippeveps.o ../cups/$(LIBCUPS)
 # ippfind
 #
 
-ippfind:	ippfind.o ../cups/$(LIBCUPS)
+ippfind:	ippfind.o ../cups/$(LIBCUPS) ippfind-static
 	echo Linking $@...
 	$(CC) $(LDFLAGS) $(OPTIM) -o $@ ippfind.o $(DNSSDLIBS) $(LINKCUPS) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
@@ -195,7 +178,7 @@ ippfind-static:	ippfind.o ../cups/$(LIBCUPS_STATIC)
 # ipptool
 #
 
-ipptool:	ipptool.o ../cups/$(LIBCUPS)
+ipptool:	ipptool.o ../cups/$(LIBCUPS) ipptool-static
 	echo Linking $@...
 	$(CC) $(LDFLAGS) $(OPTIM) -o $@ ipptool.o $(LINKCUPS) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
