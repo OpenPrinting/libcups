@@ -609,8 +609,6 @@ pdf_to_ps(const char    *filename,	/* I - Filename */
   int		pid;			/* Process ID */
   const char	*pdf_argv[8];		/* Command-line arguments */
   const char	*value;			/* Option value */
-  const char	*job_id,		/* job-id value */
-		*job_name;		/* job-name value */
 
 
  /*
@@ -628,7 +626,9 @@ pdf_to_ps(const char    *filename,	/* I - Filename */
   */
 
 #ifdef __APPLE__
-  char	pdf_options[1024];		// Options
+  const char	*job_id,		// job-id value
+		*job_name;		// job-name value
+  char		pdf_options[1024];	// Options
 
   if ((value = cupsGetOption("PageSize", num_options, options)) != NULL)
     snprintf(pdf_options, sizeof(pdf_options), "PageSize=%s", value);
