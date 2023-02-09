@@ -1,0 +1,142 @@
+#
+# ESP Package Manager (EPM) file list for libcups.
+#
+# Copyright © 2020-2023 by OpenPrinting
+# Copyright © 2007-2019 by Apple Inc.
+# Copyright © 1997-2007 by Easy Software Products, all rights reserved.
+#
+# Licensed under Apache License v2.0.  See the file "LICENSE" for more
+# information.
+#
+
+# Product information
+%product CUPS Library v3
+%copyright 2020-2023 by OpenPrinting, 2007-2019 by Apple Inc.
+%vendor OpenPrinting
+#%license LICENSE
+%readme LICENSE
+%format rpm
+# Red Hat and their epochs...
+%version 1:@CUPS_VERSION@
+%format !rpm
+%version @CUPS_VERSION@
+%format all
+%description CUPS is the standards-based, open source printing system developed
+%description by Apple Inc. and maintained by OpenPrinting for macOS® and other
+%description UNIX®-like operating systems.
+
+
+# Directories...
+$prefix=@prefix@
+$exec_prefix=@exec_prefix@
+$bindir=@bindir@
+$datarootdir=@datarootdir@
+$datadir=@datadir@
+$includedir=@includedir@
+$infodir=@infodir@
+$libdir=@libdir@
+$libexecdir=@libexecdir@
+$localstatedir=@localstatedir@
+$mandir=@mandir@
+$oldincludedir=@oldincludedir@
+$sbindir=@sbindir@
+$sharedstatedir=@sharedstatedir@
+$srcdir=@srcdir@
+$sysconfdir=@sysconfdir@
+$top_srcdir=@top_srcdir@
+$CUPS_DATADIR=@CUPS_DATADIR@
+
+
+# Shared libraries...
+d 0755 root sys $libdir -
+%system darwin
+f 0555 root sys $libdir/libcups3.3.dylib cups/libcups3.3.dylib nostrip()
+l 0755 root sys $libdir/libcups3.dylib libcups3.3.dylib
+%system !darwin
+f 0555 root sys $libdir/libcups3.so.3 cups/libcups3.so.3 nostrip()
+l 0755 root sys $libdir/libcups3.so libcups3.so.3
+%system linux
+# Make sure the shared libraries are refreshed...
+%postinstall ldconfig
+%system all
+
+# User commands...
+d 0755 root sys $bindir -
+f 0555 root sys $bindir/ippevepcl tools/ippevepcl
+f 0555 root sys $bindir/ippeveprinter tools/ippeveprinter
+f 0555 root sys $bindir/ippeveps tools/ippeveps
+f 0555 root sys $bindir/ippfind tools/ippfind
+f 0555 root sys $bindir/ipptool tools/ipptool
+
+# Data files...
+d 0755 root sys $datadir -
+d 0755 root sys $CUPS_DATADIR -
+d 0755 root sys $CUPS_DATADIR/ipptool -
+f 0444 root sys $CUPS_DATADIR/ipptool examples/*.jpg
+f 0444 root sys $CUPS_DATADIR/ipptool examples/*.test
+f 0444 root sys $CUPS_DATADIR/ipptool examples/document-*.p*
+f 0444 root sys $CUPS_DATADIR/ipptool examples/onepage-*.p*
+f 0444 root sys $CUPS_DATADIR/ipptool examples/testfile.*
+
+# Man pages...
+d 0755 root sys $mandir -
+
+d 0755 root sys $mandir/man1 -
+f 0444 root sys $mandir/man1/ippevepcl.1 man/ippevepcl.1
+f 0444 root sys $mandir/man1/ippeveprinter.1 man/ippeveprinter.1
+l 0644 root sys $mandir/man1/ippeveps.1 ippevepcl.1
+f 0444 root sys $mandir/man1/ippfind.1 man/ippfind.1
+f 0444 root sys $mandir/man1/ipptool.1 man/ipptool.1
+
+d 0755 root sys $mandir/man5 -
+f 0444 root sys $mandir/man5/ipptoolfile.5 man/ipptoolfile.5
+
+# Documentation...
+d 0755 root sys $datadir -
+d 0755 root sys $datadir/doc -
+d 0755 root sys $datadir/doc/libcups3 -
+f 0444 root sys $datadir/doc/libcups3 doc/ipp*.html
+
+
+# libcups3-devel subpackage...
+%subpackage devel
+%description Development environment
+
+# Library files...
+d 0755 root sys $libdir -
+%system darwin
+l 0755 root sys $libdir/libcups3.dylib libcups3.3.dylib
+%system !darwin
+l 0755 root sys $libdir/libcups3.so libcups3.so.3
+%system all
+f 0555 root sys $libdir/libcups3.a cups/libcups3.a nostrip()
+d 0755 root sys $libdir/pkgconfig -
+f 0555 root sys $libdir/pkgconfig/cups3.pc cups3.pc
+
+# Header files...
+d 0755 root sys $includedir -
+d 0755 root sys $includedir/cups -
+f 0444 root sys $includedir/cups/array.h cups/array.h
+f 0444 root sys $includedir/cups/base.h cups/base.h
+f 0444 root sys $includedir/cups/cups.h cups/cups.h
+f 0444 root sys $includedir/cups/dir.h cups/dir.h
+f 0444 root sys $includedir/cups/dnssd.h cups/dnssd.h
+f 0444 root sys $includedir/cups/file.h cups/file.h
+f 0444 root sys $includedir/cups/http.h cups/http.h
+f 0444 root sys $includedir/cups/ipp.h cups/ipp.h
+f 0444 root sys $includedir/cups/json.h cups/json.h
+f 0444 root sys $includedir/cups/language.h cups/language.h
+%system darwin
+f 0444 root sys $includedir/cups/ppd.h cups/ppd.h
+%system all
+f 0444 root sys $includedir/cups/pwg.h cups/pwg.h
+f 0444 root sys $includedir/cups/raster.h cups/raster.h
+f 0444 root sys $includedir/cups/thread.h cups/thread.h
+f 0444 root sys $includedir/cups/transcode.h cups/transcode.h
+
+# Documentation...
+d 0755 root sys $datadir -
+d 0755 root sys $datadir/doc -
+d 0755 root sys $datadir/doc/libcups3 -
+f 0444 root sys $datadir/doc/libcups3 doc/cupspm.*
+

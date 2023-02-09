@@ -654,5 +654,5 @@ dnl Clean up pkg-config "requires" content...
 
 
 dnl Provide autoconf with a list of files to generate and output them...
-AC_CONFIG_FILES([Makedefs cups3.pc packaging/libcups.list])
+AC_CONFIG_FILES([Makedefs cups3.pc packaging/libcups3.list])
 AC_OUTPUT

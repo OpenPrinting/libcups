@@ -1,7 +1,7 @@
 #
 # Documentation makefile for libcups.
 #
-# Copyright © 2021-2022 by OpenPrinting.
+# Copyright © 2021-2023 by OpenPrinting.
 #
 # Licensed under Apache License v2.0.  See the file "LICENSE" for more
 # information.
@@ -19,12 +19,7 @@ DOCFILES	=	\
 			ippevepcl.html \
 			ippeveprinter.html \
 			ipptool.html \
-			ipptoolfile.html \
-			raster-organization.png \
-			raster.png \
-			sample-image.png \
-			spec-ipp.html \
-			spec-raster.html
+			ipptoolfile.html
 
 
 #
@@ -67,10 +62,10 @@ depend:
 #
 
 install:
-	echo "Installing documentation files to $(BUILDROOT)$(datadir)/doc/libcups..."
-	$(INSTALL_DIR) $(BUILDROOT)$(datadir)/doc/libcups
+	echo "Installing documentation files to $(BUILDROOT)$(datadir)/doc/libcups3..."
+	$(INSTALL_DIR) $(BUILDROOT)$(datadir)/doc/libcups3
 	for file in $(DOCFILES); do \
-		$(INSTALL_MAN) $$file $(BUILDROOT)$(datadir)/doc/libcups; \
+		$(INSTALL_MAN) $$file $(BUILDROOT)$(datadir)/doc/libcups3; \
 	done
 
 
@@ -79,8 +74,8 @@ install:
 #
 
 uninstall:
-	echo "Uninstalling documentation files from $(BUILDROOT)$(datadir)/doc/libcups..."
+	echo "Uninstalling documentation files from $(BUILDROOT)$(datadir)/doc/libcups3..."
 	for file in $(DOCFILES); do \
-		$(RM) $(BUILDROOT)$(datadir)/doc/libcups/$$file; \
+		$(RM) $(BUILDROOT)$(datadir)/doc/libcups3/$$file; \
 	done
-	-$(RMDIR) $(BUILDROOT)$(datadir)/doc/libcups
+	-$(RMDIR) $(BUILDROOT)$(datadir)/doc/libcups3

@@ -1,0 +1,104 @@
+#
+# RPM "spec" file for CUPS Library v3.
+#
+# Original version by Jason McMullan <jmcc@ontv.com>.
+#
+# Copyright © 2020-2023 by OpenPrinting
+#
+# Licensed under Apache License v2.0.  See the file "LICENSE" for more
+# information.
+#
+
+Summary: CUPS Library v3
+Name: libcups3
+Version: @CUPS_VERSION@
+Release: 0
+Epoch: 1
+License: GPL
+Group: System Environment/Daemons
+Source: https://github.com/OpenPrinting/libcups/releases/download/v%{version}/libcups-%{version}-source.tar.gz
+Url: https://openprinting.github.io/cups
+Packager: Anonymous <anonymous@example.com>
+Vendor: OpenPrinting
+
+# Package names are as defined for Red Hat (and clone) distributions
+BuildRequires: openssl-devel, avahi-devel
+
+# Use buildroot so as not to disturb the version already installed
+BuildRoot: /tmp/%{name}-root
+
+%package devel
+Summary: CUPS Library v3 - development environment
+Group: Development/Libraries
+Requires: %{name} = %{epoch}:%{version}
+
+%description
+CUPS is the standards-based, open source printing system developed by
+Apple Inc. and maintained by OpenPrinting for macOS® and other UNIX®-like
+operating systems.
+
+%description devel
+This package provides the CUPS Library v3 headers and development environment.
+
+%prep
+%setup
+
+%build
+CFLAGS="$RPM_OPT_FLAGS" CXXFLAGS="$RPM_OPT_FLAGS" LDFLAGS="$RPM_OPT_FLAGS" \
+    ./configure --enable-static
+# If we got this far, all prerequisite libraries must be here.
+make
+
+%install
+# Make sure the RPM_BUILD_ROOT directory exists.
+rm -rf $RPM_BUILD_ROOT
+
+make BUILDROOT=$RPM_BUILD_ROOT install
+
+%post
+/sbin/ldconfig
+
+%postun
+/sbin/ldconfig
+
+%clean
+rm -rf $RPM_BUILD_ROOT
+
+%files
+%docdir /usr/share/doc/libcups3
+%defattr(-,root,root)
+
+/usr/bin/ippevepcl
+/usr/bin/ippeveprinter
+/usr/bin/ippfind
+/usr/bin/ippeveps
+/usr/bin/ipptool
+
+/usr/lib/libcups3.so.3
+
+%dir /usr/share/cups
+%dir /usr/share/cups/ipptool
+/usr/share/cups/ipptool/*
+
+%dir /usr/share/doc/libcups3
+/usr/share/doc/libcups3/ipp*.html
+
+%dir /usr/share/man/man1
+/usr/share/man/man1/ippevepcl.1.gz
+/usr/share/man/man1/ippeveprinter.1.gz
+/usr/share/man/man1/ippeveps.1.gz
+/usr/share/man/man1/ippfind.1.gz
+/usr/share/man/man1/ipptool.1.gz
+
+%dir /usr/share/man/man5
+/usr/share/man/man5/ipptoolfile.5.gz
+
+
+%files devel
+%defattr(-,root,root)
+/usr/lib/libcups3.a
+/usr/lib/libcups3.so
+/usr/lib/pkgconfig/cups3.pc
+
+%dir /usr/share/doc/libcups3
+/usr/share/doc/libcups3/cupspm.*

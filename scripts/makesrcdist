@@ -25,8 +25,8 @@ fi
 if test $# = 0; then
 	# Compute version for snapshot
 	rev=`git show --oneline | head -1 | awk '{print $1}'`
-	version="2.4git"
-	fileversion="2.4git-$rev"
+	version="3.0git"
+	fileversion="3.0git-$rev"
 	fileurl="file://$TMPDIR/cups-${fileversion}-source.tar.gz"
 	SIGNFILES=no
 else
@@ -34,12 +34,12 @@ else
 	rev="1"
 	version=$1
 	fileversion=$1
-	fileurl="https://github.com/openprinting/cups/releases/download/v$fileversion/cups-${fileversion}-source.tar.gz"
+	fileurl="https://github.com/openprinting/libcups/releases/download/v$fileversion/libcups-${fileversion}-source.tar.gz"
 	SIGNFILES=yes
 
 	echo Validating sources...
 	cupsversionpatch=`echo $version | awk -F. '{if (NF == 3) { print $3 } else { print "0" } }' | sed -e '1,$s/op[0-9]*$//'`
-	cupsversion=`printf "2.04%02d" $cupsversionpatch`
+	cupsversion=`printf "3.00%02d" $cupsversionpatch`
 
         temp=`grep AC_INIT configure.ac | awk -F, '{print $2}' | sed -e '1,$s/^\[//' -e '1,$s/\]$//'`
         if test "$temp" != $version; then
@@ -59,19 +59,7 @@ else
 		exit 1
 	fi
 
-	temp=`head -1 README.md | awk '{print $3}'`
-	if test "$temp" != "v$version"; then
-		echo "Still need to update version to v$version in README.md (saw $temp)"
-		exit 1
-	fi
-
-	temp=`head -1 INSTALL.md | awk '{print $6}'`
-	if test "$temp" != "v$version"; then
-		echo "Still need to update version to v$version in INSTALL.md (saw $temp)"
-		exit 1
-	fi
-
-	temp=`head -6 CHANGES.md | grep "Changes in" | awk '{print $4}'`
+	temp=`head -6 CHANGES.md | grep "^libcups v" | awk '{print $2}'`
 	if test "$temp" != "v$version"; then
 		echo "Still need to add Changes in v$version in CHANGES.md (saw $temp)"
 		exit 1
@@ -83,40 +71,32 @@ else
 fi
 
 fileurl=`echo $fileurl | sed -e '1,$s/\\//\\\\\\//g'`
-file="$HOME/cups-$fileversion-source.tar"
+file="$HOME/libcups-$fileversion-source."
 
 echo Exporting $fileversion...
-rm -rf $TMPDIR/cups-$version
-mkdir $TMPDIR/cups-$version
-git archive --format tar HEAD | (cd $TMPDIR/cups-$version; tar xf -)
+rm -rf $TMPDIR/libcups-$version
+mkdir $TMPDIR/libcups-$version
+git archive --format tar HEAD | (cd $TMPDIR/libcups-$version; tar xf -)
 
 echo Preparing files...
-cd $TMPDIR/cups-$version
+cd $TMPDIR/libcups-$version
 sed -e '1,$s/@CUPS_VERSION@/'$version'/' \
 	-e '1,$s/^Source:.*/Source: '$fileurl'/' \
-	<packaging/cups.spec.in \
-	>packaging/cups.spec
-rm -rf .gitignore
+	<packaging/libcups3.spec.in \
+	>packaging/libcups3.spec
 cd ..
 
 echo Archiving...
-tar cf $file cups-$version
-
-echo Compressing...
-if (which zopfli >/dev/null); then
-	zopfli $file
-	rm -f $file
-else
-	gzip -v9 $file
-fi
+tar cf - libcups-$version | gzip -v9 >$file.tar.gz
+zip -r $file.zip libcups-$version
 
 if test $SIGNFILES = yes; then
 	echo Signing...
-	test -f $file.gz.sig && rm -f $file.gz.sig
-	gpg --detach-sign $file.gz
+	gpg --detach-sign $file.tar.gz
+	gpg --detach-sign $file.zip
 fi
 
 echo Removing temporary files...
-rm -rf cups-$version
+rm -rf libcups-$version
 
 echo "Done - files in $HOME."

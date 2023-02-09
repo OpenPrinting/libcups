@@ -11,9 +11,9 @@ The CUPS Library v3 (libcups)
 
 The CUPS library (libcups) provides a common C API for HTTP/HTTPS and IPP
 communications on Unix®-like operating systems and Microsoft Windows®.  It is
-used by many printing-related projects such as [CUPS][1] and [PAPPL][2].  This
-project is part of OpenPrinting's CUPS 3.0 development, which will provide a
-100% driverless printing system for Unix®-life operating systems.
+used by many printing-related projects such as [CUPS][CUPS] and [PAPPL][PAPPL].
+This project is part of OpenPrinting's CUPS 3.0 development, which will provide
+a 100% driverless printing system for Unix®-life operating systems.
 
 This version of the CUPS library removes all of the deprecated and obsolete APIs
 from CUPS 2.x and earlier and is *not* binary compatible with older releases.
@@ -67,5 +67,5 @@ CONDITIONS OF ANY KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations under the License.
 
 
-[1]: https://openprinting.github.io/cups
-[2]: https://www.msweet.org/pappl
+[CUPS]: https://openprinting.github.io/cups
+[PAPPL]: https://www.msweet.org/pappl
