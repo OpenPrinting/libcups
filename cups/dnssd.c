@@ -1,7 +1,7 @@
 //
 // DNS-SD API functions for CUPS.
 //
-// Copyright © 2022 by OpenPrinting.
+// Copyright © 2022-2023 by OpenPrinting.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
 // information.
@@ -409,12 +409,14 @@ cupsDNSSDDelete(cups_dnssd_t *dnssd)	// I - DNS-SD context
 
 #ifdef HAVE_MDNSRESPONDER
   cupsThreadCancel(dnssd->monitor);
+  cupsThreadWait(dnssd->monitor);
   DNSServiceRefDeallocate(dnssd->ref);
 
 #elif _WIN32
 
 #else // HAVE_AVAHI
   cupsThreadCancel(dnssd->monitor);
+  cupsThreadWait(dnssd->monitor);
   avahi_simple_poll_free(dnssd->poll);
 #endif // HAVE_MDNSRESPONDER
 
@@ -562,7 +564,6 @@ cupsDNSSDNew(
     return (NULL);
   }
 
-  cupsThreadDetach(dnssd->monitor);
   DEBUG_printf(("2cupsDNSSDNew: dnssd->monitor=%p", (void *)dnssd->monitor));
 
 #elif _WIN32
@@ -603,7 +604,6 @@ cupsDNSSDNew(
     return (NULL);
   }
 
-  cupsThreadDetach(dnssd->monitor);
   DEBUG_printf(("2cupsDNSSDNew: dnssd->monitor=%p", (void *)dnssd->monitor));
 #endif // HAVE_MDNSRESPONDER
 
@@ -1631,9 +1631,21 @@ static void *				// O - Return value (always `NULL`)
 mdns_monitor(cups_dnssd_t *dnssd)	// I - DNS-SD context
 {
   DNSServiceErrorType	error;		// Current error
+  struct pollfd		polldata;	// Polling data
+
+  polldata.fd     = DNSServiceRefSockFD(dnssd->ref);
+  polldata.events = POLLERR | POLLHUP | POLLIN;
 
   for (;;)
   {
+#  ifndef _WIN32
+    if (poll(&polldata, 1, 1000) < 0 && errno != EINTR && errno != EAGAIN)
+      break;
+
+    if (!(polldata.revents & POLLIN))
+      continue;
+#  endif // !_WIN32
+
     if ((error = DNSServiceProcessResult(dnssd->ref)) != kDNSServiceErr_NoError)
     {
       report_error(dnssd, "Unable to read response from DNS-SD service: %s", mdns_strerror(error));

@@ -40,7 +40,7 @@ main(int  argc,				// I - Number of command-line arguments
   if (argc == 2)
     count = strtoul(argv[1], NULL, 10);
   else
-    count = 1;
+    count = 5;
 
   // Run tests...
   while (count > 0)
@@ -51,7 +51,10 @@ main(int  argc,				// I - Number of command-line arguments
     gettimeofday(&end, NULL);
     secs = end.tv_sec - start.tv_sec + 0.000001 * (end.tv_usec - start.tv_usec);
 
-    testEndMessage(secs < 2.0, "%u printers in %.3f seconds", (unsigned)num_dests, secs);
+    if (cupsLastError() != IPP_STATUS_OK)
+      testEndMessage(false, "%s", cupsLastErrorString());
+    else
+      testEndMessage(secs < 2.0, "%u printers in %.3f seconds", (unsigned)num_dests, secs);
 
     cupsFreeDests(num_dests, dests);
 
@@ -61,5 +64,5 @@ main(int  argc,				// I - Number of command-line arguments
       sleep(1);
   }
 
-  return (0);
+  return (testsPassed ? 0 : 1);
 }

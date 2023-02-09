@@ -143,6 +143,7 @@ static size_t		cups_get_dests(const char *filename, const char *match_name, cons
 static char		*cups_make_string(ipp_attribute_t *attr, char *buffer, size_t bufsize);
 static bool		cups_name_cb(_cups_namedata_t *data, unsigned flags, cups_dest_t *dest);
 static void		cups_queue_name(char *name, const char *serviceName, size_t namesize);
+static void		dnssd_error_cb(void *cb_data, const char *message);
 
 
 /*
@@ -3149,7 +3150,7 @@ cups_enum_dests(
 
   gettimeofday(&curtime, NULL);
 
-  if ((dnssd = cupsDNSSDNew(NULL, NULL)) == NULL)
+  if ((dnssd = cupsDNSSDNew(dnssd_error_cb, NULL)) == NULL)
   {
     DEBUG_puts("1cups_enum_dests: Unable to create service browser, returning 0.");
 
@@ -3811,3 +3812,17 @@ cups_queue_name(
 
   *nameptr = '\0';
 }
+
+
+//
+// 'dnssd_error_cb()' - Report an error.
+//
+
+static void
+dnssd_error_cb(void       *cb_data,	// I - Callback data (unused)
+               const char *message)	// I - Message
+{
+  (void)cb_data;
+  _cupsSetError(IPP_STATUS_ERROR_INTERNAL, message, 0);
+}
+
