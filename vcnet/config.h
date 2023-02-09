@@ -1,7 +1,7 @@
 /*
  * Configuration file for libcups on Windows.
  *
- * Copyright © 2021-2022 by OpenPrinting
+ * Copyright © 2021-2023 by OpenPrinting
  * Copyright © 2007-2019 by Apple Inc.
  * Copyright © 1997-2007 by Easy Software Products.
  *
@@ -122,17 +122,8 @@ typedef unsigned long useconds_t;
  *       variables at run-time...
  */
 
-#define CUPS_BINDIR "C:/CUPS/bin"
-#define CUPS_CACHEDIR "C:/CUPS/cache"
 #define CUPS_DATADIR "C:/CUPS/share"
-#define CUPS_DOCROOT "C:/CUPS/share/doc"
-#define CUPS_LOCALEDIR "C:/CUPS/locale"
-#define CUPS_LOGDIR "C:/CUPS/logs"
-#define CUPS_REQUESTS "C:/CUPS/spool"
-#define CUPS_SBINDIR "C:/CUPS/sbin"
-#define CUPS_SERVERBIN "C:/CUPS/lib"
 #define CUPS_SERVERROOT "C:/CUPS/etc"
-#define CUPS_STATEDIR "C:/CUPS/run"
 
 
 /*

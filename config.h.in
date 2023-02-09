@@ -1,7 +1,7 @@
 /*
  * Configuration file for libcups.
  *
- * Copyright © 2020-2022 by OpenPrinting
+ * Copyright © 2020-2023 by OpenPrinting
  * Copyright © 2007-2019 by Apple Inc.
  * Copyright © 1997-2007 by Easy Software Products.
  *
@@ -35,18 +35,8 @@
  *       variables at run-time...
  */
 
-// TODO: Cleanup directories
-#define CUPS_BINDIR	"/usr/bin"
-#define CUPS_CACHEDIR	"/var/cache/cups"
 #define CUPS_DATADIR    "/usr/share/cups"
-#define CUPS_DOCROOT	"/usr/share/doc/cups"
-#define CUPS_LOCALEDIR	"/usr/share/locale"
-#define CUPS_LOGDIR	"/var/logs/cups"
-#define CUPS_REQUESTS	"/var/spool/cups"
-#define CUPS_SBINDIR	"/usr/sbin"
-#define CUPS_SERVERBIN	"/usr/lib/cups"
 #define CUPS_SERVERROOT	"/etc/cups"
-#define CUPS_STATEDIR	"/var/run/cups"
 
 
 /*

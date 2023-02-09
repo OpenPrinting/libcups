@@ -5,7 +5,6 @@ The CUPS Library v3 (libcups)
 ![Apache 2.0](https://img.shields.io/github/license/michaelrsweet/libcups)
 [![Build and Test](https://github.com/michaelrsweet/libcups/workflows/Build%20and%20Test/badge.svg)](https://github.com/michaelrsweet/libcups/actions/workflows/build.yml)
 [![Coverity Scan](https://img.shields.io/coverity/scan/24180)](https://scan.coverity.com/projects/michaelrsweet-libcups)
-[![LGTM Grade](https://img.shields.io/lgtm/grade/cpp/github/michaelrsweet/libcups)](https://lgtm.com/projects/g/michaelrsweet/libcups/?mode=list)
 
 > *Note:* This is a major release update of the CUPS library that breaks both
 > binary and source compatibility with prior releases of CUPS.

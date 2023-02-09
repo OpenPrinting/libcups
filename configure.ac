@@ -1,7 +1,7 @@
 dnl
 dnl Configuration script for libcups.
 dnl
-dnl Copyright © 2020-2022 by OpenPrinting
+dnl Copyright © 2020-2023 by OpenPrinting
 dnl Copyright © 2007-2020 by Apple Inc.
 dnl Copyright © 1997-2007 by Easy Software Products, all rights reserved.
 dnl
@@ -13,7 +13,7 @@ dnl We need at least autoconf 2.71...
 AC_PREREQ([2.71])
 
 dnl Package name and version...
-AC_INIT([libcups],[3.0b1],[https://github.com/michaelrsweet/libcups/issues],[cups],[https://openprinting.github.io/cups])
+AC_INIT([libcups],[3.0b1],[https://github.com/OpenPrinting/libcups/issues],[cups],[https://openprinting.github.io/cups])
 AC_CONFIG_HEADERS([config.h])
 
 LIBCUPS_VERSION="AC_PACKAGE_VERSION"
@@ -566,12 +566,30 @@ AC_ARG_WITH([ldflags], AS_HELP_STRING([--with-ldflags=...], [Specify additional 
 ])
 
 
-dnl Fix prefix and includedir...
+dnl Fix prefix, datadir, datarootdir, includedir, and sysconfdir...
 AS_IF([test "$prefix" = NONE], [
     # Default prefix isn't bound until AC_OUTPUT...
     realprefix="/usr/local"
 ], [
     realprefix="$prefix"
+])
+
+AS_IF([test "$datarootdir" = "\${prefix}/share"], [
+    AS_IF([test "$prefix" = "/"], [
+	datarootdir="/usr/share"
+    ], [
+	datarootdir="$prefix/share"
+    ])
+])
+
+AS_IF([test "$datadir" = "\${prefix}/share"], [
+    AS_IF([test "$prefix" = "/"], [
+	datadir="/usr/share"
+    ], [
+	datadir="$prefix/share"
+    ])
+], [test "$datadir" = "\${datarootdir}"], [
+    datadir="$datarootdir"
 ])
 
 AS_IF([test "$includedir" = NONE -o "$includedir" = "\${prefix}/include"], [
@@ -580,6 +598,28 @@ AS_IF([test "$includedir" = NONE -o "$includedir" = "\${prefix}/include"], [
 AS_IF([test "$includedir" != "/usr/include" -a "$includedir" != "/usr/local/include"], [
     PKGCONFIG_CFLAGS="-I\${includedir} $PKGCONFIG_CFLAGS"
 ])
+
+AS_IF([test "$sysconfdir" = "\${prefix}/etc"], [
+    AS_IF([test "$prefix" = "/"], [
+	AS_IF([test "$host_os_name" = darwin], [
+	    sysconfdir="/private/etc"
+	], [
+	    sysconfdir="/etc"
+	])
+    ], [
+	sysconfdir="$prefix/etc"
+    ])
+])
+
+
+dnl CUPS_DATADIR and CUPS_SERVERROOT
+CUPS_DATADIR="$datadir/cups"
+AC_DEFINE_UNQUOTED([CUPS_DATADIR], ["$datadir/cups"], [Location of data files.])
+AC_SUBST([CUPS_DATADIR])
+
+CUPS_SERVERROOT="$sysconfdir/cups"
+AC_DEFINE_UNQUOTED([CUPS_SERVERROOT], ["$sysconfdir/cups"], [Location of server configuration files.])
+AC_SUBST([CUPS_SERVERROOT])
 
 
 dnl Domain socket support...

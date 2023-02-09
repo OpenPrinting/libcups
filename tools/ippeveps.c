@@ -1,7 +1,7 @@
 /*
  * Generic Adobe PostScript printer command for ippeveprinter/CUPS.
  *
- * Copyright © 2021 by OpenPrinting.
+ * Copyright © 2021-2023 by OpenPrinting.
  * Copyright © 2019 by Apple Inc.
  *
  * Licensed under Apache License v2.0.  See the file "LICENSE" for more
@@ -17,9 +17,9 @@
 #include <sys/wait.h>
 
 #ifdef __APPLE__
-#  define PDFTOPS CUPS_SERVERBIN "/filter/cgpdftops"
+#  define PDFTOPS "/usr/libexec/cups/filter/cgpdftops"
 #else
-#  define PDFTOPS CUPS_SERVERBIN "/filter/pdftops"
+#  define PDFTOPS "pdftops"
 #endif /* __APPLE__ */
 
 
@@ -608,7 +608,6 @@ pdf_to_ps(const char    *filename,	/* I - Filename */
   int		tempfd;			/* Temporary file descriptor */
   int		pid;			/* Process ID */
   const char	*pdf_argv[8];		/* Command-line arguments */
-  char		pdf_options[1024];	/* Options */
   const char	*value;			/* Option value */
   const char	*job_id,		/* job-id value */
 		*job_name;		/* job-name value */
@@ -625,8 +624,11 @@ pdf_to_ps(const char    *filename,	/* I - Filename */
   }
 
  /*
-  * Run cgpdftops or pdftops in the filter directory...
+  * Run cgpdftops or pdftops...
   */
+
+#ifdef __APPLE__
+  char	pdf_options[1024];		// Options
 
   if ((value = cupsGetOption("PageSize", num_options, options)) != NULL)
     snprintf(pdf_options, sizeof(pdf_options), "PageSize=%s", value);
@@ -646,6 +648,38 @@ pdf_to_ps(const char    *filename,	/* I - Filename */
   pdf_argv[5] = pdf_options;
   pdf_argv[6] = filename;
   pdf_argv[7] = NULL;
+#else
+  int	pdf_argc = 0;			// Number of arguments
+
+  pdf_argv[pdf_argc ++] = "pdftops";
+  if ((value = cupsGetOption("PageSize", num_options, options)) != NULL)
+  {
+    if (!_cups_strcasecmp(value, "letter"))
+    {
+      pdf_argv[pdf_argc ++] = "-paper";
+      pdf_argv[pdf_argc ++] = "letter";
+    }
+    else if (!_cups_strcasecmp(value, "legal"))
+    {
+      pdf_argv[pdf_argc ++] = "-paper";
+      pdf_argv[pdf_argc ++] = "legal";
+    }
+    else if (!_cups_strcasecmp(value, "a4"))
+    {
+      pdf_argv[pdf_argc ++] = "-paper";
+      pdf_argv[pdf_argc ++] = "a4";
+    }
+    else  if (!_cups_strcasecmp(value, "a3"))
+    {
+      pdf_argv[pdf_argc ++] = "-paper";
+      pdf_argv[pdf_argc ++] = "a3";
+    }
+  }
+
+  pdf_argv[pdf_argc ++] = filename;
+  pdf_argv[pdf_argc ++] = "-";
+  pdf_argv[pdf_argc   ] = NULL;
+#endif // __APPLE__
 
   if ((pid = fork()) == 0)
   {
@@ -657,7 +691,7 @@ pdf_to_ps(const char    *filename,	/* I - Filename */
     dup2(tempfd, 1);
     close(tempfd);
 
-    execv(PDFTOPS, (char * const *)pdf_argv);
+    execvp(PDFTOPS, (char * const *)pdf_argv);
     exit(errno);
   }
   else if (pid < 0)
@@ -719,15 +753,15 @@ static int				/* O - Exit status */
 ps_to_ps(const char    *filename,	/* I - Filename */
 	 int           copies)		/* I - Number of copies */
 {
-  FILE		*fp;				/* File to read from */
-  int		copy,				/* Current copy */
-		page,				/* Current page number */
-		num_pages = 0,			/* Total number of pages */
-		first_page,			/* First page */
-		last_page;			/* Last page */
-  const char	*page_ranges;			/* page-ranges option */
-  long		first_pos = -1;			/* Offset for first page */
-  char		line[1024];			/* Line from file */
+  FILE		*fp;			/* File to read from */
+  int		copy,			/* Current copy */
+		page,			/* Current page number */
+		num_pages = 0,		/* Total number of pages */
+		first_page,		/* First page */
+		last_page;		/* Last page */
+  const char	*page_ranges;		/* page-ranges option */
+  long		first_pos = -1;		/* Offset for first page */
+  char		line[1024];		/* Line from file */
 
 
  /*

@@ -1,7 +1,7 @@
 #
 # Example files makefile for libcups.
 #
-# Copyright © 2021-2022 by OpenPrinting.
+# Copyright © 2021-2023 by OpenPrinting.
 #
 # Licensed under Apache License v2.0.  See the file "LICENSE" for more
 # information.
@@ -130,10 +130,10 @@ depend:
 #
 
 install:
-	echo "Installing sample ipptool files in $(BUILDROOT)$(datadir)/cups/ipptool..."
-	$(INSTALL_DIR) $(BUILDROOT)$(datadir)/cups/ipptool
+	echo "Installing sample ipptool files in $(BUILDROOT)$(CUPS_DATADIR)/ipptool..."
+	$(INSTALL_DIR) $(BUILDROOT)$(CUPS_DATADIR)/ipptool
 	for file in $(DATAFILES) $(TESTFILES); do \
-		$(INSTALL_DATA) $$file $(BUILDROOT)$(datadir)/cups/ipptool; \
+		$(INSTALL_DATA) $$file $(BUILDROOT)$(CUPS_DATADIR)/ipptool; \
 	done
 
 
@@ -142,8 +142,8 @@ install:
 #
 
 uninstall:
-	echo "Uninstalling sample ipptool files from $(BUILDROOT)$(datadir)/cups/ipptool..."
+	echo "Uninstalling sample ipptool files from $(BUILDROOT)$(CUPS_DATADIR)/ipptool..."
 	for file in $(DATAFILES) $(TESTFILES); do \
-		$(RM) $(BUILDROOT)$(datadir)/cups/ipptool/$$file; \
+		$(RM) $(BUILDROOT)$(CUPS_DATADIR)/ipptool/$$file; \
 	done
-	-$(RMDIR) $(BUILDROOT)$(datadir)/cups/ipptool
+	-$(RMDIR) $(BUILDROOT)$(CUPS_DATADIR)/ipptool
