@@ -71,7 +71,7 @@ else
 fi
 
 fileurl=`echo $fileurl | sed -e '1,$s/\\//\\\\\\//g'`
-file="$HOME/libcups-$fileversion-source."
+file="$HOME/libcups-$fileversion-source"
 
 echo Exporting $fileversion...
 rm -rf $TMPDIR/libcups-$version
