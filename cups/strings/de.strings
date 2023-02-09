@@ -199,10 +199,12 @@
 "IPPFIND_SERVICE_URI     URI" = "IPPFIND_SERVICE_URI     URI";
 "IPPFIND_TXT_*           Value of TXT record key" = "IPPFIND_TXT_*           Wert des TXT Schlüssel-Eintrags";
 "Insufficient Storage" = "Insufficient Storage";
+"Invalid JSON data." = "Invalid JSON data.";
 "Invalid group tag." = "Ungültiges Gruppen-Tag.";
 "Invalid media name arguments." = "Ungültige Argumente des Mediennamens.";
 "Invalid media size." = "Ungültige Mediengröße.";
 "Invalid named IPP attribute in collection." = "Ungültiger IPP-Attributname in der Folge.";
+"JSON file too large." = "JSON file too large.";
 "LPDEST environment variable names default destination that does not exist." = "LPDEST-Umgebungsvariable benennt standardmäßig ein Ziel, das nicht existiert.";
 "Length Required" = "Length Required";
 "Listening on port %d." = "Lausche auf Port %d.";
@@ -2232,4 +2234,4 @@
 "{service_uri}           URI" = "{service_uri}           URI";
 "{txt_*}                 Value of TXT record key" = "{txt_*}                 Wert des TXT Datensatzschlüssels";
 "{}                      URI" = "{}                      URI";
-"~/.cups/lpoptions file names default destination that does not exist." = "~/.cups/lpoptions Die Datei nennt ein voreingestelltes Ziel das nicht existiert.";
+"~/.../lpoptions file names default destination that does not exist." = "~/.../lpoptions file names default destination that does not exist.";

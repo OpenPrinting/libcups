@@ -199,10 +199,12 @@
 "IPPFIND_SERVICE_URI     URI" = "IPPFIND_SERVICE_URI     URI";
 "IPPFIND_TXT_*           Value of TXT record key" = "IPPFIND_TXT_*           Value of TXT record key";
 "Insufficient Storage" = "Insufficient Storage";
+"Invalid JSON data." = "Invalid JSON data.";
 "Invalid group tag." = "无效的组标签。";
 "Invalid media name arguments." = "无效的媒体名称参数。";
 "Invalid media size." = "无效的媒体大小。";
 "Invalid named IPP attribute in collection." = "Invalid named IPP attribute in collection.";
+"JSON file too large." = "JSON file too large.";
 "LPDEST environment variable names default destination that does not exist." = "LPDEST 环境变量所指定的默认目标不存在。";
 "Length Required" = "Length Required";
 "Listening on port %d." = "Listening on port %d.";
@@ -2232,4 +2234,4 @@
 "{service_uri}           URI" = "{service_uri}           URI";
 "{txt_*}                 Value of TXT record key" = "{txt_*}                 Value of TXT record key";
 "{}                      URI" = "{}                      URI";
-"~/.cups/lpoptions file names default destination that does not exist." = "~/.cups/lpoptions 文件所指定的默认目标不存在。";
+"~/.../lpoptions file names default destination that does not exist." = "~/.../lpoptions file names default destination that does not exist.";
