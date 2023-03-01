@@ -366,7 +366,7 @@ httpAddrListen(http_addr_t *addr,	// I - Address to bind to
   }
 
   // Listen...
-  if (listen(fd, 128))
+  if (listen(fd, INT_MAX))
   {
     _cupsSetHTTPError(HTTP_STATUS_ERROR);
 

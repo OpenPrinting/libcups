@@ -1,6 +1,12 @@
 Changes in libcups
 ==================
 
+libcups v3.0b2 (TBD)
+--------------------
+
+- Updated the `httpAddrListen` function to use the maximum backlog value.
+
+
 libcups v3.0b1 (February 9, 2023)
 ---------------------------------
 
