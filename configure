@@ -4854,7 +4854,7 @@ then :
 
 printf "%s\n" "#define HAVE_ICONV_H 1" >>confdefs.h
 
-	if test "x$LIBS" = x -a x$host_os_name = freebsd
+	if test "x$LIBS" = x -a x$host_os_name = xfreebsd
 then :
 
 	    # FreeBSD (at least) has a false-positive match for iconv_open without -liconv...

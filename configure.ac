@@ -277,7 +277,7 @@ AC_CHECK_HEADER([iconv.h], [
     LIBS=""
     AC_SEARCH_LIBS([iconv_open], [iconv], [
         AC_DEFINE([HAVE_ICONV_H], [1], [Do we have the <iconv.h> header?])
-	AS_IF([test "x$LIBS" = x -a x$host_os_name = freebsd], [
+	AS_IF([test "x$LIBS" = x -a x$host_os_name = xfreebsd], [
 	    # FreeBSD (at least) has a false-positive match for iconv_open without -liconv...
 	    LIBS="-liconv"
 	])
