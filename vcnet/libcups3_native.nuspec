@@ -3,7 +3,7 @@
     <metadata>
         <id>libcups3_native</id>
         <title>OpenPrinting CUPS Library for VS2019+</title>
-        <version>3.0.0-b1</version>
+        <version>3.0.0-b2</version>
         <authors>Michael R Sweet, OpenPrinting</authors>
         <owners>michaelrsweet</owners>
         <projectUrl>https://github.com/OpenPrinting/cups</projectUrl>
