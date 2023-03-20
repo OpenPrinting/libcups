@@ -275,7 +275,7 @@ typedef unsigned long useconds_t;
 
 
 /*
- * Do we have <iconv.h>?
+ * Do we have the <iconv.h> header?
  */
 
 /* #undef HAVE_ICONV_H */

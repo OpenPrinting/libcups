@@ -188,7 +188,7 @@
 
 
 /*
- * Do we have <iconv.h>?
+ * Do we have the <iconv.h> header?
  */
 
 #define HAVE_ICONV_H 1

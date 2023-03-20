@@ -276,12 +276,11 @@ AC_CHECK_HEADER([iconv.h], [
     SAVELIBS="$LIBS"
     LIBS=""
     AC_SEARCH_LIBS([iconv_open], [iconv], [
-        AC_DEFINE([HAVE_ICONV_H], [1], [Have <iconv.h> header?])
-	PKGCONFIG_LIBS_PRIVATE="$LIBS $PKGCONFIG_LIBS_PRIVATE"
-	SAVELIBS="$SAVELIBS $LIBS"
-    ])
-    AC_SEARCH_LIBS([libiconv_open], [iconv], [
-	AC_DEFINE([HAVE_ICONV_H], [1], [Have <iconv.h> header?])
+        AC_DEFINE([HAVE_ICONV_H], [1], [Do we have the <iconv.h> header?])
+	AS_IF([test "x$LIBS" = x -a x$host_os_name = freebsd], [
+	    # FreeBSD (at least) has a false-positive match for iconv_open without -liconv...
+	    LIBS="-liconv"
+	])
 	PKGCONFIG_LIBS_PRIVATE="$LIBS $PKGCONFIG_LIBS_PRIVATE"
 	SAVELIBS="$SAVELIBS $LIBS"
     ])
