@@ -15,7 +15,7 @@
         <copyright>Copyright © 2020-2022 by OpenPrinting, Copyright © 2007-2019 by Apple Inc., Copyright © 1997-2007 by Easy Software Products.</copyright>
         <tags>http ipp native</tags>
 	<dependencies>
-	    <dependency id="libcups3_native.redist" version="3.0.0-b1" />
+	    <dependency id="libcups3_native.redist" version="3.0.0-b2" />
 	</dependencies>
     </metadata>
     <files>
