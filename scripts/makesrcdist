@@ -38,31 +38,68 @@ else
 	SIGNFILES=yes
 
 	echo Validating sources...
-	cupsversionpatch=`echo $version | awk -F. '{if (NF == 3) { print $3 } else { print "0" } }' | sed -e '1,$s/op[0-9]*$//'`
-	cupsversion=`printf "3.00%02d" $cupsversionpatch`
+	cupsversionpatch="$(echo $version | awk -F. '{if (NF == 3) { print $3 } else { print "0" } }' | sed -e '1,$s/op[0-9]*$//')"
+	cupsversion=$(printf "3.00%02d" $cupsversionpatch)
 
-        temp=`grep AC_INIT configure.ac | awk -F, '{print $2}' | sed -e '1,$s/^\[//' -e '1,$s/\]$//'`
+        temp="$(grep AC_INIT configure.ac | awk -F, '{print $2}' | sed -e '1,$s/^\[//' -e '1,$s/\]$//')"
         if test "$temp" != $version; then
 		echo "Still need to update version to $version in configure.ac (saw $temp)"
 		exit 1
 	fi
 
-	temp=`grep CUPS_VERSION cups/cups.h | grep -v CUPS_VERSION_ | awk '{print $4}'`
+	temp="$(grep CUPS_VERSION cups/cups.h | grep -v CUPS_VERSION_ | awk '{print $4}')"
 	if test "$temp" != $cupsversion; then
 		echo "Still need to update CUPS_VERSION to $cupsversion in cups/cups.h (saw $temp)"
 		exit 1
 	fi
 
-	temp=`grep CUPS_VERSION_PATCH cups/cups.h | awk '{print $4}'`
+	temp="$(grep CUPS_VERSION_PATCH cups/cups.h | awk '{print $4}')"
 	if test "$temp" != $cupsversionpatch; then
 		echo "Still need to update CUPS_VERSION_PATCH to $cupsversionpatch in cups/cups.h (saw $temp)"
 		exit 1
 	fi
 
-	temp=`head -6 CHANGES.md | grep "^libcups v" | awk '{print $2}'`
+	temp="$(head -6 CHANGES.md | grep "^libcups v" | awk '{print $2}')"
 	if test "$temp" != "v$version"; then
 		echo "Still need to add Changes in v$version in CHANGES.md (saw $temp)"
 		exit 1
+	fi
+
+	temp="$(grep LIBCUPS_VERSION vcnet/config.h | awk -F\" '{print $2}')"
+	if test "v$temp" != "v$version"; then
+	    echo "Still need to update LIBCUPS_VERSION to $version in vcnet/config.h (saw $temp)"
+	    exit 1
+	fi
+
+        semversion="$(echo $version | sed -E -e '1,$s/^([0-9]\.[0-9]+)([a-z1-9]+)$/\1.0-\2/')"
+	temp="$(grep '<version>' vcnet/libcups3_native.nuspec | sed -e '1,$s/^[ \t]*<version>//' -e '1,$s/<\/version>$//')"
+	if test "v$temp" != "v$semversion"; then
+	    echo "Still need to update <version> to $semversion in vcnet/libcups3_native.nuspec (saw $temp)"
+	    exit 1
+	fi
+
+	temp="$(grep 'libcups3_native.redist' vcnet/libcups3_native.nuspec | awk -F\" '{print $4}')"
+	if test "v$temp" != "v$semversion"; then
+	    echo "Still need to update libcups3_native.redist version to $semversion in vcnet/libcups3_native.nuspec (saw $temp)"
+	    exit 1
+	fi
+
+	temp="$(grep '<version>' vcnet/libcups3_native.redist.nuspec | sed -e '1,$s/^[ \t]*<version>//' -e '1,$s/<\/version>$//')"
+	if test "v$temp" != "v$semversion"; then
+	    echo "Still need to update <version> to $semversion in vcnet/libcups3_native.redist.nuspec (saw $temp)"
+	    exit 1
+	fi
+
+	temp="$(grep LIBCUPS_VERSION vcnet/config.h | awk -F\" '{print $2}')"
+	if test "v$temp" != "v$version"; then
+	    echo "Still need to update LIBCUPS_VERSION to $version in vcnet/config.h (saw $temp)"
+	    exit 1
+	fi
+
+	temp="$(grep LIBCUPS_VERSION xcode/config.h | awk -F\" '{print $2}')"
+	if test "v$temp" != "v$version"; then
+	    echo "Still need to update LIBCUPS_VERSION to $version in xcode/config.h (saw $temp)"
+	    exit 1
 	fi
 
 	echo Creating tag for release...
