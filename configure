@@ -5197,11 +5197,17 @@ if test x$enable_shared != xno
 then :
 
     case "$host_os_name" in #(
-  linux* | gnu* | *bsd*) :
+  linux* | gnu*) :
 
 	LIBCUPS="$LIBCUPS_BASE.so.3"
 	DSO="\$(CC)"
 	DSOFLAGS="$DSOFLAGS -Wl,-soname,\`basename \$@\` -shared"
+     ;; #(
+  *bsd*) :
+
+	LIBCUPS="$LIBCUPS_BASE.so.3"
+	DSO="\$(CC)"
+	DSOFLAGS="$DSOFLAGS -Wl,-soname,\`basename \$@\` -shared -lc"
      ;; #(
   darwin*) :
 

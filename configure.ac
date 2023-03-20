@@ -417,10 +417,14 @@ AC_ARG_ENABLE([shared], AS_HELP_STRING([--disable-shared], [do not install share
 LIBCUPS_STATIC="$LIBCUPS_BASE.a"
 
 AS_IF([test x$enable_shared != xno], [
-    AS_CASE(["$host_os_name"], [linux* | gnu* | *bsd*], [
+    AS_CASE(["$host_os_name"], [linux* | gnu*], [
 	LIBCUPS="$LIBCUPS_BASE.so.3"
 	DSO="\$(CC)"
 	DSOFLAGS="$DSOFLAGS -Wl,-soname,\`basename \$@\` -shared"
+    ], [*bsd*], [
+	LIBCUPS="$LIBCUPS_BASE.so.3"
+	DSO="\$(CC)"
+	DSOFLAGS="$DSOFLAGS -Wl,-soname,\`basename \$@\` -shared -lc"
     ], [darwin*], [
 	LIBCUPS="$LIBCUPS_BASE.3.dylib"
 	DSO="\$(CC)"
