@@ -16,9 +16,22 @@
 
 
 //
+// Local types...
+//
+
+typedef struct _form_data_s		// Form test data
+{
+  const char	*encoded;		// URL-encoded data
+  size_t	num_pairs;		// Number of name=value pairs
+  const char	* const * pairs;	// name=value pairs
+} _form_data_t;
+
+
+//
 // Local functions...
 //
 
+static void	do_test(_form_data_t *test);
 static void	usage(FILE *fp);
 
 
@@ -31,21 +44,73 @@ main(int  argc,				// I - Number of command-line arguments
      char *argv[])			// I - Command-line arguments
 {
   int		status = 0;		// Exit status
-  size_t	num_vars;		// Number of variables
-  cups_option_t	*vars;			// Variables
-  char		*data;			// Form data
 
 
   if (argc == 1)
   {
-    // Do canned API tests...
+    // Do canned API unit tests...
+    static _form_data_t test1 =
+    {
+      "",
+      0,
+      NULL
+    };
+    static const char * const pairs2[] =
+    {
+      "name",		"value"
+    };
+    static _form_data_t test2 =
+    {
+      "name=value",
+      1,
+      pairs2
+    };
+    static const char * const pairs3[] =
+    {
+      "name",		"value",
+      "name_2",		"value 2",
+      "third",		"3.1415926535"
+    };
+    static _form_data_t test3 =
+    {
+      "name=value&name%5F2=value+2&third=3%2E1415926535",
+      3,
+      pairs3
+    };
+    static _form_data_t test4 =
+    {
+      "bogus",
+      0,
+      NULL
+    };
+    static _form_data_t test5 =
+    {
+      "bogus=foo=bar",
+      0,
+      NULL
+    };
+    static _form_data_t test6 =
+    {
+      "nul=%00",
+      0,
+      NULL
+    };
 
+    do_test(&test1);
+    do_test(&test2);
+    do_test(&test3);
+    do_test(&test4);
+    do_test(&test5);
+    do_test(&test6);
   }
   else
   {
     // Parse command-line...
-    int		i;			// Looping var
-    const char	*opt;			// Current option
+    int			i;		// Looping var
+    const char		*opt;		// Current option
+    size_t		num_vars;	// Number of variables
+    cups_option_t	*vars;		// Variables
+    char		*data;		// Form data
 
     for (i = 1; i < argc; i ++)
     {
@@ -143,6 +208,71 @@ main(int  argc,				// I - Number of command-line arguments
   }
 
   return (status);
+}
+
+
+//
+// 'do_test()' - Test the form functions.
+//
+
+static void
+do_test(_form_data_t *test)		// I - Test data
+{
+  size_t	i,			// Looping var
+		num_vars;		// Number of variables
+  cups_option_t	*vars;			// Variables
+  char		*data;			// Form data
+
+
+  testBegin("cupsFormDecode(\"%s\")", test->encoded);
+  num_vars = cupsFormDecode(test->encoded, &vars);
+  if (num_vars != test->num_pairs)
+  {
+    testEndMessage(false, "got %u pairs, expected %u", (unsigned)num_vars, (unsigned)test->num_pairs);
+  }
+  else
+  {
+    size_t	count;			// Max count
+    const char	*value;			// Value
+
+    for (i = 0, count = 2 * test->num_pairs; i < count; i += 2)
+    {
+      if ((value = cupsGetOption(test->pairs[i], num_vars, vars)) == NULL)
+      {
+        testEndMessage(false, "Missing %s", test->pairs[i]);
+        break;
+      }
+      else if (strcmp(value, test->pairs[i + 1]))
+      {
+        testEndMessage(false, "Got value \"%s\" for %s, expected \"%s\"", value, test->pairs[i], test->pairs[i + 1]);
+        break;
+      }
+    }
+
+    if (i >= count)
+      testEnd(true);
+  }
+
+  cupsFreeOptions(num_vars, vars);
+
+  if (test->num_pairs == 0 && test->encoded[0])
+    return;
+
+  testBegin("cupsFormEncode(%u pairs)", (unsigned)test->num_pairs);
+  for (i = 0, num_vars = 0, vars = NULL; i < test->num_pairs; i ++)
+    num_vars = cupsAddOption(test->pairs[i * 2], test->pairs[i * 2 + 1], num_vars, &vars);
+
+  data = cupsFormEncode(num_vars, vars);
+
+  if (!data && test->encoded[0])
+    testEndMessage(false, cupsLastErrorString());
+  else if (data && strcmp(data, test->encoded))
+    testEndMessage(false, "Got \"%s\", expected \"%s\"", data, test->encoded);
+  else
+    testEnd(true);
+
+  free(data);
+  cupsFreeOptions(num_vars, vars);
 }
 
 

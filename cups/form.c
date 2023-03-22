@@ -15,7 +15,7 @@
 // Local functions...
 //
 
-static const char	*decode_string(const char *data, char term, char *buffer, size_t bufsize);
+static const char	*decode_string(const char *data, char *buffer, size_t bufsize);
 static char		*encode_string(const char *s, char *bufptr, char *bufend);
 
 
@@ -49,14 +49,14 @@ cupsFormDecode(const char    *data,	// I - URL-encoded form data
   while (*data)
   {
     // Get the name and value...
-    data = decode_string(data, '=', name, sizeof(name));
+    data = decode_string(data, name, sizeof(name));
 
     if (!data || *data != '=')
       goto decode_error;
 
     data ++;
 
-    data = decode_string(data, '&', value, sizeof(value));
+    data = decode_string(data, value, sizeof(value));
 
     if (!data || (*data && *data != '&'))
     {
@@ -156,7 +156,6 @@ cupsFormEncode(size_t        num_vars,	// I - Number of variables
 
 static const char *                     // O - New pointer into string or `NULL` on error
 decode_string(const char *data,         // I - Pointer into data string
-              char       term,          // I - Terminating character
               char       *buffer,       // I - String buffer
               size_t     bufsize)       // I - Size of string buffer
 {
@@ -165,7 +164,7 @@ decode_string(const char *data,         // I - Pointer into data string
 	*end;				// Pointer to end of buffer
 
 
-  for (ptr = buffer, end = buffer + bufsize - 1; *data && *data != term; data ++)
+  for (ptr = buffer, end = buffer + bufsize - 1; isalnum(*data & 255) || *data == '%' || *data == '+'; data ++)
   {
     if ((ch = *data) == '+')
     {
@@ -175,6 +174,9 @@ decode_string(const char *data,         // I - Pointer into data string
     else if (ch == '%')
     {
       // "%HH" is a hex-escaped character...
+      if (!strncasecmp(data, "%0D%0A", 6))
+        data += 3;			// Convert CR LF to just LF
+
       if (isxdigit(data[1] & 255) && isxdigit(data[2] & 255))
       {
         data ++;
@@ -188,9 +190,13 @@ decode_string(const char *data,         // I - Pointer into data string
           ch += tolower(*data & 255) - 'a' + 10;
         else
           ch += *data - '0';
+
+        if (ch == 0)
+          return (NULL);		// Nul characters are not allowed
       }
       else
       {
+        // Bad hex escape
         return (NULL);
       }
     }
@@ -253,9 +259,9 @@ encode_string(const char *s,            // I - String to encode
       else
         bufptr ++;
     }
-    else if (*s < ' ' || *s == '&' || *s == '%' || *s == '=' || *s == '+' || *s == '\"' || (*s & 128))
+    else if (!isalnum(*s & 255))
     {
-      // Other control characters and special URL characters get percent-encoded
+      // Characters other than letters and numbers get percent-encoded
       *bufptr++ = '%';
       if (bufptr < bufend)
         *bufptr++ = hex[(*s >> 4) & 15];
