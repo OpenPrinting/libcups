@@ -386,6 +386,8 @@ span.string {
 <li><a href="#cupsFindDestReady">cupsFindDestReady</a></li>
 <li><a href="#cupsFindDestSupported">cupsFindDestSupported</a></li>
 <li><a href="#cupsFinishDestDocument">cupsFinishDestDocument</a></li>
+<li><a href="#cupsFormDecode">cupsFormDecode</a></li>
+<li><a href="#cupsFormEncode">cupsFormEncode</a></li>
 <li><a href="#cupsFreeDestInfo">cupsFreeDestInfo</a></li>
 <li><a href="#cupsFreeDests">cupsFreeDests</a></li>
 <li><a href="#cupsFreeJobs">cupsFreeJobs</a></li>
@@ -3733,6 +3735,43 @@ ipp_status_t cupsFinishDestDocument(<a href="#http_t">http_t</a> *http, <a href=
 <p class="description">Status of document submission</p>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">Returns <code>IPP_STATUS_OK</code> or <code>IPP_STATUS_OK_SUBST</code> on success.</p>
+<h3 class="function"><a id="cupsFormDecode">cupsFormDecode</a></h3>
+<p class="description">Decode URL-encoded form data.</p>
+<p class="code">
+size_t cupsFormDecode(const char *data, <a href="#cups_option_t">cups_option_t</a> **vars);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>data</th>
+<td class="description">URL-encoded form data</td></tr>
+<tr><th>vars</th>
+<td class="description">Array of variables</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Number of variables</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function decodes URL-encoded form data, returning the number of
+variables and a pointer to a <a href="#cups_option_t"><code>cups_option_t</code></a> array of the variables.<br>
+<br>
+Use the <a href="#cupsFreeOptions"><code>cupsFreeOptions</code></a> function to return the memory used when you
+are done with the form variables.</p>
+<h3 class="function"><a id="cupsFormEncode">cupsFormEncode</a></h3>
+<p class="description">Encode options as URL-encoded form data.</p>
+<p class="code">
+char *cupsFormEncode(size_t num_vars, <a href="#cups_option_t">cups_option_t</a> *vars);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>num_vars</th>
+<td class="description">Number of variables</td></tr>
+<tr><th>vars</th>
+<td class="description">Variables</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">URL-encoded form data</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function encodes a CUPS options array as URL-encoded form data,
+returning an allocated string.<br>
+<br>
+Use <code>free</code> to return the memory used for the string.</p>
 <h3 class="function"><a id="cupsFreeDestInfo">cupsFreeDestInfo</a></h3>
 <p class="description">Free destination information obtained using
                        <a href="#cupsCopyDestInfo"><code>cupsCopyDestInfo</code></a>.</p>

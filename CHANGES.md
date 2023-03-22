@@ -4,6 +4,7 @@ Changes in libcups
 libcups v3.0b2 (TBD)
 --------------------
 
+- Added `cupsFormDecode` and `cupsFormEncode` APIs (Issue #49)
 - Updated the `httpAddrListen` function to use the maximum backlog value.
 - Fixed some configure script issues (Issue 48)
 

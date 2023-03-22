@@ -116,6 +116,7 @@
     <ClCompile Include="..\cups\dnssd.c" />
     <ClCompile Include="..\cups\encode.c" />
     <ClCompile Include="..\cups\file.c" />
+    <ClCompile Include="..\cups\form.c" />
     <ClCompile Include="..\cups\getputfile.c" />
     <ClCompile Include="..\cups\globals.c" />
     <ClCompile Include="..\cups\hash.c" />

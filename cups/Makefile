@@ -26,6 +26,7 @@ LIBOBJS		= \
 		dnssd.o \
 		encode.o \
 		file.o \
+		form.o \
 		getputfile.o \
 		globals.o \
 		hash.o \
@@ -64,6 +65,7 @@ TESTOBJS	= \
 		testdest.o \
 		testdnssd.o \
 		testfile.o \
+		testform.o \
 		testgetdests.o \
 		testhttp.o \
 		testi18n.o \
@@ -141,6 +143,7 @@ UNITTARGETS =	\
 		testdest \
 		testdnssd \
 		testfile \
+		testform\
 		testgetdests \
 		testhttp \
 		testi18n \
@@ -180,6 +183,8 @@ test:		$(UNITTARGETS)
 #	fi
 	echo Running file API tests...
 	./testfile 2>>test.log
+	echo Running form API tests...
+	./testform 2>>test.log
 #	echo Running cupsGetDests API tests...
 #	./testgetdests 2>>test.log
 	echo Running HTTP API tests...
@@ -435,6 +440,16 @@ testdnssd:	testdnssd.o $(LIBCUPS_STATIC)
 testfile:	testfile.o $(LIBCUPS_STATIC)
 	echo Linking $@...
 	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testfile.o $(LIBCUPS_STATIC) $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
+
+
+#
+# testform (dependency on static CUPS library is intentional)
+#
+
+testform:	testform.o $(LIBCUPS_STATIC)
+	echo Linking $@...
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testform.o $(LIBCUPS_STATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 

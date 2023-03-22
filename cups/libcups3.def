@@ -163,6 +163,8 @@ cupsFindDestDefault
 cupsFindDestReady
 cupsFindDestSupported
 cupsFinishDestDocument
+cupsFormDecode
+cupsFormEncode
 cupsFreeDestInfo
 cupsFreeDests
 cupsFreeJobs
