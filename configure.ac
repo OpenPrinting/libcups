@@ -488,7 +488,7 @@ AS_IF([test -n "$GCC"], [
     ], [
 	# Otherwise use the Fortify enhancements to catch any unbounded
 	# string operations...
-	CPPFLAGS="$CPPFLAGS -D_FORTIFY_SOURCE=2"
+	CPPFLAGS="$CPPFLAGS -D_FORTIFY_SOURCE=3"
     ])
 
     dnl Show all standard warnings + unused variables when compiling...

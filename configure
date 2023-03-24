@@ -5258,7 +5258,7 @@ else $as_nop
 
 	# Otherwise use the Fortify enhancements to catch any unbounded
 	# string operations...
-	CPPFLAGS="$CPPFLAGS -D_FORTIFY_SOURCE=2"
+	CPPFLAGS="$CPPFLAGS -D_FORTIFY_SOURCE=3"
 
 fi
 
