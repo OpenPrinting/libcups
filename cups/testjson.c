@@ -32,6 +32,7 @@ main(int  argc,				// I - Number of command-line arguments
     cups_jtype_t type;			// Node type
     size_t	count;			// Number of children
     char	*s;			// JSON string
+    time_t	last_modified = 0;	// Last-Modified value
     static const char * const types[] =	// Note types
     {
       "CUPS_JTYPE_NULL",		// Null value
@@ -216,6 +217,37 @@ main(int  argc,				// I - Number of command-line arguments
     testBegin("cupsJSONDelete(root)");
     cupsJSONDelete(json);
     testEnd(true);
+
+    testBegin("cupsJSONLoadURL('https://accounts.google.com/.well-known/openid-configuration', no last modified)");
+    json = cupsJSONLoadURL("https://accounts.google.com/.well-known/openid-configuration", &last_modified);
+
+    if (json)
+    {
+      char	last_modified_date[256];// Last-Modified string value
+
+      testEnd(true);
+      cupsJSONDelete(json);
+
+      testBegin("cupsJSONLoadURL('https://accounts.google.com/.well-known/openid-configuration', since %s)", httpGetDateString(last_modified, last_modified_date, sizeof(last_modified_date)));
+      json = cupsJSONLoadURL("https://accounts.google.com/.well-known/openid-configuration", &last_modified);
+
+      if (json)
+        testEnd(true);
+      else if (cupsLastError() == IPP_STATUS_OK_EVENTS_COMPLETE)
+        testEndMessage(true, "no change from last request");
+      else
+        testEndMessage(false, cupsLastErrorString());
+
+      cupsJSONDelete(json);
+    }
+    else if (cupsLastError() == IPP_STATUS_ERROR_SERVICE_UNAVAILABLE)
+    {
+      testEndMessage(true, "%s", cupsLastErrorString());
+    }
+    else
+    {
+      testEndMessage(false, "%s", cupsLastErrorString());
+    }
 
     if (!testsPassed)
       return (1);

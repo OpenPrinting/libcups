@@ -1,7 +1,7 @@
 //
 // JSON API implementation for CUPS.
 //
-// Copyright © 2022 by OpenPrinting.
+// Copyright © 2022-2023 by OpenPrinting.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
 // information.
@@ -750,6 +750,218 @@ cupsJSONLoadString(const char *s)	// I - JSON string
   DEBUG_puts("3cupsJSONLoadString: Returning NULL.");
 
   return (NULL);
+}
+
+
+//
+// 'cupsJSONLoadURL()' - Load a JSON object from a URL.
+//
+// This function loads a JSON object from a URL.  The "url" can be a "http:" or
+// "https:" URL.  The "last_modified" argument provides a pointer to a `time_t`
+// variable with the last modified date and time from a previous load.  If
+// `NULL` or the variable has a value of 0, the JSON is loaded unconditionally
+// from the URL.
+//
+// On success, a pointer to the root JSON object node is returned and the
+// "last_modified" variable, if not `NULL`, is updated to the Last-Modified
+// date and time returned by the server.  Otherwise, `NULL` is returned with
+// the @link cupsLastError@ value set to `IPP_STATUS_OK_EVENTS_COMPLETE` if
+// the JSON data has not been updated since the "last_modified" date and time
+// or a suitable `IPP_STATUS_ERROR_` value if an error occurred.
+//
+
+cups_json_t *				// O  - Root JSON object node
+cupsJSONLoadURL(
+    const char *url,			// I  - URL
+    time_t     *last_modified)		// IO - Last modified date/time or `NULL`
+{
+  char		scheme[32],		// URL scheme
+		userpass[64],		// URL username:password info
+		host[256],		// URL hostname
+		resource[1024];		// URL resource path
+  int		port;			// URL port number
+  http_uri_status_t uri_status;		// URL decode status
+  http_encryption_t encryption;		// Encryption to use
+  http_t	*http;			// HTTP connection
+  http_status_t	status;			// HTTP request status
+  http_state_t	initial_state;		// Initial HTTP state
+  char		if_modified_since[HTTP_MAX_VALUE];
+					// If-Modified-Since header
+  bool		new_auth = false,	// Using new auth information?
+		digest;			// Are we using Digest authentication?
+  size_t	length;			// Length of JSON data
+  ssize_t	bytes;			// Bytes read
+  char		*data = NULL,		// Pointer to data
+		*dataptr,		// Pointer into data
+		*dataend;		// Pointer to end of data (less nul byte)
+  cups_json_t	*json = NULL;		// Root JSON node
+
+
+  // Range check input...
+  if (!url)
+    return (NULL);
+
+  // Get the URL components...
+  if ((uri_status = httpSeparateURI(HTTP_URI_CODING_ALL, url, scheme, sizeof(scheme), userpass, sizeof(userpass), host, sizeof(host), &port, resource, sizeof(resource))) < HTTP_URI_STATUS_OK)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, httpURIStatusString(uri_status), 0);
+    return (NULL);
+  }
+
+  if (strcmp(scheme, "http") && strcmp(scheme, "https"))
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unsupported URI scheme."), 1);
+    return (NULL);
+  }
+
+  // Connect to the server...
+  if (!strcmp(scheme, "https") || port == 443)
+    encryption = HTTP_ENCRYPTION_ALWAYS;
+  else
+    encryption = HTTP_ENCRYPTION_IF_REQUESTED;
+
+  if ((http = httpConnect(host, port, NULL, AF_UNSPEC, encryption, true, 30000, NULL)) == NULL)
+    return (NULL);
+
+  // Send a GET request for the resource path...
+  if (last_modified && *last_modified)
+    httpGetDateString(*last_modified, if_modified_since, sizeof(if_modified_since));
+  else
+    if_modified_since[0] = '\0';
+
+  do
+  {
+    // Reconnect if the Connection header says "close"...
+    if (!_cups_strcasecmp(httpGetField(http, HTTP_FIELD_CONNECTION), "close"))
+    {
+      httpClearFields(http);
+      if (!httpReconnect(http, 30000, NULL))
+      {
+	status = HTTP_STATUS_ERROR;
+	break;
+      }
+    }
+
+    // Prep for a request...
+    httpClearFields(http);
+    httpSetField(http, HTTP_FIELD_IF_MODIFIED_SINCE, if_modified_since);
+
+    digest = http->authstring && !strncmp(http->authstring, "Digest ", 7);
+
+    if (digest && !new_auth)
+    {
+      // Update the Digest authentication string...
+      _httpSetDigestAuthString(http, http->nextnonce, "GET", resource);
+    }
+
+    httpSetField(http, HTTP_FIELD_AUTHORIZATION, http->authstring);
+
+    // Send the GET request...
+    if (!httpWriteRequest(http, "GET", resource))
+    {
+      if (httpReconnect(http, 30000, NULL))
+      {
+        status = HTTP_STATUS_UNAUTHORIZED;
+        continue;
+      }
+      else
+      {
+        status = HTTP_STATUS_ERROR;
+	break;
+      }
+    }
+
+    new_auth = false;
+
+    // Wait for an update/response...
+    while ((status = httpUpdate(http)) == HTTP_STATUS_CONTINUE);
+
+    if (status == HTTP_STATUS_UNAUTHORIZED)
+    {
+      // Need authentication, flush any error message...
+      httpFlush(http);
+
+      // See if we can do authentication...
+      new_auth = true;
+
+      if (cupsDoAuthentication(http, "GET", resource))
+      {
+        status = HTTP_STATUS_CUPS_AUTHORIZATION_CANCELED;
+        break;
+      }
+
+      if (!httpReconnect(http, 30000, NULL))
+      {
+        status = HTTP_STATUS_ERROR;
+        break;
+      }
+
+      continue;
+    }
+    else if (status == HTTP_STATUS_UPGRADE_REQUIRED)
+    {
+      // Flush any error message...
+      httpFlush(http);
+
+      // Reconnect...
+      if (!httpReconnect(http, 30000, NULL))
+      {
+        status = HTTP_STATUS_ERROR;
+        break;
+      }
+
+      // Upgrade with encryption...
+      httpSetEncryption(http, HTTP_ENCRYPTION_REQUIRED);
+
+      // Try again, this time with encryption enabled...
+      continue;
+    }
+  }
+  while (status == HTTP_STATUS_UNAUTHORIZED || status == HTTP_STATUS_UPGRADE_REQUIRED);
+
+  initial_state = httpGetState(http);
+
+  if (status == HTTP_STATUS_OK)
+  {
+    // Save the content date...
+    if (last_modified)
+      *last_modified = httpGetDateTime(httpGetField(http, HTTP_FIELD_LAST_MODIFIED));
+
+    // Allocate memory for string...
+    if ((length = httpGetLength(http)) == 0 || length > 65536)
+      length = 65536;			// Accept up to 64k
+
+    if ((data = calloc(1, length + 1)) != NULL)
+    {
+      // Read the data into the string...
+      for (dataptr = data, dataend = data + length; dataptr < dataend; dataptr += bytes)
+      {
+	if ((bytes = httpRead(http, dataptr, dataend - dataptr)) <= 0)
+	  break;
+      }
+    }
+  }
+  else
+  {
+    // Save the last HTTP status as a CUPS error...
+    _cupsSetHTTPError(status);
+  }
+
+  // Flush any remaining data...
+  if (httpGetState(http) == initial_state)
+    httpFlush(http);
+
+  // Close the connection...
+  httpClose(http);
+
+  // Load the JSON data, free the string, and return...
+  if (data)
+  {
+    json = cupsJSONLoadString(data);
+    free(data);
+  }
+
+  return (json);
 }
 
 

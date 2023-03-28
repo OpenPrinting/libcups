@@ -1,7 +1,7 @@
 /*
  * IPP utilities for CUPS.
  *
- * Copyright © 2021-2022 by OpenPrinting.
+ * Copyright © 2021-2023 by OpenPrinting.
  * Copyright © 2007-2018 by Apple Inc.
  * Copyright © 1997-2007 by Easy Software Products.
  *
@@ -1084,6 +1084,10 @@ _cupsSetHTTPError(http_status_t status)	/* I - HTTP status code */
   {
     case HTTP_STATUS_NOT_FOUND :
 	_cupsSetError(IPP_STATUS_ERROR_NOT_FOUND, httpStatusString(status), 0);
+	break;
+
+    case HTTP_STATUS_NOT_MODIFIED :
+	_cupsSetError(IPP_STATUS_OK_EVENTS_COMPLETE, httpStatusString(status), 0);
 	break;
 
     case HTTP_STATUS_UNAUTHORIZED :
