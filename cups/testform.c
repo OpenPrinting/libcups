@@ -21,7 +21,8 @@
 
 typedef struct _form_data_s		// Form test data
 {
-  const char	*encoded;		// URL-encoded data
+  const char	*url,			// URL prefix, if any
+		*encoded;		// URL-encoded data
   size_t	num_pairs;		// Number of name=value pairs
   const char	* const * pairs;	// name=value pairs
 } _form_data_t;
@@ -51,6 +52,7 @@ main(int  argc,				// I - Number of command-line arguments
     // Do canned API unit tests...
     static _form_data_t test1 =
     {
+      NULL,
       "",
       0,
       NULL
@@ -61,6 +63,7 @@ main(int  argc,				// I - Number of command-line arguments
     };
     static _form_data_t test2 =
     {
+      NULL,
       "name=value",
       1,
       pairs2
@@ -73,27 +76,57 @@ main(int  argc,				// I - Number of command-line arguments
     };
     static _form_data_t test3 =
     {
+      NULL,
       "name=value&name%5F2=value+2&third=3%2E1415926535",
       3,
       pairs3
     };
     static _form_data_t test4 =
     {
+      NULL,
       "bogus",
       0,
       NULL
     };
     static _form_data_t test5 =
     {
+      NULL,
       "bogus=foo=bar",
       0,
       NULL
     };
     static _form_data_t test6 =
     {
+      NULL,
       "nul=%00",
       0,
       NULL
+    };
+    static const char * const pairs7[] =
+    {
+      "name",		"value",
+      "name_2",		"value 2",
+      "third",		"3.1415926535"
+    };
+    static _form_data_t test7 =
+    {
+      "http://www.example.com:8080/userinfo",
+      "http://www.example.com:8080/userinfo?name=value&name%5F2=value+2&third=3%2E1415926535",
+      3,
+      pairs7
+    };
+    static const char * const pairs8[] =
+    {
+      "name",		"value",
+      "name_2",		"value 2",
+      "third",		"3.1415926535"
+    };
+    static _form_data_t test8 =
+    {
+      "https://www.example.com",
+      "https://www.example.com/?name=value&name%5F2=value+2&third=3%2E1415926535",
+      3,
+      pairs8
     };
 
     do_test(&test1);
@@ -102,12 +135,15 @@ main(int  argc,				// I - Number of command-line arguments
     do_test(&test4);
     do_test(&test5);
     do_test(&test6);
+    do_test(&test7);
+    do_test(&test8);
   }
   else
   {
     // Parse command-line...
     int			i;		// Looping var
     const char		*opt;		// Current option
+    const char		*url = NULL;	// URL, if any
     size_t		num_vars;	// Number of variables
     cups_option_t	*vars;		// Variables
     char		*data;		// Form data
@@ -172,7 +208,7 @@ main(int  argc,				// I - Number of command-line arguments
 		}
 
                 num_vars = cupsParseOptions(argv[i], 0, &vars);
-                data     = cupsFormEncode(num_vars, vars);
+                data     = cupsFormEncode(url, num_vars, vars);
 
                 if (data)
                 {
@@ -186,6 +222,19 @@ main(int  argc,				// I - Number of command-line arguments
 		}
 
 		cupsFreeOptions(num_vars, vars);
+                break;
+
+            case 'u' : // -u URL
+                i ++;
+                if (i >= argc)
+                {
+                  fputs("testform: Missing URL after '-u'.\n", stderr);
+		  usage(stderr);
+		  status = 1;
+		  break;
+		}
+
+                url = argv[i];
                 break;
 
 	    default :
@@ -262,7 +311,7 @@ do_test(_form_data_t *test)		// I - Test data
   for (i = 0, num_vars = 0, vars = NULL; i < test->num_pairs; i ++)
     num_vars = cupsAddOption(test->pairs[i * 2], test->pairs[i * 2 + 1], num_vars, &vars);
 
-  data = cupsFormEncode(num_vars, vars);
+  data = cupsFormEncode(test->url, num_vars, vars);
 
   if (!data && test->encoded[0])
     testEndMessage(false, cupsLastErrorString());

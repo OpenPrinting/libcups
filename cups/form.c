@@ -45,6 +45,19 @@ cupsFormDecode(const char    *data,	// I - URL-encoded form data
   if (!data || !*data || !vars)
     return (0);
 
+  // If the data starts with a "http:", "https:", or "/" prefix, skip past the
+  // URL/path portion to the "query string" portion...
+  if (!strncmp(data, "http://", 7) || !strncmp(data, "https://", 8) || *data == '/')
+  {
+    const char	*query = strchr(data, '?');
+					// Pointer to query portion
+
+    if (!query)
+      goto decode_error;
+
+    data = query + 1;
+  }
+
   // Scan the string for "name=value" pairs, unescaping values as needed.
   while (*data)
   {
@@ -91,25 +104,65 @@ cupsFormDecode(const char    *data,	// I - URL-encoded form data
 //
 // 'cupsFormEncode()' - Encode options as URL-encoded form data.
 //
-// This function encodes a CUPS options array as URL-encoded form data,
-// returning an allocated string.
+// This function encodes a CUPS options array as URL-encoded form data with an
+// optional URL prefix, returning an allocated string.
 //
 // Use `free` to return the memory used for the string.
 //
 
 char *					// O - URL-encoded form data
-cupsFormEncode(size_t        num_vars,	// I - Number of variables
+cupsFormEncode(const char    *url,	// I - URL or `NULL` for none
+               size_t        num_vars,	// I - Number of variables
                cups_option_t *vars)	// I - Variables
 {
   char	buffer[65536],			// Temporary buffer
+	prefix = '\0',			// Prefix character, if any
 	*bufptr = buffer,		// Current position in buffer
 	*bufend = buffer + sizeof(buffer) - 1;
 					// End of buffer
 
 
+  // Start with the URL, if present...
+  if (url)
+  {
+    char	scheme[32],		// URL scheme
+		userpass[64],		// URL username:password, if any
+		host[256],		// URL hostname
+		resource[1024];		// URL resource path
+    int		port;			// URL port number
+    http_uri_status_t uri_status;	// Decoding status
+
+    // Get the URL components and re-assemble to normalize it without user info...
+    if ((uri_status = httpSeparateURI(HTTP_URI_CODING_ALL, url, scheme, sizeof(scheme), userpass, sizeof(userpass), host, sizeof(host), &port, resource, sizeof(resource))) < HTTP_URI_STATUS_OK)
+    {
+      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, httpURIStatusString(uri_status), 0);
+      return (NULL);
+    }
+
+    httpAssembleURI(HTTP_URI_CODING_ALL, buffer, sizeof(buffer), scheme, NULL, host, port, resource);
+    bufptr = buffer + strlen(buffer);
+
+    // Check whether the URL included some initial query parameters...
+    if (strchr(resource, '?'))
+      prefix = '&';
+    else
+      prefix = '?';
+  }
+
   // Loop through the variables...
   while (num_vars > 0)
   {
+    // Add the prefix character...
+    if (prefix)
+    {
+      if (bufptr < bufend)
+        *bufptr++ = prefix;
+      else
+        goto encode_error;
+    }
+
+    prefix = '&';
+
     // Encode the name
     bufptr = encode_string(vars->name, bufptr, bufend);
 
@@ -128,12 +181,6 @@ cupsFormEncode(size_t        num_vars,	// I - Number of variables
     // Next variable
     num_vars --;
     vars ++;
-
-    if (num_vars > 0)
-    {
-      // 'name=value&name2=value2...'
-      *bufptr++ = '&';
-    }
   }
 
   // Nul-terminate and return a copy...
