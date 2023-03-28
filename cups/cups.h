@@ -1,13 +1,13 @@
-/*
- * API definitions for CUPS.
- *
- * Copyright © 2021-2022 by OpenPrinting.
- * Copyright © 2007-2020 by Apple Inc.
- * Copyright © 1997-2007 by Easy Software Products.
- *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more
- * information.
- */
+//
+// API definitions for CUPS.
+//
+// Copyright © 2021-2023 by OpenPrinting.
+// Copyright © 2007-2020 by Apple Inc.
+// Copyright © 1997-2007 by Easy Software Products.
+//
+// Licensed under Apache License v2.0.  See the file "LICENSE" for more
+// information.
+//
 
 #ifndef _CUPS_CUPS_H_
 #  define _CUPS_CUPS_H_
@@ -17,12 +17,12 @@
 #  include "pwg.h"
 #  ifdef __cplusplus
 extern "C" {
-#  endif /* __cplusplus */
+#  endif // __cplusplus
 
 
-/*
- * Constants...
- */
+//
+// Constants...
+//
 
 #  define CUPS_VERSION			3.0000
 #  define CUPS_VERSION_MAJOR		3
@@ -49,39 +49,39 @@ typedef enum cups_whichjobs_e		// Which jobs for @link cupsGetJobs@
   CUPS_WHICHJOBS_COMPLETED		// Completed/canceled/aborted jobs
 } cups_whichjobs_t;
 
-/* Flags for cupsConnectDest and cupsEnumDests */
+// Flags for cupsConnectDest and cupsEnumDests
 #  define CUPS_DEST_FLAGS_NONE		0x00
-					/* No flags are set */
+					// No flags are set
 #  define CUPS_DEST_FLAGS_UNCONNECTED	0x01
-					/* There is no connection */
+					// There is no connection
 #  define CUPS_DEST_FLAGS_MORE		0x02
-					/* There are more destinations */
+					// There are more destinations
 #  define CUPS_DEST_FLAGS_REMOVED	0x04
-					/* The destination has gone away */
+					// The destination has gone away
 #  define CUPS_DEST_FLAGS_ERROR		0x08
-					/* An error occurred */
+					// An error occurred
 #  define CUPS_DEST_FLAGS_RESOLVING	0x10
-					/* The destination address is being resolved */
+					// The destination address is being resolved
 #  define CUPS_DEST_FLAGS_CONNECTING	0x20
-					/* A connection is being established */
+					// A connection is being established
 #  define CUPS_DEST_FLAGS_CANCELED	0x40
-					/* Operation was canceled */
+					// Operation was canceled
 #  define CUPS_DEST_FLAGS_DEVICE        0x80
-                                        /* For @link cupsConnectDest@: Connect to device */
+                                        // For @link cupsConnectDest@: Connect to device
 
-/* Flags for cupsGetDestMediaByName/Size */
+// Flags for cupsGetDestMediaByName/Size
 #  define CUPS_MEDIA_FLAGS_DEFAULT 	0x00
-					/* Find the closest size supported by the printer */
+					// Find the closest size supported by the printer
 #  define CUPS_MEDIA_FLAGS_BORDERLESS	0x01
-					/* Find a borderless size */
+					// Find a borderless size
 #  define CUPS_MEDIA_FLAGS_DUPLEX	0x02
-					/* Find a size compatible with 2-sided printing */
+					// Find a size compatible with 2-sided printing
 #  define CUPS_MEDIA_FLAGS_EXACT	0x04
-					/* Find an exact match for the size */
+					// Find an exact match for the size
 #  define CUPS_MEDIA_FLAGS_READY	0x08
-					/* If the printer supports media sensing, find the size amongst the "ready" media. */
+					// If the printer supports media sensing, find the size amongst the "ready" media.
 
-/* Options and values */
+// Options and values
 #  define CUPS_COPIES			"copies"
 #  define CUPS_COPIES_SUPPORTED		"copies-supported"
 
@@ -166,59 +166,59 @@ typedef enum cups_whichjobs_e		// Which jobs for @link cupsGetJobs@
 #  define CUPS_SIDES_TWO_SIDED_LANDSCAPE "two-sided-short-edge"
 
 
-/*
- * Types and structures...
- */
+//
+// Types and structures...
+//
 
-typedef unsigned cups_ptype_t;		/* Printer type/capability bits */
-enum cups_ptype_e			/* Printer type/capability bit constants */
-{					/* Not a typedef'd enum so we can OR */
-  CUPS_PRINTER_LOCAL = 0x0000,		/* Local printer or class */
-  CUPS_PRINTER_CLASS = 0x0001,		/* Printer class */
-  CUPS_PRINTER_REMOTE = 0x0002,		/* Remote printer or class */
-  CUPS_PRINTER_BW = 0x0004,		/* Can do B&W printing */
-  CUPS_PRINTER_COLOR = 0x0008,		/* Can do color printing */
-  CUPS_PRINTER_DUPLEX = 0x0010,		/* Can do two-sided printing */
-  CUPS_PRINTER_STAPLE = 0x0020,		/* Can staple output */
-  CUPS_PRINTER_COPIES = 0x0040,		/* Can do copies in hardware */
-  CUPS_PRINTER_COLLATE = 0x0080,	/* Can quickly collate copies */
-  CUPS_PRINTER_PUNCH = 0x0100,		/* Can punch output */
-  CUPS_PRINTER_COVER = 0x0200,		/* Can cover output */
-  CUPS_PRINTER_BIND = 0x0400,		/* Can bind output */
-  CUPS_PRINTER_SORT = 0x0800,		/* Can sort output */
-  CUPS_PRINTER_SMALL = 0x1000,		/* Can print on Letter/Legal/A4-size media */
-  CUPS_PRINTER_MEDIUM = 0x2000,		/* Can print on Tabloid/B/C/A3/A2-size media */
-  CUPS_PRINTER_LARGE = 0x4000,		/* Can print on D/E/A1/A0-size media */
-  CUPS_PRINTER_VARIABLE = 0x8000,	/* Can print on rolls and custom-size media */
-  CUPS_PRINTER_DEFAULT = 0x20000,	/* Default printer on network */
-  CUPS_PRINTER_FAX = 0x40000,		/* Fax queue */
-  CUPS_PRINTER_REJECTING = 0x80000,	/* Printer is rejecting jobs */
-  CUPS_PRINTER_NOT_SHARED = 0x200000,	/* Printer is not shared */
-  CUPS_PRINTER_AUTHENTICATED = 0x400000,/* Printer requires authentication */
-  CUPS_PRINTER_COMMANDS = 0x800000,	/* Printer supports maintenance commands */
-  CUPS_PRINTER_DISCOVERED = 0x1000000,	/* Printer was discovered */
-  CUPS_PRINTER_SCANNER = 0x2000000,	/* Scanner-only device */
-  CUPS_PRINTER_MFP = 0x4000000,		/* Printer with scanning capabilities */
-  CUPS_PRINTER_OPTIONS = 0x6fffc	/* ~(CLASS | REMOTE | IMPLICIT | DEFAULT | FAX | REJECTING | DELETE | NOT_SHARED | AUTHENTICATED | COMMANDS | DISCOVERED) @private@ */
+typedef unsigned cups_ptype_t;		// Printer type/capability bits
+enum cups_ptype_e			// Printer type/capability bit constants
+{					// Not a typedef'd enum so we can OR
+  CUPS_PRINTER_LOCAL = 0x0000,		// Local printer or class
+  CUPS_PRINTER_CLASS = 0x0001,		// Printer class
+  CUPS_PRINTER_REMOTE = 0x0002,		// Remote printer or class
+  CUPS_PRINTER_BW = 0x0004,		// Can do B&W printing
+  CUPS_PRINTER_COLOR = 0x0008,		// Can do color printing
+  CUPS_PRINTER_DUPLEX = 0x0010,		// Can do two-sided printing
+  CUPS_PRINTER_STAPLE = 0x0020,		// Can staple output
+  CUPS_PRINTER_COPIES = 0x0040,		// Can do copies in hardware
+  CUPS_PRINTER_COLLATE = 0x0080,	// Can quickly collate copies
+  CUPS_PRINTER_PUNCH = 0x0100,		// Can punch output
+  CUPS_PRINTER_COVER = 0x0200,		// Can cover output
+  CUPS_PRINTER_BIND = 0x0400,		// Can bind output
+  CUPS_PRINTER_SORT = 0x0800,		// Can sort output
+  CUPS_PRINTER_SMALL = 0x1000,		// Can print on Letter/Legal/A4-size media
+  CUPS_PRINTER_MEDIUM = 0x2000,		// Can print on Tabloid/B/C/A3/A2-size media
+  CUPS_PRINTER_LARGE = 0x4000,		// Can print on D/E/A1/A0-size media
+  CUPS_PRINTER_VARIABLE = 0x8000,	// Can print on rolls and custom-size media
+  CUPS_PRINTER_DEFAULT = 0x20000,	// Default printer on network
+  CUPS_PRINTER_FAX = 0x40000,		// Fax queue
+  CUPS_PRINTER_REJECTING = 0x80000,	// Printer is rejecting jobs
+  CUPS_PRINTER_NOT_SHARED = 0x200000,	// Printer is not shared
+  CUPS_PRINTER_AUTHENTICATED = 0x400000,// Printer requires authentication
+  CUPS_PRINTER_COMMANDS = 0x800000,	// Printer supports maintenance commands
+  CUPS_PRINTER_DISCOVERED = 0x1000000,	// Printer was discovered
+  CUPS_PRINTER_SCANNER = 0x2000000,	// Scanner-only device
+  CUPS_PRINTER_MFP = 0x4000000,		// Printer with scanning capabilities
+  CUPS_PRINTER_OPTIONS = 0x6fffc	// ~(CLASS | REMOTE | IMPLICIT | DEFAULT | FAX | REJECTING | DELETE | NOT_SHARED | AUTHENTICATED | COMMANDS | DISCOVERED) @private@
 };
 
-typedef struct cups_option_s		/**** Printer Options ****/
+typedef struct cups_option_s		//// Printer Options
 {
-  char		*name;			/* Name of option */
-  char		*value;			/* Value of option */
+  char		*name;			// Name of option
+  char		*value;			// Value of option
 } cups_option_t;
 
-typedef struct cups_dest_s		/**** Destination ****/
+typedef struct cups_dest_s		//// Destination
 {
-  char		*name,			/* Printer or class name */
-		*instance;		/* Local instance name or NULL */
-  bool		is_default;		/* Is this printer the default? */
-  size_t	num_options;		/* Number of options */
-  cups_option_t	*options;		/* Options */
+  char		*name,			// Printer or class name
+		*instance;		// Local instance name or NULL
+  bool		is_default;		// Is this printer the default?
+  size_t	num_options;		// Number of options
+  cups_option_t	*options;		// Options
 } cups_dest_t;
 
 typedef struct _cups_dinfo_s cups_dinfo_t;
-					/* Destination capability and status information */
+					// Destination capability and status information
 
 typedef struct cups_job_s		// Job
 {
@@ -250,24 +250,24 @@ typedef struct cups_size_s		//// Media Size
 } cups_size_t;
 
 typedef bool (*cups_client_cert_cb_t)(http_t *http, void *tls, cups_array_t *distinguished_names, void *user_data);
-					/* Client credentials callback */
+					// Client credentials callback
 
 typedef bool (*cups_dest_cb_t)(void *user_data, unsigned flags, cups_dest_t *dest);
-			      		/* Destination enumeration callback */
+			      		// Destination enumeration callback
 
 typedef const char *(*cups_oauth_cb_t)(http_t *http, const char *realm, const char *scope, const char *resource, void *user_data);
-					/* OAuth callback */
+					// OAuth callback
 
 typedef const char *(*cups_password_cb_t)(const char *prompt, http_t *http, const char *method, const char *resource, void *user_data);
-					/* New password callback */
+					// New password callback
 
 typedef bool (*cups_server_cert_cb_t)(http_t *http, void *tls, cups_array_t *certs, void *user_data);
-					/* Server credentials callback */
+					// Server credentials callback
 
 
-/*
- * Functions...
- */
+//
+// Functions...
+//
 
 extern size_t		cupsAddDest(const char *name, const char *instance, size_t num_dests, cups_dest_t **dests) _CUPS_PUBLIC;
 extern size_t		cupsAddDestMediaOptions(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, unsigned flags, cups_size_t *size, size_t num_options, cups_option_t **options) _CUPS_PUBLIC;
@@ -298,8 +298,6 @@ extern ipp_attribute_t	*cupsFindDestDefault(http_t *http, cups_dest_t *dest, cup
 extern ipp_attribute_t	*cupsFindDestReady(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, const char *option) _CUPS_PUBLIC;
 extern ipp_attribute_t	*cupsFindDestSupported(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, const char *option) _CUPS_PUBLIC;
 extern ipp_status_t	cupsFinishDestDocument(http_t *http, cups_dest_t *dest, cups_dinfo_t *info) _CUPS_PUBLIC;
-extern size_t		cupsFormDecode(const char *data, cups_option_t **vars) _CUPS_PUBLIC;
-extern char		*cupsFormEncode(const char *url, size_t num_vars, cups_option_t *vars) _CUPS_PUBLIC;
 extern void		cupsFreeDestInfo(cups_dinfo_t *dinfo) _CUPS_PUBLIC;
 extern void		cupsFreeDests(size_t num_dests, cups_dest_t *dests) _CUPS_PUBLIC;
 extern void		cupsFreeJobs(size_t num_jobs, cups_job_t *jobs) _CUPS_PUBLIC;
@@ -372,5 +370,5 @@ extern http_status_t	cupsWriteRequestData(http_t *http, const char *buffer, size
 
 #  ifdef __cplusplus
 }
-#  endif /* __cplusplus */
-#endif /* !_CUPS_CUPS_H_ */
+#  endif // __cplusplus
+#endif // !_CUPS_CUPS_H_

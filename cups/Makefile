@@ -95,6 +95,7 @@ HEADERS	=	\
 		dir.h \
 		dnssd.h \
 		file.h \
+		form.h \
 		http.h \
 		ipp.h \
 		json.h \

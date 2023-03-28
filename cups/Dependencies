@@ -229,6 +229,31 @@ file.o: file.c file-private.h cups-private.h string-private.h ../config.h \
   \
   \
   pwg-private.h thread.h
+form.o: form.c form.h cups.h file.h base.h ipp.h http.h array.h \
+  language.h transcode.h pwg.h cups-private.h string-private.h \
+  ../config.h debug-internal.h debug-private.h ipp-private.h \
+  http-private.h ../cups/language.h \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  pwg-private.h thread.h
 getputfile.o: getputfile.c cups-private.h string-private.h ../config.h \
   base.h debug-internal.h debug-private.h array.h ipp-private.h cups.h \
   file.h ipp.h http.h language.h transcode.h pwg.h http-private.h \
@@ -911,8 +936,10 @@ testdnssd.o: testdnssd.c test-internal.h dnssd.h cups.h file.h base.h \
 testfile.o: testfile.c string-private.h ../config.h base.h \
   debug-private.h cups.h file.h ipp.h http.h array.h language.h \
   transcode.h pwg.h dir.h test-internal.h
+testform.o: testform.c form.h cups.h file.h base.h ipp.h http.h array.h \
+  language.h transcode.h pwg.h test-internal.h
 testgetdests.o: testgetdests.c cups.h file.h base.h ipp.h http.h array.h \
-  language.h transcode.h pwg.h
+  language.h transcode.h pwg.h test-internal.h
 testhttp.o: testhttp.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \

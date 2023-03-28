@@ -8,6 +8,7 @@
 // information.
 //
 
+#include "form.h"
 #include "cups-private.h"
 
 
