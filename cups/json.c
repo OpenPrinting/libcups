@@ -8,7 +8,7 @@
 //
 
 #include "cups-private.h"
-#include "json.h"
+#include "json-private.h"
 #include <sys/stat.h>
 
 
@@ -34,7 +34,83 @@ struct _cups_json_s			// JSON node
 // Local functions...
 //
 
+static void	delete_json(cups_json_t *json);
 static void	free_json(cups_json_t *json);
+
+
+//
+// '_cupsJSONAdd()' - Add a node to a JSON node.
+//
+
+void
+_cupsJSONAdd(cups_json_t *parent,	// I - Parent JSON node
+             cups_json_t *after,	// I - Previous sibling node or `NULL` to append to the end
+             cups_json_t *node)		// I - JSON node to add
+{
+  cups_json_t	*current;		// Current node
+
+
+  node->parent = parent;
+
+  if (after)
+  {
+    // Append after the specified sibling...
+    node->sibling  = after->sibling;
+    after->sibling = node;
+  }
+  else if ((current = parent->value.child) != NULL)
+  {
+    // Find the last child...
+    while (current && current->sibling)
+      current = current->sibling;
+
+    current->sibling = node;
+  }
+  else
+  {
+    // This is the first child...
+    parent->value.child = node;
+  }
+}
+
+
+//
+// '_cupsJSONDelete()' - Delete a key + value pair.
+//
+
+void
+_cupsJSONDelete(cups_json_t *json,	// I - JSON node
+                const char  *key)	// I - Key
+{
+  cups_json_t	*prev,
+		*current,		// Current child node
+		*sibling;		// Sibling (value) node
+
+
+  // Range check input...
+  if (!json || json->type != CUPS_JTYPE_OBJECT)
+    return;
+
+  // Search for the named key...
+  for (prev = NULL, current = json->value.child; current; prev = current, current = current->sibling)
+  {
+    if (current->type == CUPS_JTYPE_KEY && !strcmp(key, current->value.string))
+    {
+      // Remove the current and next siblings from the parent...
+      sibling = current->sibling;
+
+      if (prev)
+        prev->sibling = sibling->sibling;
+      else
+        json->value.child = sibling->sibling;
+
+      // Delete the key and value...
+      delete_json(current);
+      delete_json(sibling);
+      return;
+    }
+  }
+}
 
 
 //
@@ -44,8 +120,7 @@ static void	free_json(cups_json_t *json);
 void
 cupsJSONDelete(cups_json_t *json)	// I - JSON node
 {
-  cups_json_t	*child,			// Child node
-		*sibling;		// Sibling node
+  cups_json_t	*child;			// Child node
 
 
   // Range check input...
@@ -77,51 +152,306 @@ cupsJSONDelete(cups_json_t *json)	// I - JSON node
   }
 
   // Free the value(s)
-  if (json->type == CUPS_JTYPE_ARRAY || json->type == CUPS_JTYPE_OBJECT)
+  delete_json(json);
+}
+
+
+
+//
+// 'cupsJSONExportFile()' - Save a JSON node tree to a file.
+//
+
+bool					// O - `true` on success, `false` on failure
+cupsJSONExportFile(
+    cups_json_t *json,			// I - JSON root node
+    const char  *filename)		// I - JSON filename
+{
+  char	*s;				// JSON string
+  int	fd;				// JSON file
+
+
+  DEBUG_printf(("cupsJSONExportFile(json=%p, filename=\"%s\")", (void *)json, filename));
+
+  // Get the JSON as a string...
+  if ((s = cupsJSONExportString(json)) == NULL)
+    return (false);
+
+  // Create the file...
+  if ((fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0666)) < 0)
   {
-    for (child = json->value.child; child && child != json; child = sibling)
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
+    free(s);
+    return (false);
+  }
+
+  if (write(fd, s, strlen(s)) < 0)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
+    close(fd);
+    unlink(filename);
+    free(s);
+    return (false);
+  }
+
+  close(fd);
+  free(s);
+
+  return (true);
+}
+
+
+//
+// 'cupsJSONExportString()' - Save a JSON node tree to a string.
+//
+// This function saves a JSON node tree to an allocated string.  The resulting
+// string must be freed using the `free` function.
+//
+
+char *					// O - JSON string or `NULL` on error
+cupsJSONExportString(cups_json_t *json)	// I - JSON root node
+{
+  cups_json_t	*current;		// Current node
+  size_t	length;			// Length of JSON data as a string
+  char		*s,			// JSON string
+		*ptr;			// Pointer into string
+  const char	*value;			// Pointer into string value
+  struct lconv	*loc;			// Locale data
+
+
+  DEBUG_printf(("cupsJSONExportString(json=%p)", (void *)json));
+
+  // Range check input...
+  if (!json)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), 0);
+    DEBUG_puts("3cupsJSONExportString: Returning NULL.");
+    return (NULL);
+  }
+
+  // Figure out the necessary space needed in the string
+  current = json;
+  length  = 1;				// nul
+
+  while (current)
+  {
+    if (current->parent && current->parent->value.child != current)
+      length ++;			// Comma or colon separator
+
+    switch (current->type)
     {
-      if ((child->type == CUPS_JTYPE_ARRAY || child->type == CUPS_JTYPE_OBJECT) && child->value.child)
-      {
-        // Descend into child nodes...
-        sibling = child->value.child;
-      }
-      else if ((sibling = child->sibling) == NULL)
-      {
-        // No more silbings, ascend unless the parent is the original node...
-	sibling = child->parent;
-        free_json(child);
+      case CUPS_JTYPE_NULL :
+      case CUPS_JTYPE_TRUE :
+          length += 4;
+          break;
 
-	while (sibling && sibling != json)
+      case CUPS_JTYPE_FALSE :
+          length += 5;
+          break;
+
+      case CUPS_JTYPE_ARRAY :
+      case CUPS_JTYPE_OBJECT :
+          length += 2;			// Brackets/braces
+          break;
+
+      case CUPS_JTYPE_NUMBER :
+          length += 32;
+          break;
+
+      case CUPS_JTYPE_KEY :
+      case CUPS_JTYPE_STRING :
+          length += 2;			// Quotes
+          for (value = current->value.string; *value; value ++)
+          {
+	    if (strchr("\\\"\b\f\n\r\t", *value))
+	      length += 2;		// Simple escaped char
+            else if ((*value & 255) < ' ')
+              length += 6;		// Worst case for control char
+	    else
+	      length ++;		// Literal char
+          }
+          break;
+    }
+
+    // Get next node...
+    if ((current->type == CUPS_JTYPE_ARRAY || current->type == CUPS_JTYPE_OBJECT) && current->value.child)
+    {
+      // Descend
+      current = current->value.child;
+    }
+    else if (current->sibling)
+    {
+      // Visit silbling
+      current = current->sibling;
+    }
+    else
+    {
+      // Ascend and continue...
+      current = current->parent;
+      while (current)
+      {
+        if (current->sibling)
+	{
+	  current = current->sibling;
+	  break;
+	}
+	else
         {
-	  cups_json_t *temp = sibling;	// Save the current pointer
-
-          if (sibling->sibling)
-          {
-            // More siblings at this level, free the parent...
-            sibling = sibling->sibling;
-            free_json(temp);
-            break;
-          }
-          else
-          {
-            // No more siblings, continue upwards...
-            sibling = sibling->parent;
-            free_json(temp);
-          }
-        }
-      }
-      else
-      {
-        // Free the memory for this node
-        free_json(child);
+          current = current->parent;
+	}
       }
     }
   }
 
-  free_json(json);
-}
+  DEBUG_printf(("2cupsJSONExportString: length=%u", (unsigned)length));
 
+  // Allocate memory and fill it up...
+  if ((s = malloc(length)) == NULL)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
+    DEBUG_puts("3cupsJSONExportString: Returning NULL.");
+    return (NULL);
+  }
+
+  current = json;
+  ptr     = s;
+  loc     = localeconv();
+
+  while (current)
+  {
+    if (current->parent && current->parent->value.child != current)
+    {
+      // Add separator
+      if (current->type == CUPS_JTYPE_KEY || current->parent->type == CUPS_JTYPE_ARRAY)
+        *ptr++ = ',';
+      else
+        *ptr++ = ':';
+    }
+
+    switch (current->type)
+    {
+      case CUPS_JTYPE_NULL :
+          memcpy(ptr, "null", 4);
+          ptr += 4;
+          break;
+
+      case CUPS_JTYPE_TRUE :
+          memcpy(ptr, "true", 4);
+          ptr += 4;
+          break;
+
+      case CUPS_JTYPE_FALSE :
+          memcpy(ptr, "false", 5);
+          ptr += 5;
+          break;
+
+      case CUPS_JTYPE_ARRAY :
+          *ptr++ = '[';
+          break;
+
+      case CUPS_JTYPE_OBJECT :
+          *ptr++ = '{';
+          break;
+
+      case CUPS_JTYPE_NUMBER :
+          _cupsStrFormatd(ptr, s + length, current->value.number, loc);
+          ptr += strlen(ptr);
+          break;
+
+      case CUPS_JTYPE_KEY :
+      case CUPS_JTYPE_STRING :
+          *ptr++ = '\"';
+
+          for (value = current->value.string; *value; value ++)
+          {
+            // Quote/escape as needed...
+	    if (*value == '\\' || *value == '\"')
+	    {
+	      *ptr++ = '\\';
+	      *ptr++ = *value;
+	    }
+	    else if (*value == '\b')
+	    {
+	      *ptr++ = '\\';
+	      *ptr++ = 'b';
+	    }
+	    else if (*value == '\f')
+	    {
+	      *ptr++ = '\\';
+	      *ptr++ = 'f';
+	    }
+	    else if (*value == '\n')
+	    {
+	      *ptr++ = '\\';
+	      *ptr++ = 'n';
+	    }
+	    else if (*value == '\r')
+	    {
+	      *ptr++ = '\\';
+	      *ptr++ = 'r';
+	    }
+	    else if (*value == '\t')
+	    {
+	      *ptr++ = '\\';
+	      *ptr++ = 't';
+	    }
+            if ((*value & 255) < ' ')
+            {
+              snprintf(ptr, length - (size_t)(ptr - s), "\\u%04x", *value);
+              ptr += 6;
+	    }
+	    else
+	    {
+	      *ptr++ = *value;
+	    }
+          }
+
+          *ptr++ = '\"';
+          break;
+    }
+
+    // Get next node...
+    if ((current->type == CUPS_JTYPE_ARRAY || current->type == CUPS_JTYPE_OBJECT) && current->value.child)
+    {
+      // Descend
+      current = current->value.child;
+    }
+    else if (current->sibling)
+    {
+      // Visit silbling
+      current = current->sibling;
+    }
+    else if ((current = current->parent) != NULL)
+    {
+      // Ascend and continue...
+      if (current->type == CUPS_JTYPE_ARRAY)
+        *ptr++ = ']';
+      else
+        *ptr++ = '}';
+
+      while (current)
+      {
+        if (current->sibling)
+	{
+	  current = current->sibling;
+	  break;
+	}
+	else if ((current = current->parent) != NULL)
+	{
+	  if (current->type == CUPS_JTYPE_ARRAY)
+	    *ptr++ = ']';
+	  else
+	    *ptr++ = '}';
+	}
+      }
+    }
+  }
+
+  *ptr = '\0';
+
+  DEBUG_printf(("3cupsJSONExportString: Returning \"%s\".", s));
+
+  return (s);
+}
 
 
 //
@@ -274,11 +604,11 @@ cupsJSONGetType(cups_json_t *json)	// I - JSON node
 
 
 //
-// 'cupsJSONLoadFile()' - Load a JSON object file.
+// 'cupsJSONImportFile()' - Load a JSON object file.
 //
 
 cups_json_t *				// O - Root JSON object node
-cupsJSONLoadFile(const char *filename)	// I - JSON filename
+cupsJSONImportFile(const char *filename)// I - JSON filename
 {
   cups_json_t	*json;			// Root JSON object node
   int		fd;			// JSON file
@@ -332,7 +662,7 @@ cupsJSONLoadFile(const char *filename)	// I - JSON filename
   close(fd);
 
   // Load the resulting string
-  json = cupsJSONLoadString(s);
+  json = cupsJSONImportString(s);
 
   // Free the string and return...
   free(s);
@@ -342,11 +672,11 @@ cupsJSONLoadFile(const char *filename)	// I - JSON filename
 
 
 //
-// 'cupsJSONLoadString()' - Load a JSON object from a string.
+// 'cupsJSONImportString()' - Load a JSON object from a string.
 //
 
 cups_json_t *				// O - Root JSON object node
-cupsJSONLoadString(const char *s)	// I - JSON string
+cupsJSONImportString(const char *s)	// I - JSON string
 {
   cups_json_t	*json,			// Root JSON object node
 		*parent,		// Current parent node
@@ -357,12 +687,12 @@ cupsJSONLoadString(const char *s)	// I - JSON string
   static const char *sep = ",]} \n\r\t";// Separator chars
 
 
-  DEBUG_printf(("cupsJSONLoadString(s=\"%s\")", s));
+  DEBUG_printf(("cupsJSONImportString(s=\"%s\")", s));
 
   // Range check input...
   if (!s || *s != '{')
   {
-    DEBUG_puts("2cupsJSONLoadString: Doesn't start with '{'.");
+    DEBUG_puts("2cupsJSONImportString: Doesn't start with '{'.");
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Invalid JSON data."), 1);
     return (NULL);
   }
@@ -370,7 +700,7 @@ cupsJSONLoadString(const char *s)	// I - JSON string
   // Create the root node...
   if ((json = cupsJSONNew(NULL, NULL, CUPS_JTYPE_OBJECT)) == NULL)
   {
-    DEBUG_puts("2cupsJSONLoadString: Unable to create root object.");
+    DEBUG_puts("2cupsJSONImportString: Unable to create root object.");
     return (NULL);
   }
 
@@ -395,7 +725,7 @@ cupsJSONLoadString(const char *s)	// I - JSON string
 	if (!parent->value.child)
 	{
 	  // Cannot have a comma here
-          DEBUG_puts("2cupsJSONLoadString: Unexpected comma.");
+          DEBUG_puts("2cupsJSONImportString: Unexpected comma.");
 	  goto invalid;
 	}
 
@@ -414,7 +744,7 @@ cupsJSONLoadString(const char *s)	// I - JSON string
 	if (!parent->value.child || (count & 1))
 	{
 	  // Cannot have a comma here
-          DEBUG_puts("2cupsJSONLoadString: Unexpected comma.");
+          DEBUG_puts("2cupsJSONImportString: Unexpected comma.");
 	  goto invalid;
 	}
 
@@ -427,7 +757,7 @@ cupsJSONLoadString(const char *s)	// I - JSON string
         if (!parent->value.child || !(count & 1))
         {
 	  // Cannot have a colon here
-          DEBUG_puts("2cupsJSONLoadString: Unexpected colon.");
+          DEBUG_puts("2cupsJSONImportString: Unexpected colon.");
 	  goto invalid;
 	}
 
@@ -438,14 +768,14 @@ cupsJSONLoadString(const char *s)	// I - JSON string
       else if (count & 1)
       {
         // Missing colon...
-	DEBUG_puts("2cupsJSONLoadString: Missing colon.");
+	DEBUG_puts("2cupsJSONImportString: Missing colon.");
 	goto invalid;
       }
 
       if (!(count & 1) && *s != '\"' && *s != '}')
       {
         // Need a key string here...
-	DEBUG_puts("2cupsJSONLoadString: Missing key string.");
+	DEBUG_puts("2cupsJSONImportString: Missing key string.");
 	goto invalid;
       }
     }
@@ -467,19 +797,19 @@ cupsJSONLoadString(const char *s)	// I - JSON string
           s ++;
           if (!*s || !strchr("\"\\/bfnrtu", *s))
           {
-	    DEBUG_printf(("2cupsJSONLoadString: Bad escape '\\%c'.", *s));
+	    DEBUG_printf(("2cupsJSONImportString: Bad escape '\\%c'.", *s));
             goto invalid;
           }
           else if (*s == 'u' && (!isxdigit(s[1] & 255) || !isxdigit(s[2] & 255) || !isxdigit(s[3] & 255) || !isxdigit(s[4] & 255)))
           {
-	    DEBUG_printf(("2cupsJSONLoadString: Bad escape '\\%s'.", s));
+	    DEBUG_printf(("2cupsJSONImportString: Bad escape '\\%s'.", s));
             goto invalid;
           }
         }
         else if ((*s & 255) < ' ')
         {
           // Control characters are not allowed in a string...
-	  DEBUG_printf(("2cupsJSONLoadString: Bad control character 0x%02x in string.", *s));
+	  DEBUG_printf(("2cupsJSONImportString: Bad control character 0x%02x in string.", *s));
           goto invalid;
         }
       }
@@ -487,7 +817,7 @@ cupsJSONLoadString(const char *s)	// I - JSON string
       if (!*s)
       {
         // Missing close quote...
-	DEBUG_puts("2cupsJSONLoadString: Missing close quote.");
+	DEBUG_puts("2cupsJSONImportString: Missing close quote.");
         goto invalid;
       }
 
@@ -499,7 +829,7 @@ cupsJSONLoadString(const char *s)	// I - JSON string
 
       if (!current)
       {
-	DEBUG_puts("2cupsJSONLoadString: Unable to allocate key/string node.");
+	DEBUG_puts("2cupsJSONImportString: Unable to allocate key/string node.");
         goto error;
       }
       else if ((current->value.string = malloc(len)) == NULL)
@@ -597,7 +927,7 @@ cupsJSONLoadString(const char *s)	// I - JSON string
       count ++;
       prev = current;
 
-      DEBUG_printf(("3cupsJSONLoadString: Added %s '%s'.", current->type == CUPS_JTYPE_KEY ? "key" : "string", current->value.string));
+      DEBUG_printf(("3cupsJSONImportString: Added %s '%s'.", current->type == CUPS_JTYPE_KEY ? "key" : "string", current->value.string));
     }
     else if (strchr("0123456789-", *s))
     {
@@ -609,14 +939,14 @@ cupsJSONLoadString(const char *s)	// I - JSON string
       count ++;
       prev = current;
 
-      DEBUG_printf(("3cupsJSONLoadString: Added number %g.", current->value.number));
+      DEBUG_printf(("3cupsJSONImportString: Added number %g.", current->value.number));
     }
     else if (*s == '{')
     {
       // Start object
       if ((parent = cupsJSONNew(parent, prev, CUPS_JTYPE_OBJECT)) == NULL)
       {
-        DEBUG_puts("2cupsJSONLoadString: Unable to allocate object.");
+        DEBUG_puts("2cupsJSONImportString: Unable to allocate object.");
         goto error;
       }
 
@@ -624,7 +954,7 @@ cupsJSONLoadString(const char *s)	// I - JSON string
       prev  = NULL;
       s ++;
 
-      DEBUG_puts("3cupsJSONLoadString: Opened object.");
+      DEBUG_puts("3cupsJSONImportString: Opened object.");
     }
     else if (*s == '}')
     {
@@ -632,11 +962,11 @@ cupsJSONLoadString(const char *s)	// I - JSON string
       if (parent->type != CUPS_JTYPE_OBJECT)
       {
         // Not in an object, so this is unexpected...
-        DEBUG_puts("2cupsJSONLoadString: Got '}' in an array.");
+        DEBUG_puts("2cupsJSONImportString: Got '}' in an array.");
 	goto invalid;
       }
 
-      DEBUG_puts("3cupsJSONLoadString: Closed object.");
+      DEBUG_puts("3cupsJSONImportString: Closed object.");
 
       if ((parent = parent->parent) == NULL)
         break;
@@ -650,7 +980,7 @@ cupsJSONLoadString(const char *s)	// I - JSON string
       // Start array
       if ((parent = cupsJSONNew(parent, prev, CUPS_JTYPE_ARRAY)) == NULL)
       {
-        DEBUG_puts("2cupsJSONLoadString: Unable to allocate array.");
+        DEBUG_puts("2cupsJSONImportString: Unable to allocate array.");
         goto error;
       }
 
@@ -658,7 +988,7 @@ cupsJSONLoadString(const char *s)	// I - JSON string
       prev  = NULL;
       s ++;
 
-      DEBUG_puts("3cupsJSONLoadString: Opened array.");
+      DEBUG_puts("3cupsJSONImportString: Opened array.");
     }
     else if (*s == ']')
     {
@@ -666,11 +996,11 @@ cupsJSONLoadString(const char *s)	// I - JSON string
       if (parent->type != CUPS_JTYPE_ARRAY)
       {
         // Not in an array, so this is unexpected...
-        DEBUG_puts("2cupsJSONLoadString: Got ']' in an object.");
+        DEBUG_puts("2cupsJSONImportString: Got ']' in an object.");
 	goto invalid;
       }
 
-      DEBUG_puts("3cupsJSONLoadString: Closed array.");
+      DEBUG_puts("3cupsJSONImportString: Closed array.");
 
       parent = parent->parent;
       count  = cupsJSONGetCount(parent);
@@ -682,58 +1012,58 @@ cupsJSONLoadString(const char *s)	// I - JSON string
       // null value
       if ((prev = cupsJSONNew(parent, prev, CUPS_JTYPE_NULL)) == NULL)
       {
-        DEBUG_puts("2cupsJSONLoadString: Unable to allocate null value.");
+        DEBUG_puts("2cupsJSONImportString: Unable to allocate null value.");
         goto error;
       }
 
       count ++;
       s += 4;
 
-      DEBUG_puts("3cupsJSONLoadString: Added null value.");
+      DEBUG_puts("3cupsJSONImportString: Added null value.");
     }
     else if (!strncmp(s, "false", 5) && strchr(sep, s[5]))
     {
       // false value
       if ((prev = cupsJSONNew(parent, prev, CUPS_JTYPE_FALSE)) == NULL)
       {
-        DEBUG_puts("2cupsJSONLoadString: Unable to allocate false value.");
+        DEBUG_puts("2cupsJSONImportString: Unable to allocate false value.");
         goto error;
       }
 
       count ++;
       s += 5;
 
-      DEBUG_puts("3cupsJSONLoadString: Added false value.");
+      DEBUG_puts("3cupsJSONImportString: Added false value.");
     }
     else if (!strncmp(s, "true", 4) && strchr(sep, s[4]))
     {
       // true value
       if ((prev = cupsJSONNew(parent, prev, CUPS_JTYPE_TRUE)) == NULL)
       {
-        DEBUG_puts("2cupsJSONLoadString: Unable to allocate true value.");
+        DEBUG_puts("2cupsJSONImportString: Unable to allocate true value.");
         goto error;
       }
 
       count ++;
       s += 4;
 
-      DEBUG_puts("3cupsJSONLoadString: Added true value.");
+      DEBUG_puts("3cupsJSONImportString: Added true value.");
     }
     else
     {
       // Something else we don't understand...
-      DEBUG_printf(("2cupsJSONLoadString: Unexpected '%s'.", s));
+      DEBUG_printf(("2cupsJSONImportString: Unexpected '%s'.", s));
       goto invalid;
     }
   }
 
   if (*s != '}')
   {
-    DEBUG_puts("2cupsJSONLoadString: Missing '}' at end.");
+    DEBUG_puts("2cupsJSONImportString: Missing '}' at end.");
     goto invalid;
   }
 
-  DEBUG_printf(("3cupsJSONLoadString: Returning %p (%u children)", (void *)json, (unsigned)cupsJSONGetCount(json)));
+  DEBUG_printf(("3cupsJSONImportString: Returning %p (%u children)", (void *)json, (unsigned)cupsJSONGetCount(json)));
 
   return (json);
 
@@ -747,14 +1077,14 @@ cupsJSONLoadString(const char *s)	// I - JSON string
 
   cupsJSONDelete(json);
 
-  DEBUG_puts("3cupsJSONLoadString: Returning NULL.");
+  DEBUG_puts("3cupsJSONImportString: Returning NULL.");
 
   return (NULL);
 }
 
 
 //
-// 'cupsJSONLoadURL()' - Load a JSON object from a URL.
+// 'cupsJSONImportURL()' - Load a JSON object from a URL.
 //
 // This function loads a JSON object from a URL.  The "url" can be a "http:" or
 // "https:" URL.  The "last_modified" argument provides a pointer to a `time_t`
@@ -771,7 +1101,7 @@ cupsJSONLoadString(const char *s)	// I - JSON string
 //
 
 cups_json_t *				// O  - Root JSON object node
-cupsJSONLoadURL(
+cupsJSONImportURL(
     const char *url,			// I  - URL
     time_t     *last_modified)		// IO - Last modified date/time or `NULL`
 {
@@ -957,7 +1287,7 @@ cupsJSONLoadURL(
   // Load the JSON data, free the string, and return...
   if (data)
   {
-    json = cupsJSONLoadString(data);
+    json = cupsJSONImportString(data);
     free(data);
   }
 
@@ -984,34 +1314,10 @@ cupsJSONNew(cups_json_t  *parent,	// I - Parent JSON node or `NULL` for a root n
   // Allocate the node...
   if ((node = calloc(1, sizeof(cups_json_t))) != NULL)
   {
-    node->parent = parent;
-    node->type   = type;
+    node->type = type;
 
     if (parent)
-    {
-      // Add node to parent...
-      cups_json_t	*current;	// Current child node
-
-      if (after)
-      {
-        // Append after the specified sibling...
-        node->sibling  = after->sibling;
-        after->sibling = node;
-      }
-      else if ((current = parent->value.child) != NULL)
-      {
-        // Find the last child...
-	while (current && current->sibling)
-	  current = current->sibling;
-
-	current->sibling = node;
-      }
-      else
-      {
-        // This is the first child...
-	parent->value.child = node;
-      }
-    }
+      _cupsJSONAdd(parent, after, node);
   }
 
   return (node);
@@ -1088,298 +1394,59 @@ cupsJSONNewString(cups_json_t *parent,	// I - Parent JSON node or `NULL` for a r
 
 
 //
-// 'cupsJSONSaveFile()' - Save a JSON node tree to a file.
+// 'delete_json()' - Free the JSON node and its children.
 //
 
-bool					// O - `true` on success, `false` on failure
-cupsJSONSaveFile(cups_json_t *json,	// I - JSON root node
-                 const char  *filename)	// I - JSON filename
+static void
+delete_json(cups_json_t *json)		// I - JSON node
 {
-  char	*s;				// JSON string
-  int	fd;				// JSON file
+  cups_json_t	*child,			// Child node
+		*sibling;		// Sibling node
 
 
-  DEBUG_printf(("cupsJSONSaveFile(json=%p, filename=\"%s\")", (void *)json, filename));
-
-  // Get the JSON as a string...
-  if ((s = cupsJSONSaveString(json)) == NULL)
-    return (false);
-
-  // Create the file...
-  if ((fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0666)) < 0)
+  if (json->type == CUPS_JTYPE_ARRAY || json->type == CUPS_JTYPE_OBJECT)
   {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
-    free(s);
-    return (false);
-  }
-
-  if (write(fd, s, strlen(s)) < 0)
-  {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
-    close(fd);
-    unlink(filename);
-    free(s);
-    return (false);
-  }
-
-  close(fd);
-  free(s);
-
-  return (true);
-}
-
-
-//
-// 'cupsJSONSaveString()' - Save a JSON node tree to a string.
-//
-// This function saves a JSON node tree to an allocated string.  The resulting
-// string must be freed using the `free` function.
-//
-
-char *					// O - JSON string or `NULL` on error
-cupsJSONSaveString(cups_json_t *json)	// I - JSON root node
-{
-  cups_json_t	*current;		// Current node
-  size_t	length;			// Length of JSON data as a string
-  char		*s,			// JSON string
-		*ptr;			// Pointer into string
-  const char	*value;			// Pointer into string value
-  struct lconv	*loc;			// Locale data
-
-
-  DEBUG_printf(("cupsJSONSaveString(json=%p)", (void *)json));
-
-  // Range check input...
-  if (!json)
-  {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), 0);
-    DEBUG_puts("3cupsJSONSaveString: Returning NULL.");
-    return (NULL);
-  }
-
-  // Figure out the necessary space needed in the string
-  current = json;
-  length  = 1;				// nul
-
-  while (current)
-  {
-    if (current->parent && current->parent->value.child != current)
-      length ++;			// Comma or colon separator
-
-    switch (current->type)
+    for (child = json->value.child; child && child != json; child = sibling)
     {
-      case CUPS_JTYPE_NULL :
-      case CUPS_JTYPE_TRUE :
-          length += 4;
-          break;
-
-      case CUPS_JTYPE_FALSE :
-          length += 5;
-          break;
-
-      case CUPS_JTYPE_ARRAY :
-      case CUPS_JTYPE_OBJECT :
-          length += 2;			// Brackets/braces
-          break;
-
-      case CUPS_JTYPE_NUMBER :
-          length += 32;
-          break;
-
-      case CUPS_JTYPE_KEY :
-      case CUPS_JTYPE_STRING :
-          length += 2;			// Quotes
-          for (value = current->value.string; *value; value ++)
-          {
-	    if (strchr("\\\"\b\f\n\r\t", *value))
-	      length += 2;		// Simple escaped char
-            else if ((*value & 255) < ' ')
-              length += 6;		// Worst case for control char
-	    else
-	      length ++;		// Literal char
-          }
-          break;
-    }
-
-    // Get next node...
-    if ((current->type == CUPS_JTYPE_ARRAY || current->type == CUPS_JTYPE_OBJECT) && current->value.child)
-    {
-      // Descend
-      current = current->value.child;
-    }
-    else if (current->sibling)
-    {
-      // Visit silbling
-      current = current->sibling;
-    }
-    else
-    {
-      // Ascend and continue...
-      current = current->parent;
-      while (current)
+      if ((child->type == CUPS_JTYPE_ARRAY || child->type == CUPS_JTYPE_OBJECT) && child->value.child)
       {
-        if (current->sibling)
-	{
-	  current = current->sibling;
-	  break;
-	}
-	else
+        // Descend into child nodes...
+        sibling = child->value.child;
+      }
+      else if ((sibling = child->sibling) == NULL)
+      {
+        // No more silbings, ascend unless the parent is the original node...
+	sibling = child->parent;
+        free_json(child);
+
+	while (sibling && sibling != json)
         {
-          current = current->parent;
-	}
-      }
-    }
-  }
+	  cups_json_t *temp = sibling;	// Save the current pointer
 
-  DEBUG_printf(("2cupsJSONSaveString: length=%u", (unsigned)length));
-
-  // Allocate memory and fill it up...
-  if ((s = malloc(length)) == NULL)
-  {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
-    DEBUG_puts("3cupsJSONSaveString: Returning NULL.");
-    return (NULL);
-  }
-
-  current = json;
-  ptr     = s;
-  loc     = localeconv();
-
-  while (current)
-  {
-    if (current->parent && current->parent->value.child != current)
-    {
-      // Add separator
-      if (current->type == CUPS_JTYPE_KEY || current->parent->type == CUPS_JTYPE_ARRAY)
-        *ptr++ = ',';
-      else
-        *ptr++ = ':';
-    }
-
-    switch (current->type)
-    {
-      case CUPS_JTYPE_NULL :
-          memcpy(ptr, "null", 4);
-          ptr += 4;
-          break;
-
-      case CUPS_JTYPE_TRUE :
-          memcpy(ptr, "true", 4);
-          ptr += 4;
-          break;
-
-      case CUPS_JTYPE_FALSE :
-          memcpy(ptr, "false", 5);
-          ptr += 5;
-          break;
-
-      case CUPS_JTYPE_ARRAY :
-          *ptr++ = '[';
-          break;
-
-      case CUPS_JTYPE_OBJECT :
-          *ptr++ = '{';
-          break;
-
-      case CUPS_JTYPE_NUMBER :
-          _cupsStrFormatd(ptr, s + length, current->value.number, loc);
-          ptr += strlen(ptr);
-          break;
-
-      case CUPS_JTYPE_KEY :
-      case CUPS_JTYPE_STRING :
-          *ptr++ = '\"';
-
-          for (value = current->value.string; *value; value ++)
+          if (sibling->sibling)
           {
-            // Quote/escape as needed...
-	    if (*value == '\\' || *value == '\"')
-	    {
-	      *ptr++ = '\\';
-	      *ptr++ = *value;
-	    }
-	    else if (*value == '\b')
-	    {
-	      *ptr++ = '\\';
-	      *ptr++ = 'b';
-	    }
-	    else if (*value == '\f')
-	    {
-	      *ptr++ = '\\';
-	      *ptr++ = 'f';
-	    }
-	    else if (*value == '\n')
-	    {
-	      *ptr++ = '\\';
-	      *ptr++ = 'n';
-	    }
-	    else if (*value == '\r')
-	    {
-	      *ptr++ = '\\';
-	      *ptr++ = 'r';
-	    }
-	    else if (*value == '\t')
-	    {
-	      *ptr++ = '\\';
-	      *ptr++ = 't';
-	    }
-            if ((*value & 255) < ' ')
-            {
-              snprintf(ptr, length - (size_t)(ptr - s), "\\u%04x", *value);
-              ptr += 6;
-	    }
-	    else
-	    {
-	      *ptr++ = *value;
-	    }
+            // More siblings at this level, free the parent...
+            sibling = sibling->sibling;
+            free_json(temp);
+            break;
           }
-
-          *ptr++ = '\"';
-          break;
-    }
-
-    // Get next node...
-    if ((current->type == CUPS_JTYPE_ARRAY || current->type == CUPS_JTYPE_OBJECT) && current->value.child)
-    {
-      // Descend
-      current = current->value.child;
-    }
-    else if (current->sibling)
-    {
-      // Visit silbling
-      current = current->sibling;
-    }
-    else if ((current = current->parent) != NULL)
-    {
-      // Ascend and continue...
-      if (current->type == CUPS_JTYPE_ARRAY)
-        *ptr++ = ']';
+          else
+          {
+            // No more siblings, continue upwards...
+            sibling = sibling->parent;
+            free_json(temp);
+          }
+        }
+      }
       else
-        *ptr++ = '}';
-
-      while (current)
       {
-        if (current->sibling)
-	{
-	  current = current->sibling;
-	  break;
-	}
-	else if ((current = current->parent) != NULL)
-	{
-	  if (current->type == CUPS_JTYPE_ARRAY)
-	    *ptr++ = ']';
-	  else
-	    *ptr++ = '}';
-	}
+        // Free the memory for this node
+        free_json(child);
       }
     }
   }
 
-  *ptr = '\0';
-
-  DEBUG_printf(("3cupsJSONSaveString: Returning \"%s\".", s));
-
-  return (s);
+  free_json(json);
 }
 
 

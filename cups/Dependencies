@@ -528,7 +528,32 @@ json.o: json.c cups-private.h string-private.h ../config.h base.h \
   \
   \
   \
-  pwg-private.h thread.h json.h
+  pwg-private.h thread.h json-private.h json.h
+jwt.o: jwt.c cups-private.h string-private.h ../config.h base.h \
+  debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
+  ipp.h http.h language.h transcode.h pwg.h http-private.h \
+  ../cups/language.h \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  \
+  pwg-private.h thread.h jwt.h json.h json-private.h
 langprintf.o: langprintf.c cups-private.h string-private.h ../config.h \
   base.h debug-internal.h debug-private.h array.h ipp-private.h cups.h \
   file.h ipp.h http.h language.h transcode.h pwg.h http-private.h \
@@ -972,6 +997,8 @@ testipp.o: testipp.c file.h base.h string-private.h ../config.h \
   test-internal.h
 testjson.o: testjson.c cups.h file.h base.h ipp.h http.h array.h \
   language.h transcode.h pwg.h json.h test-internal.h
+testjwt.o: testjwt.c cups.h file.h base.h ipp.h http.h array.h language.h \
+  transcode.h pwg.h jwt.h json.h test-internal.h
 testoptions.o: testoptions.c cups-private.h string-private.h ../config.h \
   base.h debug-internal.h debug-private.h array.h ipp-private.h cups.h \
   file.h ipp.h http.h language.h transcode.h pwg.h http-private.h \

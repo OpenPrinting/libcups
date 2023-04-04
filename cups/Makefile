@@ -38,6 +38,7 @@ LIBOBJS		= \
 		ipp-file.o \
 		ipp-support.o \
 		json.o \
+		jwt.o \
 		langprintf.o \
 		language.o \
 		md5.o \
@@ -71,6 +72,7 @@ TESTOBJS	= \
 		testi18n.o \
 		testipp.o \
 		testjson.o \
+		testjwt.o \
 		testoptions.o \
 		testraster.o \
 		testtestpage.o \
@@ -99,6 +101,7 @@ HEADERS	=	\
 		http.h \
 		ipp.h \
 		json.h \
+		jwt.h \
 		language.h \
 		ppd.h \
 		pwg.h \
@@ -150,6 +153,7 @@ UNITTARGETS =	\
 		testi18n \
 		testipp \
 		testjson \
+		testjwt \
 		testoptions \
 		testraster \
 		testtestpage \
@@ -196,6 +200,8 @@ test:		$(UNITTARGETS)
 	./testi18n 2>>test.log
 	echo Running JSON API tests...
 	./testjson 2>>test.log
+#	echo Running JWT API tests...
+#	./testjwt 2>>test.log
 	echo Running option API tests...
 	./testoptions 2>>test.log
 	echo Running raster API tests...
@@ -501,6 +507,16 @@ testi18n:	testi18n.o $(LIBCUPS_STATIC)
 testjson:	testjson.o $(LIBCUPS_STATIC)
 	echo Linking $@...
 	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testjson.o $(LIBCUPS_STATIC) $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
+
+
+#
+# testjwt (dependency on static CUPS library is intentional)
+#
+
+testjwt:	testjwt.o $(LIBCUPS_STATIC)
+	echo Linking $@...
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testjwt.o $(LIBCUPS_STATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 

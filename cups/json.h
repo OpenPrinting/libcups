@@ -40,6 +40,9 @@ typedef struct _cups_json_s cups_json_t;// JSON node
 
 extern void		cupsJSONDelete(cups_json_t *json) _CUPS_PUBLIC;
 
+extern bool		cupsJSONExportFile(cups_json_t *json, const char *filename) _CUPS_PUBLIC;
+extern char		*cupsJSONExportString(cups_json_t *json) _CUPS_PUBLIC;
+
 extern cups_json_t	*cupsJSONFind(cups_json_t *json, const char *key) _CUPS_PUBLIC;
 
 extern cups_json_t	*cupsJSONGetChild(cups_json_t *json, size_t n) _CUPS_PUBLIC;
@@ -51,17 +54,14 @@ extern double		cupsJSONGetNumber(cups_json_t *json) _CUPS_PUBLIC;
 extern const char	*cupsJSONGetString(cups_json_t *json) _CUPS_PUBLIC;
 extern cups_jtype_t	cupsJSONGetType(cups_json_t *json) _CUPS_PUBLIC;
 
-extern cups_json_t	*cupsJSONLoadFile(const char *filename) _CUPS_PUBLIC;
-extern cups_json_t	*cupsJSONLoadString(const char *s) _CUPS_PUBLIC;
-extern cups_json_t	*cupsJSONLoadURL(const char *url, time_t *last_modified) _CUPS_PUBLIC;
+extern cups_json_t	*cupsJSONImportFile(const char *filename) _CUPS_PUBLIC;
+extern cups_json_t	*cupsJSONImportString(const char *s) _CUPS_PUBLIC;
+extern cups_json_t	*cupsJSONImportURL(const char *url, time_t *last_modified) _CUPS_PUBLIC;
 
 extern cups_json_t	*cupsJSONNew(cups_json_t *parent, cups_json_t *after, cups_jtype_t type) _CUPS_PUBLIC;
 extern cups_json_t	*cupsJSONNewKey(cups_json_t *parent, cups_json_t *after, const char *value) _CUPS_PUBLIC;
 extern cups_json_t	*cupsJSONNewNumber(cups_json_t *parent, cups_json_t *after, double number) _CUPS_PUBLIC;
 extern cups_json_t	*cupsJSONNewString(cups_json_t *parent, cups_json_t *after, const char *value) _CUPS_PUBLIC;
-
-extern bool		cupsJSONSaveFile(cups_json_t *json, const char *filename) _CUPS_PUBLIC;
-extern char		*cupsJSONSaveString(cups_json_t *json) _CUPS_PUBLIC;
 
 
 #  ifdef __cplusplus

@@ -1,16 +1,16 @@
-/*
- * Hashing function for CUPS.
- *
- * Copyright © 2022 by OpenPrinting.
- * Copyright © 2015-2019 by Apple Inc.
- *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more
- * information.
- */
+//
+// Hashing function for CUPS.
+//
+// Copyright © 2022-2023 by OpenPrinting.
+// Copyright © 2015-2019 by Apple Inc.
+//
+// Licensed under Apache License v2.0.  See the file "LICENSE" for more
+// information.
+//
 
-/*
- * Include necessary headers...
- */
+//
+// Include necessary headers...
+//
 
 #include "cups-private.h"
 #include "debug-internal.h"
@@ -24,28 +24,29 @@
 #  include <bcrypt.h>
 #else
 #  include "md5-internal.h"
-#endif /* __APPLE__ */
+#endif // __APPLE__
 
 
-/*
- * 'cupsHashData()' - Perform a hash function on the given data.
- *
- * The "algorithm" argument can be any of the registered, non-deprecated IPP
- * hash algorithms for the "job-password-encryption" attribute, including
- * "sha" for SHA-1, "sha-256" for SHA2-256, etc.
- *
- * The "hash" argument points to a buffer of "hashsize" bytes and should be at
- * least 64 bytes in length for all of the supported algorithms.
- *
- * The returned hash is binary data.
- */
+//
+// 'cupsHashData()' - Perform a hash function on the given data.
+//
+// This function performs a hash function on the given data. The "algorithm"
+// argument can be any of the registered, non-deprecated IPP hash algorithms for
+// the "job-password-encryption" attribute, including "sha" for SHA-1,
+// "sha2-256" for SHA2-256, etc.
+//
+// The "hash" argument points to a buffer of "hashsize" bytes and should be at
+// least 64 bytes in length for all of the supported algorithms.
+//
+// The returned hash is binary data.
+//
 
-ssize_t					/* O - Size of hash or -1 on error */
-cupsHashData(const char    *algorithm,	/* I - Algorithm name */
-             const void    *data,	/* I - Data to hash */
-             size_t        datalen,	/* I - Length of data to hash */
-             unsigned char *hash,	/* I - Hash buffer */
-             size_t        hashsize)	/* I - Size of hash buffer */
+ssize_t					// O - Size of hash or -1 on error
+cupsHashData(const char    *algorithm,	// I - Algorithm name
+             const void    *data,	// I - Data to hash
+             size_t        datalen,	// I - Length of data to hash
+             unsigned char *hash,	// I - Hash buffer
+             size_t        hashsize)	// I - Size of hash buffer
 {
   if (!algorithm || !data || datalen == 0 || !hash || hashsize == 0)
   {
@@ -56,11 +57,8 @@ cupsHashData(const char    *algorithm,	/* I - Algorithm name */
 #ifdef __APPLE__
   if (!strcmp(algorithm, "md5"))
   {
-   /*
-    * MD5 (deprecated but widely used...)
-    */
-
-    CC_MD5_CTX	ctx;			/* MD5 context */
+    // MD5 (deprecated but widely used...)
+    CC_MD5_CTX	ctx;			// MD5 context
 
     if (hashsize < CC_MD5_DIGEST_LENGTH)
       goto too_small;
@@ -73,11 +71,8 @@ cupsHashData(const char    *algorithm,	/* I - Algorithm name */
   }
   else if (!strcmp(algorithm, "sha"))
   {
-   /*
-    * SHA-1...
-    */
-
-    CC_SHA1_CTX	ctx;			/* SHA-1 context */
+    // SHA-1...
+    CC_SHA1_CTX	ctx;			// SHA-1 context
 
     if (hashsize < CC_SHA1_DIGEST_LENGTH)
       goto too_small;
@@ -91,7 +86,7 @@ cupsHashData(const char    *algorithm,	/* I - Algorithm name */
 #  ifdef CC_SHA224_DIGEST_LENGTH
   else if (!strcmp(algorithm, "sha2-224"))
   {
-    CC_SHA256_CTX	ctx;		/* SHA-224 context */
+    CC_SHA256_CTX	ctx;		// SHA-224 context
 
     if (hashsize < CC_SHA224_DIGEST_LENGTH)
       goto too_small;
@@ -102,10 +97,10 @@ cupsHashData(const char    *algorithm,	/* I - Algorithm name */
 
     return (CC_SHA224_DIGEST_LENGTH);
   }
-#  endif /* CC_SHA224_DIGEST_LENGTH */
+#  endif // CC_SHA224_DIGEST_LENGTH
   else if (!strcmp(algorithm, "sha2-256"))
   {
-    CC_SHA256_CTX	ctx;		/* SHA-256 context */
+    CC_SHA256_CTX	ctx;		// SHA-256 context
 
     if (hashsize < CC_SHA256_DIGEST_LENGTH)
       goto too_small;
@@ -118,7 +113,7 @@ cupsHashData(const char    *algorithm,	/* I - Algorithm name */
   }
   else if (!strcmp(algorithm, "sha2-384"))
   {
-    CC_SHA512_CTX	ctx;		/* SHA-384 context */
+    CC_SHA512_CTX	ctx;		// SHA-384 context
 
     if (hashsize < CC_SHA384_DIGEST_LENGTH)
       goto too_small;
@@ -131,7 +126,7 @@ cupsHashData(const char    *algorithm,	/* I - Algorithm name */
   }
   else if (!strcmp(algorithm, "sha2-512"))
   {
-    CC_SHA512_CTX	ctx;		/* SHA-512 context */
+    CC_SHA512_CTX	ctx;		// SHA-512 context
 
     if (hashsize < CC_SHA512_DIGEST_LENGTH)
       goto too_small;
@@ -145,14 +140,11 @@ cupsHashData(const char    *algorithm,	/* I - Algorithm name */
 #  ifdef CC_SHA224_DIGEST_LENGTH
   else if (!strcmp(algorithm, "sha2-512_224"))
   {
-    CC_SHA512_CTX	ctx;		/* SHA-512 context */
+    CC_SHA512_CTX	ctx;		// SHA-512 context
     unsigned char	temp[CC_SHA512_DIGEST_LENGTH];
-                                        /* SHA-512 hash */
+                                        // SHA-512 hash
 
-   /*
-    * SHA2-512 truncated to 224 bits (28 bytes)...
-    */
-
+    // SHA2-512 truncated to 224 bits (28 bytes)...
     if (hashsize < CC_SHA224_DIGEST_LENGTH)
       goto too_small;
 
@@ -164,17 +156,14 @@ cupsHashData(const char    *algorithm,	/* I - Algorithm name */
 
     return (CC_SHA224_DIGEST_LENGTH);
   }
-#  endif /* CC_SHA224_DIGEST_LENGTH */
+#  endif // CC_SHA224_DIGEST_LENGTH
   else if (!strcmp(algorithm, "sha2-512_256"))
   {
-    CC_SHA512_CTX	ctx;		/* SHA-512 context */
+    CC_SHA512_CTX	ctx;		// SHA-512 context
     unsigned char	temp[CC_SHA512_DIGEST_LENGTH];
-                                        /* SHA-512 hash */
+                                        // SHA-512 hash
 
-   /*
-    * SHA2-512 truncated to 256 bits (32 bytes)...
-    */
-
+    // SHA2-512 truncated to 256 bits (32 bytes)...
     if (hashsize < CC_SHA256_DIGEST_LENGTH)
       goto too_small;
 
@@ -189,18 +178,15 @@ cupsHashData(const char    *algorithm,	/* I - Algorithm name */
 
 #elif defined(HAVE_GNUTLS)
   gnutls_digest_algorithm_t alg = GNUTLS_DIG_UNKNOWN;
-					/* Algorithm */
-  unsigned char	temp[64];		/* Temporary hash buffer */
-  size_t	tempsize = 0;		/* Truncate to this size? */
+					// Algorithm
+  unsigned char	temp[64];		// Temporary hash buffer
+  size_t	tempsize = 0;		// Truncate to this size?
 
 
   if (!strcmp(algorithm, "md5"))
   {
-   /*
-    * Some versions of GNU TLS disable MD5 without warning...
-    */
-
-    _cups_md5_state_t	state;		/* MD5 state info */
+    // Some versions of GNU TLS disable MD5 without warning...
+    _cups_md5_state_t	state;		// MD5 state info
 
     if (hashsize < 16)
       goto too_small;
@@ -212,15 +198,26 @@ cupsHashData(const char    *algorithm,	/* I - Algorithm name */
     return (16);
   }
   else if (!strcmp(algorithm, "sha"))
+  {
+    // SHA-1
     alg = GNUTLS_DIG_SHA1;
+  }
   else if (!strcmp(algorithm, "sha2-224"))
+  {
     alg = GNUTLS_DIG_SHA224;
+  }
   else if (!strcmp(algorithm, "sha2-256"))
+  {
     alg = GNUTLS_DIG_SHA256;
+  }
   else if (!strcmp(algorithm, "sha2-384"))
+  {
     alg = GNUTLS_DIG_SHA384;
+  }
   else if (!strcmp(algorithm, "sha2-512"))
+  {
     alg = GNUTLS_DIG_SHA512;
+  }
   else if (!strcmp(algorithm, "sha2-512_224"))
   {
     alg      = GNUTLS_DIG_SHA512;
@@ -236,10 +233,7 @@ cupsHashData(const char    *algorithm,	/* I - Algorithm name */
   {
     if (tempsize > 0)
     {
-     /*
-      * Truncate result to tempsize bytes...
-      */
-
+      // Truncate result to tempsize bytes...
       if (hashsize < tempsize)
         goto too_small;
 
@@ -274,6 +268,7 @@ cupsHashData(const char    *algorithm,	/* I - Algorithm name */
   }
   else if (!strcmp(algorithm, "sha"))
   {
+    // SHA-1
     algid   = BCRYPT_SHA1_ALGORITHM;
     hashlen = 20;
   }
@@ -350,13 +345,10 @@ cupsHashData(const char    *algorithm,	/* I - Algorithm name */
   }
 
 #else
- /*
-  * No hash support beyond MD5 without CommonCrypto, GNU TLS, or CNG...
-  */
-
+  // No hash support beyond MD5 without CommonCrypto, GNU TLS, or CNG...
   if (!strcmp(algorithm, "md5"))
   {
-    _cups_md5_state_t	state;		/* MD5 state info */
+    _cups_md5_state_t	state;		// MD5 state info
 
     if (hashsize < 16)
       goto too_small;
@@ -369,20 +361,14 @@ cupsHashData(const char    *algorithm,	/* I - Algorithm name */
   }
   else if (hashsize < 64)
     goto too_small;
-#endif /* __APPLE__ */
+#endif // __APPLE__
 
- /*
-  * Unknown hash algorithm...
-  */
-
+  // Unknown hash algorithm...
   _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unknown hash algorithm."), 1);
 
   return (-1);
 
- /*
-  * We get here if the buffer is too small.
-  */
-
+  // We get here if the buffer is too small.
   too_small:
 
   _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Hash buffer too small."), 1);
@@ -390,30 +376,25 @@ cupsHashData(const char    *algorithm,	/* I - Algorithm name */
 }
 
 
-/*
- * 'cupsHashString()' - Format a hash value as a hexadecimal string.
- *
- * The passed buffer must be at least 2 * hashsize + 1 characters in length.
- *
- *
- */
+//
+// 'cupsHashString()' - Format a hash value as a hexadecimal string.
+//
+// The passed buffer must be at least 2 * hashsize + 1 characters in length.
+//
 
-const char *				/* O - Formatted string */
+const char *				// O - Formatted string
 cupsHashString(
-    const unsigned char *hash,		/* I - Hash */
-    size_t              hashsize,	/* I - Size of hash */
-    char                *buffer,	/* I - String buffer */
-    size_t		bufsize)	/* I - Size of string buffer */
+    const unsigned char *hash,		// I - Hash
+    size_t              hashsize,	// I - Size of hash
+    char                *buffer,	// I - String buffer
+    size_t		bufsize)	// I - Size of string buffer
 {
-  char		*bufptr = buffer;	/* Pointer into buffer */
+  char		*bufptr = buffer;	// Pointer into buffer
   static const char *hex = "0123456789abcdef";
-					/* Hex characters (lowercase!) */
+					// Hex characters (lowercase!)
 
 
- /*
-  * Range check input...
-  */
-
+  // Range check input...
   if (!hash || hashsize < 1 || !buffer || bufsize < (2 * hashsize + 1))
   {
     if (buffer)
@@ -421,10 +402,7 @@ cupsHashString(
     return (NULL);
   }
 
- /*
-  * Loop until we've converted the whole hash...
-  */
-
+  // Loop until we've converted the whole hash...
   while (hashsize > 0)
   {
     *bufptr++ = hex[*hash >> 4];
@@ -437,4 +415,31 @@ cupsHashString(
   *bufptr = '\0';
 
   return (buffer);
+}
+
+
+//
+// 'cupsHMACData()' - Perform a HMAC function on the given data.
+//
+// This function performs a HMAC function on the given data with the given key.
+// The "algorithm" argument can be any of the registered, non-deprecated IPP
+// hash algorithms for the "job-password-encryption" attribute, including
+// "sha" for SHA-1, "sha2-256" for SHA2-256, etc.
+//
+// The "hash" argument points to a buffer of "hashsize" bytes and should be at
+// least 64 bytes in length for all of the supported algorithms.
+//
+// The returned hash is binary data.
+//
+
+ssize_t					// O - The length of the hash or `-1` on error
+cupsHMACData(
+    const char          *algorithm,	// I - Hash algorithm
+    const unsigned char *key,		// I - Key
+    size_t              keylen,		// I - Length of key
+    const void          *data,		// I - Data to hash
+    size_t              datalen,	// I - Length of data to hash
+    unsigned char       *hash,		// I - Hash buffer
+    size_t              hashsize)	// I - Size of hash buffer
+{
 }

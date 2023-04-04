@@ -328,6 +328,7 @@ extern const char	*cupsGetUserAgent(void) _CUPS_PUBLIC;
 
 extern ssize_t		cupsHashData(const char *algorithm, const void *data, size_t datalen, unsigned char *hash, size_t hashsize) _CUPS_PUBLIC;
 extern const char	*cupsHashString(const unsigned char *hash, size_t hashsize, char *buffer, size_t bufsize) _CUPS_PUBLIC;
+extern ssize_t		cupsHMACData(const char *algorithm, const unsigned char *key, size_t keylen, const void *data, size_t datalen, unsigned char *hash, size_t hashsize) _CUPS_PUBLIC;
 
 extern ipp_status_t	cupsLastError(void) _CUPS_PUBLIC;
 extern const char	*cupsLastErrorString(void) _CUPS_PUBLIC;

@@ -582,10 +582,10 @@ httpEncode64(char       *out,		// I - String to write to
     inlen --;
     if (inlen <= 0)
     {
-      if (outptr < outend)
-        *outptr ++ = '=';
-      if (outptr < outend)
-        *outptr ++ = '=';
+      if (!url && outptr < outend)
+	*outptr ++ = '=';
+      if (!url && outptr < outend)
+	*outptr ++ = '=';
       break;
     }
 
@@ -601,7 +601,7 @@ httpEncode64(char       *out,		// I - String to write to
     inlen --;
     if (inlen <= 0)
     {
-      if (outptr < outend)
+      if (!url && outptr < outend)
         *outptr ++ = '=';
       break;
     }
