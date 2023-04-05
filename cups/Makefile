@@ -192,6 +192,8 @@ test:		$(UNITTARGETS)
 	./testform 2>>test.log
 #	echo Running cupsGetDests API tests...
 #	./testgetdests 2>>test.log
+#	echo Running hash API tests...
+#	./testhash 2>>test.log
 	echo Running HTTP API tests...
 	./testhttp 2>>test.log
 	echo Running IPP API tests...
@@ -467,6 +469,16 @@ testform:	testform.o $(LIBCUPS_STATIC)
 testgetdests:	testgetdests.o $(LIBCUPS_STATIC)
 	echo Linking $@...
 	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testgetdests.o $(LIBCUPS_STATIC) $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
+
+
+#
+# testhash (dependency on static CUPS library is intentional)
+#
+
+testhash:	testhash.o $(LIBCUPS_STATIC)
+	echo Linking $@...
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testhash.o $(LIBCUPS_STATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 
