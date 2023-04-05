@@ -188,12 +188,11 @@ hash_data(const char    *algorithm,	// I - Algorithm
           const void    *b,		// I - Second block or `NULL` for none
           size_t        blen)		// I - Length of second block or `0` for none
 {
-  unsigned char	temp[64];		// Temporary hash buffer
-  size_t	tempsize = 0;		// Truncate to this size?
+  unsigned	hashlen;		// Length of hash
+  unsigned char	hashtemp[64];		// Temporary hash buffer
 #ifdef HAVE_OPENSSL
   const EVP_MD	*md = NULL;		// Message digest implementation
   EVP_MD_CTX	*ctx;			// Context
-  unsigned	templen;		// Length of hash
 #else // HAVE_GNUTLS
   gnutls_digest_algorithm_t alg = GNUTLS_DIG_UNKNOWN;
 					// Algorithm
@@ -240,16 +239,6 @@ hash_data(const char    *algorithm,	// I - Algorithm
   {
     md = EVP_sha512();
   }
-  else if (!strcmp(algorithm, "sha2-512_224"))
-  {
-    md       = EVP_sha512();
-    tempsize = 28;
-  }
-  else if (!strcmp(algorithm, "sha2-512_256"))
-  {
-    md       = EVP_sha512();
-    tempsize = 32;
-  }
 
   if (md)
   {
@@ -258,17 +247,14 @@ hash_data(const char    *algorithm,	// I - Algorithm
     EVP_DigestUpdate(ctx, a, alen);
     if (b && blen)
       EVP_DigestUpdate(ctx, b, blen);
-    EVP_DigestFinal(ctx, temp, &templen);
+    EVP_DigestFinal(ctx, hashtemp, &hashlen);
 
-    if (tempsize == 0)
-      tempsize = templen;
-
-    if (tempsize > hashsize)
+    if (hashlen > hashsize)
       goto too_small;
 
-    memcpy(hash, temp, tempsize);
+    memcpy(hash, hashtemp, hashlen);
 
-    return ((ssize_t)tempsize);
+    return ((ssize_t)hashlen);
   }
 
 #else // HAVE_GNUTLS
@@ -293,36 +279,23 @@ hash_data(const char    *algorithm,	// I - Algorithm
   {
     alg = GNUTLS_DIG_SHA512;
   }
-  else if (!strcmp(algorithm, "sha2-512_224"))
-  {
-    alg      = GNUTLS_DIG_SHA512;
-    tempsize = 28;
-  }
-  else if (!strcmp(algorithm, "sha2-512_256"))
-  {
-    alg      = GNUTLS_DIG_SHA512;
-    tempsize = 32;
-  }
 
   if (alg != GNUTLS_DIG_UNKNOWN)
   {
+    hashlen = gnutls_hash_get_len(alg);
+
+    if (hashlen > hashsize)
+      goto too_small;
+
     gnutls_hash_init(&ctx, alg);
     gnutls_hash_update(&ctx, a, alen);
     if (b && blen)
       gnutls_hash_update(&ctx, b, blen);
-    gnutls_hash_deinit(&ctx, temp, sizeof(temp));
+    gnutls_hash_deinit(&ctx, hashtemp, sizeof(hashtemp));
 
-    templen = gnutls_hash_get_len(alg);
+    memcpy(hash, hashtemp, hashlen);
 
-    if (tempsize == 0)
-      tempsize = templen;
-
-    if (tempsize > hashsize)
-      goto too_small;
-
-    memcpy(hash, temp, tempsize);
-
-    return ((ssize_t)tempsize);
+    return ((ssize_t)hashlen);
   }
 #endif // HAVE_OPENSSL
 
