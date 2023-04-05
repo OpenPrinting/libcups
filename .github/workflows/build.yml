@@ -35,7 +35,7 @@ jobs:
     - name: Install prerequisites
       run: brew install openssl
     - name: configure
-      run: ./configure --enable-debug --enable-maintainer --enable-sanitizer
+      run: ./configure --enable-debug --enable-maintainer --enable-sanitizer --with-tls=openssl
     - name: make
       run: make
     - name: test
