@@ -288,9 +288,9 @@ hash_data(const char    *algorithm,	// I - Algorithm
       goto too_small;
 
     gnutls_hash_init(&ctx, alg);
-    gnutls_hash_update(&ctx, a, alen);
+    gnutls_hash(&ctx, a, alen);
     if (b && blen)
-      gnutls_hash_update(&ctx, b, blen);
+      gnutls_hash(&ctx, b, blen);
     gnutls_hash_deinit(&ctx, hashtemp, sizeof(hashtemp));
 
     memcpy(hash, hashtemp, hashlen);
