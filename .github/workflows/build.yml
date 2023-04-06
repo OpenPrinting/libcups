@@ -52,7 +52,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Install prerequisites
-      run: brew install openssl pkg-config
+      run: brew install libressl pkg-config
     - name: configure
       run: ./configure --enable-debug --enable-maintainer --enable-sanitizer --with-tls=openssl
     - name: make
