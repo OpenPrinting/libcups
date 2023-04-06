@@ -30,8 +30,10 @@
 
 struct _cups_jwt_s			// JWT object
 {
-  cups_json_t	*jose;			// JOSE header
-  cups_json_t	*claims;		// JWT claims
+  cups_json_t	*jose;			// JOSE object
+  char		*jose_string;		// JOSE string
+  cups_json_t	*claims;		// JWT claims object
+  char		*claims_string;		// JWT claims string
   cups_jwa_t	sigalg;			// Signature algorithm
   size_t	sigsize;		// Size of signature
   unsigned char	*signature;		// Signature
@@ -75,7 +77,9 @@ cupsJWTDelete(cups_jwt_t *jwt)		// I - JWT object
   if (jwt)
   {
     cupsJSONDelete(jwt->jose);
+    free(jwt->jose_string);
     cupsJSONDelete(jwt->claims);
+    free(jwt->claims_string);
     free(jwt->signature);
     free(jwt);
   }
@@ -210,8 +214,10 @@ cupsJWTHasValidSignature(
   if (!make_signature(jwt, jwt->sigalg, jwk, signature, &sigsize))
     return (false);
 
+#if 0
   fprintf(stderr, "orig sig(%u) = %02X%02X%02X%02X...%02X%02X%02X%02X\n", (unsigned)jwt->sigsize, jwt->signature[0], jwt->signature[1], jwt->signature[2], jwt->signature[3], jwt->signature[jwt->sigsize - 4], jwt->signature[jwt->sigsize - 3], jwt->signature[jwt->sigsize - 2], jwt->signature[jwt->sigsize - 1]);
   fprintf(stderr, "calc sig(%u) = %02X%02X%02X%02X...%02X%02X%02X%02X\n", (unsigned)sigsize, signature[0], signature[1], signature[2], signature[3], signature[sigsize - 4], signature[sigsize - 3], signature[sigsize - 2], signature[sigsize - 1]);
+#endif // 0
 
   // Compae and return the result...
   return (jwt->sigsize == sigsize && !memcmp(jwt->signature, signature, sigsize));
@@ -246,6 +252,7 @@ cupsJWTImportString(const char *token)	// I - JWS Compact Serialization string
 
   tokptr ++;
   data[datalen] = '\0';
+  jwt->jose_string = strdup(data);
   if ((jwt->jose = cupsJSONImportString(data)) == NULL)
     goto import_error;
 
@@ -259,6 +266,7 @@ cupsJWTImportString(const char *token)	// I - JWS Compact Serialization string
 
   tokptr ++;
   data[datalen] = '\0';
+  jwt->claims_string = strdup(data);
   if ((jwt->claims = cupsJSONImportString(data)) == NULL)
     goto import_error;
 
@@ -348,6 +356,10 @@ cupsJWTSetClaimNumber(cups_jwt_t *jwt,	// I - JWT object
   if (!jwt || !claim)
     return;
 
+  // Remove existing claim string, if any...
+  free(jwt->claims_string);
+  jwt->claims_string = NULL;
+
   // Remove existing claim, if any...
   _cupsJSONDelete(jwt->claims, claim);
 
@@ -368,6 +380,10 @@ cupsJWTSetClaimString(cups_jwt_t *jwt,	// I - JWT object
   // Range check input
   if (!jwt || !claim || !value)
     return;
+
+  // Remove existing claim string, if any...
+  free(jwt->claims_string);
+  jwt->claims_string = NULL;
 
   // Remove existing claim, if any...
   _cupsJSONDelete(jwt->claims, claim);
@@ -390,6 +406,10 @@ cupsJWTSetClaimValue(
   // Range check input
   if (!jwt || !claim)
     return;
+
+  // Remove existing claim string, if any...
+  free(jwt->claims_string);
+  jwt->claims_string = NULL;
 
   // Remove existing claim, if any...
   _cupsJSONDelete(jwt->claims, claim);
@@ -421,13 +441,18 @@ cupsJWTSign(cups_jwt_t  *jwt,		// I - JWT object
     return (false);
   }
 
+  // Remove existing JOSE string, if any...
+  free(jwt->jose_string);
+  _cupsJSONDelete(jwt->jose, "alg");
+  cupsJSONNewString(jwt->jose, cupsJSONNewKey(jwt->jose, NULL, "alg"), cups_jwa_strings[alg]);
+
+  jwt->jose_string = cupsJSONExportString(jwt->jose);
+
   // Clear existing signature...
   free(jwt->signature);
   jwt->signature = NULL;
   jwt->sigsize   = 0;
   jwt->sigalg    = CUPS_JWA_NONE;
-
-  _cupsJSONDelete(jwt->jose, "alg");
 
   // Create new signature...
   if (!make_signature(jwt, alg, jwk, signature, &sigsize))
@@ -439,8 +464,6 @@ cupsJWTSign(cups_jwt_t  *jwt,		// I - JWT object
   memcpy(jwt->signature, signature, sigsize);
   jwt->sigalg  = alg;
   jwt->sigsize = sigsize;
-
-  cupsJSONNewString(jwt->jose, cupsJSONNewKey(jwt->jose, NULL, "alg"), cups_jwa_strings[alg]);
 
   return (true);
 }
@@ -475,20 +498,12 @@ make_signature(cups_jwt_t    *jwt,	// I  - JWT
   };
 
 
-  fprintf(stderr, "alg=%u(%s)\n", alg, cups_jwa_strings[alg]);
-
   // Initialize default signature...
   *sigsize = 0;
 
   // Get text to sign...
   text     = make_string(jwt, false);
   text_len = strlen(text);
-
-  fprintf(stderr, "text (%u): %s\n", (unsigned)text_len, text);
-  fprintf(stderr, "text (%u): [%d", (unsigned)text_len, *text);
-  for (char *tptr = text + 1; *tptr; tptr ++)
-    fprintf(stderr, ", %d", *tptr);
-  fputs("]\n", stderr);
 
   if (alg >= CUPS_JWA_HS256 && alg <= CUPS_JWA_HS512)
   {
@@ -504,11 +519,6 @@ make_signature(cups_jwt_t    *jwt,	// I  - JWT
     key_len = sizeof(key);
     if (!httpDecode64((char *)key, &key_len, k, NULL))
       goto done;
-
-    fprintf(stderr, "key(%u): [%d", (unsigned)key_len, key[0] & 255);
-    for (size_t i = 1; i < key_len; i ++)
-      fprintf(stderr, ", %d", key[i] & 255);
-    fputs("]\n", stderr);
 
     if ((hmac_len = cupsHMACData(hashes[alg], key, key_len, text, text_len, signature, _CUPS_JWT_MAX_SIGNATURE)) < 0)
       goto done;
@@ -533,9 +543,7 @@ static char *				// O - JWT/JWS string
 make_string(cups_jwt_t *jwt,		// I - JWT object
             bool       with_signature)	// I - Include signature field?
 {
-  char		*jose,			// JOSE header string
-		*claims,		// Claims string
-		*s = NULL,		// JWT/JWS string
+  char		*s = NULL,		// JWT/JWS string
 		*ptr,			// Pointer into string
 		*end;			// End of string
   size_t	jose_len,		// Length of JOSE header
@@ -544,29 +552,29 @@ make_string(cups_jwt_t *jwt,		// I - JWT object
 
 
   // Get the JOSE header and claims object strings...
-  jose   = cupsJSONExportString(jwt->jose);
-  claims = cupsJSONExportString(jwt->claims);
+  if (!jwt->claims_string)
+    jwt->claims_string = cupsJSONExportString(jwt->claims);
 
-  if (!jose || !claims)
-    goto done;
+  if (!jwt->jose_string || !jwt->claims_string)
+    return (NULL);
 
-  jose_len   = strlen(jose);
-  claims_len = strlen(claims);
+  jose_len   = strlen(jwt->jose_string);
+  claims_len = strlen(jwt->claims_string);
 
   // Calculate the maximum Base64URL-encoded string length...
   len = ((jose_len + 2) * 4 / 3) + 1 + ((claims_len + 2) * 4 / 3) + 1 + ((_CUPS_JWT_MAX_SIGNATURE + 2) * 4 / 3) + 1;
 
   if ((s = malloc(len)) == NULL)
-    goto done;
+    return (NULL);
 
   ptr = s;
   end = s + len;
 
-  httpEncode64(ptr, (size_t)(end - ptr), jose, jose_len, true);
+  httpEncode64(ptr, (size_t)(end - ptr), jwt->jose_string, jose_len, true);
   ptr += strlen(ptr);
   *ptr++ = '.';
 
-  httpEncode64(ptr, (size_t)(end - ptr), claims, claims_len, true);
+  httpEncode64(ptr, (size_t)(end - ptr), jwt->claims_string, claims_len, true);
   ptr += strlen(ptr);
 
   if (with_signature)
@@ -576,12 +584,6 @@ make_string(cups_jwt_t *jwt,		// I - JWT object
     if (jwt->sigsize)
       httpEncode64(ptr, (size_t)(end - ptr), (char *)jwt->signature, jwt->sigsize, true);
   }
-
-  // Free temporary strings...
-  done:
-
-  free(jose);
-  free(claims);
 
   return (s);
 }

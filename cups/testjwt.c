@@ -114,16 +114,11 @@ main(int  argc,				// I - Number of command-line arguments
     for (i = 0; i < (int)(sizeof(examples) / sizeof(examples[0])); i ++)
     {
       cups_json_t	*jwk = NULL;	// JSON Web Key Set
-      char		*claims;	// Claims
 
       testBegin("cupsJWTImportString(\"%s\")", examples[i][0]);
       if ((jwt = cupsJWTImportString(examples[i][0])) != NULL)
       {
         testEnd(true);
-
-        claims = cupsJSONExportString(cupsJWTGetClaims(jwt));
-        testMessage("Claims: %s", claims);
-        free(claims);
 
         testBegin("cupsJSONImportString(\"%s\")", examples[i][1]);
         if ((jwk = cupsJSONImportString(examples[i][1])) != NULL)
