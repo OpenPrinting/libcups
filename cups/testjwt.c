@@ -111,6 +111,10 @@ main(int  argc,				// I - Number of command-line arguments
     jwt = cupsJWTNew(NULL);
     testEnd(jwt != NULL);
 
+    testBegin("cupsJWTDelete()");
+    cupsJWTDelete(jwt);
+    testEnd(true);
+
     for (i = 0; i < (int)(sizeof(examples) / sizeof(examples[0])); i ++)
     {
       cups_json_t	*jwk = NULL;	// JSON Web Key Set
