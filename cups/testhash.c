@@ -57,10 +57,13 @@ main(int  argc,				// I - Number of command-line arguments
       else
         testEnd(true);
 
+      if (!tests[i][2][0])
+        continue;
+
       testBegin("cupsHMACData('%s')", tests[i][0]);
       if ((hashsize = cupsHMACData(tests[i][0], (unsigned char *)key, strlen(key), text, strlen(text), hash, sizeof(hash))) < 0)
         testEndMessage(false, "%s", cupsLastErrorString());
-      else if (strcasecmp(cupsHashString(hash, (size_t)hashsize, hex, sizeof(hex)), tests[i][1]))
+      else if (strcasecmp(cupsHashString(hash, (size_t)hashsize, hex, sizeof(hex)), tests[i][2]))
         testEndMessage(false, "expected '%s', got '%s'", tests[i][1], hex);
       else
         testEnd(true);
