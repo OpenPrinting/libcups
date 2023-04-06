@@ -21,8 +21,7 @@
 // Constants...
 //
 
-#define _CUPS_JWT_HMAC_B	64	// Block size for HMAC
-#define _CUPS_JWT_MAX_SIGNATURE	32	// 256-bit hash
+#define _CUPS_JWT_MAX_SIGNATURE	128	// Enough for 512-bit signature
 
 
 //
@@ -458,38 +457,30 @@ make_signature(cups_jwt_t    *jwt,	// I  - JWT
                unsigned char *signature,// I  - Signature buffer
                size_t        *sigsize)	// IO - Signature size
 {
-  const char	*k;			// "k" value
-  char		key[256];		// Key value
-  size_t	key_idx,		// Index into key
-		key_len;		// Length of key
+  bool		ret = false;		// Return value
   char		*text;			// JWS Signing Input
-  size_t	text_len;		// Lengtb of signing input
-  unsigned char	buffer[65536],		// Buffer to hash
-		hash[32];		// SHA2-256 hash
-  size_t	buffer_len;		// Length of buffer
-
-
-  *sigsize = 0;
-
-  memset(key, 0, sizeof(key));
-  k       = cupsJSONGetString(cupsJSONFind(jwk, "k"));
-  key_len = sizeof(key);
-  httpDecode64(key, &key_len, k, NULL);
-
-  if (key_len > 64)
+  size_t	text_len;		// Length of signing input
+  static const char * const hashes[] =	// Hash algorithms
   {
-    cupsHashData("sha2-256", key, key_len, hash, sizeof(hash));
-    memcpy(key, hash, 32);
-    memset(key + 32, 0, 32);
-    key_len = 64;
-  }
+    NULL,
+    "sha2-256",
+    "sha2-384",
+    "sha2-512",
+    "sha2-256",
+    "sha2-384",
+    "sha2-512",
+    "sha2-256",
+    "sha2-384",
+    "sha2-512"
+  };
+
 
   fprintf(stderr, "alg=%u(%s)\n", alg, cups_jwa_strings[alg]);
-  fprintf(stderr, "key(%u): [%d", (unsigned)key_len, key[0] & 255);
-  for (size_t i = 1; i < key_len; i ++)
-    fprintf(stderr, ", %d", key[i] & 255);
-  fputs("]\n", stderr);
 
+  // Initialize default signature...
+  *sigsize = 0;
+
+  // Get text to sign...
   text     = make_string(jwt, false);
   text_len = strlen(text);
 
@@ -499,130 +490,38 @@ make_signature(cups_jwt_t    *jwt,	// I  - JWT
     fprintf(stderr, ", %d", *tptr);
   fputs("]\n", stderr);
 
-  // H1 = H(K XOR ipad,text)
-  for (key_idx = 0; key_idx < _CUPS_JWT_HMAC_B; key_idx ++)
-    buffer[key_idx] = key[key_idx] ^ 0x36;
-  memcpy(buffer + _CUPS_JWT_HMAC_B, text, text_len);
-  buffer_len = _CUPS_JWT_HMAC_B + text_len;
+  if (alg >= CUPS_JWA_HS256 && alg <= CUPS_JWA_HS512)
+  {
+    // SHA-256/384/512 HMAC
+    const char		*k;		// "k" value
+    unsigned char	key[256];	// Key value
+    size_t		key_len;	// Length of key
+    ssize_t		hmac_len;	// Length of HMAC
 
-  cupsHashData("sha2-256", buffer, buffer_len, hash, sizeof(hash));
+    // Get key...
+    memset(key, 0, sizeof(key));
+    k       = cupsJSONGetString(cupsJSONFind(jwk, "k"));
+    key_len = sizeof(key);
+    if (!httpDecode64((char *)key, &key_len, k, NULL))
+      goto done;
 
-  // H(K XOR opad,H1)
-  for (key_idx = 0; key_idx < _CUPS_JWT_HMAC_B; key_idx ++)
-    buffer[key_idx] = key[key_idx] ^ 0x5c;
-  memcpy(buffer + _CUPS_JWT_HMAC_B, hash, sizeof(hash));
-  buffer_len = _CUPS_JWT_HMAC_B + sizeof(hash);
-  cupsHashData("sha2-256", buffer, buffer_len, signature, sizeof(hash));
+    fprintf(stderr, "key(%u): [%d", (unsigned)key_len, key[0] & 255);
+    for (size_t i = 1; i < key_len; i ++)
+      fprintf(stderr, ", %d", key[i] & 255);
+    fputs("]\n", stderr);
+
+    if ((hmac_len = cupsHMACData(hashes[alg], key, key_len, text, text_len, signature, _CUPS_JWT_MAX_SIGNATURE)) < 0)
+      goto done;
+
+    *sigsize = (size_t)hmac_len;
+    ret      = true;
+  }
+
+  done:
 
   free(text);
 
-  *sigsize = sizeof(hash);
-
-  fprintf(stderr, "HMAC: %s\n", cupsHashString(signature, 32, key, sizeof(key)));
-
-#if 0
-#ifdef HAVE_OPENSSL
-  const EVP_MD	*md;			// Message digest
-  unsigned	mdlen;			// Length of digest
-  const char	*k = NULL;		// "k" value
-  char		key[512];		// Key value
-  size_t	key_len;		// Length of key
-  char		*text;			// JWS Signing Input
-
-
-  *sigsize = 0;
-
-  switch (alg)
-  {
-    case CUPS_JWA_HS256 : // HMAC using SHA-256
-        k  = cupsJSONGetString(cupsJSONFind(jwk, "k"));
-        md = EVP_sha256();
-        break;
-
-    case CUPS_JWA_HS384 : // HMAC using SHA-384
-        k  = cupsJSONGetString(cupsJSONFind(jwk, "k"));
-        md = EVP_sha384();
-        break;
-
-    case CUPS_JWA_HS512 : // HMAC using SHA-512
-        k  = cupsJSONGetString(cupsJSONFind(jwk, "k"));
-        md = EVP_sha512();
-        break;
-
-    default :
-        return (false);
-
-#  if 0
-    case CUPS_JWA_RS256 : // RSASSA-PKCS1-v1_5 using SHA-256
-        break;
-
-    case CUPS_JWA_RS384 : // RSASSA-PKCS1-v1_5 using SHA-384
-        break;
-
-    case CUPS_JWA_RS512 : // RSASSA-PKCS1-v1_5 using SHA-512
-        break;
-
-    case CUPS_JWA_ES256 : // ECDSA using P-256 and SHA-256
-        break;
-
-    case CUPS_JWA_ES384 : // ECDSA using P-384 and SHA-384
-        break;
-
-    case CUPS_JWA_ES512 : // ECDSA using P-521 and SHA-512
-        break;
-#  endif // 0
-  }
-
-  if (!k)
-    return (false);
-
-  key_len = sizeof(key);
-  httpDecode64(key, &key_len, k, NULL);
-
-  fprintf(stderr, "alg=%u(%s)\n", alg, cups_jwa_strings[alg]);
-  fprintf(stderr, "key(%u): [%d", (unsigned)key_len, key[0] & 255);
-  for (size_t i = 1; i < key_len; i ++)
-    fprintf(stderr, ", %d", key[i] & 255);
-  fputs("]\n", stderr);
-
-  text  = make_string(jwt, false);
-  mdlen = (unsigned)*sigsize;
-
-  fprintf(stderr, "text (%u): %s\n", (unsigned)strlen(text), text);
-  fprintf(stderr, "text (%u): [%d", (unsigned)strlen(text), *text);
-  for (char *tptr = text + 1; *tptr; tptr ++)
-    fprintf(stderr, ", %d", *tptr);
-  fputs("]\n", stderr);
-
-  HMAC(md, key, (int)key_len, (unsigned char *)text, strlen(text), signature, &mdlen);
-
-  free(text);
-  *sigsize = mdlen;
-
-#else
-  *sigsize = 0;
-
-  switch (alg)
-  {
-    case CUPS_JWA_HS256 : // HMAC using SHA-256
-    case CUPS_JWA_HS384 : // HMAC using SHA-384
-    case CUPS_JWA_HS512 : // HMAC using SHA-512
-        break;
-
-    case CUPS_JWA_RS256 : // RSASSA-PKCS1-v1_5 using SHA-256
-    case CUPS_JWA_RS384 : // RSASSA-PKCS1-v1_5 using SHA-384
-    case CUPS_JWA_RS512 : // RSASSA-PKCS1-v1_5 using SHA-512
-        break;
-
-    case CUPS_JWA_ES256 : // ECDSA using P-256 and SHA-256
-    case CUPS_JWA_ES384 : // ECDSA using P-384 and SHA-384
-    case CUPS_JWA_ES512 : // ECDSA using P-521 and SHA-512
-        break;
-  }
-#endif // HAVE_OPENSSL
-#endif // 0
-
-  return (true);
+  return (ret);
 }
 
 
