@@ -35,7 +35,7 @@ jobs:
     - name: update build environment
       run: sudo apt-get update --fix-missing -y
     - name: install prerequisites
-      run: sudo apt-get install -y avahi-daemon libavahi-client-dev libgnutls30-dev libpam-dev libusb-1.0-0-dev zlib1g-dev
+      run: sudo apt-get install -y avahi-daemon libavahi-client-dev libgnutls28-dev libpam-dev libusb-1.0-0-dev zlib1g-dev
     - name: configure
       env:
         CC: /usr/bin/gcc
