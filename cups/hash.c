@@ -291,7 +291,7 @@ hash_data(const char    *algorithm,	// I - Algorithm
     gnutls_hash(&ctx, a, alen);
     if (b && blen)
       gnutls_hash(&ctx, b, blen);
-    gnutls_hash_deinit(&ctx, hashtemp, sizeof(hashtemp));
+    gnutls_hash_deinit(&ctx, hashtemp);
 
     memcpy(hash, hashtemp, hashlen);
 
