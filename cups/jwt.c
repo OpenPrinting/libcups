@@ -11,7 +11,8 @@
 #include "jwt.h"
 #include "json-private.h"
 #ifdef HAVE_OPENSSL
-#  include <openssl/hmac.h>
+#  include <openssl/evp.h>
+#  include <openssl/rsa.h>
 #else
 #  include <gnutls/gnutls.h>
 #endif // HAVE_OPENSSL
@@ -63,6 +64,11 @@ static const char * const cups_jwa_strings[CUPS_JWA_MAX] =
 // Local functions...
 //
 
+#ifdef HAVE_OPENSSL
+static BIGNUM	*make_bignum(cups_json_t *jwk, const char *key);
+static RSA	*make_rsa(cups_json_t *jwk);
+#else // HAVE_GNUTLS
+#endif // HAVE_OPENSSL
 static bool	make_signature(cups_jwt_t *jwt, cups_jwa_t alg, cups_json_t *jwk, unsigned char *signature, size_t *sigsize);
 static char	*make_string(cups_jwt_t *jwt, bool with_signature);
 
@@ -467,6 +473,76 @@ cupsJWTSign(cups_jwt_t  *jwt,		// I - JWT object
 
   return (true);
 }
+
+
+#ifdef HAVE_OPENSSL
+//
+// 'make_bignum()' - Make a BIGNUM for the specified key.
+//
+
+static BIGNUM *				// O - BIGNUM object or `NULL` on error
+make_bignum(cups_json_t *jwk,		// I - JSON web key
+            const char  *key)		// I - Object key
+{
+  const char	*value,			// Key value
+		*value_end;		// End of value
+  unsigned char	value_bytes[512];	// Decoded value
+  size_t	value_len;		// Length of value
+
+
+  if ((value = cupsJSONGetString(cupsJSONFind(jwk, key))) == NULL)
+    return (NULL);
+
+  value_len = sizeof(value_bytes);
+  if (!httpDecode64((char *)value_bytes, &value_len, value, &value_end) || (value_end && *value_end))
+    return (NULL);
+
+  return (BN_bin2bn(value_bytes, value_len, NULL));
+}
+
+
+//
+// 'make_rsa()' - Create an RSA signing/verification object.
+//
+
+static RSA *				// O - RSA object or `NULL` on error
+make_rsa(cups_json_t *jwk)		// I - JSON web key
+{
+  RSA		*rsa = NULL;		// RSA object
+  BIGNUM	*n,			// Public key modulus
+		*e,			// Public key exponent
+		*d,			// Private key exponent
+		*p,			// Private key first prime factor
+		*q,			// Private key second prime factor
+		*dp,			// First factor exponent
+		*dq,			// Second factor exponent
+		*qi;			// First CRT coefficient
+
+
+  n  = make_bignum(jwk, "n");
+  e  = make_bignum(jwk, "e");
+  d  = make_bignum(jwk, "d");
+  p  = make_bignum(jwk, "p");
+  q  = make_bignum(jwk, "q");
+  dp = make_bignum(jwk, "dp");
+  dq = make_bignum(jwk, "dq");
+  qi = make_bignum(jwk, "qi");
+
+  if (!n || !e)
+    return (NULL);
+
+  rsa = RSA_new();
+  RSA_set0_key(rsa, n, e, d);
+  if (p && q)
+    RSA_set0_factors(rsa, p, q);
+  if (dp && dq && qi)
+    RSA_set0_crt_parameters(rsa, dp, dq, qi);
+}
+
+
+
+#else // HAVE_GNUTLS
+#endif // HAVE_OPENSSL
 
 
 //
