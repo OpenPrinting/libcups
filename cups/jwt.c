@@ -22,7 +22,7 @@
 // Constants...
 //
 
-#define _CUPS_JWT_MAX_SIGNATURE	128	// Enough for 512-bit signature
+#define _CUPS_JWT_MAX_SIGNATURE	2048	// Enough for 512-bit signature
 
 
 //
@@ -536,7 +536,9 @@ make_rsa(cups_json_t *jwk)		// I - JSON web key
   if (p && q)
     RSA_set0_factors(rsa, p, q);
   if (dp && dq && qi)
-    RSA_set0_crt_parameters(rsa, dp, dq, qi);
+    RSA_set0_crt_params(rsa, dp, dq, qi);
+
+  return (rsa);
 }
 
 
@@ -601,6 +603,27 @@ make_signature(cups_jwt_t    *jwt,	// I  - JWT
 
     *sigsize = (size_t)hmac_len;
     ret      = true;
+  }
+  else if (alg >= CUPS_JWA_RS256 && alg <= CUPS_JWA_RS512)
+  {
+    // RSASSA-PKCS1-v1_5 SHA-256/384/512
+    RSA		*rsa;			// RSA public/private key
+    unsigned char hash[128];		// SHA-256/384/512 hash
+    ssize_t	hashsize;		// Length of hash
+    unsigned	siglen = (unsigned)*sigsize;
+					// Length of signature
+    static int	nids[] = { NID_sha256, NID_sha384, NID_sha512 };
+					// Hash NIDs
+
+    if ((rsa = make_rsa(jwk)) != NULL)
+    {
+      hashsize = cupsHashData(hashes[alg], text, text_len, hash, sizeof(hash));
+      if (RSA_sign(nids[alg - CUPS_JWA_RS256], hash, hashsize, signature, &siglen, rsa) == 1)
+      {
+        *sigsize = siglen;
+        ret      = true;
+      }
+    }
   }
 
   done:
