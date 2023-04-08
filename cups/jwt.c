@@ -58,6 +58,19 @@ static const char * const cups_jwa_strings[CUPS_JWA_MAX] =
   "ES384",				// ECDSA using P-384 and SHA-384
   "ES512"				// ECDSA using P-521 and SHA-512
 };
+static const char * const cups_jwa_algorithms[CUPS_JWA_MAX] =
+{
+  NULL,
+  "sha2-256",
+  "sha2-384",
+  "sha2-512",
+  "sha2-256",
+  "sha2-384",
+  "sha2-512",
+  "sha2-256",
+  "sha2-384",
+  "sha2-512"
+};
 
 
 //
@@ -206,27 +219,68 @@ cupsJWTHasValidSignature(
     cups_jwt_t  *jwt,			// I - JWT object
     cups_json_t *jwk)			// I - JWK key set
 {
+  bool		ret = false;		// Return value
   unsigned char	signature[_CUPS_JWT_MAX_SIGNATURE];
 					// Signature
   size_t	sigsize = _CUPS_JWT_MAX_SIGNATURE;
 					// Size of signature
+  char		*text;			// Signature text
+  size_t	text_len;		// Length of signature text
+  unsigned char	hash[128];		// Hash
+  ssize_t	hash_len;		// Length of hash
+#ifdef HAVE_OPENSSL
+  RSA		*rsa;			// Public key
+#else // HAVE_GNUTLS
+#endif // HAVE_OPENSSL
 
 
   // Range check input...
   if (!jwt || !jwt->signature || !jwk)
     return (false);
 
-  // Calculate signature with keys...
-  if (!make_signature(jwt, jwt->sigalg, jwk, signature, &sigsize))
-    return (false);
+  switch (jwt->sigalg)
+  {
+    case CUPS_JWA_HS256 :
+    case CUPS_JWA_HS384 :
+    case CUPS_JWA_HS512 :
+	// Calculate signature with keys...
+	if (!make_signature(jwt, jwt->sigalg, jwk, signature, &sigsize))
+	  break;
 
-#if 0
-  fprintf(stderr, "orig sig(%u) = %02X%02X%02X%02X...%02X%02X%02X%02X\n", (unsigned)jwt->sigsize, jwt->signature[0], jwt->signature[1], jwt->signature[2], jwt->signature[3], jwt->signature[jwt->sigsize - 4], jwt->signature[jwt->sigsize - 3], jwt->signature[jwt->sigsize - 2], jwt->signature[jwt->sigsize - 1]);
-  fprintf(stderr, "calc sig(%u) = %02X%02X%02X%02X...%02X%02X%02X%02X\n", (unsigned)sigsize, signature[0], signature[1], signature[2], signature[3], signature[sigsize - 4], signature[sigsize - 3], signature[sigsize - 2], signature[sigsize - 1]);
-#endif // 0
+	DEBUG_printf(("1cupsJWTHasValidSignature: orig sig(%u) = %02X%02X%02X%02X...%02X%02X%02X%02X", (unsigned)jwt->sigsize, jwt->signature[0], jwt->signature[1], jwt->signature[2], jwt->signature[3], jwt->signature[jwt->sigsize - 4], jwt->signature[jwt->sigsize - 3], jwt->signature[jwt->sigsize - 2], jwt->signature[jwt->sigsize - 1]));
+	DEBUG_printf(("1cupsJWTHasValidSignature: calc sig(%u) = %02X%02X%02X%02X...%02X%02X%02X%02X", (unsigned)sigsize, signature[0], signature[1], signature[2], signature[3], signature[sigsize - 4], signature[sigsize - 3], signature[sigsize - 2], signature[sigsize - 1]));
 
-  // Compae and return the result...
-  return (jwt->sigsize == sigsize && !memcmp(jwt->signature, signature, sigsize));
+	// Compare and return the result...
+	ret = jwt->sigsize == sigsize && !memcmp(jwt->signature, signature, sigsize);
+	break;
+
+    case CUPS_JWA_RS256 :
+    case CUPS_JWA_RS384 :
+    case CUPS_JWA_RS512 :
+        text     = make_string(jwt, false);
+        text_len = strlen(text);
+        hash_len = cupsHashData(cups_jwa_algorithms[jwt->sigalg], text, text_len, hash, sizeof(hash));
+
+#ifdef HAVE_OPENSSL
+        if ((rsa = make_rsa(jwk)) != NULL)
+        {
+	  static int	nids[] = { NID_sha256, NID_sha384, NID_sha512 };
+					// Hash NIDs
+
+	  ret = RSA_verify(nids[jwt->sigalg - CUPS_JWA_RS256], hash, hash_len, jwt->signature, jwt->sigsize, rsa) == 1;
+
+	  RSA_free(rsa);
+        }
+#else // HAVE_GNUTLS
+#endif // HAVE_OPENSSL
+        break;
+
+    default :
+        DEBUG_printf(("1cupsJWTHasValidSignature: Algorithm %d not supported.", jwt->sigalg));
+	break;
+  }
+
+  return (ret);
 }
 
 
@@ -561,19 +615,6 @@ make_signature(cups_jwt_t    *jwt,	// I  - JWT
   bool		ret = false;		// Return value
   char		*text;			// JWS Signing Input
   size_t	text_len;		// Length of signing input
-  static const char * const hashes[] =	// Hash algorithms
-  {
-    NULL,
-    "sha2-256",
-    "sha2-384",
-    "sha2-512",
-    "sha2-256",
-    "sha2-384",
-    "sha2-512",
-    "sha2-256",
-    "sha2-384",
-    "sha2-512"
-  };
 
 
   // Initialize default signature...
@@ -598,7 +639,7 @@ make_signature(cups_jwt_t    *jwt,	// I  - JWT
     if (!httpDecode64((char *)key, &key_len, k, NULL))
       goto done;
 
-    if ((hmac_len = cupsHMACData(hashes[alg], key, key_len, text, text_len, signature, _CUPS_JWT_MAX_SIGNATURE)) < 0)
+    if ((hmac_len = cupsHMACData(cups_jwa_algorithms[alg], key, key_len, text, text_len, signature, _CUPS_JWT_MAX_SIGNATURE)) < 0)
       goto done;
 
     *sigsize = (size_t)hmac_len;
@@ -607,23 +648,28 @@ make_signature(cups_jwt_t    *jwt,	// I  - JWT
   else if (alg >= CUPS_JWA_RS256 && alg <= CUPS_JWA_RS512)
   {
     // RSASSA-PKCS1-v1_5 SHA-256/384/512
-    RSA		*rsa;			// RSA public/private key
     unsigned char hash[128];		// SHA-256/384/512 hash
-    ssize_t	hashsize;		// Length of hash
+    ssize_t	hash_len;		// Length of hash
     unsigned	siglen = (unsigned)*sigsize;
 					// Length of signature
+#ifdef HAVE_OPENSSL
+    RSA		*rsa;			// RSA public/private key
     static int	nids[] = { NID_sha256, NID_sha384, NID_sha512 };
 					// Hash NIDs
 
     if ((rsa = make_rsa(jwk)) != NULL)
     {
-      hashsize = cupsHashData(hashes[alg], text, text_len, hash, sizeof(hash));
-      if (RSA_sign(nids[alg - CUPS_JWA_RS256], hash, hashsize, signature, &siglen, rsa) == 1)
+      hash_len = cupsHashData(cups_jwa_algorithms[alg], text, text_len, hash, sizeof(hash));
+      if (RSA_sign(nids[alg - CUPS_JWA_RS256], hash, hash_len, signature, &siglen, rsa) == 1)
       {
         *sigsize = siglen;
         ret      = true;
       }
+
+      RSA_free(rsa);
     }
+#else // HAVE_GNUTLS
+#endif // HAVE_OPENSSL
   }
 
   done:
