@@ -16,6 +16,7 @@
 #  include <openssl/rsa.h>
 #else
 #  include <gnutls/gnutls.h>
+#  include <gnutls/abstract.h>
 #endif // HAVE_OPENSSL
 
 
@@ -84,8 +85,8 @@ static EC_KEY	*make_ec_key(cups_json_t *jwk, bool verify);
 static RSA	*make_rsa(cups_json_t *jwk);
 #else // HAVE_GNUTLS
 static gnutls_datum_t *make_datum(cups_json_t *jwk, const char *key);
-static gnutls_privkey_t *make_private_key(cups_json_t *jwk);
-static gnutls_pubkey_t *make_public_key(cups_json_t *jwk);
+static gnutls_privkey_t make_private_key(cups_json_t *jwk);
+static gnutls_pubkey_t make_public_key(cups_json_t *jwk);
 #endif // HAVE_OPENSSL
 static bool	make_signature(cups_jwt_t *jwt, cups_jwa_t alg, cups_json_t *jwk, unsigned char *signature, size_t *sigsize);
 static char	*make_string(cups_jwt_t *jwt, bool with_signature);
@@ -231,15 +232,15 @@ cupsJWTHasValidSignature(
 					// Size of signature
   char		*text;			// Signature text
   size_t	text_len;		// Length of signature text
+#ifdef HAVE_OPENSSL
   unsigned char	hash[128];		// Hash
   ssize_t	hash_len;		// Length of hash
-#ifdef HAVE_OPENSSL
   RSA		*rsa;			// RSA public key
   EC_KEY	*ec;			// ECDSA public key
   static int	nids[] = { NID_sha256, NID_sha384, NID_sha512 };
 					// Hash NIDs
 #else // HAVE_GNUTLS
-  gnutls_pubkey_t	*key;		// Public key
+  gnutls_pubkey_t	key;		// Public key
   gnutls_datum_t	text_datum,	// Text datum
 			sig_datum;	// Signature datum
   static gnutls_sign_algorithm_t algs[] = { GNUTLS_DIG_SHA256, GNUTLS_DIG_SHA384, GNUTLS_DIG_SHA512 };
@@ -251,8 +252,8 @@ cupsJWTHasValidSignature(
   if (!jwt || !jwt->signature || !jwk)
     return (false);
 
-  fprintf(stderr, "orig sig(%u) = %02X%02X%02X%02X...%02X%02X%02X%02X\n", (unsigned)jwt->sigsize, jwt->signature[0], jwt->signature[1], jwt->signature[2], jwt->signature[3], jwt->signature[jwt->sigsize - 4], jwt->signature[jwt->sigsize - 3], jwt->signature[jwt->sigsize - 2], jwt->signature[jwt->sigsize - 1]);
- DEBUG_printf(("1cupsJWTHasValidSignature: orig sig(%u) = %02X%02X%02X%02X...%02X%02X%02X%02X", (unsigned)jwt->sigsize, jwt->signature[0], jwt->signature[1], jwt->signature[2], jwt->signature[3], jwt->signature[jwt->sigsize - 4], jwt->signature[jwt->sigsize - 3], jwt->signature[jwt->sigsize - 2], jwt->signature[jwt->sigsize - 1]));
+  DEBUG_printf(("1cupsJWTHasValidSignature: orig sig(%u) = %02X%02X%02X%02X...%02X%02X%02X%02X", (unsigned)jwt->sigsize, jwt->signature[0], jwt->signature[1], jwt->signature[2], jwt->signature[3], jwt->signature[jwt->sigsize - 4], jwt->signature[jwt->sigsize - 3], jwt->signature[jwt->sigsize - 2], jwt->signature[jwt->sigsize - 1]));
+
   switch (jwt->sigalg)
   {
     case CUPS_JWA_HS256 :
@@ -288,12 +289,13 @@ cupsJWTHasValidSignature(
 #else // HAVE_GNUTLS
         if ((key = make_public_key(jwk)) != NULL)
         {
-          text_datum.data = text;
+          text_datum.data = (unsigned char *)text;
           text_datum.size = (unsigned)text_len;
           sig_datum.data  = jwt->signature;
           sig_datum.size  = (unsigned)jwt->sigsize;
 
           ret = !gnutls_pubkey_verify_data2(key, algs[jwt->sigalg - CUPS_JWA_RS256], 0, &text_datum, &sig_datum);
+          gnutls_pubkey_deinit(key);
         }
 #endif // HAVE_OPENSSL
 
@@ -321,12 +323,13 @@ cupsJWTHasValidSignature(
 #else // HAVE_GNUTLS
         if ((key = make_public_key(jwk)) != NULL)
         {
-          text_datum.data = text;
+          text_datum.data = (unsigned char *)text;
           text_datum.size = (unsigned)text_len;
           sig_datum.data  = jwt->signature;
           sig_datum.size  = (unsigned)jwt->sigsize;
 
           ret = !gnutls_pubkey_verify_data2(key, algs[jwt->sigalg - CUPS_JWA_ES256], 0, &text_datum, &sig_datum);
+          gnutls_pubkey_deinit(key);
         }
 #endif // HAVE_OPENSSL
 
@@ -783,11 +786,11 @@ make_datum(cups_json_t *jwk,		// I - JSON web key
 // 'make_private_key()' - Make a private key for EC or RSA signing.
 //
 
-static gnutls_privkey_t *		// O - Private key or `NULL`
+static gnutls_privkey_t			// O - Private key or `NULL`
 make_private_key(cups_json_t *jwk)	// I - JSON web key
 {
   const char		*kty;		// Key type
-  gnutls_privkey_t	*key = NULL;	// Private key
+  gnutls_privkey_t	key = NULL;	// Private key
 
 
   if ((kty = cupsJSONGetString(cupsJSONFind(jwk, "kty"))) == NULL)
@@ -816,17 +819,12 @@ make_private_key(cups_json_t *jwk)	// I - JSON web key
     dq = make_datum(jwk, "dq");
     qi = make_datum(jwk, "qi");
 
-    if (n && e && d && p && q && (key = (gnutls_privkey_t *)calloc(1, sizeof(gnutls_privkey_t))) != NULL)
+    if (n && e && d && p && q && !gnutls_privkey_init(&key))
     {
       // Import RSA private key...
-      if (gnutls_privkey_init(key))
+      if (gnutls_privkey_import_rsa_raw(key, n, e, d, p, q, qi, dp, dq))
       {
-	free(key);
-	key = NULL;
-      }
-      else if (gnutls_privkey_import_rsa_raw(key, n, e, d, p, q, qi, dp, dq))
-      {
-	free(key);
+	gnutls_privkey_deinit(key);
 	key = NULL;
       }
     }
@@ -867,17 +865,12 @@ make_private_key(cups_json_t *jwk)	// I - JSON web key
     y = make_datum(jwk, "y");
     d = make_datum(jwk, "d");
 
-    if (x && y && d && (key = (gnutls_privkey_t *)calloc(1, sizeof(gnutls_privkey_t))) != NULL)
+    if (x && y && d && !gnutls_privkey_init(&key))
     {
       // Import EC private key...
-      if (gnutls_privkey_init(key))
+      if (gnutls_privkey_import_ecc_raw(key, curve, x, y, d))
       {
-	free(key);
-	key = NULL;
-      }
-      else if (gnutls_privkey_import_ecc_raw(key, curve, x, y, d))
-      {
-	free(key);
+	gnutls_privkey_deinit(key);
 	key = NULL;
       }
     }
@@ -897,11 +890,11 @@ make_private_key(cups_json_t *jwk)	// I - JSON web key
 // 'make_public_key()' - Make a public key for EC or RSA verification.
 //
 
-static gnutls_pubkey_t *		// O - Public key or `NULL`
+static gnutls_pubkey_t			// O - Public key or `NULL`
 make_public_key(cups_json_t *jwk)	// I - JSON web key
 {
   const char		*kty;		// Key type
-  gnutls_pubkey_t	*key = NULL;	// Private key
+  gnutls_pubkey_t	key = NULL;	// Private key
 
 
   if ((kty = cupsJSONGetString(cupsJSONFind(jwk, "kty"))) == NULL)
@@ -916,20 +909,15 @@ make_public_key(cups_json_t *jwk)	// I - JSON web key
 			*e;		// Public key exponent
 
 
-    n  = make_bignum(jwk, "n");
-    e  = make_bignum(jwk, "e");
+    n  = make_datum(jwk, "n");
+    e  = make_datum(jwk, "e");
 
-    if (n && e && (key = (gnutls_pubkey_t *)calloc(1, sizeof(gnutls_pubkey_t))) != NULL)
+    if (n && e && !gnutls_pubkey_init(&key))
     {
       // Import RSA private key...
-      if (gnutls_pubkey_init(key))
+      if (gnutls_pubkey_import_rsa_raw(key, n, e))
       {
-	free(key);
-	key = NULL;
-      }
-      else if (gnutls_pubkey_import_rsa_raw(key, n, e))
-      {
-	free(key);
+	gnutls_pubkey_deinit(key);
 	key = NULL;
       }
     }
@@ -944,8 +932,7 @@ make_public_key(cups_json_t *jwk)	// I - JSON web key
     const char		*crv;		// EC curve ("P-256", "P-384", or "P-521")
     gnutls_ecc_curve_t	curve;		// Curve constant
     gnutls_datum	*x,		// X coordinate
-			*y,		// Y coordinate
-			*d;		// Private key
+			*y;		// Y coordinate
 
     crv = cupsJSONGetString(cupsJSONFind(jwk, "crv"));
 
@@ -962,19 +949,13 @@ make_public_key(cups_json_t *jwk)	// I - JSON web key
 
     x = make_datum(jwk, "x");
     y = make_datum(jwk, "y");
-    d = make_datum(jwk, "d");
 
-    if (x && y && d && (key = (gnutls_privkey_t *)calloc(1, sizeof(gnutls_privkey_t))) != NULL)
+    if (x && y && !gnutls_pubkey_init(&key))
     {
-      // Import EC private key...
-      if (gnutls_privkey_init(key))
+      // Import EC public key...
+      if (gnutls_pubkey_import_ecc_raw(key, curve, x, y))
       {
-	free(key);
-	key = NULL;
-      }
-      else if (gnutls_privkey_import_ecc_raw(key, curve, x, y, d))
-      {
-	free(key);
+	gnutls_pubkey_deinit(key);
 	key = NULL;
       }
     }
@@ -982,7 +963,6 @@ make_public_key(cups_json_t *jwk)	// I - JSON web key
     // Free memory...
     free(x);
     free(y);
-    free(d);
   }
 
   return (key);
@@ -1008,7 +988,7 @@ make_signature(cups_jwt_t    *jwt,	// I  - JWT
   static int		nids[] = { NID_sha256, NID_sha384, NID_sha512 };
 					// Hash NIDs
 #else // HAVE_GNUTLS
-  gnutls_privkey_t	*key;		// Private key
+  gnutls_privkey_t	key;		// Private key
   gnutls_datum_t	text_datum,	// Text datum
 			sig_datum;	// Signature datum
   static gnutls_sign_algorithm_t algs[] = { GNUTLS_DIG_SHA256, GNUTLS_DIG_SHA384, GNUTLS_DIG_SHA512 };
@@ -1047,11 +1027,11 @@ make_signature(cups_jwt_t    *jwt,	// I  - JWT
   else if (alg >= CUPS_JWA_RS256 && alg <= CUPS_JWA_RS512)
   {
     // RSASSA-PKCS1-v1_5 SHA-256/384/512
+#ifdef HAVE_OPENSSL
     unsigned char hash[128];		// SHA-256/384/512 hash
     ssize_t	hash_len;		// Length of hash
     unsigned	siglen = (unsigned)*sigsize;
 					// Length of signature
-#ifdef HAVE_OPENSSL
     RSA		*rsa;			// RSA public/private key
 
     if ((rsa = make_rsa(jwk)) != NULL)
@@ -1068,12 +1048,12 @@ make_signature(cups_jwt_t    *jwt,	// I  - JWT
 #else // HAVE_GNUTLS
     if ((key = make_private_key(jwk)) != NULL)
     {
-      text_datum.data = text;
+      text_datum.data = (unsigned char *)text;
       text_datum.size = (unsigned)text_len;
       sig_datum.data  = NULL;
       sig_datum.size  = 0;
 
-      if (!gnutls_privkey_sign_data(key, algs[alg - CUPS_JWA_RS256], 0, &hash_datum, &sig_datum) && sig_datum.size <= *sigsize)
+      if (!gnutls_privkey_sign_data(key, algs[alg - CUPS_JWA_RS256], 0, &text_datum, &sig_datum) && sig_datum.size <= *sigsize)
       {
         memcpy(signature, sig_datum.data, sig_datum.size);
         *sigsize = sig_datum.size;
@@ -1082,19 +1062,18 @@ make_signature(cups_jwt_t    *jwt,	// I  - JWT
 
       gnutls_free(sig_datum.data);
       gnutls_privkey_deinit(key);
-      free(key);
     }
 #endif // HAVE_OPENSSL
   }
   else if (alg >= CUPS_JWA_ES256 && alg <= CUPS_JWA_ES512)
   {
     // ECDSA P-256 SHA-256/384/512
+#ifdef HAVE_OPENSSL
     unsigned char hash[128];		// SHA-256/384/512 hash
     ssize_t	hash_len;		// Length of hash
     unsigned	siglen = (unsigned)*sigsize;
 					// Length of signature
-#ifdef HAVE_OPENSSL
-    EC_KEY		*ec;		// EC public/private key
+    EC_KEY	*ec;			// EC private key
 
     if ((ec = make_ec_key(jwk, false)) != NULL)
     {
@@ -1110,12 +1089,12 @@ make_signature(cups_jwt_t    *jwt,	// I  - JWT
 #else // HAVE_GNUTLS
     if ((key = make_private_key(jwk)) != NULL)
     {
-      text_datum.data = text;
+      text_datum.data = (unsigned char *)text;
       text_datum.size = (unsigned)text_len;
       sig_datum.data  = NULL;
       sig_datum.size  = 0;
 
-      if (!gnutls_privkey_sign_data(key, algs[alg - CUPS_JWA_ES256], 0, &hash_datum, &sig_datum) && sig_datum.size <= *sigsize)
+      if (!gnutls_privkey_sign_data(key, algs[alg - CUPS_JWA_ES256], 0, &text_datum, &sig_datum) && sig_datum.size <= *sigsize)
       {
         memcpy(signature, sig_datum.data, sig_datum.size);
         *sigsize = sig_datum.size;
@@ -1124,7 +1103,6 @@ make_signature(cups_jwt_t    *jwt,	// I  - JWT
 
       gnutls_free(sig_datum.data);
       gnutls_privkey_deinit(key);
-      free(key);
     }
 #endif // HAVE_OPENSSL
   }
