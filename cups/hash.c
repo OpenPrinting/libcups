@@ -1,5 +1,5 @@
 //
-// Hashing function for CUPS.
+// Hashing functions for CUPS.
 //
 // Copyright © 2022-2023 by OpenPrinting.
 // Copyright © 2015-2019 by Apple Inc.
@@ -21,6 +21,16 @@
 #  include <gnutls/crypto.h>
 #endif // HAVE_OPENSSL
 
+
+//
+// Note: While both GNU TLS and OpenSSL offer HMAC functions, they also exclude
+// certain hashes depending on the version of library and whatever patches are
+// applied by the OS vendor/Linux distribution.  Since printers sometimes rely
+// on otherwise deprecated/obsolete hash functions for things like PIN printing
+// ("job-password"), and since such uses already have poor security regardless
+// of the hash function used, it is more important to provide guaranteed
+// implementations over some imaginary notion of "guaranteed security"...
+//
 
 //
 // Local functions...
