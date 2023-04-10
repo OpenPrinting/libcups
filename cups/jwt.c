@@ -86,6 +86,7 @@ static EC_KEY	*make_ec_key(cups_json_t *jwk, bool verify);
 static RSA	*make_rsa(cups_json_t *jwk);
 #else // HAVE_GNUTLS
 static gnutls_datum_t *make_datum(cups_json_t *jwk, const char *key);
+static void	make_datstring(gnutls_datum_t *d, char *buffer, size_t bufsize);
 static gnutls_privkey_t make_private_key(cups_json_t *jwk);
 static gnutls_pubkey_t make_public_key(cups_json_t *jwk);
 #endif // HAVE_OPENSSL
@@ -527,6 +528,22 @@ cupsJWTMakePrivateKey(cups_jwa_t alg)	// I - Signing/encryption algorithm
     RSA_free(rsa);
 
 #else // HAVE_GNUTLS
+    gnutls_privkey_t	key;		// Private key
+    gnutls_datum_t	dat_n, dat_e, dat_d, dat_p, dat_q, dat_dp, dat_dq, dat_qi;
+					// RSA parameters
+
+    gnutls_privkey_init(&key);
+    gnutls_privkey_generate(key, GNUTLS_PK_RSA, 3072, 0);
+    gnutls_privkey_export_rsa_raw(key, &dat_n, &dat_e, &dat_d, &dat_p, &dat_q, &dat_qi, &dat_dp, &dat_dq);
+    make_datstring(&dat_n, n, sizeof(n));
+    make_datstring(&dat_e, e, sizeof(e));
+    make_datstring(&dat_d, d, sizeof(d));
+    make_datstring(&dat_p, p, sizeof(p));
+    make_datstring(&dat_q, q, sizeof(q));
+    make_datstring(&dat_qi, qi, sizeof(qi));
+    make_datstring(&dat_dp, dp, sizeof(dp));
+    make_datstring(&dat_dq, dq, sizeof(dq));
+    gnutls_privkey_deinit(key);
 #endif // HAVE_OPENSSL
 
     node = cupsJSONNewString(jwk, node, kty = "RSA");
@@ -591,6 +608,17 @@ cupsJWTMakePrivateKey(cups_jwa_t alg)	// I - Signing/encryption algorithm
     EC_KEY_free(ec);
 
 #else // HAVE_GNUTLS
+    gnutls_privkey_t	key;		// Private key
+    gnutls_datum_t	dat_x, dat_y, dat_d;
+					// ECDSA parameters
+
+    gnutls_privkey_init(&key);
+    gnutls_privkey_generate(key, GNUTLS_PK_EC, GNUTLS_CURVE_TO_BITS((GNUTLS_ECC_CURVE_SECP256R1 + (alg - CUPS_JWA_ES256))), 0);
+    gnutls_privkey_export_ecc_raw(key, NULL, &dat_x, &dat_y, &dat_d);
+    make_datstring(&dat_x, x, sizeof(x));
+    make_datstring(&dat_y, y, sizeof(y));
+    make_datstring(&dat_d, d, sizeof(d));
+    gnutls_privkey_deinit(key);
 #endif // HAVE_OPENSSL
 
     node = cupsJSONNewString(jwk, node, kty = "EC");
@@ -1052,6 +1080,20 @@ make_datum(cups_json_t *jwk,		// I - JSON web key
 
 
 //
+// 'make_datstring()' - Make a Base64URL-encoded string from a datum.
+//
+
+static void
+make_datstring(gnutls_datum_t *d,	// I - Datum
+               char           *buffer,	// I - String buffer
+               size_t         bufsize)	// I - Size of string buffer
+{
+  httpEncode64(buffer, bufsize, (char *)d->data, d->size, true);
+  gnutls_free(d->data);
+}
+
+
+//
 // 'make_private_key()' - Make a private key for EC or RSA signing.
 //
 
@@ -1337,6 +1379,8 @@ make_signature(cups_jwt_t    *jwt,	// I  - JWT
   else if (alg >= CUPS_JWA_ES256 && alg <= CUPS_JWA_ES512)
   {
     // ECDSA P-256 SHA-256/384/512
+    static unsigned sig_sizes[3] =	// Sizes of signatures
+    { 64, 96, 132 };
 #ifdef HAVE_OPENSSL
     unsigned char hash[128];		// SHA-256/384/512 hash
     ssize_t	hash_len;		// Length of hash
@@ -1345,8 +1389,6 @@ make_signature(cups_jwt_t    *jwt,	// I  - JWT
     ECDSA_SIG	*ec_sig;		// EC signature
     const BIGNUM *r, *s;		// Signature coordinates
     unsigned	r_len, s_len;		// Length of coordinates
-    static unsigned sig_sizes[3] =	// Sizes of signatures
-    { 64, 96, 132 };
 
     if ((ec = make_ec_key(jwk, false)) != NULL)
     {
@@ -1382,9 +1424,18 @@ make_signature(cups_jwt_t    *jwt,	// I  - JWT
 
       if (!gnutls_privkey_sign_data(key, algs[alg - CUPS_JWA_ES256], 0, &text_datum, &sig_datum) && sig_datum.size <= *sigsize)
       {
-        memcpy(signature, sig_datum.data, sig_datum.size);
-        *sigsize = sig_datum.size;
-        ret      = true;
+        gnutls_datum_t	r, s;		// Signature coordinates
+
+        *sigsize = sig_sizes[alg - CUPS_JWA_ES256];
+        gnutls_decode_rs_value(&sig_datum, &r, &s);
+
+        memset(signature, 0, *sigsize);
+        memcpy(signature + *sigsize / 2 - r.size, r.data, r.size);
+        memcpy(signature + *sigsize - s.size, s.data, s.size);
+        ret = true;
+
+	gnutls_free(r.data);
+	gnutls_free(s.data);
       }
 
       gnutls_free(sig_datum.data);
