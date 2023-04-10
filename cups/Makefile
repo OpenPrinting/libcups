@@ -149,6 +149,7 @@ UNITTARGETS =	\
 		testfile \
 		testform\
 		testgetdests \
+		testhash \
 		testhttp \
 		testi18n \
 		testipp \
