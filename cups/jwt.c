@@ -618,15 +618,17 @@ cupsJWTMakePrivateKey(cups_jwa_t alg)	// I - Signing/encryption algorithm
 
 #else // HAVE_GNUTLS
     gnutls_privkey_t	key;		// Private key
+    gnutls_ecc_curve_t	dat_curve;	// Curve
     gnutls_datum_t	dat_x, dat_y, dat_d;
 					// ECDSA parameters
 
     gnutls_privkey_init(&key);
     gnutls_privkey_generate(key, GNUTLS_PK_EC, GNUTLS_CURVE_TO_BITS((GNUTLS_ECC_CURVE_SECP256R1 + (alg - CUPS_JWA_ES256))), 0);
-    gnutls_privkey_export_ecc_raw(key, NULL, &dat_x, &dat_y, &dat_d);
+    gnutls_privkey_export_ecc_raw(key, &dat_curve, &dat_x, &dat_y, &dat_d);
     make_datstring(&dat_x, x, sizeof(x));
     make_datstring(&dat_y, y, sizeof(y));
     make_datstring(&dat_d, d, sizeof(d));
+    fprintf(stderr, "dat_curve=%d, dat_x=%s, dat_y=%s, day_d=%s\n", dat_curve, x, y, d);
     gnutls_privkey_deinit(key);
 #endif // HAVE_OPENSSL
 
