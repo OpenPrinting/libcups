@@ -1313,7 +1313,7 @@ make_signature(cups_jwt_t    *jwt,	// I  - JWT
   gnutls_privkey_t	key;		// Private key
   gnutls_datum_t	text_datum,	// Text datum
 			sig_datum;	// Signature datum
-  static gnutls_sign_algorithm_t algs[] = { GNUTLS_DIG_SHA256, GNUTLS_DIG_SHA384, GNUTLS_DIG_SHA512 };
+  static int algs[] = { GNUTLS_DIG_SHA256, GNUTLS_DIG_SHA384, GNUTLS_DIG_SHA512 };
 					// Hash algorithms
 #endif // HAVE_OPENSSL
 
