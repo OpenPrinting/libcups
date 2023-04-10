@@ -292,12 +292,20 @@ cupsJWTHasValidSignature(
 #else // HAVE_GNUTLS
         if ((key = make_public_key(jwk)) != NULL)
         {
+	  gnutls_datum_t r, s;		// Signature coordinates
+
           text_datum.data = (unsigned char *)text;
           text_datum.size = (unsigned)text_len;
-          sig_datum.data  = jwt->signature;
-          sig_datum.size  = (unsigned)jwt->sigsize;
 
+          r.data = jwt->signature;
+          r.size = (unsigned)jwt->sigsize / 2;
+	  s.data = jwt->signature + jwt->sigsize / 2;
+          s.size = (unsigned)jwt->sigsize / 2;
+
+	  gnutls_encode_rs_value(&sig_datum, &r, &s);
+	  fprintf(stderr, "sig_datum.size=%u\n", sig_datum.size);
           ret = !gnutls_pubkey_verify_data2(key, algs[jwt->sigalg - CUPS_JWA_RS256], 0, &text_datum, &sig_datum);
+	  gnutls_free(sig_datum.data);
           gnutls_pubkey_deinit(key);
         }
 #endif // HAVE_OPENSSL
@@ -1136,6 +1144,7 @@ make_private_key(cups_json_t *jwk)	// I - JSON web key
       // Import RSA private key...
       if (gnutls_privkey_import_rsa_raw(key, n, e, d, p, q, qi, dp, dq))
       {
+	fprintf(stderr, "import_rsa_raw failed: %d\n", gnutls_privkey_import_rsa_raw(key, n, e, d, p, q, qi, dp, dq));
 	gnutls_privkey_deinit(key);
 	key = NULL;
       }
@@ -1182,6 +1191,7 @@ make_private_key(cups_json_t *jwk)	// I - JSON web key
       // Import EC private key...
       if (gnutls_privkey_import_ecc_raw(key, curve, x, y, d))
       {
+	fprintf(stderr, "import_ecc_raw failed: %d\n", gnutls_privkey_import_ecc_raw(key, curve, x, y, d));
 	gnutls_privkey_deinit(key);
 	key = NULL;
       }
@@ -1308,9 +1318,6 @@ make_signature(cups_jwt_t    *jwt,	// I  - JWT
 #endif // HAVE_OPENSSL
 
 
-  // Initialize default signature...
-  *sigsize = 0;
-
   // Get text to sign...
   text     = make_string(jwt, false);
   text_len = strlen(text);
@@ -1360,17 +1367,21 @@ make_signature(cups_jwt_t    *jwt,	// I  - JWT
 #else // HAVE_GNUTLS
     if ((key = make_private_key(jwk)) != NULL)
     {
+      int err;
+
       text_datum.data = (unsigned char *)text;
       text_datum.size = (unsigned)text_len;
       sig_datum.data  = NULL;
       sig_datum.size  = 0;
 
-      if (!gnutls_privkey_sign_data(key, algs[alg - CUPS_JWA_RS256], 0, &text_datum, &sig_datum) && sig_datum.size <= *sigsize)
+      if ((err = gnutls_privkey_sign_data(key, algs[alg - CUPS_JWA_RS256], 0, &text_datum, &sig_datum)) == 0 && sig_datum.size <= *sigsize)
       {
         memcpy(signature, sig_datum.data, sig_datum.size);
         *sigsize = sig_datum.size;
         ret      = true;
       }
+      else
+	fprintf(stderr, "gnutls_privkey_sign_data returned %d, signature size = %u\n", err, sig_datum.size);
 
       gnutls_free(sig_datum.data);
       gnutls_privkey_deinit(key);
@@ -1426,13 +1437,21 @@ make_signature(cups_jwt_t    *jwt,	// I  - JWT
       if (!gnutls_privkey_sign_data(key, algs[alg - CUPS_JWA_ES256], 0, &text_datum, &sig_datum) && sig_datum.size <= *sigsize)
       {
         gnutls_datum_t	r, s;		// Signature coordinates
-
+        unsigned sig_len;
         *sigsize = sig_sizes[alg - CUPS_JWA_ES256];
+	sig_len  = *sigsize / 2;
         gnutls_decode_rs_value(&sig_datum, &r, &s);
 
+	fprintf(stderr, "r.size=%u, s.size=%u, sig_len=%u\n", r.size, s.size, sig_len);
         memset(signature, 0, *sigsize);
-        memcpy(signature + *sigsize / 2 - r.size, r.data, r.size);
-        memcpy(signature + *sigsize - s.size, s.data, s.size);
+	if (r.size < sig_len)
+          memcpy(signature + sig_len - r.size, r.data, r.size);
+	else
+          memcpy(signature, r.data + r.size - sig_len, sig_len);
+	if (s.size < sig_len)
+          memcpy(signature + *sigsize - s.size, s.data, s.size);
+	else
+          memcpy(signature + sig_len, s.data + s.size - sig_len, sig_len);
         ret = true;
 
 	gnutls_free(r.data);
@@ -1448,6 +1467,9 @@ make_signature(cups_jwt_t    *jwt,	// I  - JWT
   done:
 
   free(text);
+
+  if (!ret)
+    *sigsize = 0;
 
   return (ret);
 }
