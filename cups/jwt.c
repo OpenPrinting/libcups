@@ -316,8 +316,23 @@ cupsJWTHasValidSignature(
 
         if ((ec = make_ec_key(jwk, true)) != NULL)
         {
-	  ret = ECDSA_verify(0, hash, hash_len, jwt->signature, jwt->sigsize, ec) == 1;
+          // Convert binary signature into ECDSA signature for OpenSSL
+          ECDSA_SIG	*ec_sig;	// EC signature
+	  BIGNUM	*r, *s;		// Signature coordinates
+	  int		sig_len;	// Size of coordinates
 
+	  ec_sig = ECDSA_SIG_new();
+	  sig_len = (int)jwt->sigsize / 2;
+	  r       = BN_new();
+	  s       = BN_new();
+	  BN_bin2bn(jwt->signature, sig_len, r);
+	  BN_bin2bn(jwt->signature + sig_len, sig_len, s);
+	  ECDSA_SIG_set0(ec_sig, r, s);
+
+          // Verify signature and clean up...
+	  ret = ECDSA_do_verify(hash, hash_len, ec_sig, ec) == 1;
+
+          ECDSA_SIG_free(ec_sig);
 	  EC_KEY_free(ec);
         }
 
@@ -1325,17 +1340,34 @@ make_signature(cups_jwt_t    *jwt,	// I  - JWT
 #ifdef HAVE_OPENSSL
     unsigned char hash[128];		// SHA-256/384/512 hash
     ssize_t	hash_len;		// Length of hash
-    unsigned	siglen = (unsigned)*sigsize;
-					// Length of signature
+    unsigned	sig_len;		// Length of signature coordinate
     EC_KEY	*ec;			// EC private key
+    ECDSA_SIG	*ec_sig;		// EC signature
+    const BIGNUM *r, *s;		// Signature coordinates
+    unsigned	r_len, s_len;		// Length of coordinates
+    static unsigned sig_sizes[3] =	// Sizes of signatures
+    { 64, 96, 132 };
 
     if ((ec = make_ec_key(jwk, false)) != NULL)
     {
       hash_len = cupsHashData(cups_jwa_algorithms[alg], text, text_len, hash, sizeof(hash));
-      if (ECDSA_sign(0, hash, hash_len, signature, &siglen, ec) == 1)
+      if ((ec_sig = ECDSA_do_sign(hash, hash_len, ec)) != NULL)
       {
-        *sigsize = siglen;
+        // Get the raw coordinates...
+        ECDSA_SIG_get0(ec_sig, &r, &s);
+        r_len    = (unsigned)BN_num_bytes(r);
+        s_len    = (unsigned)BN_num_bytes(s);
+        *sigsize = sig_sizes[alg - CUPS_JWA_ES256];
+        sig_len  = *sigsize / 2;
         ret      = true;
+
+        // 0-pad raw coordinates
+        memset(signature, 0, *sigsize);
+        BN_bn2bin(r, signature + sig_len - r_len);
+        BN_bn2bin(s, signature + *sigsize - s_len);
+
+        // Free the signature
+        ECDSA_SIG_free(ec_sig);
       }
 
       EC_KEY_free(ec);

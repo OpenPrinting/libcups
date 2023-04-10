@@ -149,6 +149,57 @@ main(int  argc,				// I - Number of command-line arguments
     cupsJSONDelete(jwk);
     cupsJSONDelete(pubjwk);
 
+    testBegin("cupsJWTMakePrivateKey(ES256)");
+    jwk = cupsJWTMakePrivateKey(CUPS_JWA_ES256);
+    testEnd(jwk != NULL);
+
+    testBegin("cupsJWTMakePublicKey(ES256)");
+    pubjwk = cupsJWTMakePublicKey(jwk);
+    testEnd(pubjwk != NULL);
+
+    testBegin("cupsJWTSign(ES256)");
+    testEnd(cupsJWTSign(jwt, CUPS_JWA_ES256, jwk));
+
+    testBegin("cupsJWTHasValidSignature(ES256)");
+    testEnd(cupsJWTHasValidSignature(jwt, pubjwk));
+
+    cupsJSONDelete(jwk);
+    cupsJSONDelete(pubjwk);
+
+    testBegin("cupsJWTMakePrivateKey(ES384)");
+    jwk = cupsJWTMakePrivateKey(CUPS_JWA_ES384);
+    testEnd(jwk != NULL);
+
+    testBegin("cupsJWTMakePublicKey(ES384)");
+    pubjwk = cupsJWTMakePublicKey(jwk);
+    testEnd(pubjwk != NULL);
+
+    testBegin("cupsJWTSign(ES384)");
+    testEnd(cupsJWTSign(jwt, CUPS_JWA_ES384, jwk));
+
+    testBegin("cupsJWTHasValidSignature(ES384)");
+    testEnd(cupsJWTHasValidSignature(jwt, pubjwk));
+
+    cupsJSONDelete(jwk);
+    cupsJSONDelete(pubjwk);
+
+    testBegin("cupsJWTMakePrivateKey(ES512)");
+    jwk = cupsJWTMakePrivateKey(CUPS_JWA_ES512);
+    testEnd(jwk != NULL);
+
+    testBegin("cupsJWTMakePublicKey(ES512)");
+    pubjwk = cupsJWTMakePublicKey(jwk);
+    testEnd(pubjwk != NULL);
+
+    testBegin("cupsJWTSign(ES512)");
+    testEnd(cupsJWTSign(jwt, CUPS_JWA_ES512, jwk));
+
+    testBegin("cupsJWTHasValidSignature(ES512)");
+    testEnd(cupsJWTHasValidSignature(jwt, pubjwk));
+
+    cupsJSONDelete(jwk);
+    cupsJSONDelete(pubjwk);
+
     testBegin("cupsJWTDelete()");
     cupsJWTDelete(jwt);
     testEnd(true);
