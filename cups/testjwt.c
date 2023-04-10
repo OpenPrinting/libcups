@@ -22,11 +22,13 @@ main(int  argc,				// I - Number of command-line arguments
 {
   int		i;			// Looping var
   cups_jwt_t	*jwt;			// JSON Web Token object
+  cups_json_t	*jwk;			// JSON Web Key Set
 
 
   if (argc == 1)
   {
     // Do unit tests...
+    cups_json_t	*pubjwk;		// Public key set
     static const char * const examples[][2] =
     {					// JWT examples
       {
@@ -93,23 +95,59 @@ main(int  argc,				// I - Number of command-line arguments
             "}"
       }
     };
-#if 0
-    static const char * const types[] =	// Node types
-    {
-      "CUPS_JTYPE_NULL",		// Null value
-      "CUPS_JTYPE_FALSE",		// Boolean false value
-      "CUPS_JTYPE_TRUE",		// Boolean true value
-      "CUPS_JTYPE_NUMBER",		// Number value
-      "CUPS_JTYPE_STRING",		// String value
-      "CUPS_JTYPE_ARRAY",		// Array value
-      "CUPS_JTYPE_OBJECT",		// Object value
-      "CUPS_JTYPE_KEY"			// Object key (string)
-    };
-#endif // 0
 
     testBegin("cupsJWTNew(NULL)");
     jwt = cupsJWTNew(NULL);
     testEnd(jwt != NULL);
+
+    testBegin("cupsJWTSetClaimNumber(CUPS_JWT_IAT)");
+    cupsJWTSetClaimNumber(jwt, CUPS_JWT_IAT, (double)time(NULL) + 86400.0);
+    testEnd(cupsJWTGetClaimNumber(jwt, CUPS_JWT_IAT) > 0.0);
+
+    testBegin("cupsJWTSetClaimString(CUPS_JWT_SUB)");
+    cupsJWTSetClaimString(jwt, CUPS_JWT_SUB, "joe.user");
+    testEnd(cupsJWTGetClaimString(jwt, CUPS_JWT_SUB) != NULL);
+
+    testBegin("cupsJWTMakePrivateKey(HS256)");
+    jwk = cupsJWTMakePrivateKey(CUPS_JWA_HS256);
+    testEnd(jwk != NULL);
+
+    testBegin("cupsJWTSign(HS256)");
+    testEnd(cupsJWTSign(jwt, CUPS_JWA_HS256, jwk));
+
+    testBegin("cupsJWTHasValidSignature(HS256)");
+    testEnd(cupsJWTHasValidSignature(jwt, jwk));
+
+    cupsJSONDelete(jwk);
+
+    testBegin("cupsJWTMakePrivateKey(RS256)");
+    jwk = cupsJWTMakePrivateKey(CUPS_JWA_RS256);
+    testEnd(jwk != NULL);
+
+    testBegin("cupsJWTMakePublicKey(RS256)");
+    pubjwk = cupsJWTMakePublicKey(jwk);
+    testEnd(pubjwk != NULL);
+
+    testBegin("cupsJWTSign(RS256)");
+    testEnd(cupsJWTSign(jwt, CUPS_JWA_RS256, jwk));
+
+    testBegin("cupsJWTHasValidSignature(RS256)");
+    testEnd(cupsJWTHasValidSignature(jwt, pubjwk));
+
+    testBegin("cupsJWTSign(RS384)");
+    testEnd(cupsJWTSign(jwt, CUPS_JWA_RS384, jwk));
+
+    testBegin("cupsJWTHasValidSignature(RS384)");
+    testEnd(cupsJWTHasValidSignature(jwt, pubjwk));
+
+    testBegin("cupsJWTSign(RS512)");
+    testEnd(cupsJWTSign(jwt, CUPS_JWA_RS512, jwk));
+
+    testBegin("cupsJWTHasValidSignature(RS512)");
+    testEnd(cupsJWTHasValidSignature(jwt, pubjwk));
+
+    cupsJSONDelete(jwk);
+    cupsJSONDelete(pubjwk);
 
     testBegin("cupsJWTDelete()");
     cupsJWTDelete(jwt);
@@ -117,8 +155,6 @@ main(int  argc,				// I - Number of command-line arguments
 
     for (i = 0; i < (int)(sizeof(examples) / sizeof(examples[0])); i ++)
     {
-      cups_json_t	*jwk = NULL;	// JSON Web Key Set
-
       testBegin("cupsJWTImportString(\"%s\")", examples[i][0]);
       if ((jwt = cupsJWTImportString(examples[i][0])) != NULL)
       {
@@ -144,208 +180,6 @@ main(int  argc,				// I - Number of command-line arguments
       cupsJSONDelete(jwk);
       cupsJWTDelete(jwt);
     }
-
-#if 0
-    testBegin("cupsJSONGetCount(root)");
-    count = cupsJSONGetCount(json);
-    testEndMessage(count == 0, "%u", (unsigned)count);
-
-    testBegin("cupsJSONGetType(root)");
-    type = cupsJSONGetType(json);
-    testEndMessage(type == CUPS_JTYPE_OBJECT, "%s", types[type]);
-
-    testBegin("cupsJSONNewKey('string')");
-    current = cupsJSONNewKey(json, NULL, "string");
-    testEnd(current != NULL);
-
-    testBegin("cupsJSONGetType(key)");
-    type = cupsJSONGetType(current);
-    testEndMessage(type == CUPS_JTYPE_KEY, "%s", types[type]);
-
-    testBegin("cupsJSONNewString('value')");
-    current = cupsJSONNewString(json, current, "value");
-    testEnd(current != NULL);
-
-    testBegin("cupsJSONGetType(string)");
-    type = cupsJSONGetType(current);
-    testEndMessage(type == CUPS_JTYPE_STRING, "%s", types[type]);
-
-    testBegin("cupsJSONNewKey('number')");
-    current = cupsJSONNewKey(json, NULL, "number");
-    testEnd(current != NULL);
-
-    testBegin("cupsJSONNewNumber(42)");
-    current = cupsJSONNewNumber(json, current, 42);
-    testEnd(current != NULL);
-
-    testBegin("cupsJSONGetType(number)");
-    type = cupsJSONGetType(current);
-    testEndMessage(type == CUPS_JTYPE_NUMBER, "%s", types[type]);
-
-    testBegin("cupsJSONNewKey('null')");
-    current = cupsJSONNewKey(json, NULL, "null");
-    testEnd(current != NULL);
-
-    testBegin("cupsJSONNew(null)");
-    current = cupsJSONNew(json, current, CUPS_JTYPE_NULL);
-    testEnd(current != NULL);
-
-    testBegin("cupsJSONGetType(null)");
-    type = cupsJSONGetType(current);
-    testEndMessage(type == CUPS_JTYPE_NULL, "%s", types[type]);
-
-    testBegin("cupsJSONNewKey('false')");
-    current = cupsJSONNewKey(json, NULL, "false");
-    testEnd(current != NULL);
-
-    testBegin("cupsJSONNew(false)");
-    current = cupsJSONNew(json, current, CUPS_JTYPE_FALSE);
-    testEnd(current != NULL);
-
-    testBegin("cupsJSONGetType(false)");
-    type = cupsJSONGetType(current);
-    testEndMessage(type == CUPS_JTYPE_FALSE, "%s", types[type]);
-
-    testBegin("cupsJSONNewKey('true')");
-    current = cupsJSONNewKey(json, NULL, "true");
-    testEnd(current != NULL);
-
-    testBegin("cupsJSONNew(true)");
-    current = cupsJSONNew(json, current, CUPS_JTYPE_TRUE);
-    testEnd(current != NULL);
-
-    testBegin("cupsJSONGetType(true)");
-    type = cupsJSONGetType(current);
-    testEndMessage(type == CUPS_JTYPE_TRUE, "%s", types[type]);
-
-    testBegin("cupsJSONNewKey('array')");
-    current = cupsJSONNewKey(json, NULL, "array");
-    testEnd(current != NULL);
-
-    testBegin("cupsJSONNew(array)");
-    parent = cupsJSONNew(json, current, CUPS_JTYPE_ARRAY);
-    testEnd(parent != NULL);
-
-    testBegin("cupsJSONGetType(array)");
-    type = cupsJSONGetType(parent);
-    testEndMessage(type == CUPS_JTYPE_ARRAY, "%s", types[type]);
-
-    testBegin("cupsJSONNewString(array, 'foo')");
-    current = cupsJSONNewString(parent, NULL, "foo");
-    testEnd(current != NULL);
-
-    testBegin("cupsJSONNewString(array, 'bar')");
-    current = cupsJSONNewString(parent, current, "bar");
-    testEnd(current != NULL);
-
-    testBegin("cupsJSONNewNumber(array, 0.5)");
-    current = cupsJSONNewNumber(parent, current, 0.5);
-    testEnd(current != NULL);
-
-    testBegin("cupsJSONNewNumber(array, 123456789123456789.0)");
-    current = cupsJSONNewNumber(parent, current, 123456789123456789.0);
-    testEnd(current != NULL);
-
-    testBegin("cupsJSONNew(array, null)");
-    current = cupsJSONNew(parent, current, CUPS_JTYPE_NULL);
-    testEnd(current != NULL);
-
-    testBegin("cupsJSONNewKey('object')");
-    current = cupsJSONNewKey(json, NULL, "object");
-    testEnd(current != NULL);
-
-    testBegin("cupsJSONNew(object)");
-    parent = cupsJSONNew(json, current, CUPS_JTYPE_OBJECT);
-    testEnd(parent != NULL);
-
-    testBegin("cupsJSONNewKey(object, 'a')");
-    current = cupsJSONNewKey(parent, NULL, "a");
-    testEnd(current != NULL);
-
-    testBegin("cupsJSONNewString(object, 'one')");
-    current = cupsJSONNewString(parent, current, "one");
-    testEnd(current != NULL);
-
-    testBegin("cupsJSONNewKey(object, 'b')");
-    current = cupsJSONNewKey(parent, current, "b");
-    testEnd(current != NULL);
-
-    testBegin("cupsJSONNewNumber(object, 2)");
-    current = cupsJSONNewNumber(parent, current, 2);
-    testEnd(current != NULL);
-
-    testBegin("cupsJSONGetCount(root)");
-    count = cupsJSONGetCount(json);
-    testEndMessage(count == 14, "%u", (unsigned)count);
-
-    testBegin("cupsJSONSaveFile(root, 'test.json')");
-    if (cupsJSONSaveFile(json, "test.json"))
-    {
-      testEnd(true);
-
-      testBegin("cupsJSONLoadFile('test.json')");
-      parent = cupsJSONLoadFile("test.json");
-      testEnd(parent != NULL);
-
-      cupsJSONDelete(parent);
-    }
-    else
-    {
-      testEndMessage(false, "%s", cupsLastErrorString());
-    }
-
-    testBegin("cupsJSONSaveString(root)");
-    if ((s = cupsJSONSaveString(json)) != NULL)
-    {
-      testEnd(true);
-
-      testBegin("cupsJSONLoadString('%s')", s);
-      parent = cupsJSONLoadString(s);
-      testEnd(parent != NULL);
-
-      cupsJSONDelete(parent);
-      free(s);
-    }
-    else
-    {
-      testEndMessage(false, "%s", cupsLastErrorString());
-    }
-
-    testBegin("cupsJSONDelete(root)");
-    cupsJSONDelete(json);
-    testEnd(true);
-
-    testBegin("cupsJSONLoadURL('https://accounts.google.com/.well-known/openid-configuration', no last modified)");
-    json = cupsJSONLoadURL("https://accounts.google.com/.well-known/openid-configuration", &last_modified);
-
-    if (json)
-    {
-      char	last_modified_date[256];// Last-Modified string value
-
-      testEnd(true);
-      cupsJSONDelete(json);
-
-      testBegin("cupsJSONLoadURL('https://accounts.google.com/.well-known/openid-configuration', since %s)", httpGetDateString(last_modified, last_modified_date, sizeof(last_modified_date)));
-      json = cupsJSONLoadURL("https://accounts.google.com/.well-known/openid-configuration", &last_modified);
-
-      if (json)
-        testEnd(true);
-      else if (cupsLastError() == IPP_STATUS_OK_EVENTS_COMPLETE)
-        testEndMessage(true, "no change from last request");
-      else
-        testEndMessage(false, cupsLastErrorString());
-
-      cupsJSONDelete(json);
-    }
-    else if (cupsLastError() == IPP_STATUS_ERROR_SERVICE_UNAVAILABLE)
-    {
-      testEndMessage(true, "%s", cupsLastErrorString());
-    }
-    else
-    {
-      testEndMessage(false, "%s", cupsLastErrorString());
-    }
-#endif // 0
 
     if (!testsPassed)
       return (1);

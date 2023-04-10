@@ -81,6 +81,7 @@ static const char * const cups_jwa_algorithms[CUPS_JWA_MAX] =
 
 #ifdef HAVE_OPENSSL
 static BIGNUM	*make_bignum(cups_json_t *jwk, const char *key);
+static void	make_bnstring(const BIGNUM *bn, char *buffer, size_t bufsize);
 static EC_KEY	*make_ec_key(cups_json_t *jwk, bool verify);
 static RSA	*make_rsa(cups_json_t *jwk);
 #else // HAVE_GNUTLS
@@ -440,6 +441,235 @@ cupsJWTImportString(const char *token)	// I - JWS Compact Serialization string
 
 
 //
+// 'cupsJWTMakePrivateKey()' - Make a JSON Web Key for encryption and signing.
+//
+// This function makes a JSON Web Key (JWK) for the specified JWS/JWE algorithm
+// for use when signing or encrypting JSON Web Tokens.  The resulting JWK
+// *must not* be provided to clients - instead, call @link cupsJWTMakePublicKey@
+// to produce a public key subset suitable for verification and decryption.
+//
+
+cups_json_t *				// O - Private JSON Web Key or `NULL` on error
+cupsJWTMakePrivateKey(cups_jwa_t alg)	// I - Signing/encryption algorithm
+{
+  cups_json_t	*jwk,			// Private JSON Web Key
+		*node;			// Current node
+  char		kid[256];		// Key identifier value
+  const char	*kty;			// Key type
+
+
+  if (alg < CUPS_JWA_HS256 || alg > CUPS_JWA_ES512)
+    return (NULL);
+
+  jwk = cupsJSONNew(NULL, NULL, CUPS_JTYPE_OBJECT);
+  node = cupsJSONNewKey(jwk, NULL, "kty");
+
+  if (alg >= CUPS_JWA_HS256 && alg <= CUPS_JWA_HS512)
+  {
+    // Simple N-byte random key...
+    unsigned char	key[128];	// Key bytes
+    size_t		key_len;	// Key length
+    char		key_base64[172];// Base64URL-encoded key bytes
+
+    node = cupsJSONNewString(jwk, node, kty = "oct");
+
+    key_len = alg == CUPS_JWA_HS256 ? 64 : 128;
+#ifdef HAVE_OPENSSL
+    RAND_bytes(key, key_len);
+#else // HAVE_GNUTLS
+    gnutls_rnd(GNUTLS_RND_KEY, key, key_len);
+#endif // HAVE_OPENSSL
+
+    httpEncode64(key_base64, sizeof(key_base64), (char *)key, key_len, true);
+    node = cupsJSONNewKey(jwk, node, "k");
+    node = cupsJSONNewString(jwk, node, key_base64);
+  }
+  else if (alg >= CUPS_JWA_RS256 && alg <= CUPS_JWA_RS512)
+  {
+    // 3072-bit RSA key
+    char	n[1024],		// Public key modulus
+		e[1024],		// Public key exponent
+		d[1024],		// Private key exponent
+		p[1024],		// Private key first prime factor
+		q[1024],		// Private key second prime factor
+		dp[1024],		// First factor exponent
+		dq[1024],		// Second factor exponent
+		qi[1024];		// First CRT coefficient
+
+#ifdef HAVE_OPENSSL
+    RSA	*rsa;			// RSA public/private key
+
+    rsa = RSA_generate_key(3072, 0x10001, NULL, NULL);
+    make_bnstring(RSA_get0_n(rsa), n, sizeof(n));
+    make_bnstring(RSA_get0_e(rsa), e, sizeof(e));
+    make_bnstring(RSA_get0_d(rsa), d, sizeof(d));
+    make_bnstring(RSA_get0_p(rsa), p, sizeof(p));
+    make_bnstring(RSA_get0_q(rsa), q, sizeof(q));
+    make_bnstring(RSA_get0_dmp1(rsa), dp, sizeof(dp));
+    make_bnstring(RSA_get0_dmq1(rsa), dq, sizeof(dq));
+    make_bnstring(RSA_get0_iqmp(rsa), qi, sizeof(qi));
+
+    RSA_free(rsa);
+
+#else // HAVE_GNUTLS
+#endif // HAVE_OPENSSL
+
+    node = cupsJSONNewString(jwk, node, kty = "RSA");
+    node = cupsJSONNewKey(jwk, node, "n");
+    node = cupsJSONNewString(jwk, node, n);
+    node = cupsJSONNewKey(jwk, node, "e");
+    node = cupsJSONNewString(jwk, node, e);
+    node = cupsJSONNewKey(jwk, node, "d");
+    node = cupsJSONNewString(jwk, node, d);
+    node = cupsJSONNewKey(jwk, node, "p");
+    node = cupsJSONNewString(jwk, node, p);
+    node = cupsJSONNewKey(jwk, node, "q");
+    node = cupsJSONNewString(jwk, node, q);
+    node = cupsJSONNewKey(jwk, node, "dp");
+    node = cupsJSONNewString(jwk, node, dp);
+    node = cupsJSONNewKey(jwk, node, "dq");
+    node = cupsJSONNewString(jwk, node, dq);
+    node = cupsJSONNewKey(jwk, node, "qi");
+    node = cupsJSONNewString(jwk, node, qi);
+  }
+  else
+  {
+    // N-bit ECC key
+    char	x[1024],		// X coordinate
+		y[1024],		// Y coordinate
+		d[1024];		// Private key
+    static const char * const curves[] =
+    {
+      "P-256",
+      "P-384",
+      "P-521"
+    };
+
+#ifdef HAVE_OPENSSL
+    EC_KEY	*ec;			// EC object
+    const EC_GROUP *group;		// Group
+    const EC_POINT *pubkey;		// Public key portion
+    BIGNUM	*bx, *by;		// Public key coordinates
+
+    if (alg == CUPS_JWA_ES256)
+      ec = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
+    else if (alg == CUPS_JWA_ES384)
+      ec = EC_KEY_new_by_curve_name(NID_secp384r1);
+    else
+      ec = EC_KEY_new_by_curve_name(NID_secp521r1);
+
+    EC_KEY_generate_key(ec);
+
+    make_bnstring(EC_KEY_get0_private_key(ec), d, sizeof(d));
+
+    group  = EC_KEY_get0_group(ec);
+    pubkey = EC_KEY_get0_public_key(ec);
+
+    bx = BN_new();
+    by = BN_new();
+    EC_POINT_get_affine_coordinates(group, pubkey, bx, by, NULL);
+    make_bnstring(bx, x, sizeof(x));
+    make_bnstring(by, y, sizeof(y));
+    BN_free(bx);
+    BN_free(by);
+
+    EC_KEY_free(ec);
+
+#else // HAVE_GNUTLS
+#endif // HAVE_OPENSSL
+
+    node = cupsJSONNewString(jwk, node, kty = "EC");
+    node = cupsJSONNewKey(jwk, node, "crv");
+    node = cupsJSONNewString(jwk, node, curves[alg - CUPS_JWA_ES256]);
+    node = cupsJSONNewKey(jwk, node, "x");
+    node = cupsJSONNewString(jwk, node, x);
+    node = cupsJSONNewKey(jwk, node, "y");
+    node = cupsJSONNewString(jwk, node, y);
+    node = cupsJSONNewKey(jwk, node, "d");
+    node = cupsJSONNewString(jwk, node, d);
+  }
+
+  // Add key identifier using key type and current date/time...
+  snprintf(kid, sizeof(kid), "%s%ld", kty, (long)time(NULL));
+  node = cupsJSONNewKey(jwk, node, "kid");
+  node = cupsJSONNewString(jwk, node, kid);
+
+  return (jwk);
+}
+
+
+//
+// 'cupsJWTMakePublicKey()' - Make a JSON Web Key for decryption and verification.
+//
+// This function makes a public JSON Web Key (JWK) from the specified private
+// JWK suitable for use when decrypting or verifying a JWE/JWS message.
+//
+
+cups_json_t *				// O - Public JSON Web Key or `NULL` on error
+cupsJWTMakePublicKey(cups_json_t *jwk)	// I - Private JSON Web Key
+{
+  cups_json_t	*pubjwt = NULL,		// Public JSON Web Key
+		*node;			// Current node
+  const char	*kid,			// Key ID
+		*kty;			// Key type
+
+
+  kid = cupsJSONGetString(cupsJSONFind(jwk, "kid"));
+
+  if ((kty = cupsJSONGetString(cupsJSONFind(jwk, "kty"))) == NULL)
+  {
+    // No type so we can't load it...
+    return (NULL);
+  }
+  else if (!strcmp(kty, "RSA"))
+  {
+    // RSA private key
+    const char	*n = cupsJSONGetString(cupsJSONFind(jwk, "n"));
+    const char	*e = cupsJSONGetString(cupsJSONFind(jwk, "e"));
+
+    pubjwt = cupsJSONNew(NULL, NULL, CUPS_JTYPE_OBJECT);
+    node   = cupsJSONNewKey(pubjwt, NULL, "kty");
+    node   = cupsJSONNewString(pubjwt, node, "RSA");
+    node   = cupsJSONNewKey(pubjwt, node, "n");
+    node   = cupsJSONNewString(pubjwt, node, n);
+    node   = cupsJSONNewKey(pubjwt, node, "e");
+    node   = cupsJSONNewString(pubjwt, node, e);
+
+    if (kid)
+    {
+      node = cupsJSONNewKey(pubjwt, node, "kid");
+      node = cupsJSONNewString(pubjwt, node, kid);
+    }
+  }
+  else if (!strcmp(kty, "EC"))
+  {
+    // ECDSA private key
+    const char	*crv = cupsJSONGetString(cupsJSONFind(jwk, "crv"));
+    const char	*x = cupsJSONGetString(cupsJSONFind(jwk, "x"));
+    const char	*y = cupsJSONGetString(cupsJSONFind(jwk, "y"));
+
+    pubjwt = cupsJSONNew(NULL, NULL, CUPS_JTYPE_OBJECT);
+    node   = cupsJSONNewKey(pubjwt, NULL, "kty");
+    node   = cupsJSONNewString(pubjwt, node, "EC");
+    node   = cupsJSONNewKey(pubjwt, node, "crv");
+    node   = cupsJSONNewString(pubjwt, node, crv);
+    node   = cupsJSONNewKey(pubjwt, node, "x");
+    node   = cupsJSONNewString(pubjwt, node, x);
+    node   = cupsJSONNewKey(pubjwt, node, "y");
+    node   = cupsJSONNewString(pubjwt, node, y);
+
+    if (kid)
+    {
+      node = cupsJSONNewKey(pubjwt, node, "kid");
+      node = cupsJSONNewString(pubjwt, node, kid);
+    }
+  }
+
+  return (pubjwt);
+}
+
+
+//
 // 'cupsJWTNew()' - Create a new, empty JSON Web Token.
 //
 
@@ -617,6 +847,30 @@ make_bignum(cups_json_t *jwk,		// I - JSON web key
 
   // Convert to a BIGNUM...
   return (BN_bin2bn(value_bytes, value_len, NULL));
+}
+
+
+//
+// 'make_bnstring()' - Make a Base64URL-encoded string for a BIGNUM.
+//
+
+static void
+make_bnstring(const BIGNUM *bn,		// I - Number
+              char         *buffer,	// I - String buffer
+              size_t       bufsize)	// I - Size of string buffer
+{
+  unsigned char	value_bytes[512];	// Value bytes
+  size_t	value_len;		// Number of bytes
+
+
+  if ((value_len = (size_t)BN_num_bytes(bn)) > sizeof(value_bytes))
+  {
+    *buffer = '\0';
+    return;
+  }
+
+  BN_bn2bin(bn, value_bytes);
+  httpEncode64(buffer, bufsize, (char *)value_bytes, value_len, true);
 }
 
 
