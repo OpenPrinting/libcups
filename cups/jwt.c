@@ -17,6 +17,7 @@
 #else
 #  include <gnutls/gnutls.h>
 #  include <gnutls/abstract.h>
+#  include <gnutls/crypto.h>
 #endif // HAVE_OPENSSL
 
 

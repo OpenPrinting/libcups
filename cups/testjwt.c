@@ -29,6 +29,7 @@ main(int  argc,				// I - Number of command-line arguments
   {
     // Do unit tests...
     cups_json_t	*pubjwk;		// Public key set
+    char	*temp;			// Temporary string
     static const char * const examples[][2] =
     {					// JWT examples
       {
@@ -112,6 +113,12 @@ main(int  argc,				// I - Number of command-line arguments
     jwk = cupsJWTMakePrivateKey(CUPS_JWA_HS256);
     testEnd(jwk != NULL);
 
+    if ((temp = cupsJSONExportString(jwk)) != NULL)
+    {
+      puts(temp);
+      free(temp);
+    }
+
     testBegin("cupsJWTSign(HS256)");
     testEnd(cupsJWTSign(jwt, CUPS_JWA_HS256, jwk));
 
@@ -124,9 +131,21 @@ main(int  argc,				// I - Number of command-line arguments
     jwk = cupsJWTMakePrivateKey(CUPS_JWA_RS256);
     testEnd(jwk != NULL);
 
+    if ((temp = cupsJSONExportString(jwk)) != NULL)
+    {
+      puts(temp);
+      free(temp);
+    }
+
     testBegin("cupsJWTMakePublicKey(RS256)");
     pubjwk = cupsJWTMakePublicKey(jwk);
     testEnd(pubjwk != NULL);
+
+    if ((temp = cupsJSONExportString(pubjwk)) != NULL)
+    {
+      puts(temp);
+      free(temp);
+    }
 
     testBegin("cupsJWTSign(RS256)");
     testEnd(cupsJWTSign(jwt, CUPS_JWA_RS256, jwk));
@@ -153,9 +172,21 @@ main(int  argc,				// I - Number of command-line arguments
     jwk = cupsJWTMakePrivateKey(CUPS_JWA_ES256);
     testEnd(jwk != NULL);
 
+    if ((temp = cupsJSONExportString(jwk)) != NULL)
+    {
+      puts(temp);
+      free(temp);
+    }
+
     testBegin("cupsJWTMakePublicKey(ES256)");
     pubjwk = cupsJWTMakePublicKey(jwk);
     testEnd(pubjwk != NULL);
+
+    if ((temp = cupsJSONExportString(pubjwk)) != NULL)
+    {
+      puts(temp);
+      free(temp);
+    }
 
     testBegin("cupsJWTSign(ES256)");
     testEnd(cupsJWTSign(jwt, CUPS_JWA_ES256, jwk));
@@ -170,9 +201,21 @@ main(int  argc,				// I - Number of command-line arguments
     jwk = cupsJWTMakePrivateKey(CUPS_JWA_ES384);
     testEnd(jwk != NULL);
 
+    if ((temp = cupsJSONExportString(jwk)) != NULL)
+    {
+      puts(temp);
+      free(temp);
+    }
+
     testBegin("cupsJWTMakePublicKey(ES384)");
     pubjwk = cupsJWTMakePublicKey(jwk);
     testEnd(pubjwk != NULL);
+
+    if ((temp = cupsJSONExportString(pubjwk)) != NULL)
+    {
+      puts(temp);
+      free(temp);
+    }
 
     testBegin("cupsJWTSign(ES384)");
     testEnd(cupsJWTSign(jwt, CUPS_JWA_ES384, jwk));
@@ -187,9 +230,21 @@ main(int  argc,				// I - Number of command-line arguments
     jwk = cupsJWTMakePrivateKey(CUPS_JWA_ES512);
     testEnd(jwk != NULL);
 
+    if ((temp = cupsJSONExportString(jwk)) != NULL)
+    {
+      puts(temp);
+      free(temp);
+    }
+
     testBegin("cupsJWTMakePublicKey(ES512)");
     pubjwk = cupsJWTMakePublicKey(jwk);
     testEnd(pubjwk != NULL);
+
+    if ((temp = cupsJSONExportString(pubjwk)) != NULL)
+    {
+      puts(temp);
+      free(temp);
+    }
 
     testBegin("cupsJWTSign(ES512)");
     testEnd(cupsJWTSign(jwt, CUPS_JWA_ES512, jwk));
