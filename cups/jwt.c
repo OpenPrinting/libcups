@@ -246,7 +246,7 @@ cupsJWTHasValidSignature(
   gnutls_pubkey_t	key;		// Public key
   gnutls_datum_t	text_datum,	// Text datum
 			sig_datum;	// Signature datum
-  static gnutls_sign_algorithm_t algs[] = { GNUTLS_DIG_SHA256, GNUTLS_DIG_SHA384, GNUTLS_DIG_SHA512, GNUTLS_SIGN_ECDSA_SHA256, GNUTLS_SIGN_ECDSA_SHA384, GNUTLS_SIGN_ECDSA_SHA512 };
+  static int algs[] = { GNUTLS_DIG_SHA256, GNUTLS_DIG_SHA384, GNUTLS_DIG_SHA512, GNUTLS_SIGN_ECDSA_SHA256, GNUTLS_SIGN_ECDSA_SHA384, GNUTLS_SIGN_ECDSA_SHA512 };
 					// Hash algorithms
 #endif // HAVE_OPENSSL
 
@@ -1313,7 +1313,7 @@ make_signature(cups_jwt_t    *jwt,	// I  - JWT
   gnutls_privkey_t	key;		// Private key
   gnutls_datum_t	text_datum,	// Text datum
 			sig_datum;	// Signature datum
-  static int algs[] = { GNUTLS_DIG_SHA256, GNUTLS_DIG_SHA384, GNUTLS_DIG_SHA512 };
+  static int algs[] = { GNUTLS_DIG_SHA256, GNUTLS_DIG_SHA384, GNUTLS_DIG_SHA512, GNUTLS_SIGN_ECDSA_SHA256, GNUTLS_SIGN_ECDSA_SHA384, GNUTLS_SIGN_ECDSA_SHA512 };
 					// Hash algorithms
 #endif // HAVE_OPENSSL
 
@@ -1430,7 +1430,7 @@ make_signature(cups_jwt_t    *jwt,	// I  - JWT
       sig_datum.data  = NULL;
       sig_datum.size  = 0;
 
-      if (!gnutls_privkey_sign_data(key, algs[alg - CUPS_JWA_ES256], 0, &text_datum, &sig_datum) && sig_datum.size <= *sigsize)
+      if (!gnutls_privkey_sign_data(key, algs[alg - CUPS_JWA_RS256], 0, &text_datum, &sig_datum) && sig_datum.size <= *sigsize)
       {
         gnutls_datum_t	r, s;		// Signature coordinates
         unsigned sig_len;
