@@ -6065,7 +6065,8 @@ process_job(ippeve_job_t *job)		/* I - Job */
       * Close the output file in the parent process...
       */
 
-      close(mystdout);
+      if (mystdout >= 0)
+	close(mystdout);
 
      /*
       * If the pipe exists, read from it until EOF...
