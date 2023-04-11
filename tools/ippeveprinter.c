@@ -6036,9 +6036,14 @@ process_job(ippeve_job_t *job)		/* I - Job */
       fprintf(stderr, "[Job %d] Unable to start job processing command: %s\n", job->id, strerror(errno));
       status = -1;
 
-      close(mystdout);
-      close(mypipe[0]);
-      close(mypipe[1]);
+      if (mystdout >= 0)
+	close(mystdout);
+
+      if (mypipe[0] >= 0)
+      {
+	close(mypipe[0]);
+	close(mypipe[1]);
+      }
 
      /*
       * Free memory used for environment...

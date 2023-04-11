@@ -139,8 +139,8 @@ cupsHMACData(
   size_t	i,			// Looping var
 		b;			// Block size
   unsigned char	buffer[128],		// Intermediate buffer
-		hash[64],		// Hash buffer
-		hkey[64];		// Hashed key buffer
+		hash[128],		// Hash buffer
+		hkey[128];		// Hashed key buffer
   ssize_t	hashlen;		// Length of hash
 
 

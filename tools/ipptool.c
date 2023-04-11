@@ -6997,7 +6997,8 @@ with_content(
       }
 
       status = cupsGetFd(http, resource, fd);
-      fstat(fd, &fileinfo);
+      if (fstat(fd, &fileinfo))
+        memset(&fileinfo, 0, sizeof(fileinfo));
       close(fd);
 
       if (status != HTTP_STATUS_OK)
