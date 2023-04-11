@@ -64,9 +64,15 @@ static int		tls_options = -1,/* Options for TLS connections */
  * 'cupsMakeServerCredentials()' - Make a self-signed certificate and private key pair.
  */
 
-int					// O - 1 on success, 0 on failure
+bool					// O - `true` on success, `false` on failure
 cupsMakeServerCredentials(
-    const char *path,			// I - Path to keychain/directory
+    const char *path,			// I - Path to keychain/directory or `NULL` for default
+    const char *organization,		// I - Organization or `NULL` to use common name
+    const char *org_unit,		// I - Organizational unit or `NULL` for none
+    const char *locality,		// I - City/town or `NULL` for "Unknown"
+    const char *state_province,		// I - State/province or `NULL` for "Unknown"
+    const char *country,		// I - Country or `NULL` for locale-based default
+    const char *root_name,		// I - Root certificate/domain name or `NULL` for site/self-signed
     const char *common_name,		// I - Common name
     int        num_alt_names,		// I - Number of subject alternate names
     const char **alt_names,		// I - Subject Alternate Names
@@ -177,16 +183,19 @@ cupsMakeServerCredentials(
   language = cupsLangDefault();
   langname = cupsLangGetName(language);
   name     = X509_NAME_new();
-  if (strlen(langname) == 5)
+  if (country)
+    X509_NAME_add_entry_by_txt(name, SN_countryName, MBSTRING_ASC, (unsigned char *)country, -1, -1, 0);
+  else if (strlen(langname) == 5)
     X509_NAME_add_entry_by_txt(name, SN_countryName, MBSTRING_ASC, (unsigned char *)langname + 3, -1, -1, 0);
   else
     X509_NAME_add_entry_by_txt(name, SN_countryName, MBSTRING_ASC, (unsigned char *)"US", -1, -1, 0);
   X509_NAME_add_entry_by_txt(name, SN_commonName, MBSTRING_ASC, (unsigned char *)common_name, -1, -1, 0);
-  X509_NAME_add_entry_by_txt(name, SN_organizationName, MBSTRING_ASC, (unsigned char *)common_name, -1, -1, 0);
-  X509_NAME_add_entry_by_txt(name, SN_organizationalUnitName, MBSTRING_ASC, (unsigned char *)"Unknown", -1, -1, 0);
-  X509_NAME_add_entry_by_txt(name, SN_stateOrProvinceName, MBSTRING_ASC, (unsigned char *)"Unknown", -1, -1, 0);
-  X509_NAME_add_entry_by_txt(name, SN_localityName, MBSTRING_ASC, (unsigned char *)"Unknown", -1, -1, 0);
+  X509_NAME_add_entry_by_txt(name, SN_organizationName, MBSTRING_ASC, (unsigned char *)(organization ? organization : common_name), -1, -1, 0);
+  X509_NAME_add_entry_by_txt(name, SN_organizationalUnitName, MBSTRING_ASC, (unsigned char *)(org_unit ? org_unit : ""), -1, -1, 0);
+  X509_NAME_add_entry_by_txt(name, SN_stateOrProvinceName, MBSTRING_ASC, (unsigned char *)(state_province ? state_province : "Unknown"), -1, -1, 0);
+  X509_NAME_add_entry_by_txt(name, SN_localityName, MBSTRING_ASC, (unsigned char *)(locality ? locality : "Unknown"), -1, -1, 0);
 
+  // TODO set issuer name to CA subject name (X509_get_subject_name)
   X509_set_issuer_name(cert, name);
   X509_set_subject_name(cert, name);
   X509_NAME_free(name);
@@ -218,6 +227,7 @@ cupsMakeServerCredentials(
   }
 
   // Add extensions that are required to make Chrome happy...
+  // TODO: Support creating CA certs
   http_x509_add_ext(cert, NID_basic_constraints, "critical,CA:FALSE,pathlen:0");
   http_x509_add_ext(cert, NID_key_usage, "critical,digitalSignature,keyEncipherment");
   http_x509_add_ext(cert, NID_ext_key_usage, "1.3.6.1.5.5.7.3.1");
@@ -225,6 +235,7 @@ cupsMakeServerCredentials(
   http_x509_add_ext(cert, NID_authority_key_identifier, "keyid,issuer");
   X509_set_version(cert, 2); // v3
 
+  // TODO: Sign with CA key when available
   X509_sign(cert, pkey, EVP_sha256());
 
   // Save them...

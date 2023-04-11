@@ -336,7 +336,8 @@ extern const char	*cupsLocalizeDestMedia(http_t *http, cups_dest_t *dest, cups_d
 extern const char	*cupsLocalizeDestOption(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, const char *option) _CUPS_PUBLIC;
 extern const char	*cupsLocalizeDestValue(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, const char *option, const char *value) _CUPS_PUBLIC;
 
-extern int		cupsMakeServerCredentials(const char *path, const char *common_name, int num_alt_names, const char **alt_names, time_t expiration_date) _CUPS_PUBLIC;
+extern bool		cupsMakeServerCredentials(const char *path, const char *organization, const char *org_unit, const char *locality, const char *state_province, const char *country, const char *root_name, const char *common_name, int num_alt_names, const char **alt_names, time_t expiration_date) _CUPS_PUBLIC;
+extern char		*cupsMakeServerRequest(const char *path, const char *organization, const char *org_unit, const char *locality, const char *state_province, const char *country, const char *common_name, int num_alt_names, const char **alt_names) _CUPS_PUBLIC;
 
 extern char		*cupsNotifySubject(cups_lang_t *lang, ipp_t *event) _CUPS_PUBLIC;
 extern char		*cupsNotifyText(cups_lang_t *lang, ipp_t *event) _CUPS_PUBLIC;
@@ -349,6 +350,7 @@ extern ssize_t		cupsReadResponseData(http_t *http, char *buffer, size_t length) 
 extern size_t		cupsRemoveDest(const char *name, const char *instance, size_t num_dests, cups_dest_t **dests) _CUPS_PUBLIC;
 extern size_t		cupsRemoveOption(const char *name, size_t num_options, cups_option_t **options) _CUPS_PUBLIC;
 
+extern bool		cupsSaveServerCredentials(const char *path, const char *pem) _CUPS_PUBLIC;
 extern http_status_t	cupsSendRequest(http_t *http, ipp_t *request, const char *resource, size_t length) _CUPS_PUBLIC;
 extern void		cupsSetOAuthCB(cups_oauth_cb_t cb, void *data) _CUPS_PUBLIC;
 extern void		cupsSetClientCertCB(cups_client_cert_cb_t cb, void *user_data) _CUPS_PUBLIC;
