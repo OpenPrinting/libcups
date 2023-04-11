@@ -485,10 +485,12 @@ AS_IF([test -n "$GCC"], [
     AS_IF([test x$enable_sanitizer = xyes], [
 	# Use -fsanitize=address with debugging...
 	OPTIM="$OPTIM -fsanitize=address"
+    ], [echo "$CPPFLAGS $CFLAGS" | grep -q _FORTIFY_SOURCE], [
+        # Don't add _FORTIFY_SOURCE if it is already there
     ], [
 	# Otherwise use the Fortify enhancements to catch any unbounded
 	# string operations...
-	CPPFLAGS="$CPPFLAGS -D_FORTIFY_SOURCE=2"
+	CPPFLAGS="$CPPFLAGS -D_FORTIFY_SOURCE=3"
     ])
 
     dnl Show all standard warnings + unused variables when compiling...

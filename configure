@@ -5254,11 +5254,16 @@ then :
 	# Use -fsanitize=address with debugging...
 	OPTIM="$OPTIM -fsanitize=address"
 
+elif echo "$CPPFLAGS $CFLAGS" | grep -q _FORTIFY_SOURCE
+then :
+
+        # Don't add _FORTIFY_SOURCE if it is already there
+
 else $as_nop
 
 	# Otherwise use the Fortify enhancements to catch any unbounded
 	# string operations...
-	CPPFLAGS="$CPPFLAGS -D_FORTIFY_SOURCE=2"
+	CPPFLAGS="$CPPFLAGS -D_FORTIFY_SOURCE=3"
 
 fi
 
