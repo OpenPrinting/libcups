@@ -231,7 +231,7 @@ main(int  argc,				// I - Number of command-line arguments
         tlsVersion = 13;
         break;
   }
-  cipherName = gnutls_ciphersuite_get(http->tls);
+  cipherName = gnutls_session_get_desc(http->tls);
 #endif // HAVE_OPENSSL
 
   printf("%s: OK (TLS: %d.%d, %s)\n", server, tlsVersion / 10, tlsVersion % 10, cipherName);
