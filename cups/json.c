@@ -1258,7 +1258,7 @@ cupsJSONImportURL(
       *last_modified = httpGetDateTime(httpGetField(http, HTTP_FIELD_LAST_MODIFIED));
 
     // Allocate memory for string...
-    if ((length = httpGetLength(http)) == 0 || length > 65536)
+    if ((length = (size_t)httpGetLength(http)) == 0 || length > 65536)
       length = 65536;			// Accept up to 64k
 
     if ((data = calloc(1, length + 1)) != NULL)
@@ -1266,7 +1266,7 @@ cupsJSONImportURL(
       // Read the data into the string...
       for (dataptr = data, dataend = data + length; dataptr < dataend; dataptr += bytes)
       {
-	if ((bytes = httpRead(http, dataptr, dataend - dataptr)) <= 0)
+	if ((bytes = httpRead(http, dataptr, (size_t)(dataend - dataptr))) <= 0)
 	  break;
       }
     }

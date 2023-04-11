@@ -451,6 +451,7 @@ extern void		httpAddrSetPort(http_addr_t *addr, int port) _CUPS_PUBLIC;
 extern http_uri_status_t httpAssembleURI(http_uri_coding_t encoding, char *uri, size_t urilen, const char *scheme, const char *username, const char *host, int port, const char *resource) _CUPS_PUBLIC;
 extern http_uri_status_t httpAssembleURIf(http_uri_coding_t encoding, char *uri, size_t urilen, const char *scheme, const char *username, const char *host, int port, const char *resourcef, ...) _CUPS_FORMAT(8, 9) _CUPS_PUBLIC;
 extern char		*httpAssembleUUID(const char *server, int port, const char *name, int number, char *buffer, size_t bufsize) _CUPS_PUBLIC;
+
 extern bool		httpCheck(http_t *http) _CUPS_PUBLIC;
 extern void		httpClearFields(http_t *http) _CUPS_PUBLIC;
 extern void		httpClose(http_t *http) _CUPS_PUBLIC;
@@ -463,13 +464,17 @@ extern int		httpCredentialsAreValidForName(cups_array_t *credentials, const char
 extern time_t		httpCredentialsGetExpiration(cups_array_t *credentials) _CUPS_PUBLIC;
 extern http_trust_t	httpCredentialsGetTrust(cups_array_t *credentials, const char *common_name) _CUPS_PUBLIC;
 extern size_t		httpCredentialsString(cups_array_t *credentials, char *buffer, size_t bufsize) _CUPS_PUBLIC;
+
 extern char		*httpDecode64(char *out, size_t *outlen, const char *in, const char **end) _CUPS_PUBLIC;
+
 extern char		*httpEncode64(char *out, size_t outlen, const char *in, size_t inlen, bool url) _CUPS_PUBLIC;
 extern int		httpError(http_t *http) _CUPS_PUBLIC;
+
 extern http_field_t	httpFieldValue(const char *name) _CUPS_PUBLIC;
 extern void		httpFlush(http_t *http) _CUPS_PUBLIC;
 extern int		httpFlushWrite(http_t *http) _CUPS_PUBLIC;
 extern void		httpFreeCredentials(cups_array_t *certs) _CUPS_PUBLIC;
+
 extern time_t		httpGetActivity(http_t *http) _CUPS_PUBLIC;
 extern http_addr_t	*httpGetAddress(http_t *http) _CUPS_PUBLIC;
 extern char		*httpGetAuthString(http_t *http) _CUPS_PUBLIC;
@@ -493,17 +498,22 @@ extern http_status_t	httpGetStatus(http_t *http) _CUPS_PUBLIC;
 extern char		*httpGetSubField(http_t *http, http_field_t field, const char *name, char *value, size_t valuelen) _CUPS_PUBLIC;
 extern http_version_t	httpGetVersion(http_t *http) _CUPS_PUBLIC;
 extern char		*httpGets(http_t *http, char *line, size_t length) _CUPS_PUBLIC;
+
 extern void		httpInitialize(void) _CUPS_PUBLIC;
 extern bool		httpIsChunked(http_t *http) _CUPS_PUBLIC;
 extern bool		httpIsEncrypted(http_t *http) _CUPS_PUBLIC;
+
 extern bool		httpLoadCredentials(const char *path, cups_array_t **credentials, const char *common_name) _CUPS_PUBLIC;
+
 extern ssize_t		httpPeek(http_t *http, char *buffer, size_t length) _CUPS_PUBLIC;
 extern ssize_t		httpPrintf(http_t *http, const char *format, ...) _CUPS_FORMAT(2, 3) _CUPS_PUBLIC;
+
 extern ssize_t		httpRead(http_t *http, char *buffer, size_t length) _CUPS_PUBLIC;
 extern http_state_t	httpReadRequest(http_t *http, char *resource, size_t resourcelen) _CUPS_PUBLIC;
 extern bool		httpReconnect(http_t *http, int msec, int *cancel) _CUPS_PUBLIC;
 extern const char	*httpResolveHostname(http_t *http, char *buffer, size_t bufsize) _CUPS_PUBLIC;
 extern const char	*httpResolveURI(const char *uri, char *resolved_uri, size_t resolved_size, http_resolve_t options, http_resolve_cb_t cb, void *cb_data) _CUPS_PUBLIC;
+
 extern bool		httpSaveCredentials(const char *path, cups_array_t *credentials, const char *common_name) _CUPS_PUBLIC;
 extern http_uri_status_t httpSeparateURI(http_uri_coding_t decoding, const char *uri, char *scheme, size_t schemelen, char *username, size_t usernamelen, char *host, size_t hostlen, int *port, char *resource, size_t resourcelen) _CUPS_PUBLIC;
 extern void		httpSetAuthString(http_t *http, const char *scheme, const char *data) _CUPS_PUBLIC;
@@ -520,8 +530,10 @@ extern void		httpSetTimeout(http_t *http, double timeout, http_timeout_cb_t cb, 
 extern void		httpShutdown(http_t *http) _CUPS_PUBLIC;
 extern const char	*httpStateString(http_state_t state) _CUPS_PUBLIC;
 extern const char	*httpStatusString(http_status_t status) _CUPS_PUBLIC;
+
 extern http_status_t	httpUpdate(http_t *http) _CUPS_PUBLIC;
 extern const char	*httpURIStatusString(http_uri_status_t status) _CUPS_PUBLIC;
+
 extern bool		httpWait(http_t *http, int msec) _CUPS_PUBLIC;
 extern ssize_t		httpWrite(http_t *http, const char *buffer, size_t length) _CUPS_PUBLIC;
 extern bool		httpWriteRequest(http_t *http, const char *method, const char *uri);

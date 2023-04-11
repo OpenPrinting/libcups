@@ -646,7 +646,7 @@ cupsJWTMakePrivateKey(cups_jwa_t alg)	// I - Signing/encryption algorithm
   // Add key identifier using key type and current date/time...
   snprintf(kid, sizeof(kid), "%s%ld", kty, (long)time(NULL));
   node = cupsJSONNewKey(jwk, node, "kid");
-  node = cupsJSONNewString(jwk, node, kid);
+  /*node =*/ cupsJSONNewString(jwk, node, kid);
 
   return (jwk);
 }
@@ -663,7 +663,7 @@ cups_json_t *				// O - Public JSON Web Key or `NULL` on error
 cupsJWTMakePublicKey(cups_json_t *jwk)	// I - Private JSON Web Key
 {
   cups_json_t	*pubjwt = NULL,		// Public JSON Web Key
-		*node;			// Current node
+		*node = NULL;		// Current node
   const char	*kid,			// Key ID
 		*kty;			// Key type
 
@@ -688,12 +688,6 @@ cupsJWTMakePublicKey(cups_json_t *jwk)	// I - Private JSON Web Key
     node   = cupsJSONNewString(pubjwt, node, n);
     node   = cupsJSONNewKey(pubjwt, node, "e");
     node   = cupsJSONNewString(pubjwt, node, e);
-
-    if (kid)
-    {
-      node = cupsJSONNewKey(pubjwt, node, "kid");
-      node = cupsJSONNewString(pubjwt, node, kid);
-    }
   }
   else if (!strcmp(kty, "EC"))
   {
@@ -711,12 +705,12 @@ cupsJWTMakePublicKey(cups_json_t *jwk)	// I - Private JSON Web Key
     node   = cupsJSONNewString(pubjwt, node, x);
     node   = cupsJSONNewKey(pubjwt, node, "y");
     node   = cupsJSONNewString(pubjwt, node, y);
+  }
 
-    if (kid)
-    {
-      node = cupsJSONNewKey(pubjwt, node, "kid");
-      node = cupsJSONNewString(pubjwt, node, kid);
-    }
+  if (pubjwt && kid)
+  {
+    node =    cupsJSONNewKey(pubjwt, node, "kid");
+    /*node=*/ cupsJSONNewString(pubjwt, node, kid);
   }
 
   return (pubjwt);
