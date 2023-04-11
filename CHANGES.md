@@ -10,6 +10,8 @@ libcups v3.0b2 (TBD)
   when not using address sanitizer and when it hasn't already been added
   (Issue #51)
 - Updated the `httpAddrListen` function to use the maximum backlog value.
+- Fixed ipptool limit on the size of an attribute value that would be printed
+  (Issue #5)
 - Fixed some configure script issues (Issue #48)
 
 

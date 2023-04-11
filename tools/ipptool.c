@@ -4352,7 +4352,15 @@ print_attr(cups_file_t      *outfile,	/* I  - Output file */
   }
   else
   {
-    char	buffer[131072];		/* Value buffer */
+    size_t		attrsize;	// Size of current attribute
+    static char		*buffer = NULL;	// Value buffer
+    static size_t	bufsize = 0;	// Current size of value buffer
+
+    if (!buffer)
+    {
+      bufsize = 65536;
+      buffer  = malloc(bufsize);
+    }
 
     if (output == IPPTOOL_OUTPUT_TEST)
     {
@@ -4365,7 +4373,21 @@ print_attr(cups_file_t      *outfile,	/* I  - Output file */
       cupsFilePrintf(outfile, "        %s (%s%s) = ", ippGetName(attr), ippGetCount(attr) > 1 ? "1setOf " : "", ippTagString(ippGetValueTag(attr)));
     }
 
-    ippAttributeString(attr, buffer, sizeof(buffer));
+    if ((attrsize = ippAttributeString(attr, buffer, bufsize)) >= bufsize)
+    {
+      // Expand attribute value buffer...
+      char *temp = realloc(buffer, attrsize + 1);
+					// New buffer pointer
+
+      if (temp)
+      {
+        buffer  = temp;
+        bufsize = attrsize + 1;
+
+	ippAttributeString(attr, buffer, bufsize);
+      }
+
+    }
     cupsFilePrintf(outfile, "%s\n", buffer);
   }
 }
@@ -7116,7 +7138,7 @@ with_distinct_values(
 		count;			// Number of values
   ipp_tag_t	value_tag;		// Value syntax
   const char	*value;			// Current value
-  char		buffer[8192];		// Temporary buffer
+  char		buffer[131072];		// Temporary buffer
   cups_array_t	*values;		// Array of values as strings
 
 
