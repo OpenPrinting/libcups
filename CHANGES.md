@@ -6,6 +6,7 @@ libcups v3.0b2 (TBD)
 
 - Added `cupsFormDecode` and `cupsFormEncode` APIs (Issue #49)
 - Added `cupsJWT` APIs to support JSON Web Tokens (Issue #50)
+- Fixed certificate issue with subjectAltNames
 - Updated the configure script to add `_FORTIFY_SOURCE=3` (previous level was 2)
   when not using address sanitizer and when it hasn't already been added
   (Issue #51)
