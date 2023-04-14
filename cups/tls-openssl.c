@@ -1,28 +1,24 @@
-/*
- * TLS support code for CUPS using OpenSSL/LibreSSL.
- *
- * Copyright © 2020-2022 by OpenPrinting
- * Copyright © 2007-2019 by Apple Inc.
- * Copyright © 1997-2007 by Easy Software Products, all rights reserved.
- *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more
- * information.
- */
-
-/**** This file is included from tls.c ****/
-
-/*
- * Include necessary headers...
- */
+//
+// TLS support code for CUPS using OpenSSL/LibreSSL.
+//
+// Note: This file is included from tls.c
+//
+// Copyright © 2020-2023 by OpenPrinting
+// Copyright © 2007-2019 by Apple Inc.
+// Copyright © 1997-2007 by Easy Software Products, all rights reserved.
+//
+// Licensed under Apache License v2.0.  See the file "LICENSE" for more
+// information.
+//
 
 #include <sys/stat.h>
 #include <openssl/x509v3.h>
 #define USE_EC 0			// Set to 1 to generate EC certs
 
 
-/*
- * Local functions...
- */
+//
+// Local functions...
+//
 
 static long		http_bio_ctrl(BIO *h, int cmd, long arg1, void *arg2);
 static int		http_bio_free(BIO *data);
@@ -37,14 +33,14 @@ static time_t		http_get_date(X509 *cert, int which);
 //static void		http_load_crl(void);
 static const char	*http_make_path(char *buffer, size_t bufsize, const char *dirname, const char *filename, const char *ext);
 static bool		http_x509_add_ext(X509 *cert, int nid, const char *value);
-static void		http_x509_add_san(X509 *cert, const char *name);
+static void		http_x509_add_san(GENERAL_NAMES *gens, const char *name);
 
 
-/*
- * Local globals...
- */
+//
+// Local globals...
+//
 
-static int		tls_auto_create = 0;
+static bool		tls_auto_create = false;
 					/* Auto-create self-signed certs? */
 static BIO_METHOD	*tls_bio_method = NULL;
 					/* OpenSSL BIO method */
@@ -73,12 +69,13 @@ cupsMakeServerCredentials(
     const char *state_province,		// I - State/province or `NULL` for "Unknown"
     const char *country,		// I - Country or `NULL` for locale-based default
     const char *root_name,		// I - Root certificate/domain name or `NULL` for site/self-signed
+    bool       ca_cert,			// I - Make CA certificate?
     const char *common_name,		// I - Common name
-    int        num_alt_names,		// I - Number of subject alternate names
+    size_t     num_alt_names,		// I - Number of subject alternate names
     const char **alt_names,		// I - Subject Alternate Names
     time_t     expiration_date)		// I - Expiration date
 {
-  int		result = 0;		// Return value
+  bool		result = false;		// Return value
   EVP_PKEY	*pkey;			// Private key
 #if defined(EVP_PKEY_EC) && USE_EC
   EC_KEY	*ec;			// EC key
@@ -86,6 +83,10 @@ cupsMakeServerCredentials(
   RSA		*rsa;			// RSA key pair
 #endif // EVP_PKEY_EC && USE_EC
   X509		*cert;			// Certificate
+  X509		*root_cert = NULL;	// Root certificate, if any
+  EVP_PKEY	*root_key = NULL;	// Root private key, if any
+  char		root_crtfile[1024],	// Path to root certificate
+		root_keyfile[1024];	// Path to root private key
   cups_lang_t	*language;		// Default language info
   const char	*langname;		// Language name
   time_t	curtime;		// Current time
@@ -97,9 +98,10 @@ cupsMakeServerCredentials(
   char		temp[1024],		// Temporary directory name
  		crtfile[1024],		// Certificate filename
 		keyfile[1024];		// Private key filename
+  GENERAL_NAMES *gens;			// Names for SubjectAltName certificate extension
 
 
-  DEBUG_printf(("cupsMakeServerCredentials(path=\"%s\", common_name=\"%s\", num_alt_names=%d, alt_names=%p, expiration_date=%d)", path, common_name, num_alt_names, alt_names, (int)expiration_date));
+  DEBUG_printf(("cupsMakeServerCredentials(path=\"%s\", organization=\"%s\", org_unit=\"%s\", locality=\"%s\", state_province=\"%s\", country=\"%s\", common_name=\"%s\", num_alt_names=%u, alt_names=%p, expiration_date=%ld)", path, organization, org_unit, locality, state_province, country, common_name, (unsigned)num_alt_names, alt_names, (long)expiration_date));
 
   // Filenames...
   if (!path)
@@ -108,7 +110,7 @@ cupsMakeServerCredentials(
   if (!path || !common_name)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), 0);
-    return (0);
+    return (false);
   }
 
   http_make_path(crtfile, sizeof(crtfile), path, common_name, "crt");
@@ -121,13 +123,13 @@ cupsMakeServerCredentials(
   if ((ec = EC_KEY_new_by_curve_name(NID_secp384r1)) == NULL)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create key pair."), 1);
-    return (0);
+    return (false);
   }
 #else
   if ((rsa = RSA_generate_key(3072, RSA_F4, NULL, NULL)) == NULL)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create key pair."), 1);
-    return (0);
+    return (false);
   }
 #endif // EVP_PKEY_EC && USE_EC
 
@@ -140,7 +142,7 @@ cupsMakeServerCredentials(
 #endif // EVP_PKEY_EC && USE_EC
 
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create private key."), 1);
-    return (0);
+    return (false);
   }
 
 #if defined(EVP_PKEY_EC) && USE_EC
@@ -158,7 +160,7 @@ cupsMakeServerCredentials(
   {
     EVP_PKEY_free(pkey);
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create X.509 certificate."), 1);
-    return (0);
+    return (false);
   }
 
   curtime = time(NULL);
@@ -180,6 +182,33 @@ cupsMakeServerCredentials(
 
   X509_set_pubkey(cert, pkey);
 
+  // Try loading a root certificate...
+  http_make_path(root_crtfile, sizeof(root_crtfile), path, root_name ? root_name : "_site_", "crt");
+  http_make_path(root_keyfile, sizeof(root_keyfile), path, root_name ? root_name : "_site_", "key");
+
+  if (!ca_cert && !access(root_crtfile, 0) && !access(root_keyfile, 0))
+  {
+    if ((bio = BIO_new_file(root_crtfile, "rb")) != NULL)
+    {
+      PEM_read_bio_X509(bio, &root_cert, /*cb*/NULL, /*u*/NULL);
+      BIO_free(bio);
+
+      if ((bio = BIO_new_file(root_keyfile, "rb")) != NULL)
+      {
+	PEM_read_bio_PrivateKey(bio, &root_key, /*cb*/NULL, /*u*/NULL);
+	BIO_free(bio);
+      }
+
+      if (!root_key)
+      {
+        // Only use root certificate if we have the key...
+        X509_free(root_cert);
+        root_cert = NULL;
+      }
+    }
+
+  }
+
   language = cupsLangDefault();
   langname = cupsLangGetName(language);
   name     = X509_NAME_new();
@@ -196,47 +225,64 @@ cupsMakeServerCredentials(
   X509_NAME_add_entry_by_txt(name, SN_localityName, MBSTRING_ASC, (unsigned char *)(locality ? locality : "Unknown"), -1, -1, 0);
 
   // TODO set issuer name to CA subject name (X509_get_subject_name)
-  X509_set_issuer_name(cert, name);
+  if (root_cert)
+    X509_set_issuer_name(cert, X509_get_subject_name(root_cert));
+  else
+    X509_set_issuer_name(cert, name);
   X509_set_subject_name(cert, name);
   X509_NAME_free(name);
 
-  http_x509_add_san(cert, common_name);
-  if (!strstr(common_name, ".local"))
+  gens = sk_GENERAL_NAME_new_null();
+  http_x509_add_san(gens, common_name);
+  if (strstr(common_name, ".local") == NULL && !ca_cert)
   {
     // Add common_name.local to the list, too...
     char	localname[256],		// hostname.local
 		*localptr;		// Pointer into localname
 
-    cupsCopyString(localname, common_name, sizeof(localname));
+    strlcpy(localname, common_name, sizeof(localname));
     if ((localptr = strchr(localname, '.')) != NULL)
       *localptr = '\0';
-    cupsConcatString(localname, ".local", sizeof(localname));
+    strlcat(localname, ".local", sizeof(localname));
 
-    http_x509_add_san(cert, localname);
+    http_x509_add_san(gens, localname);
   }
 
   if (num_alt_names > 0)
   {
-    int i;                              // Looping var...
+    size_t i;				// Looping var...
 
     for (i = 0; i < num_alt_names; i ++)
     {
       if (strcmp(alt_names[i], "localhost"))
-        http_x509_add_san(cert, alt_names[i]);
+        http_x509_add_san(gens, alt_names[i]);
     }
   }
 
+  // Add extension with DNS names and free buffer for GENERAL_NAME
+  X509_add1_ext_i2d(cert, NID_subject_alt_name, gens, 0, X509V3_ADD_DEFAULT);
+  sk_GENERAL_NAME_pop_free(gens, GENERAL_NAME_free);
+
   // Add extensions that are required to make Chrome happy...
-  // TODO: Support creating CA certs
-  http_x509_add_ext(cert, NID_basic_constraints, "critical,CA:FALSE,pathlen:0");
-  http_x509_add_ext(cert, NID_key_usage, "critical,digitalSignature,keyEncipherment");
+  if (ca_cert)
+  {
+    http_x509_add_ext(cert, NID_basic_constraints, "critical,CA:TRUE,pathlen:0");
+    http_x509_add_ext(cert, NID_key_usage, "critical,cRLSign,digitalSignature,keyCertSign");
+  }
+  else
+  {
+    http_x509_add_ext(cert, NID_basic_constraints, "critical,CA:FALSE,pathlen:0");
+    http_x509_add_ext(cert, NID_key_usage, "critical,digitalSignature,keyEncipherment");
+  }
   http_x509_add_ext(cert, NID_ext_key_usage, "1.3.6.1.5.5.7.3.1");
   http_x509_add_ext(cert, NID_subject_key_identifier, "hash");
   http_x509_add_ext(cert, NID_authority_key_identifier, "keyid,issuer");
   X509_set_version(cert, 2); // v3
 
-  // TODO: Sign with CA key when available
-  X509_sign(cert, pkey, EVP_sha256());
+  if (root_key)
+    X509_sign(cert, root_key, EVP_sha256());
+  else
+    X509_sign(cert, pkey, EVP_sha256());
 
   // Save them...
   if ((bio = BIO_new_file(keyfile, "wb")) == NULL)
@@ -267,9 +313,12 @@ cupsMakeServerCredentials(
     goto done;
   }
 
+  if (root_cert)
+    PEM_write_bio_X509(bio, root_cert);
+
   BIO_free(bio);
 
-  result = 1;
+  result = true;
   DEBUG_puts("1cupsMakeServerCredentials: Successfully created credentials.");
 
   // Cleanup...
@@ -278,22 +327,27 @@ cupsMakeServerCredentials(
   X509_free(cert);
   EVP_PKEY_free(pkey);
 
+  if (root_cert)
+    X509_free(root_cert);
+  if (root_key)
+    EVP_PKEY_free(root_key);
+
   return (result);
 }
 
 
-/*
- * 'cupsSetServerCredentials()' - Set the default server credentials.
- *
- * Note: The server credentials are used by all threads in the running process.
- * This function is threadsafe.
- */
+//
+// 'cupsSetServerCredentials()' - Set the default server credentials.
+//
+// Note: The server credentials are used by all threads in the running process.
+// This function is threadsafe.
+//
 
-int					// O - 1 on success, 0 on failure
+bool					// O - `true` on success, `false` on failure
 cupsSetServerCredentials(
     const char *path,			// I - Path to keychain/directory
     const char *common_name,		// I - Default common name for server
-    int        auto_create)		// I - 1 = automatically create self-signed certificates
+    bool       auto_create)		// I - `true` = automatically create self-signed certificates
 {
   char	temp[1024];			// Default path buffer
 
@@ -343,12 +397,12 @@ cupsSetServerCredentials(
 }
 
 
-/*
- * 'httpCopyCredentials()' - Copy the credentials associated with the peer in
- *                           an encrypted connection.
- */
+//
+// 'httpCopyCredentials()' - Copy the credentials associated with the peer in
+//                           an encrypted connection.
+//
 
-int					// O - Status of call (0 = success)
+bool					// O - Status of call (`true` = success)
 httpCopyCredentials(
     http_t	 *http,			// I - Connection to server
     cups_array_t **credentials)		// O - Array of credentials
@@ -362,7 +416,7 @@ httpCopyCredentials(
     *credentials = NULL;
 
   if (!http || !http->tls || !credentials)
-    return (-1);
+    return (false);
 
   *credentials = cupsArrayNew(NULL, NULL, NULL, 0, NULL, NULL);
   chain        = SSL_get_peer_cert_chain(http->tls);
@@ -397,13 +451,13 @@ httpCopyCredentials(
     }
   }
 
-  return (0);
+  return (true);
 }
 
 
-/*
- * '_httpCreateCredentials()' - Create credentials in the internal format.
- */
+//
+// '_httpCreateCredentials()' - Create credentials in the internal format.
+//
 
 http_tls_credentials_t			// O - Internal credentials
 _httpCreateCredentials(
@@ -415,9 +469,9 @@ _httpCreateCredentials(
 }
 
 
-/*
- * '_httpFreeCredentials()' - Free internal credentials.
- */
+//
+// '_httpFreeCredentials()' - Free internal credentials.
+//
 
 void
 _httpFreeCredentials(
@@ -427,23 +481,24 @@ _httpFreeCredentials(
 }
 
 
-/*
- * 'httpCredentialsAreValidForName()' - Return whether the credentials are valid for the given name.
- */
+//
+// 'httpCredentialsAreValidForName()' - Return whether the credentials are valid
+//                                      for the given name.
+//
 
-int					// O - 1 if valid, 0 otherwise
+bool					// O - `true` if valid, `false` otherwise
 httpCredentialsAreValidForName(
     cups_array_t *credentials,		// I - Credentials
     const char   *common_name)		// I - Name to check
 {
   X509	*cert;				// Certificate
-  int	result = 0;			// Result
+  bool	result = false;			// Result
 
 
   cert = http_create_credential((http_credential_t *)cupsArrayGetFirst(credentials));
   if (cert)
   {
-    result = X509_check_host(cert, common_name, strlen(common_name), 0, NULL);
+    result = X509_check_host(cert, common_name, strlen(common_name), 0, NULL) != 0;
 
     X509_free(cert);
   }
@@ -452,9 +507,9 @@ httpCredentialsAreValidForName(
 }
 
 
-/*
- * 'httpCredentialsGetTrust()' - Return the trust of credentials.
- */
+//
+// 'httpCredentialsGetTrust()' - Return the trust of credentials.
+//
 
 http_trust_t				// O - Level of trust
 httpCredentialsGetTrust(
@@ -596,9 +651,9 @@ httpCredentialsGetTrust(
 }
 
 
-/*
- * 'httpCredentialsGetExpiration()' - Return the expiration date of the credentials.
- */
+//
+// 'httpCredentialsGetExpiration()' - Return the expiration date of the credentials.
+//
 
 time_t					// O - Expiration date of credentials
 httpCredentialsGetExpiration(
@@ -618,9 +673,9 @@ httpCredentialsGetExpiration(
 }
 
 
-/*
- * 'httpCredentialsString()' - Return a string representing the credentials.
- */
+//
+// 'httpCredentialsString()' - Return a string representing the credentials.
+//
 
 size_t					// O - Total size of credentials string
 httpCredentialsString(
@@ -706,9 +761,9 @@ httpCredentialsString(
 }
 
 
-/*
- * 'httpLoadCredentials()' - Load X.509 credentials from a keychain file.
- */
+//
+// 'httpLoadCredentials()' - Load X.509 credentials from a keychain file.
+//
 
 bool					// O - `true` on success, `false` on error
 httpLoadCredentials(
@@ -724,7 +779,7 @@ httpLoadCredentials(
   size_t		alloc_data = 0,	// Bytes allocated
 			num_data = 0,	// Bytes used
 			decoded;	// Bytes decoded
-  int			in_certificate = 0;
+  bool			in_certificate = false;
 					// In a certificate?
 
 
@@ -750,25 +805,19 @@ httpLoadCredentials(
     {
       if (in_certificate)
       {
-       /*
-	* Missing END CERTIFICATE...
-	*/
-
+        // Missing END CERTIFICATE...
         httpFreeCredentials(*credentials);
 	*credentials = NULL;
         break;
       }
 
-      in_certificate = 1;
+      in_certificate = true;
     }
     else if (!strcmp(line, "-----END CERTIFICATE-----"))
     {
       if (!in_certificate || !num_data)
       {
-       /*
-	* Missing data...
-	*/
-
+        // Missing data...
         httpFreeCredentials(*credentials);
 	*credentials = NULL;
         break;
@@ -785,7 +834,7 @@ httpLoadCredentials(
       }
 
       num_data       = 0;
-      in_certificate = 0;
+      in_certificate = false;
     }
     else if (in_certificate)
     {
@@ -823,10 +872,7 @@ httpLoadCredentials(
 
   if (in_certificate)
   {
-   /*
-    * Missing END CERTIFICATE...
-    */
-
+    // Missing END CERTIFICATE...
     httpFreeCredentials(*credentials);
     *credentials = NULL;
   }
@@ -838,9 +884,9 @@ httpLoadCredentials(
 }
 
 
-/*
- * 'httpSaveCredentials()' - Save X.509 credentials to a keychain file.
- */
+//
+// 'httpSaveCredentials()' - Save X.509 credentials to a keychain file.
+//
 
 bool					// O - `true` on success, `false` on error
 httpSaveCredentials(
@@ -893,9 +939,9 @@ httpSaveCredentials(
 }
 
 
-/*
- * '_httpTLSInitialize()' - Initialize the TLS stack.
- */
+//
+// '_httpTLSInitialize()' - Initialize the TLS stack.
+//
 
 void
 _httpTLSInitialize(void)
@@ -904,9 +950,9 @@ _httpTLSInitialize(void)
 }
 
 
-/*
- * '_httpTLSPending()' - Return the number of pending TLS-encrypted bytes.
- */
+//
+// '_httpTLSPending()' - Return the number of pending TLS-encrypted bytes.
+//
 
 size_t					// O - Bytes available
 _httpTLSPending(http_t *http)		// I - HTTP connection
@@ -915,9 +961,9 @@ _httpTLSPending(http_t *http)		// I - HTTP connection
 }
 
 
-/*
- * '_httpTLSRead()' - Read from a SSL/TLS connection.
- */
+//
+// '_httpTLSRead()' - Read from a SSL/TLS connection.
+//
 
 int					// O - Bytes read
 _httpTLSRead(http_t *http,		// I - Connection to server
@@ -933,9 +979,9 @@ _httpTLSRead(http_t *http,		// I - Connection to server
 }
 
 
-/*
- * '_httpTLSSetOptions()' - Set TLS protocol and cipher suite options.
- */
+//
+// '_httpTLSSetOptions()' - Set TLS protocol and cipher suite options.
+//
 
 void
 _httpTLSSetOptions(int options,		// I - Options
@@ -951,11 +997,11 @@ _httpTLSSetOptions(int options,		// I - Options
 }
 
 
-/*
- * '_httpTLSStart()' - Set up SSL/TLS support on a connection.
- */
+//
+// '_httpTLSStart()' - Set up SSL/TLS support on a connection.
+//
 
-bool					/* O - `true` on success, `false` on failure */
+bool					// O - `true` on success, `false` on failure
 _httpTLSStart(http_t *http)		// I - Connection to server
 {
   BIO		*bio;			// Basic input/output context
@@ -1096,7 +1142,7 @@ _httpTLSStart(http_t *http)		// I - Connection to server
     {
       DEBUG_printf(("4_httpTLSStart: Auto-create credentials for \"%s\".", cn));
 
-      if (!cupsMakeServerCredentials(tls_keypath, cn, 0, NULL, time(NULL) + 3650 * 86400))
+      if (!cupsMakeServerCredentials(tls_keypath, NULL, NULL, NULL, NULL, NULL, NULL, false, cn, 0, NULL, time(NULL) + 3650 * 86400))
       {
 	DEBUG_puts("4_httpTLSStart: cupsMakeServerCredentials failed.");
 	http->error  = errno = EINVAL;
@@ -1219,9 +1265,9 @@ _httpTLSStart(http_t *http)		// I - Connection to server
 }
 
 
-/*
- * '_httpTLSStop()' - Shut down SSL/TLS on a connection.
- */
+//
+// '_httpTLSStop()' - Shut down SSL/TLS on a connection.
+//
 
 void
 _httpTLSStop(http_t *http)		// I - Connection to server
@@ -1239,9 +1285,9 @@ _httpTLSStop(http_t *http)		// I - Connection to server
 }
 
 
-/*
- * '_httpTLSWrite()' - Write to a SSL/TLS connection.
- */
+//
+// '_httpTLSWrite()' - Write to a SSL/TLS connection.
+//
 
 int					// O - Bytes written
 _httpTLSWrite(http_t     *http,		// I - Connection to server
@@ -1252,9 +1298,9 @@ _httpTLSWrite(http_t     *http,		// I - Connection to server
 }
 
 
-/*
- * 'http_bio_ctrl()' - Control the HTTP connection.
- */
+//
+// 'http_bio_ctrl()' - Control the HTTP connection.
+//
 
 static long				// O - Result/data
 http_bio_ctrl(BIO  *h,			// I - BIO data
@@ -1296,9 +1342,9 @@ http_bio_ctrl(BIO  *h,			// I - BIO data
 }
 
 
-/*
- * 'http_bio_free()' - Free OpenSSL data.
- */
+//
+// 'http_bio_free()' - Free OpenSSL data.
+//
 
 static int				// O - 1 on success, 0 on failure
 http_bio_free(BIO *h)			// I - BIO data
@@ -1315,9 +1361,9 @@ http_bio_free(BIO *h)			// I - BIO data
 }
 
 
-/*
- * 'http_bio_new()' - Initialize an OpenSSL BIO structure.
- */
+//
+// 'http_bio_new()' - Initialize an OpenSSL BIO structure.
+//
 
 static int				// O - 1 on success, 0 on failure
 http_bio_new(BIO *h)			// I - BIO data
@@ -1334,9 +1380,9 @@ http_bio_new(BIO *h)			// I - BIO data
 }
 
 
-/*
- * 'http_bio_puts()' - Send a string for OpenSSL.
- */
+//
+// 'http_bio_puts()' - Send a string for OpenSSL.
+//
 
 static int				// O - Bytes written
 http_bio_puts(BIO        *h,		// I - BIO data
@@ -1352,9 +1398,9 @@ http_bio_puts(BIO        *h,		// I - BIO data
 }
 
 
-/*
- * 'http_bio_read()' - Read data for OpenSSL.
- */
+//
+// 'http_bio_read()' - Read data for OpenSSL.
+//
 
 static int				// O - Bytes read
 http_bio_read(BIO  *h,			// I - BIO data
@@ -1393,9 +1439,9 @@ http_bio_read(BIO  *h,			// I - BIO data
 }
 
 
-/*
- * 'http_bio_write()' - Write data for OpenSSL.
- */
+//
+// 'http_bio_write()' - Write data for OpenSSL.
+//
 
 static int				// O - Bytes written
 http_bio_write(BIO        *h,		// I - BIO data
@@ -1414,9 +1460,9 @@ http_bio_write(BIO        *h,		// I - BIO data
 }
 
 
-/*
- * 'http_create_credential()' - Create a single credential in the internal format.
- */
+//
+// 'http_create_credential()' - Create a single credential in the internal format.
+//
 
 static X509 *				// O - Certificate
 http_create_credential(
@@ -1440,9 +1486,9 @@ http_create_credential(
 }
 
 
-/*
- * 'http_default_path()' - Get the default credential store path.
- */
+//
+// 'http_default_path()' - Get the default credential store path.
+//
 
 static const char *			// O - Path or NULL on error
 http_default_path(
@@ -1538,9 +1584,9 @@ http_get_date(X509 *cert,		// I - Certificate
 
 
 #if 0
-/*
- * 'http_load_crl()' - Load the certificate revocation list, if any.
- */
+//
+// 'http_load_crl()' - Load the certificate revocation list, if any.
+//
 
 static void
 http_load_crl(void)
@@ -1634,9 +1680,9 @@ http_load_crl(void)
 #endif // 0
 
 
-/*
- * 'http_make_path()' - Format a filename for a certificate or key file.
- */
+//
+// 'http_make_path()' - Format a filename for a certificate or key file.
+//
 
 static const char *			// O - Filename
 http_make_path(
@@ -1713,17 +1759,22 @@ http_x509_add_ext(X509       *cert,	// I - Certificate
 
 
 //
-// 'http_x509_add_san()' - Add a subjectAltName extension to an X.509 certificate.
+// 'http_x509_add_san()' - Add a subjectAltName to GENERAL_NAMES used for
+//                         the extension to an X.509 certificate.
 //
 
 static void
-http_x509_add_san(X509       *cert,	// I - Certificate
-                  const char *name)	// I - Hostname
+http_x509_add_san(GENERAL_NAMES *gens,	// I - Concatenation of DNS names
+                  const char    *name)	// I - Hostname
 {
-  char		dns_name[1024];		// DNS: prefixed hostname
+  GENERAL_NAME *gen_dns = GENERAL_NAME_new();
+					// DNS: name
+  ASN1_IA5STRING *ia5 = ASN1_IA5STRING_new();
+					// Hostname string
 
 
-  // The subjectAltName value for DNS names starts with a DNS: prefix...
-  snprintf(dns_name, sizeof(dns_name), "DNS:%s", name);
-  http_x509_add_ext(cert, NID_subject_alt_name, dns_name);
+  // Set the strings and push it on the GENERAL_NAMES list...
+  ASN1_STRING_set(ia5, name, strlen(name));
+  GENERAL_NAME_set0_value(gen_dns, GEN_DNS, ia5);
+  sk_GENERAL_NAME_push(gens, gen_dns);
 }

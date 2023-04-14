@@ -336,8 +336,8 @@ extern const char	*cupsLocalizeDestMedia(http_t *http, cups_dest_t *dest, cups_d
 extern const char	*cupsLocalizeDestOption(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, const char *option) _CUPS_PUBLIC;
 extern const char	*cupsLocalizeDestValue(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, const char *option, const char *value) _CUPS_PUBLIC;
 
-extern bool		cupsMakeServerCredentials(const char *path, const char *organization, const char *org_unit, const char *locality, const char *state_province, const char *country, const char *root_name, const char *common_name, int num_alt_names, const char **alt_names, time_t expiration_date) _CUPS_PUBLIC;
-extern char		*cupsMakeServerRequest(const char *path, const char *organization, const char *org_unit, const char *locality, const char *state_province, const char *country, const char *common_name, int num_alt_names, const char **alt_names) _CUPS_PUBLIC;
+extern bool		cupsMakeServerCredentials(const char *path, const char *organization, const char *org_unit, const char *locality, const char *state_province, const char *country, const char *root_name, bool ca_cert, const char *common_name, size_t num_alt_names, const char **alt_names, time_t expiration_date) _CUPS_PUBLIC;
+extern char		*cupsMakeServerRequest(const char *path, const char *organization, const char *org_unit, const char *locality, const char *state_province, const char *country, const char *common_name, size_t num_alt_names, const char **alt_names) _CUPS_PUBLIC;
 
 extern char		*cupsNotifySubject(cups_lang_t *lang, ipp_t *event) _CUPS_PUBLIC;
 extern char		*cupsNotifyText(cups_lang_t *lang, ipp_t *event) _CUPS_PUBLIC;
@@ -361,7 +361,7 @@ extern void		cupsSetEncryption(http_encryption_t e) _CUPS_PUBLIC;
 extern void		cupsSetPasswordCB(cups_password_cb_t cb, void *user_data) _CUPS_PUBLIC;
 extern void		cupsSetServer(const char *server) _CUPS_PUBLIC;
 extern void		cupsSetServerCertCB(cups_server_cert_cb_t cb, void *user_data) _CUPS_PUBLIC;
-extern int		cupsSetServerCredentials(const char *path, const char *common_name, int auto_create) _CUPS_PUBLIC;
+extern bool		cupsSetServerCredentials(const char *path, const char *common_name, bool auto_create) _CUPS_PUBLIC;
 extern void		cupsSetUser(const char *user) _CUPS_PUBLIC;
 extern void		cupsSetUserAgent(const char *user_agent) _CUPS_PUBLIC;
 extern http_status_t	cupsStartDestDocument(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, int job_id, const char *docname, const char *format, size_t num_options, cups_option_t *options, bool last_document) _CUPS_PUBLIC;

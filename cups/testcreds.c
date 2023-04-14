@@ -82,7 +82,7 @@ main(int  argc,				/* I - Number of command-line arguments */
       else
         printf("    Trust: %s (%s)\n", trusts[trust], cupsLastErrorString());
       printf("    Expiration: %s\n", httpGetDateString(httpCredentialsGetExpiration(hcreds), datestr, sizeof(datestr)));
-      printf("    IsValidName: %d\n", httpCredentialsAreValidForName(hcreds, hostname));
+      printf("    IsValidName: %s\n", httpCredentialsAreValidForName(hcreds, hostname) ? "true" : "false");
       printf("    String: \"%s\"\n", hinfo);
 
       httpFreeCredentials(hcreds);
@@ -109,7 +109,7 @@ main(int  argc,				/* I - Number of command-line arguments */
 
     printf("    Certificate Count: %u\n", (unsigned)cupsArrayGetCount(tcreds));
     printf("    Expiration: %s\n", httpGetDateString(httpCredentialsGetExpiration(tcreds), datestr, sizeof(datestr)));
-    printf("    IsValidName: %d\n", httpCredentialsAreValidForName(tcreds, hostname));
+    printf("    IsValidName: %s\n", httpCredentialsAreValidForName(tcreds, hostname) ? "true" : "false");
     printf("    String: \"%s\"\n", tinfo);
 
     httpFreeCredentials(tcreds);
