@@ -42,44 +42,6 @@ extern "C" {
 #  define CUPS_LENGTH_VARIABLE		(ssize_t)0
 #  define CUPS_TIMEOUT_DEFAULT		0
 
-typedef enum cups_whichjobs_e		// Which jobs for @link cupsGetJobs@
-{
-  CUPS_WHICHJOBS_ALL = -1,		// All jobs
-  CUPS_WHICHJOBS_ACTIVE,		// Pending/held/processing jobs
-  CUPS_WHICHJOBS_COMPLETED		// Completed/canceled/aborted jobs
-} cups_whichjobs_t;
-
-// Flags for cupsConnectDest and cupsEnumDests
-#  define CUPS_DEST_FLAGS_NONE		0x00
-					// No flags are set
-#  define CUPS_DEST_FLAGS_UNCONNECTED	0x01
-					// There is no connection
-#  define CUPS_DEST_FLAGS_MORE		0x02
-					// There are more destinations
-#  define CUPS_DEST_FLAGS_REMOVED	0x04
-					// The destination has gone away
-#  define CUPS_DEST_FLAGS_ERROR		0x08
-					// An error occurred
-#  define CUPS_DEST_FLAGS_RESOLVING	0x10
-					// The destination address is being resolved
-#  define CUPS_DEST_FLAGS_CONNECTING	0x20
-					// A connection is being established
-#  define CUPS_DEST_FLAGS_CANCELED	0x40
-					// Operation was canceled
-#  define CUPS_DEST_FLAGS_DEVICE        0x80
-                                        // For @link cupsConnectDest@: Connect to device
-
-// Flags for cupsGetDestMediaByName/Size
-#  define CUPS_MEDIA_FLAGS_DEFAULT 	0x00
-					// Find the closest size supported by the printer
-#  define CUPS_MEDIA_FLAGS_BORDERLESS	0x01
-					// Find a borderless size
-#  define CUPS_MEDIA_FLAGS_DUPLEX	0x02
-					// Find a size compatible with 2-sided printing
-#  define CUPS_MEDIA_FLAGS_EXACT	0x04
-					// Find an exact match for the size
-#  define CUPS_MEDIA_FLAGS_READY	0x08
-					// If the printer supports media sensing, find the size amongst the "ready" media.
 
 // Options and values
 #  define CUPS_COPIES			"copies"
@@ -148,8 +110,9 @@ typedef enum cups_whichjobs_e		// Which jobs for @link cupsGetJobs@
 #  define CUPS_PRINT_COLOR_MODE_SUPPORTED "print-color-mode-supported"
 
 #  define CUPS_PRINT_COLOR_MODE_AUTO	"auto"
-#  define CUPS_PRINT_COLOR_MODE_MONOCHROME "monochrome"
+#  define CUPS_PRINT_COLOR_MODE_BI_LEVEL "bi-level"
 #  define CUPS_PRINT_COLOR_MODE_COLOR	"color"
+#  define CUPS_PRINT_COLOR_MODE_MONOCHROME "monochrome"
 
 #  define CUPS_PRINT_QUALITY		"print-quality"
 #  define CUPS_PRINT_QUALITY_SUPPORTED	"print-quality-supported"
@@ -170,9 +133,43 @@ typedef enum cups_whichjobs_e		// Which jobs for @link cupsGetJobs@
 // Types and structures...
 //
 
-typedef unsigned cups_ptype_t;		// Printer type/capability bits
-enum cups_ptype_e			// Printer type/capability bit constants
-{					// Not a typedef'd enum so we can OR
+typedef enum cups_credtype_e		// X.509 credential types
+{
+  CUPS_CREDTYPE_DEFAULT,		// Default type
+  CUPS_CREDTYPE_RSA_2048_SHA256,	// RSA with 2048-bit keys and SHA-256 hash
+  CUPS_CREDTYPE_RSA_3072_SHA256,	// RSA with 3072-bit keys and SHA-256 hash
+  CUPS_CREDTYPE_RSA_4096_SHA256,	// RSA with 4096-bit keys and SHA-256 hash
+  CUPS_CREDTYPE_ECDSA_P256_SHA256,	// ECDSA using the P-256 curve with SHA-256 hash
+  CUPS_CREDTYPE_ECDSA_P384_SHA256,	// ECDSA using the P-384 curve with SHA-256 hash
+  CUPS_CREDTYPE_ECDSA_P521_SHA256	// ECDSA using the P-521 curve with SHA-256 hash
+} cups_credtype_t;
+
+enum cups_dest_flags_e			// Flags for @link cupsConnectDest@ and @link cupsEnumDests@
+{
+  CUPS_DEST_FLAGS_NONE = 0x00,		// No flags are set
+  CUPS_DEST_FLAGS_UNCONNECTED = 0x01,	// There is no connection
+  CUPS_DEST_FLAGS_MORE = 0x02,		// There are more destinations
+  CUPS_DEST_FLAGS_REMOVED = 0x04,	// The destination has gone away
+  CUPS_DEST_FLAGS_ERROR = 0x08,		// An error occurred
+  CUPS_DEST_FLAGS_RESOLVING = 0x10,	// The destination address is being resolved
+  CUPS_DEST_FLAGS_CONNECTING = 0x20,	// A connection is being established
+  CUPS_DEST_FLAGS_CANCELED = 0x40,	// Operation was canceled
+  CUPS_DEST_FLAGS_DEVICE = 0x80		// For @link cupsConnectDest@: Connect to device
+};
+typedef unsigned cups_dest_flags_t;	// Combined flags for @link cupsConnectDest@ and @link cupsEnumDests@
+
+enum cups_media_flags_e			// Flags for @link cupsGetDestMediaByName@ and @link cupsGetDestMediaBySize@
+{
+  CUPS_MEDIA_FLAGS_DEFAULT = 0x00,	// Find the closest size supported by the printer
+  CUPS_MEDIA_FLAGS_BORDERLESS = 0x01,	// Find a borderless size
+  CUPS_MEDIA_FLAGS_DUPLEX = 0x02,	// Find a size compatible with 2-sided printing
+  CUPS_MEDIA_FLAGS_EXACT = 0x04,	// Find an exact match for the size
+  CUPS_MEDIA_FLAGS_READY = 0x08		// If the printer supports media sensing, find the size amongst the "ready" media.
+};
+typedef unsigned cups_media_flags_t;	// Combined flags for @link cupsGetDestMediaByName@ and @link cupsGetDestMediaBySize@
+
+enum cups_ptype_e			// Printer type/capability flags
+{
   CUPS_PRINTER_LOCAL = 0x0000,		// Local printer or class
   CUPS_PRINTER_CLASS = 0x0001,		// Printer class
   CUPS_PRINTER_REMOTE = 0x0002,		// Remote printer or class
@@ -201,6 +198,14 @@ enum cups_ptype_e			// Printer type/capability bit constants
   CUPS_PRINTER_MFP = 0x4000000,		// Printer with scanning capabilities
   CUPS_PRINTER_OPTIONS = 0x6fffc	// ~(CLASS | REMOTE | IMPLICIT | DEFAULT | FAX | REJECTING | DELETE | NOT_SHARED | AUTHENTICATED | COMMANDS | DISCOVERED) @private@
 };
+typedef unsigned cups_ptype_t;		// Combined printer type/capability flags
+
+typedef enum cups_whichjobs_e		// Which jobs for @link cupsGetJobs@
+{
+  CUPS_WHICHJOBS_ALL = -1,		// All jobs
+  CUPS_WHICHJOBS_ACTIVE,		// Pending/held/processing jobs
+  CUPS_WHICHJOBS_COMPLETED		// Completed/canceled/aborted jobs
+} cups_whichjobs_t;
 
 typedef struct cups_option_s		//// Printer Options
 {
@@ -235,7 +240,7 @@ typedef struct cups_job_s		// Job
   time_t	processing_time;	// Time the job was processed
 } cups_job_t;
 
-typedef struct cups_size_s		//// Media Size
+typedef struct cups_size_s		//// Media information
 {
   char		media[128],		// Media name to use
 		color[128],		// Media color (blank for any/auto)
@@ -252,7 +257,7 @@ typedef struct cups_size_s		//// Media Size
 typedef bool (*cups_client_cert_cb_t)(http_t *http, void *tls, cups_array_t *distinguished_names, void *user_data);
 					// Client credentials callback
 
-typedef bool (*cups_dest_cb_t)(void *user_data, unsigned flags, cups_dest_t *dest);
+typedef bool (*cups_dest_cb_t)(void *user_data, cups_dest_flags_t flags, cups_dest_t *dest);
 			      		// Destination enumeration callback
 
 typedef const char *(*cups_oauth_cb_t)(http_t *http, const char *realm, const char *scope, const char *resource, void *user_data);
@@ -336,8 +341,8 @@ extern const char	*cupsLocalizeDestMedia(http_t *http, cups_dest_t *dest, cups_d
 extern const char	*cupsLocalizeDestOption(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, const char *option) _CUPS_PUBLIC;
 extern const char	*cupsLocalizeDestValue(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, const char *option, const char *value) _CUPS_PUBLIC;
 
-extern bool		cupsMakeServerCredentials(const char *path, const char *organization, const char *org_unit, const char *locality, const char *state_province, const char *country, const char *root_name, bool ca_cert, const char *common_name, size_t num_alt_names, const char **alt_names, time_t expiration_date) _CUPS_PUBLIC;
-extern char		*cupsMakeServerRequest(const char *path, const char *organization, const char *org_unit, const char *locality, const char *state_province, const char *country, const char *common_name, size_t num_alt_names, const char **alt_names) _CUPS_PUBLIC;
+extern bool		cupsMakeServerCredentials(const char *path, cups_credtype_t type, const char *organization, const char *org_unit, const char *locality, const char *state_province, const char *country, const char *root_name, bool ca_cert, const char *common_name, size_t num_alt_names, const char **alt_names, time_t expiration_date) _CUPS_PUBLIC;
+extern char		*cupsMakeServerRequest(const char *path, cups_credtype_t type, const char *organization, const char *org_unit, const char *locality, const char *state_province, const char *country, const char *common_name, size_t num_alt_names, const char **alt_names) _CUPS_PUBLIC;
 
 extern char		*cupsNotifySubject(cups_lang_t *lang, ipp_t *event) _CUPS_PUBLIC;
 extern char		*cupsNotifyText(cups_lang_t *lang, ipp_t *event) _CUPS_PUBLIC;

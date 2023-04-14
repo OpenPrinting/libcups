@@ -13,7 +13,6 @@
 
 #include <sys/stat.h>
 #include <openssl/x509v3.h>
-#define USE_EC 0			// Set to 1 to generate EC certs
 
 
 //
@@ -41,47 +40,58 @@ static void		http_x509_add_san(GENERAL_NAMES *gens, const char *name);
 //
 
 static bool		tls_auto_create = false;
-					/* Auto-create self-signed certs? */
+					// Auto-create self-signed certs?
 static BIO_METHOD	*tls_bio_method = NULL;
-					/* OpenSSL BIO method */
+					// OpenSSL BIO method
 static char		*tls_common_name = NULL;
-					/* Default common name */
-//static X509_CRL		*tls_crl = NULL;/* Certificate revocation list */
+					// Default common name
+//static X509_CRL		*tls_crl = NULL;// Certificate revocation list
 static char		*tls_keypath = NULL;
-					/* Server cert keychain path */
+					// Server cert keychain path
 static cups_mutex_t	tls_mutex = CUPS_MUTEX_INITIALIZER;
-					/* Mutex for keychain/certs */
-static int		tls_options = -1,/* Options for TLS connections */
+					// Mutex for keychain/certs
+static int		tls_options = -1,// Options for TLS connections
 			tls_min_version = _HTTP_TLS_1_2,
 			tls_max_version = _HTTP_TLS_MAX;
 
 
-/*
- * 'cupsMakeServerCredentials()' - Make a self-signed certificate and private key pair.
- */
+//
+// 'cupsMakeServerCredentials()' - Make an X.509 certificate and private key pair.
+//
+// This function creates an X.509 certificate and private key pair.  The
+// certificate and key are stored in the directory "path" or, if "path" is
+// `NULL`, in a per-user or system-wide (when running as root) certificate/key
+// store.  The generated certificate is signed by the named root certificate or,
+// if "root_name" is `NULL`, a site-wide default root certificate.  When
+// "root_name" is `NULL` and there is no site-wide default root certificate, a
+// self-signed certificate is generated instead.
+//
+// The type of certificate depends on the version of the TLS library in use but
+// will be either 3072-bit RSA or 384-bit ECDSA with SHA-256 signature.
+//
 
 bool					// O - `true` on success, `false` on failure
 cupsMakeServerCredentials(
-    const char *path,			// I - Path to keychain/directory or `NULL` for default
-    const char *organization,		// I - Organization or `NULL` to use common name
-    const char *org_unit,		// I - Organizational unit or `NULL` for none
-    const char *locality,		// I - City/town or `NULL` for "Unknown"
-    const char *state_province,		// I - State/province or `NULL` for "Unknown"
-    const char *country,		// I - Country or `NULL` for locale-based default
-    const char *root_name,		// I - Root certificate/domain name or `NULL` for site/self-signed
-    bool       ca_cert,			// I - Make CA certificate?
-    const char *common_name,		// I - Common name
-    size_t     num_alt_names,		// I - Number of subject alternate names
-    const char **alt_names,		// I - Subject Alternate Names
-    time_t     expiration_date)		// I - Expiration date
+    const char      *path,		// I - Directory path or `NULL` for default
+    cups_credtype_t type,		// I - Type of certificate/keys to generate
+    const char      *organization,	// I - Organization or `NULL` to use common name
+    const char      *org_unit,		// I - Organizational unit or `NULL` for none
+    const char      *locality,		// I - City/town or `NULL` for "Unknown"
+    const char      *state_province,	// I - State/province or `NULL` for "Unknown"
+    const char      *country,		// I - Country or `NULL` for locale-based default
+    const char      *root_name,		// I - Root certificate/domain name or `NULL` for site/self-signed
+    bool            ca_cert,		// I - Make CA certificate?
+    const char      *common_name,	// I - Common name
+    size_t          num_alt_names,	// I - Number of subject alternate names
+    const char      **alt_names,	// I - Subject Alternate Names
+    time_t          expiration_date)	// I - Expiration date
 {
   bool		result = false;		// Return value
   EVP_PKEY	*pkey;			// Private key
-#if defined(EVP_PKEY_EC) && USE_EC
-  EC_KEY	*ec;			// EC key
-#else
-  RSA		*rsa;			// RSA key pair
-#endif // EVP_PKEY_EC && USE_EC
+#if defined(EVP_PKEY_EC)
+  EC_KEY	*ec = NULL;		// EC key
+#endif // EVP_PKEY_EC
+  RSA		*rsa = NULL;		// RSA key pair
   X509		*cert;			// Certificate
   X509		*root_cert = NULL;	// Root certificate, if any
   EVP_PKEY	*root_key = NULL;	// Root private key, if any
@@ -119,37 +129,62 @@ cupsMakeServerCredentials(
   // Create the encryption key...
   DEBUG_puts("1cupsMakeServerCredentials: Creating key pair.");
 
-#if defined(EVP_PKEY_EC) && USE_EC
-  if ((ec = EC_KEY_new_by_curve_name(NID_secp384r1)) == NULL)
+  switch (type)
   {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create key pair."), 1);
-    return (false);
-  }
-#else
-  if ((rsa = RSA_generate_key(3072, RSA_F4, NULL, NULL)) == NULL)
-  {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create key pair."), 1);
-    return (false);
-  }
+#if defined(EVP_PKEY_EC)
+    case CUPS_CREDTYPE_ECDSA_P256_SHA256 :
+	ec = EC_KEY_new_by_curve_name(NID_secp256k1);
+	break;
+
+    case CUPS_CREDTYPE_ECDSA_P384_SHA256 :
+	ec = EC_KEY_new_by_curve_name(NID_secp384r1);
+	break;
+
+    case CUPS_CREDTYPE_ECDSA_P521_SHA256 :
+	ec = EC_KEY_new_by_curve_name(NID_secp521r1);
+	break;
 #endif // EVP_PKEY_EC && USE_EC
+
+    case CUPS_CREDTYPE_RSA_2048_SHA256 :
+	rsa = RSA_generate_key(2048, RSA_F4, NULL, NULL);
+	break;
+
+    default :
+    case CUPS_CREDTYPE_RSA_3072_SHA256 :
+	rsa = RSA_generate_key(3072, RSA_F4, NULL, NULL);
+	break;
+
+    case CUPS_CREDTYPE_RSA_4096_SHA256 :
+	rsa = RSA_generate_key(4096, RSA_F4, NULL, NULL);
+	break;
+  }
+
+  if (!rsa && !ec)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create key pair."), 1);
+    return (false);
+  }
 
   if ((pkey = EVP_PKEY_new()) == NULL)
   {
-#if defined(EVP_PKEY_EC) && USE_EC
-    EC_KEY_free(ec);
-#else
-    RSA_free(rsa);
+#if defined(EVP_PKEY_EC)
+    if (ec)
+      EC_KEY_free(ec);
 #endif // EVP_PKEY_EC && USE_EC
+
+    if (rsa)
+      RSA_free(rsa);
 
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create private key."), 1);
     return (false);
   }
 
-#if defined(EVP_PKEY_EC) && USE_EC
-  EVP_PKEY_assign_EC_KEY(pkey, ec);
-#else
+#if defined(EVP_PKEY_EC)
+  if (ec)
+    EVP_PKEY_assign_EC_KEY(pkey, ec);
+  else
+#endif // EVP_PKEY_EC
   EVP_PKEY_assign_RSA(pkey, rsa);
-#endif // EVP_PKEY_EC && USE_EC
 
   DEBUG_puts("1cupsMakeServerCredentials: Key pair created.");
 
@@ -224,7 +259,6 @@ cupsMakeServerCredentials(
   X509_NAME_add_entry_by_txt(name, SN_stateOrProvinceName, MBSTRING_ASC, (unsigned char *)(state_province ? state_province : "Unknown"), -1, -1, 0);
   X509_NAME_add_entry_by_txt(name, SN_localityName, MBSTRING_ASC, (unsigned char *)(locality ? locality : "Unknown"), -1, -1, 0);
 
-  // TODO set issuer name to CA subject name (X509_get_subject_name)
   if (root_cert)
     X509_set_issuer_name(cert, X509_get_subject_name(root_cert));
   else
@@ -545,8 +579,8 @@ httpCredentialsGetTrust(
 
   if (tcreds)
   {
-    char	credentials_str[1024],	/* String for incoming credentials */
-		tcreds_str[1024];	/* String for saved credentials */
+    char	credentials_str[1024],	// String for incoming credentials
+		tcreds_str[1024];	// String for saved credentials
 
     httpCredentialsString(credentials, credentials_str, sizeof(credentials_str));
     httpCredentialsString(tcreds, tcreds_str, sizeof(tcreds_str));
@@ -849,7 +883,7 @@ httpLoadCredentials(
       else if ((num_data + strlen(line)) >= alloc_data)
       {
         unsigned char *tdata = realloc(data, alloc_data + 1024);
-					/* Expanded buffer */
+					// Expanded buffer
 
 	if (!tdata)
 	{
@@ -1142,7 +1176,7 @@ _httpTLSStart(http_t *http)		// I - Connection to server
     {
       DEBUG_printf(("4_httpTLSStart: Auto-create credentials for \"%s\".", cn));
 
-      if (!cupsMakeServerCredentials(tls_keypath, NULL, NULL, NULL, NULL, NULL, NULL, false, cn, 0, NULL, time(NULL) + 3650 * 86400))
+      if (!cupsMakeServerCredentials(tls_keypath, CUPS_CREDTYPE_DEFAULT, NULL, NULL, NULL, NULL, NULL, NULL, false, cn, 0, NULL, time(NULL) + 3650 * 86400))
       {
 	DEBUG_puts("4_httpTLSStart: cupsMakeServerCredentials failed.");
 	http->error  = errno = EINVAL;
