@@ -19,6 +19,8 @@
 // Local functions...
 //
 
+static void		http_add_san(GENERAL_NAMES *gens, const char *name);
+
 static long		http_bio_ctrl(BIO *h, int cmd, long arg1, void *arg2);
 static int		http_bio_free(BIO *data);
 static int		http_bio_new(BIO *h);
@@ -27,12 +29,19 @@ static int		http_bio_read(BIO *h, char *buf, int size);
 static int		http_bio_write(BIO *h, const char *buf, int num);
 
 static X509		*http_create_credential(http_credential_t *credential);
+static X509_NAME	*http_create_name(const char *organization, const char *org_unit, const char *locality, const char *state_province, const char *country, const char *common_name);
+static EVP_PKEY		*http_create_key(cups_credtype_t type);
+static GENERAL_NAMES	*http_create_san(const char *common_name, size_t num_alt_names, const char **alt_names);
+
 static const char	*http_default_path(char *buffer, size_t bufsize);
+
 static time_t		http_get_date(X509 *cert, int which);
+
 //static void		http_load_crl(void);
+
 static const char	*http_make_path(char *buffer, size_t bufsize, const char *dirname, const char *filename, const char *ext);
+
 static bool		http_x509_add_ext(X509 *cert, int nid, const char *value);
-static void		http_x509_add_san(GENERAL_NAMES *gens, const char *name);
 
 
 //
@@ -66,13 +75,10 @@ static int		tls_options = -1,// Options for TLS connections
 // "root_name" is `NULL` and there is no site-wide default root certificate, a
 // self-signed certificate is generated instead.
 //
-// The type of certificate depends on the version of the TLS library in use but
-// will be either 3072-bit RSA or 384-bit ECDSA with SHA-256 signature.
-//
 
 bool					// O - `true` on success, `false` on failure
 cupsMakeServerCredentials(
-    const char      *path,		// I - Directory path or `NULL` for default
+    const char      *path,		// I - Directory path for certificate/key store or `NULL` for default
     cups_credtype_t type,		// I - Type of certificate/keys to generate
     const char      *organization,	// I - Organization or `NULL` to use common name
     const char      *org_unit,		// I - Organizational unit or `NULL` for none
@@ -87,18 +93,12 @@ cupsMakeServerCredentials(
     time_t          expiration_date)	// I - Expiration date
 {
   bool		result = false;		// Return value
-  EVP_PKEY	*pkey;			// Private key
-#if defined(EVP_PKEY_EC)
-  EC_KEY	*ec = NULL;		// EC key
-#endif // EVP_PKEY_EC
-  RSA		*rsa = NULL;		// RSA key pair
+  EVP_PKEY	*pkey;			// Key pair
   X509		*cert;			// Certificate
   X509		*root_cert = NULL;	// Root certificate, if any
   EVP_PKEY	*root_key = NULL;	// Root private key, if any
   char		root_crtfile[1024],	// Path to root certificate
 		root_keyfile[1024];	// Path to root private key
-  cups_lang_t	*language;		// Default language info
-  const char	*langname;		// Language name
   time_t	curtime;		// Current time
   X509_NAME	*name;			// Subject/issuer name
   ASN1_INTEGER	*serial;		// Serial number
@@ -111,7 +111,7 @@ cupsMakeServerCredentials(
   GENERAL_NAMES *gens;			// Names for SubjectAltName certificate extension
 
 
-  DEBUG_printf(("cupsMakeServerCredentials(path=\"%s\", organization=\"%s\", org_unit=\"%s\", locality=\"%s\", state_province=\"%s\", country=\"%s\", common_name=\"%s\", num_alt_names=%u, alt_names=%p, expiration_date=%ld)", path, organization, org_unit, locality, state_province, country, common_name, (unsigned)num_alt_names, alt_names, (long)expiration_date));
+  DEBUG_printf(("cupsMakeServerCredentials(path=\"%s\", type=%d, organization=\"%s\", org_unit=\"%s\", locality=\"%s\", state_province=\"%s\", country=\"%s\", root_name=\"%s\", ca_cert=%s, common_name=\"%s\", num_alt_names=%u, alt_names=%p, expiration_date=%ld)", path, type, organization, org_unit, locality, state_province, country, root_name, ca_cert ? "true" : "false", common_name, (unsigned)num_alt_names, alt_names, (long)expiration_date));
 
   // Filenames...
   if (!path)
@@ -129,62 +129,8 @@ cupsMakeServerCredentials(
   // Create the encryption key...
   DEBUG_puts("1cupsMakeServerCredentials: Creating key pair.");
 
-  switch (type)
-  {
-#if defined(EVP_PKEY_EC)
-    case CUPS_CREDTYPE_ECDSA_P256_SHA256 :
-	ec = EC_KEY_new_by_curve_name(NID_secp256k1);
-	break;
-
-    case CUPS_CREDTYPE_ECDSA_P384_SHA256 :
-	ec = EC_KEY_new_by_curve_name(NID_secp384r1);
-	break;
-
-    case CUPS_CREDTYPE_ECDSA_P521_SHA256 :
-	ec = EC_KEY_new_by_curve_name(NID_secp521r1);
-	break;
-#endif // EVP_PKEY_EC && USE_EC
-
-    case CUPS_CREDTYPE_RSA_2048_SHA256 :
-	rsa = RSA_generate_key(2048, RSA_F4, NULL, NULL);
-	break;
-
-    default :
-    case CUPS_CREDTYPE_RSA_3072_SHA256 :
-	rsa = RSA_generate_key(3072, RSA_F4, NULL, NULL);
-	break;
-
-    case CUPS_CREDTYPE_RSA_4096_SHA256 :
-	rsa = RSA_generate_key(4096, RSA_F4, NULL, NULL);
-	break;
-  }
-
-  if (!rsa && !ec)
-  {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create key pair."), 1);
+  if ((pkey = http_create_key(type)) == NULL)
     return (false);
-  }
-
-  if ((pkey = EVP_PKEY_new()) == NULL)
-  {
-#if defined(EVP_PKEY_EC)
-    if (ec)
-      EC_KEY_free(ec);
-#endif // EVP_PKEY_EC && USE_EC
-
-    if (rsa)
-      RSA_free(rsa);
-
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create private key."), 1);
-    return (false);
-  }
-
-#if defined(EVP_PKEY_EC)
-  if (ec)
-    EVP_PKEY_assign_EC_KEY(pkey, ec);
-  else
-#endif // EVP_PKEY_EC
-  EVP_PKEY_assign_RSA(pkey, rsa);
 
   DEBUG_puts("1cupsMakeServerCredentials: Key pair created.");
 
@@ -244,20 +190,7 @@ cupsMakeServerCredentials(
 
   }
 
-  language = cupsLangDefault();
-  langname = cupsLangGetName(language);
-  name     = X509_NAME_new();
-  if (country)
-    X509_NAME_add_entry_by_txt(name, SN_countryName, MBSTRING_ASC, (unsigned char *)country, -1, -1, 0);
-  else if (strlen(langname) == 5)
-    X509_NAME_add_entry_by_txt(name, SN_countryName, MBSTRING_ASC, (unsigned char *)langname + 3, -1, -1, 0);
-  else
-    X509_NAME_add_entry_by_txt(name, SN_countryName, MBSTRING_ASC, (unsigned char *)"US", -1, -1, 0);
-  X509_NAME_add_entry_by_txt(name, SN_commonName, MBSTRING_ASC, (unsigned char *)common_name, -1, -1, 0);
-  X509_NAME_add_entry_by_txt(name, SN_organizationName, MBSTRING_ASC, (unsigned char *)(organization ? organization : common_name), -1, -1, 0);
-  X509_NAME_add_entry_by_txt(name, SN_organizationalUnitName, MBSTRING_ASC, (unsigned char *)(org_unit ? org_unit : ""), -1, -1, 0);
-  X509_NAME_add_entry_by_txt(name, SN_stateOrProvinceName, MBSTRING_ASC, (unsigned char *)(state_province ? state_province : "Unknown"), -1, -1, 0);
-  X509_NAME_add_entry_by_txt(name, SN_localityName, MBSTRING_ASC, (unsigned char *)(locality ? locality : "Unknown"), -1, -1, 0);
+  name = http_create_name(organization, org_unit, locality, state_province, country, common_name);
 
   if (root_cert)
     X509_set_issuer_name(cert, X509_get_subject_name(root_cert));
@@ -266,48 +199,29 @@ cupsMakeServerCredentials(
   X509_set_subject_name(cert, name);
   X509_NAME_free(name);
 
-  gens = sk_GENERAL_NAME_new_null();
-  http_x509_add_san(gens, common_name);
-  if (strstr(common_name, ".local") == NULL && !ca_cert)
-  {
-    // Add common_name.local to the list, too...
-    char	localname[256],		// hostname.local
-		*localptr;		// Pointer into localname
-
-    strlcpy(localname, common_name, sizeof(localname));
-    if ((localptr = strchr(localname, '.')) != NULL)
-      *localptr = '\0';
-    strlcat(localname, ".local", sizeof(localname));
-
-    http_x509_add_san(gens, localname);
-  }
-
-  if (num_alt_names > 0)
-  {
-    size_t i;				// Looping var...
-
-    for (i = 0; i < num_alt_names; i ++)
-    {
-      if (strcmp(alt_names[i], "localhost"))
-        http_x509_add_san(gens, alt_names[i]);
-    }
-  }
-
-  // Add extension with DNS names and free buffer for GENERAL_NAME
-  X509_add1_ext_i2d(cert, NID_subject_alt_name, gens, 0, X509V3_ADD_DEFAULT);
-  sk_GENERAL_NAME_pop_free(gens, GENERAL_NAME_free);
-
-  // Add extensions that are required to make Chrome happy...
   if (ca_cert)
   {
+    // Add extensions that are required to make Chrome happy...
     http_x509_add_ext(cert, NID_basic_constraints, "critical,CA:TRUE,pathlen:0");
     http_x509_add_ext(cert, NID_key_usage, "critical,cRLSign,digitalSignature,keyCertSign");
   }
   else
   {
+    // Add extension with DNS names and free buffer for GENERAL_NAME
+    if ((gens = http_create_san(common_name, num_alt_names, alt_names)) == NULL)
+    {
+      // TODO: Set error?
+      goto done;
+    }
+
+    X509_add1_ext_i2d(cert, NID_subject_alt_name, gens, 0, X509V3_ADD_DEFAULT);
+    sk_GENERAL_NAME_pop_free(gens, GENERAL_NAME_free);
+
+    // Add extensions that are required to make Chrome happy...
     http_x509_add_ext(cert, NID_basic_constraints, "critical,CA:FALSE,pathlen:0");
     http_x509_add_ext(cert, NID_key_usage, "critical,digitalSignature,keyEncipherment");
   }
+
   http_x509_add_ext(cert, NID_ext_key_usage, "1.3.6.1.5.5.7.3.1");
   http_x509_add_ext(cert, NID_subject_key_identifier, "hash");
   http_x509_add_ext(cert, NID_authority_key_identifier, "keyid,issuer");
@@ -371,6 +285,168 @@ cupsMakeServerCredentials(
 
 
 //
+// 'cupsMakeServerRequest()' - Make an X.509 Certificate Signing Request.
+//
+// This function creates an X.509 certificate signing request (CSR) and
+// associated private key.  The CSR and key are stored in the directory "path"
+// or, if "path" is `NULL`, in a per-user or system-wide (when running as root)
+// certificate/key store.
+//
+// The CSR is returned as a string that must be freed using the `free` function.
+//
+
+char *					// O - PEM-encoded certificate signing request
+cupsMakeServerRequest(
+    const char      *path,		// I - Directory path for certificate/key store or `NULL` for default
+    cups_credtype_t type,		// I - Type of certificate/keys to generate
+    const char      *organization,	// I - Organization or `NULL` to use common name
+    const char      *org_unit,		// I - Organizational unit or `NULL` for none
+    const char      *locality,		// I - City/town or `NULL` for "Unknown"
+    const char      *state_province,	// I - State/province or `NULL` for "Unknown"
+    const char      *country,		// I - Country or `NULL` for locale-based default
+    const char      *common_name,	// I - Common name
+    size_t          num_alt_names,	// I - Number of subject alternate names
+    const char      **alt_names)	// I - Subject Alternate Names
+{
+  char		*result = NULL;		// Return value
+  EVP_PKEY	*pkey;			// Key pair
+  X509_REQ	*csr;			// Certificate signing request
+  X509_NAME	*name;			// Subject/issuer name
+  BIO		*bio;			// Output file
+  char		temp[1024],		// Temporary directory name
+ 		csrfile[1024],		// Certificate signing request filename
+		keyfile[1024];		// Private key filename
+//  GENERAL_NAMES *gens;			// Names for SubjectAltName certificate extension
+
+
+  DEBUG_printf(("cupsMakeServerRequest(path=\"%s\", type=%d, organization=\"%s\", org_unit=\"%s\", locality=\"%s\", state_province=\"%s\", country=\"%s\", common_name=\"%s\", num_alt_names=%u, alt_names=%p)", path, type, organization, org_unit, locality, state_province, country, common_name, (unsigned)num_alt_names, alt_names));
+
+  // Filenames...
+  if (!path)
+    path = http_default_path(temp, sizeof(temp));
+
+  if (!path || !common_name)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), 0);
+    return (false);
+  }
+
+  http_make_path(csrfile, sizeof(csrfile), path, common_name, "csr");
+  http_make_path(keyfile, sizeof(keyfile), path, common_name, "key");
+
+  // Create the encryption key...
+  DEBUG_puts("1cupsMakeServerRequest: Creating key pair.");
+
+  if ((pkey = http_create_key(type)) == NULL)
+    return (false);
+
+  DEBUG_puts("1cupsMakeServerRequest: Key pair created.");
+
+  // Create the X.509 certificate...
+  DEBUG_puts("1cupsMakeServerRequest: Generating self-signed X.509 certificate.");
+
+  if ((csr = X509_REQ_new()) == NULL)
+  {
+    EVP_PKEY_free(pkey);
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create X.509 certificate signing request."), 1);
+    return (NULL);
+  }
+
+  X509_REQ_set_pubkey(csr, pkey);
+
+  if ((name = http_create_name(organization, org_unit, locality, state_province, country, common_name)) == NULL)
+    goto done;
+
+  X509_REQ_set_subject_name(csr, name);
+  X509_NAME_free(name);
+
+  // Add extension with DNS names and free buffer for GENERAL_NAME
+//  if ((gens = http_create_san(common_name, num_alt_names, alt_names)) == NULL)
+//  {
+//    // TODO: Set error?
+//    goto done;
+//  }
+
+  // TODO: Make this STACKOF and use X509_REQ_add_extensions
+//  X509_REQ_add1_ext_i2d(csr, NID_subject_alt_name, gens, 0, X509V3_ADD_DEFAULT);
+//  sk_GENERAL_NAME_pop_free(gens, GENERAL_NAME_free);
+
+  X509_REQ_sign(csr, pkey, EVP_sha256());
+
+  // Save them...
+  if ((bio = BIO_new_file(keyfile, "wb")) == NULL)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
+    goto done;
+  }
+
+  if (!PEM_write_bio_PrivateKey(bio, pkey, NULL, NULL, 0, NULL, NULL))
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to write private key."), 1);
+    BIO_free(bio);
+    goto done;
+  }
+
+  BIO_free(bio);
+
+  if ((bio = BIO_new_file(csrfile, "wb")) == NULL)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
+    goto done;
+  }
+
+  if (!PEM_write_bio_X509_REQ(bio, csr))
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to write X.509 certificate signing request."), 1);
+    BIO_free(bio);
+    goto done;
+  }
+
+  BIO_free(bio);
+
+  // TODO: Copy CSR to returned string
+  result = strdup("");
+  DEBUG_puts("1cupsMakeServerRequest: Successfully created signing request.");
+
+  // Cleanup...
+  done:
+
+  X509_REQ_free(csr);
+  EVP_PKEY_free(pkey);
+
+  return (result);
+}
+
+
+//
+// 'cupsSaveServerCredentials()' - Save the X.509 certificate chain associated
+//                                 with a server.
+//
+// This function saves the the PEM-encoded X.509 certificate chain string to
+// the directory "path" or, if "path" is `NULL`, in a per-user or system-wide
+// (when running as root) certificate/key store.  The "common_name" value must
+// match the value supplied when the @link cupsMakeServerRequest@ function was
+// called to obtain the certificate signing request (CSR).  The saved
+// certificate is paired with the private key that was generated for the CSR,
+// allowing it to be used for encryption and signing.
+//
+
+extern bool				// O - `true` on success, `false` on failure
+cupsSaveServerCredentials(
+    const char *path,			// I - Directory path for certificate/key store or `NULL` for default
+    const char *common_name,		// I - Common name for certificate
+    const char *pem)			// I - PEM-encoded certificate chain
+{
+  // TODO: Implement cupsSaveServerCredentials
+  (void)path;
+  (void)common_name;
+  (void)pem;
+
+  return (false);
+}
+
+
+//
 // 'cupsSetServerCredentials()' - Set the default server credentials.
 //
 // Note: The server credentials are used by all threads in the running process.
@@ -379,7 +455,7 @@ cupsMakeServerCredentials(
 
 bool					// O - `true` on success, `false` on failure
 cupsSetServerCredentials(
-    const char *path,			// I - Path to keychain/directory
+    const char *path,			// I - Directory path for certificate/key store or `NULL` for default
     const char *common_name,		// I - Default common name for server
     bool       auto_create)		// I - `true` = automatically create self-signed certificates
 {
@@ -1333,6 +1409,28 @@ _httpTLSWrite(http_t     *http,		// I - Connection to server
 
 
 //
+// 'http_add_san()' - Add a subjectAltName to GENERAL_NAMES used for
+//                    the extension to an X.509 certificate/signing request.
+//
+
+static void
+http_add_san(GENERAL_NAMES *gens,	// I - Concatenation of DNS names
+             const char    *name)	// I - Hostname
+{
+  GENERAL_NAME *gen_dns = GENERAL_NAME_new();
+					// DNS: name
+  ASN1_IA5STRING *ia5 = ASN1_IA5STRING_new();
+					// Hostname string
+
+
+  // Set the strings and push it on the GENERAL_NAMES list...
+  ASN1_STRING_set(ia5, name, strlen(name));
+  GENERAL_NAME_set0_value(gen_dns, GEN_DNS, ia5);
+  sk_GENERAL_NAME_push(gens, gen_dns);
+}
+
+
+//
 // 'http_bio_ctrl()' - Control the HTTP connection.
 //
 
@@ -1517,6 +1615,159 @@ http_create_credential(
   BIO_free(bio);
 
   return (cert);
+}
+
+
+//
+// 'http_create_key()' - Create a suitable key pair for a certificate/signing request.
+//
+
+static EVP_PKEY *			// O - Key pair
+http_create_key(cups_credtype_t type)	// I - Type of key
+{
+  EVP_PKEY	*pkey;			// Key pair
+#if defined(EVP_PKEY_EC)
+  EC_KEY	*ec = NULL;		// EC key
+#endif // EVP_PKEY_EC
+  RSA		*rsa = NULL;		// RSA key pair
+
+
+  switch (type)
+  {
+#if defined(EVP_PKEY_EC)
+    case CUPS_CREDTYPE_ECDSA_P256_SHA256 :
+	ec = EC_KEY_new_by_curve_name(NID_secp256k1);
+	break;
+
+    case CUPS_CREDTYPE_ECDSA_P384_SHA256 :
+	ec = EC_KEY_new_by_curve_name(NID_secp384r1);
+	break;
+
+    case CUPS_CREDTYPE_ECDSA_P521_SHA256 :
+	ec = EC_KEY_new_by_curve_name(NID_secp521r1);
+	break;
+#endif // EVP_PKEY_EC && USE_EC
+
+    case CUPS_CREDTYPE_RSA_2048_SHA256 :
+	rsa = RSA_generate_key(2048, RSA_F4, NULL, NULL);
+	break;
+
+    default :
+    case CUPS_CREDTYPE_RSA_3072_SHA256 :
+	rsa = RSA_generate_key(3072, RSA_F4, NULL, NULL);
+	break;
+
+    case CUPS_CREDTYPE_RSA_4096_SHA256 :
+	rsa = RSA_generate_key(4096, RSA_F4, NULL, NULL);
+	break;
+  }
+
+  if (!rsa && !ec)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create key pair."), 1);
+    return (NULL);
+  }
+
+  if ((pkey = EVP_PKEY_new()) == NULL)
+  {
+#if defined(EVP_PKEY_EC)
+    if (ec)
+      EC_KEY_free(ec);
+#endif // EVP_PKEY_EC && USE_EC
+
+    if (rsa)
+      RSA_free(rsa);
+
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create private key."), 1);
+    return (NULL);
+  }
+
+#if defined(EVP_PKEY_EC)
+  if (ec)
+    EVP_PKEY_assign_EC_KEY(pkey, ec);
+  else
+#endif // EVP_PKEY_EC
+  EVP_PKEY_assign_RSA(pkey, rsa);
+
+  return (pkey);
+}
+
+
+//
+// 'http_create_name()' - Create an X.509 name value for a certificate/signing request.
+//
+
+static X509_NAME *			// O - X.509 name value
+http_create_name(
+    const char      *organization,	// I - Organization or `NULL` to use common name
+    const char      *org_unit,		// I - Organizational unit or `NULL` for none
+    const char      *locality,		// I - City/town or `NULL` for "Unknown"
+    const char      *state_province,	// I - State/province or `NULL` for "Unknown"
+    const char      *country,		// I - Country or `NULL` for locale-based default
+    const char      *common_name)	// I - Common name
+{
+  X509_NAME	*name;			// Subject/issuer name
+  cups_lang_t	*language;		// Default language info
+  const char	*langname;		// Language name
+
+
+  language = cupsLangDefault();
+  langname = cupsLangGetName(language);
+  name     = X509_NAME_new();
+  if (country)
+    X509_NAME_add_entry_by_txt(name, SN_countryName, MBSTRING_ASC, (unsigned char *)country, -1, -1, 0);
+  else if (strlen(langname) == 5)
+    X509_NAME_add_entry_by_txt(name, SN_countryName, MBSTRING_ASC, (unsigned char *)langname + 3, -1, -1, 0);
+  else
+    X509_NAME_add_entry_by_txt(name, SN_countryName, MBSTRING_ASC, (unsigned char *)"US", -1, -1, 0);
+  X509_NAME_add_entry_by_txt(name, SN_commonName, MBSTRING_ASC, (unsigned char *)common_name, -1, -1, 0);
+  X509_NAME_add_entry_by_txt(name, SN_organizationName, MBSTRING_ASC, (unsigned char *)(organization ? organization : common_name), -1, -1, 0);
+  X509_NAME_add_entry_by_txt(name, SN_organizationalUnitName, MBSTRING_ASC, (unsigned char *)(org_unit ? org_unit : ""), -1, -1, 0);
+  X509_NAME_add_entry_by_txt(name, SN_stateOrProvinceName, MBSTRING_ASC, (unsigned char *)(state_province ? state_province : "Unknown"), -1, -1, 0);
+  X509_NAME_add_entry_by_txt(name, SN_localityName, MBSTRING_ASC, (unsigned char *)(locality ? locality : "Unknown"), -1, -1, 0);
+
+  return (name);
+}
+
+
+//
+// 'http_create_san()' - Create a list of subjectAltName values for a certificate/signing request.
+//
+
+static GENERAL_NAMES *			// O - List of subjectAltName values
+http_create_san(
+    const char *common_name,		// I - Common name
+    size_t     num_alt_names,		// I - Number of alternate names
+    const char **alt_names)		// I - List of alternate names
+{
+  GENERAL_NAMES	*gens;			// List of subjectAltName values
+  size_t	i;			// Looping var
+
+
+  gens = sk_GENERAL_NAME_new_null();
+
+  http_add_san(gens, common_name);
+  if (strstr(common_name, ".local") == NULL)
+  {
+    // Add common_name.local to the list, too...
+    char	localname[256],		// hostname.local
+		*localptr;		// Pointer into localname
+
+    strlcpy(localname, common_name, sizeof(localname));
+    if ((localptr = strchr(localname, '.')) != NULL)
+      *localptr = '\0';
+    strlcat(localname, ".local", sizeof(localname));
+
+    http_add_san(gens, localname);
+  }
+
+  for (i = 0; i < num_alt_names; i ++)
+  {
+    if (strcmp(alt_names[i], "localhost"))
+      http_add_san(gens, alt_names[i]);
+  }
+
+  return (gens);
 }
 
 
@@ -1789,26 +2040,4 @@ http_x509_add_ext(X509       *cert,	// I - Certificate
   X509_EXTENSION_free(ex);
 
   return (ret);
-}
-
-
-//
-// 'http_x509_add_san()' - Add a subjectAltName to GENERAL_NAMES used for
-//                         the extension to an X.509 certificate.
-//
-
-static void
-http_x509_add_san(GENERAL_NAMES *gens,	// I - Concatenation of DNS names
-                  const char    *name)	// I - Hostname
-{
-  GENERAL_NAME *gen_dns = GENERAL_NAME_new();
-					// DNS: name
-  ASN1_IA5STRING *ia5 = ASN1_IA5STRING_new();
-					// Hostname string
-
-
-  // Set the strings and push it on the GENERAL_NAMES list...
-  ASN1_STRING_set(ia5, name, strlen(name));
-  GENERAL_NAME_set0_value(gen_dns, GEN_DNS, ia5);
-  sk_GENERAL_NAME_push(gens, gen_dns);
 }

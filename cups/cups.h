@@ -133,7 +133,7 @@ extern "C" {
 // Types and structures...
 //
 
-typedef enum cups_credtype_e		// X.509 credential types
+typedef enum cups_credtype_e		// X.509 credential types for @link cupsMakeServerCredentials@ and @link cupsMakeServerRequest@
 {
   CUPS_CREDTYPE_DEFAULT,		// Default type
   CUPS_CREDTYPE_RSA_2048_SHA256,	// RSA with 2048-bit keys and SHA-256 hash
@@ -355,7 +355,7 @@ extern ssize_t		cupsReadResponseData(http_t *http, char *buffer, size_t length) 
 extern size_t		cupsRemoveDest(const char *name, const char *instance, size_t num_dests, cups_dest_t **dests) _CUPS_PUBLIC;
 extern size_t		cupsRemoveOption(const char *name, size_t num_options, cups_option_t **options) _CUPS_PUBLIC;
 
-extern bool		cupsSaveServerCredentials(const char *path, const char *pem) _CUPS_PUBLIC;
+extern bool		cupsSaveServerCredentials(const char *path, const char *common_name, const char *pem) _CUPS_PUBLIC;
 extern http_status_t	cupsSendRequest(http_t *http, ipp_t *request, const char *resource, size_t length) _CUPS_PUBLIC;
 extern void		cupsSetOAuthCB(cups_oauth_cb_t cb, void *data) _CUPS_PUBLIC;
 extern void		cupsSetClientCertCB(cups_client_cert_cb_t cb, void *user_data) _CUPS_PUBLIC;
