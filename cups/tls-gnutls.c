@@ -1,88 +1,78 @@
-/*
- * TLS support code for CUPS using GNU TLS.
- *
- * Copyright © 2020-2022 by OpenPrinting
- * Copyright © 2007-2019 by Apple Inc.
- * Copyright © 1997-2007 by Easy Software Products, all rights reserved.
- *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more
- * information.
- */
+//
+// TLS support code for CUPS using GNU TLS.
+//
+// Copyright © 2020-2023 by OpenPrinting
+// Copyright © 2007-2019 by Apple Inc.
+// Copyright © 1997-2007 by Easy Software Products, all rights reserved.
+//
+// Licensed under Apache License v2.0.  See the file "LICENSE" for more
+// information.
+//
 
-/**** This file is included from tls.c ****/
-
-/*
- * Include necessary headers...
- */
-
-#include <sys/stat.h>
+//// This file is included from tls.c
 
 
-/*
- * Local globals...
- */
+//
+// Local functions...
+//
 
-static int		tls_auto_create = 0;
-					/* Auto-create self-signed certs? */
-static char		*tls_common_name = NULL;
-					/* Default common name */
-static gnutls_x509_crl_t tls_crl = NULL;/* Certificate revocation list */
-static char		*tls_keypath = NULL;
-					/* Server cert keychain path */
-static cups_mutex_t	tls_mutex = CUPS_MUTEX_INITIALIZER;
-					/* Mutex for keychain/certs */
-static int		tls_options = -1,/* Options for TLS connections */
-			tls_min_version = _HTTP_TLS_1_0,
-			tls_max_version = _HTTP_TLS_MAX;
+static gnutls_x509_crt_t gnutls_create_credential(http_credential_t *credential);
+static gnutls_x509_privkey_t gnutls_create_key(cups_credtype_t type);
+static void		gnutls_load_crl(void);
+static ssize_t		gnutls_read(gnutls_transport_ptr_t ptr, void *data, size_t length);
+static ssize_t		gnutls_write(gnutls_transport_ptr_t ptr, const void *data, size_t length);
 
 
-/*
- * Local functions...
- */
+//
+// 'cupsCreateCredentials()' - Make an X.509 certificate and private key pair.
+//
+// This function creates an X.509 certificate and private key pair.  The
+// certificate and key are stored in the directory "path" or, if "path" is
+// `NULL`, in a per-user or system-wide (when running as root) certificate/key
+// store.  The generated certificate is signed by the named root certificate or,
+// if "root_name" is `NULL`, a site-wide default root certificate.  When
+// "root_name" is `NULL` and there is no site-wide default root certificate, a
+// self-signed certificate is generated instead.
+//
 
-static gnutls_x509_crt_t http_gnutls_create_credential(http_credential_t *credential);
-static const char	*http_gnutls_default_path(char *buffer, size_t bufsize);
-static void		http_gnutls_load_crl(void);
-static const char	*http_gnutls_make_path(char *buffer, size_t bufsize, const char *dirname, const char *filename, const char *ext);
-static ssize_t		http_gnutls_read(gnutls_transport_ptr_t ptr, void *data, size_t length);
-static ssize_t		http_gnutls_write(gnutls_transport_ptr_t ptr, const void *data, size_t length);
-
-
-/*
- * 'cupsMakeServerCredentials()' - Make a self-signed certificate and private key pair.
- */
-
-int					/* O - 1 on success, 0 on failure */
-cupsMakeServerCredentials(
-    const char *path,			/* I - Path to keychain/directory */
-    const char *common_name,		/* I - Common name */
-    int        num_alt_names,		/* I - Number of subject alternate names */
-    const char **alt_names,		/* I - Subject Alternate Names */
-    time_t     expiration_date)		/* I - Expiration date */
+bool					// O - `true` on success, `false` on error
+cupsCreateCredentials(
+    const char         *path,		// I - Directory path for certificate/key store or `NULL` for default
+    bool               ca_cert,		// I - `true` to create a CA certificate, `false` for a client/server certificate
+    cups_credpurpose_t purpose,		// I - Credential purposes
+    cups_credtype_t    type,		// I - Credential type
+    cups_credusage_t   usage,		// I - Credential usages
+    const char         *organization,	// I - Organization or `NULL` to use common name
+    const char         *org_unit,	// I - Organizational unit or `NULL` for none
+    const char         *locality,	// I - City/town or `NULL` for "Unknown"
+    const char         *state_province,	// I - State/province or `NULL` for "Unknown"
+    const char         *country,	// I - Country or `NULL` for locale-based default
+    const char         *common_name,	// I - Common name
+    size_t             num_alt_names,	// I - Number of subject alternate names
+    const char         **alt_names,	// I - Subject Alternate Names
+    const char         *root_name,	// I - Root certificate/domain name or `NULL` for site/self-signed
+    time_t             expiration_date)	// I - Expiration date
 {
-  gnutls_x509_crt_t	crt;		/* Self-signed certificate */
-  gnutls_x509_privkey_t	key;		/* Encryption private key */
-  char			temp[1024],	/* Temporary directory name */
- 			crtfile[1024],	/* Certificate filename */
-			keyfile[1024];	/* Private key filename */
-  cups_lang_t		*language;	/* Default language info */
-  const char		*langname;	/* Default language name */
-  cups_file_t		*fp;		/* Key/cert file */
-  unsigned char		buffer[8192];	/* Buffer for x509 data */
-  size_t		bytes;		/* Number of bytes of data */
-  unsigned char		serial[4];	/* Serial number buffer */
-  time_t		curtime;	/* Current time */
-  int			result;		/* Result of GNU TLS calls */
+  gnutls_x509_crt_t	crt;		// Self-signed certificate
+  gnutls_x509_privkey_t	key;		// Encryption private key
+  char			temp[1024],	// Temporary directory name
+ 			crtfile[1024],	// Certificate filename
+			keyfile[1024];	// Private key filename
+  cups_lang_t		*language;	// Default language info
+  const char		*langname;	// Default language name
+  cups_file_t		*fp;		// Key/cert file
+  unsigned char		buffer[8192];	// Buffer for x509 data
+  size_t		bytes;		// Number of bytes of data
+  unsigned char		serial[4];	// Serial number buffer
+  time_t		curtime;	// Current time
+  int			result;		// Result of GNU TLS calls
 
 
-  DEBUG_printf(("cupsMakeServerCredentials(path=\"%s\", common_name=\"%s\", num_alt_names=%d, alt_names=%p, expiration_date=%d)", path, common_name, num_alt_names, alt_names, (int)expiration_date));
+  DEBUG_printf(("cupsCreateCredentials(path=\"%s\", ca_cert=%s, purpose=0x%x, type=%d, usage=0x%x, organization=\"%s\", org_unit=\"%s\", locality=\"%s\", state_province=\"%s\", country=\"%s\", common_name=\"%s\", num_alt_names=%u, alt_names=%p, root_name=\"%s\", expiration_date=%ld)", path, ca_cert ? "true" : "false", purpose, type, usage, organization, org_unit, locality, state_province, country, common_name, (unsigned)num_alt_names, alt_names, root_name, (long)expiration_date));
 
- /*
-  * Filenames...
-  */
-
+  // Filenames...
   if (!path)
-    path = http_gnutls_default_path(temp, sizeof(temp));
+    path = http_default_path(temp, sizeof(temp));
 
   if (!path || !common_name)
   {
@@ -90,52 +80,42 @@ cupsMakeServerCredentials(
     return (0);
   }
 
-  http_gnutls_make_path(crtfile, sizeof(crtfile), path, common_name, "crt");
-  http_gnutls_make_path(keyfile, sizeof(keyfile), path, common_name, "key");
+  http_make_path(crtfile, sizeof(crtfile), path, common_name, "crt");
+  http_make_path(keyfile, sizeof(keyfile), path, common_name, "key");
 
- /*
-  * Create the encryption key...
-  */
+  // Create the encryption key...
+  DEBUG_puts("1cupsCreateCredentials: Creating key pair.");
 
-  DEBUG_puts("1cupsMakeServerCredentials: Creating key pair.");
+  key = gnutls_create_key(type);
 
-  gnutls_x509_privkey_init(&key);
-  gnutls_x509_privkey_generate(key, GNUTLS_PK_RSA, 3072, 0);
+  DEBUG_puts("1cupsCreateCredentials: Key pair created.");
 
-  DEBUG_puts("1cupsMakeServerCredentials: Key pair created.");
-
- /*
-  * Save it...
-  */
-
+  // Save it...
   bytes = sizeof(buffer);
 
   if ((result = gnutls_x509_privkey_export(key, GNUTLS_X509_FMT_PEM, buffer, &bytes)) < 0)
   {
-    DEBUG_printf(("1cupsMakeServerCredentials: Unable to export private key: %s", gnutls_strerror(result)));
+    DEBUG_printf(("1cupsCreateCredentials: Unable to export private key: %s", gnutls_strerror(result)));
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, gnutls_strerror(result), 0);
     gnutls_x509_privkey_deinit(key);
     return (0);
   }
   else if ((fp = cupsFileOpen(keyfile, "w")) != NULL)
   {
-    DEBUG_printf(("1cupsMakeServerCredentials: Writing private key to \"%s\".", keyfile));
+    DEBUG_printf(("1cupsCreateCredentials: Writing private key to \"%s\".", keyfile));
     cupsFileWrite(fp, (char *)buffer, bytes);
     cupsFileClose(fp);
   }
   else
   {
-    DEBUG_printf(("1cupsMakeServerCredentials: Unable to create private key file \"%s\": %s", keyfile, strerror(errno)));
+    DEBUG_printf(("1cupsCreateCredentials: Unable to create private key file \"%s\": %s", keyfile, strerror(errno)));
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
     gnutls_x509_privkey_deinit(key);
     return (0);
   }
 
- /*
-  * Create the self-signed certificate...
-  */
-
-  DEBUG_puts("1cupsMakeServerCredentials: Generating self-signed X.509 certificate.");
+  // Create the self-signed certificate...
+  DEBUG_puts("1cupsCreateCredentials: Generating self-signed X.509 certificate.");
 
   language  = cupsLangDefault();
   langname  = cupsLangGetName(language);
@@ -155,7 +135,7 @@ cupsMakeServerCredentials(
   gnutls_x509_crt_set_dn_by_oid(crt, GNUTLS_OID_X520_ORGANIZATIONAL_UNIT_NAME, 0, "Unknown", 7);
   gnutls_x509_crt_set_dn_by_oid(crt, GNUTLS_OID_X520_STATE_OR_PROVINCE_NAME, 0, "Unknown", 7);
   gnutls_x509_crt_set_dn_by_oid(crt, GNUTLS_OID_X520_LOCALITY_NAME, 0, "Unknown", 7);
-/*  gnutls_x509_crt_set_dn_by_oid(crt, GNUTLS_OID_PKCS9_EMAIL, 0, ServerAdmin, strlen(ServerAdmin));*/
+//  gnutls_x509_crt_set_dn_by_oid(crt, GNUTLS_OID_PKCS9_EMAIL, 0, ServerAdmin, strlen(ServerAdmin));
   gnutls_x509_crt_set_key(crt, key);
   gnutls_x509_crt_set_serial(crt, serial, sizeof(serial));
   gnutls_x509_crt_set_activation_time(crt, curtime);
@@ -164,11 +144,8 @@ cupsMakeServerCredentials(
   gnutls_x509_crt_set_subject_alt_name(crt, GNUTLS_SAN_DNSNAME, common_name, (unsigned)strlen(common_name), GNUTLS_FSAN_SET);
   if (!strchr(common_name, '.'))
   {
-   /*
-    * Add common_name.local to the list, too...
-    */
-
-    char localname[256];                /* hostname.local */
+    // Add common_name.local to the list, too...
+    char localname[256];                // hostname.local
 
     snprintf(localname, sizeof(localname), "%s.local", common_name);
     gnutls_x509_crt_set_subject_alt_name(crt, GNUTLS_SAN_DNSNAME, localname, (unsigned)strlen(localname), GNUTLS_FSAN_APPEND);
@@ -176,7 +153,7 @@ cupsMakeServerCredentials(
   gnutls_x509_crt_set_subject_alt_name(crt, GNUTLS_SAN_DNSNAME, "localhost", 9, GNUTLS_FSAN_APPEND);
   if (num_alt_names > 0)
   {
-    int i;                              /* Looping var */
+    size_t i;				// Looping var
 
     for (i = 0; i < num_alt_names; i ++)
     {
@@ -196,14 +173,11 @@ cupsMakeServerCredentials(
 
   gnutls_x509_crt_sign(crt, crt, key);
 
- /*
-  * Save it...
-  */
-
+  // Save it...
   bytes = sizeof(buffer);
   if ((result = gnutls_x509_crt_export(crt, GNUTLS_X509_FMT_PEM, buffer, &bytes)) < 0)
   {
-    DEBUG_printf(("1cupsMakeServerCredentials: Unable to export public key and X.509 certificate: %s", gnutls_strerror(result)));
+    DEBUG_printf(("1cupsCreateCredentials: Unable to export public key and X.509 certificate: %s", gnutls_strerror(result)));
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, gnutls_strerror(result), 0);
     gnutls_x509_crt_deinit(crt);
     gnutls_x509_privkey_deinit(key);
@@ -211,105 +185,41 @@ cupsMakeServerCredentials(
   }
   else if ((fp = cupsFileOpen(crtfile, "w")) != NULL)
   {
-    DEBUG_printf(("1cupsMakeServerCredentials: Writing public key and X.509 certificate to \"%s\".", crtfile));
+    DEBUG_printf(("1cupsCreateCredentials: Writing public key and X.509 certificate to \"%s\".", crtfile));
     cupsFileWrite(fp, (char *)buffer, bytes);
     cupsFileClose(fp);
   }
   else
   {
-    DEBUG_printf(("1cupsMakeServerCredentials: Unable to create public key and X.509 certificate file \"%s\": %s", crtfile, strerror(errno)));
+    DEBUG_printf(("1cupsCreateCredentials: Unable to create public key and X.509 certificate file \"%s\": %s", crtfile, strerror(errno)));
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
     gnutls_x509_crt_deinit(crt);
     gnutls_x509_privkey_deinit(key);
     return (0);
   }
 
- /*
-  * Cleanup...
-  */
-
+  // Cleanup...
   gnutls_x509_crt_deinit(crt);
   gnutls_x509_privkey_deinit(key);
 
-  DEBUG_puts("1cupsMakeServerCredentials: Successfully created credentials.");
+  DEBUG_puts("1cupsCreateCredentials: Successfully created credentials.");
 
   return (1);
 }
 
 
-/*
- * 'cupsSetServerCredentials()' - Set the default server credentials.
- *
- * Note: The server credentials are used by all threads in the running process.
- * This function is threadsafe.
- */
+//
+// 'httpCopyCredentials()' - Copy the credentials associated with the peer in
+//                           an encrypted connection.
+//
 
-int					/* O - 1 on success, 0 on failure */
-cupsSetServerCredentials(
-    const char *path,			/* I - Path to keychain/directory */
-    const char *common_name,		/* I - Default common name for server */
-    int        auto_create)		/* I - 1 = automatically create self-signed certificates */
-{
-  char	temp[1024];			/* Default path buffer */
-
-
-  DEBUG_printf(("cupsSetServerCredentials(path=\"%s\", common_name=\"%s\", auto_create=%d)", path, common_name, auto_create));
-
- /*
-  * Use defaults as needed...
-  */
-
-  if (!path)
-    path = http_gnutls_default_path(temp, sizeof(temp));
-
- /*
-  * Range check input...
-  */
-
-  if (!path || !common_name)
-  {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), 0);
-    return (0);
-  }
-
-  cupsMutexLock(&tls_mutex);
-
- /*
-  * Free old values...
-  */
-
-  if (tls_keypath)
-    _cupsStrFree(tls_keypath);
-
-  if (tls_common_name)
-    _cupsStrFree(tls_common_name);
-
- /*
-  * Save the new values...
-  */
-
-  tls_keypath     = _cupsStrAlloc(path);
-  tls_auto_create = auto_create;
-  tls_common_name = _cupsStrAlloc(common_name);
-
-  cupsMutexUnlock(&tls_mutex);
-
-  return (1);
-}
-
-
-/*
- * 'httpCopyCredentials()' - Copy the credentials associated with the peer in
- *                           an encrypted connection.
- */
-
-int					/* O - Status of call (0 = success) */
+int					// O - Status of call (0 = success)
 httpCopyCredentials(
-    http_t	 *http,			/* I - Connection to server */
-    cups_array_t **credentials)		/* O - Array of credentials */
+    http_t	 *http,			// I - Connection to server
+    cups_array_t **credentials)		// O - Array of credentials
 {
-  unsigned		count;		/* Number of certificates */
-  const gnutls_datum_t *certs;		/* Certificates */
+  unsigned		count;		// Number of certificates
+  const gnutls_datum_t *certs;		// Certificates
 
 
   DEBUG_printf(("httpCopyCredentials(http=%p, credentials=%p)", http, credentials));
@@ -339,13 +249,13 @@ httpCopyCredentials(
 }
 
 
-/*
- * '_httpCreateCredentials()' - Create credentials in the internal format.
- */
+//
+// '_httpCreateCredentials()' - Create credentials in the internal format.
+//
 
-http_tls_credentials_t			/* O - Internal credentials */
+http_tls_credentials_t			// O - Internal credentials
 _httpCreateCredentials(
-    cups_array_t *credentials)		/* I - Array of credentials */
+    cups_array_t *credentials)		// I - Array of credentials
 {
   (void)credentials;
 
@@ -353,32 +263,20 @@ _httpCreateCredentials(
 }
 
 
-/*
- * '_httpFreeCredentials()' - Free internal credentials.
- */
+//
+// 'httpCredentialsAreValidForName()' - Return whether the credentials are valid for the given name.
+//
 
-void
-_httpFreeCredentials(
-    http_tls_credentials_t credentials)	/* I - Internal credentials */
-{
-  (void)credentials;
-}
-
-
-/*
- * 'httpCredentialsAreValidForName()' - Return whether the credentials are valid for the given name.
- */
-
-int					/* O - 1 if valid, 0 otherwise */
+int					// O - 1 if valid, 0 otherwise
 httpCredentialsAreValidForName(
-    cups_array_t *credentials,		/* I - Credentials */
-    const char   *common_name)		/* I - Name to check */
+    cups_array_t *credentials,		// I - Credentials
+    const char   *common_name)		// I - Name to check
 {
-  gnutls_x509_crt_t	cert;		/* Certificate */
-  int			result = 0;	/* Result */
+  gnutls_x509_crt_t	cert;		// Certificate
+  int			result = 0;	// Result
 
 
-  cert = http_gnutls_create_credential((http_credential_t *)cupsArrayGetFirst(credentials));
+  cert = gnutls_create_credential((http_credential_t *)cupsArrayGetFirst(credentials));
   if (cert)
   {
     result = gnutls_x509_crt_check_hostname(cert, common_name) != 0;
@@ -386,11 +284,11 @@ httpCredentialsAreValidForName(
     if (result)
     {
       gnutls_x509_crl_iter_t iter = NULL;
-					/* Iterator */
-      unsigned char	cserial[1024],	/* Certificate serial number */
-			rserial[1024];	/* Revoked serial number */
-      size_t		cserial_size,	/* Size of cert serial number */
-			rserial_size;	/* Size of revoked serial number */
+					// Iterator
+      unsigned char	cserial[1024],	// Certificate serial number
+			rserial[1024];	// Revoked serial number
+      size_t		cserial_size,	// Size of cert serial number
+			rserial_size;	// Size of revoked serial number
 
       cupsMutexLock(&tls_mutex);
 
@@ -424,21 +322,21 @@ httpCredentialsAreValidForName(
 }
 
 
-/*
- * 'httpCredentialsGetTrust()' - Return the trust of credentials.
- */
+//
+// 'httpCredentialsGetTrust()' - Return the trust of credentials.
+//
 
-http_trust_t				/* O - Level of trust */
+http_trust_t				// O - Level of trust
 httpCredentialsGetTrust(
-    cups_array_t *credentials,		/* I - Credentials */
-    const char   *common_name)		/* I - Common name for trust lookup */
+    cups_array_t *credentials,		// I - Credentials
+    const char   *common_name)		// I - Common name for trust lookup
 {
   http_trust_t		trust = HTTP_TRUST_OK;
-					/* Trusted? */
-  gnutls_x509_crt_t	cert;		/* Certificate */
-  cups_array_t		*tcreds = NULL;	/* Trusted credentials */
+					// Trusted?
+  gnutls_x509_crt_t	cert;		// Certificate
+  cups_array_t		*tcreds = NULL;	// Trusted credentials
   _cups_globals_t	*cg = _cupsGlobals();
-					/* Per-thread globals */
+					// Per-thread globals
 
 
   if (!common_name)
@@ -447,7 +345,7 @@ httpCredentialsGetTrust(
     return (HTTP_TRUST_UNKNOWN);
   }
 
-  if ((cert = http_gnutls_create_credential((http_credential_t *)cupsArrayGetFirst(credentials))) == NULL)
+  if ((cert = gnutls_create_credential((http_credential_t *)cupsArrayGetFirst(credentials))) == NULL)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create credentials from array."), 1);
     return (HTTP_TRUST_UNKNOWN);
@@ -456,66 +354,48 @@ httpCredentialsGetTrust(
   if (cg->any_root < 0)
   {
     _cupsSetDefaults();
-    http_gnutls_load_crl();
+    gnutls_load_crl();
   }
 
- /*
-  * Look this common name up in the default keychains...
-  */
-
+  // Look this common name up in the default keychains...
   httpLoadCredentials(NULL, &tcreds, common_name);
 
   if (tcreds)
   {
-    char	credentials_str[1024],	/* String for incoming credentials */
-		tcreds_str[1024];	/* String for saved credentials */
+    char	credentials_str[1024],	// String for incoming credentials
+		tcreds_str[1024];	// String for saved credentials
 
     httpCredentialsString(credentials, credentials_str, sizeof(credentials_str));
     httpCredentialsString(tcreds, tcreds_str, sizeof(tcreds_str));
 
     if (strcmp(credentials_str, tcreds_str))
     {
-     /*
-      * Credentials don't match, let's look at the expiration date of the new
-      * credentials and allow if the new ones have a later expiration...
-      */
-
+      // Credentials don't match, let's look at the expiration date of the new
+      // credentials and allow if the new ones have a later expiration...
       if (!cg->trust_first)
       {
-       /*
-        * Do not trust certificates on first use...
-	*/
-
+        // Do not trust certificates on first use...
         _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Trust on first use is disabled."), 1);
 
         trust = HTTP_TRUST_INVALID;
       }
       else if (httpCredentialsGetExpiration(credentials) <= httpCredentialsGetExpiration(tcreds))
       {
-       /*
-        * The new credentials are not newly issued...
-	*/
-
+        // The new credentials are not newly issued...
         _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("New credentials are older than stored credentials."), 1);
 
         trust = HTTP_TRUST_INVALID;
       }
       else if (!httpCredentialsAreValidForName(credentials, common_name))
       {
-       /*
-        * The common name does not match the issued certificate...
-	*/
-
+        // The common name does not match the issued certificate...
         _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("New credentials are not valid for name."), 1);
 
         trust = HTTP_TRUST_INVALID;
       }
       else if (httpCredentialsGetExpiration(tcreds) < time(NULL))
       {
-       /*
-        * Save the renewed credentials...
-	*/
-
+        // Save the renewed credentials...
 	trust = HTTP_TRUST_RENEWED;
 
         httpSaveCredentials(NULL, credentials, common_name);
@@ -531,33 +411,24 @@ httpCredentialsGetTrust(
   }
   else if (!cg->trust_first)
   {
-   /*
-    * See if we have a site CA certificate we can compare...
-    */
-
+    // See if we have a site CA certificate we can compare...
     if (!httpLoadCredentials(NULL, &tcreds, "site"))
     {
       if (cupsArrayGetCount(credentials) != (cupsArrayGetCount(tcreds) + 1))
       {
-       /*
-        * Certificate isn't directly generated from the CA cert...
-	*/
-
+        // Certificate isn't directly generated from the CA cert...
         trust = HTTP_TRUST_INVALID;
       }
       else
       {
-       /*
-        * Do a tail comparison of the two certificates...
-	*/
+        // Do a tail comparison of the two certificates...
+        http_credential_t *a, *b;	// Certificates
 
-        http_credential_t	*a, *b;		/* Certificates */
-
-        for (a = (http_credential_t *)cupsArrayGetFirst(tcreds), b = (http_credential_t *)cupsArrayGetElement(credentials, 1);
-	     a && b;
-	     a = (http_credential_t *)cupsArrayGetNext(tcreds), b = (http_credential_t *)cupsArrayGetNext(credentials))
+        for (a = (http_credential_t *)cupsArrayGetFirst(tcreds), b = (http_credential_t *)cupsArrayGetElement(credentials, 1); a && b; a = (http_credential_t *)cupsArrayGetNext(tcreds), b = (http_credential_t *)cupsArrayGetNext(credentials))
+        {
 	  if (a->datalen != b->datalen || memcmp(a->data, b->data, a->datalen))
 	    break;
+	}
 
         if (a || b)
 	  trust = HTTP_TRUST_INVALID;
@@ -575,7 +446,7 @@ httpCredentialsGetTrust(
 
   if (trust == HTTP_TRUST_OK && !cg->expired_certs)
   {
-    time_t	curtime;		/* Current date/time */
+    time_t	curtime;		// Current date/time
 
     time(&curtime);
     if (curtime < gnutls_x509_crt_get_activation_time(cert) ||
@@ -598,19 +469,19 @@ httpCredentialsGetTrust(
 }
 
 
-/*
- * 'httpCredentialsGetExpiration()' - Return the expiration date of the credentials.
- */
+//
+// 'httpCredentialsGetExpiration()' - Return the expiration date of the credentials.
+//
 
-time_t					/* O - Expiration date of credentials */
+time_t					// O - Expiration date of credentials
 httpCredentialsGetExpiration(
-    cups_array_t *credentials)		/* I - Credentials */
+    cups_array_t *credentials)		// I - Credentials
 {
-  gnutls_x509_crt_t	cert;		/* Certificate */
-  time_t		result = 0;	/* Result */
+  gnutls_x509_crt_t	cert;		// Certificate
+  time_t		result = 0;	// Result
 
 
-  cert = http_gnutls_create_credential((http_credential_t *)cupsArrayGetFirst(credentials));
+  cert = gnutls_create_credential((http_credential_t *)cupsArrayGetFirst(credentials));
   if (cert)
   {
     result = gnutls_x509_crt_get_expiration_time(cert);
@@ -621,18 +492,18 @@ httpCredentialsGetExpiration(
 }
 
 
-/*
- * 'httpCredentialsString()' - Return a string representing the credentials.
- */
+//
+// 'httpCredentialsString()' - Return a string representing the credentials.
+//
 
-size_t					/* O - Total size of credentials string */
+size_t					// O - Total size of credentials string
 httpCredentialsString(
-    cups_array_t *credentials,		/* I - Credentials */
-    char         *buffer,		/* I - Buffer or @code NULL@ */
-    size_t       bufsize)		/* I - Size of buffer */
+    cups_array_t *credentials,		// I - Credentials
+    char         *buffer,		// I - Buffer or @code NULL@
+    size_t       bufsize)		// I - Size of buffer
 {
-  http_credential_t	*first;		/* First certificate */
-  gnutls_x509_crt_t	cert;		/* Certificate */
+  http_credential_t	*first;		// First certificate
+  gnutls_x509_crt_t	cert;		// Certificate
 
 
   DEBUG_printf(("httpCredentialsString(credentials=%p, buffer=%p, bufsize=" CUPS_LLFMT ")", credentials, buffer, CUPS_LLCAST bufsize));
@@ -644,15 +515,15 @@ httpCredentialsString(
     *buffer = '\0';
 
   if ((first = (http_credential_t *)cupsArrayGetFirst(credentials)) != NULL &&
-      (cert = http_gnutls_create_credential(first)) != NULL)
+      (cert = gnutls_create_credential(first)) != NULL)
   {
-    char		name[256],	/* Common name associated with cert */
-			issuer[256];	/* Issuer associated with cert */
-    size_t		len;		/* Length of string */
-    time_t		expiration;	/* Expiration date of cert */
+    char		name[256],	// Common name associated with cert
+			issuer[256];	// Issuer associated with cert
+    size_t		len;		// Length of string
+    time_t		expiration;	// Expiration date of cert
     char		expstr[256];	// Expiration date as string */
-    int			sigalg;	/* Signature algorithm */
-    unsigned char	md5_digest[16];	/* MD5 result */
+    int			sigalg;		// Signature algorithm
+    unsigned char	md5_digest[16];	// MD5 result
 
     len = sizeof(name) - 1;
     if (gnutls_x509_crt_get_dn_by_oid(cert, GNUTLS_OID_X520_COMMON_NAME, 0, 0, name, &len) >= 0)
@@ -682,214 +553,39 @@ httpCredentialsString(
 }
 
 
-/*
- * 'httpLoadCredentials()' - Load X.509 credentials from a keychain file.
- */
+//
+// '_httpFreeCredentials()' - Free internal credentials.
+//
 
-bool					// O - `true` on success, `false` on error
-httpLoadCredentials(
-    const char   *path,			/* I  - Keychain/PKCS#12 path */
-    cups_array_t **credentials,		/* IO - Credentials */
-    const char   *common_name)		/* I  - Common name for credentials */
+void
+_httpFreeCredentials(
+    http_tls_credentials_t credentials)	// I - Internal credentials
 {
-  cups_file_t		*fp;		/* Certificate file */
-  char			filename[1024],	/* filename.crt */
-			temp[1024],	/* Temporary string */
-			line[256];	/* Base64-encoded line */
-  unsigned char		*data = NULL;	/* Buffer for cert data */
-  size_t		alloc_data = 0,	/* Bytes allocated */
-			num_data = 0;	/* Bytes used */
-  size_t		decoded;	/* Bytes decoded */
-  int			in_certificate = 0;
-					/* In a certificate? */
-
-
-  if (credentials)
-    *credentials = NULL;
-
-  if (!credentials || !common_name)
-    return (false);
-
-  if (!path)
-    path = http_gnutls_default_path(temp, sizeof(temp));
-  if (!path)
-    return (false);
-
-  http_gnutls_make_path(filename, sizeof(filename), path, common_name, "crt");
-
-  if ((fp = cupsFileOpen(filename, "r")) == NULL)
-    return (false);
-
-  while (cupsFileGets(fp, line, sizeof(line)))
-  {
-    if (!strcmp(line, "-----BEGIN CERTIFICATE-----"))
-    {
-      if (in_certificate)
-      {
-       /*
-	* Missing END CERTIFICATE...
-	*/
-
-        httpFreeCredentials(*credentials);
-	*credentials = NULL;
-        break;
-      }
-
-      in_certificate = 1;
-    }
-    else if (!strcmp(line, "-----END CERTIFICATE-----"))
-    {
-      if (!in_certificate || !num_data)
-      {
-       /*
-	* Missing data...
-	*/
-
-        httpFreeCredentials(*credentials);
-	*credentials = NULL;
-        break;
-      }
-
-      if (!*credentials)
-        *credentials = cupsArrayNew(NULL, NULL, NULL, 0, NULL, NULL);
-
-      if (httpAddCredential(*credentials, data, num_data))
-      {
-        httpFreeCredentials(*credentials);
-	*credentials = NULL;
-        break;
-      }
-
-      num_data       = 0;
-      in_certificate = 0;
-    }
-    else if (in_certificate)
-    {
-      if (alloc_data == 0)
-      {
-        data       = malloc(2048);
-	alloc_data = 2048;
-
-        if (!data)
-	  break;
-      }
-      else if ((num_data + strlen(line)) >= alloc_data)
-      {
-        unsigned char *tdata = realloc(data, alloc_data + 1024);
-					/* Expanded buffer */
-
-	if (!tdata)
-	{
-	  httpFreeCredentials(*credentials);
-	  *credentials = NULL;
-	  break;
-	}
-
-	data       = tdata;
-        alloc_data += 1024;
-      }
-
-      decoded = (size_t)(alloc_data - num_data);
-      httpDecode64((char *)data + num_data, &decoded, line, NULL);
-      num_data += (size_t)decoded;
-    }
-  }
-
-  cupsFileClose(fp);
-
-  if (in_certificate)
-  {
-   /*
-    * Missing END CERTIFICATE...
-    */
-
-    httpFreeCredentials(*credentials);
-    *credentials = NULL;
-  }
-
-  if (data)
-    free(data);
-
-  return (*credentials != NULL);
+  (void)credentials;
 }
 
 
-/*
- * 'httpSaveCredentials()' - Save X.509 credentials to a keychain file.
- */
+//
+// 'gnutls_create_credential()' - Create a single credential in the internal format.
+//
 
-bool					// O - `true` on success, `false` on error
-httpSaveCredentials(
-    const char   *path,			/* I - Keychain/PKCS#12 path */
-    cups_array_t *credentials,		/* I - Credentials */
-    const char   *common_name)		/* I - Common name for credentials */
+static gnutls_x509_crt_t			// O - Certificate
+gnutls_create_credential(
+    http_credential_t *credential)		// I - Credential
 {
-  cups_file_t		*fp;		/* Certificate file */
-  char			filename[1024],	/* filename.crt */
-			nfilename[1024],/* filename.crt.N */
-			temp[1024],	/* Temporary string */
-			line[256];	/* Base64-encoded line */
-  const unsigned char	*ptr;		/* Pointer into certificate */
-  ssize_t		remaining;	/* Bytes left */
-  http_credential_t	*cred;		/* Current credential */
+  int			result;			// Result from GNU TLS
+  gnutls_x509_crt_t	cert;			// Certificate
+  gnutls_datum_t	datum;			// Data record
 
 
-  if (!credentials || !common_name)
-    return (false);
-
-  if (!path)
-    path = http_gnutls_default_path(temp, sizeof(temp));
-  if (!path)
-    return (false);
-
-  http_gnutls_make_path(filename, sizeof(filename), path, common_name, "crt");
-  snprintf(nfilename, sizeof(nfilename), "%s.N", filename);
-
-  if ((fp = cupsFileOpen(nfilename, "w")) == NULL)
-    return (false);
-
-  fchmod(cupsFileNumber(fp), 0600);
-
-  for (cred = (http_credential_t *)cupsArrayGetFirst(credentials);
-       cred;
-       cred = (http_credential_t *)cupsArrayGetNext(credentials))
-  {
-    cupsFilePuts(fp, "-----BEGIN CERTIFICATE-----\n");
-    for (ptr = cred->data, remaining = (ssize_t)cred->datalen; remaining > 0; remaining -= 45, ptr += 45)
-    {
-      httpEncode64(line, sizeof(line), (char *)ptr, remaining > 45 ? 45 : (size_t)remaining, false);
-      cupsFilePrintf(fp, "%s\n", line);
-    }
-    cupsFilePuts(fp, "-----END CERTIFICATE-----\n");
-  }
-
-  cupsFileClose(fp);
-
-  return (!rename(nfilename, filename));
-}
-
-
-/*
- * 'http_gnutls_create_credential()' - Create a single credential in the internal format.
- */
-
-static gnutls_x509_crt_t			/* O - Certificate */
-http_gnutls_create_credential(
-    http_credential_t *credential)		/* I - Credential */
-{
-  int			result;			/* Result from GNU TLS */
-  gnutls_x509_crt_t	cert;			/* Certificate */
-  gnutls_datum_t	datum;			/* Data record */
-
-
-  DEBUG_printf(("3http_gnutls_create_credential(credential=%p)", credential));
+  DEBUG_printf(("3gnutls_create_credential(credential=%p)", credential));
 
   if (!credential)
     return (NULL);
 
   if ((result = gnutls_x509_crt_init(&cert)) < 0)
   {
-    DEBUG_printf(("4http_gnutls_create_credential: init error: %s", gnutls_strerror(result)));
+    DEBUG_printf(("4gnutls_create_credential: init error: %s", gnutls_strerror(result)));
     return (NULL);
   }
 
@@ -898,7 +594,7 @@ http_gnutls_create_credential(
 
   if ((result = gnutls_x509_crt_import(cert, &datum, GNUTLS_X509_FMT_DER)) < 0)
   {
-    DEBUG_printf(("4http_gnutls_create_credential: import error: %s", gnutls_strerror(result)));
+    DEBUG_printf(("4gnutls_create_credential: import error: %s", gnutls_strerror(result)));
 
     gnutls_x509_crt_deinit(cert);
     return (NULL);
@@ -908,79 +604,72 @@ http_gnutls_create_credential(
 }
 
 
-/*
- * 'http_gnutls_default_path()' - Get the default credential store path.
- */
+//
+// 'gnutls_create_key()' - Create a private key.
+//
 
-static const char *			/* O - Path or NULL on error */
-http_gnutls_default_path(char   *buffer,/* I - Path buffer */
-                         size_t bufsize)/* I - Size of path buffer */
+static gnutls_x509_privkey_t		// O - Private key
+gnutls_create_key(cups_credtype_t type)	// I - Type of key
 {
-  _cups_globals_t	*cg = _cupsGlobals();
-					/* Pointer to library globals */
+  gnutls_x509_privkey_t	key;		// Private key
 
 
-  if (cg->userconfig)
+  gnutls_x509_privkey_init(&key);
+
+  switch (type)
   {
-    if (mkdir(cg->userconfig, 0755) && errno != EEXIST)
-    {
-      DEBUG_printf(("1http_gnutls_default_path: Failed to make directory '%s': %s", cg->userconfig, strerror(errno)));
-      return (NULL);
-    }
+    case CUPS_CREDTYPE_ECDSA_P256_SHA256 :
+	gnutls_x509_privkey_generate(key, GNUTLS_PK_ECDSA, GNUTLS_CURVE_TO_BITS(GNUTLS_ECC_CURVE_SECP256R1), 0);
+	break;
 
-    snprintf(buffer, bufsize, "%s/ssl", cg->userconfig);
+    case CUPS_CREDTYPE_ECDSA_P384_SHA256 :
+	gnutls_x509_privkey_generate(key, GNUTLS_PK_ECDSA, GNUTLS_CURVE_TO_BITS(GNUTLS_ECC_CURVE_SECP384R1), 0);
+	break;
 
-    if (mkdir(buffer, 0700) && errno != EEXIST)
-    {
-      DEBUG_printf(("1http_gnutls_default_path: Failed to make directory '%s': %s", buffer, strerror(errno)));
-      return (NULL);
-    }
-  }
-  else
-  {
-    if (mkdir(cg->sysconfig, 0755) && errno != EEXIST)
-    {
-      DEBUG_printf(("1http_gnutls_default_path: Failed to make directory '%s': %s", cg->sysconfig, strerror(errno)));
-      return (NULL);
-    }
+    case CUPS_CREDTYPE_ECDSA_P521_SHA256 :
+	gnutls_x509_privkey_generate(key, GNUTLS_PK_ECDSA, GNUTLS_CURVE_TO_BITS(GNUTLS_ECC_CURVE_SECP521R1), 0);
+	break;
 
-    snprintf(buffer, bufsize, "%s/ssl", cg->sysconfig);
+    case CUPS_CREDTYPE_RSA_2048_SHA256 :
+	gnutls_x509_privkey_generate(key, GNUTLS_PK_RSA, 2048, 0);
+	break;
 
-    if (mkdir(buffer, 0700) && errno != EEXIST)
-    {
-      DEBUG_printf(("1http_gnutls_default_path: Failed to make directory '%s': %s", buffer, strerror(errno)));
-      return (NULL);
-    }
+    default :
+    case CUPS_CREDTYPE_RSA_3072_SHA256 :
+	gnutls_x509_privkey_generate(key, GNUTLS_PK_RSA, 3072, 0);
+	break;
+
+    case CUPS_CREDTYPE_RSA_4096_SHA256 :
+	gnutls_x509_privkey_generate(key, GNUTLS_PK_RSA, 4096, 0);
+	break;
   }
 
-  DEBUG_printf(("1http_gnutls_default_path: Using default path \"%s\".", buffer));
-
-  return (buffer);
+  return (key);
 }
 
 
-/*
- * 'http_gnutls_load_crl()' - Load the certificate revocation list, if any.
- */
+//
+// 'gnutls_load_crl()' - Load the certificate revocation list, if any.
+//
 
 static void
-http_gnutls_load_crl(void)
+gnutls_load_crl(void)
 {
   cupsMutexLock(&tls_mutex);
 
   if (!gnutls_x509_crl_init(&tls_crl))
   {
-    cups_file_t		*fp;		/* CRL file */
-    char		filename[1024],	/* site.crl */
-			line[256];	/* Base64-encoded line */
-    unsigned char	*data = NULL;	/* Buffer for cert data */
-    size_t		alloc_data = 0,	/* Bytes allocated */
-			num_data = 0;	/* Bytes used */
-    size_t		decoded;	/* Bytes decoded */
-    gnutls_datum_t	datum;		/* Data record */
+    cups_file_t		*fp;		// CRL file
+    char		filename[1024],	// site.crl
+			line[256];	// Base64-encoded line
+    unsigned char	*data = NULL;	// Buffer for cert data
+    size_t		alloc_data = 0,	// Bytes allocated
+			num_data = 0;	// Bytes used
+    size_t		decoded;	// Bytes decoded
+    gnutls_datum_t	datum;		// Data record
 
 
-    http_gnutls_make_path(filename, sizeof(filename), CUPS_SERVERROOT, "site", "crl");
+    http_make_path(filename, sizeof(filename), CUPS_SERVERROOT, "site", "crl");
 
     if ((fp = cupsFileOpen(filename, "r")) != NULL)
     {
@@ -990,10 +679,7 @@ http_gnutls_load_crl(void)
 	{
 	  if (num_data)
 	  {
-	   /*
-	    * Missing END X509 CRL...
-	    */
-
+	    // Missing END X509 CRL...
 	    break;
 	  }
 	}
@@ -1001,10 +687,7 @@ http_gnutls_load_crl(void)
 	{
 	  if (!num_data)
 	  {
-	   /*
-	    * Missing data...
-	    */
-
+	    // Missing data...
 	    break;
 	  }
 
@@ -1028,7 +711,7 @@ http_gnutls_load_crl(void)
 	  else if ((num_data + strlen(line)) >= alloc_data)
 	  {
 	    unsigned char *tdata = realloc(data, alloc_data + 1024);
-					    /* Expanded buffer */
+					    // Expanded buffer
 
 	    if (!tdata)
 	      break;
@@ -1054,68 +737,27 @@ http_gnutls_load_crl(void)
 }
 
 
-/*
- * 'http_gnutls_make_path()' - Format a filename for a certificate or key file.
- */
+//
+// 'gnutls_read()' - Read function for the GNU TLS library.
+//
 
-static const char *			/* O - Filename */
-http_gnutls_make_path(
-    char       *buffer,			/* I - Filename buffer */
-    size_t     bufsize,			/* I - Size of buffer */
-    const char *dirname,		/* I - Directory */
-    const char *filename,		/* I - Filename (usually hostname) */
-    const char *ext)			/* I - Extension */
+static ssize_t				// O - Number of bytes read or -1 on error
+gnutls_read(
+    gnutls_transport_ptr_t ptr,		// I - Connection to server
+    void                   *data,	// I - Buffer
+    size_t                 length)	// I - Number of bytes to read
 {
-  char	*bufptr,			/* Pointer into buffer */
-	*bufend = buffer + bufsize - 1;	/* End of buffer */
+  http_t	*http;			// HTTP connection
+  ssize_t	bytes;			// Bytes read
 
 
-  snprintf(buffer, bufsize, "%s/", dirname);
-  bufptr = buffer + strlen(buffer);
-
-  while (*filename && bufptr < bufend)
-  {
-    if (_cups_isalnum(*filename) || *filename == '-' || *filename == '.')
-      *bufptr++ = *filename;
-    else
-      *bufptr++ = '_';
-
-    filename ++;
-  }
-
-  if (bufptr < bufend)
-    *bufptr++ = '.';
-
-  cupsCopyString(bufptr, ext, (size_t)(bufend - bufptr + 1));
-
-  return (buffer);
-}
-
-
-/*
- * 'http_gnutls_read()' - Read function for the GNU TLS library.
- */
-
-static ssize_t				/* O - Number of bytes read or -1 on error */
-http_gnutls_read(
-    gnutls_transport_ptr_t ptr,		/* I - Connection to server */
-    void                   *data,	/* I - Buffer */
-    size_t                 length)	/* I - Number of bytes to read */
-{
-  http_t	*http;			/* HTTP connection */
-  ssize_t	bytes;			/* Bytes read */
-
-
-  DEBUG_printf(("5http_gnutls_read(ptr=%p, data=%p, length=%d)", ptr, data, (int)length));
+  DEBUG_printf(("5gnutls_read(ptr=%p, data=%p, length=%d)", ptr, data, (int)length));
 
   http = (http_t *)ptr;
 
   if (!http->blocking || http->timeout_value > 0.0)
   {
-   /*
-    * Make sure we have data before we read...
-    */
-
+    // Make sure we have data before we read...
     while (!_httpWait(http, http->wait_value, 0))
     {
       if (http->timeout_cb && (*http->timeout_cb)(http, http->timeout_data))
@@ -1127,79 +769,73 @@ http_gnutls_read(
   }
 
   bytes = recv(http->fd, data, length, 0);
-  DEBUG_printf(("5http_gnutls_read: bytes=%d", (int)bytes));
+  DEBUG_printf(("5gnutls_read: bytes=%d", (int)bytes));
   return (bytes);
 }
 
 
-/*
- * 'http_gnutls_write()' - Write function for the GNU TLS library.
- */
+//
+// 'gnutls_write()' - Write function for the GNU TLS library.
+//
 
-static ssize_t				/* O - Number of bytes written or -1 on error */
-http_gnutls_write(
-    gnutls_transport_ptr_t ptr,		/* I - Connection to server */
-    const void             *data,	/* I - Data buffer */
-    size_t                 length)	/* I - Number of bytes to write */
+static ssize_t				// O - Number of bytes written or -1 on error
+gnutls_write(
+    gnutls_transport_ptr_t ptr,		// I - Connection to server
+    const void             *data,	// I - Data buffer
+    size_t                 length)	// I - Number of bytes to write
 {
-  ssize_t bytes;			/* Bytes written */
+  ssize_t bytes;			// Bytes written
 
 
-  DEBUG_printf(("5http_gnutls_write(ptr=%p, data=%p, length=%d)", ptr, data,
+  DEBUG_printf(("5gnutls_write(ptr=%p, data=%p, length=%d)", ptr, data,
                 (int)length));
   bytes = send(((http_t *)ptr)->fd, data, length, 0);
-  DEBUG_printf(("5http_gnutls_write: bytes=%d", (int)bytes));
+  DEBUG_printf(("5gnutls_write: bytes=%d", (int)bytes));
 
   return (bytes);
 }
 
 
-/*
- * '_httpTLSInitialize()' - Initialize the TLS stack.
- */
+//
+// '_httpTLSInitialize()' - Initialize the TLS stack.
+//
 
 void
 _httpTLSInitialize(void)
 {
- /*
-  * Initialize GNU TLS...
-  */
-
+  // Initialize GNU TLS...
   gnutls_global_init();
 }
 
 
-/*
- * '_httpTLSPending()' - Return the number of pending TLS-encrypted bytes.
- */
+//
+// '_httpTLSPending()' - Return the number of pending TLS-encrypted bytes.
+//
 
-size_t					/* O - Bytes available */
-_httpTLSPending(http_t *http)		/* I - HTTP connection */
+size_t					// O - Bytes available
+_httpTLSPending(http_t *http)		// I - HTTP connection
 {
   return (gnutls_record_check_pending(http->tls));
 }
 
 
-/*
- * '_httpTLSRead()' - Read from a SSL/TLS connection.
- */
+//
+// '_httpTLSRead()' - Read from a SSL/TLS connection.
+//
 
-int					/* O - Bytes read */
-_httpTLSRead(http_t *http,		/* I - Connection to server */
-	     char   *buf,		/* I - Buffer to store data */
-	     int    len)		/* I - Length of buffer */
+int					// O - Bytes read
+_httpTLSRead(http_t *http,		// I - Connection to server
+	     char   *buf,		// I - Buffer to store data
+	     int    len)		// I - Length of buffer
 {
-  ssize_t	result;			/* Return value */
+  ssize_t	result;			// Return value
 
 
   result = gnutls_record_recv(http->tls, buf, (size_t)len);
 
   if (result < 0 && !errno)
   {
-   /*
-    * Convert GNU TLS error to errno value...
-    */
-
+    // Convert GNU TLS error to errno value...
     switch (result)
     {
       case GNUTLS_E_INTERRUPTED :
@@ -1222,43 +858,25 @@ _httpTLSRead(http_t *http,		/* I - Connection to server */
 }
 
 
-/*
- * '_httpTLSSetOptions()' - Set TLS protocol and cipher suite options.
- */
+//
+// '_httpTLSStart()' - Set up SSL/TLS support on a connection.
+//
 
-void
-_httpTLSSetOptions(int options,		/* I - Options */
-                   int min_version,	/* I - Minimum TLS version */
-                   int max_version)	/* I - Maximum TLS version */
+bool					// O - `true` on success, `false` on failure
+_httpTLSStart(http_t *http)		// I - Connection to server
 {
-  if (!(options & _HTTP_TLS_SET_DEFAULT) || tls_options < 0)
-  {
-    tls_options     = options;
-    tls_min_version = min_version;
-    tls_max_version = max_version;
-  }
-}
-
-
-/*
- * '_httpTLSStart()' - Set up SSL/TLS support on a connection.
- */
-
-bool					/* O - `true` on success, `false` on failure */
-_httpTLSStart(http_t *http)		/* I - Connection to server */
-{
-  char			hostname[256],	/* Hostname */
-			*hostptr;	/* Pointer into hostname */
-  int			status;		/* Status of handshake */
+  char			hostname[256],	// Hostname
+			*hostptr;	// Pointer into hostname
+  int			status;		// Status of handshake
   gnutls_certificate_credentials_t *credentials;
-					/* TLS credentials */
+					// TLS credentials
   char			priority_string[2048];
-					/* Priority string */
-  int			version;	/* Current version */
-  double		old_timeout;	/* Old timeout value */
-  http_timeout_cb_t	old_cb;		/* Old timeout callback */
-  void			*old_data;	/* Old timeout data */
-  static const char * const versions[] =/* SSL/TLS versions */
+					// Priority string
+  int			version;	// Current version
+  double		old_timeout;	// Old timeout value
+  http_timeout_cb_t	old_cb;		// Old timeout callback
+  void			*old_data;	// Old timeout data
+  static const char * const versions[] =// SSL/TLS versions
   {
     "VERS-SSL3.0",
     "VERS-TLS1.0",
@@ -1324,23 +942,16 @@ _httpTLSStart(http_t *http)		/* I - Connection to server */
 
   if (http->mode == _HTTP_MODE_CLIENT)
   {
-   /*
-    * Client: get the hostname to use for TLS...
-    */
-
+    // Client: get the hostname to use for TLS...
     if (httpAddrIsLocalhost(http->hostaddr))
     {
       cupsCopyString(hostname, "localhost", sizeof(hostname));
     }
     else
     {
-     /*
-      * Otherwise make sure the hostname we have does not end in a trailing dot.
-      */
-
+      // Otherwise make sure the hostname we have does not end in a trailing dot.
       cupsCopyString(hostname, http->hostname, sizeof(hostname));
-      if ((hostptr = hostname + strlen(hostname) - 1) >= hostname &&
-	  *hostptr == '.')
+      if ((hostptr = hostname + strlen(hostname) - 1) >= hostname && *hostptr == '.')
 	*hostptr = '\0';
     }
 
@@ -1348,10 +959,7 @@ _httpTLSStart(http_t *http)		/* I - Connection to server */
   }
   else
   {
-   /*
-    * Server: get certificate and private key...
-    */
-
+    // Server: get certificate and private key...
     char	crtfile[1024],		// Certificate file
 		keyfile[1024];		// Private key file
     const char	*cn,			// Common name to lookup
@@ -1360,20 +968,14 @@ _httpTLSStart(http_t *http)		/* I - Connection to server */
 
     if (http->fields[HTTP_FIELD_HOST])
     {
-     /*
-      * Use hostname for TLS upgrade...
-      */
-
+      // Use hostname for TLS upgrade...
       cupsCopyString(hostname, http->fields[HTTP_FIELD_HOST], sizeof(hostname));
     }
     else
     {
-     /*
-      * Resolve hostname from connection address...
-      */
-
-      http_addr_t	addr;		/* Connection address */
-      socklen_t		addrlen;	/* Length of address */
+      // Resolve hostname from connection address...
+      http_addr_t	addr;		// Connection address
+      socklen_t		addrlen;	// Length of address
 
       addrlen = sizeof(addr);
       if (getsockname(http->fd, (struct sockaddr *)&addr, &addrlen))
@@ -1382,7 +984,9 @@ _httpTLSStart(http_t *http)		/* I - Connection to server */
 	hostname[0] = '\0';
       }
       else if (httpAddrIsLocalhost(&addr))
+      {
 	hostname[0] = '\0';
+      }
       else
       {
 	httpAddrLookup(&addr, hostname, sizeof(hostname));
@@ -1391,7 +995,7 @@ _httpTLSStart(http_t *http)		/* I - Connection to server */
     }
 
     if (isdigit(hostname[0] & 255) || hostname[0] == '[')
-      hostname[0] = '\0';		/* Don't allow numeric addresses */
+      hostname[0] = '\0';		// Don't allow numeric addresses
 
     cupsMutexLock(&tls_mutex);
 
@@ -1403,13 +1007,13 @@ _httpTLSStart(http_t *http)		/* I - Connection to server */
     if (cn)
     {
       // First look in the CUPS keystore...
-      http_gnutls_make_path(crtfile, sizeof(crtfile), tls_keypath, cn, "crt");
-      http_gnutls_make_path(keyfile, sizeof(keyfile), tls_keypath, cn, "key");
+      http_make_path(crtfile, sizeof(crtfile), tls_keypath, cn, "crt");
+      http_make_path(keyfile, sizeof(keyfile), tls_keypath, cn, "key");
 
       if (access(crtfile, R_OK) || access(keyfile, R_OK))
       {
         // No CUPS-managed certs, look for CA certs...
-        char cacrtfile[1024], cakeyfile[1024];	/* CA cert files */
+        char cacrtfile[1024], cakeyfile[1024];	// CA cert files
 
         snprintf(cacrtfile, sizeof(cacrtfile), "/etc/letsencrypt/live/%s/fullchain.pem", cn);
         snprintf(cakeyfile, sizeof(cakeyfile), "/etc/letsencrypt/live/%s/privkey.pem", cn);
@@ -1440,9 +1044,9 @@ _httpTLSStart(http_t *http)		/* I - Connection to server */
     {
       DEBUG_printf(("4_httpTLSStart: Auto-create credentials for \"%s\".", cn));
 
-      if (!cupsMakeServerCredentials(tls_keypath, cn, 0, NULL, time(NULL) + 3650 * 86400))
+      if (!cupsCreateCredentials(tls_keypath, cn, 0, NULL, time(NULL) + 3650 * 86400))
       {
-	DEBUG_puts("4_httpTLSStart: cupsMakeServerCredentials failed.");
+	DEBUG_puts("4_httpTLSStart: cupsCreateCredentials failed.");
 	http->error  = errno = EINVAL;
 	http->status = HTTP_STATUS_ERROR;
 	_cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create server credentials."), 1);
@@ -1482,10 +1086,7 @@ _httpTLSStart(http_t *http)		/* I - Connection to server */
 
   if (tls_max_version < _HTTP_TLS_MAX)
   {
-   /*
-    * Require specific TLS versions...
-    */
-
+    // Require specific TLS versions...
     cupsConcatString(priority_string, ":-VERS-TLS-ALL", sizeof(priority_string));
     for (version = tls_min_version; version <= tls_max_version; version ++)
     {
@@ -1495,18 +1096,12 @@ _httpTLSStart(http_t *http)		/* I - Connection to server */
   }
   else if (tls_min_version == _HTTP_TLS_SSL3)
   {
-   /*
-    * Allow all versions of TLS and SSL/3.0...
-    */
-
+    // Allow all versions of TLS and SSL/3.0...
     cupsConcatString(priority_string, ":+VERS-TLS-ALL:+VERS-SSL3.0", sizeof(priority_string));
   }
   else
   {
-   /*
-    * Require a minimum version...
-    */
-
+    // Require a minimum version...
     cupsConcatString(priority_string, ":+VERS-TLS-ALL", sizeof(priority_string));
     for (version = 0; version < tls_min_version; version ++)
     {
@@ -1529,24 +1124,21 @@ _httpTLSStart(http_t *http)		/* I - Connection to server */
   gnutls_priority_set_direct(http->tls, priority_string, NULL);
 
 #else
-  gnutls_priority_t priority;		/* Priority */
+  gnutls_priority_t priority;		// Priority
 
   gnutls_priority_init(&priority, priority_string, NULL);
   gnutls_priority_set(http->tls, priority);
   gnutls_priority_deinit(priority);
-#endif /* HAVE_GNUTLS_PRIORITY_SET_DIRECT */
+#endif // HAVE_GNUTLS_PRIORITY_SET_DIRECT
 
   gnutls_transport_set_ptr(http->tls, (gnutls_transport_ptr_t)http);
-  gnutls_transport_set_pull_function(http->tls, http_gnutls_read);
+  gnutls_transport_set_pull_function(http->tls, gnutls_read);
 #ifdef HAVE_GNUTLS_TRANSPORT_SET_PULL_TIMEOUT_FUNCTION
   gnutls_transport_set_pull_timeout_function(http->tls, (gnutls_pull_timeout_func)httpWait);
-#endif /* HAVE_GNUTLS_TRANSPORT_SET_PULL_TIMEOUT_FUNCTION */
-  gnutls_transport_set_push_function(http->tls, http_gnutls_write);
+#endif // HAVE_GNUTLS_TRANSPORT_SET_PULL_TIMEOUT_FUNCTION
+  gnutls_transport_set_push_function(http->tls, gnutls_write);
 
- /*
-  * Enforce a minimum timeout of 10 seconds for the TLS handshake...
-  */
-
+  // Enforce a minimum timeout of 10 seconds for the TLS handshake...
   old_timeout  = http->timeout_value;
   old_cb       = http->timeout_cb;
   old_data     = http->timeout_data;
@@ -1557,10 +1149,7 @@ _httpTLSStart(http_t *http)		/* I - Connection to server */
     httpSetTimeout(http, 10.0, NULL, NULL);
   }
 
- /*
-  * Do the TLS handshake...
-  */
-
+  // Do the TLS handshake...
   while ((status = gnutls_handshake(http->tls)) != GNUTLS_E_SUCCESS)
   {
     DEBUG_printf(("5_httpStartTLS: gnutls_handshake returned %d (%s)",
@@ -1584,10 +1173,7 @@ _httpTLSStart(http_t *http)		/* I - Connection to server */
     }
   }
 
- /*
-  * Restore the previous timeout settings...
-  */
-
+  // Restore the previous timeout settings...
   httpSetTimeout(http, old_timeout, old_cb, old_data);
 
   http->tls_credentials = credentials;
@@ -1596,14 +1182,14 @@ _httpTLSStart(http_t *http)		/* I - Connection to server */
 }
 
 
-/*
- * '_httpTLSStop()' - Shut down SSL/TLS on a connection.
- */
+//
+// '_httpTLSStop()' - Shut down SSL/TLS on a connection.
+//
 
 void
-_httpTLSStop(http_t *http)		/* I - Connection to server */
+_httpTLSStop(http_t *http)		// I - Connection to server
 {
-  int	error;				/* Error code */
+  int	error;				// Error code
 
 
   error = gnutls_bye(http->tls, http->mode == _HTTP_MODE_CLIENT ? GNUTLS_SHUT_RDWR : GNUTLS_SHUT_WR);
@@ -1622,16 +1208,16 @@ _httpTLSStop(http_t *http)		/* I - Connection to server */
 }
 
 
-/*
- * '_httpTLSWrite()' - Write to a SSL/TLS connection.
- */
+//
+// '_httpTLSWrite()' - Write to a SSL/TLS connection.
+//
 
-int					/* O - Bytes written */
-_httpTLSWrite(http_t     *http,		/* I - Connection to server */
-	      const char *buf,		/* I - Buffer holding data */
-	      int        len)		/* I - Length of buffer */
+int					// O - Bytes written
+_httpTLSWrite(http_t     *http,		// I - Connection to server
+	      const char *buf,		// I - Buffer holding data
+	      int        len)		// I - Length of buffer
 {
-  ssize_t	result;			/* Return value */
+  ssize_t	result;			// Return value
 
 
   DEBUG_printf(("5_httpTLSWrite(http=%p, buf=%p, len=%d)", http, buf, len));
@@ -1640,10 +1226,7 @@ _httpTLSWrite(http_t     *http,		/* I - Connection to server */
 
   if (result < 0 && !errno)
   {
-   /*
-    * Convert GNU TLS error to errno value...
-    */
-
+    // Convert GNU TLS error to errno value...
     switch (result)
     {
       case GNUTLS_E_INTERRUPTED :

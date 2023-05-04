@@ -133,74 +133,101 @@ extern "C" {
 // Types and structures...
 //
 
-typedef enum cups_credtype_e		// X.509 credential types for @link cupsMakeServerCredentials@ and @link cupsMakeServerRequest@
+enum cups_credpurpose_e			//// X.509 credential purposes
 {
-  CUPS_CREDTYPE_DEFAULT,		// Default type
-  CUPS_CREDTYPE_RSA_2048_SHA256,	// RSA with 2048-bit keys and SHA-256 hash
-  CUPS_CREDTYPE_RSA_3072_SHA256,	// RSA with 3072-bit keys and SHA-256 hash
-  CUPS_CREDTYPE_RSA_4096_SHA256,	// RSA with 4096-bit keys and SHA-256 hash
-  CUPS_CREDTYPE_ECDSA_P256_SHA256,	// ECDSA using the P-256 curve with SHA-256 hash
-  CUPS_CREDTYPE_ECDSA_P384_SHA256,	// ECDSA using the P-384 curve with SHA-256 hash
-  CUPS_CREDTYPE_ECDSA_P521_SHA256	// ECDSA using the P-521 curve with SHA-256 hash
+  CUPS_CREDPURPOSE_SERVER_AUTH = 0x01,		// serverAuth
+  CUPS_CREDPURPOSE_CLIENT_AUTH = 0x02,		// clientAuth
+  CUPS_CREDPURPOSE_CODE_SIGNING = 0x04,		// codeSigning
+  CUPS_CREDPURPOSE_EMAIL_PROTECTION = 0x08,	// emailProtection
+  CUPS_CREDPURPOSE_TIME_STAMPING = 0x10,	// timeStamping
+  CUPS_CREDPURPOSE_OCSP_SIGNING = 0x20		// OCSPSigning
+};
+typedef unsigned cups_credpurpose_t;	//// Combined X.509 credential purposes for @link cupsCreateCredentials@ and @link cupsCreateCredentialsRequest@
+
+typedef enum cups_credtype_e		//// X.509 credential types for @link cupsCreateCredentials@ and @link cupsCreateCredentialsRequest@
+{
+  CUPS_CREDTYPE_DEFAULT,			// Default type
+  CUPS_CREDTYPE_RSA_2048_SHA256,		// RSA with 2048-bit keys and SHA-256 hash
+  CUPS_CREDTYPE_RSA_3072_SHA256,		// RSA with 3072-bit keys and SHA-256 hash
+  CUPS_CREDTYPE_RSA_4096_SHA256,		// RSA with 4096-bit keys and SHA-256 hash
+  CUPS_CREDTYPE_ECDSA_P256_SHA256,		// ECDSA using the P-256 curve with SHA-256 hash
+  CUPS_CREDTYPE_ECDSA_P384_SHA256,		// ECDSA using the P-384 curve with SHA-256 hash
+  CUPS_CREDTYPE_ECDSA_P521_SHA256		// ECDSA using the P-521 curve with SHA-256 hash
 } cups_credtype_t;
 
-enum cups_dest_flags_e			// Flags for @link cupsConnectDest@ and @link cupsEnumDests@
+enum cups_credusage_e			//// X.509 keyUsage flags
 {
-  CUPS_DEST_FLAGS_NONE = 0x00,		// No flags are set
-  CUPS_DEST_FLAGS_UNCONNECTED = 0x01,	// There is no connection
-  CUPS_DEST_FLAGS_MORE = 0x02,		// There are more destinations
-  CUPS_DEST_FLAGS_REMOVED = 0x04,	// The destination has gone away
-  CUPS_DEST_FLAGS_ERROR = 0x08,		// An error occurred
-  CUPS_DEST_FLAGS_RESOLVING = 0x10,	// The destination address is being resolved
-  CUPS_DEST_FLAGS_CONNECTING = 0x20,	// A connection is being established
-  CUPS_DEST_FLAGS_CANCELED = 0x40,	// Operation was canceled
-  CUPS_DEST_FLAGS_DEVICE = 0x80		// For @link cupsConnectDest@: Connect to device
+  CUPS_CREDUSAGE_DIGITAL_SIGNATURE = 0x001,	// digitalSignature
+  CUPS_CREDUSAGE_NON_REPUDIATION = 0x002,	// nonRepudiation/contentCommitment
+  CUPS_CREDUSAGE_KEY_ENCIPHERMENT = 0x004,	// keyEncipherment
+  CUPS_CREDUSAGE_DATA_ENCIPHERMENT = 0x008,	// dataEncipherment
+  CUPS_CREDUSAGE_KEY_AGREEMENT = 0x010,		// keyAgreement
+  CUPS_CREDUSAGE_KEY_CERT_SIGN = 0x020,		// keyCertSign
+  CUPS_CREDUSAGE_CRL_SIGN = 0x040,		// cRLSign
+  CUPS_CREDUSAGE_ENCIPHER_ONLY = 0x080,		// encipherOnly
+  CUPS_CREDUSAGE_DECIPHER_ONLY = 0x100,		// decipherOnly
+  CUPS_CREDUSAGE_DEFAULT_CA = 0x061,		// Defaults for CA certs
+  CUPS_CREDUSAGE_DEFAULT_TLS = 0x005		// Defaults for TLS certs
 };
-typedef unsigned cups_dest_flags_t;	// Combined flags for @link cupsConnectDest@ and @link cupsEnumDests@
+typedef unsigned cups_credusage_t;	//// Combined X.509 keyUsage flags for @link cupsCreateCredentials@ and @link cupsCreateCredentialsRequest@
 
-enum cups_media_flags_e			// Flags for @link cupsGetDestMediaByName@ and @link cupsGetDestMediaBySize@
+enum cups_dest_flags_e			//// Flags for @link cupsConnectDest@ and @link cupsEnumDests@
 {
-  CUPS_MEDIA_FLAGS_DEFAULT = 0x00,	// Find the closest size supported by the printer
-  CUPS_MEDIA_FLAGS_BORDERLESS = 0x01,	// Find a borderless size
-  CUPS_MEDIA_FLAGS_DUPLEX = 0x02,	// Find a size compatible with 2-sided printing
-  CUPS_MEDIA_FLAGS_EXACT = 0x04,	// Find an exact match for the size
-  CUPS_MEDIA_FLAGS_READY = 0x08		// If the printer supports media sensing, find the size amongst the "ready" media.
+  CUPS_DEST_FLAGS_NONE = 0x00,			// No flags are set
+  CUPS_DEST_FLAGS_UNCONNECTED = 0x01,		// There is no connection
+  CUPS_DEST_FLAGS_MORE = 0x02,			// There are more destinations
+  CUPS_DEST_FLAGS_REMOVED = 0x04,		// The destination has gone away
+  CUPS_DEST_FLAGS_ERROR = 0x08,			// An error occurred
+  CUPS_DEST_FLAGS_RESOLVING = 0x10,		// The destination address is being resolved
+  CUPS_DEST_FLAGS_CONNECTING = 0x20,		// A connection is being established
+  CUPS_DEST_FLAGS_CANCELED = 0x40,		// Operation was canceled
+  CUPS_DEST_FLAGS_DEVICE = 0x80			// For @link cupsConnectDest@: Connect to device
 };
-typedef unsigned cups_media_flags_t;	// Combined flags for @link cupsGetDestMediaByName@ and @link cupsGetDestMediaBySize@
+typedef unsigned cups_dest_flags_t;	//// Combined flags for @link cupsConnectDest@ and @link cupsEnumDests@
 
-enum cups_ptype_e			// Printer type/capability flags
+enum cups_media_flags_e			//// Flags for @link cupsGetDestMediaByName@ and @link cupsGetDestMediaBySize@
 {
-  CUPS_PRINTER_LOCAL = 0x0000,		// Local printer or class
-  CUPS_PRINTER_CLASS = 0x0001,		// Printer class
-  CUPS_PRINTER_REMOTE = 0x0002,		// Remote printer or class
-  CUPS_PRINTER_BW = 0x0004,		// Can do B&W printing
-  CUPS_PRINTER_COLOR = 0x0008,		// Can do color printing
-  CUPS_PRINTER_DUPLEX = 0x0010,		// Can do two-sided printing
-  CUPS_PRINTER_STAPLE = 0x0020,		// Can staple output
-  CUPS_PRINTER_COPIES = 0x0040,		// Can do copies in hardware
-  CUPS_PRINTER_COLLATE = 0x0080,	// Can quickly collate copies
-  CUPS_PRINTER_PUNCH = 0x0100,		// Can punch output
-  CUPS_PRINTER_COVER = 0x0200,		// Can cover output
-  CUPS_PRINTER_BIND = 0x0400,		// Can bind output
-  CUPS_PRINTER_SORT = 0x0800,		// Can sort output
-  CUPS_PRINTER_SMALL = 0x1000,		// Can print on Letter/Legal/A4-size media
-  CUPS_PRINTER_MEDIUM = 0x2000,		// Can print on Tabloid/B/C/A3/A2-size media
-  CUPS_PRINTER_LARGE = 0x4000,		// Can print on D/E/A1/A0-size media
-  CUPS_PRINTER_VARIABLE = 0x8000,	// Can print on rolls and custom-size media
-  CUPS_PRINTER_DEFAULT = 0x20000,	// Default printer on network
-  CUPS_PRINTER_FAX = 0x40000,		// Fax queue
-  CUPS_PRINTER_REJECTING = 0x80000,	// Printer is rejecting jobs
-  CUPS_PRINTER_NOT_SHARED = 0x200000,	// Printer is not shared
-  CUPS_PRINTER_AUTHENTICATED = 0x400000,// Printer requires authentication
-  CUPS_PRINTER_COMMANDS = 0x800000,	// Printer supports maintenance commands
-  CUPS_PRINTER_DISCOVERED = 0x1000000,	// Printer was discovered
-  CUPS_PRINTER_SCANNER = 0x2000000,	// Scanner-only device
-  CUPS_PRINTER_MFP = 0x4000000,		// Printer with scanning capabilities
-  CUPS_PRINTER_OPTIONS = 0x6fffc	// ~(CLASS | REMOTE | IMPLICIT | DEFAULT | FAX | REJECTING | DELETE | NOT_SHARED | AUTHENTICATED | COMMANDS | DISCOVERED) @private@
+  CUPS_MEDIA_FLAGS_DEFAULT = 0x00,		// Find the closest size supported by the printer
+  CUPS_MEDIA_FLAGS_BORDERLESS = 0x01,		// Find a borderless size
+  CUPS_MEDIA_FLAGS_DUPLEX = 0x02,		// Find a size compatible with 2-sided printing
+  CUPS_MEDIA_FLAGS_EXACT = 0x04,		// Find an exact match for the size
+  CUPS_MEDIA_FLAGS_READY = 0x08			// If the printer supports media sensing, find the size amongst the "ready" media.
 };
-typedef unsigned cups_ptype_t;		// Combined printer type/capability flags
+typedef unsigned cups_media_flags_t;	//// Combined flags for @link cupsGetDestMediaByName@ and @link cupsGetDestMediaBySize@
 
-typedef enum cups_whichjobs_e		// Which jobs for @link cupsGetJobs@
+enum cups_ptype_e			//// Printer type/capability flags
+{
+  CUPS_PRINTER_LOCAL = 0x0000,			// Local printer or class
+  CUPS_PRINTER_CLASS = 0x0001,			// Printer class
+  CUPS_PRINTER_REMOTE = 0x0002,			// Remote printer or class
+  CUPS_PRINTER_BW = 0x0004,			// Can do B&W printing
+  CUPS_PRINTER_COLOR = 0x0008,			// Can do color printing
+  CUPS_PRINTER_DUPLEX = 0x0010,			// Can do two-sided printing
+  CUPS_PRINTER_STAPLE = 0x0020,			// Can staple output
+  CUPS_PRINTER_COPIES = 0x0040,			// Can do copies in hardware
+  CUPS_PRINTER_COLLATE = 0x0080,		// Can quickly collate copies
+  CUPS_PRINTER_PUNCH = 0x0100,			// Can punch output
+  CUPS_PRINTER_COVER = 0x0200,			// Can cover output
+  CUPS_PRINTER_BIND = 0x0400,			// Can bind output
+  CUPS_PRINTER_SORT = 0x0800,			// Can sort output
+  CUPS_PRINTER_SMALL = 0x1000,			// Can print on Letter/Legal/A4-size media
+  CUPS_PRINTER_MEDIUM = 0x2000,			// Can print on Tabloid/B/C/A3/A2-size media
+  CUPS_PRINTER_LARGE = 0x4000,			// Can print on D/E/A1/A0-size media
+  CUPS_PRINTER_VARIABLE = 0x8000,		// Can print on rolls and custom-size media
+  CUPS_PRINTER_DEFAULT = 0x20000,		// Default printer on network
+  CUPS_PRINTER_FAX = 0x40000,			// Fax queue
+  CUPS_PRINTER_REJECTING = 0x80000,		// Printer is rejecting jobs
+  CUPS_PRINTER_NOT_SHARED = 0x200000,		// Printer is not shared
+  CUPS_PRINTER_AUTHENTICATED = 0x400000,	// Printer requires authentication
+  CUPS_PRINTER_COMMANDS = 0x800000,		// Printer supports maintenance commands
+  CUPS_PRINTER_DISCOVERED = 0x1000000,		// Printer was discovered
+  CUPS_PRINTER_SCANNER = 0x2000000,		// Scanner-only device
+  CUPS_PRINTER_MFP = 0x4000000,			// Printer with scanning capabilities
+  CUPS_PRINTER_OPTIONS = 0x6fffc		// ~(CLASS | REMOTE | IMPLICIT | DEFAULT | FAX | REJECTING | DELETE | NOT_SHARED | AUTHENTICATED | COMMANDS | DISCOVERED) @private@
+};
+typedef unsigned cups_ptype_t;		//// Combined printer type/capability flags
+
+typedef enum cups_whichjobs_e		//// Which jobs for @link cupsGetJobs@
 {
   CUPS_WHICHJOBS_ALL = -1,		// All jobs
   CUPS_WHICHJOBS_ACTIVE,		// Pending/held/processing jobs
@@ -284,10 +311,15 @@ extern bool		cupsCheckDestSupported(http_t *http, cups_dest_t *dest, cups_dinfo_
 extern ipp_status_t	cupsCloseDestJob(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, int job_id) _CUPS_PUBLIC;
 extern size_t		cupsConcatString(char *dst, const char *src, size_t dstsize) _CUPS_PUBLIC;
 extern http_t		*cupsConnectDest(cups_dest_t *dest, unsigned flags, int msec, int *cancel, char *resource, size_t resourcesize, cups_dest_cb_t cb, void *user_data) _CUPS_PUBLIC;
+extern char		*cupsCopyCredentials(const char *path, const char *common_name) _CUPS_PUBLIC;
+extern char		*cupsCopyCredentialsKey(const char *path, const char *common_name) _CUPS_PUBLIC;
+extern char		*cupsCopyCredentialsRequest(const char *path, const char *common_name) _CUPS_PUBLIC;
 extern size_t		cupsCopyDest(cups_dest_t *dest, size_t num_dests, cups_dest_t **dests) _CUPS_PUBLIC;
 extern cups_dinfo_t	*cupsCopyDestInfo(http_t *http, cups_dest_t *dest) _CUPS_PUBLIC;
 extern int		cupsCopyDestConflicts(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, size_t num_options, cups_option_t *options, const char *new_option, const char *new_value, size_t *num_conflicts, cups_option_t **conflicts, size_t *num_resolved, cups_option_t **resolved) _CUPS_PUBLIC;
 extern size_t		cupsCopyString(char *dst, const char *src, size_t dstsize) _CUPS_PUBLIC;
+extern bool		cupsCreateCredentials(const char *path, bool ca_cert, cups_credpurpose_t purpose, cups_credtype_t type, cups_credusage_t usage, const char *organization, const char *org_unit, const char *locality, const char *state_province, const char *country, const char *common_name, size_t num_alt_names, const char **alt_names, const char *root_name, time_t expiration_date) _CUPS_PUBLIC;
+extern bool		cupsCreateCredentialsRequest(const char *path, cups_credpurpose_t purpose, cups_credtype_t type, cups_credusage_t usage, const char *organization, const char *org_unit, const char *locality, const char *state_province, const char *country, const char *common_name, size_t num_alt_names, const char **alt_names) _CUPS_PUBLIC;
 extern ipp_status_t	cupsCreateDestJob(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, int *job_id, const char *title, size_t num_options, cups_option_t *options) _CUPS_PUBLIC;
 
 extern int		cupsDoAuthentication(http_t *http, const char *method, const char *resource) _CUPS_PUBLIC;
@@ -341,9 +373,6 @@ extern const char	*cupsLocalizeDestMedia(http_t *http, cups_dest_t *dest, cups_d
 extern const char	*cupsLocalizeDestOption(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, const char *option) _CUPS_PUBLIC;
 extern const char	*cupsLocalizeDestValue(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, const char *option, const char *value) _CUPS_PUBLIC;
 
-extern bool		cupsMakeServerCredentials(const char *path, cups_credtype_t type, const char *organization, const char *org_unit, const char *locality, const char *state_province, const char *country, const char *root_name, bool ca_cert, const char *common_name, size_t num_alt_names, const char **alt_names, time_t expiration_date) _CUPS_PUBLIC;
-extern char		*cupsMakeServerRequest(const char *path, cups_credtype_t type, const char *organization, const char *org_unit, const char *locality, const char *state_province, const char *country, const char *common_name, size_t num_alt_names, const char **alt_names) _CUPS_PUBLIC;
-
 extern char		*cupsNotifySubject(cups_lang_t *lang, ipp_t *event) _CUPS_PUBLIC;
 extern char		*cupsNotifyText(cups_lang_t *lang, ipp_t *event) _CUPS_PUBLIC;
 
@@ -355,7 +384,7 @@ extern ssize_t		cupsReadResponseData(http_t *http, char *buffer, size_t length) 
 extern size_t		cupsRemoveDest(const char *name, const char *instance, size_t num_dests, cups_dest_t **dests) _CUPS_PUBLIC;
 extern size_t		cupsRemoveOption(const char *name, size_t num_options, cups_option_t **options) _CUPS_PUBLIC;
 
-extern bool		cupsSaveServerCredentials(const char *path, const char *common_name, const char *pem) _CUPS_PUBLIC;
+extern bool		cupsSaveCredentials(const char *path, const char *common_name, const char *credentials, const char *key) _CUPS_PUBLIC;
 extern http_status_t	cupsSendRequest(http_t *http, ipp_t *request, const char *resource, size_t length) _CUPS_PUBLIC;
 extern void		cupsSetOAuthCB(cups_oauth_cb_t cb, void *data) _CUPS_PUBLIC;
 extern void		cupsSetClientCertCB(cups_client_cert_cb_t cb, void *user_data) _CUPS_PUBLIC;
@@ -369,6 +398,7 @@ extern void		cupsSetServerCertCB(cups_server_cert_cb_t cb, void *user_data) _CUP
 extern bool		cupsSetServerCredentials(const char *path, const char *common_name, bool auto_create) _CUPS_PUBLIC;
 extern void		cupsSetUser(const char *user) _CUPS_PUBLIC;
 extern void		cupsSetUserAgent(const char *user_agent) _CUPS_PUBLIC;
+extern bool		cupsSignCredentialsRequest(const char *path, const char *common_name, const char *request, const char *root_name, time_t expiration_date) _CUPS_PUBLIC;
 extern http_status_t	cupsStartDestDocument(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, int job_id, const char *docname, const char *format, size_t num_options, cups_option_t *options, bool last_document) _CUPS_PUBLIC;
 extern int		cupsTempFd(const char *prefix, const char *suffix, char *filename, size_t len) _CUPS_PUBLIC;
 extern cups_file_t	*cupsTempFile(const char *prefix, const char *suffix, char *filename, size_t len) _CUPS_PUBLIC;
