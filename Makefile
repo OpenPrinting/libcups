@@ -1,7 +1,7 @@
 #
 # Top-level Makefile for libcups.
 #
-# Copyright © 2020-2022 by OpenPrinting
+# Copyright © 2020-2023 by OpenPrinting
 #
 # Licensed under Apache License v2.0.  See the file "LICENSE" for more
 # information.
@@ -97,6 +97,17 @@ uninstall:
 	for dir in $(DIRS); do\
 		echo "======== uninstall in $$dir ========";\
 		(cd $$dir; $(MAKE) $(MFLAGS) uninstall) || exit 1;\
+	done
+
+
+#
+# Build all unit tests...
+#
+
+unittests:	all
+	for dir in $(DIRS); do\
+		echo "======== unittests in $$dir ========";\
+		(cd $$dir ; $(MAKE) $(MFLAGS) unittests) || exit 1;\
 	done
 
 

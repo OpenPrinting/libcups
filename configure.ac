@@ -46,15 +46,6 @@ AS_IF([test "x$host_os_version" = x], [
 
 
 dnl Determine whether we are cross-compiling...
-AS_IF([test "$build" = "$host"], [
-    # No, build local targets
-    LOCALTARGET="local"
-], [
-    # Yes, don't build local targets
-    LOCALTARGET=""
-])
-AC_SUBST([LOCALTARGET])
-
 AC_PATH_PROGS([CODE_SIGN], [codesign true])
 
 

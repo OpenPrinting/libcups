@@ -50,14 +50,6 @@ INSTALL_MAN	=	$(INSTALL) -c -m 444
 
 
 #
-# Cross-compilation support: "local" target is used for any tools that are
-# built and run locally.
-#
-
-LOCALTARGET     =       @LOCALTARGET@
-
-
-#
 # Libraries...
 #
 

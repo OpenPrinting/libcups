@@ -684,7 +684,6 @@ CC
 OPTIM
 DSOFLAGS
 CODE_SIGN
-LOCALTARGET
 host_os
 host_vendor
 host_cpu
@@ -2554,20 +2553,6 @@ if test "x$host_os_version" = x
 then :
 
     host_os_version="0"
-
-fi
-
-
-if test "$build" = "$host"
-then :
-
-    # No, build local targets
-    LOCALTARGET="local"
-
-else $as_nop
-
-    # Yes, don't build local targets
-    LOCALTARGET=""
 
 fi
 

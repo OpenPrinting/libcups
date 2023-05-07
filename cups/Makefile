@@ -219,6 +219,13 @@ fuzz:		$(UNITTARGETS)
 
 
 #
+# Make unit tests...
+#
+
+unittests:	$(UNITTARGETS)
+
+
+#
 # Remove object and target files...
 #
 

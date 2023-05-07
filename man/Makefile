@@ -1,7 +1,7 @@
 #
 # Man page makefile for libcups.
 #
-# Copyright © 2021 by OpenPrinting.
+# Copyright © 2021-2023 by OpenPrinting.
 # Copyright © 2007-2019 by Apple Inc.
 # Copyright © 1993-2006 by Easy Software Products.
 #
@@ -33,7 +33,7 @@ all:		$(LOCALTARGET)
 
 
 #
-# Make unit tests...
+# Run unit tests...
 #
 
 test:
@@ -85,10 +85,10 @@ uninstall:
 
 
 #
-# Local programs (not built when cross-compiling...)
+# Unit test programs (not built when cross-compiling...)
 #
 
-local:
+unittests:
 
 
 #
