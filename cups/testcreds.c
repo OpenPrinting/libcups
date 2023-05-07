@@ -44,19 +44,27 @@
 
 #include "cups-private.h"
 #include "test-internal.h"
+#include <sys/stat.h>
+
+
+//
+// Constants...
+//
+
+#define TEST_CERT_PATH	".testssl"
 
 
 //
 // Local functions...
 //
 
-static int	test_ca(const char *arg);
-static int	test_cacert(const char *arg);
-static int	test_cert(const char *arg);
-static int	test_client(const char *arg);
-static int	test_csr(const char *arg);
-static int	test_server(const char *arg);
-static int	test_show(const char *arg);
+static int	do_unit_tests(void);
+static int	test_ca(const char *common_name, const char *root_name, int days);
+static int	test_cert(bool ca_cert, cups_credpurpose_t purpose, cups_credtype_t type, cups_credusage_t keyusage, const char *organization, const char *org_unit, const char *locality, const char *state, const char *country, const char *root_name, const char *common_name, size_t num_alt_names, const char **alt_names, int days);
+static int	test_client(const char *uri);
+static int	test_csr(cups_credpurpose_t purpose, cups_credtype_t type, cups_credusage_t keyusage, const char *organization, const char *org_unit, const char *locality, const char *state, const char *country, const char *common_name, size_t num_alt_names, const char **alt_names);
+static int	test_server(const char *host_port);
+static int	test_show(const char *common_name);
 static int	usage(FILE *fp);
 
 
@@ -80,7 +88,7 @@ main(int  argc,				// I - Number of command-line arguments
 		*country = NULL,	// Country
 		*alt_names[100];	// Subject alternate names
   size_t	num_alt_names = 0;
-  int		days;			// Days until expiration
+  int		days = 0;		// Days until expiration
   cups_credpurpose_t purpose = CUPS_CREDPURPOSE_SERVER_AUTH;
 					// Certificate purpose
   cups_credtype_t type = CUPS_CREDTYPE_DEFAULT;
@@ -323,10 +331,14 @@ main(int  argc,				// I - Number of command-line arguments
     }
   }
 
+  // Make certificate directory
+  if (access(TEST_CERT_PATH, 0))
+    mkdir(TEST_CERT_PATH, 0700);
+
+  // Do unit tests or sub-command...
   if (!subcommand)
   {
-    fputs("testcreds: Missing sub-command.\n", stderr);
-    return (usage(stderr));
+    return (do_unit_tests());
   }
   else if (!arg)
   {
@@ -337,15 +349,15 @@ main(int  argc,				// I - Number of command-line arguments
   // Run the corresponding sub-command...
   if (!strcmp(subcommand, "ca"))
   {
-    return (test_ca(arg));
+    return (test_ca(arg, root_name, days));
   }
   else if (!strcmp(subcommand, "cacert"))
   {
-    return (test_cacert(arg));
+    return (test_cert(true, purpose, type, keyusage, organization, org_unit, locality, state, country, root_name, arg, num_alt_names, alt_names, days));
   }
   else if (!strcmp(subcommand, "cert"))
   {
-    return (test_cert(arg));
+    return (test_cert(false, purpose, type, keyusage, organization, org_unit, locality, state, country, root_name, arg, num_alt_names, alt_names, days));
   }
   else if (!strcmp(subcommand, "client"))
   {
@@ -353,7 +365,7 @@ main(int  argc,				// I - Number of command-line arguments
   }
   else if (!strcmp(subcommand, "csr"))
   {
-    return (test_csr(arg));
+    return (test_csr(purpose, type, keyusage, organization, org_unit, locality, state, country, arg, num_alt_names, alt_names));
   }
   else if (!strcmp(subcommand, "server"))
   {
@@ -372,25 +384,29 @@ main(int  argc,				// I - Number of command-line arguments
 
 
 //
-// 'test_ca()' - Test generating a certificate from a CSR.
+// 'do_unit_tests()' - Do unit tests.
 //
 
 static int				// O - Exit status
-test_ca(const char *arg)		// I - Common name
+do_unit_tests(void)
 {
-  (void)arg;
   return (1);
 }
 
 
 //
-// 'test_cacert()' - Test creating a CA certificate.
+// 'test_ca()' - Test generating a certificate from a CSR.
 //
 
 static int				// O - Exit status
-test_cacert(const char *arg)		// I - Common name
+test_ca(const char *common_name,	// I - Common name
+        const char *root_name,		// I - Root certificate name
+        int        days)		// I - Number of days
 {
-  (void)arg;
+  (void)common_name;
+  (void)root_name;
+  (void)days;
+
   return (1);
 }
 
@@ -400,10 +416,55 @@ test_cacert(const char *arg)		// I - Common name
 //
 
 static int				// O - Exit status
-test_cert(const char *arg)		// I - Common name
+test_cert(
+    bool               ca_cert,		// I - `true` for a CA certificate, `false` for a regular one
+    cups_credpurpose_t purpose,		// I - Certificate purpose
+    cups_credtype_t    type,		// I - Certificate type
+    cups_credusage_t   keyusage,	// I - Key usage
+    const char         *organization,	// I - Organization
+    const char         *org_unit,	// I - Organizational unit
+    const char         *locality,	// I - Locality (city/town/etc.)
+    const char         *state,		// I - State/province
+    const char         *country,	// I - Country
+    const char         *root_name,	// I - Root certificate name
+    const char         *common_name,	// I - Common name
+    size_t             num_alt_names,	// I - Number of subjectAltName's
+    const char         **alt_names,	// I - subjectAltName's
+    int                days)		// I - Number of days until expiration
 {
-  (void)arg;
-  return (1);
+  char	*cert,				// Certificate
+	*key;				// Private key
+
+
+  if (!cupsCreateCredentials(TEST_CERT_PATH, ca_cert, purpose, type, keyusage, organization, org_unit, locality, state, country, common_name, num_alt_names, alt_names, root_name, time(NULL) + days * 86400))
+  {
+    fprintf(stderr, "testcreds: Unable to create certificate (%s)\n", cupsLastErrorString());
+    return (1);
+  }
+
+  if ((cert = cupsCopyCredentials(TEST_CERT_PATH, common_name)) != NULL)
+  {
+    puts(cert);
+    free(cert);
+  }
+  else
+  {
+    fprintf(stderr, "testcreds: Unable to get generated certificate for '%s'.\n", common_name);
+    return (1);
+  }
+
+  if ((key = cupsCopyCredentialsKey(TEST_CERT_PATH, common_name)) != NULL)
+  {
+    puts(key);
+    free(key);
+  }
+  else
+  {
+    fprintf(stderr, "testcreds: Unable to get generated private key for '%s'.\n", common_name);
+    return (1);
+  }
+
+  return (0);
 }
 
 
@@ -412,7 +473,7 @@ test_cert(const char *arg)		// I - Common name
 //
 
 static int				// O - Exit status
-test_client(const char *arg)		// I - URI
+test_client(const char *uri)		// I - URI
 {
   http_t	*http;			// HTTP connection
   char		scheme[HTTP_MAX_URI],	// Scheme from URI
@@ -421,19 +482,17 @@ test_client(const char *arg)		// I - URI
 		resource[HTTP_MAX_URI];	// Resource from URI
   int		port;			// Port number from URI
   http_trust_t	trust;			// Trust evaluation for connection
-  cups_array_t	*hcreds,		// Credentials from connection
-		*tcreds;		// Credentials from trust store
+  cups_array_t	*hcreds;		// Credentials from connection
   char		hinfo[1024],		// String for connection credentials
-		tinfo[1024],		// String for trust store credentials
 		datestr[256];		// Date string
   static const char *trusts[] =		// Trust strings
   { "OK", "Invalid", "Changed", "Expired", "Renewed", "Unknown" };
 
 
   // Connect to the host and validate credentials...
-  if (httpSeparateURI(HTTP_URI_CODING_MOST, arg, scheme, sizeof(scheme), username, sizeof(username), hostname, sizeof(hostname), &port, resource, sizeof(resource)) < HTTP_URI_STATUS_OK)
+  if (httpSeparateURI(HTTP_URI_CODING_MOST, uri, scheme, sizeof(scheme), username, sizeof(username), hostname, sizeof(hostname), &port, resource, sizeof(resource)) < HTTP_URI_STATUS_OK)
   {
-    fprintf(stderr, "testcreds: Bad URI '%s'.\n", arg);
+    fprintf(stderr, "testcreds: Bad URI '%s'.\n", uri);
     return (1);
   }
 
@@ -468,15 +527,104 @@ test_client(const char *arg)		// I - URI
 
   puts("");
 
-  printf("Trust Store for \"%s\":\n", hostname);
+  return (test_show(hostname));
+}
 
-  if (httpLoadCredentials(NULL, &tcreds, hostname))
+
+//
+// 'test_csr()' - Test creating a certificate signing request.
+//
+
+static int				// O - Exit status
+test_csr(
+    cups_credpurpose_t purpose,		// I - Certificate purpose
+    cups_credtype_t    type,		// I - Certificate type
+    cups_credusage_t   keyusage,	// I - Key usage
+    const char         *organization,	// I - Organization
+    const char         *org_unit,	// I - Organizational unit
+    const char         *locality,	// I - Locality (city/town/etc.)
+    const char         *state,		// I - State/province
+    const char         *country,	// I - Country
+    const char         *common_name,	// I - Common name
+    size_t             num_alt_names,	// I - Number of subjectAltName's
+    const char         **alt_names)	// I - subjectAltName's
+{
+  char	*csr;				// Certificate request
+
+
+  if (!cupsCreateCredentialsRequest(TEST_CERT_PATH, purpose, type, keyusage, organization, org_unit, locality, state, country, common_name, num_alt_names, alt_names))
+  {
+    fprintf(stderr, "testcreds: Unable to create certificate request (%s)\n", cupsLastErrorString());
+    return (1);
+  }
+
+  if ((csr = cupsCopyCredentialsRequest(TEST_CERT_PATH, common_name)) != NULL)
+  {
+    puts(csr);
+    free(csr);
+  }
+  else
+  {
+    fprintf(stderr, "testcreds: Unable to get generated certificate request for '%s'.\n", common_name);
+    return (1);
+  }
+
+  return (0);
+}
+
+
+//
+// 'test_server()' - Test running a server.
+//
+
+static int				// O - Exit status
+test_server(const char *host_port)	// I - Hostname/port
+{
+  char	host[256],			// Hostname
+	*hostptr;			// Pointer into hostname
+  int	port;				// Port number
+
+
+  cupsCopyString(host, host_port, sizeof(host));
+  if ((hostptr = strrchr(host, ':')) != NULL)
+  {
+    // Extract the port number from the argument...
+    *hostptr++ = '\0';
+    port       = atoi(hostptr);
+  }
+  else
+  {
+    // Use the default port 8NNN where NNN is the bottom 3 digits of the UID...
+    port = 8000 + (int)getuid() % 1000;
+  }
+
+  printf("Listening for connections on port %d...\n", port);
+
+  return (1);
+}
+
+
+//
+// 'test_show()' - Test showing stored certificates.
+//
+
+static int				// O - Exit status
+test_show(const char *common_name)	// I - Common name
+{
+  cups_array_t	*tcreds;		// Credentials from trust store
+  char		tinfo[1024],		// String for trust store credentials
+		datestr[256];		// Date string
+
+
+  printf("Trust Store for \"%s\":\n", common_name);
+
+  if (httpLoadCredentials(NULL, &tcreds, common_name))
   {
     httpCredentialsString(tcreds, tinfo, sizeof(tinfo));
 
     printf("    Certificate Count: %u\n", (unsigned)cupsArrayGetCount(tcreds));
     printf("    Expiration: %s\n", httpGetDateString(httpCredentialsGetExpiration(tcreds), datestr, sizeof(datestr)));
-    printf("    IsValidName: %s\n", httpCredentialsAreValidForName(tcreds, hostname) ? "true" : "false");
+    printf("    IsValidName: %s\n", httpCredentialsAreValidForName(tcreds, common_name) ? "true" : "false");
     printf("    String: \"%s\"\n", tinfo);
 
     httpFreeCredentials(tcreds);
@@ -487,42 +635,6 @@ test_client(const char *arg)		// I - URI
   }
 
   return (0);
-}
-
-
-//
-// 'test_csr()' - Test creating a certificate signing request.
-//
-
-static int				// O - Exit status
-test_csr(const char *arg)		// I - Common name
-{
-  (void)arg;
-  return (1);
-}
-
-
-//
-// 'test_server()' - Test running a server.
-//
-
-static int				// O - Exit status
-test_server(const char *arg)		// I - Hostname/port
-{
-  (void)arg;
-  return (1);
-}
-
-
-//
-// 'test_show()' - Test showing stored certificates.
-//
-
-static int				// O - Exit status
-test_show(const char *arg)		// I - Common name
-{
-  (void)arg;
-  return (1);
 }
 
 
