@@ -88,7 +88,7 @@ main(int  argc,				// I - Number of command-line arguments
 		*country = NULL,	// Country
 		*alt_names[100];	// Subject alternate names
   size_t	num_alt_names = 0;
-  int		days = 0;		// Days until expiration
+  int		days = 365;		// Days until expiration
   cups_credpurpose_t purpose = CUPS_CREDPURPOSE_SERVER_AUTH;
 					// Certificate purpose
   cups_credtype_t type = CUPS_CREDTYPE_DEFAULT;

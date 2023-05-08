@@ -1550,7 +1550,7 @@ openssl_create_san(
 
 
   // Add the common name
-  snprintf(temp, sizeof(temp), "dns:%s", common_name);
+  snprintf(temp, sizeof(temp), "DNS:%s", common_name);
   tempptr = temp + strlen(temp);
 
   if (strstr(common_name, ".local") == NULL)
@@ -1563,7 +1563,7 @@ openssl_create_san(
     if ((localptr = strchr(localname, '.')) != NULL)
       *localptr = '\0';
 
-    snprintf(tempptr, sizeof(temp) - (size_t)(tempptr - temp), ",dns:%s.local", localname);
+    snprintf(tempptr, sizeof(temp) - (size_t)(tempptr - temp), ",DNS:%s.local", localname);
     tempptr += strlen(tempptr);
   }
 
@@ -1572,7 +1572,7 @@ openssl_create_san(
   {
     if (strcmp(alt_names[i], "localhost"))
     {
-      snprintf(tempptr, sizeof(temp) - (size_t)(tempptr - temp), ",dns:%s", alt_names[i]);
+      snprintf(tempptr, sizeof(temp) - (size_t)(tempptr - temp), ",DNS:%s", alt_names[i]);
       tempptr += strlen(tempptr);
     }
   }
