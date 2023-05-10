@@ -74,6 +74,7 @@ TESTOBJS	= \
 		testjson.o \
 		testjwt.o \
 		testoptions.o \
+		testpwg.o \
 		testraster.o \
 		testtestpage.o \
 		testthreads.o \
@@ -83,7 +84,6 @@ OBJS	=	\
 		$(TESTOBJS)
 
 #		testlang.o \
-#		testpwg.o \
 
 
 #
@@ -156,13 +156,13 @@ UNITTARGETS =	\
 		testjson \
 		testjwt \
 		testoptions \
+		testpwg \
 		testraster \
 		testtestpage \
 		testthreads \
 		tlscheck
 
 #		testlang \
-#		testpwg \
 
 TARGETS	=	\
 		$(LIBTARGETS)
@@ -181,6 +181,7 @@ all:		$(TARGETS)
 
 test:		$(UNITTARGETS)
 	rm -f test.log
+	date >test.log
 	echo Running array API tests...
 	./testarray 2>>test.log
 #	if test `uname` != Darwin; then \
@@ -207,6 +208,8 @@ test:		$(UNITTARGETS)
 	./testjwt 2>>test.log
 	echo Running option API tests...
 	./testoptions 2>>test.log
+	echo Running PWG API tests...
+	./testpwg 2>>test.log
 	echo Running raster API tests...
 	./testraster 2>>test.log
 	./testtestpage 2>>test.log
@@ -579,8 +582,6 @@ testpwg:	testpwg.o $(LIBCUPS_STATIC) test.ppd
 	echo Linking $@...
 	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testpwg.o $(LIBCUPS_STATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
-	echo Running PWG API tests...
-	./testpwg test.ppd
 
 
 #

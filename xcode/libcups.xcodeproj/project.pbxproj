@@ -30,6 +30,7 @@
 				2797D73728E5D24E0056D546 /* PBXTargetDependency */,
 				2794DA8D29DCBDEB00B71A3F /* PBXTargetDependency */,
 				271284B91CC11FA500E517C7 /* PBXTargetDependency */,
+				27C2A7A72A0C59EA00C20AEF /* PBXTargetDependency */,
 				271284BF1CC11FA500E517C7 /* PBXTargetDependency */,
 				27D3967927BA8224003D3D8E /* PBXTargetDependency */,
 				274770E42345347D0089BC31 /* PBXTargetDependency */,
@@ -769,6 +770,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 2797D72228E5D2360056D546;
 			remoteInfo = testjson;
+		};
+		27C2A7A62A0C59EA00C20AEF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 72BF96371333042100B1EAD7 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 724FA5F71CC038190092477B;
+			remoteInfo = testpwg;
 		};
 		27D3966A27BA81D3003D3D8E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -2665,7 +2673,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1420;
+				LastUpgradeCheck = 1430;
 				ORGANIZATIONNAME = "Apple Inc.";
 				TargetAttributes = {
 					270695FD1CADF3E200FFE5FB = {
@@ -3283,6 +3291,11 @@
 			isa = PBXTargetDependency;
 			target = 2797D72228E5D2360056D546 /* testjson */;
 			targetProxy = 2797D73628E5D24E0056D546 /* PBXContainerItemProxy */;
+		};
+		27C2A7A72A0C59EA00C20AEF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 724FA5F71CC038190092477B /* testpwg */;
+			targetProxy = 27C2A7A62A0C59EA00C20AEF /* PBXContainerItemProxy */;
 		};
 		27D3966927BA81D3003D3D8E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
