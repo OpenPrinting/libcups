@@ -45,6 +45,7 @@
 #include "cups-private.h"
 #include "test-internal.h"
 #include <sys/stat.h>
+#include <poll.h>
 
 
 //
@@ -580,11 +581,17 @@ test_csr(
 static int				// O - Exit status
 test_server(const char *host_port)	// I - Hostname/port
 {
-  char	host[256],			// Hostname
-	*hostptr;			// Pointer into hostname
-  int	port;				// Port number
+  char		host[256],		// Hostname
+		*hostptr;		// Pointer into hostname
+  int		port;			// Port number
+  nfds_t	i,			// Looping var
+		num_listeners = 0;	// Number of listeners
+  struct pollfd	listeners[2];		// Listeners
+  http_addr_t	addr;			// Listen address
+  http_t	*http;			// Client
 
 
+  // Get the host and port...
   cupsCopyString(host, host_port, sizeof(host));
   if ((hostptr = strrchr(host, ':')) != NULL)
   {
@@ -598,9 +605,127 @@ test_server(const char *host_port)	// I - Hostname/port
     port = 8000 + (int)getuid() % 1000;
   }
 
+  // Setup listeners for IPv4 and IPv6...
+  memset(&addr, 0, sizeof(addr));
+  addr.ipv4.sin_family = AF_INET;
+
+  if ((listeners[num_listeners].fd = httpAddrListen(&addr, port)) > 0)
+  {
+    listeners[num_listeners].events = POLLIN | POLLERR;
+    num_listeners ++;
+  }
+
+  addr.ipv6.sin6_family = AF_INET6;
+
+  if ((listeners[num_listeners].fd = httpAddrListen(&addr, port)) > 0)
+  {
+    listeners[num_listeners].events = POLLIN | POLLERR;
+    num_listeners ++;
+  }
+
+  if (num_listeners == 0)
+  {
+    fprintf(stderr, "testcreds: Unable to listen on port %d: %s\n", port, cupsLastErrorString());
+    return (1);
+  }
+
   printf("Listening for connections on port %d...\n", port);
 
-  return (1);
+  // Set certificate info...
+  cupsSetServerCredentials(TEST_CERT_PATH, host, true);
+
+  // Wait for connections...
+  for (;;)
+  {
+    http_state_t	state;		// HTTP request state
+    char		resource[1024];	// Resource path
+
+    // Look for new connections...
+    if (poll(listeners, num_listeners, 1000) < 0)
+    {
+      if (errno == EINTR || errno == EAGAIN)
+        continue;
+
+      perror("testcreds: Unable to poll");
+      break;
+    }
+
+    // Try accepting a connection...
+    for (i = 0, http = NULL; i < num_listeners; i ++)
+    {
+      if (listeners[i].revents & POLLIN)
+      {
+        if ((http = httpAcceptConnection(listeners[i].fd, true)) != NULL)
+          break;
+
+        fprintf(stderr, "testcreds: Unable to accept connection: %s\n", cupsLastErrorString());
+      }
+    }
+
+    if (!http)
+      continue;
+
+    // Negotiate a secure connection...
+    if (!httpSetEncryption(http, HTTP_ENCRYPTION_ALWAYS))
+    {
+      fprintf(stderr, "testcreds: Unable to encrypt connection: %s\n", cupsLastErrorString());
+      httpClose(http);
+      continue;
+    }
+
+    // Process a single request and then close it out...
+    while ((state = httpReadRequest(http, resource, sizeof(resource))) == HTTP_STATE_WAITING)
+      usleep(1000);
+
+    if (state == HTTP_STATE_ERROR)
+    {
+      if (httpError(http) == EPIPE)
+	fputs("testcreds: Client closed connection.\n", stderr);
+      else
+	fprintf(stderr, "testcreds: Bad request line (%s).\n", strerror(httpError(http)));
+    }
+    else if (state == HTTP_STATE_UNKNOWN_METHOD)
+    {
+      fputs("testcreds: Bad/unknown operation.\n", stderr);
+    }
+    else if (state == HTTP_STATE_UNKNOWN_VERSION)
+    {
+      fputs("testcreds: Bad HTTP version.\n", stderr);
+    }
+    else
+    {
+      printf("%s %s\n", httpStateString(state), resource);
+
+      if (state == HTTP_STATE_GET || state == HTTP_STATE_HEAD)
+      {
+        httpClearFields(http);
+        httpSetField(http, HTTP_FIELD_CONTENT_TYPE, "text/plain");
+        httpSetField(http, HTTP_FIELD_CONNECTION, "close");
+	httpSetLength(http, strlen(resource) + 1);
+	httpWriteResponse(http, HTTP_STATUS_OK);
+
+        if (state == HTTP_STATE_GET)
+        {
+          // Echo back the resource path...
+          httpWrite(http, resource, strlen(resource));
+          httpWrite(http, "\n", 1);
+          httpFlushWrite(http);
+        }
+      }
+      else
+      {
+        httpWriteResponse(http, HTTP_STATUS_BAD_REQUEST);
+      }
+    }
+
+    httpClose(http);
+  }
+
+  // Close listeners and return...
+  for (i = 0; i < num_listeners; i ++)
+    httpAddrClose(&addr, listeners[i].fd);
+
+  return (0);
 }
 
 
