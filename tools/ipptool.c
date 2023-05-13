@@ -4878,6 +4878,7 @@ print_json_attr(
 
     default :
         /* Out-of-band value */
+        cupsFilePrintf(data->outfile, ": null");
 	break;
   }
 }
