@@ -60,14 +60,18 @@ cupsCreateCredentials(
     const char         *root_name,	// I - Root certificate/domain name or `NULL` for site/self-signed
     time_t             expiration_date)	// I - Expiration date
 {
-  gnutls_x509_crt_t	crt;		// Self-signed certificate
+  gnutls_x509_crt_t	crt;		// New certificate
   gnutls_x509_privkey_t	key;		// Encryption private key
+  gnutls_x509_crt_t	root_crt = NULL;// Root certificate
+  gnutls_x509_privkey_t	root_key = NULL;// Root private key
   char			temp[1024],	// Temporary directory name
  			crtfile[1024],	// Certificate filename
-			keyfile[1024];	// Private key filename
+			keyfile[1024],	// Private key filename
+ 			*root_crtdata,	// Root certificate data
+			*root_keydata;	// Root private key data
   unsigned		gnutls_usage = 0;// GNU TLS keyUsage bits
   cups_file_t		*fp;		// Key/cert file
-  unsigned char		buffer[8192];	// Buffer for x509 data
+  unsigned char		buffer[65536];	// Buffer for x509 data
   size_t		bytes;		// Number of bytes of data
   unsigned char		serial[4];	// Serial number buffer
   time_t		curtime;	// Current time
@@ -212,7 +216,60 @@ cupsCreateCredentials(
   if (gnutls_x509_crt_get_key_id(crt, 0, buffer, &bytes) >= 0)
     gnutls_x509_crt_set_subject_key_id(crt, buffer, bytes);
 
-  gnutls_x509_crt_sign(crt, crt, key);
+  // Try loading a root certificate...
+  if (!ca_cert)
+  {
+    root_crtdata = cupsCopyCredentials(path, root_name ? root_name : "_site_");
+    root_keydata = cupsCopyCredentialsKey(path, root_name ? root_name : "_site_");
+
+    if (root_crtdata && root_keydata)
+    {
+      // Load root certificate...
+      gnutls_datum_t    datum;          // Datum for cert/key
+
+      datum.data = (unsigned char *)root_crtdata;
+      datum.size = strlen(root_crtdata);
+
+      gnutls_x509_crt_init(&root_crt);
+      if (gnutls_x509_crt_import(root_crt, &datum, GNUTLS_X509_FMT_PEM) < 0)
+      {
+        // No good, clear it...
+        gnutls_x509_crt_deinit(root_crt);
+        root_crt = NULL;
+      }
+      else
+      {
+        // Load root private key...
+        datum.data = (unsigned char *)root_keydata;
+        datum.size = strlen(root_keydata);
+
+        gnutls_x509_privkey_init(&root_key);
+        if (gnutls_x509_privkey_import(root_key, &datum, GNUTLS_X509_FMT_PEM) < 0)
+        {
+          // No food, clear them...
+          gnutls_x509_privkey_deinit(root_key);
+          root_key = NULL;
+
+          gnutls_x509_crt_deinit(root_crt);
+          root_crt = NULL;
+        }
+      }
+    }
+
+    free(root_crtdata);
+    free(root_keydata);
+  }
+
+  if (root_crt && root_key)
+  {
+    gnutls_x509_crt_sign(crt, root_crt, root_key);
+    gnutls_x509_crt_deinit(root_crt);
+    gnutls_x509_privkey_deinit(root_key);
+  }
+  else
+  {
+    gnutls_x509_crt_sign(crt, crt, key);
+  }
 
   // Save it...
   bytes = sizeof(buffer);
