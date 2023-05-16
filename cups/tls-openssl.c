@@ -33,7 +33,7 @@ static bool		openssl_add_ext(STACK_OF(X509_EXTENSION) *exts, int nid, const char
 static X509		*openssl_create_credential(http_credential_t *credential);
 static X509_NAME	*openssl_create_name(const char *organization, const char *org_unit, const char *locality, const char *state_province, const char *country, const char *common_name);
 static EVP_PKEY		*openssl_create_key(cups_credtype_t type);
-static bool		openssl_create_san(STACK_OF(X509_EXTENSION) *exts, const char *common_name, size_t num_alt_names, const char **alt_names);
+static bool		openssl_create_san(STACK_OF(X509_EXTENSION) *exts, const char *common_name, size_t num_alt_names, const char * const *alt_names);
 static time_t		openssl_get_date(X509 *cert, int which);
 //static void		openssl_load_crl(void);
 
@@ -93,7 +93,7 @@ cupsCreateCredentials(
     const char         *country,	// I - Country or `NULL` for locale-based default
     const char         *common_name,	// I - Common name
     size_t             num_alt_names,	// I - Number of subject alternate names
-    const char         **alt_names,	// I - Subject Alternate Names
+    const char * const *alt_names,	// I - Subject Alternate Names
     const char         *root_name,	// I - Root certificate/domain name or `NULL` for site/self-signed
     time_t             expiration_date)	// I - Expiration date
 {
@@ -340,7 +340,7 @@ cupsCreateCredentialsRequest(
     const char         *country,	// I - Country or `NULL` for locale-based default
     const char         *common_name,	// I - Common name
     size_t             num_alt_names,	// I - Number of subject alternate names
-    const char         **alt_names)	// I - Subject Alternate Names
+    const char * const *alt_names)	// I - Subject Alternate Names
 {
   char		*result = NULL;		// Return value
   EVP_PKEY	*pkey;			// Key pair
@@ -1429,90 +1429,31 @@ openssl_create_credential(
 //
 
 static EVP_PKEY *			// O - Key pair
-openssl_create_key(cups_credtype_t type)	// I - Type of key
+openssl_create_key(
+    cups_credtype_t type)		// I - Type of key
 {
   EVP_PKEY	*pkey;			// Key pair
-#if 0
-#if defined(EVP_PKEY_EC)
-  EC_KEY	*ec = NULL;		// EC key
-#endif // EVP_PKEY_EC
-  RSA		*rsa = NULL;		// RSA key pair
-
-
-  switch (type)
-  {
-#if defined(EVP_PKEY_EC)
-    case CUPS_CREDTYPE_ECDSA_P256_SHA256 :
-	ec = EC_KEY_new_by_curve_name(NID_secp256k1);
-	break;
-
-    case CUPS_CREDTYPE_ECDSA_P384_SHA256 :
-	ec = EC_KEY_new_by_curve_name(NID_secp384r1);
-	break;
-
-    case CUPS_CREDTYPE_ECDSA_P521_SHA256 :
-	ec = EC_KEY_new_by_curve_name(NID_secp521r1);
-	break;
-#endif // EVP_PKEY_EC && USE_EC
-
-    case CUPS_CREDTYPE_RSA_2048_SHA256 :
-	rsa = RSA_generate_key(2048, RSA_F4, NULL, NULL);
-	break;
-
-    default :
-    case CUPS_CREDTYPE_RSA_3072_SHA256 :
-	rsa = RSA_generate_key(3072, RSA_F4, NULL, NULL);
-	break;
-
-    case CUPS_CREDTYPE_RSA_4096_SHA256 :
-	rsa = RSA_generate_key(4096, RSA_F4, NULL, NULL);
-	break;
-  }
-
-  if (!rsa && !ec)
-  {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create key pair."), 1);
-    return (NULL);
-  }
-
-  if ((pkey = EVP_PKEY_new()) == NULL)
-  {
-#if defined(EVP_PKEY_EC)
-    if (ec)
-      EC_KEY_free(ec);
-#endif // EVP_PKEY_EC && USE_EC
-
-    if (rsa)
-      RSA_free(rsa);
-
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create private key."), 1);
-    return (NULL);
-  }
-
-#if defined(EVP_PKEY_EC)
-  if (ec)
-    EVP_PKEY_assign_EC_KEY(pkey, ec);
-  else
-#endif // EVP_PKEY_EC
-  EVP_PKEY_assign_RSA(pkey, rsa);
-#else
   EVP_PKEY_CTX	*ctx;			// Key generation context
   int		algid;			// Algorithm NID
   int		bits = 0;		// Bits
+  int		curveid = 0;		// Curve NID
 
 
   switch (type)
   {
     case CUPS_CREDTYPE_ECDSA_P256_SHA256 :
-        algid = EVP_PKEY_EC;
+        algid   = EVP_PKEY_EC;
+        curveid = NID_secp256k1;
 	break;
 
     case CUPS_CREDTYPE_ECDSA_P384_SHA256 :
-        algid = EVP_PKEY_EC;
+        algid   = EVP_PKEY_EC;
+        curveid = NID_secp384r1;
 	break;
 
     case CUPS_CREDTYPE_ECDSA_P521_SHA256 :
-        algid = EVP_PKEY_EC;
+        algid   = EVP_PKEY_EC;
+        curveid = NID_secp521r1;
 	break;
 
     case CUPS_CREDTYPE_RSA_2048_SHA256 :
@@ -1535,21 +1476,17 @@ openssl_create_key(cups_credtype_t type)	// I - Type of key
   pkey = NULL;
 
   if ((ctx = EVP_PKEY_CTX_new_id(algid, NULL)) == NULL)
-  {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create private key context."), 1);
-  }
   else if (EVP_PKEY_keygen_init(ctx) <= 0)
-  {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to initialize private key context."), 1);
-  }
   else if (bits && EVP_PKEY_CTX_set_rsa_keygen_bits(ctx, bits) <= 0)
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to configure private key context."), 1);
+  else if (curveid && EVP_PKEY_CTX_set_ec_paramgen_curve_nid(ctx, curveid) <= 0)
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to configure private key context."), 1);
   else if (EVP_PKEY_keygen(ctx, &pkey) <= 0)
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create private key."), 1);
 
-  EVP_PKEY_free(pkey);
-#endif // 0
-
+  EVP_PKEY_CTX_free(ctx);
 
   return (pkey);
 }
@@ -1599,9 +1536,9 @@ openssl_create_name(
 static bool				// O - `true` on success, `false` otherwise
 openssl_create_san(
     STACK_OF(X509_EXTENSION) *exts,	// I - Extensions
-    const char *common_name,		// I - Common name
-    size_t     num_alt_names,		// I - Number of alternate names
-    const char **alt_names)		// I - List of alternate names
+    const char         *common_name,	// I - Common name
+    size_t             num_alt_names,	// I - Number of alternate names
+    const char * const *alt_names)	// I - List of alternate names
 {
   char		temp[2048],		// Temporary string
 		*tempptr;		// Pointer into temporary string

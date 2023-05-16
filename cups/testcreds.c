@@ -391,7 +391,75 @@ main(int  argc,				// I - Number of command-line arguments
 static int				// O - Exit status
 do_unit_tests(void)
 {
-  return (1);
+  cups_credtype_t	type;		// Current credential type
+  char			*data;		// Cert data
+  static const char * const alt_names[] =
+  {					// subjectAltName values
+    "printer.example.com",
+    "localhost"
+  };
+  static const char * const types[] =
+  {					// Credential types
+    "default",
+    "rsa-2048",
+    "rsa-3072",
+    "rsa-4096",
+    "ecdsa-p256",
+    "ecdsa-p384",
+    "ecdsa-p521"
+  };
+
+
+  for (type = CUPS_CREDTYPE_DEFAULT; type <= CUPS_CREDTYPE_ECDSA_P521_SHA256; type ++)
+  {
+    testBegin("cupsCreateCredentials(_site_, %s, no alt names, CA)", types[type]);
+    if (cupsCreateCredentials(TEST_CERT_PATH, true, CUPS_CREDPURPOSE_SERVER_AUTH, type, CUPS_CREDUSAGE_DEFAULT_TLS, "Organization", "Unit", "Locality", "Ontario", "CA", "_site_", 0, NULL, NULL, time(NULL) + 30 * 86400))
+    {
+      testEnd(true);
+
+      testBegin("cupsCopyCredentials(_site_)");
+      data = cupsCopyCredentials(TEST_CERT_PATH, "_site_");
+      testEnd(data != NULL);
+      free(data);
+
+      testBegin("cupsCopyCredentialsKey(_site_)");
+      data = cupsCopyCredentialsKey(TEST_CERT_PATH, "_site_");
+      testEnd(data != NULL);
+      free(data);
+    }
+    else
+    {
+      testEndMessage(false, "%s", cupsLastErrorString());
+    }
+
+    testBegin("cupsCreateCredentials(printer, %s, alt names, signed by CA cert)", types[type]);
+    if (cupsCreateCredentials(TEST_CERT_PATH, false, CUPS_CREDPURPOSE_SERVER_AUTH, type, CUPS_CREDUSAGE_DEFAULT_TLS, "Organization", "Unit", "Locality", "Ontario", "CA", "printer", sizeof(alt_names) / sizeof(alt_names[0]), alt_names, "_site_", time(NULL) + 30 * 86400))
+      testEnd(true);
+    else
+      testEndMessage(false, "%s", cupsLastErrorString());
+
+    testBegin("cupsCreateCredentialsRequest(printer, %s, alt names)", types[type]);
+    if (cupsCreateCredentialsRequest(TEST_CERT_PATH, CUPS_CREDPURPOSE_SERVER_AUTH, type, CUPS_CREDUSAGE_DEFAULT_TLS, "Organization", "Unit", "Locality", "Ontario", "CA", "printer", sizeof(alt_names) / sizeof(alt_names[0]), alt_names))
+    {
+      testEnd(true);
+
+      testBegin("cupsCopyCredentialsRequest(printer)");
+      data = cupsCopyCredentialsRequest(TEST_CERT_PATH, "printer");
+      testEnd(data != NULL);
+      free(data);
+
+      testBegin("cupsCopyCredentialsKey(printer)");
+      data = cupsCopyCredentialsKey(TEST_CERT_PATH, "printer");
+      testEnd(data != NULL);
+      free(data);
+    }
+    else
+    {
+      testEndMessage(false, "%s", cupsLastErrorString());
+    }
+  }
+
+  return (testsPassed ? 0 : 1);
 }
 
 
