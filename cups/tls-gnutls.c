@@ -18,9 +18,16 @@
 
 static gnutls_x509_crt_t gnutls_create_credential(http_credential_t *credential);
 static gnutls_x509_privkey_t gnutls_create_key(cups_credtype_t type);
+static ssize_t		gnutls_http_read(gnutls_transport_ptr_t ptr, void *data, size_t length);
+static ssize_t		gnutls_http_write(gnutls_transport_ptr_t ptr, const void *data, size_t length);
 static void		gnutls_load_crl(void);
-static ssize_t		gnutls_read(gnutls_transport_ptr_t ptr, void *data, size_t length);
-static ssize_t		gnutls_write(gnutls_transport_ptr_t ptr, const void *data, size_t length);
+
+
+//
+// Local globals...
+//
+
+static gnutls_x509_crl_t tls_crl = NULL;/* Certificate revocation list */
 
 
 //
@@ -49,7 +56,7 @@ cupsCreateCredentials(
     const char         *country,	// I - Country or `NULL` for locale-based default
     const char         *common_name,	// I - Common name
     size_t             num_alt_names,	// I - Number of subject alternate names
-    const char         **alt_names,	// I - Subject Alternate Names
+    const char * const *alt_names,	// I - Subject Alternate Names
     const char         *root_name,	// I - Root certificate/domain name or `NULL` for site/self-signed
     time_t             expiration_date)	// I - Expiration date
 {
@@ -58,8 +65,7 @@ cupsCreateCredentials(
   char			temp[1024],	// Temporary directory name
  			crtfile[1024],	// Certificate filename
 			keyfile[1024];	// Private key filename
-  cups_lang_t		*language;	// Default language info
-  const char		*langname;	// Default language name
+  unsigned		gnutls_usage = 0;// GNU TLS keyUsage bits
   cups_file_t		*fp;		// Key/cert file
   unsigned char		buffer[8192];	// Buffer for x509 data
   size_t		bytes;		// Number of bytes of data
@@ -77,7 +83,7 @@ cupsCreateCredentials(
   if (!path || !common_name)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), 0);
-    return (0);
+    return (false);
   }
 
   http_make_path(crtfile, sizeof(crtfile), path, common_name, "crt");
@@ -98,7 +104,7 @@ cupsCreateCredentials(
     DEBUG_printf(("1cupsCreateCredentials: Unable to export private key: %s", gnutls_strerror(result)));
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, gnutls_strerror(result), 0);
     gnutls_x509_privkey_deinit(key);
-    return (0);
+    return (false);
   }
   else if ((fp = cupsFileOpen(keyfile, "w")) != NULL)
   {
@@ -111,36 +117,41 @@ cupsCreateCredentials(
     DEBUG_printf(("1cupsCreateCredentials: Unable to create private key file \"%s\": %s", keyfile, strerror(errno)));
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
     gnutls_x509_privkey_deinit(key);
-    return (0);
+    return (false);
   }
 
-  // Create the self-signed certificate...
-  DEBUG_puts("1cupsCreateCredentials: Generating self-signed X.509 certificate.");
+  // Create the certificate...
+  DEBUG_puts("1cupsCreateCredentials: Generating X.509 certificate.");
 
-  language  = cupsLangDefault();
-  langname  = cupsLangGetName(language);
   curtime   = time(NULL);
   serial[0] = (unsigned char)(curtime >> 24);
   serial[1] = (unsigned char)(curtime >> 16);
   serial[2] = (unsigned char)(curtime >> 8);
   serial[3] = (unsigned char)(curtime);
 
+  if (!organization)
+    organization = common_name;
+  if (!org_unit)
+    org_unit = "";
+  if (!locality)
+    locality = "Unknown";
+  if (!state_province)
+    state_province = "Unknown";
+  if (!country)
+    country = "US";
+
   gnutls_x509_crt_init(&crt);
-  if (strlen(langname) == 5)
-    gnutls_x509_crt_set_dn_by_oid(crt, GNUTLS_OID_X520_COUNTRY_NAME, 0, langname + 3, 2);
-  else
-    gnutls_x509_crt_set_dn_by_oid(crt, GNUTLS_OID_X520_COUNTRY_NAME, 0, "US", 2);
+  gnutls_x509_crt_set_dn_by_oid(crt, GNUTLS_OID_X520_COUNTRY_NAME, 0, "US", 2);
   gnutls_x509_crt_set_dn_by_oid(crt, GNUTLS_OID_X520_COMMON_NAME, 0, common_name, strlen(common_name));
-  gnutls_x509_crt_set_dn_by_oid(crt, GNUTLS_OID_X520_ORGANIZATION_NAME, 0, common_name, strlen(common_name));
-  gnutls_x509_crt_set_dn_by_oid(crt, GNUTLS_OID_X520_ORGANIZATIONAL_UNIT_NAME, 0, "Unknown", 7);
-  gnutls_x509_crt_set_dn_by_oid(crt, GNUTLS_OID_X520_STATE_OR_PROVINCE_NAME, 0, "Unknown", 7);
-  gnutls_x509_crt_set_dn_by_oid(crt, GNUTLS_OID_X520_LOCALITY_NAME, 0, "Unknown", 7);
-//  gnutls_x509_crt_set_dn_by_oid(crt, GNUTLS_OID_PKCS9_EMAIL, 0, ServerAdmin, strlen(ServerAdmin));
+  gnutls_x509_crt_set_dn_by_oid(crt, GNUTLS_OID_X520_ORGANIZATION_NAME, 0, organization, strlen(organization));
+  gnutls_x509_crt_set_dn_by_oid(crt, GNUTLS_OID_X520_ORGANIZATIONAL_UNIT_NAME, 0, org_unit, strlen(org_unit));
+  gnutls_x509_crt_set_dn_by_oid(crt, GNUTLS_OID_X520_STATE_OR_PROVINCE_NAME, 0, state_province, strlen(state_province));
+  gnutls_x509_crt_set_dn_by_oid(crt, GNUTLS_OID_X520_LOCALITY_NAME, 0, locality, strlen(locality));
   gnutls_x509_crt_set_key(crt, key);
   gnutls_x509_crt_set_serial(crt, serial, sizeof(serial));
   gnutls_x509_crt_set_activation_time(crt, curtime);
   gnutls_x509_crt_set_expiration_time(crt, expiration_date);
-  gnutls_x509_crt_set_ca_status(crt, 0);
+  gnutls_x509_crt_set_ca_status(crt, ca_cert ? 1 : 0);
   gnutls_x509_crt_set_subject_alt_name(crt, GNUTLS_SAN_DNSNAME, common_name, (unsigned)strlen(common_name), GNUTLS_FSAN_SET);
   if (!strchr(common_name, '.'))
   {
@@ -163,8 +174,38 @@ cupsCreateCredentials(
       }
     }
   }
-  gnutls_x509_crt_set_key_purpose_oid(crt, GNUTLS_KP_TLS_WWW_SERVER, 0);
-  gnutls_x509_crt_set_key_usage(crt, GNUTLS_KEY_DIGITAL_SIGNATURE | GNUTLS_KEY_KEY_ENCIPHERMENT);
+
+  if (purpose & CUPS_CREDPURPOSE_SERVER_AUTH)
+    gnutls_x509_crt_set_key_purpose_oid(crt, GNUTLS_KP_TLS_WWW_SERVER, 0);
+  if (purpose & CUPS_CREDPURPOSE_CLIENT_AUTH)
+    gnutls_x509_crt_set_key_purpose_oid(crt, GNUTLS_KP_TLS_WWW_CLIENT, 0);
+  if (purpose & CUPS_CREDPURPOSE_CODE_SIGNING)
+    gnutls_x509_crt_set_key_purpose_oid(crt, GNUTLS_KP_CODE_SIGNING, 0);
+  if (purpose & CUPS_CREDPURPOSE_EMAIL_PROTECTION)
+    gnutls_x509_crt_set_key_purpose_oid(crt, GNUTLS_KP_EMAIL_PROTECTION, 0);
+  if (purpose & CUPS_CREDPURPOSE_OCSP_SIGNING)
+    gnutls_x509_crt_set_key_purpose_oid(crt, GNUTLS_KP_OCSP_SIGNING, 0);
+
+  if (usage & CUPS_CREDUSAGE_DIGITAL_SIGNATURE)
+    gnutls_usage |= GNUTLS_KEY_DIGITAL_SIGNATURE;
+  if (usage & CUPS_CREDUSAGE_NON_REPUDIATION)
+    gnutls_usage |= GNUTLS_KEY_NON_REPUDIATION;
+  if (usage & CUPS_CREDUSAGE_KEY_ENCIPHERMENT)
+    gnutls_usage |= GNUTLS_KEY_KEY_ENCIPHERMENT;
+  if (usage & CUPS_CREDUSAGE_DATA_ENCIPHERMENT)
+    gnutls_usage |= GNUTLS_KEY_DATA_ENCIPHERMENT;
+  if (usage & CUPS_CREDUSAGE_KEY_AGREEMENT)
+    gnutls_usage |= GNUTLS_KEY_KEY_AGREEMENT;
+  if (usage & CUPS_CREDUSAGE_KEY_CERT_SIGN)
+    gnutls_usage |= GNUTLS_KEY_KEY_CERT_SIGN;
+  if (usage & CUPS_CREDUSAGE_CRL_SIGN)
+    gnutls_usage |= GNUTLS_KEY_CRL_SIGN;
+  if (usage & CUPS_CREDUSAGE_ENCIPHER_ONLY)
+    gnutls_usage |= GNUTLS_KEY_ENCIPHER_ONLY;
+  if (usage & CUPS_CREDUSAGE_DECIPHER_ONLY)
+    gnutls_usage |= GNUTLS_KEY_DECIPHER_ONLY;
+ 
+  gnutls_x509_crt_set_key_usage(crt, gnutls_usage);
   gnutls_x509_crt_set_version(crt, 3);
 
   bytes = sizeof(buffer);
@@ -181,7 +222,7 @@ cupsCreateCredentials(
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, gnutls_strerror(result), 0);
     gnutls_x509_crt_deinit(crt);
     gnutls_x509_privkey_deinit(key);
-    return (0);
+    return (false);
   }
   else if ((fp = cupsFileOpen(crtfile, "w")) != NULL)
   {
@@ -195,7 +236,7 @@ cupsCreateCredentials(
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
     gnutls_x509_crt_deinit(crt);
     gnutls_x509_privkey_deinit(key);
-    return (0);
+    return (false);
   }
 
   // Cleanup...
@@ -204,7 +245,48 @@ cupsCreateCredentials(
 
   DEBUG_puts("1cupsCreateCredentials: Successfully created credentials.");
 
-  return (1);
+  return (true);
+}
+
+
+//
+// 'cupsCreateCredentialsRequest()' - Make an X.509 Certificate Signing Request.
+//
+// This function creates an X.509 certificate signing request (CSR) and
+// associated private key.  The CSR and key are stored in the directory "path"
+// or, if "path" is `NULL`, in a per-user or system-wide (when running as root)
+// certificate/key store.
+//
+
+bool					// O - `true` on success, `false` on error
+cupsCreateCredentialsRequest(
+    const char         *path,		// I - Directory path for certificate/key store or `NULL` for default
+    cups_credpurpose_t purpose,		// I - Credential purposes
+    cups_credtype_t    type,		// I - Credential type
+    cups_credusage_t   usage,		// I - Credential usages
+    const char         *organization,	// I - Organization or `NULL` to use common name
+    const char         *org_unit,	// I - Organizational unit or `NULL` for none
+    const char         *locality,	// I - City/town or `NULL` for "Unknown"
+    const char         *state_province,	// I - State/province or `NULL` for "Unknown"
+    const char         *country,	// I - Country or `NULL` for locale-based default
+    const char         *common_name,	// I - Common name
+    size_t             num_alt_names,	// I - Number of subject alternate names
+    const char * const *alt_names)	// I - Subject Alternate Names
+{
+  (void)path;
+  (void)purpose;
+  (void)type;
+  (void)usage;
+  (void)organization;
+  (void)org_unit;
+  (void)locality;
+  (void)state_province;
+  (void)country;
+  (void)common_name;
+  (void)num_alt_names;
+  (void)alt_names;
+
+  return (false);
 }
 
 
@@ -213,7 +295,7 @@ cupsCreateCredentials(
 //                           an encrypted connection.
 //
 
-int					// O - Status of call (0 = success)
+bool					// O - `true` on success, `false` on failure
 httpCopyCredentials(
     http_t	 *http,			// I - Connection to server
     cups_array_t **credentials)		// O - Array of credentials
@@ -228,7 +310,7 @@ httpCopyCredentials(
     *credentials = NULL;
 
   if (!http || !http->tls || !credentials)
-    return (-1);
+    return (false);
 
   *credentials = cupsArrayNew(NULL, NULL, NULL, 0, NULL, NULL);
   certs        = gnutls_certificate_get_peers(http->tls, &count);
@@ -245,7 +327,7 @@ httpCopyCredentials(
     }
   }
 
-  return (0);
+  return (true);
 }
 
 
@@ -267,13 +349,13 @@ _httpCreateCredentials(
 // 'httpCredentialsAreValidForName()' - Return whether the credentials are valid for the given name.
 //
 
-int					// O - 1 if valid, 0 otherwise
+bool					// O - `true` if valid, `false` otherwise
 httpCredentialsAreValidForName(
     cups_array_t *credentials,		// I - Credentials
     const char   *common_name)		// I - Name to check
 {
   gnutls_x509_crt_t	cert;		// Certificate
-  int			result = 0;	// Result
+  bool			result = false;	// Result
 
 
   cert = gnutls_create_credential((http_credential_t *)cupsArrayGetFirst(credentials));
@@ -303,7 +385,7 @@ httpCredentialsAreValidForName(
         {
           if (cserial_size == rserial_size && !memcmp(cserial, rserial, rserial_size))
 	  {
-	    result = 0;
+	    result = false;
 	    break;
 	  }
 
@@ -738,11 +820,11 @@ gnutls_load_crl(void)
 
 
 //
-// 'gnutls_read()' - Read function for the GNU TLS library.
+// 'gnutls_http_read()' - Read function for the GNU TLS library.
 //
 
 static ssize_t				// O - Number of bytes read or -1 on error
-gnutls_read(
+gnutls_http_read(
     gnutls_transport_ptr_t ptr,		// I - Connection to server
     void                   *data,	// I - Buffer
     size_t                 length)	// I - Number of bytes to read
@@ -751,7 +833,7 @@ gnutls_read(
   ssize_t	bytes;			// Bytes read
 
 
-  DEBUG_printf(("5gnutls_read(ptr=%p, data=%p, length=%d)", ptr, data, (int)length));
+  DEBUG_printf(("5gnutls_http_read(ptr=%p, data=%p, length=%d)", ptr, data, (int)length));
 
   http = (http_t *)ptr;
 
@@ -769,17 +851,17 @@ gnutls_read(
   }
 
   bytes = recv(http->fd, data, length, 0);
-  DEBUG_printf(("5gnutls_read: bytes=%d", (int)bytes));
+  DEBUG_printf(("5gnutls_http_read: bytes=%d", (int)bytes));
   return (bytes);
 }
 
 
 //
-// 'gnutls_write()' - Write function for the GNU TLS library.
+// 'gnutls_http_write()' - Write function for the GNU TLS library.
 //
 
 static ssize_t				// O - Number of bytes written or -1 on error
-gnutls_write(
+gnutls_http_write(
     gnutls_transport_ptr_t ptr,		// I - Connection to server
     const void             *data,	// I - Data buffer
     size_t                 length)	// I - Number of bytes to write
@@ -787,10 +869,10 @@ gnutls_write(
   ssize_t bytes;			// Bytes written
 
 
-  DEBUG_printf(("5gnutls_write(ptr=%p, data=%p, length=%d)", ptr, data,
+  DEBUG_printf(("5gnutls_http_write(ptr=%p, data=%p, length=%d)", ptr, data,
                 (int)length));
   bytes = send(((http_t *)ptr)->fd, data, length, 0);
-  DEBUG_printf(("5gnutls_write: bytes=%d", (int)bytes));
+  DEBUG_printf(("5gnutls_http_write: bytes=%d", (int)bytes));
 
   return (bytes);
 }
@@ -1044,7 +1126,7 @@ _httpTLSStart(http_t *http)		// I - Connection to server
     {
       DEBUG_printf(("4_httpTLSStart: Auto-create credentials for \"%s\".", cn));
 
-      if (!cupsCreateCredentials(tls_keypath, cn, 0, NULL, time(NULL) + 3650 * 86400))
+      if (!cupsCreateCredentials(tls_keypath, false, CUPS_CREDPURPOSE_SERVER_AUTH, CUPS_CREDTYPE_DEFAULT, CUPS_CREDUSAGE_DEFAULT_TLS, NULL, NULL, NULL, NULL, NULL, cn, 0, NULL, NULL, time(NULL) + 3650 * 86400))
       {
 	DEBUG_puts("4_httpTLSStart: cupsCreateCredentials failed.");
 	http->error  = errno = EINVAL;
@@ -1132,11 +1214,11 @@ _httpTLSStart(http_t *http)		// I - Connection to server
 #endif // HAVE_GNUTLS_PRIORITY_SET_DIRECT
 
   gnutls_transport_set_ptr(http->tls, (gnutls_transport_ptr_t)http);
-  gnutls_transport_set_pull_function(http->tls, gnutls_read);
+  gnutls_transport_set_pull_function(http->tls, gnutls_http_read);
 #ifdef HAVE_GNUTLS_TRANSPORT_SET_PULL_TIMEOUT_FUNCTION
   gnutls_transport_set_pull_timeout_function(http->tls, (gnutls_pull_timeout_func)httpWait);
 #endif // HAVE_GNUTLS_TRANSPORT_SET_PULL_TIMEOUT_FUNCTION
-  gnutls_transport_set_push_function(http->tls, gnutls_write);
+  gnutls_transport_set_push_function(http->tls, gnutls_http_write);
 
   // Enforce a minimum timeout of 10 seconds for the TLS handshake...
   old_timeout  = http->timeout_value;
