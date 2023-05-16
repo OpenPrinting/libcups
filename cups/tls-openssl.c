@@ -12,6 +12,9 @@
 //
 
 #include <openssl/x509v3.h>
+#include <openssl/evp.h>
+#include <openssl/objects.h>
+#include <openssl/obj_mac.h>
 
 
 //
@@ -1429,6 +1432,7 @@ static EVP_PKEY *			// O - Key pair
 openssl_create_key(cups_credtype_t type)	// I - Type of key
 {
   EVP_PKEY	*pkey;			// Key pair
+#if 0
 #if defined(EVP_PKEY_EC)
   EC_KEY	*ec = NULL;		// EC key
 #endif // EVP_PKEY_EC
@@ -1491,6 +1495,61 @@ openssl_create_key(cups_credtype_t type)	// I - Type of key
   else
 #endif // EVP_PKEY_EC
   EVP_PKEY_assign_RSA(pkey, rsa);
+#else
+  EVP_PKEY_CTX	*ctx;			// Key generation context
+  int		algid;			// Algorithm NID
+  int		bits = 0;		// Bits
+
+
+  switch (type)
+  {
+    case CUPS_CREDTYPE_ECDSA_P256_SHA256 :
+        algid = EVP_PKEY_EC;
+	break;
+
+    case CUPS_CREDTYPE_ECDSA_P384_SHA256 :
+        algid = EVP_PKEY_EC;
+	break;
+
+    case CUPS_CREDTYPE_ECDSA_P521_SHA256 :
+        algid = EVP_PKEY_EC;
+	break;
+
+    case CUPS_CREDTYPE_RSA_2048_SHA256 :
+        algid = EVP_PKEY_RSA;
+        bits  = 2048;
+	break;
+
+    default :
+    case CUPS_CREDTYPE_RSA_3072_SHA256 :
+        algid = EVP_PKEY_RSA;
+        bits  = 3072;
+	break;
+
+    case CUPS_CREDTYPE_RSA_4096_SHA256 :
+        algid = EVP_PKEY_RSA;
+        bits  = 4096;
+	break;
+  }
+
+  pkey = NULL;
+
+  if ((ctx = EVP_PKEY_CTX_new_id(algid, NULL)) == NULL)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create private key context."), 1);
+  }
+  else if (EVP_PKEY_keygen_init(ctx) <= 0)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to initialize private key context."), 1);
+  }
+  else if (bits && EVP_PKEY_CTX_set_rsa_keygen_bits(ctx, bits) <= 0)
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to configure private key context."), 1);
+  else if (EVP_PKEY_keygen(ctx, &pkey) <= 0)
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create private key."), 1);
+
+  EVP_PKEY_free(pkey);
+#endif // 0
+
 
   return (pkey);
 }

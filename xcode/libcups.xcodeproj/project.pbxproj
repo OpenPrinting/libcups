@@ -136,6 +136,9 @@
 		2712865D1CC1309000E517C7 /* libcups_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 72A4332F155844CF002E172D /* libcups_static.a */; };
 		2712865E1CC1309000E517C7 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC591926750C000F61D3 /* CoreFoundation.framework */; };
 		271286691CC130C700E517C7 /* tlscheck.c in Sources */ = {isa = PBXBuildFile; fileRef = 271286681CC130BD00E517C7 /* tlscheck.c */; };
+		271607952A0EC955002508F6 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D3967A27BB389C003D3D8E /* libz.tbd */; };
+		271607962A0EC96B002508F6 /* libresolv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D3968227BB390D003D3D8E /* libresolv.tbd */; };
+		271607972A0EC971002508F6 /* libiconv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D3967E27BB38E6003D3D8E /* libiconv.tbd */; };
 		273B1EA1226B3E4800428143 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC591926750C000F61D3 /* CoreFoundation.framework */; };
 		273B1EA2226B3E4800428143 /* libresolv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5B1926750C000F61D3 /* libresolv.dylib */; };
 		273B1EA3226B3E4800428143 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5C1926750C000F61D3 /* libz.dylib */; };
@@ -1724,7 +1727,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				279B960D28C582F000869E97 /* SystemConfiguration.framework in Frameworks */,
+				271607952A0EC955002508F6 /* libz.tbd in Frameworks */,
+				271607972A0EC971002508F6 /* libiconv.tbd in Frameworks */,
 				27CAFC7C282C8C6F00FE02FC /* libcrypto.a in Frameworks */,
+				271607962A0EC96B002508F6 /* libresolv.tbd in Frameworks */,
 				27CAFC7D282C8C6F00FE02FC /* libssl.a in Frameworks */,
 				724FA5FF1CC038190092477B /* libcups_static.a in Frameworks */,
 				724FA6001CC038190092477B /* CoreFoundation.framework in Frameworks */,
