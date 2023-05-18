@@ -60,8 +60,9 @@ cupsCreateCredentials(
     const char         *root_name,	// I - Root certificate/domain name or `NULL` for site/self-signed
     time_t             expiration_date)	// I - Expiration date
 {
-  gnutls_x509_crt_t	crt;		// New certificate
-  gnutls_x509_privkey_t	key;		// Encryption private key
+  bool			ret = false;	// Return value
+  gnutls_x509_crt_t	crt = NULL;	// New certificate
+  gnutls_x509_privkey_t	key = NULL;	// Encryption private key
   gnutls_x509_crt_t	root_crt = NULL;// Root certificate
   gnutls_x509_privkey_t	root_key = NULL;// Root private key
   char			temp[1024],	// Temporary directory name
@@ -87,7 +88,7 @@ cupsCreateCredentials(
   if (!path || !common_name)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), 0);
-    return (false);
+    goto done;
   }
 
   http_make_path(crtfile, sizeof(crtfile), path, common_name, "crt");
@@ -107,8 +108,7 @@ cupsCreateCredentials(
   {
     DEBUG_printf(("1cupsCreateCredentials: Unable to export private key: %s", gnutls_strerror(result)));
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, gnutls_strerror(result), 0);
-    gnutls_x509_privkey_deinit(key);
-    return (false);
+    goto done;
   }
   else if ((fp = cupsFileOpen(keyfile, "w")) != NULL)
   {
@@ -120,8 +120,7 @@ cupsCreateCredentials(
   {
     DEBUG_printf(("1cupsCreateCredentials: Unable to create private key file \"%s\": %s", keyfile, strerror(errno)));
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
-    gnutls_x509_privkey_deinit(key);
-    return (false);
+    goto done;
   }
 
   // Create the certificate...
@@ -277,9 +276,7 @@ cupsCreateCredentials(
   {
     DEBUG_printf(("1cupsCreateCredentials: Unable to export public key and X.509 certificate: %s", gnutls_strerror(result)));
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, gnutls_strerror(result), 0);
-    gnutls_x509_crt_deinit(crt);
-    gnutls_x509_privkey_deinit(key);
-    return (false);
+    goto done;
   }
   else if ((fp = cupsFileOpen(crtfile, "w")) != NULL)
   {
@@ -291,18 +288,22 @@ cupsCreateCredentials(
   {
     DEBUG_printf(("1cupsCreateCredentials: Unable to create public key and X.509 certificate file \"%s\": %s", crtfile, strerror(errno)));
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
-    gnutls_x509_crt_deinit(crt);
-    gnutls_x509_privkey_deinit(key);
-    return (false);
+    goto done;
   }
-
-  // Cleanup...
-  gnutls_x509_crt_deinit(crt);
-  gnutls_x509_privkey_deinit(key);
 
   DEBUG_puts("1cupsCreateCredentials: Successfully created credentials.");
 
-  return (true);
+  ret = true;
+
+  // Cleanup...
+  done:
+
+  if (crt)
+    gnutls_x509_crt_deinit(crt);
+  if (key)
+    gnutls_x509_privkey_deinit(key);
+
+  return (ret);
 }
 
 
@@ -330,20 +331,176 @@ cupsCreateCredentialsRequest(
     size_t             num_alt_names,	// I - Number of subject alternate names
     const char * const *alt_names)	// I - Subject Alternate Names
 {
-  (void)path;
-  (void)purpose;
-  (void)type;
-  (void)usage;
-  (void)organization;
-  (void)org_unit;
-  (void)locality;
-  (void)state_province;
-  (void)country;
-  (void)common_name;
-  (void)num_alt_names;
-  (void)alt_names;
+  bool			ret = false;	// Return value
+  gnutls_x509_crq_t	crq = NULL;	// Certificate request
+  gnutls_x509_privkey_t	key = NULL;	// Private/public key pair
+  char			temp[1024],	// Temporary directory name
+ 			csrfile[1024],	// Certificate signing request filename
+			keyfile[1024];	// Private key filename
+  unsigned		gnutls_usage = 0;// GNU TLS keyUsage bits
+  cups_file_t		*fp;		// Key/cert file
+  unsigned char		buffer[8192];	// Buffer for key/cert data
+  size_t		bytes;		// Number of bytes of data
+  int			status;		// GNU TLS status
 
-  return (false);
+
+  DEBUG_printf(("cupsCreateCredentialsRequest(path=\"%s\", purpose=0x%x, type=%d, usage=0x%x, organization=\"%s\", org_unit=\"%s\", locality=\"%s\", state_province=\"%s\", country=\"%s\", common_name=\"%s\", num_alt_names=%u, alt_names=%p)", path, purpose, type, usage, organization, org_unit, locality, state_province, country, common_name, (unsigned)num_alt_names, alt_names));
+
+  // Filenames...
+  if (!path)
+    path = http_default_path(temp, sizeof(temp));
+
+  if (!path || !common_name)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), 0);
+    goto done;
+  }
+
+  http_make_path(csrfile, sizeof(csrfile), path, common_name, "csr");
+  http_make_path(keyfile, sizeof(keyfile), path, common_name, "key");
+
+  // Create the encryption key...
+  DEBUG_puts("1cupsCreateCredentialsRequest: Creating key pair.");
+
+  key = gnutls_create_key(type);
+
+  DEBUG_puts("1cupsCreateCredentialsRequest: Key pair created.");
+
+  // Save it...
+  bytes = sizeof(buffer);
+
+  if ((result = gnutls_x509_privkey_export(key, GNUTLS_X509_FMT_PEM, buffer, &bytes)) < 0)
+  {
+    DEBUG_printf(("1cupsCreateCredentialsRequest: Unable to export private key: %s", gnutls_strerror(result)));
+    goto done;
+  }
+  else if ((fp = cupsFileOpen(keyfile, "w")) != NULL)
+  {
+    DEBUG_printf(("1cupsCreateCredentialsRequest: Writing private key to \"%s\".", keyfile));
+    cupsFileWrite(fp, (char *)buffer, bytes);
+    cupsFileClose(fp);
+  }
+  else
+  {
+    DEBUG_printf(("1cupsCreateCredentialsRequest: Unable to create private key file \"%s\": %s", keyfile, strerror(errno)));
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
+    goto done;
+  }
+
+  // Create the certificate...
+  DEBUG_puts("1cupsCreateCredentialsRequest: Generating X.509 certificate request.");
+
+  if (!organization)
+    organization = common_name;
+  if (!org_unit)
+    org_unit = "";
+  if (!locality)
+    locality = "Unknown";
+  if (!state_province)
+    state_province = "Unknown";
+  if (!country)
+    country = "US";
+
+  gnutls_x509_crq_init(&crq);
+  gnutls_x509_crq_set_dn_by_oid(crq, GNUTLS_OID_X520_COUNTRY_NAME, 0, country, (unsigned)strlen(country));
+  gnutls_x509_crq_set_dn_by_oid(crq, GNUTLS_OID_X520_COMMON_NAME, 0, hostname, (unsigned)strlen(hostname));
+  gnutls_x509_crq_set_dn_by_oid(crq, GNUTLS_OID_X520_ORGANIZATION_NAME, 0, organization, (unsigned)strlen(organization));
+  gnutls_x509_crq_set_dn_by_oid(crq, GNUTLS_OID_X520_ORGANIZATIONAL_UNIT_NAME, 0, org_unit, (unsigned)strlen(org_unit));
+  gnutls_x509_crq_set_dn_by_oid(crq, GNUTLS_OID_X520_STATE_OR_PROVINCE_NAME, 0, state_province, (unsigned)strlen(state_province));
+  gnutls_x509_crq_set_dn_by_oid(crq, GNUTLS_OID_X520_LOCALITY_NAME, 0, locality, (unsigned)strlen(locality));
+  gnutls_x509_crq_set_key(crq, key);
+  gnutls_x509_crq_set_subject_alt_name(crq, GNUTLS_SAN_DNSNAME, common_name, (unsigned)strlen(common_name), GNUTLS_FSAN_SET);
+  if (!strchr(common_name, '.'))
+  {
+    // Add common_name.local to the list, too...
+    char localname[256];                // hostname.local
+
+    snprintf(localname, sizeof(localname), "%s.local", common_name);
+    gnutls_x509_crq_set_subject_alt_name(crq, GNUTLS_SAN_DNSNAME, localname, (unsigned)strlen(localname), GNUTLS_FSAN_APPEND);
+  }
+  gnutls_x509_crq_set_subject_alt_name(crq, GNUTLS_SAN_DNSNAME, "localhost", 9, GNUTLS_FSAN_APPEND);
+  if (num_alt_names > 0)
+  {
+    size_t i;				// Looping var
+
+    for (i = 0; i < num_alt_names; i ++)
+    {
+      if (strcmp(alt_names[i], "localhost"))
+      {
+        gnutls_x509_crq_set_subject_alt_name(crq, GNUTLS_SAN_DNSNAME, alt_names[i], (unsigned)strlen(alt_names[i]), GNUTLS_FSAN_APPEND);
+      }
+    }
+  }
+
+  if (purpose & CUPS_CREDPURPOSE_SERVER_AUTH)
+    gnutls_x509_crq_set_key_purpose_oid(crq, GNUTLS_KP_TLS_WWW_SERVER, 0);
+  if (purpose & CUPS_CREDPURPOSE_CLIENT_AUTH)
+    gnutls_x509_crq_set_key_purpose_oid(crq, GNUTLS_KP_TLS_WWW_CLIENT, 0);
+  if (purpose & CUPS_CREDPURPOSE_CODE_SIGNING)
+    gnutls_x509_crq_set_key_purpose_oid(crq, GNUTLS_KP_CODE_SIGNING, 0);
+  if (purpose & CUPS_CREDPURPOSE_EMAIL_PROTECTION)
+    gnutls_x509_crq_set_key_purpose_oid(crq, GNUTLS_KP_EMAIL_PROTECTION, 0);
+  if (purpose & CUPS_CREDPURPOSE_OCSP_SIGNING)
+    gnutls_x509_crq_set_key_purpose_oid(crq, GNUTLS_KP_OCSP_SIGNING, 0);
+
+  if (usage & CUPS_CREDUSAGE_DIGITAL_SIGNATURE)
+    gnutls_usage |= GNUTLS_KEY_DIGITAL_SIGNATURE;
+  if (usage & CUPS_CREDUSAGE_NON_REPUDIATION)
+    gnutls_usage |= GNUTLS_KEY_NON_REPUDIATION;
+  if (usage & CUPS_CREDUSAGE_KEY_ENCIPHERMENT)
+    gnutls_usage |= GNUTLS_KEY_KEY_ENCIPHERMENT;
+  if (usage & CUPS_CREDUSAGE_DATA_ENCIPHERMENT)
+    gnutls_usage |= GNUTLS_KEY_DATA_ENCIPHERMENT;
+  if (usage & CUPS_CREDUSAGE_KEY_AGREEMENT)
+    gnutls_usage |= GNUTLS_KEY_KEY_AGREEMENT;
+  if (usage & CUPS_CREDUSAGE_KEY_CERT_SIGN)
+    gnutls_usage |= GNUTLS_KEY_KEY_CERT_SIGN;
+  if (usage & CUPS_CREDUSAGE_CRL_SIGN)
+    gnutls_usage |= GNUTLS_KEY_CRL_SIGN;
+  if (usage & CUPS_CREDUSAGE_ENCIPHER_ONLY)
+    gnutls_usage |= GNUTLS_KEY_ENCIPHER_ONLY;
+  if (usage & CUPS_CREDUSAGE_DECIPHER_ONLY)
+    gnutls_usage |= GNUTLS_KEY_DECIPHER_ONLY;
+
+  gnutls_x509_crq_set_key_usage(crq, gnutls_usage);
+  gnutls_x509_crq_set_version(crq, 3);
+
+  gnutls_x509_crq_sign2(crq, key, GNUTLS_DIG_SHA256, 0);
+
+  // Save it...
+  bytes = sizeof(buffer);
+  if ((result = gnutls_x509_crq_export(crq, GNUTLS_X509_FMT_PEM, buffer, &bytes)) < 0)
+  {
+    DEBUG_printf(("1cupsCreateCredentialsRequest: Unable to export public key and X.509 certificate request: %s", gnutls_strerror(result)));
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, gnutls_strerror(result), 0);
+    goto done;
+  }
+  else if ((fp = cupsFileOpen(crqfile, "w")) != NULL)
+  {
+    DEBUG_printf(("1cupsCreateCredentialsRequest: Writing public key and X.509 certificate request to \"%s\".", crtfile));
+    cupsFileWrite(fp, (char *)buffer, bytes);
+    cupsFileClose(fp);
+  }
+  else
+  {
+    DEBUG_printf(("1cupsCreateCredentialsRequest: Unable to create public key and X.509 certificate request file \"%s\": %s", crtfile, strerror(errno)));
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
+    goto done;
+  }
+
+  DEBUG_puts("1cupsCreateCredentialsRequest: Successfully created credentials request.");
+
+  ret = true;
+
+  // Cleanup...
+  done:
+
+  if (crq)
+    gnutls_x509_crq_deinit(crq);
+  if (key)
+    gnutls_x509_privkey_deinit(key);
+
+  return (ret);
 }
 
 
