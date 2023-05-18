@@ -341,7 +341,7 @@ cupsCreateCredentialsRequest(
   cups_file_t		*fp;		// Key/cert file
   unsigned char		buffer[8192];	// Buffer for key/cert data
   size_t		bytes;		// Number of bytes of data
-  int			status;		// GNU TLS status
+  int			result;		// GNU TLS status
 
 
   DEBUG_printf(("cupsCreateCredentialsRequest(path=\"%s\", purpose=0x%x, type=%d, usage=0x%x, organization=\"%s\", org_unit=\"%s\", locality=\"%s\", state_province=\"%s\", country=\"%s\", common_name=\"%s\", num_alt_names=%u, alt_names=%p)", path, purpose, type, usage, organization, org_unit, locality, state_province, country, common_name, (unsigned)num_alt_names, alt_names));
@@ -403,7 +403,7 @@ cupsCreateCredentialsRequest(
 
   gnutls_x509_crq_init(&crq);
   gnutls_x509_crq_set_dn_by_oid(crq, GNUTLS_OID_X520_COUNTRY_NAME, 0, country, (unsigned)strlen(country));
-  gnutls_x509_crq_set_dn_by_oid(crq, GNUTLS_OID_X520_COMMON_NAME, 0, hostname, (unsigned)strlen(hostname));
+  gnutls_x509_crq_set_dn_by_oid(crq, GNUTLS_OID_X520_COMMON_NAME, 0, common_name, (unsigned)strlen(common_name));
   gnutls_x509_crq_set_dn_by_oid(crq, GNUTLS_OID_X520_ORGANIZATION_NAME, 0, organization, (unsigned)strlen(organization));
   gnutls_x509_crq_set_dn_by_oid(crq, GNUTLS_OID_X520_ORGANIZATIONAL_UNIT_NAME, 0, org_unit, (unsigned)strlen(org_unit));
   gnutls_x509_crq_set_dn_by_oid(crq, GNUTLS_OID_X520_STATE_OR_PROVINCE_NAME, 0, state_province, (unsigned)strlen(state_province));
@@ -475,15 +475,15 @@ cupsCreateCredentialsRequest(
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, gnutls_strerror(result), 0);
     goto done;
   }
-  else if ((fp = cupsFileOpen(crqfile, "w")) != NULL)
+  else if ((fp = cupsFileOpen(csrfile, "w")) != NULL)
   {
-    DEBUG_printf(("1cupsCreateCredentialsRequest: Writing public key and X.509 certificate request to \"%s\".", crtfile));
+    DEBUG_printf(("1cupsCreateCredentialsRequest: Writing public key and X.509 certificate request to \"%s\".", csrfile));
     cupsFileWrite(fp, (char *)buffer, bytes);
     cupsFileClose(fp);
   }
   else
   {
-    DEBUG_printf(("1cupsCreateCredentialsRequest: Unable to create public key and X.509 certificate request file \"%s\": %s", crtfile, strerror(errno)));
+    DEBUG_printf(("1cupsCreateCredentialsRequest: Unable to create public key and X.509 certificate request file \"%s\": %s", csrfile, strerror(errno)));
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
     goto done;
   }
