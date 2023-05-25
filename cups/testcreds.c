@@ -455,7 +455,7 @@ do_unit_tests(void)
       if (data)
       {
         testBegin("cupsSignCredentialsRequest(altprinter)");
-        if (cupsSignCredentialsRequest(TEST_CERT_PATH, "altprinter", data, "_site_", CUPS_CREDPURPOSE_ALL, CUPS_CREDUSAGE_ALL, /*allowed_domain*/NULL, time(NULL) + 30 * 86400))
+        if (cupsSignCredentialsRequest(TEST_CERT_PATH, "altprinter", data, "_site_", CUPS_CREDPURPOSE_ALL, CUPS_CREDUSAGE_ALL, /*cb*/NULL, /*cb_data*/NULL, time(NULL) + 30 * 86400))
         {
           testEnd(true);
 	  free(data);

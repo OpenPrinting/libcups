@@ -283,6 +283,9 @@ typedef struct cups_size_s		//// Media information
 		top;			// Top margin in hundredths of millimeters
 } cups_size_t;
 
+typedef bool (*cups_cert_sign_cb_t)(const char *subject_alt_name, void *user_data);
+					// Certificate signing subjectAltName callback
+
 typedef bool (*cups_client_cert_cb_t)(http_t *http, void *tls, cups_array_t *distinguished_names, void *user_data);
 					// Client credentials callback
 
@@ -400,7 +403,7 @@ extern void		cupsSetServerCertCB(cups_server_cert_cb_t cb, void *user_data) _CUP
 extern bool		cupsSetServerCredentials(const char *path, const char *common_name, bool auto_create) _CUPS_PUBLIC;
 extern void		cupsSetUser(const char *user) _CUPS_PUBLIC;
 extern void		cupsSetUserAgent(const char *user_agent) _CUPS_PUBLIC;
-extern bool		cupsSignCredentialsRequest(const char *path, const char *common_name, const char *request, const char *root_name, cups_credpurpose_t allowed_purpose, cups_credusage_t allowed_usage, const char *allowed_domain, time_t expiration_date) _CUPS_PUBLIC;
+extern bool		cupsSignCredentialsRequest(const char *path, const char *common_name, const char *request, const char *root_name, cups_credpurpose_t allowed_purpose, cups_credusage_t allowed_usage, cups_cert_sign_cb_t cb, void *cb_data, time_t expiration_date) _CUPS_PUBLIC;
 extern http_status_t	cupsStartDestDocument(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, int job_id, const char *docname, const char *format, size_t num_options, cups_option_t *options, bool last_document) _CUPS_PUBLIC;
 extern int		cupsTempFd(const char *prefix, const char *suffix, char *filename, size_t len) _CUPS_PUBLIC;
 extern cups_file_t	*cupsTempFile(const char *prefix, const char *suffix, char *filename, size_t len) _CUPS_PUBLIC;

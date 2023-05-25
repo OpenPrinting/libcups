@@ -495,14 +495,15 @@ cupsCreateCredentialsRequest(
 
 bool					// O - `true` on success, `false` on failure
 cupsSignCredentialsRequest(
-    const char         *path,		// I - Directory path for certificate/key store or `NULL` for default
-    const char         *common_name,	// I - Common name to use
-    const char         *request,	// I - PEM-encoded CSR
-    const char         *root_name,	// I - Root certificate
-    cups_credpurpose_t allowed_purpose,	// I - Allowed credential purpose(s)
-    cups_credusage_t   allowed_usage,	// I - Allowed credential usage(s)
-    const char         *allowed_domain,	// I - Allowed domain name (beyond .local) or `NULL` for just .local
-    time_t             expiration_date)	// I - Certificate expiration date
+    const char          *path,		// I - Directory path for certificate/key store or `NULL` for default
+    const char          *common_name,	// I - Common name to use
+    const char          *request,	// I - PEM-encoded CSR
+    const char          *root_name,	// I - Root certificate
+    cups_credpurpose_t  allowed_purpose,// I - Allowed credential purpose(s)
+    cups_credusage_t    allowed_usage,	// I - Allowed credential usage(s)
+    cups_cert_sign_cb_t cb,		// I - subjectAltName callback or `NULL` to allow just .local
+    void                *cb_data,	// I - Callback data
+    time_t              expiration_date)// I - Certificate expiration date
 {
   bool		result = false;		// Return value
   X509		*cert = NULL;		// Certificate
@@ -518,18 +519,17 @@ cupsSignCredentialsRequest(
   ASN1_TIME	*notBefore,		// Initial date
 		*notAfter;		// Expiration date
   BIO		*bio;			// Output file
-#if 0
-  char		temp[1024],		// Temporary string
-		*tempptr;		// Pointer into temporary string
-  STACK_OF(X509_EXTENSION) *exts;	// Extensions
+  char		temp[1024];		// Temporary string
+//  char		*tempptr; 		// Pointer into temporary string
+  int		i,			// Looping var
+		num_exts;		// Number of extensions
+  STACK_OF(X509_EXTENSION) *exts = NULL;// Extensions
   X509_EXTENSION *ext;			// Current extension
-  unsigned	i;			// Looping var
-  cups_credpurpose_t purpose_bit;	// Current purpose
-  cups_credusage_t usage_bit;		// Current usage
-#endif // 0
+//  cups_credpurpose_t purpose_bit;	// Current purpose
+//  cups_credusage_t usage_bit;		// Current usage
 
 
-  DEBUG_printf(("cupsSignCredentialsRequest(path=\"%s\", common_name=\"%s\", request=\"%s\", root_name=\"%s\", allowed_purpose=0x%x, allowed_usage=0x%x, allowed_domain=\"%s\", expiration_date=%ld)", path, common_name, request, root_name, allowed_purpose, allowed_usage, allowed_domain, (long)expiration_date));
+  DEBUG_printf(("cupsSignCredentialsRequest(path=\"%s\", common_name=\"%s\", request=\"%s\", root_name=\"%s\", allowed_purpose=0x%x, allowed_usage=0x%x, cb=%p, cb_data=%p, expiration_date=%ld)", path, common_name, request, root_name, allowed_purpose, allowed_usage, cb, cb_data, (long)expiration_date));
 
   // Filenames...
   if (!path)
@@ -589,9 +589,32 @@ cupsSignCredentialsRequest(
 
   X509_set_pubkey(cert, X509_REQ_get_pubkey(crq));
 
-  X509_set_issuer_name(cert, X509_get_subject_name(root_cert));
   X509_set_subject_name(cert, X509_REQ_get_subject_name(crq));
   X509_set_version(cert, 2); // v3
+
+  // Copy/verify extensions...
+  exts     = X509_REQ_get_extensions(crq);
+  num_exts = sk_X509_EXTENSION_num(exts);
+
+  for (i = 0; i < num_exts; i ++)
+  {
+    // Get the extension object...
+    ASN1_OBJECT	*obj;			// Extension object
+
+    ext = sk_X509_EXTENSION_value(exts, i);
+    obj = X509_EXTENSION_get_object(ext);
+
+    // TODO: Use callback to verify subjectAltName values
+    i2t_ASN1_OBJECT(temp, (int)sizeof(temp), obj);
+    fprintf(stderr, "exts[%d]=\"%s\"\n", i, temp);
+
+    (void)cb;
+    (void)cb_data;
+
+    // If we get this far, the object is OK and we can add it...
+    if (!X509_add_ext(cert, ext, -1))
+      goto done;
+  }
 
   // Try loading a root certificate...
   http_make_path(root_crtfile, sizeof(root_crtfile), path, root_name ? root_name : "_site_", "crt");
@@ -625,6 +648,7 @@ cupsSignCredentialsRequest(
     goto done;
   }
 
+  X509_set_issuer_name(cert, X509_get_subject_name(root_cert));
   X509_sign(cert, root_key, EVP_sha256());
 
   // Save the certificate...
@@ -652,6 +676,8 @@ cupsSignCredentialsRequest(
   // Cleanup...
   done:
 
+  if (exts)
+    sk_X509_EXTENSION_pop_free(exts, X509_EXTENSION_free);
   if (crq)
     X509_REQ_free(crq);
   if (cert)
