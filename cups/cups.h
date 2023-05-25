@@ -140,7 +140,8 @@ enum cups_credpurpose_e			//// X.509 credential purposes
   CUPS_CREDPURPOSE_CODE_SIGNING = 0x04,		// codeSigning
   CUPS_CREDPURPOSE_EMAIL_PROTECTION = 0x08,	// emailProtection
   CUPS_CREDPURPOSE_TIME_STAMPING = 0x10,	// timeStamping
-  CUPS_CREDPURPOSE_OCSP_SIGNING = 0x20		// OCSPSigning
+  CUPS_CREDPURPOSE_OCSP_SIGNING = 0x20,		// OCSPSigning
+  CUPS_CREDPURPOSE_ALL = 0x3f			// All purposes
 };
 typedef unsigned cups_credpurpose_t;	//// Combined X.509 credential purposes for @link cupsCreateCredentials@ and @link cupsCreateCredentialsRequest@
 
@@ -167,7 +168,8 @@ enum cups_credusage_e			//// X.509 keyUsage flags
   CUPS_CREDUSAGE_ENCIPHER_ONLY = 0x080,		// encipherOnly
   CUPS_CREDUSAGE_DECIPHER_ONLY = 0x100,		// decipherOnly
   CUPS_CREDUSAGE_DEFAULT_CA = 0x061,		// Defaults for CA certs
-  CUPS_CREDUSAGE_DEFAULT_TLS = 0x005		// Defaults for TLS certs
+  CUPS_CREDUSAGE_DEFAULT_TLS = 0x005,		// Defaults for TLS certs
+  CUPS_CREDUSAGE_ALL = 0x1ff			// All keyUsage flags
 };
 typedef unsigned cups_credusage_t;	//// Combined X.509 keyUsage flags for @link cupsCreateCredentials@ and @link cupsCreateCredentialsRequest@
 
@@ -398,7 +400,7 @@ extern void		cupsSetServerCertCB(cups_server_cert_cb_t cb, void *user_data) _CUP
 extern bool		cupsSetServerCredentials(const char *path, const char *common_name, bool auto_create) _CUPS_PUBLIC;
 extern void		cupsSetUser(const char *user) _CUPS_PUBLIC;
 extern void		cupsSetUserAgent(const char *user_agent) _CUPS_PUBLIC;
-extern bool		cupsSignCredentialsRequest(const char *path, const char *common_name, const char *request, const char *root_name, time_t expiration_date) _CUPS_PUBLIC;
+extern bool		cupsSignCredentialsRequest(const char *path, const char *common_name, const char *request, const char *root_name, cups_credpurpose_t allowed_purpose, cups_credusage_t allowed_usage, const char *allowed_domain, time_t expiration_date) _CUPS_PUBLIC;
 extern http_status_t	cupsStartDestDocument(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, int job_id, const char *docname, const char *format, size_t num_options, cups_option_t *options, bool last_document) _CUPS_PUBLIC;
 extern int		cupsTempFd(const char *prefix, const char *suffix, char *filename, size_t len) _CUPS_PUBLIC;
 extern cups_file_t	*cupsTempFile(const char *prefix, const char *suffix, char *filename, size_t len) _CUPS_PUBLIC;

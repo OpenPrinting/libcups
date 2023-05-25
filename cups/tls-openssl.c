@@ -102,8 +102,11 @@ cupsCreateCredentials(
   X509		*cert;			// Certificate
   X509		*root_cert = NULL;	// Root certificate, if any
   EVP_PKEY	*root_key = NULL;	// Root private key, if any
-  char		root_crtfile[1024],	// Path to root certificate
-		root_keyfile[1024];	// Path to root private key
+  char		defpath[1024],		// Default path
+ 		crtfile[1024],		// Certificate filename
+		keyfile[1024],		// Private key filename
+		root_crtfile[1024],	// Root certificate filename
+		root_keyfile[1024];	// Root private key filename
   time_t	curtime;		// Current time
   X509_NAME	*name;			// Subject/issuer name
   ASN1_INTEGER	*serial;		// Serial number
@@ -111,9 +114,7 @@ cupsCreateCredentials(
 		*notAfter;		// Expiration date
   BIO		*bio;			// Output file
   char		temp[1024],		// Temporary string
-		*tempptr,		// Pointer into temporary string
- 		crtfile[1024],		// Certificate filename
-		keyfile[1024];		// Private key filename
+		*tempptr;		// Pointer into temporary string
   STACK_OF(X509_EXTENSION) *exts;	// Extensions
   X509_EXTENSION *ext;			// Current extension
   unsigned	i;			// Looping var
@@ -125,16 +126,13 @@ cupsCreateCredentials(
 
   // Filenames...
   if (!path)
-    path = http_default_path(temp, sizeof(temp));
+    path = http_default_path(defpath, sizeof(defpath));
 
   if (!path || !common_name)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), 0);
     return (false);
   }
-
-  http_make_path(crtfile, sizeof(crtfile), path, common_name, "crt");
-  http_make_path(keyfile, sizeof(keyfile), path, common_name, "key");
 
   // Create the encryption key...
   DEBUG_puts("1cupsCreateCredentials: Creating key pair.");
@@ -145,7 +143,7 @@ cupsCreateCredentials(
   DEBUG_puts("1cupsCreateCredentials: Key pair created.");
 
   // Create the X.509 certificate...
-  DEBUG_puts("1cupsCreateCredentials: Generating self-signed X.509 certificate.");
+  DEBUG_puts("1cupsCreateCredentials: Generating X.509 certificate.");
 
   if ((cert = X509_new()) == NULL)
   {
@@ -173,6 +171,10 @@ cupsCreateCredentials(
 
   X509_set_pubkey(cert, pkey);
 
+  name = openssl_create_name(organization, org_unit, locality, state_province, country, common_name);
+
+  X509_set_subject_name(cert, name);
+
   // Try loading a root certificate...
   http_make_path(root_crtfile, sizeof(root_crtfile), path, root_name ? root_name : "_site_", "crt");
   http_make_path(root_keyfile, sizeof(root_keyfile), path, root_name ? root_name : "_site_", "key");
@@ -198,15 +200,18 @@ cupsCreateCredentials(
       }
     }
 
+    if (!root_cert || !root_key)
+    {
+      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to load X.509 CA certificate and private key."), 1);
+      goto done;
+    }
   }
-
-  name = openssl_create_name(organization, org_unit, locality, state_province, country, common_name);
 
   if (root_cert)
     X509_set_issuer_name(cert, X509_get_subject_name(root_cert));
   else
     X509_set_issuer_name(cert, name);
-  X509_set_subject_name(cert, name);
+
   X509_NAME_free(name);
 
   exts = sk_X509_EXTENSION_new_null();
@@ -267,6 +272,9 @@ cupsCreateCredentials(
     X509_sign(cert, pkey, EVP_sha256());
 
   // Save them...
+  http_make_path(crtfile, sizeof(crtfile), path, common_name, "crt");
+  http_make_path(keyfile, sizeof(keyfile), path, common_name, "key");
+
   if ((bio = BIO_new_file(keyfile, "wb")) == NULL)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
@@ -487,19 +495,173 @@ cupsCreateCredentialsRequest(
 
 bool					// O - `true` on success, `false` on failure
 cupsSignCredentialsRequest(
-    const char *path,			// I - Directory path for certificate/key store or `NULL` for default
-    const char *common_name,		// I - Common name to use
-    const char *request,		// I - PEM-encoded CSR
-    const char *root_name,		// I - Root certificate
-    time_t     expiration_date)		// I - Certificate expiration date
+    const char         *path,		// I - Directory path for certificate/key store or `NULL` for default
+    const char         *common_name,	// I - Common name to use
+    const char         *request,	// I - PEM-encoded CSR
+    const char         *root_name,	// I - Root certificate
+    cups_credpurpose_t allowed_purpose,	// I - Allowed credential purpose(s)
+    cups_credusage_t   allowed_usage,	// I - Allowed credential usage(s)
+    const char         *allowed_domain,	// I - Allowed domain name (beyond .local) or `NULL` for just .local
+    time_t             expiration_date)	// I - Certificate expiration date
 {
-  (void)path;
-  (void)common_name;
-  (void)request;
-  (void)root_name;
-  (void)expiration_date;
+  bool		result = false;		// Return value
+  X509		*cert = NULL;		// Certificate
+  X509_REQ	*crq = NULL;		// Certificate request
+  X509		*root_cert = NULL;	// Root certificate, if any
+  EVP_PKEY	*root_key = NULL;	// Root private key, if any
+  char		defpath[1024],		// Default path
+		crtfile[1024],		// Certificate filename
+		root_crtfile[1024],	// Root certificate filename
+		root_keyfile[1024];	// Root private key filename
+  time_t	curtime;		// Current time
+  ASN1_INTEGER	*serial;		// Serial number
+  ASN1_TIME	*notBefore,		// Initial date
+		*notAfter;		// Expiration date
+  BIO		*bio;			// Output file
+#if 0
+  char		temp[1024],		// Temporary string
+		*tempptr;		// Pointer into temporary string
+  STACK_OF(X509_EXTENSION) *exts;	// Extensions
+  X509_EXTENSION *ext;			// Current extension
+  unsigned	i;			// Looping var
+  cups_credpurpose_t purpose_bit;	// Current purpose
+  cups_credusage_t usage_bit;		// Current usage
+#endif // 0
 
-  return (false);
+
+  DEBUG_printf(("cupsSignCredentialsRequest(path=\"%s\", common_name=\"%s\", request=\"%s\", root_name=\"%s\", allowed_purpose=0x%x, allowed_usage=0x%x, allowed_domain=\"%s\", expiration_date=%ld)", path, common_name, request, root_name, allowed_purpose, allowed_usage, allowed_domain, (long)expiration_date));
+
+  // Filenames...
+  if (!path)
+    path = http_default_path(defpath, sizeof(defpath));
+
+  if (!path || !common_name || !request)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), 0);
+    return (false);
+  }
+
+  // Import the X.509 certificate request...
+  DEBUG_puts("1cupsCreateCredentials: Importing X.509 certificate request.");
+  if ((bio = BIO_new_mem_buf(request, (int)strlen(request))) != NULL)
+  {
+    PEM_read_bio_X509_REQ(bio, &crq, /*cb*/NULL, /*u*/NULL);
+    BIO_free(bio);
+  }
+
+  if (!crq)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to import X.509 certificate request."), 1);
+    return (false);
+  }
+
+  if (X509_REQ_verify(crq, X509_REQ_get_pubkey(crq)) < 0)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to verify X.509 certificate request."), 1);
+    goto done;
+  }
+
+  // Create the X.509 certificate...
+  DEBUG_puts("1cupsSignCredentialsRequest: Generating X.509 certificate.");
+
+  if ((cert = X509_new()) == NULL)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create X.509 certificate."), 1);
+    goto done;
+  }
+
+  curtime = time(NULL);
+
+  notBefore = ASN1_TIME_new();
+  ASN1_TIME_set(notBefore, curtime);
+  X509_set_notBefore(cert, notBefore);
+  ASN1_TIME_free(notBefore);
+
+  notAfter  = ASN1_TIME_new();
+  ASN1_TIME_set(notAfter, expiration_date);
+  X509_set_notAfter(cert, notAfter);
+  ASN1_TIME_free(notAfter);
+
+  serial = ASN1_INTEGER_new();
+  ASN1_INTEGER_set(serial, (int)curtime);
+  X509_set_serialNumber(cert, serial);
+  ASN1_INTEGER_free(serial);
+
+  X509_set_pubkey(cert, X509_REQ_get_pubkey(crq));
+
+  X509_set_issuer_name(cert, X509_get_subject_name(root_cert));
+  X509_set_subject_name(cert, X509_REQ_get_subject_name(crq));
+  X509_set_version(cert, 2); // v3
+
+  // Try loading a root certificate...
+  http_make_path(root_crtfile, sizeof(root_crtfile), path, root_name ? root_name : "_site_", "crt");
+  http_make_path(root_keyfile, sizeof(root_keyfile), path, root_name ? root_name : "_site_", "key");
+
+  if (!access(root_crtfile, 0) && !access(root_keyfile, 0))
+  {
+    if ((bio = BIO_new_file(root_crtfile, "rb")) != NULL)
+    {
+      PEM_read_bio_X509(bio, &root_cert, /*cb*/NULL, /*u*/NULL);
+      BIO_free(bio);
+
+      if ((bio = BIO_new_file(root_keyfile, "rb")) != NULL)
+      {
+	PEM_read_bio_PrivateKey(bio, &root_key, /*cb*/NULL, /*u*/NULL);
+	BIO_free(bio);
+      }
+
+      if (!root_key)
+      {
+        // Only use root certificate if we have the key...
+        X509_free(root_cert);
+        root_cert = NULL;
+      }
+    }
+  }
+
+  if (!root_cert || !root_key)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to load X.509 CA certificate and private key."), 1);
+    goto done;
+  }
+
+  X509_sign(cert, root_key, EVP_sha256());
+
+  // Save the certificate...
+  http_make_path(crtfile, sizeof(crtfile), path, common_name, "crt");
+
+  if ((bio = BIO_new_file(crtfile, "wb")) == NULL)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
+    goto done;
+  }
+
+  if (!PEM_write_bio_X509(bio, cert))
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to write X.509 certificate."), 1);
+    BIO_free(bio);
+    goto done;
+  }
+
+  PEM_write_bio_X509(bio, root_cert);
+
+  BIO_free(bio);
+  result = true;
+  DEBUG_puts("1cupsSignRequest: Successfully created credentials.");
+
+  // Cleanup...
+  done:
+
+  if (crq)
+    X509_REQ_free(crq);
+  if (cert)
+    X509_free(cert);
+  if (root_cert)
+    X509_free(root_cert);
+  if (root_key)
+    EVP_PKEY_free(root_key);
+
+  return (result);
 }
 
 
