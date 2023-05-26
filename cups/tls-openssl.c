@@ -527,6 +527,9 @@ cupsSignCredentialsRequest(
   X509_EXTENSION *ext;			// Current extension
 //  cups_credpurpose_t purpose_bit;	// Current purpose
 //  cups_credusage_t usage_bit;		// Current usage
+  bool		saw_usage = false,	// Saw NID_key_usage?
+		saw_ext_usage = false,	// Saw NID_ext_key_usage?
+		saw_san = false;	// Saw NID_subject_alt_name?
 
 
   DEBUG_printf(("cupsSignCredentialsRequest(path=\"%s\", common_name=\"%s\", request=\"%s\", root_name=\"%s\", allowed_purpose=0x%x, allowed_usage=0x%x, cb=%p, cb_data=%p, expiration_date=%ld)", path, common_name, request, root_name, allowed_purpose, allowed_usage, cb, cb_data, (long)expiration_date));
@@ -604,16 +607,39 @@ cupsSignCredentialsRequest(
     ext = sk_X509_EXTENSION_value(exts, i);
     obj = X509_EXTENSION_get_object(ext);
 
-    // TODO: Use callback to verify subjectAltName values
-    i2t_ASN1_OBJECT(temp, (int)sizeof(temp), obj);
-    fprintf(stderr, "exts[%d]=\"%s\"\n", i, temp);
+    OBJ_obj2txt(temp, (int)sizeof(temp), obj, 0);
+    fprintf(stderr, "NID %d: %s\n", OBJ_obj2nid(obj), temp);
 
-    (void)cb;
-    (void)cb_data;
+    switch (OBJ_obj2nid(obj))
+    {
+      case NID_ext_key_usage :
+          saw_ext_usage = true;
+          break;
+
+      case NID_key_usage :
+          saw_usage = true;
+          break;
+
+      case NID_subject_alt_name :
+          saw_san = true;
+          // TODO: Use callback to validate subjectAltName values
+          break;
+
+      case NID_basic_constraints :
+	  // Ignore basicConstraints in request...
+	  continue;
+    }
 
     // If we get this far, the object is OK and we can add it...
     if (!X509_add_ext(cert, ext, -1))
       goto done;
+  }
+
+  // Add basic constraints for an "edge" certificate...
+  if ((ext = X509V3_EXT_conf_nid(/*conf*/NULL, /*ctx*/NULL, NID_basic_constraints, "critical,CA:FALSE,pathlen:0")) == NULL || !X509_add_ext(cert, ext, -1))
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to add extension to X.509 certificate."), 1);
+    goto done;
   }
 
   // Try loading a root certificate...
