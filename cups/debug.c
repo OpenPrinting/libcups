@@ -1,7 +1,7 @@
 /*
  * Debugging functions for CUPS.
  *
- * Copyright © 2022 by OpenPrinting.
+ * Copyright © 2022-2023 by OpenPrinting.
  * Copyright © 2008-2018 by Apple Inc.
  *
  * Licensed under Apache License v2.0.  See the file "LICENSE" for more
@@ -148,7 +148,6 @@ _cups_debug_printf(const char *format,	/* I - Printf-style format string */
   else if (buffer[bytes - 1] != '\n')
   {
     buffer[bytes++] = '\n';
-    buffer[bytes]   = '\0';
   }
 
  /*
@@ -381,7 +380,7 @@ _cups_safe_vsnprintf(
 
       if (*format == '%')
       {
-        if (bufptr < bufend)
+        if (bufptr && bufptr < bufend)
 	  *bufptr++ = *format;
         bytes ++;
         format ++;
@@ -493,7 +492,7 @@ _cups_safe_vsnprintf(
 
             bytes += (int)strlen(temp);
 
-            if (bufptr)
+            if (bufptr && bufptr < bufend)
 	    {
 	      cupsCopyString(bufptr, temp, (size_t)(bufend - bufptr));
 	      bufptr += strlen(bufptr);
@@ -523,7 +522,7 @@ _cups_safe_vsnprintf(
 
             bytes += (int)strlen(temp);
 
-	    if (bufptr)
+	    if (bufptr && bufptr < bufend)
 	    {
 	      cupsCopyString(bufptr, temp, (size_t)(bufend - bufptr));
 	      bufptr += strlen(bufptr);
@@ -538,7 +537,7 @@ _cups_safe_vsnprintf(
 
             bytes += (int)strlen(temp);
 
-	    if (bufptr)
+	    if (bufptr && bufptr < bufend)
 	    {
 	      cupsCopyString(bufptr, temp, (size_t)(bufend - bufptr));
 	      bufptr += strlen(bufptr);
@@ -548,10 +547,12 @@ _cups_safe_vsnprintf(
         case 'c' : /* Character or character array */
 	    bytes += width;
 
-	    if (bufptr)
+	    if (bufptr && bufptr < bufend)
 	    {
 	      if (width <= 1)
+	      {
 	        *bufptr++ = (char)va_arg(ap, int);
+	      }
 	      else
 	      {
 		if ((bufptr + width) > bufend)
@@ -566,6 +567,12 @@ _cups_safe_vsnprintf(
 	case 's' : /* String */
 	    if ((s = va_arg(ap, char *)) == NULL)
 	      s = "(null)";
+
+            if (!bufptr)
+	    {
+	      bytes += 2 * strlen(s);
+	      break;
+	    }
 
            /*
 	    * Copy the C string, replacing control chars and \ with
@@ -640,7 +647,7 @@ _cups_safe_vsnprintf(
     {
       bytes ++;
 
-      if (bufptr < bufend)
+      if (bufptr && bufptr < bufend)
         *bufptr++ = *format;
 
       format ++;
@@ -651,7 +658,8 @@ _cups_safe_vsnprintf(
   * Nul-terminate the string and return the number of characters needed.
   */
 
-  *bufptr = '\0';
+  if (bufptr)
+    *bufptr = '\0';
 
   return (bytes);
 }

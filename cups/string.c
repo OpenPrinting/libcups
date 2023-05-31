@@ -1,7 +1,7 @@
 /*
  * String functions for CUPS.
  *
- * Copyright © 2022 by OpenPrinting.
+ * Copyright © 2022-2023 by OpenPrinting.
  * Copyright © 2007-2019 by Apple Inc.
  * Copyright © 1997-2007 by Easy Software Products.
  *
@@ -141,6 +141,10 @@ cupsConcatString(char       *dst,	/* O - Destination string */
                  const char *src,	/* I - Source string */
 	         size_t     dstsize)	/* I - Size of destination string buffer */
 {
+  // Range check input...
+  if (!dst || !src || dstsize == 0)
+    return (0);
+
 #ifdef HAVE_STRLCAT
   return (strlcat(dst, src, dstsize));
 
@@ -149,10 +153,7 @@ cupsConcatString(char       *dst,	/* O - Destination string */
   size_t	dstlen;			/* Length of destination string */
 
 
- /*
-  * Figure out how much room is left...
-  */
-
+  // Figure out how much room is left...
   dstlen = strlen(dst);
 
   if (dstsize < (dstlen + 1))
@@ -160,16 +161,10 @@ cupsConcatString(char       *dst,	/* O - Destination string */
 
   dstsize -= dstlen + 1;
 
- /*
-  * Figure out how much room is needed...
-  */
-
+  // Figure out how much room is needed...
   srclen = strlen(src);
 
- /*
-  * Copy the appropriate amount...
-  */
-
+  // Copy the appropriate amount...
   if (srclen > dstsize)
     srclen = dstsize;
 
@@ -177,7 +172,7 @@ cupsConcatString(char       *dst,	/* O - Destination string */
   dst[dstlen + srclen] = '\0';
 
   return (dstlen + srclen);
-#endif /* HAVE_STRLCAT */
+#endif // HAVE_STRLCAT
 }
 
 
@@ -190,25 +185,22 @@ cupsCopyString(char       *dst,		/* O - Destination string */
                const char *src,		/* I - Source string */
 	       size_t     dstsize)	/* I - Size of destination string buffer */
 {
+  // Range check input...
+  if (!dst || !src || dstsize == 0)
+    return (0);
+
 #ifdef HAVE_STRLCPY
   return (strlcpy(dst, src, dstsize));
 
 #else
   size_t	srclen;			/* Length of source string */
 
-
- /*
-  * Figure out how much room is needed...
-  */
-
+  // Figure out how much room is needed...
   dstsize --;
 
   srclen = strlen(src);
 
- /*
-  * Copy the appropriate amount...
-  */
-
+  // Copy the appropriate amount...
   if (srclen > dstsize)
     srclen = dstsize;
 
@@ -216,7 +208,7 @@ cupsCopyString(char       *dst,		/* O - Destination string */
   dst[srclen] = '\0';
 
   return (srclen);
-#endif /* HAVE_STRLCPY */
+#endif // HAVE_STRLCPY
 }
 
 
