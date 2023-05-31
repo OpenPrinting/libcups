@@ -47,6 +47,7 @@ static int		tls_options = -1,// Options for TLS connections
 
 static char		*http_copy_file(const char *path, const char *common_name, const char *ext);
 static const char	*http_default_path(char *buffer, size_t bufsize);
+static bool		http_default_san_cb(const char *common_name, const char *subject_alt_name, void *data);
 static const char	*http_make_path(char *buffer, size_t bufsize, const char *dirname, const char *filename, const char *ext);
 static bool		http_save_file(const char *path, const char *common_name, const char *ext, const char *value);
 
@@ -493,6 +494,30 @@ http_default_path(
   DEBUG_printf(("1http_default_path: Using default path \"%s\".", buffer));
 
   return (buffer);
+}
+
+
+//
+// 'http_default_san_cb()' - Validate a subjectAltName value.
+//
+
+static bool				// O - `true` if OK, `false` otherwise
+http_default_san_cb(
+    const char *common_name,		// I - Common name value
+    const char *subject_alt_name,	// I - subjectAltName value
+    void       *data)			// I - Callback data (unused)
+{
+  size_t	common_len;		// Common name length
+
+
+  (void)data;
+
+  if (!_cups_strcasecmp(subject_alt_name, common_name) || !_cups_strcasecmp(subject_alt_name, "localhost"))
+    return (true);
+
+  common_len = strlen(common_name);
+
+  return (!_cups_strncasecmp(subject_alt_name, common_name, common_len) && subject_alt_name[common_len] == '.');
 }
 
 

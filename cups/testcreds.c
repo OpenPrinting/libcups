@@ -412,7 +412,7 @@ do_unit_tests(void)
 
   for (type = CUPS_CREDTYPE_DEFAULT; type <= CUPS_CREDTYPE_ECDSA_P521_SHA256; type ++)
   {
-    testBegin("cupsCreateCredentials(_site_, %s, no alt names, CA)", types[type]);
+    testBegin("cupsCreateCredentials(_site_, %s, CA)", types[type]);
     if (cupsCreateCredentials(TEST_CERT_PATH, true, CUPS_CREDPURPOSE_SERVER_AUTH, type, CUPS_CREDUSAGE_DEFAULT_TLS, "Organization", "Unit", "Locality", "Ontario", "CA", "_site_", 0, NULL, NULL, time(NULL) + 30 * 86400))
     {
       testEnd(true);
@@ -432,35 +432,69 @@ do_unit_tests(void)
       testEndMessage(false, "%s", cupsLastErrorString());
     }
 
-    testBegin("cupsCreateCredentials(printer, %s, alt names, signed by CA cert)", types[type]);
+    testBegin("cupsCreateCredentials(printer w/alt names, %s, signed by CA cert)", types[type]);
     if (cupsCreateCredentials(TEST_CERT_PATH, false, CUPS_CREDPURPOSE_SERVER_AUTH, type, CUPS_CREDUSAGE_DEFAULT_TLS, "Organization", "Unit", "Locality", "Ontario", "CA", "printer", sizeof(alt_names) / sizeof(alt_names[0]), alt_names, "_site_", time(NULL) + 30 * 86400))
       testEnd(true);
     else
       testEndMessage(false, "%s", cupsLastErrorString());
 
-    testBegin("cupsCreateCredentialsRequest(altprinter, %s, alt names)", types[type]);
+    testBegin("cupsCreateCredentialsRequest(altprinter w/alt names, %s)", types[type]);
     if (cupsCreateCredentialsRequest(TEST_CERT_PATH, CUPS_CREDPURPOSE_SERVER_AUTH, type, CUPS_CREDUSAGE_DEFAULT_TLS, "Organization", "Unit", "Locality", "Ontario", "CA", "altprinter", sizeof(alt_names) / sizeof(alt_names[0]), alt_names))
     {
       testEnd(true);
 
-      testBegin("cupsCopyCredentialsKey(altprinter)");
+      testBegin("cupsCopyCredentialsKey(altprinter w/alt names)");
       data = cupsCopyCredentialsKey(TEST_CERT_PATH, "altprinter");
       testEnd(data != NULL);
       free(data);
 
-      testBegin("cupsCopyCredentialsRequest(altprinter)");
+      testBegin("cupsCopyCredentialsRequest(altprinter w/alt names)");
       data = cupsCopyCredentialsRequest(TEST_CERT_PATH, "altprinter");
       testEnd(data != NULL);
 
       if (data)
       {
-        testBegin("cupsSignCredentialsRequest(altprinter)");
+        testBegin("cupsSignCredentialsRequest(altprinter w/alt names)");
+        if (cupsSignCredentialsRequest(TEST_CERT_PATH, "altprinter", data, "_site_", CUPS_CREDPURPOSE_ALL, CUPS_CREDUSAGE_ALL, /*cb*/NULL, /*cb_data*/NULL, time(NULL) + 30 * 86400))
+        {
+          testEndMessage(false, "Expected a failure");
+        }
+        else
+        {
+	  testEndMessage(true, "%s", cupsLastErrorString());
+        }
+
+        free(data);
+      }
+    }
+    else
+    {
+      testEndMessage(false, "%s", cupsLastErrorString());
+    }
+
+    testBegin("cupsCreateCredentialsRequest(altprinter w/o alt names, %s)", types[type]);
+    if (cupsCreateCredentialsRequest(TEST_CERT_PATH, CUPS_CREDPURPOSE_SERVER_AUTH, type, CUPS_CREDUSAGE_DEFAULT_TLS, "Organization", "Unit", "Locality", "Ontario", "CA", "altprinter", 0, NULL))
+    {
+      testEnd(true);
+
+      testBegin("cupsCopyCredentialsKey(altprinter w/o alt names)");
+      data = cupsCopyCredentialsKey(TEST_CERT_PATH, "altprinter");
+      testEnd(data != NULL);
+      free(data);
+
+      testBegin("cupsCopyCredentialsRequest(altprinter w/o alt names)");
+      data = cupsCopyCredentialsRequest(TEST_CERT_PATH, "altprinter");
+      testEnd(data != NULL);
+
+      if (data)
+      {
+        testBegin("cupsSignCredentialsRequest(altprinter w/o alt names)");
         if (cupsSignCredentialsRequest(TEST_CERT_PATH, "altprinter", data, "_site_", CUPS_CREDPURPOSE_ALL, CUPS_CREDUSAGE_ALL, /*cb*/NULL, /*cb_data*/NULL, time(NULL) + 30 * 86400))
         {
           testEnd(true);
 	  free(data);
 
-	  testBegin("cupsCopyCredentialsKey(altprinter)");
+	  testBegin("cupsCopyCredentialsKey(altprinter w/o alt names)");
 	  data = cupsCopyCredentialsKey(TEST_CERT_PATH, "altprinter");
 	  testEnd(data != NULL);
         }

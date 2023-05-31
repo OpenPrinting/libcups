@@ -33,7 +33,7 @@ static bool		openssl_add_ext(STACK_OF(X509_EXTENSION) *exts, int nid, const char
 static X509		*openssl_create_credential(http_credential_t *credential);
 static X509_NAME	*openssl_create_name(const char *organization, const char *org_unit, const char *locality, const char *state_province, const char *country, const char *common_name);
 static EVP_PKEY		*openssl_create_key(cups_credtype_t type);
-static bool		openssl_create_san(STACK_OF(X509_EXTENSION) *exts, const char *common_name, size_t num_alt_names, const char * const *alt_names);
+static X509_EXTENSION	*openssl_create_san(const char *common_name, size_t num_alt_names, const char * const *alt_names);
 static time_t		openssl_get_date(X509 *cert, int which);
 //static void		openssl_load_crl(void);
 
@@ -224,8 +224,10 @@ cupsCreateCredentials(
   else
   {
     // Add extension with DNS names and free buffer for GENERAL_NAME
-    if (!openssl_create_san(exts, common_name, num_alt_names, alt_names))
+    if ((ext = openssl_create_san(common_name, num_alt_names, alt_names)) == NULL)
       goto done;
+
+    sk_X509_EXTENSION_push(exts, ext);
 
     // Add extensions that are required to make Chrome happy...
     openssl_add_ext(exts, NID_basic_constraints, "critical,CA:FALSE,pathlen:0");
@@ -354,6 +356,7 @@ cupsCreateCredentialsRequest(
   EVP_PKEY	*pkey;			// Key pair
   X509_REQ	*csr;			// Certificate signing request
   X509_NAME	*name;			// Subject/issuer name
+  X509_EXTENSION *ext;			// X509 extension
   BIO		*bio;			// Output file
   char		temp[1024],		// Temporary directory name
 		*tempptr,		// Pointer into temporary string
@@ -409,8 +412,10 @@ cupsCreateCredentialsRequest(
   // Add extension with DNS names and free buffer for GENERAL_NAME
   exts = sk_X509_EXTENSION_new_null();
 
-  if (!openssl_create_san(exts, common_name, num_alt_names, alt_names))
+  if ((ext = openssl_create_san(common_name, num_alt_names, alt_names)) == NULL)
     goto done;
+
+  sk_X509_EXTENSION_push(exts, ext);
 
   cupsCopyString(temp, "critical", sizeof(temp));
   for (tempptr = temp + strlen(temp), i = 0, usage_bit = CUPS_CREDUSAGE_DIGITAL_SIGNATURE; i < (sizeof(tls_usage_strings) / sizeof(tls_usage_strings[0])); i ++, usage_bit *= 2)
@@ -495,15 +500,15 @@ cupsCreateCredentialsRequest(
 
 bool					// O - `true` on success, `false` on failure
 cupsSignCredentialsRequest(
-    const char          *path,		// I - Directory path for certificate/key store or `NULL` for default
-    const char          *common_name,	// I - Common name to use
-    const char          *request,	// I - PEM-encoded CSR
-    const char          *root_name,	// I - Root certificate
-    cups_credpurpose_t  allowed_purpose,// I - Allowed credential purpose(s)
-    cups_credusage_t    allowed_usage,	// I - Allowed credential usage(s)
-    cups_cert_sign_cb_t cb,		// I - subjectAltName callback or `NULL` to allow just .local
-    void                *cb_data,	// I - Callback data
-    time_t              expiration_date)// I - Certificate expiration date
+    const char         *path,		// I - Directory path for certificate/key store or `NULL` for default
+    const char         *common_name,	// I - Common name to use
+    const char         *request,	// I - PEM-encoded CSR
+    const char         *root_name,	// I - Root certificate
+    cups_credpurpose_t allowed_purpose,	// I - Allowed credential purpose(s)
+    cups_credusage_t   allowed_usage,	// I - Allowed credential usage(s)
+    cups_cert_san_cb_t cb,		// I - subjectAltName callback or `NULL` to allow just .local
+    void               *cb_data,	// I - Callback data
+    time_t             expiration_date)	// I - Certificate expiration date
 {
   bool		result = false;		// Return value
   X509		*cert = NULL;		// Certificate
@@ -520,13 +525,12 @@ cupsSignCredentialsRequest(
 		*notAfter;		// Expiration date
   BIO		*bio;			// Output file
   char		temp[1024];		// Temporary string
-//  char		*tempptr; 		// Pointer into temporary string
-  int		i,			// Looping var
+  int		i, j,			// Looping vars
 		num_exts;		// Number of extensions
   STACK_OF(X509_EXTENSION) *exts = NULL;// Extensions
   X509_EXTENSION *ext;			// Current extension
-//  cups_credpurpose_t purpose_bit;	// Current purpose
-//  cups_credusage_t usage_bit;		// Current usage
+  cups_credpurpose_t purpose;		// Current purpose
+  cups_credusage_t usage;		// Current usage
   bool		saw_usage = false,	// Saw NID_key_usage?
 		saw_ext_usage = false,	// Saw NID_ext_key_usage?
 		saw_san = false;	// Saw NID_subject_alt_name?
@@ -543,6 +547,9 @@ cupsSignCredentialsRequest(
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), 0);
     return (false);
   }
+
+  if (!cb)
+    cb = http_default_san_cb;
 
   // Import the X.509 certificate request...
   DEBUG_puts("1cupsCreateCredentials: Importing X.509 certificate request.");
@@ -602,36 +609,155 @@ cupsSignCredentialsRequest(
   for (i = 0; i < num_exts; i ++)
   {
     // Get the extension object...
-    ASN1_OBJECT	*obj;			// Extension object
+    bool		add_ext = false;	// Add this extension?
+    ASN1_OBJECT		*obj;			// Extension object
+    ASN1_OCTET_STRING	*extdata;		// Extension data string
+    unsigned char	*data = NULL;		// Extension data bytes
+    int			datalen;		// Length of extension data
 
-    ext = sk_X509_EXTENSION_value(exts, i);
-    obj = X509_EXTENSION_get_object(ext);
+    ext     = sk_X509_EXTENSION_value(exts, i);
+    obj     = X509_EXTENSION_get_object(ext);
+    extdata = X509_EXTENSION_get_data(ext);
+    datalen = i2d_ASN1_OCTET_STRING(extdata, &data);
 
-    OBJ_obj2txt(temp, (int)sizeof(temp), obj, 0);
-    fprintf(stderr, "NID %d: %s\n", OBJ_obj2nid(obj), temp);
+#ifdef DEBUG
+    char *tempptr;				// Pointer into string
+
+    for (j = 0, tempptr = temp; j < datalen; j ++, tempptr += 2)
+      snprintf(tempptr, sizeof(temp) - (size_t)(tempptr - temp), "%02X", data[j]);
+
+    DEBUG_printf(("1cupsSignCredentialsRequest: EXT%d=%s", OBJ_obj2nid(obj), temp));
+#endif // DEBUG
 
     switch (OBJ_obj2nid(obj))
     {
       case NID_ext_key_usage :
+          add_ext       = true;
           saw_ext_usage = true;
+
+          if (datalen < 12 || data[2] != 0x30 || data[3] != (datalen - 4))
+          {
+            _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad keyUsage extension in X.509 certificate request."), 1);
+	    goto done;
+          }
+
+          for (purpose = 0, j = 4; j < datalen; j += data[j + 1] + 2)
+          {
+            if (data[j] != 0x06 || data[j + 1] != 8 || memcmp(data + j + 2, "+\006\001\005\005\007\003", 7))
+            {
+	      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad keyUsage extension in X.509 certificate request."), 1);
+	      goto done;
+            }
+
+            switch (data[j + 9])
+            {
+              case 1 :
+                  purpose |= CUPS_CREDPURPOSE_SERVER_AUTH;
+                  break;
+              case 2 :
+                  purpose |= CUPS_CREDPURPOSE_CLIENT_AUTH;
+                  break;
+              case 3 :
+                  purpose |= CUPS_CREDPURPOSE_CODE_SIGNING;
+                  break;
+              case 4 :
+                  purpose |= CUPS_CREDPURPOSE_EMAIL_PROTECTION;
+                  break;
+              case 8 :
+                  purpose |= CUPS_CREDPURPOSE_TIME_STAMPING;
+                  break;
+              case 9 :
+                  purpose |= CUPS_CREDPURPOSE_OCSP_SIGNING;
+                  break;
+	      default :
+		  _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad keyUsage extension in X.509 certificate request."), 1);
+		  goto done;
+            }
+          }
+
+          DEBUG_printf(("1cupsSignCredentialsRequest: purpose=0x%04x", purpose));
+
+          if (purpose & ~allowed_purpose)
+          {
+            _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad keyUsage extension in X.509 certificate request."), 1);
+	    goto done;
+          }
           break;
 
       case NID_key_usage :
+          add_ext   = true;
           saw_usage = true;
+
+          if (datalen < 6 || datalen > 7 || data[2] != 0x03 || data[3] != (datalen - 4))
+          {
+            _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad extKeyUsage extension in X.509 certificate request."), 1);
+	    goto done;
+          }
+
+          usage = 0;
+          if (data[5] & 0x80)
+	    usage |= CUPS_CREDUSAGE_DIGITAL_SIGNATURE;
+          if (data[5] & 0x40)
+	    usage |= CUPS_CREDUSAGE_NON_REPUDIATION;
+          if (data[5] & 0x20)
+	    usage |= CUPS_CREDUSAGE_KEY_ENCIPHERMENT;
+          if (data[5] & 0x10)
+	    usage |= CUPS_CREDUSAGE_DATA_ENCIPHERMENT;
+          if (data[5] & 0x08)
+	    usage |= CUPS_CREDUSAGE_KEY_AGREEMENT;
+          if (data[5] & 0x04)
+	    usage |= CUPS_CREDUSAGE_KEY_CERT_SIGN;
+          if (data[5] & 0x02)
+	    usage |= CUPS_CREDUSAGE_CRL_SIGN;
+          if (data[5] & 0x01)
+	    usage |= CUPS_CREDUSAGE_ENCIPHER_ONLY;
+          if (datalen == 7 && (data[6] & 0x80))
+	    usage |= CUPS_CREDUSAGE_DECIPHER_ONLY;
+
+          DEBUG_printf(("1cupsSignCredentialsRequest: usage=0x%04x", usage));
+
+          if (usage & ~allowed_usage)
+          {
+            _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad extKeyUsage extension in X.509 certificate request."), 1);
+	    goto done;
+          }
           break;
 
       case NID_subject_alt_name :
+          add_ext = true;
           saw_san = true;
-          // TODO: Use callback to validate subjectAltName values
-          break;
 
-      case NID_basic_constraints :
-	  // Ignore basicConstraints in request...
-	  continue;
+          if (datalen < 4 || data[2] != 0x30 || data[3] != (datalen - 4))
+          {
+            _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad subjectAltName extension in X.509 certificate request."), 1);
+	    goto done;
+          }
+
+          // Parse the SAN values (there should be an easier/standard OpenSSL API to do this!)
+          for (j = 4, datalen -= 2; j < datalen; j += data[j + 1] + 2)
+          {
+            if (data[j] == 0x82 && data[j + 1])
+            {
+              // GENERAL_STRING for DNS
+              memcpy(temp, data + j + 2, data[j + 1]);
+              temp[data[j + 1]] = '\0';
+
+              DEBUG_printf(("1cupsSignCredentialsRequest: SAN %s", temp));
+
+              if (!(cb)(common_name, temp, cb_data))
+              {
+                _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Validation of subjectAltName in X.509 certificate request failed."), 1);
+                goto done;
+              }
+	    }
+          }
+          break;
     }
 
+    OPENSSL_free(data);
+
     // If we get this far, the object is OK and we can add it...
-    if (!X509_add_ext(cert, ext, -1))
+    if (add_ext && !X509_add_ext(cert, ext, -1))
       goto done;
   }
 
@@ -640,6 +766,34 @@ cupsSignCredentialsRequest(
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to add extension to X.509 certificate."), 1);
     goto done;
+  }
+
+  // Add key usage extensions as needed...
+  if (!saw_usage)
+  {
+    if ((ext = X509V3_EXT_conf_nid(/*conf*/NULL, /*ctx*/NULL, NID_key_usage, "critical,digitalSignature,keyEncipherment")) == NULL || !X509_add_ext(cert, ext, -1))
+    {
+      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to add extension to X.509 certificate."), 1);
+      goto done;
+    }
+  }
+
+  if (!saw_ext_usage)
+  {
+    if ((ext = X509V3_EXT_conf_nid(/*conf*/NULL, /*ctx*/NULL, NID_ext_key_usage, tls_usage_strings[0])) == NULL || !X509_add_ext(cert, ext, -1))
+    {
+      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to add extension to X.509 certificate."), 1);
+      goto done;
+    }
+  }
+
+  if (!saw_san)
+  {
+    if ((ext = openssl_create_san(common_name, /*num_alt_names*/0, /*alt_names*/NULL)) == NULL || !X509_add_ext(cert, ext, -1))
+    {
+      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to add extension to X.509 certificate."), 1);
+      goto done;
+    }
   }
 
   // Try loading a root certificate...
@@ -1747,9 +1901,8 @@ openssl_create_name(
 // 'openssl_create_san()' - Create a list of subjectAltName values for a certificate/signing request.
 //
 
-static bool				// O - `true` on success, `false` otherwise
+static X509_EXTENSION *			// O - Extension
 openssl_create_san(
-    STACK_OF(X509_EXTENSION) *exts,	// I - Extensions
     const char         *common_name,	// I - Common name
     size_t             num_alt_names,	// I - Number of alternate names
     const char * const *alt_names)	// I - List of alternate names
@@ -1788,7 +1941,7 @@ openssl_create_san(
   }
 
   // Return the stack
-  return (openssl_add_ext(exts, NID_subject_alt_name, temp));
+  return (X509V3_EXT_conf_nid(/*conf*/NULL, /*ctx*/NULL, NID_subject_alt_name, temp));
 }
 
 
