@@ -76,7 +76,7 @@ cupsCreateCredentials(
   size_t		bytes;		// Number of bytes of data
   unsigned char		serial[4];	// Serial number buffer
   time_t		curtime;	// Current time
-  int			result;		// Result of GNU TLS calls
+  int			err;		// Result of GNU TLS calls
 
 
   DEBUG_printf(("cupsCreateCredentials(path=\"%s\", ca_cert=%s, purpose=0x%x, type=%d, usage=0x%x, organization=\"%s\", org_unit=\"%s\", locality=\"%s\", state_province=\"%s\", country=\"%s\", common_name=\"%s\", num_alt_names=%u, alt_names=%p, root_name=\"%s\", expiration_date=%ld)", path, ca_cert ? "true" : "false", purpose, type, usage, organization, org_unit, locality, state_province, country, common_name, (unsigned)num_alt_names, alt_names, root_name, (long)expiration_date));
@@ -104,10 +104,10 @@ cupsCreateCredentials(
   // Save it...
   bytes = sizeof(buffer);
 
-  if ((result = gnutls_x509_privkey_export(key, GNUTLS_X509_FMT_PEM, buffer, &bytes)) < 0)
+  if ((err = gnutls_x509_privkey_export(key, GNUTLS_X509_FMT_PEM, buffer, &bytes)) < 0)
   {
-    DEBUG_printf(("1cupsCreateCredentials: Unable to export private key: %s", gnutls_strerror(result)));
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, gnutls_strerror(result), 0);
+    DEBUG_printf(("1cupsCreateCredentials: Unable to export private key: %s", gnutls_strerror(err)));
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, gnutls_strerror(err), 0);
     goto done;
   }
   else if ((fp = cupsFileOpen(keyfile, "w")) != NULL)
@@ -272,10 +272,10 @@ cupsCreateCredentials(
 
   // Save it...
   bytes = sizeof(buffer);
-  if ((result = gnutls_x509_crt_export(crt, GNUTLS_X509_FMT_PEM, buffer, &bytes)) < 0)
+  if ((err = gnutls_x509_crt_export(crt, GNUTLS_X509_FMT_PEM, buffer, &bytes)) < 0)
   {
-    DEBUG_printf(("1cupsCreateCredentials: Unable to export public key and X.509 certificate: %s", gnutls_strerror(result)));
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, gnutls_strerror(result), 0);
+    DEBUG_printf(("1cupsCreateCredentials: Unable to export public key and X.509 certificate: %s", gnutls_strerror(err)));
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, gnutls_strerror(err), 0);
     goto done;
   }
   else if ((fp = cupsFileOpen(crtfile, "w")) != NULL)
@@ -341,7 +341,7 @@ cupsCreateCredentialsRequest(
   cups_file_t		*fp;		// Key/cert file
   unsigned char		buffer[8192];	// Buffer for key/cert data
   size_t		bytes;		// Number of bytes of data
-  int			result;		// GNU TLS status
+  int			err;		// GNU TLS status
 
 
   DEBUG_printf(("cupsCreateCredentialsRequest(path=\"%s\", purpose=0x%x, type=%d, usage=0x%x, organization=\"%s\", org_unit=\"%s\", locality=\"%s\", state_province=\"%s\", country=\"%s\", common_name=\"%s\", num_alt_names=%u, alt_names=%p)", path, purpose, type, usage, organization, org_unit, locality, state_province, country, common_name, (unsigned)num_alt_names, alt_names));
@@ -369,9 +369,9 @@ cupsCreateCredentialsRequest(
   // Save it...
   bytes = sizeof(buffer);
 
-  if ((result = gnutls_x509_privkey_export(key, GNUTLS_X509_FMT_PEM, buffer, &bytes)) < 0)
+  if ((err = gnutls_x509_privkey_export(key, GNUTLS_X509_FMT_PEM, buffer, &bytes)) < 0)
   {
-    DEBUG_printf(("1cupsCreateCredentialsRequest: Unable to export private key: %s", gnutls_strerror(result)));
+    DEBUG_printf(("1cupsCreateCredentialsRequest: Unable to export private key: %s", gnutls_strerror(err)));
     goto done;
   }
   else if ((fp = cupsFileOpen(keyfile, "w")) != NULL)
@@ -469,10 +469,10 @@ cupsCreateCredentialsRequest(
 
   // Save it...
   bytes = sizeof(buffer);
-  if ((result = gnutls_x509_crq_export(crq, GNUTLS_X509_FMT_PEM, buffer, &bytes)) < 0)
+  if ((err = gnutls_x509_crq_export(crq, GNUTLS_X509_FMT_PEM, buffer, &bytes)) < 0)
   {
-    DEBUG_printf(("1cupsCreateCredentialsRequest: Unable to export public key and X.509 certificate request: %s", gnutls_strerror(result)));
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, gnutls_strerror(result), 0);
+    DEBUG_printf(("1cupsCreateCredentialsRequest: Unable to export public key and X.509 certificate request: %s", gnutls_strerror(err)));
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, gnutls_strerror(err), 0);
     goto done;
   }
   else if ((fp = cupsFileOpen(csrfile, "w")) != NULL)
@@ -542,7 +542,6 @@ cupsSignCredentialsRequest(
   size_t		bytes;		// Number of bytes of data
   unsigned char		serial[4];	// Serial number buffer
   time_t		curtime;	// Current time
-  int			result;		// Result of GNU TLS calls
 
 
   DEBUG_printf(("cupsSignCredentialsRequest(path=\"%s\", common_name=\"%s\", request=\"%s\", root_name=\"%s\", allowed_purpose=0x%x, allowed_usage=0x%x, cb=%p, cb_data=%p, expiration_date=%ld)", path, common_name, request, root_name, allowed_purpose, allowed_usage, cb, cb_data, (long)expiration_date));
@@ -582,7 +581,9 @@ cupsSignCredentialsRequest(
   serial[3] = (unsigned char)(curtime);
 
   gnutls_x509_crt_init(&crt);
+  gnutls_x509_crt_set_crq(crt, crq);
 
+#if 0
   tempsize = sizeof(temp) - 1;
   if (gnutls_x509_crq_get_dn_by_oid(crq, GNUTLS_OID_X520_COUNTRY_NAME, 0, 0, temp, &tempsize) >= 0)
     temp[tempsize] = '\0';
@@ -619,8 +620,8 @@ cupsSignCredentialsRequest(
   else
     cupsCopyString(temp, "Unknown", sizeof(temp));
   gnutls_x509_crt_set_dn_by_oid(crt, GNUTLS_OID_X520_LOCALITY_NAME, 0, temp, strlen(temp));
+#endif // 0
 
-//  gnutls_x509_crt_set_key(crt, key);
   gnutls_x509_crt_set_serial(crt, serial, sizeof(serial));
   gnutls_x509_crt_set_activation_time(crt, curtime);
   gnutls_x509_crt_set_expiration_time(crt, expiration_date);
@@ -641,7 +642,7 @@ cupsSignCredentialsRequest(
     if (type != GNUTLS_SAN_DNSNAME || (cb)(common_name, temp, cb_data))
     {
       // Good subjectAltName
-      gnutls_x509_crt_set_subject_alt_name(crt, type, temp, (unsigned)strlen(temp), i ? GNUTLS_FSAN_APPEND : GNUTLS_FSAN_SET);
+//      gnutls_x509_crt_set_subject_alt_name(crt, type, temp, (unsigned)strlen(temp), i ? GNUTLS_FSAN_APPEND : GNUTLS_FSAN_SET);
     }
     else
     {
@@ -676,6 +677,7 @@ cupsSignCredentialsRequest(
     goto done;
   }
 
+#if 0
   if (purpose == 0 || (purpose & CUPS_CREDPURPOSE_SERVER_AUTH))
     gnutls_x509_crt_set_key_purpose_oid(crt, GNUTLS_KP_TLS_WWW_SERVER, 0);
   if (purpose & CUPS_CREDPURPOSE_CLIENT_AUTH)
@@ -686,6 +688,7 @@ cupsSignCredentialsRequest(
     gnutls_x509_crt_set_key_purpose_oid(crt, GNUTLS_KP_EMAIL_PROTECTION, 0);
   if (purpose & CUPS_CREDPURPOSE_OCSP_SIGNING)
     gnutls_x509_crt_set_key_purpose_oid(crt, GNUTLS_KP_OCSP_SIGNING, 0);
+#endif // 0
 
   if (gnutls_x509_crq_get_key_usage(crq, &gnutls_usage, NULL) < 0)
   {
@@ -723,7 +726,7 @@ cupsSignCredentialsRequest(
       goto done;
     }
   }
-  gnutls_x509_crt_set_key_usage(crt, gnutls_usage);
+//  gnutls_x509_crt_set_key_usage(crt, gnutls_usage);
 
   gnutls_x509_crt_set_version(crt, 3);
 
@@ -782,10 +785,10 @@ cupsSignCredentialsRequest(
   http_make_path(crtfile, sizeof(crtfile), path, common_name, "crt");
 
   bytes = sizeof(buffer);
-  if ((result = gnutls_x509_crt_export(crt, GNUTLS_X509_FMT_PEM, buffer, &bytes)) < 0)
+  if ((err = gnutls_x509_crt_export(crt, GNUTLS_X509_FMT_PEM, buffer, &bytes)) < 0)
   {
-    DEBUG_printf(("1cupsSignCredentialsRequest: Unable to export public key and X.509 certificate: %s", gnutls_strerror(result)));
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, gnutls_strerror(result), 0);
+    DEBUG_printf(("1cupsSignCredentialsRequest: Unable to export public key and X.509 certificate: %s", gnutls_strerror(err)));
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, gnutls_strerror(err), 0);
     goto done;
   }
   else if ((fp = cupsFileOpen(crtfile, "w")) != NULL)
@@ -1186,7 +1189,7 @@ static gnutls_x509_crt_t			// O - Certificate
 gnutls_create_credential(
     http_credential_t *credential)		// I - Credential
 {
-  int			result;			// Result from GNU TLS
+  int			err;			// Result from GNU TLS
   gnutls_x509_crt_t	cert;			// Certificate
   gnutls_datum_t	datum;			// Data record
 
@@ -1196,18 +1199,18 @@ gnutls_create_credential(
   if (!credential)
     return (NULL);
 
-  if ((result = gnutls_x509_crt_init(&cert)) < 0)
+  if ((err = gnutls_x509_crt_init(&cert)) < 0)
   {
-    DEBUG_printf(("4gnutls_create_credential: init error: %s", gnutls_strerror(result)));
+    DEBUG_printf(("4gnutls_create_credential: init error: %s", gnutls_strerror(err)));
     return (NULL);
   }
 
   datum.data = credential->data;
   datum.size = credential->datalen;
 
-  if ((result = gnutls_x509_crt_import(cert, &datum, GNUTLS_X509_FMT_DER)) < 0)
+  if ((err = gnutls_x509_crt_import(cert, &datum, GNUTLS_X509_FMT_DER)) < 0)
   {
-    DEBUG_printf(("4gnutls_create_credential: import error: %s", gnutls_strerror(result)));
+    DEBUG_printf(("4gnutls_create_credential: import error: %s", gnutls_strerror(err)));
 
     gnutls_x509_crt_deinit(cert);
     return (NULL);
