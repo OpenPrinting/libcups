@@ -314,10 +314,15 @@ span.string {
 <li><a href="#cupsCondInit">cupsCondInit</a></li>
 <li><a href="#cupsCondWait">cupsCondWait</a></li>
 <li><a href="#cupsConnectDest">cupsConnectDest</a></li>
+<li><a href="#cupsCopyCredentials">cupsCopyCredentials</a></li>
+<li><a href="#cupsCopyCredentialsKey">cupsCopyCredentialsKey</a></li>
+<li><a href="#cupsCopyCredentialsRequest">cupsCopyCredentialsRequest</a></li>
 <li><a href="#cupsCopyDest">cupsCopyDest</a></li>
 <li><a href="#cupsCopyDestConflicts">cupsCopyDestConflicts</a></li>
 <li><a href="#cupsCopyDestInfo">cupsCopyDestInfo</a></li>
 <li><a href="#cupsCopyString">cupsCopyString</a></li>
+<li><a href="#cupsCreateCredentials">cupsCreateCredentials</a></li>
+<li><a href="#cupsCreateCredentialsRequest">cupsCreateCredentialsRequest</a></li>
 <li><a href="#cupsCreateDestJob">cupsCreateDestJob</a></li>
 <li><a href="#cupsDNSSDAssembleFullName">cupsDNSSDAssembleFullName</a></li>
 <li><a href="#cupsDNSSDBrowseDelete">cupsDNSSDBrowseDelete</a></li>
@@ -414,9 +419,12 @@ span.string {
 <li><a href="#cupsGetServer">cupsGetServer</a></li>
 <li><a href="#cupsGetUser">cupsGetUser</a></li>
 <li><a href="#cupsGetUserAgent">cupsGetUserAgent</a></li>
+<li><a href="#cupsHMACData">cupsHMACData</a></li>
 <li><a href="#cupsHashData">cupsHashData</a></li>
 <li><a href="#cupsHashString">cupsHashString</a></li>
 <li><a href="#cupsJSONDelete">cupsJSONDelete</a></li>
+<li><a href="#cupsJSONExportFile">cupsJSONExportFile</a></li>
+<li><a href="#cupsJSONExportString">cupsJSONExportString</a></li>
 <li><a href="#cupsJSONFind">cupsJSONFind</a></li>
 <li><a href="#cupsJSONGetChild">cupsJSONGetChild</a></li>
 <li><a href="#cupsJSONGetCount">cupsJSONGetCount</a></li>
@@ -426,14 +434,30 @@ span.string {
 <li><a href="#cupsJSONGetSibling">cupsJSONGetSibling</a></li>
 <li><a href="#cupsJSONGetString">cupsJSONGetString</a></li>
 <li><a href="#cupsJSONGetType">cupsJSONGetType</a></li>
-<li><a href="#cupsJSONLoadFile">cupsJSONLoadFile</a></li>
-<li><a href="#cupsJSONLoadString">cupsJSONLoadString</a></li>
+<li><a href="#cupsJSONImportFile">cupsJSONImportFile</a></li>
+<li><a href="#cupsJSONImportString">cupsJSONImportString</a></li>
+<li><a href="#cupsJSONImportURL">cupsJSONImportURL</a></li>
 <li><a href="#cupsJSONNew">cupsJSONNew</a></li>
 <li><a href="#cupsJSONNewKey">cupsJSONNewKey</a></li>
 <li><a href="#cupsJSONNewNumber">cupsJSONNewNumber</a></li>
 <li><a href="#cupsJSONNewString">cupsJSONNewString</a></li>
-<li><a href="#cupsJSONSaveFile">cupsJSONSaveFile</a></li>
-<li><a href="#cupsJSONSaveString">cupsJSONSaveString</a></li>
+<li><a href="#cupsJWTDelete">cupsJWTDelete</a></li>
+<li><a href="#cupsJWTExportString">cupsJWTExportString</a></li>
+<li><a href="#cupsJWTGetAlgorithm">cupsJWTGetAlgorithm</a></li>
+<li><a href="#cupsJWTGetClaimNumber">cupsJWTGetClaimNumber</a></li>
+<li><a href="#cupsJWTGetClaimString">cupsJWTGetClaimString</a></li>
+<li><a href="#cupsJWTGetClaimType">cupsJWTGetClaimType</a></li>
+<li><a href="#cupsJWTGetClaimValue">cupsJWTGetClaimValue</a></li>
+<li><a href="#cupsJWTGetClaims">cupsJWTGetClaims</a></li>
+<li><a href="#cupsJWTHasValidSignature">cupsJWTHasValidSignature</a></li>
+<li><a href="#cupsJWTImportString">cupsJWTImportString</a></li>
+<li><a href="#cupsJWTMakePrivateKey">cupsJWTMakePrivateKey</a></li>
+<li><a href="#cupsJWTMakePublicKey">cupsJWTMakePublicKey</a></li>
+<li><a href="#cupsJWTNew">cupsJWTNew</a></li>
+<li><a href="#cupsJWTSetClaimNumber">cupsJWTSetClaimNumber</a></li>
+<li><a href="#cupsJWTSetClaimString">cupsJWTSetClaimString</a></li>
+<li><a href="#cupsJWTSetClaimValue">cupsJWTSetClaimValue</a></li>
+<li><a href="#cupsJWTSign">cupsJWTSign</a></li>
 <li><a href="#cupsLangAddStrings">cupsLangAddStrings</a></li>
 <li><a href="#cupsLangDefault">cupsLangDefault</a></li>
 <li><a href="#cupsLangFind">cupsLangFind</a></li>
@@ -487,8 +511,10 @@ span.string {
 <li><a href="#cupsSetPasswordCB">cupsSetPasswordCB</a></li>
 <li><a href="#cupsSetServer">cupsSetServer</a></li>
 <li><a href="#cupsSetServerCertCB">cupsSetServerCertCB</a></li>
+<li><a href="#cupsSetServerCredentials">cupsSetServerCredentials</a></li>
 <li><a href="#cupsSetUser">cupsSetUser</a></li>
 <li><a href="#cupsSetUserAgent">cupsSetUserAgent</a></li>
+<li><a href="#cupsSignCredentialsRequest">cupsSignCredentialsRequest</a></li>
 <li><a href="#cupsStartDestDocument">cupsStartDestDocument</a></li>
 <li><a href="#cupsTempFd">cupsTempFd</a></li>
 <li><a href="#cupsTempFile">cupsTempFile</a></li>
@@ -526,7 +552,12 @@ span.string {
 <li><a href="#httpClose">httpClose</a></li>
 <li><a href="#httpCompareCredentials">httpCompareCredentials</a></li>
 <li><a href="#httpConnect">httpConnect</a></li>
+<li><a href="#httpCopyCredentials">httpCopyCredentials</a></li>
 <li><a href="#httpCreateCredentials">httpCreateCredentials</a></li>
+<li><a href="#httpCredentialsAreValidForName">httpCredentialsAreValidForName</a></li>
+<li><a href="#httpCredentialsGetExpiration">httpCredentialsGetExpiration</a></li>
+<li><a href="#httpCredentialsGetTrust">httpCredentialsGetTrust</a></li>
+<li><a href="#httpCredentialsString">httpCredentialsString</a></li>
 <li><a href="#httpDecode64">httpDecode64</a></li>
 <li><a href="#httpEncode64">httpEncode64</a></li>
 <li><a href="#httpError">httpError</a></li>
@@ -560,12 +591,14 @@ span.string {
 <li><a href="#httpInitialize">httpInitialize</a></li>
 <li><a href="#httpIsChunked">httpIsChunked</a></li>
 <li><a href="#httpIsEncrypted">httpIsEncrypted</a></li>
+<li><a href="#httpLoadCredentials">httpLoadCredentials</a></li>
 <li><a href="#httpPeek">httpPeek</a></li>
 <li><a href="#httpRead">httpRead</a></li>
 <li><a href="#httpReadRequest">httpReadRequest</a></li>
 <li><a href="#httpReconnect">httpReconnect</a></li>
 <li><a href="#httpResolveHostname">httpResolveHostname</a></li>
 <li><a href="#httpResolveURI">httpResolveURI</a></li>
+<li><a href="#httpSaveCredentials">httpSaveCredentials</a></li>
 <li><a href="#httpSeparateURI">httpSeparateURI</a></li>
 <li><a href="#httpSetAuthString">httpSetAuthString</a></li>
 <li><a href="#httpSetBlocking">httpSetBlocking</a></li>
@@ -718,12 +751,17 @@ span.string {
 <li><a href="#cups_array_cb_t">cups_array_cb_t</a></li>
 <li><a href="#cups_array_t">cups_array_t</a></li>
 <li><a href="#cups_bool_t">cups_bool_t</a></li>
+<li><a href="#cups_cert_san_cb_t">cups_cert_san_cb_t</a></li>
 <li><a href="#cups_client_cert_cb_t">cups_client_cert_cb_t</a></li>
 <li><a href="#cups_cond_t">cups_cond_t</a></li>
+<li><a href="#cups_credpurpose_t">cups_credpurpose_t</a></li>
+<li><a href="#cups_credtype_t">cups_credtype_t</a></li>
+<li><a href="#cups_credusage_t">cups_credusage_t</a></li>
 <li><a href="#cups_cspace_t">cups_cspace_t</a></li>
 <li><a href="#cups_cut_t">cups_cut_t</a></li>
 <li><a href="#cups_dentry_t">cups_dentry_t</a></li>
 <li><a href="#cups_dest_cb_t">cups_dest_cb_t</a></li>
+<li><a href="#cups_dest_flags_t">cups_dest_flags_t</a></li>
 <li><a href="#cups_dest_t">cups_dest_t</a></li>
 <li><a href="#cups_dinfo_t">cups_dinfo_t</a></li>
 <li><a href="#cups_dir_t">cups_dir_t</a></li>
@@ -745,7 +783,10 @@ span.string {
 <li><a href="#cups_jog_t">cups_jog_t</a></li>
 <li><a href="#cups_json_t">cups_json_t</a></li>
 <li><a href="#cups_jtype_t">cups_jtype_t</a></li>
+<li><a href="#cups_jwa_t">cups_jwa_t</a></li>
+<li><a href="#cups_jwt_t">cups_jwt_t</a></li>
 <li><a href="#cups_lang_t">cups_lang_t</a></li>
+<li><a href="#cups_media_flags_t">cups_media_flags_t</a></li>
 <li><a href="#cups_mediapos_t">cups_mediapos_t</a></li>
 <li><a href="#cups_mutex_t">cups_mutex_t</a></li>
 <li><a href="#cups_oauth_cb_t">cups_oauth_cb_t</a></li>
@@ -813,14 +854,20 @@ span.string {
 <li><a href="#ENUMERATIONS">Enumerations</a><ul class="subcontents">
 <li><a href="#cups_adv_e">cups_adv_e</a></li>
 <li><a href="#cups_bool_e">cups_bool_e</a></li>
+<li><a href="#cups_credpurpose_e">cups_credpurpose_e</a></li>
+<li><a href="#cups_credtype_e">cups_credtype_e</a></li>
+<li><a href="#cups_credusage_e">cups_credusage_e</a></li>
 <li><a href="#cups_cspace_e">cups_cspace_e</a></li>
 <li><a href="#cups_cut_e">cups_cut_e</a></li>
+<li><a href="#cups_dest_flags_e">cups_dest_flags_e</a></li>
 <li><a href="#cups_dnssd_flags_e">cups_dnssd_flags_e</a></li>
 <li><a href="#cups_dnssd_rrtype_e">cups_dnssd_rrtype_e</a></li>
 <li><a href="#cups_edge_e">cups_edge_e</a></li>
 <li><a href="#cups_encoding_e">cups_encoding_e</a></li>
 <li><a href="#cups_jog_e">cups_jog_e</a></li>
 <li><a href="#cups_jtype_e">cups_jtype_e</a></li>
+<li><a href="#cups_jwa_e">cups_jwa_e</a></li>
+<li><a href="#cups_media_flags_e">cups_media_flags_e</a></li>
 <li><a href="#cups_mediapos_e">cups_mediapos_e</a></li>
 <li><a href="#cups_order_e">cups_order_e</a></li>
 <li><a href="#cups_orient_e">cups_orient_e</a></li>
@@ -2470,6 +2517,45 @@ returned connection.<br>
 The caller can pass <code>CUPS_DEST_FLAGS_DEVICE</code> for the &quot;flags&quot; argument to
 connect directly to the device associated with the destination.  Otherwise,
 the connection is made to the CUPS scheduler associated with the destination.</p>
+<h3 class="function"><a id="cupsCopyCredentials">cupsCopyCredentials</a></h3>
+<p class="description"></p>
+<p class="code">
+char *cupsCopyCredentials(const char *path, const char *common_name);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>path</th>
+<td class="description">Directory path for certificate/key store or <code>NULL</code> for default</td></tr>
+<tr><th>common_name</th>
+<td class="description">Common name</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Copy the X.509 certificate chain to a string.</p>
+<h3 class="function"><a id="cupsCopyCredentialsKey">cupsCopyCredentialsKey</a></h3>
+<p class="description"></p>
+<p class="code">
+char *cupsCopyCredentialsKey(const char *path, const char *common_name);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>path</th>
+<td class="description">Directory path for certificate/key store or <code>NULL</code> for default</td></tr>
+<tr><th>common_name</th>
+<td class="description">Common name</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Copy the private key to a string.</p>
+<h3 class="function"><a id="cupsCopyCredentialsRequest">cupsCopyCredentialsRequest</a></h3>
+<p class="description"></p>
+<p class="code">
+char *cupsCopyCredentialsRequest(const char *path, const char *common_name);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>path</th>
+<td class="description">Directory path for certificate/key store or <code>NULL</code> for default</td></tr>
+<tr><th>common_name</th>
+<td class="description">Common name</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Copy the X.509 certificate signing request to a string.</p>
 <h3 class="function"><a id="cupsCopyDest">cupsCopyDest</a></h3>
 <p class="description">Copy a destination.</p>
 <p class="code">
@@ -2568,6 +2654,238 @@ size_t cupsCopyString(char *dst, const char *src, size_t dstsize);</p>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Length of string</p>
+<h3 class="function"><a id="cupsCreateCredentials">cupsCreateCredentials</a></h3>
+<p class="description">Make an X.509 certificate and private key pair.</p>
+<p class="code">
+bool cupsCreateCredentials(const char *path, bool ca_cert, <a href="#cups_credpurpose_t">cups_credpurpose_t</a> purpose, <a href="#cups_credtype_t">cups_credtype_t</a> type, <a href="#cups_credusage_t">cups_credusage_t</a> usage, const char *organization, const char *org_unit, const char *locality, const char *state_province, const char *country, const char *common_name, size_t num_alt_names, const char *const *alt_names, const char *root_name, time_t expiration_date);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>path</th>
+<td class="description">Directory path for certificate/key store or <code>NULL</code> for default</td></tr>
+<tr><th>ca_cert</th>
+<td class="description"><code>true</code> to create a CA certificate, <code>false</code> for a client/server certificate</td></tr>
+<tr><th>purpose</th>
+<td class="description">Credential purposes</td></tr>
+<tr><th>type</th>
+<td class="description">Credential type</td></tr>
+<tr><th>usage</th>
+<td class="description">Credential usages</td></tr>
+<tr><th>organization</th>
+<td class="description">Organization or <code>NULL</code> to use common name</td></tr>
+<tr><th>org_unit</th>
+<td class="description">Organizational unit or <code>NULL</code> for none</td></tr>
+<tr><th>locality</th>
+<td class="description">City/town or <code>NULL</code> for &quot;Unknown&quot;</td></tr>
+<tr><th>state_province</th>
+<td class="description">State/province or <code>NULL</code> for &quot;Unknown&quot;</td></tr>
+<tr><th>country</th>
+<td class="description">Country or <code>NULL</code> for locale-based default</td></tr>
+<tr><th>common_name</th>
+<td class="description">Common name</td></tr>
+<tr><th>num_alt_names</th>
+<td class="description">Number of subject alternate names</td></tr>
+<tr><th>alt_names</th>
+<td class="description">Subject Alternate Names</td></tr>
+<tr><th>root_name</th>
+<td class="description">Root certificate/domain name or <code>NULL</code> for site/self-signed</td></tr>
+<tr><th>expiration_date</th>
+<td class="description">Expiration date</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description"><code>true</code> on success, <code>false</code> on failure</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function creates an X.509 certificate and private key pair.  The
+certificate and key are stored in the directory &quot;path&quot; or, if &quot;path&quot; is
+<code>NULL</code>, in a per-user or system-wide (when running as root) certificate/key
+store.  The generated certificate is signed by the named root certificate or,
+if &quot;root_name&quot; is <code>NULL</code>, a site-wide default root certificate.  When
+&quot;root_name&quot; is <code>NULL</code> and there is no site-wide default root certificate, a
+self-signed certificate is generated instead.<br>
+<br>
+The &quot;ca_cert&quot; argument specifies whether a CA certificate should be created.<br>
+<br>
+The &quot;purpose&quot; argument specifies the purpose(s) used for the credentials as a
+bitwise OR of the following constants:
+
+</p><ul>
+<li><code>CUPS_CREDPURPOSE_SERVER_AUTH</code> for validating TLS servers,
+</li>
+<li><code>CUPS_CREDPURPOSE_CLIENT_AUTH</code> for validating TLS clients,
+</li>
+<li><code>CUPS_CREDPURPOSE_CODE_SIGNING</code> for validating compiled code,
+</li>
+<li><code>CUPS_CREDPURPOSE_EMAIL_PROTECTION</code> for validating email messages,
+</li>
+<li><code>CUPS_CREDPURPOSE_TIME_STAMPING</code> for signing timestamps to objects, and/or
+</li>
+<li><code>CUPS_CREDPURPOSE_OCSP_SIGNING</code> for Online Certificate Status Protocol
+  message signing.</li>
+</ul>
+<p class="discussion">The &quot;type&quot; argument specifies the type of credentials using one of the
+following constants:
+
+</p><ul>
+<li><code>CUPS_CREDTYPE_DEFAULT</code>: default type (RSA-3072 or P-384),
+</li>
+<li><code>CUPS_CREDTYPE_RSA_2048_SHA256</code>: RSA with 2048-bit keys and SHA-256 hash,
+</li>
+<li><code>CUPS_CREDTYPE_RSA_3072_SHA256</code>: RSA with 3072-bit keys and SHA-256 hash,
+</li>
+<li><code>CUPS_CREDTYPE_RSA_4096_SHA256</code>: RSA with 4096-bit keys and SHA-256 hash,
+</li>
+<li><code>CUPS_CREDTYPE_ECDSA_P256_SHA256</code>: ECDSA using the P-256 curve with SHA-256 hash,
+</li>
+<li><code>CUPS_CREDTYPE_ECDSA_P384_SHA256</code>: ECDSA using the P-384 curve with SHA-256 hash, or
+</li>
+<li><code>CUPS_CREDTYPE_ECDSA_P521_SHA256</code>: ECDSA using the P-521 curve with SHA-256 hash.</li>
+</ul>
+<p class="discussion">The &quot;usage&quot; argument specifies the usage(s) for the credentials as a bitwise
+OR of the following constants:
+
+</p><ul>
+<li><code>CUPS_CREDUSAGE_DIGITAL_SIGNATURE</code>: digital signatures,
+</li>
+<li><code>CUPS_CREDUSAGE_NON_REPUDIATION</code>: non-repudiation/content commitment,
+</li>
+<li><code>CUPS_CREDUSAGE_KEY_ENCIPHERMENT</code>: key encipherment,
+</li>
+<li><code>CUPS_CREDUSAGE_DATA_ENCIPHERMENT</code>: data encipherment,
+</li>
+<li><code>CUPS_CREDUSAGE_KEY_AGREEMENT</code>: key agreement,
+</li>
+<li><code>CUPS_CREDUSAGE_KEY_CERT_SIGN</code>: key certicate signing,
+</li>
+<li><code>CUPS_CREDUSAGE_CRL_SIGN</code>: certificate revocation list signing,
+</li>
+<li><code>CUPS_CREDUSAGE_ENCIPHER_ONLY</code>: encipherment only,
+</li>
+<li><code>CUPS_CREDUSAGE_DECIPHER_ONLY</code>: decipherment only,
+</li>
+<li><code>CUPS_CREDUSAGE_DEFAULT_CA</code>: defaults for CA certificates,
+</li>
+<li><code>CUPS_CREDUSAGE_DEFAULT_TLS</code>: defaults for TLS certificates, and/or
+</li>
+<li><code>CUPS_CREDUSAGE_ALL</code>: all usages.</li>
+</ul>
+<p class="discussion">The &quot;organization&quot;, &quot;org_unit&quot;, &quot;locality&quot;, &quot;state_province&quot;, and &quot;country&quot;
+arguments specify information about the identity and geolocation of the
+issuer.<br>
+<br>
+The &quot;common_name&quot; argument specifies the common name and the &quot;num_alt_names&quot;
+and &quot;alt_names&quot; arguments specify a list of DNS hostnames for the
+certificate.<br>
+<br>
+The &quot;expiration_date&quot; argument specifies the expiration date and time as a
+Unix <code>time_t</code> value in seconds.</p>
+<h3 class="function"><a id="cupsCreateCredentialsRequest">cupsCreateCredentialsRequest</a></h3>
+<p class="description">Make an X.509 Certificate Signing Request.</p>
+<p class="code">
+bool cupsCreateCredentialsRequest(const char *path, <a href="#cups_credpurpose_t">cups_credpurpose_t</a> purpose, <a href="#cups_credtype_t">cups_credtype_t</a> type, <a href="#cups_credusage_t">cups_credusage_t</a> usage, const char *organization, const char *org_unit, const char *locality, const char *state_province, const char *country, const char *common_name, size_t num_alt_names, const char *const *alt_names);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>path</th>
+<td class="description">Directory path for certificate/key store or <code>NULL</code> for default</td></tr>
+<tr><th>purpose</th>
+<td class="description">Credential purposes</td></tr>
+<tr><th>type</th>
+<td class="description">Credential type</td></tr>
+<tr><th>usage</th>
+<td class="description">Credential usages</td></tr>
+<tr><th>organization</th>
+<td class="description">Organization or <code>NULL</code> to use common name</td></tr>
+<tr><th>org_unit</th>
+<td class="description">Organizational unit or <code>NULL</code> for none</td></tr>
+<tr><th>locality</th>
+<td class="description">City/town or <code>NULL</code> for &quot;Unknown&quot;</td></tr>
+<tr><th>state_province</th>
+<td class="description">State/province or <code>NULL</code> for &quot;Unknown&quot;</td></tr>
+<tr><th>country</th>
+<td class="description">Country or <code>NULL</code> for locale-based default</td></tr>
+<tr><th>common_name</th>
+<td class="description">Common name</td></tr>
+<tr><th>num_alt_names</th>
+<td class="description">Number of subject alternate names</td></tr>
+<tr><th>alt_names</th>
+<td class="description">Subject Alternate Names</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description"><code>true</code> on success, <code>false</code> on error</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function creates an X.509 certificate signing request (CSR) and
+associated private key.  The CSR and key are stored in the directory &quot;path&quot;
+or, if &quot;path&quot; is <code>NULL</code>, in a per-user or system-wide (when running as root)
+certificate/key store.<br>
+<br>
+The &quot;purpose&quot; argument specifies the purpose(s) used for the credentials as a
+bitwise OR of the following constants:
+
+</p><ul>
+<li><code>CUPS_CREDPURPOSE_SERVER_AUTH</code> for validating TLS servers,
+</li>
+<li><code>CUPS_CREDPURPOSE_CLIENT_AUTH</code> for validating TLS clients,
+</li>
+<li><code>CUPS_CREDPURPOSE_CODE_SIGNING</code> for validating compiled code,
+</li>
+<li><code>CUPS_CREDPURPOSE_EMAIL_PROTECTION</code> for validating email messages,
+</li>
+<li><code>CUPS_CREDPURPOSE_TIME_STAMPING</code> for signing timestamps to objects, and/or
+</li>
+<li><code>CUPS_CREDPURPOSE_OCSP_SIGNING</code> for Online Certificate Status Protocol
+  message signing.</li>
+</ul>
+<p class="discussion">The &quot;type&quot; argument specifies the type of credentials using one of the
+following constants:
+
+</p><ul>
+<li><code>CUPS_CREDTYPE_DEFAULT</code>: default type (RSA-3072 or P-384),
+</li>
+<li><code>CUPS_CREDTYPE_RSA_2048_SHA256</code>: RSA with 2048-bit keys and SHA-256 hash,
+</li>
+<li><code>CUPS_CREDTYPE_RSA_3072_SHA256</code>: RSA with 3072-bit keys and SHA-256 hash,
+</li>
+<li><code>CUPS_CREDTYPE_RSA_4096_SHA256</code>: RSA with 4096-bit keys and SHA-256 hash,
+</li>
+<li><code>CUPS_CREDTYPE_ECDSA_P256_SHA256</code>: ECDSA using the P-256 curve with SHA-256 hash,
+</li>
+<li><code>CUPS_CREDTYPE_ECDSA_P384_SHA256</code>: ECDSA using the P-384 curve with SHA-256 hash, or
+</li>
+<li><code>CUPS_CREDTYPE_ECDSA_P521_SHA256</code>: ECDSA using the P-521 curve with SHA-256 hash.</li>
+</ul>
+<p class="discussion">The &quot;usage&quot; argument specifies the usage(s) for the credentials as a bitwise
+OR of the following constants:
+
+</p><ul>
+<li><code>CUPS_CREDUSAGE_DIGITAL_SIGNATURE</code>: digital signatures,
+</li>
+<li><code>CUPS_CREDUSAGE_NON_REPUDIATION</code>: non-repudiation/content commitment,
+</li>
+<li><code>CUPS_CREDUSAGE_KEY_ENCIPHERMENT</code>: key encipherment,
+</li>
+<li><code>CUPS_CREDUSAGE_DATA_ENCIPHERMENT</code>: data encipherment,
+</li>
+<li><code>CUPS_CREDUSAGE_KEY_AGREEMENT</code>: key agreement,
+</li>
+<li><code>CUPS_CREDUSAGE_KEY_CERT_SIGN</code>: key certicate signing,
+</li>
+<li><code>CUPS_CREDUSAGE_CRL_SIGN</code>: certificate revocation list signing,
+</li>
+<li><code>CUPS_CREDUSAGE_ENCIPHER_ONLY</code>: encipherment only,
+</li>
+<li><code>CUPS_CREDUSAGE_DECIPHER_ONLY</code>: decipherment only,
+</li>
+<li><code>CUPS_CREDUSAGE_DEFAULT_CA</code>: defaults for CA certificates,
+</li>
+<li><code>CUPS_CREDUSAGE_DEFAULT_TLS</code>: defaults for TLS certificates, and/or
+</li>
+<li><code>CUPS_CREDUSAGE_ALL</code>: all usages.</li>
+</ul>
+<p class="discussion">The &quot;organization&quot;, &quot;org_unit&quot;, &quot;locality&quot;, &quot;state_province&quot;, and &quot;country&quot;
+arguments specify information about the identity and geolocation of the
+issuer.<br>
+<br>
+The &quot;common_name&quot; argument specifies the common name and the &quot;num_alt_names&quot;
+and &quot;alt_names&quot; arguments specify a list of DNS hostnames for the
+certificate.</p>
 <h3 class="function"><a id="cupsCreateDestJob">cupsCreateDestJob</a></h3>
 <p class="description">Create a job on a destination.</p>
 <p class="code">
@@ -3757,9 +4075,11 @@ are done with the form variables.</p>
 <h3 class="function"><a id="cupsFormEncode">cupsFormEncode</a></h3>
 <p class="description">Encode options as URL-encoded form data.</p>
 <p class="code">
-char *cupsFormEncode(size_t num_vars, <a href="#cups_option_t">cups_option_t</a> *vars);</p>
+char *cupsFormEncode(const char *url, size_t num_vars, <a href="#cups_option_t">cups_option_t</a> *vars);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
+<tr><th>url</th>
+<td class="description">URL or <code>NULL</code> for none</td></tr>
 <tr><th>num_vars</th>
 <td class="description">Number of variables</td></tr>
 <tr><th>vars</th>
@@ -3768,8 +4088,8 @@ char *cupsFormEncode(size_t num_vars, <a href="#cups_option_t">cups_option_t</a>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">URL-encoded form data</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">This function encodes a CUPS options array as URL-encoded form data,
-returning an allocated string.<br>
+<p class="discussion">This function encodes a CUPS options array as URL-encoded form data with an
+optional URL prefix, returning an allocated string.<br>
 <br>
 Use <code>free</code> to return the memory used for the string.</p>
 <h3 class="function"><a id="cupsFreeDestInfo">cupsFreeDestInfo</a></h3>
@@ -4282,6 +4602,39 @@ name to be used.</p>
 const char *cupsGetUserAgent(void);</p>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">User-Agent string</p>
+<h3 class="function"><a id="cupsHMACData">cupsHMACData</a></h3>
+<p class="description">Perform a HMAC function on the given data.</p>
+<p class="code">
+ssize_t cupsHMACData(const char *algorithm, const unsigned char *key, size_t keylen, const void *data, size_t datalen, unsigned char *hmac, size_t hmacsize);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>algorithm</th>
+<td class="description">Hash algorithm</td></tr>
+<tr><th>key</th>
+<td class="description">Key</td></tr>
+<tr><th>keylen</th>
+<td class="description">Length of key</td></tr>
+<tr><th>data</th>
+<td class="description">Data to hash</td></tr>
+<tr><th>datalen</th>
+<td class="description">Length of data to hash</td></tr>
+<tr><th>hmac</th>
+<td class="description">HMAC buffer</td></tr>
+<tr><th>hmacsize</th>
+<td class="description">Size of HMAC buffer</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">The length of the HMAC or <code>-1</code> on error</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function performs a HMAC function on the given data with the given key.
+The &quot;algorithm&quot; argument can be any of the registered, non-deprecated IPP
+hash algorithms for the &quot;job-password-encryption&quot; attribute, including
+&quot;sha&quot; for SHA-1, &quot;sha2-256&quot; for SHA2-256, etc.<br>
+<br>
+The &quot;hmac&quot; argument points to a buffer of &quot;hmacsize&quot; bytes and should be at
+least 64 bytes in length for all of the supported algorithms.<br>
+<br>
+The returned HMAC is binary data.</p>
 <h3 class="function"><a id="cupsHashData">cupsHashData</a></h3>
 <p class="description">Perform a hash function on the given data.</p>
 <p class="code">
@@ -4302,9 +4655,10 @@ ssize_t cupsHashData(const char *algorithm, const void *data, size_t datalen, un
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Size of hash or -1 on error</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The &quot;algorithm&quot; argument can be any of the registered, non-deprecated IPP
-hash algorithms for the &quot;job-password-encryption&quot; attribute, including
-&quot;sha&quot; for SHA-1, &quot;sha-256&quot; for SHA2-256, etc.<br>
+<p class="discussion">This function performs a hash function on the given data. The &quot;algorithm&quot;
+argument can be any of the registered, non-deprecated IPP hash algorithms for
+the &quot;job-password-encryption&quot; attribute, including &quot;sha&quot; for SHA-1,
+&quot;sha2-256&quot; for SHA2-256, etc.<br>
 <br>
 The &quot;hash&quot; argument points to a buffer of &quot;hashsize&quot; bytes and should be at
 least 64 bytes in length for all of the supported algorithms.<br>
@@ -4338,6 +4692,33 @@ void cupsJSONDelete(<a href="#cups_json_t">cups_json_t</a> *json);</p>
 <tr><th>json</th>
 <td class="description">JSON node</td></tr>
 </tbody></table>
+<h3 class="function"><a id="cupsJSONExportFile">cupsJSONExportFile</a></h3>
+<p class="description">Save a JSON node tree to a file.</p>
+<p class="code">
+bool cupsJSONExportFile(<a href="#cups_json_t">cups_json_t</a> *json, const char *filename);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>json</th>
+<td class="description">JSON root node</td></tr>
+<tr><th>filename</th>
+<td class="description">JSON filename</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description"><code>true</code> on success, <code>false</code> on failure</p>
+<h3 class="function"><a id="cupsJSONExportString">cupsJSONExportString</a></h3>
+<p class="description">Save a JSON node tree to a string.</p>
+<p class="code">
+char *cupsJSONExportString(<a href="#cups_json_t">cups_json_t</a> *json);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>json</th>
+<td class="description">JSON root node</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">JSON string or <code>NULL</code> on error</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function saves a JSON node tree to an allocated string.  The resulting
+string must be freed using the <code>free</code> function.</p>
 <h3 class="function"><a id="cupsJSONFind">cupsJSONFind</a></h3>
 <p class="description">Find the value(s) associated with a given key.</p>
 <p class="code">
@@ -4450,10 +4831,10 @@ the node is not a string.</p>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">JSON node type</p>
-<h3 class="function"><a id="cupsJSONLoadFile">cupsJSONLoadFile</a></h3>
+<h3 class="function"><a id="cupsJSONImportFile">cupsJSONImportFile</a></h3>
 <p class="description">Load a JSON object file.</p>
 <p class="code">
-<a href="#cups_json_t">cups_json_t</a> *cupsJSONLoadFile(const char *filename);</p>
+<a href="#cups_json_t">cups_json_t</a> *cupsJSONImportFile(const char *filename);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>filename</th>
@@ -4461,10 +4842,10 @@ the node is not a string.</p>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Root JSON object node</p>
-<h3 class="function"><a id="cupsJSONLoadString">cupsJSONLoadString</a></h3>
+<h3 class="function"><a id="cupsJSONImportString">cupsJSONImportString</a></h3>
 <p class="description">Load a JSON object from a string.</p>
 <p class="code">
-<a href="#cups_json_t">cups_json_t</a> *cupsJSONLoadString(const char *s);</p>
+<a href="#cups_json_t">cups_json_t</a> *cupsJSONImportString(const char *s);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>s</th>
@@ -4472,6 +4853,32 @@ the node is not a string.</p>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Root JSON object node</p>
+<h3 class="function"><a id="cupsJSONImportURL">cupsJSONImportURL</a></h3>
+<p class="description">Load a JSON object from a URL.</p>
+<p class="code">
+<a href="#cups_json_t">cups_json_t</a> *cupsJSONImportURL(const char *url, time_t *last_modified);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>url</th>
+<td class="description">URL</td></tr>
+<tr><th>last_modified</th>
+<td class="description">Last modified date/time or <code>NULL</code></td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Root JSON object node</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function loads a JSON object from a URL.  The &quot;url&quot; can be a &quot;http:&quot; or
+&quot;https:&quot; URL.  The &quot;last_modified&quot; argument provides a pointer to a <code>time_t</code>
+variable with the last modified date and time from a previous load.  If
+<code>NULL</code> or the variable has a value of 0, the JSON is loaded unconditionally
+from the URL.<br>
+<br>
+On success, a pointer to the root JSON object node is returned and the
+&quot;last_modified&quot; variable, if not <code>NULL</code>, is updated to the Last-Modified
+date and time returned by the server.  Otherwise, <code>NULL</code> is returned with
+the <a href="#cupsLastError"><code>cupsLastError</code></a> value set to <code>IPP_STATUS_OK_EVENTS_COMPLETE</code> if
+the JSON data has not been updated since the &quot;last_modified&quot; date and time
+or a suitable <code>IPP_STATUS_ERROR_</code> value if an error occurred.</p>
 <h3 class="function"><a id="cupsJSONNew">cupsJSONNew</a></h3>
 <p class="description">Create a new JSON node.</p>
 <p class="code">
@@ -4532,33 +4939,219 @@ the node is not a string.</p>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">JSON node</p>
-<h3 class="function"><a id="cupsJSONSaveFile">cupsJSONSaveFile</a></h3>
-<p class="description">Save a JSON node tree to a file.</p>
+<h3 class="function"><a id="cupsJWTDelete">cupsJWTDelete</a></h3>
+<p class="description">Free the memory used for a JSON Web Token.</p>
 <p class="code">
-bool cupsJSONSaveFile(<a href="#cups_json_t">cups_json_t</a> *json, const char *filename);</p>
+void cupsJWTDelete(<a href="#cups_jwt_t">cups_jwt_t</a> *jwt);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
-<tr><th>json</th>
-<td class="description">JSON root node</td></tr>
-<tr><th>filename</th>
-<td class="description">JSON filename</td></tr>
+<tr><th>jwt</th>
+<td class="description">JWT object</td></tr>
 </tbody></table>
-<h4 class="returnvalue">Return Value</h4>
-<p class="description"><code>true</code> on success, <code>false</code> on failure</p>
-<h3 class="function"><a id="cupsJSONSaveString">cupsJSONSaveString</a></h3>
-<p class="description">Save a JSON node tree to a string.</p>
+<h3 class="function"><a id="cupsJWTExportString">cupsJWTExportString</a></h3>
+<p class="description">Export a JWT with the JWS Compact Serialization format.</p>
 <p class="code">
-char *cupsJSONSaveString(<a href="#cups_json_t">cups_json_t</a> *json);</p>
+char *cupsJWTExportString(<a href="#cups_jwt_t">cups_jwt_t</a> *jwt);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
-<tr><th>json</th>
-<td class="description">JSON root node</td></tr>
+<tr><th>jwt</th>
+<td class="description">JWT object</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">JSON string or <code>NULL</code> on error</p>
+<p class="description">JWT/JWS Compact Serialization string</p>
+<h3 class="function"><a id="cupsJWTGetAlgorithm">cupsJWTGetAlgorithm</a></h3>
+<p class="description">Get the signature algorithm used by a JSON Web Token.</p>
+<p class="code">
+<a href="#cups_jwa_t">cups_jwa_t</a> cupsJWTGetAlgorithm(<a href="#cups_jwt_t">cups_jwt_t</a> *jwt);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>jwt</th>
+<td class="description">JWT object</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Signature algorithm</p>
+<h3 class="function"><a id="cupsJWTGetClaimNumber">cupsJWTGetClaimNumber</a></h3>
+<p class="description">Get the number value of a claim.</p>
+<p class="code">
+double cupsJWTGetClaimNumber(<a href="#cups_jwt_t">cups_jwt_t</a> *jwt, const char *claim);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>jwt</th>
+<td class="description">JWT object</td></tr>
+<tr><th>claim</th>
+<td class="description">Claim name</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Number value</p>
+<h3 class="function"><a id="cupsJWTGetClaimString">cupsJWTGetClaimString</a></h3>
+<p class="description">Get the string value of a claim.</p>
+<p class="code">
+const char *cupsJWTGetClaimString(<a href="#cups_jwt_t">cups_jwt_t</a> *jwt, const char *claim);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>jwt</th>
+<td class="description">JWT object</td></tr>
+<tr><th>claim</th>
+<td class="description">Claim name</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">String value</p>
+<h3 class="function"><a id="cupsJWTGetClaimType">cupsJWTGetClaimType</a></h3>
+<p class="description">Get the value type of a claim.</p>
+<p class="code">
+<a href="#cups_jtype_t">cups_jtype_t</a> cupsJWTGetClaimType(<a href="#cups_jwt_t">cups_jwt_t</a> *jwt, const char *claim);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>jwt</th>
+<td class="description">JWT object</td></tr>
+<tr><th>claim</th>
+<td class="description">Claim name</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">JSON value type</p>
+<h3 class="function"><a id="cupsJWTGetClaimValue">cupsJWTGetClaimValue</a></h3>
+<p class="description">Get the value node of a claim.</p>
+<p class="code">
+<a href="#cups_json_t">cups_json_t</a> *cupsJWTGetClaimValue(<a href="#cups_jwt_t">cups_jwt_t</a> *jwt, const char *claim);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>jwt</th>
+<td class="description">JWT object</td></tr>
+<tr><th>claim</th>
+<td class="description">Claim name</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">JSON value node</p>
+<h3 class="function"><a id="cupsJWTGetClaims">cupsJWTGetClaims</a></h3>
+<p class="description">Get the JWT claims as a JSON object.</p>
+<p class="code">
+<a href="#cups_json_t">cups_json_t</a> *cupsJWTGetClaims(<a href="#cups_jwt_t">cups_jwt_t</a> *jwt);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>jwt</th>
+<td class="description">JWT object</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">JSON object</p>
+<h3 class="function"><a id="cupsJWTHasValidSignature">cupsJWTHasValidSignature</a></h3>
+<p class="description">Determine whether the JWT has a valid signature.</p>
+<p class="code">
+bool cupsJWTHasValidSignature(<a href="#cups_jwt_t">cups_jwt_t</a> *jwt, <a href="#cups_json_t">cups_json_t</a> *jwk);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>jwt</th>
+<td class="description">JWT object</td></tr>
+<tr><th>jwk</th>
+<td class="description">JWK key set</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description"><code>true</code> if value, <code>false</code> otherwise</p>
+<h3 class="function"><a id="cupsJWTImportString">cupsJWTImportString</a></h3>
+<p class="description">Import a JSON Web Token or JSON Web Signature.</p>
+<p class="code">
+<a href="#cups_jwt_t">cups_jwt_t</a> *cupsJWTImportString(const char *token);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>token</th>
+<td class="description">JWS Compact Serialization string</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">JWT object</p>
+<h3 class="function"><a id="cupsJWTMakePrivateKey">cupsJWTMakePrivateKey</a></h3>
+<p class="description">Make a JSON Web Key for encryption and signing.</p>
+<p class="code">
+<a href="#cups_json_t">cups_json_t</a> *cupsJWTMakePrivateKey(<a href="#cups_jwa_t">cups_jwa_t</a> alg);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>alg</th>
+<td class="description">Signing/encryption algorithm</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Private JSON Web Key or <code>NULL</code> on error</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">This function saves a JSON node tree to an allocated string.  The resulting
-string must be freed using the <code>free</code> function.</p>
+<p class="discussion">This function makes a JSON Web Key (JWK) for the specified JWS/JWE algorithm
+for use when signing or encrypting JSON Web Tokens.  The resulting JWK
+<em>must not</em> be provided to clients - instead, call <a href="#cupsJWTMakePublicKey"><code>cupsJWTMakePublicKey</code></a>
+to produce a public key subset suitable for verification and decryption.</p>
+<h3 class="function"><a id="cupsJWTMakePublicKey">cupsJWTMakePublicKey</a></h3>
+<p class="description">Make a JSON Web Key for decryption and verification.</p>
+<p class="code">
+<a href="#cups_json_t">cups_json_t</a> *cupsJWTMakePublicKey(<a href="#cups_json_t">cups_json_t</a> *jwk);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>jwk</th>
+<td class="description">Private JSON Web Key</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Public JSON Web Key or <code>NULL</code> on error</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function makes a public JSON Web Key (JWK) from the specified private
+JWK suitable for use when decrypting or verifying a JWE/JWS message.</p>
+<h3 class="function"><a id="cupsJWTNew">cupsJWTNew</a></h3>
+<p class="description">Create a new, empty JSON Web Token.</p>
+<p class="code">
+<a href="#cups_jwt_t">cups_jwt_t</a> *cupsJWTNew(const char *type);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>type</th>
+<td class="description">JWT type or <code>NULL</code> for default (&quot;JWT&quot;)</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">JWT object</p>
+<h3 class="function"><a id="cupsJWTSetClaimNumber">cupsJWTSetClaimNumber</a></h3>
+<p class="description">Set a claim number.</p>
+<p class="code">
+void cupsJWTSetClaimNumber(<a href="#cups_jwt_t">cups_jwt_t</a> *jwt, const char *claim, double value);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>jwt</th>
+<td class="description">JWT object</td></tr>
+<tr><th>claim</th>
+<td class="description">Claim name</td></tr>
+<tr><th>value</th>
+<td class="description">Number value</td></tr>
+</tbody></table>
+<h3 class="function"><a id="cupsJWTSetClaimString">cupsJWTSetClaimString</a></h3>
+<p class="description">Set a claim string.</p>
+<p class="code">
+void cupsJWTSetClaimString(<a href="#cups_jwt_t">cups_jwt_t</a> *jwt, const char *claim, const char *value);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>jwt</th>
+<td class="description">JWT object</td></tr>
+<tr><th>claim</th>
+<td class="description">Claim name</td></tr>
+<tr><th>value</th>
+<td class="description">String value</td></tr>
+</tbody></table>
+<h3 class="function"><a id="cupsJWTSetClaimValue">cupsJWTSetClaimValue</a></h3>
+<p class="description">Set a claim value.</p>
+<p class="code">
+void cupsJWTSetClaimValue(<a href="#cups_jwt_t">cups_jwt_t</a> *jwt, const char *claim, <a href="#cups_json_t">cups_json_t</a> *value);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>jwt</th>
+<td class="description">JWT object</td></tr>
+<tr><th>claim</th>
+<td class="description">Claim name</td></tr>
+<tr><th>value</th>
+<td class="description">JSON value node</td></tr>
+</tbody></table>
+<h3 class="function"><a id="cupsJWTSign">cupsJWTSign</a></h3>
+<p class="description">Sign a JSON Web Token, creating a JSON Web Signature.</p>
+<p class="code">
+bool cupsJWTSign(<a href="#cups_jwt_t">cups_jwt_t</a> *jwt, <a href="#cups_jwa_t">cups_jwa_t</a> alg, <a href="#cups_json_t">cups_json_t</a> *jwk);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>jwt</th>
+<td class="description">JWT object</td></tr>
+<tr><th>alg</th>
+<td class="description">Signing algorithm</td></tr>
+<tr><th>jwk</th>
+<td class="description">JWK key set</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description"><code>true</code> on success, <code>false</code> on error</p>
 <h3 class="function"><a id="cupsLangAddStrings">cupsLangAddStrings</a></h3>
 <p class="description">Add strings for the specified language.</p>
 <p class="code">
@@ -5413,6 +6006,24 @@ void cupsSetServerCertCB(<a href="#cups_server_cert_cb_t">cups_server_cert_cb_t<
 Note: The current credentials callback is tracked separately for each thread
 in a program. Multi-threaded programs that override the callback need to do
 so in each thread for the same callback to be used.</p>
+<h3 class="function"><a id="cupsSetServerCredentials">cupsSetServerCredentials</a></h3>
+<p class="description">Set the default server credentials.</p>
+<p class="code">
+bool cupsSetServerCredentials(const char *path, const char *common_name, bool auto_create);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>path</th>
+<td class="description">Directory path for certificate/key store or <code>NULL</code> for default</td></tr>
+<tr><th>common_name</th>
+<td class="description">Default common name for server</td></tr>
+<tr><th>auto_create</th>
+<td class="description"><code>true</code> = automatically create self-signed certificates</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description"><code>true</code> on success, <code>false</code> on failure</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">Note: The server credentials are used by all threads in the running process.
+This function is threadsafe.</p>
 <h3 class="function"><a id="cupsSetUser">cupsSetUser</a></h3>
 <p class="description">Set the default user name.</p>
 <p class="code">
@@ -5440,6 +6051,101 @@ void cupsSetUserAgent(const char *user_agent);</p>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">Setting the string to NULL forces the default value containing the CUPS
 version, IPP version, and operating system version and architecture.</p>
+<h3 class="function"><a id="cupsSignCredentialsRequest">cupsSignCredentialsRequest</a></h3>
+<p class="description">Sign an X.509 certificate signing request to produce an X.509 certificate chain.</p>
+<p class="code">
+bool cupsSignCredentialsRequest(const char *path, const char *common_name, const char *request, const char *root_name, <a href="#cups_credpurpose_t">cups_credpurpose_t</a> allowed_purpose, <a href="#cups_credusage_t">cups_credusage_t</a> allowed_usage, <a href="#cups_cert_san_cb_t">cups_cert_san_cb_t</a> cb, void *cb_data, time_t expiration_date);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>path</th>
+<td class="description">Directory path for certificate/key store or <code>NULL</code> for default</td></tr>
+<tr><th>common_name</th>
+<td class="description">Common name to use</td></tr>
+<tr><th>request</th>
+<td class="description">PEM-encoded CSR</td></tr>
+<tr><th>root_name</th>
+<td class="description">Root certificate</td></tr>
+<tr><th>allowed_purpose</th>
+<td class="description">Allowed credential purpose(s)</td></tr>
+<tr><th>allowed_usage</th>
+<td class="description">Allowed credential usage(s)</td></tr>
+<tr><th>cb</th>
+<td class="description">subjectAltName callback or <code>NULL</code> to allow just .local</td></tr>
+<tr><th>cb_data</th>
+<td class="description">Callback data</td></tr>
+<tr><th>expiration_date</th>
+<td class="description">Certificate expiration date</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description"><code>true</code> on success, <code>false</code> on failure</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function creates an X.509 certificate from a signing request.  The
+certificate is stored in the directory &quot;path&quot; or, if &quot;path&quot; is <code>NULL</code>, in a
+per-user or system-wide (when running as root) certificate/key store.  The
+generated certificate is signed by the named root certificate or, if
+&quot;root_name&quot; is <code>NULL</code>, a site-wide default root certificate.  When
+&quot;root_name&quot; is <code>NULL</code> and there is no site-wide default root certificate, a
+self-signed certificate is generated instead.<br>
+<br>
+The &quot;allowed_purpose&quot; argument specifies the allowed purpose(s) used for the
+credentials as a bitwise OR of the following constants:
+
+</p><ul>
+<li><code>CUPS_CREDPURPOSE_SERVER_AUTH</code> for validating TLS servers,
+</li>
+<li><code>CUPS_CREDPURPOSE_CLIENT_AUTH</code> for validating TLS clients,
+</li>
+<li><code>CUPS_CREDPURPOSE_CODE_SIGNING</code> for validating compiled code,
+</li>
+<li><code>CUPS_CREDPURPOSE_EMAIL_PROTECTION</code> for validating email messages,
+</li>
+<li><code>CUPS_CREDPURPOSE_TIME_STAMPING</code> for signing timestamps to objects, and/or
+</li>
+<li><code>CUPS_CREDPURPOSE_OCSP_SIGNING</code> for Online Certificate Status Protocol
+  message signing.</li>
+</ul>
+<p class="discussion">The &quot;allowed_usage&quot; argument specifies the allowed usage(s) for the
+credentials as a bitwise OR of the following constants:
+
+</p><ul>
+<li><code>CUPS_CREDUSAGE_DIGITAL_SIGNATURE</code>: digital signatures,
+</li>
+<li><code>CUPS_CREDUSAGE_NON_REPUDIATION</code>: non-repudiation/content commitment,
+</li>
+<li><code>CUPS_CREDUSAGE_KEY_ENCIPHERMENT</code>: key encipherment,
+</li>
+<li><code>CUPS_CREDUSAGE_DATA_ENCIPHERMENT</code>: data encipherment,
+</li>
+<li><code>CUPS_CREDUSAGE_KEY_AGREEMENT</code>: key agreement,
+</li>
+<li><code>CUPS_CREDUSAGE_KEY_CERT_SIGN</code>: key certicate signing,
+</li>
+<li><code>CUPS_CREDUSAGE_CRL_SIGN</code>: certificate revocation list signing,
+</li>
+<li><code>CUPS_CREDUSAGE_ENCIPHER_ONLY</code>: encipherment only,
+</li>
+<li><code>CUPS_CREDUSAGE_DECIPHER_ONLY</code>: decipherment only,
+</li>
+<li><code>CUPS_CREDUSAGE_DEFAULT_CA</code>: defaults for CA certificates,
+</li>
+<li><code>CUPS_CREDUSAGE_DEFAULT_TLS</code>: defaults for TLS certificates, and/or
+</li>
+<li><code>CUPS_CREDUSAGE_ALL</code>: all usages.</li>
+</ul>
+<p class="discussion">The &quot;cb&quot; and &quot;cb_data&quot; arguments specify a function and its data that are
+used to validate any subjectAltName values in the signing request:
+
+<pre>
+bool san_cb(const char *common_name, const char *alt_name, void *cb_data) {
+  ... return true if OK and false if not ...
+}
+</pre>
+
+If <code>NULL</code>, a default validation function is used that allows &quot;localhost&quot; and
+variations of the common name.<br>
+<br>
+The &quot;expiration_date&quot; argument specifies the expiration date and time as a
+Unix <code>time_t</code> value in seconds.</p>
 <h3 class="function"><a id="cupsStartDestDocument">cupsStartDestDocument</a></h3>
 <p class="description">Start a new document.</p>
 <p class="code">
@@ -6023,6 +6729,20 @@ bool httpCompareCredentials(<a href="#cups_array_t">cups_array_t</a> *cred1, <a 
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">New HTTP connection</p>
+<h3 class="function"><a id="httpCopyCredentials">httpCopyCredentials</a></h3>
+<p class="description">Copy the credentials associated with the peer in
+                          an encrypted connection.</p>
+<p class="code">
+bool httpCopyCredentials(<a href="#http_t">http_t</a> *http, <a href="#cups_array_t">cups_array_t</a> **credentials);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>http</th>
+<td class="description">Connection to server</td></tr>
+<tr><th>credentials</th>
+<td class="description">Array of credentials</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Status of call (<code>true</code> = success)</p>
 <h3 class="function"><a id="httpCreateCredentials">httpCreateCredentials</a></h3>
 <p class="description">Create a new array of HTTP credentials.</p>
 <p class="code">
@@ -6039,6 +6759,59 @@ bool httpCompareCredentials(<a href="#cups_array_t">cups_array_t</a> *cred1, <a 
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">This function creates a new array of HTTP credentials for use with the
 <a href="#httpAddCredentials"><code>httpAddCredentials</code></a> and <a href="#httpSetCredentials"><code>httpSetCredentials</code></a> functions.</p>
+<h3 class="function"><a id="httpCredentialsAreValidForName">httpCredentialsAreValidForName</a></h3>
+<p class="description">Return whether the credentials are valid
+                                     for the given name.</p>
+<p class="code">
+bool httpCredentialsAreValidForName(<a href="#cups_array_t">cups_array_t</a> *credentials, const char *common_name);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>credentials</th>
+<td class="description">Credentials</td></tr>
+<tr><th>common_name</th>
+<td class="description">Name to check</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description"><code>true</code> if valid, <code>false</code> otherwise</p>
+<h3 class="function"><a id="httpCredentialsGetExpiration">httpCredentialsGetExpiration</a></h3>
+<p class="description">Return the expiration date of the credentials.</p>
+<p class="code">
+time_t httpCredentialsGetExpiration(<a href="#cups_array_t">cups_array_t</a> *credentials);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>credentials</th>
+<td class="description">Credentials</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Expiration date of credentials</p>
+<h3 class="function"><a id="httpCredentialsGetTrust">httpCredentialsGetTrust</a></h3>
+<p class="description">Return the trust of credentials.</p>
+<p class="code">
+<a href="#http_trust_t">http_trust_t</a> httpCredentialsGetTrust(<a href="#cups_array_t">cups_array_t</a> *credentials, const char *common_name);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>credentials</th>
+<td class="description">Credentials</td></tr>
+<tr><th>common_name</th>
+<td class="description">Common name for trust lookup</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Level of trust</p>
+<h3 class="function"><a id="httpCredentialsString">httpCredentialsString</a></h3>
+<p class="description">Return a string representing the credentials.</p>
+<p class="code">
+size_t httpCredentialsString(<a href="#cups_array_t">cups_array_t</a> *credentials, char *buffer, size_t bufsize);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>credentials</th>
+<td class="description">Credentials</td></tr>
+<tr><th>buffer</th>
+<td class="description">Buffer</td></tr>
+<tr><th>bufsize</th>
+<td class="description">Size of buffer</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Total size of credentials string</p>
 <h3 class="function"><a id="httpDecode64">httpDecode64</a></h3>
 <p class="description">Base64-decode a string.</p>
 <p class="code">
@@ -6493,6 +7266,21 @@ bool httpIsEncrypted(<a href="#http_t">http_t</a> *http);</p>
 <p class="description"><code>true</code> if encrypted, <code>false</code> if not</p>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">This function returns <code>true</code> if the connection is currently encrypted.</p>
+<h3 class="function"><a id="httpLoadCredentials">httpLoadCredentials</a></h3>
+<p class="description">Load X.509 credentials from a keychain file.</p>
+<p class="code">
+bool httpLoadCredentials(const char *path, <a href="#cups_array_t">cups_array_t</a> **credentials, const char *common_name);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>path</th>
+<td class="description">Keychain/PKCS#12 path</td></tr>
+<tr><th>credentials</th>
+<td class="description">Credentials</td></tr>
+<tr><th>common_name</th>
+<td class="description">Common name for credentials</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description"><code>true</code> on success, <code>false</code> on error</p>
 <h3 class="function"><a id="httpPeek">httpPeek</a></h3>
 <p class="description">Peek at data from a HTTP connection.</p>
 <p class="code">
@@ -6613,6 +7401,21 @@ terminated.  The callback is provided the &quot;cb_data&quot; value and returns 
 <code>bool</code> value that is <code>true</code> to continue and <code>false</code> to stop.  If no callback
 is specified (&quot;cb&quot; is <code>NULL</code>), then this function will block up to 90 seconds
 to resolve the specified URI.</p>
+<h3 class="function"><a id="httpSaveCredentials">httpSaveCredentials</a></h3>
+<p class="description">Save X.509 credentials to a keychain file.</p>
+<p class="code">
+bool httpSaveCredentials(const char *path, <a href="#cups_array_t">cups_array_t</a> *credentials, const char *common_name);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>path</th>
+<td class="description">Keychain/PKCS#12 path</td></tr>
+<tr><th>credentials</th>
+<td class="description">Credentials</td></tr>
+<tr><th>common_name</th>
+<td class="description">Common name for credentials</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description"><code>true</code> on success, <code>false</code> on error</p>
 <h3 class="function"><a id="httpSeparateURI">httpSeparateURI</a></h3>
 <p class="description">Separate a Universal Resource Identifier into its
                       components.</p>
@@ -9304,6 +10107,11 @@ typedef struct _cups_array_s cups_array_t;
 <p class="code">
 typedef enum <a href="#cups_bool_e">cups_bool_e</a> cups_bool_t;
 </p>
+<h3 class="typedef"><a id="cups_cert_san_cb_t">cups_cert_san_cb_t</a></h3>
+<p class="description">Certificate signing subjectAltName callback</p>
+<p class="code">
+typedef bool(*)(const char *common_name, const char *subject_alt_name, void *user_data)cups_cert_san_cb_t;
+</p>
 <h3 class="typedef"><a id="cups_client_cert_cb_t">cups_client_cert_cb_t</a></h3>
 <p class="description">Client credentials callback</p>
 <p class="code">
@@ -9313,6 +10121,21 @@ typedef bool(*)(http_t *http, void *tls, <a href="#cups_array_t">cups_array_t</a
 <p class="description">Condition variable</p>
 <p class="code">
 typedef pthread_cond_t cups_cond_t;
+</p>
+<h3 class="typedef"><a id="cups_credpurpose_t">cups_credpurpose_t</a></h3>
+<p class="description">Combined X.509 credential purposes for <a href="#cupsCreateCredentials"><code>cupsCreateCredentials</code></a> and <a href="#cupsCreateCredentialsRequest"><code>cupsCreateCredentialsRequest</code></a></p>
+<p class="code">
+typedef unsigned cups_credpurpose_t;
+</p>
+<h3 class="typedef"><a id="cups_credtype_t">cups_credtype_t</a></h3>
+<p class="description">X.509 credential types for <a href="#cupsCreateCredentials"><code>cupsCreateCredentials</code></a> and <a href="#cupsCreateCredentialsRequest"><code>cupsCreateCredentialsRequest</code></a></p>
+<p class="code">
+typedef enum <a href="#cups_credtype_e">cups_credtype_e</a> cups_credtype_t;
+</p>
+<h3 class="typedef"><a id="cups_credusage_t">cups_credusage_t</a></h3>
+<p class="description">Combined X.509 keyUsage flags for <a href="#cupsCreateCredentials"><code>cupsCreateCredentials</code></a> and <a href="#cupsCreateCredentialsRequest"><code>cupsCreateCredentialsRequest</code></a></p>
+<p class="code">
+typedef unsigned cups_credusage_t;
 </p>
 <h3 class="typedef"><a id="cups_cspace_t">cups_cspace_t</a></h3>
 <p class="description">cupsColorSpace attribute values</p>
@@ -9332,7 +10155,12 @@ typedef struct <a href="#cups_dentry_s">cups_dentry_s</a> cups_dentry_t;
 <h3 class="typedef"><a id="cups_dest_cb_t">cups_dest_cb_t</a></h3>
 <p class="description">Destination enumeration callback</p>
 <p class="code">
-typedef bool(*)(void *user_data, unsigned flags, <a href="#cups_dest_t">cups_dest_t</a> *dest)cups_dest_cb_t;
+typedef bool(*)(void *user_data, <a href="#cups_dest_flags_t">cups_dest_flags_t</a> flags, <a href="#cups_dest_t">cups_dest_t</a> *dest)cups_dest_cb_t;
+</p>
+<h3 class="typedef"><a id="cups_dest_flags_t">cups_dest_flags_t</a></h3>
+<p class="description">Combined flags for <a href="#cupsConnectDest"><code>cupsConnectDest</code></a> and <a href="#cupsEnumDests"><code>cupsEnumDests</code></a></p>
+<p class="code">
+typedef unsigned cups_dest_flags_t;
 </p>
 <h3 class="typedef"><a id="cups_dest_t">cups_dest_t</a></h3>
 <p class="description">Destination</p>
@@ -9439,10 +10267,25 @@ typedef struct _cups_json_s cups_json_t;
 <p class="code">
 typedef enum <a href="#cups_jtype_e">cups_jtype_e</a> cups_jtype_t;
 </p>
+<h3 class="typedef"><a id="cups_jwa_t">cups_jwa_t</a></h3>
+<p class="description">JSON Web Algorithms</p>
+<p class="code">
+typedef enum <a href="#cups_jwa_e">cups_jwa_e</a> cups_jwa_t;
+</p>
+<h3 class="typedef"><a id="cups_jwt_t">cups_jwt_t</a></h3>
+<p class="description">JSON Web Token</p>
+<p class="code">
+typedef struct _cups_jwt_s cups_jwt_t;
+</p>
 <h3 class="typedef"><a id="cups_lang_t">cups_lang_t</a></h3>
 <p class="description">Language Cache</p>
 <p class="code">
 typedef struct _cups_lang_s cups_lang_t;
+</p>
+<h3 class="typedef"><a id="cups_media_flags_t">cups_media_flags_t</a></h3>
+<p class="description">Combined flags for <a href="#cupsGetDestMediaByName"><code>cupsGetDestMediaByName</code></a> and <a href="#cupsGetDestMediaBySize"><code>cupsGetDestMediaBySize</code></a></p>
+<p class="code">
+typedef unsigned cups_media_flags_t;
 </p>
 <h3 class="typedef"><a id="cups_mediapos_t">cups_mediapos_t</a></h3>
 <p class="description">MediaPosition values</p>
@@ -9485,7 +10328,7 @@ typedef struct <a href="#cups_page_header_s">cups_page_header_s</a> cups_page_he
 typedef const char *(*)(const char *prompt, <a href="#http_t">http_t</a> *http, const char *method, const char *resource, void *user_data)cups_password_cb_t;
 </p>
 <h3 class="typedef"><a id="cups_ptype_t">cups_ptype_t</a></h3>
-<p class="description">Printer type/capability bits</p>
+<p class="description">Combined printer type/capability flags</p>
 <p class="code">
 typedef unsigned cups_ptype_t;
 </p>
@@ -9510,7 +10353,7 @@ typedef pthread_rwlock_t cups_rwlock_t;
 typedef bool(*)(http_t *http, void *tls, <a href="#cups_array_t">cups_array_t</a> *certs, void *user_data)cups_server_cert_cb_t;
 </p>
 <h3 class="typedef"><a id="cups_size_t">cups_size_t</a></h3>
-<p class="description">// Media Size</p>
+<p class="description">Media information</p>
 <p class="code">
 typedef struct <a href="#cups_size_s">cups_size_s</a> cups_size_t;
 </p>
@@ -9953,7 +10796,7 @@ factor not applied)</td></tr>
 <td class="description">Width of page image in pixels</td></tr>
 </tbody></table>
 <h3 class="struct"><a id="cups_size_s">cups_size_s</a></h3>
-<p class="description">// Media Size</p>
+<p class="description">Media information</p>
 <p class="code">struct cups_size_s {<br>
 &#160;&#160;&#160;&#160;int width, length, bottom, left, right, top;<br>
 &#160;&#160;&#160;&#160;char media[128], color[128], source[128], type[128];<br>
@@ -10008,6 +10851,47 @@ factor not applied)</td></tr>
 <table class="list"><tbody>
 <tr><th>CUPS_FALSE </th><td class="description">Logical false</td></tr>
 <tr><th>CUPS_TRUE </th><td class="description">Logical true</td></tr>
+</tbody></table>
+<h3 class="enumeration"><a id="cups_credpurpose_e">cups_credpurpose_e</a></h3>
+<p class="description">X.509 credential purposes</p>
+<h4 class="constants">Constants</h4>
+<table class="list"><tbody>
+<tr><th>CUPS_CREDPURPOSE_ALL </th><td class="description">All purposes</td></tr>
+<tr><th>CUPS_CREDPURPOSE_CLIENT_AUTH </th><td class="description">clientAuth</td></tr>
+<tr><th>CUPS_CREDPURPOSE_CODE_SIGNING </th><td class="description">codeSigning</td></tr>
+<tr><th>CUPS_CREDPURPOSE_EMAIL_PROTECTION </th><td class="description">emailProtection</td></tr>
+<tr><th>CUPS_CREDPURPOSE_OCSP_SIGNING </th><td class="description">OCSPSigning</td></tr>
+<tr><th>CUPS_CREDPURPOSE_SERVER_AUTH </th><td class="description">serverAuth</td></tr>
+<tr><th>CUPS_CREDPURPOSE_TIME_STAMPING </th><td class="description">timeStamping</td></tr>
+</tbody></table>
+<h3 class="enumeration"><a id="cups_credtype_e">cups_credtype_e</a></h3>
+<p class="description">X.509 credential types for <a href="#cupsCreateCredentials"><code>cupsCreateCredentials</code></a> and <a href="#cupsCreateCredentialsRequest"><code>cupsCreateCredentialsRequest</code></a></p>
+<h4 class="constants">Constants</h4>
+<table class="list"><tbody>
+<tr><th>CUPS_CREDTYPE_DEFAULT </th><td class="description">Default type</td></tr>
+<tr><th>CUPS_CREDTYPE_ECDSA_P256_SHA256 </th><td class="description">ECDSA using the P-256 curve with SHA-256 hash</td></tr>
+<tr><th>CUPS_CREDTYPE_ECDSA_P384_SHA256 </th><td class="description">ECDSA using the P-384 curve with SHA-256 hash</td></tr>
+<tr><th>CUPS_CREDTYPE_ECDSA_P521_SHA256 </th><td class="description">ECDSA using the P-521 curve with SHA-256 hash</td></tr>
+<tr><th>CUPS_CREDTYPE_RSA_2048_SHA256 </th><td class="description">RSA with 2048-bit keys and SHA-256 hash</td></tr>
+<tr><th>CUPS_CREDTYPE_RSA_3072_SHA256 </th><td class="description">RSA with 3072-bit keys and SHA-256 hash</td></tr>
+<tr><th>CUPS_CREDTYPE_RSA_4096_SHA256 </th><td class="description">RSA with 4096-bit keys and SHA-256 hash</td></tr>
+</tbody></table>
+<h3 class="enumeration"><a id="cups_credusage_e">cups_credusage_e</a></h3>
+<p class="description">X.509 keyUsage flags</p>
+<h4 class="constants">Constants</h4>
+<table class="list"><tbody>
+<tr><th>CUPS_CREDUSAGE_ALL </th><td class="description">All keyUsage flags</td></tr>
+<tr><th>CUPS_CREDUSAGE_CRL_SIGN </th><td class="description">cRLSign</td></tr>
+<tr><th>CUPS_CREDUSAGE_DATA_ENCIPHERMENT </th><td class="description">dataEncipherment</td></tr>
+<tr><th>CUPS_CREDUSAGE_DECIPHER_ONLY </th><td class="description">decipherOnly</td></tr>
+<tr><th>CUPS_CREDUSAGE_DEFAULT_CA </th><td class="description">Defaults for CA certs</td></tr>
+<tr><th>CUPS_CREDUSAGE_DEFAULT_TLS </th><td class="description">Defaults for TLS certs</td></tr>
+<tr><th>CUPS_CREDUSAGE_DIGITAL_SIGNATURE </th><td class="description">digitalSignature</td></tr>
+<tr><th>CUPS_CREDUSAGE_ENCIPHER_ONLY </th><td class="description">encipherOnly</td></tr>
+<tr><th>CUPS_CREDUSAGE_KEY_AGREEMENT </th><td class="description">keyAgreement</td></tr>
+<tr><th>CUPS_CREDUSAGE_KEY_CERT_SIGN </th><td class="description">keyCertSign</td></tr>
+<tr><th>CUPS_CREDUSAGE_KEY_ENCIPHERMENT </th><td class="description">keyEncipherment</td></tr>
+<tr><th>CUPS_CREDUSAGE_NON_REPUDIATION </th><td class="description">nonRepudiation/contentCommitment</td></tr>
 </tbody></table>
 <h3 class="enumeration"><a id="cups_cspace_e">cups_cspace_e</a></h3>
 <p class="description">cupsColorSpace attribute values</p>
@@ -10074,6 +10958,20 @@ factor not applied)</td></tr>
 <tr><th>CUPS_CUT_NONE </th><td class="description">Never cut the roll</td></tr>
 <tr><th>CUPS_CUT_PAGE </th><td class="description">Cut the roll after this page</td></tr>
 <tr><th>CUPS_CUT_SET </th><td class="description">Cut the roll after this set</td></tr>
+</tbody></table>
+<h3 class="enumeration"><a id="cups_dest_flags_e">cups_dest_flags_e</a></h3>
+<p class="description">Flags for <a href="#cupsConnectDest"><code>cupsConnectDest</code></a> and <a href="#cupsEnumDests"><code>cupsEnumDests</code></a></p>
+<h4 class="constants">Constants</h4>
+<table class="list"><tbody>
+<tr><th>CUPS_DEST_FLAGS_CANCELED </th><td class="description">Operation was canceled</td></tr>
+<tr><th>CUPS_DEST_FLAGS_CONNECTING </th><td class="description">A connection is being established</td></tr>
+<tr><th>CUPS_DEST_FLAGS_DEVICE </th><td class="description">For <a href="#cupsConnectDest"><code>cupsConnectDest</code></a>: Connect to device</td></tr>
+<tr><th>CUPS_DEST_FLAGS_ERROR </th><td class="description">An error occurred</td></tr>
+<tr><th>CUPS_DEST_FLAGS_MORE </th><td class="description">There are more destinations</td></tr>
+<tr><th>CUPS_DEST_FLAGS_NONE </th><td class="description">No flags are set</td></tr>
+<tr><th>CUPS_DEST_FLAGS_REMOVED </th><td class="description">The destination has gone away</td></tr>
+<tr><th>CUPS_DEST_FLAGS_RESOLVING </th><td class="description">The destination address is being resolved</td></tr>
+<tr><th>CUPS_DEST_FLAGS_UNCONNECTED </th><td class="description">There is no connection</td></tr>
 </tbody></table>
 <h3 class="enumeration"><a id="cups_dnssd_flags_e">cups_dnssd_flags_e</a></h3>
 <p class="description">DNS-SD callback flag values</p>
@@ -10188,6 +11086,31 @@ factor not applied)</td></tr>
 <tr><th>CUPS_JTYPE_STRING </th><td class="description">String value</td></tr>
 <tr><th>CUPS_JTYPE_TRUE </th><td class="description">Boolean true value</td></tr>
 </tbody></table>
+<h3 class="enumeration"><a id="cups_jwa_e">cups_jwa_e</a></h3>
+<p class="description">JSON Web Algorithms</p>
+<h4 class="constants">Constants</h4>
+<table class="list"><tbody>
+<tr><th>CUPS_JWA_ES256 </th><td class="description">ECDSA using P-256 and SHA-256</td></tr>
+<tr><th>CUPS_JWA_ES384 </th><td class="description">ECDSA using P-384 and SHA-384</td></tr>
+<tr><th>CUPS_JWA_ES512 </th><td class="description">ECDSA using P-521 and SHA-512</td></tr>
+<tr><th>CUPS_JWA_HS256 </th><td class="description">HMAC using SHA-256</td></tr>
+<tr><th>CUPS_JWA_HS384 </th><td class="description">HMAC using SHA-384</td></tr>
+<tr><th>CUPS_JWA_HS512 </th><td class="description">HMAC using SHA-512</td></tr>
+<tr><th>CUPS_JWA_NONE </th><td class="description">No algorithm</td></tr>
+<tr><th>CUPS_JWA_RS256 </th><td class="description">RSASSA-PKCS1-v1_5 using SHA-256</td></tr>
+<tr><th>CUPS_JWA_RS384 </th><td class="description">RSASSA-PKCS1-v1_5 using SHA-384</td></tr>
+<tr><th>CUPS_JWA_RS512 </th><td class="description">RSASSA-PKCS1-v1_5 using SHA-512</td></tr>
+</tbody></table>
+<h3 class="enumeration"><a id="cups_media_flags_e">cups_media_flags_e</a></h3>
+<p class="description">Flags for <a href="#cupsGetDestMediaByName"><code>cupsGetDestMediaByName</code></a> and <a href="#cupsGetDestMediaBySize"><code>cupsGetDestMediaBySize</code></a></p>
+<h4 class="constants">Constants</h4>
+<table class="list"><tbody>
+<tr><th>CUPS_MEDIA_FLAGS_BORDERLESS </th><td class="description">Find a borderless size</td></tr>
+<tr><th>CUPS_MEDIA_FLAGS_DEFAULT </th><td class="description">Find the closest size supported by the printer</td></tr>
+<tr><th>CUPS_MEDIA_FLAGS_DUPLEX </th><td class="description">Find a size compatible with 2-sided printing</td></tr>
+<tr><th>CUPS_MEDIA_FLAGS_EXACT </th><td class="description">Find an exact match for the size</td></tr>
+<tr><th>CUPS_MEDIA_FLAGS_READY </th><td class="description">If the printer supports media sensing, find the size amongst the &quot;ready&quot; media.</td></tr>
+</tbody></table>
 <h3 class="enumeration"><a id="cups_mediapos_e">cups_mediapos_e</a></h3>
 <p class="description">MediaPosition values</p>
 <h4 class="constants">Constants</h4>
@@ -10261,7 +11184,7 @@ factor not applied)</td></tr>
 <tr><th>CUPS_ORIENT_90 </th><td class="description">Rotate the page counter-clockwise</td></tr>
 </tbody></table>
 <h3 class="enumeration"><a id="cups_ptype_e">cups_ptype_e</a></h3>
-<p class="description">Printer type/capability bit constants</p>
+<p class="description">Printer type/capability flags</p>
 <h4 class="constants">Constants</h4>
 <table class="list"><tbody>
 <tr><th>CUPS_PRINTER_AUTHENTICATED </th><td class="description">Printer requires authentication</td></tr>

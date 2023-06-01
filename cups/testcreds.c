@@ -25,6 +25,7 @@
 //   -C COUNTRY                 Set country.
 //   -L LOCALITY                Set locality name.
 //   -O ORGANIZATION            Set organization name.
+//   -R CSR-FILENAME            Specify certificate signing request filename.
 //   -S STATE                   Set state.
 //   -U ORGANIZATIONAL-UNIT     Set organizational unit name.
 //   -a SUBJECT-ALT-NAME        Add a subjectAltName.
@@ -60,7 +61,7 @@
 //
 
 static int	do_unit_tests(void);
-static int	test_ca(const char *common_name, const char *root_name, int days);
+static int	test_ca(const char *common_name, const char *csrfile, const char *root_name, int days);
 static int	test_cert(bool ca_cert, cups_credpurpose_t purpose, cups_credtype_t type, cups_credusage_t keyusage, const char *organization, const char *org_unit, const char *locality, const char *state, const char *country, const char *root_name, const char *common_name, size_t num_alt_names, const char **alt_names, int days);
 static int	test_client(const char *uri);
 static int	test_csr(cups_credpurpose_t purpose, cups_credtype_t type, cups_credusage_t keyusage, const char *organization, const char *org_unit, const char *locality, const char *state, const char *country, const char *common_name, size_t num_alt_names, const char **alt_names);
@@ -81,6 +82,7 @@ main(int  argc,				// I - Number of command-line arguments
   const char	*subcommand = NULL,	// Sub-command
 		*arg = NULL,		// Argument for sub-command
 		*opt,			// Current option character
+		*csrfile = NULL,	// Certificste signing request filename
 		*root_name = NULL,	// Name of root certificate
 		*organization = NULL,	// Organization
 		*org_unit = NULL,	// Organizational unit
@@ -144,6 +146,16 @@ main(int  argc,				// I - Number of command-line arguments
                 return (usage(stderr));
 	      }
 	      organization = argv[i];
+	      break;
+
+          case 'R' : // -R CSR-FILENAME
+              i ++;
+              if (i >= argc)
+              {
+                fputs("testcreds: Missing CSR filename after '-R'.\n", stderr);
+                return (usage(stderr));
+	      }
+	      csrfile = argv[i];
 	      break;
 
           case 'S' : // -S STATE
@@ -350,7 +362,7 @@ main(int  argc,				// I - Number of command-line arguments
   // Run the corresponding sub-command...
   if (!strcmp(subcommand, "ca"))
   {
-    return (test_ca(arg, root_name, days));
+    return (test_ca(arg, csrfile, root_name, days));
   }
   else if (!strcmp(subcommand, "cacert"))
   {
@@ -522,14 +534,77 @@ do_unit_tests(void)
 
 static int				// O - Exit status
 test_ca(const char *common_name,	// I - Common name
+        const char *csrfile,		// I - CSR filename, if any
         const char *root_name,		// I - Root certificate name
         int        days)		// I - Number of days
 {
-  (void)common_name;
-  (void)root_name;
-  (void)days;
+  char	*request,			// Certificate request
+	*cert;				// Certificate
 
-  return (1);
+
+  if (csrfile)
+  {
+    int		csrfd = open(csrfile, O_RDONLY);
+					// File descriptor
+    struct stat	csrinfo;		// File information
+
+    if (csrfd < 0)
+    {
+      fprintf(stderr, "testcreds: Unable to access '%s': %s\n", csrfile, strerror(errno));
+      return (1);
+    }
+
+    if (fstat(csrfd, &csrinfo))
+    {
+      fprintf(stderr, "testcreds: Unable to stat '%s': %s\n", csrfile, strerror(errno));
+      close(csrfd);
+      return (1);
+    }
+
+    if ((request = malloc((size_t)csrinfo.st_size + 1)) == NULL)
+    {
+      fprintf(stderr, "testcreds: Unable to allocate memory for '%s': %s\n", csrfile, strerror(errno));
+      close(csrfd);
+      return (1);
+    }
+
+    if (read(csrfd, request, (size_t)csrinfo.st_size) < (ssize_t)csrinfo.st_size)
+    {
+      fprintf(stderr, "testcreds: Unable to read '%s'.\n", csrfile);
+      close(csrfd);
+      return (1);
+    }
+
+    close(csrfd);
+    request[csrinfo.st_size] = '\0';
+  }
+  else if ((request = cupsCopyCredentialsRequest(TEST_CERT_PATH, common_name)) == NULL)
+  {
+    fprintf(stderr, "testcreds: No request for '%s'.\n", common_name);
+    return (1);
+  }
+
+  if (!cupsSignCredentialsRequest(TEST_CERT_PATH, common_name, request, root_name, CUPS_CREDPURPOSE_ALL, CUPS_CREDUSAGE_ALL, /*cb*/NULL, /*cb_data*/NULL, time(NULL) + days * 86400))
+  {
+    fprintf(stderr, "testcreds: Unable to create certificate (%s)\n", cupsLastErrorString());
+    free(request);
+    return (1);
+  }
+
+  free(request);
+
+  if ((cert = cupsCopyCredentials(TEST_CERT_PATH, common_name)) != NULL)
+  {
+    puts(cert);
+    free(cert);
+  }
+  else
+  {
+    fprintf(stderr, "testcreds: Unable to get generated certificate for '%s'.\n", common_name);
+    return (1);
+  }
+
+  return (0);
 }
 
 

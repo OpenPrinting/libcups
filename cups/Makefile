@@ -648,7 +648,7 @@ doc:
 	echo "Generating CUPS Programming Manual..."
 	$(RM) cupspm.xml
 	codedoc --section "Programming" --body cupspm.md cupspm.xml \
-		$(LIBOBJS:.o=.c) $(HEADERS) --coverimage cupspm.png \
+		$(LIBOBJS:.o=.c) tls-openssl.c $(HEADERS) --coverimage cupspm.png \
 		--epub ../doc/cupspm.epub
 	codedoc --section "Programming" --body cupspm.md \
 		cupspm.xml > ../doc/cupspm.html

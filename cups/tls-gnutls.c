@@ -41,6 +41,57 @@ static gnutls_x509_crl_t tls_crl = NULL;/* Certificate revocation list */
 // "root_name" is `NULL` and there is no site-wide default root certificate, a
 // self-signed certificate is generated instead.
 //
+// The "ca_cert" argument specifies whether a CA certificate should be created.
+//
+// The "purpose" argument specifies the purpose(s) used for the credentials as a
+// bitwise OR of the following constants:
+//
+// - `CUPS_CREDPURPOSE_SERVER_AUTH` for validating TLS servers,
+// - `CUPS_CREDPURPOSE_CLIENT_AUTH` for validating TLS clients,
+// - `CUPS_CREDPURPOSE_CODE_SIGNING` for validating compiled code,
+// - `CUPS_CREDPURPOSE_EMAIL_PROTECTION` for validating email messages,
+// - `CUPS_CREDPURPOSE_TIME_STAMPING` for signing timestamps to objects, and/or
+// - `CUPS_CREDPURPOSE_OCSP_SIGNING` for Online Certificate Status Protocol
+//   message signing.
+//
+// The "type" argument specifies the type of credentials using one of the
+// following constants:
+//
+// - `CUPS_CREDTYPE_DEFAULT`: default type (RSA-3072 or P-384),
+// - `CUPS_CREDTYPE_RSA_2048_SHA256`: RSA with 2048-bit keys and SHA-256 hash,
+// - `CUPS_CREDTYPE_RSA_3072_SHA256`: RSA with 3072-bit keys and SHA-256 hash,
+// - `CUPS_CREDTYPE_RSA_4096_SHA256`: RSA with 4096-bit keys and SHA-256 hash,
+// - `CUPS_CREDTYPE_ECDSA_P256_SHA256`: ECDSA using the P-256 curve with SHA-256 hash,
+// - `CUPS_CREDTYPE_ECDSA_P384_SHA256`: ECDSA using the P-384 curve with SHA-256 hash, or
+// - `CUPS_CREDTYPE_ECDSA_P521_SHA256`: ECDSA using the P-521 curve with SHA-256 hash.
+//
+// The "usage" argument specifies the usage(s) for the credentials as a bitwise
+// OR of the following constants:
+//
+// - `CUPS_CREDUSAGE_DIGITAL_SIGNATURE`: digital signatures,
+// - `CUPS_CREDUSAGE_NON_REPUDIATION`: non-repudiation/content commitment,
+// - `CUPS_CREDUSAGE_KEY_ENCIPHERMENT`: key encipherment,
+// - `CUPS_CREDUSAGE_DATA_ENCIPHERMENT`: data encipherment,
+// - `CUPS_CREDUSAGE_KEY_AGREEMENT`: key agreement,
+// - `CUPS_CREDUSAGE_KEY_CERT_SIGN`: key certicate signing,
+// - `CUPS_CREDUSAGE_CRL_SIGN`: certificate revocation list signing,
+// - `CUPS_CREDUSAGE_ENCIPHER_ONLY`: encipherment only,
+// - `CUPS_CREDUSAGE_DECIPHER_ONLY`: decipherment only,
+// - `CUPS_CREDUSAGE_DEFAULT_CA`: defaults for CA certificates,
+// - `CUPS_CREDUSAGE_DEFAULT_TLS`: defaults for TLS certificates, and/or
+// - `CUPS_CREDUSAGE_ALL`: all usages.
+//
+// The "organization", "org_unit", "locality", "state_province", and "country"
+// arguments specify information about the identity and geolocation of the
+// issuer.
+//
+// The "common_name" argument specifies the common name and the "num_alt_names"
+// and "alt_names" arguments specify a list of DNS hostnames for the
+// certificate.
+//
+// The "expiration_date" argument specifies the expiration date and time as a
+// Unix `time_t` value in seconds.
+//
 
 bool					// O - `true` on success, `false` on error
 cupsCreateCredentials(
@@ -315,6 +366,52 @@ cupsCreateCredentials(
 // or, if "path" is `NULL`, in a per-user or system-wide (when running as root)
 // certificate/key store.
 //
+// The "purpose" argument specifies the purpose(s) used for the credentials as a
+// bitwise OR of the following constants:
+//
+// - `CUPS_CREDPURPOSE_SERVER_AUTH` for validating TLS servers,
+// - `CUPS_CREDPURPOSE_CLIENT_AUTH` for validating TLS clients,
+// - `CUPS_CREDPURPOSE_CODE_SIGNING` for validating compiled code,
+// - `CUPS_CREDPURPOSE_EMAIL_PROTECTION` for validating email messages,
+// - `CUPS_CREDPURPOSE_TIME_STAMPING` for signing timestamps to objects, and/or
+// - `CUPS_CREDPURPOSE_OCSP_SIGNING` for Online Certificate Status Protocol
+//   message signing.
+//
+// The "type" argument specifies the type of credentials using one of the
+// following constants:
+//
+// - `CUPS_CREDTYPE_DEFAULT`: default type (RSA-3072 or P-384),
+// - `CUPS_CREDTYPE_RSA_2048_SHA256`: RSA with 2048-bit keys and SHA-256 hash,
+// - `CUPS_CREDTYPE_RSA_3072_SHA256`: RSA with 3072-bit keys and SHA-256 hash,
+// - `CUPS_CREDTYPE_RSA_4096_SHA256`: RSA with 4096-bit keys and SHA-256 hash,
+// - `CUPS_CREDTYPE_ECDSA_P256_SHA256`: ECDSA using the P-256 curve with SHA-256 hash,
+// - `CUPS_CREDTYPE_ECDSA_P384_SHA256`: ECDSA using the P-384 curve with SHA-256 hash, or
+// - `CUPS_CREDTYPE_ECDSA_P521_SHA256`: ECDSA using the P-521 curve with SHA-256 hash.
+//
+// The "usage" argument specifies the usage(s) for the credentials as a bitwise
+// OR of the following constants:
+//
+// - `CUPS_CREDUSAGE_DIGITAL_SIGNATURE`: digital signatures,
+// - `CUPS_CREDUSAGE_NON_REPUDIATION`: non-repudiation/content commitment,
+// - `CUPS_CREDUSAGE_KEY_ENCIPHERMENT`: key encipherment,
+// - `CUPS_CREDUSAGE_DATA_ENCIPHERMENT`: data encipherment,
+// - `CUPS_CREDUSAGE_KEY_AGREEMENT`: key agreement,
+// - `CUPS_CREDUSAGE_KEY_CERT_SIGN`: key certicate signing,
+// - `CUPS_CREDUSAGE_CRL_SIGN`: certificate revocation list signing,
+// - `CUPS_CREDUSAGE_ENCIPHER_ONLY`: encipherment only,
+// - `CUPS_CREDUSAGE_DECIPHER_ONLY`: decipherment only,
+// - `CUPS_CREDUSAGE_DEFAULT_CA`: defaults for CA certificates,
+// - `CUPS_CREDUSAGE_DEFAULT_TLS`: defaults for TLS certificates, and/or
+// - `CUPS_CREDUSAGE_ALL`: all usages.
+//
+// The "organization", "org_unit", "locality", "state_province", and "country"
+// arguments specify information about the identity and geolocation of the
+// issuer.
+//
+// The "common_name" argument specifies the common name and the "num_alt_names"
+// and "alt_names" arguments specify a list of DNS hostnames for the
+// certificate.
+//
 
 bool					// O - `true` on success, `false` on error
 cupsCreateCredentialsRequest(
@@ -506,6 +603,56 @@ cupsCreateCredentialsRequest(
 
 //
 // 'cupsSignCredentialsRequest()' - Sign an X.509 certificate signing request to produce an X.509 certificate chain.
+//
+// This function creates an X.509 certificate from a signing request.  The
+// certificate is stored in the directory "path" or, if "path" is `NULL`, in a
+// per-user or system-wide (when running as root) certificate/key store.  The
+// generated certificate is signed by the named root certificate or, if
+// "root_name" is `NULL`, a site-wide default root certificate.  When
+// "root_name" is `NULL` and there is no site-wide default root certificate, a
+// self-signed certificate is generated instead.
+//
+// The "allowed_purpose" argument specifies the allowed purpose(s) used for the
+// credentials as a bitwise OR of the following constants:
+//
+// - `CUPS_CREDPURPOSE_SERVER_AUTH` for validating TLS servers,
+// - `CUPS_CREDPURPOSE_CLIENT_AUTH` for validating TLS clients,
+// - `CUPS_CREDPURPOSE_CODE_SIGNING` for validating compiled code,
+// - `CUPS_CREDPURPOSE_EMAIL_PROTECTION` for validating email messages,
+// - `CUPS_CREDPURPOSE_TIME_STAMPING` for signing timestamps to objects, and/or
+// - `CUPS_CREDPURPOSE_OCSP_SIGNING` for Online Certificate Status Protocol
+//   message signing.
+//
+// The "allowed_usage" argument specifies the allowed usage(s) for the
+// credentials as a bitwise OR of the following constants:
+//
+// - `CUPS_CREDUSAGE_DIGITAL_SIGNATURE`: digital signatures,
+// - `CUPS_CREDUSAGE_NON_REPUDIATION`: non-repudiation/content commitment,
+// - `CUPS_CREDUSAGE_KEY_ENCIPHERMENT`: key encipherment,
+// - `CUPS_CREDUSAGE_DATA_ENCIPHERMENT`: data encipherment,
+// - `CUPS_CREDUSAGE_KEY_AGREEMENT`: key agreement,
+// - `CUPS_CREDUSAGE_KEY_CERT_SIGN`: key certicate signing,
+// - `CUPS_CREDUSAGE_CRL_SIGN`: certificate revocation list signing,
+// - `CUPS_CREDUSAGE_ENCIPHER_ONLY`: encipherment only,
+// - `CUPS_CREDUSAGE_DECIPHER_ONLY`: decipherment only,
+// - `CUPS_CREDUSAGE_DEFAULT_CA`: defaults for CA certificates,
+// - `CUPS_CREDUSAGE_DEFAULT_TLS`: defaults for TLS certificates, and/or
+// - `CUPS_CREDUSAGE_ALL`: all usages.
+//
+// The "cb" and "cb_data" arguments specify a function and its data that are
+// used to validate any subjectAltName values in the signing request:
+//
+// ```
+// bool san_cb(const char *common_name, const char *alt_name, void *cb_data) {
+//   ... return true if OK and false if not ...
+// }
+// ```
+//
+// If `NULL`, a default validation function is used that allows "localhost" and
+// variations of the common name.
+//
+// The "expiration_date" argument specifies the expiration date and time as a
+// Unix `time_t` value in seconds.
 //
 
 bool					// O - `true` on success, `false` on failure

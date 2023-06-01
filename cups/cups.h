@@ -133,7 +133,7 @@ extern "C" {
 // Types and structures...
 //
 
-enum cups_credpurpose_e			//// X.509 credential purposes
+enum cups_credpurpose_e			// X.509 credential purposes
 {
   CUPS_CREDPURPOSE_SERVER_AUTH = 0x01,		// serverAuth
   CUPS_CREDPURPOSE_CLIENT_AUTH = 0x02,		// clientAuth
@@ -143,9 +143,9 @@ enum cups_credpurpose_e			//// X.509 credential purposes
   CUPS_CREDPURPOSE_OCSP_SIGNING = 0x20,		// OCSPSigning
   CUPS_CREDPURPOSE_ALL = 0x3f			// All purposes
 };
-typedef unsigned cups_credpurpose_t;	//// Combined X.509 credential purposes for @link cupsCreateCredentials@ and @link cupsCreateCredentialsRequest@
+typedef unsigned cups_credpurpose_t;	// Combined X.509 credential purposes for @link cupsCreateCredentials@ and @link cupsCreateCredentialsRequest@
 
-typedef enum cups_credtype_e		//// X.509 credential types for @link cupsCreateCredentials@ and @link cupsCreateCredentialsRequest@
+typedef enum cups_credtype_e		// X.509 credential types for @link cupsCreateCredentials@ and @link cupsCreateCredentialsRequest@
 {
   CUPS_CREDTYPE_DEFAULT,			// Default type
   CUPS_CREDTYPE_RSA_2048_SHA256,		// RSA with 2048-bit keys and SHA-256 hash
@@ -156,7 +156,7 @@ typedef enum cups_credtype_e		//// X.509 credential types for @link cupsCreateCr
   CUPS_CREDTYPE_ECDSA_P521_SHA256		// ECDSA using the P-521 curve with SHA-256 hash
 } cups_credtype_t;
 
-enum cups_credusage_e			//// X.509 keyUsage flags
+enum cups_credusage_e			// X.509 keyUsage flags
 {
   CUPS_CREDUSAGE_DIGITAL_SIGNATURE = 0x001,	// digitalSignature
   CUPS_CREDUSAGE_NON_REPUDIATION = 0x002,	// nonRepudiation/contentCommitment
@@ -171,9 +171,9 @@ enum cups_credusage_e			//// X.509 keyUsage flags
   CUPS_CREDUSAGE_DEFAULT_TLS = 0x005,		// Defaults for TLS certs
   CUPS_CREDUSAGE_ALL = 0x1ff			// All keyUsage flags
 };
-typedef unsigned cups_credusage_t;	//// Combined X.509 keyUsage flags for @link cupsCreateCredentials@ and @link cupsCreateCredentialsRequest@
+typedef unsigned cups_credusage_t;	// Combined X.509 keyUsage flags for @link cupsCreateCredentials@ and @link cupsCreateCredentialsRequest@
 
-enum cups_dest_flags_e			//// Flags for @link cupsConnectDest@ and @link cupsEnumDests@
+enum cups_dest_flags_e			// Flags for @link cupsConnectDest@ and @link cupsEnumDests@
 {
   CUPS_DEST_FLAGS_NONE = 0x00,			// No flags are set
   CUPS_DEST_FLAGS_UNCONNECTED = 0x01,		// There is no connection
@@ -185,9 +185,9 @@ enum cups_dest_flags_e			//// Flags for @link cupsConnectDest@ and @link cupsEnu
   CUPS_DEST_FLAGS_CANCELED = 0x40,		// Operation was canceled
   CUPS_DEST_FLAGS_DEVICE = 0x80			// For @link cupsConnectDest@: Connect to device
 };
-typedef unsigned cups_dest_flags_t;	//// Combined flags for @link cupsConnectDest@ and @link cupsEnumDests@
+typedef unsigned cups_dest_flags_t;	// Combined flags for @link cupsConnectDest@ and @link cupsEnumDests@
 
-enum cups_media_flags_e			//// Flags for @link cupsGetDestMediaByName@ and @link cupsGetDestMediaBySize@
+enum cups_media_flags_e			// Flags for @link cupsGetDestMediaByName@ and @link cupsGetDestMediaBySize@
 {
   CUPS_MEDIA_FLAGS_DEFAULT = 0x00,		// Find the closest size supported by the printer
   CUPS_MEDIA_FLAGS_BORDERLESS = 0x01,		// Find a borderless size
@@ -195,9 +195,9 @@ enum cups_media_flags_e			//// Flags for @link cupsGetDestMediaByName@ and @link
   CUPS_MEDIA_FLAGS_EXACT = 0x04,		// Find an exact match for the size
   CUPS_MEDIA_FLAGS_READY = 0x08			// If the printer supports media sensing, find the size amongst the "ready" media.
 };
-typedef unsigned cups_media_flags_t;	//// Combined flags for @link cupsGetDestMediaByName@ and @link cupsGetDestMediaBySize@
+typedef unsigned cups_media_flags_t;	// Combined flags for @link cupsGetDestMediaByName@ and @link cupsGetDestMediaBySize@
 
-enum cups_ptype_e			//// Printer type/capability flags
+enum cups_ptype_e			// Printer type/capability flags
 {
   CUPS_PRINTER_LOCAL = 0x0000,			// Local printer or class
   CUPS_PRINTER_CLASS = 0x0001,			// Printer class
@@ -227,22 +227,22 @@ enum cups_ptype_e			//// Printer type/capability flags
   CUPS_PRINTER_MFP = 0x4000000,			// Printer with scanning capabilities
   CUPS_PRINTER_OPTIONS = 0x6fffc		// ~(CLASS | REMOTE | IMPLICIT | DEFAULT | FAX | REJECTING | DELETE | NOT_SHARED | AUTHENTICATED | COMMANDS | DISCOVERED) @private@
 };
-typedef unsigned cups_ptype_t;		//// Combined printer type/capability flags
+typedef unsigned cups_ptype_t;		// Combined printer type/capability flags
 
-typedef enum cups_whichjobs_e		//// Which jobs for @link cupsGetJobs@
+typedef enum cups_whichjobs_e		// Which jobs for @link cupsGetJobs@
 {
   CUPS_WHICHJOBS_ALL = -1,		// All jobs
   CUPS_WHICHJOBS_ACTIVE,		// Pending/held/processing jobs
   CUPS_WHICHJOBS_COMPLETED		// Completed/canceled/aborted jobs
 } cups_whichjobs_t;
 
-typedef struct cups_option_s		//// Printer Options
+typedef struct cups_option_s		// Printer Options
 {
   char		*name;			// Name of option
   char		*value;			// Value of option
 } cups_option_t;
 
-typedef struct cups_dest_s		//// Destination
+typedef struct cups_dest_s		// Destination
 {
   char		*name,			// Printer or class name
 		*instance;		// Local instance name or NULL
@@ -269,7 +269,7 @@ typedef struct cups_job_s		// Job
   time_t	processing_time;	// Time the job was processed
 } cups_job_t;
 
-typedef struct cups_size_s		//// Media information
+typedef struct cups_size_s		// Media information
 {
   char		media[128],		// Media name to use
 		color[128],		// Media color (blank for any/auto)
