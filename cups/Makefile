@@ -188,28 +188,43 @@ test:		$(UNITTARGETS)
 #		echo Running CUPS API tests...; \
 #		./testcups 2>>test.log; \
 #	fi
+	echo ""
+	echo Running credentials API tests...
+	./testcreds 2>>test.log
+	echo ""
 	echo Running file API tests...
 	./testfile 2>>test.log
+	echo ""
 	echo Running form API tests...
 	./testform 2>>test.log
+#	echo ""
 #	echo Running cupsGetDests API tests...
 #	./testgetdests 2>>test.log
+	echo ""
 	echo Running hash API tests...
 	./testhash 2>>test.log
+	echo ""
 	echo Running HTTP API tests...
 	./testhttp 2>>test.log
+	echo ""
 	echo Running IPP API tests...
 	./testipp 2>>test.log
+	echo ""
 	echo Running internationalization API tests...
 	./testi18n 2>>test.log
+	echo ""
 	echo Running JSON API tests...
 	./testjson 2>>test.log
+	echo ""
 	echo Running JWT API tests...
 	./testjwt 2>>test.log
+	echo ""
 	echo Running option API tests...
 	./testoptions 2>>test.log
+	echo ""
 	echo Running PWG API tests...
 	./testpwg 2>>test.log
+	echo ""
 	echo Running raster API tests...
 	./testraster 2>>test.log
 	./testtestpage 2>>test.log
@@ -217,6 +232,7 @@ test:		$(UNITTARGETS)
 fuzz:		$(UNITTARGETS)
 	echo Fuzzing IPP API...
 	./fuzzipp 2>fuzz.log
+	echo ""
 	echo Fuzzing JSON API...
 	AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=yes AFL_NO_UI=yes afl-fuzz -n -i json-afl-in -o json-afl-out -V 120  -- ./testjson 2>>fuzz.log
 
