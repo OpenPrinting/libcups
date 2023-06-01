@@ -675,7 +675,7 @@ main(int  argc,				/* I - Number of command-line arguments */
 	printf("Count: %u\n", (unsigned)cupsArrayGetCount(creds));
         printf("Trust: %s\n", trusts[trust]);
         printf("Expiration: %s\n", httpGetDateString(httpCredentialsGetExpiration(creds), expstr, sizeof(expstr)));
-        printf("IsValidName: %d\n", httpCredentialsAreValidForName(creds, hostname));
+        printf("IsValidName: %s\n", httpCredentialsAreValidForName(creds, hostname) ? "true" : "false");
         printf("String: \"%s\"\n", info);
 
 	printf("LoadCredentials: %s\n", httpLoadCredentials(NULL, &lcreds, hostname) ? "true" : "false");

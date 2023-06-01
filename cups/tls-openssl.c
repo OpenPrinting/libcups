@@ -1,28 +1,26 @@
-/*
- * TLS support code for CUPS using OpenSSL/LibreSSL.
- *
- * Copyright © 2020-2022 by OpenPrinting
- * Copyright © 2007-2019 by Apple Inc.
- * Copyright © 1997-2007 by Easy Software Products, all rights reserved.
- *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more
- * information.
- */
+//
+// TLS support code for CUPS using OpenSSL/LibreSSL.
+//
+// Note: This file is included from tls.c
+//
+// Copyright © 2020-2023 by OpenPrinting
+// Copyright © 2007-2019 by Apple Inc.
+// Copyright © 1997-2007 by Easy Software Products, all rights reserved.
+//
+// Licensed under Apache License v2.0.  See the file "LICENSE" for more
+// information.
+//
 
-/**** This file is included from tls.c ****/
-
-/*
- * Include necessary headers...
- */
-
-#include <sys/stat.h>
 #include <openssl/x509v3.h>
-#define USE_EC 0			// Set to 1 to generate EC certs
+#include <openssl/evp.h>
+#include <openssl/objects.h>
+#include <openssl/obj_mac.h>
 
 
-/*
- * Local functions...
- */
+//
+// Local functions...
+//
+
 
 static long		http_bio_ctrl(BIO *h, int cmd, long arg1, void *arg2);
 static int		http_bio_free(BIO *data);
@@ -31,128 +29,178 @@ static int		http_bio_puts(BIO *h, const char *str);
 static int		http_bio_read(BIO *h, char *buf, int size);
 static int		http_bio_write(BIO *h, const char *buf, int num);
 
-static X509		*http_create_credential(http_credential_t *credential);
-static const char	*http_default_path(char *buffer, size_t bufsize);
-static time_t		http_get_date(X509 *cert, int which);
-//static void		http_load_crl(void);
-static const char	*http_make_path(char *buffer, size_t bufsize, const char *dirname, const char *filename, const char *ext);
-static bool		http_x509_add_ext(X509 *cert, int nid, const char *value);
-static void		http_x509_add_san(X509 *cert, const char *name);
+static bool		openssl_add_ext(STACK_OF(X509_EXTENSION) *exts, int nid, const char *value);
+static X509		*openssl_create_credential(http_credential_t *credential);
+static X509_NAME	*openssl_create_name(const char *organization, const char *org_unit, const char *locality, const char *state_province, const char *country, const char *common_name);
+static EVP_PKEY		*openssl_create_key(cups_credtype_t type);
+static X509_EXTENSION	*openssl_create_san(const char *common_name, size_t num_alt_names, const char * const *alt_names);
+static time_t		openssl_get_date(X509 *cert, int which);
+//static void		openssl_load_crl(void);
 
 
-/*
- * Local globals...
- */
+//
+// Local globals...
+//
 
-static int		tls_auto_create = 0;
-					/* Auto-create self-signed certs? */
 static BIO_METHOD	*tls_bio_method = NULL;
-					/* OpenSSL BIO method */
-static char		*tls_common_name = NULL;
-					/* Default common name */
-//static X509_CRL		*tls_crl = NULL;/* Certificate revocation list */
-static char		*tls_keypath = NULL;
-					/* Server cert keychain path */
-static cups_mutex_t	tls_mutex = CUPS_MUTEX_INITIALIZER;
-					/* Mutex for keychain/certs */
-static int		tls_options = -1,/* Options for TLS connections */
-			tls_min_version = _HTTP_TLS_1_2,
-			tls_max_version = _HTTP_TLS_MAX;
+					// OpenSSL BIO method
+static const char * const tls_purpose_oids[] =
+{					// OIDs for each key purpose value
+  "1.3.6.1.5.5.7.3.1",			// serverAuth
+  "1.3.6.1.5.5.7.3.2",			// clientAuth
+  "1.3.6.1.5.5.7.3.3",			// codeSigning
+  "1.3.6.1.5.5.7.3.4",			// emailProtection
+  "1.3.6.1.5.5.7.3.8",			// timeStamping
+  "1.3.6.1.5.5.7.3.9"			// OCSPSigning
+};
+static const char * const tls_usage_strings[] =
+{					// Strings for each key usage value
+  "digitalSignature",
+  "nonRepudiation",
+  "keyEncipherment",
+  "dataEncipherment",
+  "keyAgreement",
+  "keyCertSign",
+  "cRLSign",
+  "encipherOnly",
+  "decipherOnly"
+};
 
 
-/*
- * 'cupsMakeServerCredentials()' - Make a self-signed certificate and private key pair.
- */
+//
+// 'cupsCreateCredentials()' - Make an X.509 certificate and private key pair.
+//
+// This function creates an X.509 certificate and private key pair.  The
+// certificate and key are stored in the directory "path" or, if "path" is
+// `NULL`, in a per-user or system-wide (when running as root) certificate/key
+// store.  The generated certificate is signed by the named root certificate or,
+// if "root_name" is `NULL`, a site-wide default root certificate.  When
+// "root_name" is `NULL` and there is no site-wide default root certificate, a
+// self-signed certificate is generated instead.
+//
+// The "ca_cert" argument specifies whether a CA certificate should be created.
+//
+// The "purpose" argument specifies the purpose(s) used for the credentials as a
+// bitwise OR of the following constants:
+//
+// - `CUPS_CREDPURPOSE_SERVER_AUTH` for validating TLS servers,
+// - `CUPS_CREDPURPOSE_CLIENT_AUTH` for validating TLS clients,
+// - `CUPS_CREDPURPOSE_CODE_SIGNING` for validating compiled code,
+// - `CUPS_CREDPURPOSE_EMAIL_PROTECTION` for validating email messages,
+// - `CUPS_CREDPURPOSE_TIME_STAMPING` for signing timestamps to objects, and/or
+// - `CUPS_CREDPURPOSE_OCSP_SIGNING` for Online Certificate Status Protocol
+//   message signing.
+//
+// The "type" argument specifies the type of credentials using one of the
+// following constants:
+//
+// - `CUPS_CREDTYPE_DEFAULT`: default type (RSA-3072 or P-384),
+// - `CUPS_CREDTYPE_RSA_2048_SHA256`: RSA with 2048-bit keys and SHA-256 hash,
+// - `CUPS_CREDTYPE_RSA_3072_SHA256`: RSA with 3072-bit keys and SHA-256 hash,
+// - `CUPS_CREDTYPE_RSA_4096_SHA256`: RSA with 4096-bit keys and SHA-256 hash,
+// - `CUPS_CREDTYPE_ECDSA_P256_SHA256`: ECDSA using the P-256 curve with SHA-256 hash,
+// - `CUPS_CREDTYPE_ECDSA_P384_SHA256`: ECDSA using the P-384 curve with SHA-256 hash, or
+// - `CUPS_CREDTYPE_ECDSA_P521_SHA256`: ECDSA using the P-521 curve with SHA-256 hash.
+//
+// The "usage" argument specifies the usage(s) for the credentials as a bitwise
+// OR of the following constants:
+//
+// - `CUPS_CREDUSAGE_DIGITAL_SIGNATURE`: digital signatures,
+// - `CUPS_CREDUSAGE_NON_REPUDIATION`: non-repudiation/content commitment,
+// - `CUPS_CREDUSAGE_KEY_ENCIPHERMENT`: key encipherment,
+// - `CUPS_CREDUSAGE_DATA_ENCIPHERMENT`: data encipherment,
+// - `CUPS_CREDUSAGE_KEY_AGREEMENT`: key agreement,
+// - `CUPS_CREDUSAGE_KEY_CERT_SIGN`: key certicate signing,
+// - `CUPS_CREDUSAGE_CRL_SIGN`: certificate revocation list signing,
+// - `CUPS_CREDUSAGE_ENCIPHER_ONLY`: encipherment only,
+// - `CUPS_CREDUSAGE_DECIPHER_ONLY`: decipherment only,
+// - `CUPS_CREDUSAGE_DEFAULT_CA`: defaults for CA certificates,
+// - `CUPS_CREDUSAGE_DEFAULT_TLS`: defaults for TLS certificates, and/or
+// - `CUPS_CREDUSAGE_ALL`: all usages.
+//
+// The "organization", "org_unit", "locality", "state_province", and "country"
+// arguments specify information about the identity and geolocation of the
+// issuer.
+//
+// The "common_name" argument specifies the common name and the "num_alt_names"
+// and "alt_names" arguments specify a list of DNS hostnames for the
+// certificate.
+//
+// The "expiration_date" argument specifies the expiration date and time as a
+// Unix `time_t` value in seconds.
+//
 
-int					// O - 1 on success, 0 on failure
-cupsMakeServerCredentials(
-    const char *path,			// I - Path to keychain/directory
-    const char *common_name,		// I - Common name
-    int        num_alt_names,		// I - Number of subject alternate names
-    const char **alt_names,		// I - Subject Alternate Names
-    time_t     expiration_date)		// I - Expiration date
+bool					// O - `true` on success, `false` on failure
+cupsCreateCredentials(
+    const char         *path,		// I - Directory path for certificate/key store or `NULL` for default
+    bool               ca_cert,		// I - `true` to create a CA certificate, `false` for a client/server certificate
+    cups_credpurpose_t purpose,		// I - Credential purposes
+    cups_credtype_t    type,		// I - Credential type
+    cups_credusage_t   usage,		// I - Credential usages
+    const char         *organization,	// I - Organization or `NULL` to use common name
+    const char         *org_unit,	// I - Organizational unit or `NULL` for none
+    const char         *locality,	// I - City/town or `NULL` for "Unknown"
+    const char         *state_province,	// I - State/province or `NULL` for "Unknown"
+    const char         *country,	// I - Country or `NULL` for locale-based default
+    const char         *common_name,	// I - Common name
+    size_t             num_alt_names,	// I - Number of subject alternate names
+    const char * const *alt_names,	// I - Subject Alternate Names
+    const char         *root_name,	// I - Root certificate/domain name or `NULL` for site/self-signed
+    time_t             expiration_date)	// I - Expiration date
 {
-  int		result = 0;		// Return value
-  EVP_PKEY	*pkey;			// Private key
-#if defined(EVP_PKEY_EC) && USE_EC
-  EC_KEY	*ec;			// EC key
-#else
-  RSA		*rsa;			// RSA key pair
-#endif // EVP_PKEY_EC && USE_EC
+  bool		result = false;		// Return value
+  EVP_PKEY	*pkey;			// Key pair
   X509		*cert;			// Certificate
-  cups_lang_t	*language;		// Default language info
-  const char	*langname;		// Language name
+  X509		*root_cert = NULL;	// Root certificate, if any
+  EVP_PKEY	*root_key = NULL;	// Root private key, if any
+  char		defpath[1024],		// Default path
+ 		crtfile[1024],		// Certificate filename
+		keyfile[1024],		// Private key filename
+		root_crtfile[1024],	// Root certificate filename
+		root_keyfile[1024];	// Root private key filename
   time_t	curtime;		// Current time
   X509_NAME	*name;			// Subject/issuer name
   ASN1_INTEGER	*serial;		// Serial number
   ASN1_TIME	*notBefore,		// Initial date
 		*notAfter;		// Expiration date
   BIO		*bio;			// Output file
-  char		temp[1024],		// Temporary directory name
- 		crtfile[1024],		// Certificate filename
-		keyfile[1024];		// Private key filename
+  char		temp[1024],		// Temporary string
+		*tempptr;		// Pointer into temporary string
+  STACK_OF(X509_EXTENSION) *exts;	// Extensions
+  X509_EXTENSION *ext;			// Current extension
+  unsigned	i;			// Looping var
+  cups_credpurpose_t purpose_bit;	// Current purpose
+  cups_credusage_t usage_bit;		// Current usage
 
 
-  DEBUG_printf(("cupsMakeServerCredentials(path=\"%s\", common_name=\"%s\", num_alt_names=%d, alt_names=%p, expiration_date=%d)", path, common_name, num_alt_names, alt_names, (int)expiration_date));
+  DEBUG_printf(("cupsCreateCredentials(path=\"%s\", ca_cert=%s, purpose=0x%x, type=%d, usage=0x%x, organization=\"%s\", org_unit=\"%s\", locality=\"%s\", state_province=\"%s\", country=\"%s\", common_name=\"%s\", num_alt_names=%u, alt_names=%p, root_name=\"%s\", expiration_date=%ld)", path, ca_cert ? "true" : "false", purpose, type, usage, organization, org_unit, locality, state_province, country, common_name, (unsigned)num_alt_names, alt_names, root_name, (long)expiration_date));
 
   // Filenames...
   if (!path)
-    path = http_default_path(temp, sizeof(temp));
+    path = http_default_path(defpath, sizeof(defpath));
 
   if (!path || !common_name)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), 0);
-    return (0);
+    return (false);
   }
-
-  http_make_path(crtfile, sizeof(crtfile), path, common_name, "crt");
-  http_make_path(keyfile, sizeof(keyfile), path, common_name, "key");
 
   // Create the encryption key...
-  DEBUG_puts("1cupsMakeServerCredentials: Creating key pair.");
+  DEBUG_puts("1cupsCreateCredentials: Creating key pair.");
 
-#if defined(EVP_PKEY_EC) && USE_EC
-  if ((ec = EC_KEY_new_by_curve_name(NID_secp384r1)) == NULL)
-  {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create key pair."), 1);
-    return (0);
-  }
-#else
-  if ((rsa = RSA_generate_key(3072, RSA_F4, NULL, NULL)) == NULL)
-  {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create key pair."), 1);
-    return (0);
-  }
-#endif // EVP_PKEY_EC && USE_EC
+  if ((pkey = openssl_create_key(type)) == NULL)
+    return (false);
 
-  if ((pkey = EVP_PKEY_new()) == NULL)
-  {
-#if defined(EVP_PKEY_EC) && USE_EC
-    EC_KEY_free(ec);
-#else
-    RSA_free(rsa);
-#endif // EVP_PKEY_EC && USE_EC
-
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create private key."), 1);
-    return (0);
-  }
-
-#if defined(EVP_PKEY_EC) && USE_EC
-  EVP_PKEY_assign_EC_KEY(pkey, ec);
-#else
-  EVP_PKEY_assign_RSA(pkey, rsa);
-#endif // EVP_PKEY_EC && USE_EC
-
-  DEBUG_puts("1cupsMakeServerCredentials: Key pair created.");
+  DEBUG_puts("1cupsCreateCredentials: Key pair created.");
 
   // Create the X.509 certificate...
-  DEBUG_puts("1cupsMakeServerCredentials: Generating self-signed X.509 certificate.");
+  DEBUG_puts("1cupsCreateCredentials: Generating X.509 certificate.");
 
   if ((cert = X509_new()) == NULL)
   {
     EVP_PKEY_free(pkey);
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create X.509 certificate."), 1);
-    return (0);
+    return (false);
   }
 
   curtime = time(NULL);
@@ -174,60 +222,112 @@ cupsMakeServerCredentials(
 
   X509_set_pubkey(cert, pkey);
 
-  language = cupsLangDefault();
-  langname = cupsLangGetName(language);
-  name     = X509_NAME_new();
-  if (strlen(langname) == 5)
-    X509_NAME_add_entry_by_txt(name, SN_countryName, MBSTRING_ASC, (unsigned char *)langname + 3, -1, -1, 0);
-  else
-    X509_NAME_add_entry_by_txt(name, SN_countryName, MBSTRING_ASC, (unsigned char *)"US", -1, -1, 0);
-  X509_NAME_add_entry_by_txt(name, SN_commonName, MBSTRING_ASC, (unsigned char *)common_name, -1, -1, 0);
-  X509_NAME_add_entry_by_txt(name, SN_organizationName, MBSTRING_ASC, (unsigned char *)common_name, -1, -1, 0);
-  X509_NAME_add_entry_by_txt(name, SN_organizationalUnitName, MBSTRING_ASC, (unsigned char *)"Unknown", -1, -1, 0);
-  X509_NAME_add_entry_by_txt(name, SN_stateOrProvinceName, MBSTRING_ASC, (unsigned char *)"Unknown", -1, -1, 0);
-  X509_NAME_add_entry_by_txt(name, SN_localityName, MBSTRING_ASC, (unsigned char *)"Unknown", -1, -1, 0);
+  name = openssl_create_name(organization, org_unit, locality, state_province, country, common_name);
 
-  X509_set_issuer_name(cert, name);
   X509_set_subject_name(cert, name);
-  X509_NAME_free(name);
 
-  http_x509_add_san(cert, common_name);
-  if (!strstr(common_name, ".local"))
+  // Try loading a root certificate...
+  http_make_path(root_crtfile, sizeof(root_crtfile), path, root_name ? root_name : "_site_", "crt");
+  http_make_path(root_keyfile, sizeof(root_keyfile), path, root_name ? root_name : "_site_", "key");
+
+  if (!ca_cert && !access(root_crtfile, 0) && !access(root_keyfile, 0))
   {
-    // Add common_name.local to the list, too...
-    char	localname[256],		// hostname.local
-		*localptr;		// Pointer into localname
-
-    cupsCopyString(localname, common_name, sizeof(localname));
-    if ((localptr = strchr(localname, '.')) != NULL)
-      *localptr = '\0';
-    cupsConcatString(localname, ".local", sizeof(localname));
-
-    http_x509_add_san(cert, localname);
-  }
-
-  if (num_alt_names > 0)
-  {
-    int i;                              // Looping var...
-
-    for (i = 0; i < num_alt_names; i ++)
+    if ((bio = BIO_new_file(root_crtfile, "rb")) != NULL)
     {
-      if (strcmp(alt_names[i], "localhost"))
-        http_x509_add_san(cert, alt_names[i]);
+      PEM_read_bio_X509(bio, &root_cert, /*cb*/NULL, /*u*/NULL);
+      BIO_free(bio);
+
+      if ((bio = BIO_new_file(root_keyfile, "rb")) != NULL)
+      {
+	PEM_read_bio_PrivateKey(bio, &root_key, /*cb*/NULL, /*u*/NULL);
+	BIO_free(bio);
+      }
+
+      if (!root_key)
+      {
+        // Only use root certificate if we have the key...
+        X509_free(root_cert);
+        root_cert = NULL;
+      }
+    }
+
+    if (!root_cert || !root_key)
+    {
+      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to load X.509 CA certificate and private key."), 1);
+      goto done;
     }
   }
 
-  // Add extensions that are required to make Chrome happy...
-  http_x509_add_ext(cert, NID_basic_constraints, "critical,CA:FALSE,pathlen:0");
-  http_x509_add_ext(cert, NID_key_usage, "critical,digitalSignature,keyEncipherment");
-  http_x509_add_ext(cert, NID_ext_key_usage, "1.3.6.1.5.5.7.3.1");
-  http_x509_add_ext(cert, NID_subject_key_identifier, "hash");
-  http_x509_add_ext(cert, NID_authority_key_identifier, "keyid,issuer");
+  if (root_cert)
+    X509_set_issuer_name(cert, X509_get_subject_name(root_cert));
+  else
+    X509_set_issuer_name(cert, name);
+
+  X509_NAME_free(name);
+
+  exts = sk_X509_EXTENSION_new_null();
+
+  if (ca_cert)
+  {
+    // Add extensions that are required to make Chrome happy...
+    openssl_add_ext(exts, NID_basic_constraints, "critical,CA:TRUE,pathlen:0");
+  }
+  else
+  {
+    // Add extension with DNS names and free buffer for GENERAL_NAME
+    if ((ext = openssl_create_san(common_name, num_alt_names, alt_names)) == NULL)
+      goto done;
+
+    sk_X509_EXTENSION_push(exts, ext);
+
+    // Add extensions that are required to make Chrome happy...
+    openssl_add_ext(exts, NID_basic_constraints, "critical,CA:FALSE,pathlen:0");
+  }
+
+  cupsCopyString(temp, "critical", sizeof(temp));
+  for (tempptr = temp + strlen(temp), i = 0, usage_bit = CUPS_CREDUSAGE_DIGITAL_SIGNATURE; i < (sizeof(tls_usage_strings) / sizeof(tls_usage_strings[0])); i ++, usage_bit *= 2)
+  {
+    if (!(usage & usage_bit))
+      continue;
+
+    snprintf(tempptr, sizeof(temp) - (size_t)(tempptr - temp), ",%s", tls_usage_strings[i]);
+
+    tempptr += strlen(tempptr);
+  }
+  openssl_add_ext(exts, NID_key_usage, temp);
+
+  temp[0] = '\0';
+  for (tempptr = temp, i = 0, purpose_bit = CUPS_CREDPURPOSE_SERVER_AUTH; i < (sizeof(tls_purpose_oids) / sizeof(tls_purpose_oids[0])); i ++, purpose_bit *= 2)
+  {
+    if (!(purpose & purpose_bit))
+      continue;
+
+    if (tempptr == temp)
+      cupsCopyString(temp, tls_purpose_oids[i], sizeof(temp));
+    else
+      snprintf(tempptr, sizeof(temp) - (size_t)(tempptr - temp), ",%s", tls_purpose_oids[i]);
+
+    tempptr += strlen(tempptr);
+  }
+  openssl_add_ext(exts, NID_ext_key_usage, temp);
+
+  openssl_add_ext(exts, NID_subject_key_identifier, "hash");
+  openssl_add_ext(exts, NID_authority_key_identifier, "keyid,issuer");
+
+  while ((ext = sk_X509_EXTENSION_pop(exts)) != NULL)
+    X509_add_ext(cert, ext, -1);
+
   X509_set_version(cert, 2); // v3
 
-  X509_sign(cert, pkey, EVP_sha256());
+  if (root_key)
+    X509_sign(cert, root_key, EVP_sha256());
+  else
+    X509_sign(cert, pkey, EVP_sha256());
 
   // Save them...
+  http_make_path(crtfile, sizeof(crtfile), path, common_name, "crt");
+  http_make_path(keyfile, sizeof(keyfile), path, common_name, "key");
+
   if ((bio = BIO_new_file(keyfile, "wb")) == NULL)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
@@ -256,10 +356,13 @@ cupsMakeServerCredentials(
     goto done;
   }
 
+  if (root_cert)
+    PEM_write_bio_X509(bio, root_cert);
+
   BIO_free(bio);
 
-  result = 1;
-  DEBUG_puts("1cupsMakeServerCredentials: Successfully created credentials.");
+  result = true;
+  DEBUG_puts("1cupsCreateCredentials: Successfully created credentials.");
 
   // Cleanup...
   done:
@@ -267,77 +370,660 @@ cupsMakeServerCredentials(
   X509_free(cert);
   EVP_PKEY_free(pkey);
 
+  if (root_cert)
+    X509_free(root_cert);
+  if (root_key)
+    EVP_PKEY_free(root_key);
+
   return (result);
 }
 
 
-/*
- * 'cupsSetServerCredentials()' - Set the default server credentials.
- *
- * Note: The server credentials are used by all threads in the running process.
- * This function is threadsafe.
- */
+//
+// 'cupsCreateCredentialsRequest()' - Make an X.509 Certificate Signing Request.
+//
+// This function creates an X.509 certificate signing request (CSR) and
+// associated private key.  The CSR and key are stored in the directory "path"
+// or, if "path" is `NULL`, in a per-user or system-wide (when running as root)
+// certificate/key store.
+//
+// The "purpose" argument specifies the purpose(s) used for the credentials as a
+// bitwise OR of the following constants:
+//
+// - `CUPS_CREDPURPOSE_SERVER_AUTH` for validating TLS servers,
+// - `CUPS_CREDPURPOSE_CLIENT_AUTH` for validating TLS clients,
+// - `CUPS_CREDPURPOSE_CODE_SIGNING` for validating compiled code,
+// - `CUPS_CREDPURPOSE_EMAIL_PROTECTION` for validating email messages,
+// - `CUPS_CREDPURPOSE_TIME_STAMPING` for signing timestamps to objects, and/or
+// - `CUPS_CREDPURPOSE_OCSP_SIGNING` for Online Certificate Status Protocol
+//   message signing.
+//
+// The "type" argument specifies the type of credentials using one of the
+// following constants:
+//
+// - `CUPS_CREDTYPE_DEFAULT`: default type (RSA-3072 or P-384),
+// - `CUPS_CREDTYPE_RSA_2048_SHA256`: RSA with 2048-bit keys and SHA-256 hash,
+// - `CUPS_CREDTYPE_RSA_3072_SHA256`: RSA with 3072-bit keys and SHA-256 hash,
+// - `CUPS_CREDTYPE_RSA_4096_SHA256`: RSA with 4096-bit keys and SHA-256 hash,
+// - `CUPS_CREDTYPE_ECDSA_P256_SHA256`: ECDSA using the P-256 curve with SHA-256 hash,
+// - `CUPS_CREDTYPE_ECDSA_P384_SHA256`: ECDSA using the P-384 curve with SHA-256 hash, or
+// - `CUPS_CREDTYPE_ECDSA_P521_SHA256`: ECDSA using the P-521 curve with SHA-256 hash.
+//
+// The "usage" argument specifies the usage(s) for the credentials as a bitwise
+// OR of the following constants:
+//
+// - `CUPS_CREDUSAGE_DIGITAL_SIGNATURE`: digital signatures,
+// - `CUPS_CREDUSAGE_NON_REPUDIATION`: non-repudiation/content commitment,
+// - `CUPS_CREDUSAGE_KEY_ENCIPHERMENT`: key encipherment,
+// - `CUPS_CREDUSAGE_DATA_ENCIPHERMENT`: data encipherment,
+// - `CUPS_CREDUSAGE_KEY_AGREEMENT`: key agreement,
+// - `CUPS_CREDUSAGE_KEY_CERT_SIGN`: key certicate signing,
+// - `CUPS_CREDUSAGE_CRL_SIGN`: certificate revocation list signing,
+// - `CUPS_CREDUSAGE_ENCIPHER_ONLY`: encipherment only,
+// - `CUPS_CREDUSAGE_DECIPHER_ONLY`: decipherment only,
+// - `CUPS_CREDUSAGE_DEFAULT_CA`: defaults for CA certificates,
+// - `CUPS_CREDUSAGE_DEFAULT_TLS`: defaults for TLS certificates, and/or
+// - `CUPS_CREDUSAGE_ALL`: all usages.
+//
+// The "organization", "org_unit", "locality", "state_province", and "country"
+// arguments specify information about the identity and geolocation of the
+// issuer.
+//
+// The "common_name" argument specifies the common name and the "num_alt_names"
+// and "alt_names" arguments specify a list of DNS hostnames for the
+// certificate.
+//
 
-int					// O - 1 on success, 0 on failure
-cupsSetServerCredentials(
-    const char *path,			// I - Path to keychain/directory
-    const char *common_name,		// I - Default common name for server
-    int        auto_create)		// I - 1 = automatically create self-signed certificates
+bool					// O - `true` on success, `false` on error
+cupsCreateCredentialsRequest(
+    const char         *path,		// I - Directory path for certificate/key store or `NULL` for default
+    cups_credpurpose_t purpose,		// I - Credential purposes
+    cups_credtype_t    type,		// I - Credential type
+    cups_credusage_t   usage,		// I - Credential usages
+    const char         *organization,	// I - Organization or `NULL` to use common name
+    const char         *org_unit,	// I - Organizational unit or `NULL` for none
+    const char         *locality,	// I - City/town or `NULL` for "Unknown"
+    const char         *state_province,	// I - State/province or `NULL` for "Unknown"
+    const char         *country,	// I - Country or `NULL` for locale-based default
+    const char         *common_name,	// I - Common name
+    size_t             num_alt_names,	// I - Number of subject alternate names
+    const char * const *alt_names)	// I - Subject Alternate Names
 {
-  char	temp[1024];			// Default path buffer
+  char		*result = NULL;		// Return value
+  EVP_PKEY	*pkey;			// Key pair
+  X509_REQ	*csr;			// Certificate signing request
+  X509_NAME	*name;			// Subject/issuer name
+  X509_EXTENSION *ext;			// X509 extension
+  BIO		*bio;			// Output file
+  char		temp[1024],		// Temporary directory name
+		*tempptr,		// Pointer into temporary string
+ 		csrfile[1024],		// Certificate signing request filename
+		keyfile[1024];		// Private key filename
+  STACK_OF(X509_EXTENSION) *exts;	// Extensions
+  unsigned	i;			// Looping var
+  cups_credpurpose_t purpose_bit;	// Current purpose
+  cups_credusage_t usage_bit;		// Current usage
 
 
-  DEBUG_printf(("cupsSetServerCredentials(path=\"%s\", common_name=\"%s\", auto_create=%d)", path, common_name, auto_create));
+  DEBUG_printf(("cupsCreateCredentialsRequest(path=\"%s\", purpose=0x%x, type=%d, usage=0x%x, organization=\"%s\", org_unit=\"%s\", locality=\"%s\", state_province=\"%s\", country=\"%s\", common_name=\"%s\", num_alt_names=%u, alt_names=%p)", path, purpose, type, usage, organization, org_unit, locality, state_province, country, common_name, (unsigned)num_alt_names, alt_names));
 
- /*
-  * Use defaults as needed...
-  */
-
+  // Filenames...
   if (!path)
     path = http_default_path(temp, sizeof(temp));
-
- /*
-  * Range check input...
-  */
 
   if (!path || !common_name)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), 0);
-    return (0);
+    return (false);
   }
 
-  cupsMutexLock(&tls_mutex);
+  http_make_path(csrfile, sizeof(csrfile), path, common_name, "csr");
+  http_make_path(keyfile, sizeof(keyfile), path, common_name, "key");
 
- /*
-  * Free old values...
-  */
+  // Create the encryption key...
+  DEBUG_puts("1cupsCreateCredentialsRequest: Creating key pair.");
 
-  if (tls_keypath)
-    _cupsStrFree(tls_keypath);
+  if ((pkey = openssl_create_key(type)) == NULL)
+    return (false);
 
-  if (tls_common_name)
-    _cupsStrFree(tls_common_name);
+  DEBUG_puts("1cupsCreateCredentialsRequest: Key pair created.");
 
- /*
-  * Save the new values...
-  */
+  // Create the X.509 certificate...
+  DEBUG_puts("1cupsCreateCredentialsRequest: Generating self-signed X.509 certificate.");
 
-  tls_keypath     = _cupsStrAlloc(path);
-  tls_auto_create = auto_create;
-  tls_common_name = _cupsStrAlloc(common_name);
+  if ((csr = X509_REQ_new()) == NULL)
+  {
+    EVP_PKEY_free(pkey);
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create X.509 certificate signing request."), 1);
+    return (NULL);
+  }
 
-  cupsMutexUnlock(&tls_mutex);
+  X509_REQ_set_pubkey(csr, pkey);
 
-  return (1);
+  if ((name = openssl_create_name(organization, org_unit, locality, state_province, country, common_name)) == NULL)
+    goto done;
+
+  X509_REQ_set_subject_name(csr, name);
+  X509_NAME_free(name);
+
+  // Add extension with DNS names and free buffer for GENERAL_NAME
+  exts = sk_X509_EXTENSION_new_null();
+
+  if ((ext = openssl_create_san(common_name, num_alt_names, alt_names)) == NULL)
+    goto done;
+
+  sk_X509_EXTENSION_push(exts, ext);
+
+  cupsCopyString(temp, "critical", sizeof(temp));
+  for (tempptr = temp + strlen(temp), i = 0, usage_bit = CUPS_CREDUSAGE_DIGITAL_SIGNATURE; i < (sizeof(tls_usage_strings) / sizeof(tls_usage_strings[0])); i ++, usage_bit *= 2)
+  {
+    if (!(usage & usage_bit))
+      continue;
+
+    snprintf(tempptr, sizeof(temp) - (size_t)(tempptr - temp), ",%s", tls_usage_strings[i]);
+
+    tempptr += strlen(tempptr);
+  }
+  openssl_add_ext(exts, NID_key_usage, temp);
+
+  temp[0] = '\0';
+  for (tempptr = temp, i = 0, purpose_bit = CUPS_CREDPURPOSE_SERVER_AUTH; i < (sizeof(tls_purpose_oids) / sizeof(tls_purpose_oids[0])); i ++, purpose_bit *= 2)
+  {
+    if (!(purpose & purpose_bit))
+      continue;
+
+    if (tempptr == temp)
+      cupsCopyString(temp, tls_purpose_oids[i], sizeof(temp));
+    else
+      snprintf(tempptr, sizeof(temp) - (size_t)(tempptr - temp), ",%s", tls_purpose_oids[i]);
+
+    tempptr += strlen(tempptr);
+  }
+  openssl_add_ext(exts, NID_ext_key_usage, temp);
+
+  X509_REQ_add_extensions(csr, exts);
+  X509_REQ_sign(csr, pkey, EVP_sha256());
+
+  sk_X509_EXTENSION_pop_free(exts, X509_EXTENSION_free);
+
+  // Save them...
+  if ((bio = BIO_new_file(keyfile, "wb")) == NULL)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
+    goto done;
+  }
+
+  if (!PEM_write_bio_PrivateKey(bio, pkey, NULL, NULL, 0, NULL, NULL))
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to write private key."), 1);
+    BIO_free(bio);
+    goto done;
+  }
+
+  BIO_free(bio);
+
+  if ((bio = BIO_new_file(csrfile, "wb")) == NULL)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
+    goto done;
+  }
+
+  if (!PEM_write_bio_X509_REQ(bio, csr))
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to write X.509 certificate signing request."), 1);
+    BIO_free(bio);
+    goto done;
+  }
+
+  BIO_free(bio);
+
+  // TODO: Copy CSR to returned string
+  result = strdup("");
+  DEBUG_puts("1cupsCreateCredentialsRequest: Successfully created signing request.");
+
+  // Cleanup...
+  done:
+
+  X509_REQ_free(csr);
+  EVP_PKEY_free(pkey);
+
+  return (result);
 }
 
 
-/*
- * 'httpCopyCredentials()' - Copy the credentials associated with the peer in
- *                           an encrypted connection.
- */
+//
+// 'cupsSignCredentialsRequest()' - Sign an X.509 certificate signing request to produce an X.509 certificate chain.
+//
+// This function creates an X.509 certificate from a signing request.  The
+// certificate is stored in the directory "path" or, if "path" is `NULL`, in a
+// per-user or system-wide (when running as root) certificate/key store.  The
+// generated certificate is signed by the named root certificate or, if
+// "root_name" is `NULL`, a site-wide default root certificate.  When
+// "root_name" is `NULL` and there is no site-wide default root certificate, a
+// self-signed certificate is generated instead.
+//
+// The "allowed_purpose" argument specifies the allowed purpose(s) used for the
+// credentials as a bitwise OR of the following constants:
+//
+// - `CUPS_CREDPURPOSE_SERVER_AUTH` for validating TLS servers,
+// - `CUPS_CREDPURPOSE_CLIENT_AUTH` for validating TLS clients,
+// - `CUPS_CREDPURPOSE_CODE_SIGNING` for validating compiled code,
+// - `CUPS_CREDPURPOSE_EMAIL_PROTECTION` for validating email messages,
+// - `CUPS_CREDPURPOSE_TIME_STAMPING` for signing timestamps to objects, and/or
+// - `CUPS_CREDPURPOSE_OCSP_SIGNING` for Online Certificate Status Protocol
+//   message signing.
+//
+// The "allowed_usage" argument specifies the allowed usage(s) for the
+// credentials as a bitwise OR of the following constants:
+//
+// - `CUPS_CREDUSAGE_DIGITAL_SIGNATURE`: digital signatures,
+// - `CUPS_CREDUSAGE_NON_REPUDIATION`: non-repudiation/content commitment,
+// - `CUPS_CREDUSAGE_KEY_ENCIPHERMENT`: key encipherment,
+// - `CUPS_CREDUSAGE_DATA_ENCIPHERMENT`: data encipherment,
+// - `CUPS_CREDUSAGE_KEY_AGREEMENT`: key agreement,
+// - `CUPS_CREDUSAGE_KEY_CERT_SIGN`: key certicate signing,
+// - `CUPS_CREDUSAGE_CRL_SIGN`: certificate revocation list signing,
+// - `CUPS_CREDUSAGE_ENCIPHER_ONLY`: encipherment only,
+// - `CUPS_CREDUSAGE_DECIPHER_ONLY`: decipherment only,
+// - `CUPS_CREDUSAGE_DEFAULT_CA`: defaults for CA certificates,
+// - `CUPS_CREDUSAGE_DEFAULT_TLS`: defaults for TLS certificates, and/or
+// - `CUPS_CREDUSAGE_ALL`: all usages.
+//
+// The "cb" and "cb_data" arguments specify a function and its data that are
+// used to validate any subjectAltName values in the signing request:
+//
+// ```
+// bool san_cb(const char *common_name, const char *alt_name, void *cb_data) {
+//   ... return true if OK and false if not ...
+// }
+// ```
+//
+// If `NULL`, a default validation function is used that allows "localhost" and
+// variations of the common name.
+//
+// The "expiration_date" argument specifies the expiration date and time as a
+// Unix `time_t` value in seconds.
+//
 
-int					// O - Status of call (0 = success)
+bool					// O - `true` on success, `false` on failure
+cupsSignCredentialsRequest(
+    const char         *path,		// I - Directory path for certificate/key store or `NULL` for default
+    const char         *common_name,	// I - Common name to use
+    const char         *request,	// I - PEM-encoded CSR
+    const char         *root_name,	// I - Root certificate
+    cups_credpurpose_t allowed_purpose,	// I - Allowed credential purpose(s)
+    cups_credusage_t   allowed_usage,	// I - Allowed credential usage(s)
+    cups_cert_san_cb_t cb,		// I - subjectAltName callback or `NULL` to allow just .local
+    void               *cb_data,	// I - Callback data
+    time_t             expiration_date)	// I - Certificate expiration date
+{
+  bool		result = false;		// Return value
+  X509		*cert = NULL;		// Certificate
+  X509_REQ	*crq = NULL;		// Certificate request
+  X509		*root_cert = NULL;	// Root certificate, if any
+  EVP_PKEY	*root_key = NULL;	// Root private key, if any
+  char		defpath[1024],		// Default path
+		crtfile[1024],		// Certificate filename
+		root_crtfile[1024],	// Root certificate filename
+		root_keyfile[1024];	// Root private key filename
+  time_t	curtime;		// Current time
+  ASN1_INTEGER	*serial;		// Serial number
+  ASN1_TIME	*notBefore,		// Initial date
+		*notAfter;		// Expiration date
+  BIO		*bio;			// Output file
+  char		temp[1024];		// Temporary string
+  int		i, j,			// Looping vars
+		num_exts;		// Number of extensions
+  STACK_OF(X509_EXTENSION) *exts = NULL;// Extensions
+  X509_EXTENSION *ext;			// Current extension
+  cups_credpurpose_t purpose;		// Current purpose
+  cups_credusage_t usage;		// Current usage
+  bool		saw_usage = false,	// Saw NID_key_usage?
+		saw_ext_usage = false,	// Saw NID_ext_key_usage?
+		saw_san = false;	// Saw NID_subject_alt_name?
+
+
+  DEBUG_printf(("cupsSignCredentialsRequest(path=\"%s\", common_name=\"%s\", request=\"%s\", root_name=\"%s\", allowed_purpose=0x%x, allowed_usage=0x%x, cb=%p, cb_data=%p, expiration_date=%ld)", path, common_name, request, root_name, allowed_purpose, allowed_usage, cb, cb_data, (long)expiration_date));
+
+  // Filenames...
+  if (!path)
+    path = http_default_path(defpath, sizeof(defpath));
+
+  if (!path || !common_name || !request)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), 0);
+    return (false);
+  }
+
+  if (!cb)
+    cb = http_default_san_cb;
+
+  // Import the X.509 certificate request...
+  DEBUG_puts("1cupsCreateCredentials: Importing X.509 certificate request.");
+  if ((bio = BIO_new_mem_buf(request, (int)strlen(request))) != NULL)
+  {
+    PEM_read_bio_X509_REQ(bio, &crq, /*cb*/NULL, /*u*/NULL);
+    BIO_free(bio);
+  }
+
+  if (!crq)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to import X.509 certificate request."), 1);
+    return (false);
+  }
+
+  if (X509_REQ_verify(crq, X509_REQ_get_pubkey(crq)) < 0)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to verify X.509 certificate request."), 1);
+    goto done;
+  }
+
+  // Create the X.509 certificate...
+  DEBUG_puts("1cupsSignCredentialsRequest: Generating X.509 certificate.");
+
+  if ((cert = X509_new()) == NULL)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create X.509 certificate."), 1);
+    goto done;
+  }
+
+  curtime = time(NULL);
+
+  notBefore = ASN1_TIME_new();
+  ASN1_TIME_set(notBefore, curtime);
+  X509_set_notBefore(cert, notBefore);
+  ASN1_TIME_free(notBefore);
+
+  notAfter  = ASN1_TIME_new();
+  ASN1_TIME_set(notAfter, expiration_date);
+  X509_set_notAfter(cert, notAfter);
+  ASN1_TIME_free(notAfter);
+
+  serial = ASN1_INTEGER_new();
+  ASN1_INTEGER_set(serial, (int)curtime);
+  X509_set_serialNumber(cert, serial);
+  ASN1_INTEGER_free(serial);
+
+  X509_set_pubkey(cert, X509_REQ_get_pubkey(crq));
+
+  X509_set_subject_name(cert, X509_REQ_get_subject_name(crq));
+  X509_set_version(cert, 2); // v3
+
+  // Copy/verify extensions...
+  exts     = X509_REQ_get_extensions(crq);
+  num_exts = sk_X509_EXTENSION_num(exts);
+
+  for (i = 0; i < num_exts; i ++)
+  {
+    // Get the extension object...
+    bool		add_ext = false;	// Add this extension?
+    ASN1_OBJECT		*obj;			// Extension object
+    ASN1_OCTET_STRING	*extdata;		// Extension data string
+    unsigned char	*data = NULL;		// Extension data bytes
+    int			datalen;		// Length of extension data
+
+    ext     = sk_X509_EXTENSION_value(exts, i);
+    obj     = X509_EXTENSION_get_object(ext);
+    extdata = X509_EXTENSION_get_data(ext);
+    datalen = i2d_ASN1_OCTET_STRING(extdata, &data);
+
+#ifdef DEBUG
+    char *tempptr;				// Pointer into string
+
+    for (j = 0, tempptr = temp; j < datalen; j ++, tempptr += 2)
+      snprintf(tempptr, sizeof(temp) - (size_t)(tempptr - temp), "%02X", data[j]);
+
+    DEBUG_printf(("1cupsSignCredentialsRequest: EXT%d=%s", OBJ_obj2nid(obj), temp));
+#endif // DEBUG
+
+    switch (OBJ_obj2nid(obj))
+    {
+      case NID_ext_key_usage :
+          add_ext       = true;
+          saw_ext_usage = true;
+
+          if (datalen < 12 || data[2] != 0x30 || data[3] != (datalen - 4))
+          {
+            _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad keyUsage extension in X.509 certificate request."), 1);
+	    goto done;
+          }
+
+          for (purpose = 0, j = 4; j < datalen; j += data[j + 1] + 2)
+          {
+            if (data[j] != 0x06 || data[j + 1] != 8 || memcmp(data + j + 2, "+\006\001\005\005\007\003", 7))
+            {
+	      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad keyUsage extension in X.509 certificate request."), 1);
+	      goto done;
+            }
+
+            switch (data[j + 9])
+            {
+              case 1 :
+                  purpose |= CUPS_CREDPURPOSE_SERVER_AUTH;
+                  break;
+              case 2 :
+                  purpose |= CUPS_CREDPURPOSE_CLIENT_AUTH;
+                  break;
+              case 3 :
+                  purpose |= CUPS_CREDPURPOSE_CODE_SIGNING;
+                  break;
+              case 4 :
+                  purpose |= CUPS_CREDPURPOSE_EMAIL_PROTECTION;
+                  break;
+              case 8 :
+                  purpose |= CUPS_CREDPURPOSE_TIME_STAMPING;
+                  break;
+              case 9 :
+                  purpose |= CUPS_CREDPURPOSE_OCSP_SIGNING;
+                  break;
+	      default :
+		  _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad keyUsage extension in X.509 certificate request."), 1);
+		  goto done;
+            }
+          }
+
+          DEBUG_printf(("1cupsSignCredentialsRequest: purpose=0x%04x", purpose));
+
+          if (purpose & ~allowed_purpose)
+          {
+            _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad keyUsage extension in X.509 certificate request."), 1);
+	    goto done;
+          }
+          break;
+
+      case NID_key_usage :
+          add_ext   = true;
+          saw_usage = true;
+
+          if (datalen < 6 || datalen > 7 || data[2] != 0x03 || data[3] != (datalen - 4))
+          {
+            _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad extKeyUsage extension in X.509 certificate request."), 1);
+	    goto done;
+          }
+
+          usage = 0;
+          if (data[5] & 0x80)
+	    usage |= CUPS_CREDUSAGE_DIGITAL_SIGNATURE;
+          if (data[5] & 0x40)
+	    usage |= CUPS_CREDUSAGE_NON_REPUDIATION;
+          if (data[5] & 0x20)
+	    usage |= CUPS_CREDUSAGE_KEY_ENCIPHERMENT;
+          if (data[5] & 0x10)
+	    usage |= CUPS_CREDUSAGE_DATA_ENCIPHERMENT;
+          if (data[5] & 0x08)
+	    usage |= CUPS_CREDUSAGE_KEY_AGREEMENT;
+          if (data[5] & 0x04)
+	    usage |= CUPS_CREDUSAGE_KEY_CERT_SIGN;
+          if (data[5] & 0x02)
+	    usage |= CUPS_CREDUSAGE_CRL_SIGN;
+          if (data[5] & 0x01)
+	    usage |= CUPS_CREDUSAGE_ENCIPHER_ONLY;
+          if (datalen == 7 && (data[6] & 0x80))
+	    usage |= CUPS_CREDUSAGE_DECIPHER_ONLY;
+
+          DEBUG_printf(("1cupsSignCredentialsRequest: usage=0x%04x", usage));
+
+          if (usage & ~allowed_usage)
+          {
+            _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad extKeyUsage extension in X.509 certificate request."), 1);
+	    goto done;
+          }
+          break;
+
+      case NID_subject_alt_name :
+          add_ext = true;
+          saw_san = true;
+
+          if (datalen < 4 || data[2] != 0x30 || data[3] != (datalen - 4))
+          {
+            _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad subjectAltName extension in X.509 certificate request."), 1);
+	    goto done;
+          }
+
+          // Parse the SAN values (there should be an easier/standard OpenSSL API to do this!)
+          for (j = 4, datalen -= 2; j < datalen; j += data[j + 1] + 2)
+          {
+            if (data[j] == 0x82 && data[j + 1])
+            {
+              // GENERAL_STRING for DNS
+              memcpy(temp, data + j + 2, data[j + 1]);
+              temp[data[j + 1]] = '\0';
+
+              DEBUG_printf(("1cupsSignCredentialsRequest: SAN %s", temp));
+
+              if (!(cb)(common_name, temp, cb_data))
+              {
+                _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Validation of subjectAltName in X.509 certificate request failed."), 1);
+                goto done;
+              }
+	    }
+          }
+          break;
+    }
+
+    OPENSSL_free(data);
+
+    // If we get this far, the object is OK and we can add it...
+    if (add_ext && !X509_add_ext(cert, ext, -1))
+      goto done;
+  }
+
+  // Add basic constraints for an "edge" certificate...
+  if ((ext = X509V3_EXT_conf_nid(/*conf*/NULL, /*ctx*/NULL, NID_basic_constraints, "critical,CA:FALSE,pathlen:0")) == NULL || !X509_add_ext(cert, ext, -1))
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to add extension to X.509 certificate."), 1);
+    goto done;
+  }
+
+  // Add key usage extensions as needed...
+  if (!saw_usage)
+  {
+    if ((ext = X509V3_EXT_conf_nid(/*conf*/NULL, /*ctx*/NULL, NID_key_usage, "critical,digitalSignature,keyEncipherment")) == NULL || !X509_add_ext(cert, ext, -1))
+    {
+      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to add extension to X.509 certificate."), 1);
+      goto done;
+    }
+  }
+
+  if (!saw_ext_usage)
+  {
+    if ((ext = X509V3_EXT_conf_nid(/*conf*/NULL, /*ctx*/NULL, NID_ext_key_usage, tls_usage_strings[0])) == NULL || !X509_add_ext(cert, ext, -1))
+    {
+      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to add extension to X.509 certificate."), 1);
+      goto done;
+    }
+  }
+
+  if (!saw_san)
+  {
+    if ((ext = openssl_create_san(common_name, /*num_alt_names*/0, /*alt_names*/NULL)) == NULL || !X509_add_ext(cert, ext, -1))
+    {
+      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to add extension to X.509 certificate."), 1);
+      goto done;
+    }
+  }
+
+  // Try loading a root certificate...
+  http_make_path(root_crtfile, sizeof(root_crtfile), path, root_name ? root_name : "_site_", "crt");
+  http_make_path(root_keyfile, sizeof(root_keyfile), path, root_name ? root_name : "_site_", "key");
+
+  if (!access(root_crtfile, 0) && !access(root_keyfile, 0))
+  {
+    if ((bio = BIO_new_file(root_crtfile, "rb")) != NULL)
+    {
+      PEM_read_bio_X509(bio, &root_cert, /*cb*/NULL, /*u*/NULL);
+      BIO_free(bio);
+
+      if ((bio = BIO_new_file(root_keyfile, "rb")) != NULL)
+      {
+	PEM_read_bio_PrivateKey(bio, &root_key, /*cb*/NULL, /*u*/NULL);
+	BIO_free(bio);
+      }
+
+      if (!root_key)
+      {
+        // Only use root certificate if we have the key...
+        X509_free(root_cert);
+        root_cert = NULL;
+      }
+    }
+  }
+
+  if (!root_cert || !root_key)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to load X.509 CA certificate and private key."), 1);
+    goto done;
+  }
+
+  X509_set_issuer_name(cert, X509_get_subject_name(root_cert));
+  X509_sign(cert, root_key, EVP_sha256());
+
+  // Save the certificate...
+  http_make_path(crtfile, sizeof(crtfile), path, common_name, "crt");
+
+  if ((bio = BIO_new_file(crtfile, "wb")) == NULL)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
+    goto done;
+  }
+
+  if (!PEM_write_bio_X509(bio, cert))
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to write X.509 certificate."), 1);
+    BIO_free(bio);
+    goto done;
+  }
+
+  PEM_write_bio_X509(bio, root_cert);
+
+  BIO_free(bio);
+  result = true;
+  DEBUG_puts("1cupsSignRequest: Successfully created credentials.");
+
+  // Cleanup...
+  done:
+
+  if (exts)
+    sk_X509_EXTENSION_pop_free(exts, X509_EXTENSION_free);
+  if (crq)
+    X509_REQ_free(crq);
+  if (cert)
+    X509_free(cert);
+  if (root_cert)
+    X509_free(root_cert);
+  if (root_key)
+    EVP_PKEY_free(root_key);
+
+  return (result);
+}
+
+
+//
+// 'httpCopyCredentials()' - Copy the credentials associated with the peer in
+//                           an encrypted connection.
+//
+
+bool					// O - Status of call (`true` = success)
 httpCopyCredentials(
     http_t	 *http,			// I - Connection to server
     cups_array_t **credentials)		// O - Array of credentials
@@ -351,7 +1037,7 @@ httpCopyCredentials(
     *credentials = NULL;
 
   if (!http || !http->tls || !credentials)
-    return (-1);
+    return (false);
 
   *credentials = cupsArrayNew(NULL, NULL, NULL, 0, NULL, NULL);
   chain        = SSL_get_peer_cert_chain(http->tls);
@@ -386,13 +1072,13 @@ httpCopyCredentials(
     }
   }
 
-  return (0);
+  return (true);
 }
 
 
-/*
- * '_httpCreateCredentials()' - Create credentials in the internal format.
- */
+//
+// '_httpCreateCredentials()' - Create credentials in the internal format.
+//
 
 http_tls_credentials_t			// O - Internal credentials
 _httpCreateCredentials(
@@ -404,35 +1090,24 @@ _httpCreateCredentials(
 }
 
 
-/*
- * '_httpFreeCredentials()' - Free internal credentials.
- */
+//
+// 'httpCredentialsAreValidForName()' - Return whether the credentials are valid
+//                                      for the given name.
+//
 
-void
-_httpFreeCredentials(
-    http_tls_credentials_t credentials)	// I - Internal credentials
-{
-  X509_free(credentials);
-}
-
-
-/*
- * 'httpCredentialsAreValidForName()' - Return whether the credentials are valid for the given name.
- */
-
-int					// O - 1 if valid, 0 otherwise
+bool					// O - `true` if valid, `false` otherwise
 httpCredentialsAreValidForName(
     cups_array_t *credentials,		// I - Credentials
     const char   *common_name)		// I - Name to check
 {
   X509	*cert;				// Certificate
-  int	result = 0;			// Result
+  bool	result = false;			// Result
 
 
-  cert = http_create_credential((http_credential_t *)cupsArrayGetFirst(credentials));
+  cert = openssl_create_credential((http_credential_t *)cupsArrayGetFirst(credentials));
   if (cert)
   {
-    result = X509_check_host(cert, common_name, strlen(common_name), 0, NULL);
+    result = X509_check_host(cert, common_name, strlen(common_name), 0, NULL) != 0;
 
     X509_free(cert);
   }
@@ -441,9 +1116,9 @@ httpCredentialsAreValidForName(
 }
 
 
-/*
- * 'httpCredentialsGetTrust()' - Return the trust of credentials.
- */
+//
+// 'httpCredentialsGetTrust()' - Return the trust of credentials.
+//
 
 http_trust_t				// O - Level of trust
 httpCredentialsGetTrust(
@@ -462,7 +1137,7 @@ httpCredentialsGetTrust(
     return (HTTP_TRUST_UNKNOWN);
   }
 
-  if ((cert = http_create_credential((http_credential_t *)cupsArrayGetFirst(credentials))) == NULL)
+  if ((cert = openssl_create_credential((http_credential_t *)cupsArrayGetFirst(credentials))) == NULL)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create credentials from array."), 1);
     return (HTTP_TRUST_UNKNOWN);
@@ -471,7 +1146,7 @@ httpCredentialsGetTrust(
   if (cg->any_root < 0)
   {
     _cupsSetDefaults();
-//    http_load_crl();
+//    openssl_load_crl();
   }
 
   // Look this common name up in the default keychains...
@@ -479,8 +1154,8 @@ httpCredentialsGetTrust(
 
   if (tcreds)
   {
-    char	credentials_str[1024],	/* String for incoming credentials */
-		tcreds_str[1024];	/* String for saved credentials */
+    char	credentials_str[1024],	// String for incoming credentials
+		tcreds_str[1024];	// String for saved credentials
 
     httpCredentialsString(credentials, credentials_str, sizeof(credentials_str));
     httpCredentialsString(tcreds, tcreds_str, sizeof(tcreds_str));
@@ -566,7 +1241,7 @@ httpCredentialsGetTrust(
     time_t	curtime;		// Current date/time
 
     time(&curtime);
-    if (curtime < http_get_date(cert, 0) || curtime > http_get_date(cert, 1))
+    if (curtime < openssl_get_date(cert, 0) || curtime > openssl_get_date(cert, 1))
     {
       _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Credentials have expired."), 1);
       trust = HTTP_TRUST_EXPIRED;
@@ -585,9 +1260,9 @@ httpCredentialsGetTrust(
 }
 
 
-/*
- * 'httpCredentialsGetExpiration()' - Return the expiration date of the credentials.
- */
+//
+// 'httpCredentialsGetExpiration()' - Return the expiration date of the credentials.
+//
 
 time_t					// O - Expiration date of credentials
 httpCredentialsGetExpiration(
@@ -597,9 +1272,9 @@ httpCredentialsGetExpiration(
   X509		*cert;			// Certificate
 
 
-  if ((cert = http_create_credential((http_credential_t *)cupsArrayGetFirst(credentials))) != NULL)
+  if ((cert = openssl_create_credential((http_credential_t *)cupsArrayGetFirst(credentials))) != NULL)
   {
-    result = http_get_date(cert, 1);
+    result = openssl_get_date(cert, 1);
     X509_free(cert);
   }
 
@@ -607,9 +1282,9 @@ httpCredentialsGetExpiration(
 }
 
 
-/*
- * 'httpCredentialsString()' - Return a string representing the credentials.
- */
+//
+// 'httpCredentialsString()' - Return a string representing the credentials.
+//
 
 size_t					// O - Total size of credentials string
 httpCredentialsString(
@@ -630,7 +1305,7 @@ httpCredentialsString(
     *buffer = '\0';
 
   first = (http_credential_t *)cupsArrayGetFirst(credentials);
-  cert  = http_create_credential(first);
+  cert  = openssl_create_credential(first);
 
   if (cert)
   {
@@ -644,7 +1319,7 @@ httpCredentialsString(
 
     X509_NAME_get_text_by_NID(X509_get_subject_name(cert), NID_commonName, name, sizeof(name));
     X509_NAME_get_text_by_NID(X509_get_issuer_name(cert), NID_commonName, issuer, sizeof(issuer));
-    expiration = http_get_date(cert, 1);
+    expiration = openssl_get_date(cert, 1);
 
     switch (X509_get_signature_nid(cert))
     {
@@ -695,196 +1370,21 @@ httpCredentialsString(
 }
 
 
-/*
- * 'httpLoadCredentials()' - Load X.509 credentials from a keychain file.
- */
+//
+// '_httpFreeCredentials()' - Free internal credentials.
+//
 
-bool					// O - `true` on success, `false` on error
-httpLoadCredentials(
-    const char   *path,			// I  - Keychain/PKCS#12 path
-    cups_array_t **credentials,		// IO - Credentials
-    const char   *common_name)		// I  - Common name for credentials
+void
+_httpFreeCredentials(
+    http_tls_credentials_t credentials)	// I - Internal credentials
 {
-  cups_file_t		*fp;		// Certificate file
-  char			filename[1024],	// filename.crt
-			temp[1024],	// Temporary string
-			line[256];	// Base64-encoded line
-  unsigned char		*data = NULL;	// Buffer for cert data
-  size_t		alloc_data = 0,	// Bytes allocated
-			num_data = 0,	// Bytes used
-			decoded;	// Bytes decoded
-  int			in_certificate = 0;
-					// In a certificate?
-
-
-  if (credentials)
-    *credentials = NULL;
-
-  if (!credentials || !common_name)
-    return (false);
-
-  if (!path)
-    path = http_default_path(temp, sizeof(temp));
-  if (!path)
-    return (false);
-
-  http_make_path(filename, sizeof(filename), path, common_name, "crt");
-
-  if ((fp = cupsFileOpen(filename, "r")) == NULL)
-    return (false);
-
-  while (cupsFileGets(fp, line, sizeof(line)))
-  {
-    if (!strcmp(line, "-----BEGIN CERTIFICATE-----"))
-    {
-      if (in_certificate)
-      {
-       /*
-	* Missing END CERTIFICATE...
-	*/
-
-        httpFreeCredentials(*credentials);
-	*credentials = NULL;
-        break;
-      }
-
-      in_certificate = 1;
-    }
-    else if (!strcmp(line, "-----END CERTIFICATE-----"))
-    {
-      if (!in_certificate || !num_data)
-      {
-       /*
-	* Missing data...
-	*/
-
-        httpFreeCredentials(*credentials);
-	*credentials = NULL;
-        break;
-      }
-
-      if (!*credentials)
-        *credentials = cupsArrayNew(NULL, NULL, NULL, 0, NULL, NULL);
-
-      if (httpAddCredential(*credentials, data, num_data))
-      {
-        httpFreeCredentials(*credentials);
-	*credentials = NULL;
-        break;
-      }
-
-      num_data       = 0;
-      in_certificate = 0;
-    }
-    else if (in_certificate)
-    {
-      if (alloc_data == 0)
-      {
-        data       = malloc(2048);
-	alloc_data = 2048;
-
-        if (!data)
-	  break;
-      }
-      else if ((num_data + strlen(line)) >= alloc_data)
-      {
-        unsigned char *tdata = realloc(data, alloc_data + 1024);
-					/* Expanded buffer */
-
-	if (!tdata)
-	{
-	  httpFreeCredentials(*credentials);
-	  *credentials = NULL;
-	  break;
-	}
-
-	data       = tdata;
-        alloc_data += 1024;
-      }
-
-      decoded = alloc_data - num_data;
-      httpDecode64((char *)data + num_data, &decoded, line, NULL);
-      num_data += (size_t)decoded;
-    }
-  }
-
-  cupsFileClose(fp);
-
-  if (in_certificate)
-  {
-   /*
-    * Missing END CERTIFICATE...
-    */
-
-    httpFreeCredentials(*credentials);
-    *credentials = NULL;
-  }
-
-  if (data)
-    free(data);
-
-  return (*credentials != NULL);
+  X509_free(credentials);
 }
 
 
-/*
- * 'httpSaveCredentials()' - Save X.509 credentials to a keychain file.
- */
-
-bool					// O - `true` on success, `false` on error
-httpSaveCredentials(
-    const char   *path,			// I - Keychain/PKCS#12 path
-    cups_array_t *credentials,		// I - Credentials
-    const char   *common_name)		// I - Common name for credentials
-{
-  cups_file_t		*fp;		// Certificate file
-  char			filename[1024],	// filename.crt
-			nfilename[1024],// filename.crt.N
-			temp[1024],	// Temporary string
-			line[256];	// Base64-encoded line
-  const unsigned char	*ptr;		// Pointer into certificate
-  ssize_t		remaining;	// Bytes left
-  http_credential_t	*cred;		// Current credential
-
-
-  if (!credentials || !common_name)
-    return (false);
-
-  if (!path)
-    path = http_default_path(temp, sizeof(temp));
-  if (!path)
-    return (false);
-
-  http_make_path(filename, sizeof(filename), path, common_name, "crt");
-  snprintf(nfilename, sizeof(nfilename), "%s.N", filename);
-
-  if ((fp = cupsFileOpen(nfilename, "w")) == NULL)
-    return (false);
-
-#ifndef _WIN32
-  fchmod(cupsFileNumber(fp), 0600);
-#endif // !_WIN32
-
-  for (cred = (http_credential_t *)cupsArrayGetFirst(credentials); cred; cred = (http_credential_t *)cupsArrayGetNext(credentials))
-  {
-    cupsFilePuts(fp, "-----BEGIN CERTIFICATE-----\n");
-    for (ptr = cred->data, remaining = (ssize_t)cred->datalen; remaining > 0; remaining -= 45, ptr += 45)
-    {
-      httpEncode64(line, sizeof(line), (char *)ptr, remaining > 45 ? 45 : (size_t)remaining, false);
-      cupsFilePrintf(fp, "%s\n", line);
-    }
-    cupsFilePuts(fp, "-----END CERTIFICATE-----\n");
-  }
-
-  cupsFileClose(fp);
-
-  return (!rename(nfilename, filename));
-}
-
-
-/*
- * '_httpTLSInitialize()' - Initialize the TLS stack.
- */
+//
+// '_httpTLSInitialize()' - Initialize the TLS stack.
+//
 
 void
 _httpTLSInitialize(void)
@@ -893,9 +1393,9 @@ _httpTLSInitialize(void)
 }
 
 
-/*
- * '_httpTLSPending()' - Return the number of pending TLS-encrypted bytes.
- */
+//
+// '_httpTLSPending()' - Return the number of pending TLS-encrypted bytes.
+//
 
 size_t					// O - Bytes available
 _httpTLSPending(http_t *http)		// I - HTTP connection
@@ -904,9 +1404,9 @@ _httpTLSPending(http_t *http)		// I - HTTP connection
 }
 
 
-/*
- * '_httpTLSRead()' - Read from a SSL/TLS connection.
- */
+//
+// '_httpTLSRead()' - Read from a SSL/TLS connection.
+//
 
 int					// O - Bytes read
 _httpTLSRead(http_t *http,		// I - Connection to server
@@ -922,29 +1422,11 @@ _httpTLSRead(http_t *http,		// I - Connection to server
 }
 
 
-/*
- * '_httpTLSSetOptions()' - Set TLS protocol and cipher suite options.
- */
+//
+// '_httpTLSStart()' - Set up SSL/TLS support on a connection.
+//
 
-void
-_httpTLSSetOptions(int options,		// I - Options
-                   int min_version,	// I - Minimum TLS version
-                   int max_version)	// I - Maximum TLS version
-{
-  if (!(options & _HTTP_TLS_SET_DEFAULT) || tls_options < 0)
-  {
-    tls_options     = options;
-    tls_min_version = min_version;
-    tls_max_version = max_version;
-  }
-}
-
-
-/*
- * '_httpTLSStart()' - Set up SSL/TLS support on a connection.
- */
-
-bool					/* O - `true` on success, `false` on failure */
+bool					// O - `true` on success, `false` on failure
 _httpTLSStart(http_t *http)		// I - Connection to server
 {
   BIO		*bio;			// Basic input/output context
@@ -1085,9 +1567,9 @@ _httpTLSStart(http_t *http)		// I - Connection to server
     {
       DEBUG_printf(("4_httpTLSStart: Auto-create credentials for \"%s\".", cn));
 
-      if (!cupsMakeServerCredentials(tls_keypath, cn, 0, NULL, time(NULL) + 3650 * 86400))
+      if (!cupsCreateCredentials(tls_keypath, false, CUPS_CREDPURPOSE_SERVER_AUTH, CUPS_CREDTYPE_DEFAULT, CUPS_CREDUSAGE_DEFAULT_TLS, NULL, NULL, NULL, NULL, NULL, cn, 0, NULL, NULL, time(NULL) + 3650 * 86400))
       {
-	DEBUG_puts("4_httpTLSStart: cupsMakeServerCredentials failed.");
+	DEBUG_puts("4_httpTLSStart: cupsCreateCredentials failed.");
 	http->error  = errno = EINVAL;
 	http->status = HTTP_STATUS_ERROR;
 	_cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create server credentials."), 1);
@@ -1208,9 +1690,9 @@ _httpTLSStart(http_t *http)		// I - Connection to server
 }
 
 
-/*
- * '_httpTLSStop()' - Shut down SSL/TLS on a connection.
- */
+//
+// '_httpTLSStop()' - Shut down SSL/TLS on a connection.
+//
 
 void
 _httpTLSStop(http_t *http)		// I - Connection to server
@@ -1228,9 +1710,9 @@ _httpTLSStop(http_t *http)		// I - Connection to server
 }
 
 
-/*
- * '_httpTLSWrite()' - Write to a SSL/TLS connection.
- */
+//
+// '_httpTLSWrite()' - Write to a SSL/TLS connection.
+//
 
 int					// O - Bytes written
 _httpTLSWrite(http_t     *http,		// I - Connection to server
@@ -1241,9 +1723,9 @@ _httpTLSWrite(http_t     *http,		// I - Connection to server
 }
 
 
-/*
- * 'http_bio_ctrl()' - Control the HTTP connection.
- */
+//
+// 'http_bio_ctrl()' - Control the HTTP connection.
+//
 
 static long				// O - Result/data
 http_bio_ctrl(BIO  *h,			// I - BIO data
@@ -1285,9 +1767,9 @@ http_bio_ctrl(BIO  *h,			// I - BIO data
 }
 
 
-/*
- * 'http_bio_free()' - Free OpenSSL data.
- */
+//
+// 'http_bio_free()' - Free OpenSSL data.
+//
 
 static int				// O - 1 on success, 0 on failure
 http_bio_free(BIO *h)			// I - BIO data
@@ -1304,9 +1786,9 @@ http_bio_free(BIO *h)			// I - BIO data
 }
 
 
-/*
- * 'http_bio_new()' - Initialize an OpenSSL BIO structure.
- */
+//
+// 'http_bio_new()' - Initialize an OpenSSL BIO structure.
+//
 
 static int				// O - 1 on success, 0 on failure
 http_bio_new(BIO *h)			// I - BIO data
@@ -1323,9 +1805,9 @@ http_bio_new(BIO *h)			// I - BIO data
 }
 
 
-/*
- * 'http_bio_puts()' - Send a string for OpenSSL.
- */
+//
+// 'http_bio_puts()' - Send a string for OpenSSL.
+//
 
 static int				// O - Bytes written
 http_bio_puts(BIO        *h,		// I - BIO data
@@ -1341,9 +1823,9 @@ http_bio_puts(BIO        *h,		// I - BIO data
 }
 
 
-/*
- * 'http_bio_read()' - Read data for OpenSSL.
- */
+//
+// 'http_bio_read()' - Read data for OpenSSL.
+//
 
 static int				// O - Bytes read
 http_bio_read(BIO  *h,			// I - BIO data
@@ -1382,9 +1864,9 @@ http_bio_read(BIO  *h,			// I - BIO data
 }
 
 
-/*
- * 'http_bio_write()' - Write data for OpenSSL.
- */
+//
+// 'http_bio_write()' - Write data for OpenSSL.
+//
 
 static int				// O - Bytes written
 http_bio_write(BIO        *h,		// I - BIO data
@@ -1403,12 +1885,40 @@ http_bio_write(BIO        *h,		// I - BIO data
 }
 
 
-/*
- * 'http_create_credential()' - Create a single credential in the internal format.
- */
+//
+// 'openssl_add_ext()' - Add an extension.
+//
+
+static bool				// O - `true` on success, `false` on error
+openssl_add_ext(
+    STACK_OF(X509_EXTENSION) *exts,	// I - Stack of extensions
+    int                      nid,	// I - Extension ID
+    const char               *value)	// I - Value
+{
+  X509_EXTENSION *ext = NULL;		// Extension
+
+
+  DEBUG_printf(("3openssl_add_ext(exts=%p, nid=%d, value=\"%s\")", (void *)exts, nid, value));
+
+  // Create and add the extension...
+  if ((ext = X509V3_EXT_conf_nid(/*conf*/NULL, /*ctx*/NULL, nid, value)) == NULL)
+  {
+    DEBUG_puts("4openssl_add_ext: Unable to create extension, returning false.");
+    return (false);
+  }
+
+  sk_X509_EXTENSION_push(exts, ext);
+
+  return (true);
+}
+
+
+//
+// 'openssl_create_credential()' - Create a single credential in the internal format.
+//
 
 static X509 *				// O - Certificate
-http_create_credential(
+openssl_create_credential(
     http_credential_t *credential)	// I - Credential
 {
   X509	*cert = NULL;			// Certificate
@@ -1429,64 +1939,165 @@ http_create_credential(
 }
 
 
-/*
- * 'http_default_path()' - Get the default credential store path.
- */
+//
+// 'openssl_create_key()' - Create a suitable key pair for a certificate/signing request.
+//
 
-static const char *			// O - Path or NULL on error
-http_default_path(
-    char   *buffer,			// I - Path buffer
-    size_t bufsize)			// I - Size of path buffer
+static EVP_PKEY *			// O - Key pair
+openssl_create_key(
+    cups_credtype_t type)		// I - Type of key
 {
-  _cups_globals_t	*cg = _cupsGlobals();
-					// Pointer to library globals
+  EVP_PKEY	*pkey;			// Key pair
+  EVP_PKEY_CTX	*ctx;			// Key generation context
+  int		algid;			// Algorithm NID
+  int		bits = 0;		// Bits
+  int		curveid = 0;		// Curve NID
 
 
-  if (cg->userconfig)
+  switch (type)
   {
-    if (mkdir(cg->userconfig, 0755) && errno != EEXIST)
-    {
-      DEBUG_printf(("1http_default_path: Failed to make directory '%s': %s", cg->userconfig, strerror(errno)));
-      return (NULL);
-    }
+    case CUPS_CREDTYPE_ECDSA_P256_SHA256 :
+        algid   = EVP_PKEY_EC;
+        curveid = NID_secp256k1;
+	break;
 
-    snprintf(buffer, bufsize, "%s/ssl", cg->userconfig);
+    case CUPS_CREDTYPE_ECDSA_P384_SHA256 :
+        algid   = EVP_PKEY_EC;
+        curveid = NID_secp384r1;
+	break;
 
-    if (mkdir(buffer, 0700) && errno != EEXIST)
-    {
-      DEBUG_printf(("1http_default_path: Failed to make directory '%s': %s", buffer, strerror(errno)));
-      return (NULL);
-    }
+    case CUPS_CREDTYPE_ECDSA_P521_SHA256 :
+        algid   = EVP_PKEY_EC;
+        curveid = NID_secp521r1;
+	break;
+
+    case CUPS_CREDTYPE_RSA_2048_SHA256 :
+        algid = EVP_PKEY_RSA;
+        bits  = 2048;
+	break;
+
+    default :
+    case CUPS_CREDTYPE_RSA_3072_SHA256 :
+        algid = EVP_PKEY_RSA;
+        bits  = 3072;
+	break;
+
+    case CUPS_CREDTYPE_RSA_4096_SHA256 :
+        algid = EVP_PKEY_RSA;
+        bits  = 4096;
+	break;
   }
-  else
-  {
-    if (mkdir(cg->sysconfig, 0755) && errno != EEXIST)
-    {
-      DEBUG_printf(("1http_default_path: Failed to make directory '%s': %s", cg->sysconfig, strerror(errno)));
-      return (NULL);
-    }
 
-    snprintf(buffer, bufsize, "%s/ssl", cg->sysconfig);
+  pkey = NULL;
 
-    if (mkdir(buffer, 0700) && errno != EEXIST)
-    {
-      DEBUG_printf(("1http_default_path: Failed to make directory '%s': %s", buffer, strerror(errno)));
-      return (NULL);
-    }
-  }
+  if ((ctx = EVP_PKEY_CTX_new_id(algid, NULL)) == NULL)
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create private key context."), 1);
+  else if (EVP_PKEY_keygen_init(ctx) <= 0)
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to initialize private key context."), 1);
+  else if (bits && EVP_PKEY_CTX_set_rsa_keygen_bits(ctx, bits) <= 0)
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to configure private key context."), 1);
+  else if (curveid && EVP_PKEY_CTX_set_ec_paramgen_curve_nid(ctx, curveid) <= 0)
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to configure private key context."), 1);
+  else if (EVP_PKEY_keygen(ctx, &pkey) <= 0)
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create private key."), 1);
 
-  DEBUG_printf(("1http_default_path: Using default path \"%s\".", buffer));
+  EVP_PKEY_CTX_free(ctx);
 
-  return (buffer);
+  return (pkey);
 }
 
 
 //
-// 'http_get_date()' - Get the notBefore or notAfter date of a certificate.
+// 'openssl_create_name()' - Create an X.509 name value for a certificate/signing request.
+//
+
+static X509_NAME *			// O - X.509 name value
+openssl_create_name(
+    const char      *organization,	// I - Organization or `NULL` to use common name
+    const char      *org_unit,		// I - Organizational unit or `NULL` for none
+    const char      *locality,		// I - City/town or `NULL` for "Unknown"
+    const char      *state_province,	// I - State/province or `NULL` for "Unknown"
+    const char      *country,		// I - Country or `NULL` for locale-based default
+    const char      *common_name)	// I - Common name
+{
+  X509_NAME	*name;			// Subject/issuer name
+  cups_lang_t	*language;		// Default language info
+  const char	*langname;		// Language name
+
+
+  language = cupsLangDefault();
+  langname = cupsLangGetName(language);
+  name     = X509_NAME_new();
+  if (country)
+    X509_NAME_add_entry_by_txt(name, SN_countryName, MBSTRING_ASC, (unsigned char *)country, -1, -1, 0);
+  else if (strlen(langname) == 5)
+    X509_NAME_add_entry_by_txt(name, SN_countryName, MBSTRING_ASC, (unsigned char *)langname + 3, -1, -1, 0);
+  else
+    X509_NAME_add_entry_by_txt(name, SN_countryName, MBSTRING_ASC, (unsigned char *)"US", -1, -1, 0);
+  X509_NAME_add_entry_by_txt(name, SN_commonName, MBSTRING_ASC, (unsigned char *)common_name, -1, -1, 0);
+  X509_NAME_add_entry_by_txt(name, SN_organizationName, MBSTRING_ASC, (unsigned char *)(organization ? organization : common_name), -1, -1, 0);
+  X509_NAME_add_entry_by_txt(name, SN_organizationalUnitName, MBSTRING_ASC, (unsigned char *)(org_unit ? org_unit : ""), -1, -1, 0);
+  X509_NAME_add_entry_by_txt(name, SN_stateOrProvinceName, MBSTRING_ASC, (unsigned char *)(state_province ? state_province : "Unknown"), -1, -1, 0);
+  X509_NAME_add_entry_by_txt(name, SN_localityName, MBSTRING_ASC, (unsigned char *)(locality ? locality : "Unknown"), -1, -1, 0);
+
+  return (name);
+}
+
+
+//
+// 'openssl_create_san()' - Create a list of subjectAltName values for a certificate/signing request.
+//
+
+static X509_EXTENSION *			// O - Extension
+openssl_create_san(
+    const char         *common_name,	// I - Common name
+    size_t             num_alt_names,	// I - Number of alternate names
+    const char * const *alt_names)	// I - List of alternate names
+{
+  char		temp[2048],		// Temporary string
+		*tempptr;		// Pointer into temporary string
+  size_t	i;			// Looping var
+
+
+  // Add the common name
+  snprintf(temp, sizeof(temp), "DNS:%s", common_name);
+  tempptr = temp + strlen(temp);
+
+  if (strstr(common_name, ".local") == NULL)
+  {
+    // Add common_name.local to the list, too...
+    char	localname[256],		// hostname.local
+		*localptr;		// Pointer into localname
+
+    cupsCopyString(localname, common_name, sizeof(localname));
+    if ((localptr = strchr(localname, '.')) != NULL)
+      *localptr = '\0';
+
+    snprintf(tempptr, sizeof(temp) - (size_t)(tempptr - temp), ",DNS:%s.local", localname);
+    tempptr += strlen(tempptr);
+  }
+
+  // Add any alternate names...
+  for (i = 0; i < num_alt_names; i ++)
+  {
+    if (strcmp(alt_names[i], "localhost"))
+    {
+      snprintf(tempptr, sizeof(temp) - (size_t)(tempptr - temp), ",DNS:%s", alt_names[i]);
+      tempptr += strlen(tempptr);
+    }
+  }
+
+  // Return the stack
+  return (X509V3_EXT_conf_nid(/*conf*/NULL, /*ctx*/NULL, NID_subject_alt_name, temp));
+}
+
+
+//
+// 'openssl_get_date()' - Get the notBefore or notAfter date of a certificate.
 //
 
 static time_t				// O - UNIX time in seconds
-http_get_date(X509 *cert,		// I - Certificate
+openssl_get_date(X509 *cert,		// I - Certificate
               int  which)		// I - 0 for notBefore, 1 for notAfter
 {
   unsigned char	*expiration;		// Expiration date of cert
@@ -1527,12 +2138,12 @@ http_get_date(X509 *cert,		// I - Certificate
 
 
 #if 0
-/*
- * 'http_load_crl()' - Load the certificate revocation list, if any.
- */
+//
+// 'openssl_load_crl()' - Load the certificate revocation list, if any.
+//
 
 static void
-http_load_crl(void)
+openssl_load_crl(void)
 {
   cupsMutexLock(&tls_mutex);
 
@@ -1621,98 +2232,3 @@ http_load_crl(void)
   cupsMutexUnlock(&tls_mutex);
 }
 #endif // 0
-
-
-/*
- * 'http_make_path()' - Format a filename for a certificate or key file.
- */
-
-static const char *			// O - Filename
-http_make_path(
-    char       *buffer,			// I - Filename buffer
-    size_t     bufsize,			// I - Size of buffer
-    const char *dirname,		// I - Directory
-    const char *filename,		// I - Filename (usually hostname)
-    const char *ext)			// I - Extension
-{
-  char	*bufptr,			// Pointer into buffer
-	*bufend = buffer + bufsize - 1;	// End of buffer
-
-
-  snprintf(buffer, bufsize, "%s/", dirname);
-  bufptr = buffer + strlen(buffer);
-
-  while (*filename && bufptr < bufend)
-  {
-    if (_cups_isalnum(*filename) || *filename == '-' || *filename == '.')
-      *bufptr++ = *filename;
-    else
-      *bufptr++ = '_';
-
-    filename ++;
-  }
-
-  if (bufptr < bufend && filename[-1] != '.')
-    *bufptr++ = '.';
-
-  cupsCopyString(bufptr, ext, (size_t)(bufend - bufptr + 1));
-
-  return (buffer);
-}
-
-
-//
-// 'http_x509_add_ext()' - Add an extension to a certificate.
-//
-
-static bool
-http_x509_add_ext(X509       *cert,	// I - Certificate
-                  int        nid,	// I - Extension ID
-                  const char *value)	// I - Value
-{
-  bool			ret;		// Return value
-  X509_EXTENSION	*ex = NULL;	// Extension
-  X509V3_CTX		ctx;		// Certificate context
-
-
-  DEBUG_printf(("3http_x509_add_ext(cert=%p, nid=%d, value=\"%s\")", (void *)cert, nid, value));
-
-  // Don't use a configuration database...
-  X509V3_set_ctx_nodb(&ctx);
-
-  // Self-signed certificates use the same issuer and subject...
-  X509V3_set_ctx(&ctx, /*issuer*/cert, /*subject*/cert, /*req*/NULL, /*crl*/NULL, /*flags*/0);
-
-  // Create and add the extension...
-  if ((ex = X509V3_EXT_conf_nid(/*conf*/NULL, &ctx, nid, value)) == NULL)
-  {
-    DEBUG_puts("4http_x509_add_ext: Unable to create extension, returning false.");
-    return (false);
-  }
-
-  ret = X509_add_ext(cert, ex, -1) != 0;
-
-  DEBUG_printf(("4http_x509_add_ext: X509_add_ext returned %s.", ret ? "true" : "false"));
-
-  // Free the extension and return...
-  X509_EXTENSION_free(ex);
-
-  return (ret);
-}
-
-
-//
-// 'http_x509_add_san()' - Add a subjectAltName extension to an X.509 certificate.
-//
-
-static void
-http_x509_add_san(X509       *cert,	// I - Certificate
-                  const char *name)	// I - Hostname
-{
-  char		dns_name[1024];		// DNS: prefixed hostname
-
-
-  // The subjectAltName value for DNS names starts with a DNS: prefix...
-  snprintf(dns_name, sizeof(dns_name), "DNS:%s", name);
-  http_x509_add_ext(cert, NID_subject_alt_name, dns_name);
-}

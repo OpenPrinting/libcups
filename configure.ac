@@ -46,15 +46,6 @@ AS_IF([test "x$host_os_version" = x], [
 
 
 dnl Determine whether we are cross-compiling...
-AS_IF([test "$build" = "$host"], [
-    # No, build local targets
-    LOCALTARGET="local"
-], [
-    # Yes, don't build local targets
-    LOCALTARGET=""
-])
-AC_SUBST([LOCALTARGET])
-
 AC_PATH_PROGS([CODE_SIGN], [codesign true])
 
 
@@ -463,7 +454,12 @@ AC_SUBST([LIBCUPS_STATIC])
 dnl Extra compiler options...
 AC_ARG_ENABLE([debug], AS_HELP_STRING([--enable-debug], [turn on debugging, default=no]))
 AC_ARG_ENABLE([maintainer], AS_HELP_STRING([--enable-maintainer], [turn on maintainer mode, default=no]))
-AC_ARG_ENABLE([sanitizer], AS_HELP_STRING([--enable-sanitizer], [build with AddressSanitizer, default=no]))
+AC_ARG_WITH([sanitizer], AS_HELP_STRING([--with-sanitizer], [build with address, leak, memory, thread, or undefined sanitizer, default=no]))
+AS_IF([test "x$with_sanitizer" = x], [
+    with_sanitizer="address"
+], [test "$with_sanitizer" != address -a "$with_sanitizer" != leak -a "$with_sanitizer" != memory -a "$with_sanitizer" != no -a "$with_sanitizer" != thread -a "$with_sanitizer" != undefined], [
+    AC_MSG_ERROR([Unsupported --with-sanitizer value "$with_sanitizer" specified.])
+])
 
 AS_IF([test x$enable_debug = xyes], [
     CSFLAGS=""
@@ -482,9 +478,9 @@ WARNINGS=""
 AC_SUBST([WARNINGS])
 
 AS_IF([test -n "$GCC"], [
-    AS_IF([test x$enable_sanitizer = xyes], [
-	# Use -fsanitize=address with debugging...
-	OPTIM="$OPTIM -fsanitize=address"
+    AS_IF([test x$with_sanitizer != xno], [
+	# Use -fsanitize=FOO with debugging...
+	OPTIM="$OPTIM -fsanitize=$with_sanitizer"
     ], [echo "$CPPFLAGS $CFLAGS" | grep -q _FORTIFY_SOURCE], [
         # Don't add _FORTIFY_SOURCE if it is already there
     ], [

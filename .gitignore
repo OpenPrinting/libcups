@@ -9,6 +9,7 @@
 /configure~
 /cups3.pc
 /Makedefs
+/cups/.testssl
 /cups/fuzzipp
 /cups/libcups.a
 /cups/libcups.dylib
@@ -23,6 +24,7 @@
 /cups/locale/
 /cups/rasterbench
 /cups/test.json
+/cups/test.log
 /cups/test.pwg
 /cups/test.raster
 /cups/testarray

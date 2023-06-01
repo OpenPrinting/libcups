@@ -1586,7 +1586,7 @@ create_printer(
     * Extract up to 3 icons...
     */
 
-    for (i = 1, iconsptr = strchr(icons, ','); iconsptr && i < 3; i ++, iconsptr = strchr(iconsptr, ','))
+    for (i = 1, iconsptr = strchr(printer->icons[0], ','); iconsptr && i < 3; i ++, iconsptr = strchr(iconsptr, ','))
     {
       *iconsptr++ = '\0';
       printer->icons[i] = iconsptr;
@@ -5995,7 +5995,10 @@ process_job(ippeve_job_t *job)		/* I - Job */
     }
 
     if (mystdout < 0)
-      mystdout = open("/dev/null", O_WRONLY | O_BINARY);
+    {
+      if ((mystdout = open("/dev/null", O_WRONLY | O_BINARY)) < 0)
+        fprintf(stderr, "[Job %d] Unable to redirect command output to /dev/null: %s", job->id, strerror(errno));
+    }
 
     if (pipe(mypipe))
     {

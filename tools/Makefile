@@ -25,8 +25,7 @@ IPPTOOLS	=	\
 			ippfind \
 			ipptool
 TARGETS		=	\
-			$(IPPTOOLS) \
-			$(LOCALTARGET)
+			$(IPPTOOLS)
 
 
 #
@@ -100,17 +99,17 @@ uninstall:
 
 
 #
-# Local programs (not built when cross-compiling...)
+# Unit test programs (not built when cross-compiling...)
 #
 
-local:		ippeveprinter-static ippfind-static ipptool-static
+unittests:	ippeveprinter-static ippfind-static ipptool-static
 
 
 #
 # Test everything...
 #
 
-test:		local
+test:		unittests
 	./run-tests.sh
 
 
