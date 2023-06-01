@@ -983,6 +983,7 @@ usage(FILE *fp)				// I - Output file (stdout or stderr)
   fputs("  -C COUNTRY                 Set country.\n", fp);
   fputs("  -L LOCALITY                Set locality name.\n", fp);
   fputs("  -O ORGANIZATION            Set organization name.\n", fp);
+  fputs("  -R CSR-FILENAME            Specify certificate signing request file.\n", fp);
   fputs("  -S STATE                   Set state.\n", fp);
   fputs("  -U ORGANIZATIONAL-UNIT     Set organizational unit name.\n", fp);
   fputs("  -a SUBJECT-ALT-NAME        Add a subjectAltName.\n", fp);
