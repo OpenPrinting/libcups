@@ -471,6 +471,8 @@ cupsJWTImportString(
     cups_jws_format_t format)		// I - JWS serialization format
 {
   cups_jwt_t	*jwt;			// JWT object
+  size_t	datalen;		// Size of data
+  char		data[65536];		// Data
   const char	*alg;			// Signature algorithm, if any
 
 
@@ -483,15 +485,10 @@ cupsJWTImportString(
   {
     // Import compact Base64URL-encoded token...
     const char	*tokptr;		// Pointer into the token
-    size_t	datalen;		// Size of data
-    char	data[65536];		// Data
 
     // Extract the JOSE header...
     datalen = sizeof(data) - 1;
-    if (!httpDecode64(data, &datalen, s, &tokptr))
-      goto import_error;
-
-    if (!tokptr || *tokptr != '.')
+    if (!httpDecode64(data, &datalen, s, &tokptr) || !tokptr || *tokptr != '.')
       goto import_error;
 
     tokptr ++;
@@ -502,10 +499,7 @@ cupsJWTImportString(
 
     // Extract the JWT claims...
     datalen = sizeof(data) - 1;
-    if (!httpDecode64(data, &datalen, tokptr, &tokptr))
-      goto import_error;
-
-    if (!tokptr || *tokptr != '.')
+    if (!httpDecode64(data, &datalen, tokptr, &tokptr) || !tokptr || *tokptr != '.')
       goto import_error;
 
     tokptr ++;
@@ -516,10 +510,7 @@ cupsJWTImportString(
 
     // Extract the signature, if any...
     datalen = sizeof(data);
-    if (!httpDecode64(data, &datalen, tokptr, &tokptr))
-      goto import_error;
-
-    if (!tokptr || *tokptr)
+    if (!httpDecode64(data, &datalen, tokptr, &tokptr) || !tokptr || *tokptr)
       goto import_error;
 
     if (datalen > 0)
@@ -534,9 +525,96 @@ cupsJWTImportString(
   else
   {
     // Import JSON...
-    // TODO: Implement JSON import...
+    cups_json_t	*json,			// JSON data
+		*json_value,		// BASE64URL-encoded string value node
+		*signatures,		// Signatures array
+		*signature;		// Signature element to load
+    const char	*value,			// C string value
+		*valueptr;		// Pointer into value
+
+    if ((json = cupsJSONImportString(s)) == NULL)
+      goto import_error;
+
+    // Copy the payload...
+    if ((json_value = cupsJSONFind(json, "payload")) == NULL || (value = cupsJSONGetString(json_value)) == NULL)
+    {
+      cupsJSONDelete(json);
+      goto import_error;
+    }
+
+    datalen = sizeof(data) - 1;
+    if (!httpDecode64(data, &datalen, value, &valueptr) || !valueptr || *valueptr)
+    {
+      cupsJSONDelete(json);
+      goto import_error;
+    }
+
+    data[datalen] = '\0';
+    jwt->claims_string = strdup(data);
+    if ((jwt->claims = cupsJSONImportString(data)) == NULL)
+    {
+      cupsJSONDelete(json);
+      goto import_error;
+    }
+
+    // See if we have a flattened JSON JWT...
+    if ((signatures = cupsJSONFind(json, "signatures")) != NULL)
+    {
+      // Use the first protected header and signature in the array...
+      signature = cupsJSONGetChild(signatures, 0);
+    }
+    else
+    {
+      // Use the protected header and signature from the main JSON object...
+      signature = json;
+    }
+
+    // Copy the protected header and signature values...
+    if ((json_value = cupsJSONFind(signature, "protected")) == NULL || (value = cupsJSONGetString(json_value)) == NULL)
+    {
+      cupsJSONDelete(json);
+      goto import_error;
+    }
+
+    datalen = sizeof(data) - 1;
+    if (!httpDecode64(data, &datalen, value, &valueptr) || !valueptr || *valueptr)
+    {
+      cupsJSONDelete(json);
+      goto import_error;
+    }
+
+    data[datalen] = '\0';
+    jwt->jose_string = strdup(data);
+    if ((jwt->jose = cupsJSONImportString(data)) == NULL)
+    {
+      cupsJSONDelete(json);
+      goto import_error;
+    }
+
+    if ((json_value = cupsJSONFind(signature, "signature")) == NULL || (value = cupsJSONGetString(json_value)) == NULL)
+    {
+      cupsJSONDelete(json);
+      goto import_error;
+    }
+
+    datalen = sizeof(data);
+    if (!httpDecode64(data, &datalen, value, &valueptr) || !valueptr || *valueptr)
+    {
+      cupsJSONDelete(json);
+      goto import_error;
+    }
+
+    if (datalen > 0)
+    {
+      if ((jwt->signature = malloc(datalen)) == NULL)
+	goto import_error;
+
+      memcpy(jwt->signature, data, datalen);
+      jwt->sigsize = datalen;
+    }
   }
 
+  // Check the algorithm used in the protected header...
   if ((alg = cupsJSONGetString(cupsJSONFind(jwt->jose, "alg"))) != NULL)
   {
     cups_jwa_t	sigalg;			// Signing algorithm
