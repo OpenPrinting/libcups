@@ -261,8 +261,8 @@ main(int  argc,				// I - Number of command-line arguments
 
     for (i = 0; i < (int)(sizeof(examples) / sizeof(examples[0])); i ++)
     {
-      testBegin("cupsJWTImportString(\"%s\")", examples[i][0]);
-      if ((jwt = cupsJWTImportString(examples[i][0])) != NULL)
+      testBegin("cupsJWTImportString(\"%s\", CUPS_JWS_FORMAT_COMPACT)", examples[i][0]);
+      if ((jwt = cupsJWTImportString(examples[i][0], CUPS_JWS_FORMAT_COMPACT)) != NULL)
       {
         testEnd(true);
 
@@ -295,7 +295,7 @@ main(int  argc,				// I - Number of command-line arguments
     // Try loading JWT string on the command-line...
     for (i = 1; i < argc; i ++)
     {
-      if ((jwt = cupsJWTImportString(argv[i])) != NULL)
+      if ((jwt = cupsJWTImportString(argv[i], CUPS_JWS_FORMAT_COMPACT)) != NULL)
       {
 //	printf("%s: OK, %u key/value pairs in root object.\n", argv[i], (unsigned)(cupsJSONGetCount(json) / 2));
 

@@ -119,12 +119,16 @@ cupsJWTDelete(cups_jwt_t *jwt)		// I - JWT object
 //
 
 char *					// O - JWT/JWS Compact Serialization string
-cupsJWTExportString(cups_jwt_t *jwt)	// I - JWT object
+cupsJWTExportString(
+    cups_jwt_t        *jwt,		// I - JWT object
+    cups_jws_format_t format)		// I - JWS serialization format
 {
-  if (jwt)
+  if (!jwt)
+    return (NULL);
+  else if (format == CUPS_JWS_FORMAT_COMPACT)
     return (make_string(jwt, true));
   else
-    return (NULL);
+    return (NULL); // TODO: Implement JSON export
 }
 
 
@@ -216,6 +220,90 @@ cups_json_t *				// O - JSON object
 cupsJWTGetClaims(cups_jwt_t *jwt)	// I - JWT object
 {
   return (jwt ? jwt->claims : NULL);
+}
+
+
+//
+// 'cupsJWTGetHeaderNumber()' - Get the number value of a protected header.
+//
+
+double					// O - Number value
+cupsJWTGetHeaderNumber(
+    cups_jwt_t *jwt,			// I - JWT object
+    const char *header)			// I - Header name
+{
+  cups_json_t	*node;			// Value node
+
+
+  if (jwt && (node = cupsJSONFind(jwt->jose, header)) != NULL)
+    return (cupsJSONGetNumber(node));
+  else
+    return (0.0);
+}
+
+
+//
+// 'cupsJWTGetHeaderString()' - Get the string value of a protected header.
+//
+
+const char *				// O - String value
+cupsJWTGetHeaderString(
+    cups_jwt_t *jwt,			// I - JWT object
+    const char *header)			// I - Header name
+{
+  cups_json_t	*node;			// Value node
+
+
+  if (jwt && (node = cupsJSONFind(jwt->jose, header)) != NULL)
+    return (cupsJSONGetString(node));
+  else
+    return (NULL);
+}
+
+
+//
+// 'cupsJWTGetHeaderType()' - Get the value type of a protected header.
+//
+
+cups_jtype_t				// O - JSON value type
+cupsJWTGetHeaderType(
+    cups_jwt_t *jwt,			// I - JWT object
+    const char *header)			// I - Header name
+{
+  cups_json_t	*node;			// Value node
+
+
+  if (jwt && (node = cupsJSONFind(jwt->jose, header)) != NULL)
+    return (cupsJSONGetType(node));
+  else
+    return (CUPS_JTYPE_NULL);
+}
+
+
+//
+// 'cupsJWTGetHeaderValue()' - Get the value node of a protected header.
+//
+
+cups_json_t *				// O - JSON value node
+cupsJWTGetHeaderValue(
+    cups_jwt_t *jwt,			// I - JWT object
+    const char *header)			// I - Header name
+{
+  if (jwt)
+    return (cupsJSONFind(jwt->jose, header));
+  else
+    return (NULL);
+}
+
+
+//
+// 'cupsJWTGetHeaders()' - Get the JWT protected headers as a JSON object.
+//
+
+cups_json_t *				// O - JSON object
+cupsJWTGetHeaders(cups_jwt_t *jwt)	// I - JWT object
+{
+  return (jwt ? jwt->jose : NULL);
 }
 
 
@@ -378,12 +466,11 @@ cupsJWTHasValidSignature(
 //
 
 cups_jwt_t *				// O - JWT object
-cupsJWTImportString(const char *token)	// I - JWS Compact Serialization string
+cupsJWTImportString(
+    const char        *s,		// I - JWS string
+    cups_jws_format_t format)		// I - JWS serialization format
 {
   cups_jwt_t	*jwt;			// JWT object
-  const char	*tokptr;		// Pointer into the token
-  size_t	datalen;		// Size of data
-  char		data[65536];		// Data
   const char	*alg;			// Signature algorithm, if any
 
 
@@ -391,49 +478,63 @@ cupsJWTImportString(const char *token)	// I - JWS Compact Serialization string
   if ((jwt = calloc(1, sizeof(cups_jwt_t))) == NULL)
     return (NULL);
 
-  // Extract the JOSE header...
-  datalen = sizeof(data) - 1;
-  if (!httpDecode64(data, &datalen, token, &tokptr))
-    goto import_error;
-
-  if (!tokptr || *tokptr != '.')
-    goto import_error;
-
-  tokptr ++;
-  data[datalen] = '\0';
-  jwt->jose_string = strdup(data);
-  if ((jwt->jose = cupsJSONImportString(data)) == NULL)
-    goto import_error;
-
-  // Extract the JWT claims...
-  datalen = sizeof(data) - 1;
-  if (!httpDecode64(data, &datalen, tokptr, &tokptr))
-    goto import_error;
-
-  if (!tokptr || *tokptr != '.')
-    goto import_error;
-
-  tokptr ++;
-  data[datalen] = '\0';
-  jwt->claims_string = strdup(data);
-  if ((jwt->claims = cupsJSONImportString(data)) == NULL)
-    goto import_error;
-
-  // Extract the signature, if any...
-  datalen = sizeof(data);
-  if (!httpDecode64(data, &datalen, tokptr, &tokptr))
-    goto import_error;
-
-  if (!tokptr || *tokptr)
-    goto import_error;
-
-  if (datalen > 0)
+  // Import it...
+  if (format == CUPS_JWS_FORMAT_COMPACT)
   {
-    if ((jwt->signature = malloc(datalen)) == NULL)
+    // Import compact Base64URL-encoded token...
+    const char	*tokptr;		// Pointer into the token
+    size_t	datalen;		// Size of data
+    char	data[65536];		// Data
+
+    // Extract the JOSE header...
+    datalen = sizeof(data) - 1;
+    if (!httpDecode64(data, &datalen, s, &tokptr))
       goto import_error;
 
-    memcpy(jwt->signature, data, datalen);
-    jwt->sigsize = datalen;
+    if (!tokptr || *tokptr != '.')
+      goto import_error;
+
+    tokptr ++;
+    data[datalen] = '\0';
+    jwt->jose_string = strdup(data);
+    if ((jwt->jose = cupsJSONImportString(data)) == NULL)
+      goto import_error;
+
+    // Extract the JWT claims...
+    datalen = sizeof(data) - 1;
+    if (!httpDecode64(data, &datalen, tokptr, &tokptr))
+      goto import_error;
+
+    if (!tokptr || *tokptr != '.')
+      goto import_error;
+
+    tokptr ++;
+    data[datalen] = '\0';
+    jwt->claims_string = strdup(data);
+    if ((jwt->claims = cupsJSONImportString(data)) == NULL)
+      goto import_error;
+
+    // Extract the signature, if any...
+    datalen = sizeof(data);
+    if (!httpDecode64(data, &datalen, tokptr, &tokptr))
+      goto import_error;
+
+    if (!tokptr || *tokptr)
+      goto import_error;
+
+    if (datalen > 0)
+    {
+      if ((jwt->signature = malloc(datalen)) == NULL)
+	goto import_error;
+
+      memcpy(jwt->signature, data, datalen);
+      jwt->sigsize = datalen;
+    }
+  }
+  else
+  {
+    // Import JSON...
+    // TODO: Implement JSON import...
   }
 
   if ((alg = cupsJSONGetString(cupsJSONFind(jwt->jose, "alg"))) != NULL)
@@ -816,6 +917,84 @@ cupsJWTSetClaimValue(
 
   // Add claim...
   _cupsJSONAdd(jwt->claims, cupsJSONNewKey(jwt->claims, NULL, claim), value);
+}
+
+
+//
+// 'cupsJWTSetHeaderNumber()' - Set a protected header number.
+//
+
+void
+cupsJWTSetHeaderNumber(
+    cups_jwt_t *jwt,			// I - JWT object
+    const char *header,			// I - Header name
+    double     value)			// I - Number value
+{
+  // Range check input
+  if (!jwt || !header)
+    return;
+
+  // Remove existing claim string, if any...
+  free(jwt->claims_string);
+  jwt->claims_string = NULL;
+
+  // Remove existing claim, if any...
+  _cupsJSONDelete(jwt->jose, header);
+
+  // Add claim...
+  cupsJSONNewNumber(jwt->jose, cupsJSONNewKey(jwt->jose, NULL, header), value);
+}
+
+
+//
+// 'cupsJWTSetHeaderString()' - Set a protected header string.
+//
+
+void
+cupsJWTSetHeaderString(
+    cups_jwt_t *jwt,			// I - JWT object
+    const char *header,			// I - Header name
+    const char *value)			// I - String value
+{
+  // Range check input
+  if (!jwt || !header || !value)
+    return;
+
+  // Remove existing claim string, if any...
+  free(jwt->claims_string);
+  jwt->claims_string = NULL;
+
+  // Remove existing claim, if any...
+  _cupsJSONDelete(jwt->jose, header);
+
+  // Add claim...
+  cupsJSONNewString(jwt->jose, cupsJSONNewKey(jwt->jose, NULL, header), value);
+}
+
+
+//
+// 'cupsJWTSetHeaderValue()' - Set a protected header value.
+//
+
+void
+cupsJWTSetHeaderValue(
+    cups_jwt_t  *jwt,			// I - JWT object
+    const char  *header,		// I - Header name
+    cups_json_t *value)			// I - JSON value node
+{
+  // Range check input
+  if (!jwt || !header)
+    return;
+
+  // Remove existing claim string, if any...
+  free(jwt->claims_string);
+  jwt->claims_string = NULL;
+
+  // Remove existing claim, if any...
+  _cupsJSONDelete(jwt->jose, header);
+
+  // Add claim...
+  _cupsJSONAdd(jwt->jose, cupsJSONNewKey(jwt->jose, NULL, header), value);
 }
 
 
