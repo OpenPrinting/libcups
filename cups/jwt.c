@@ -39,6 +39,7 @@ struct _cups_jwt_s			// JWT object
   cups_json_t	*claims;		// JWT claims object
   char		*claims_string;		// JWT claims string
   cups_jwa_t	sigalg;			// Signature algorithm
+  char		*sigkid;		// Key ID, if any
   size_t	sigsize;		// Size of signature
   unsigned char	*signature;		// Signature
 };
@@ -91,7 +92,7 @@ static void	make_datstring(gnutls_datum_t *d, char *buffer, size_t bufsize);
 static gnutls_privkey_t make_private_key(cups_json_t *jwk);
 static gnutls_pubkey_t make_public_key(cups_json_t *jwk);
 #endif // HAVE_OPENSSL
-static bool	make_signature(cups_jwt_t *jwt, cups_jwa_t alg, cups_json_t *jwk, unsigned char *signature, size_t *sigsize);
+static bool	make_signature(cups_jwt_t *jwt, cups_jwa_t alg, cups_json_t *jwk, unsigned char *signature, size_t *sigsize, const char **sigkid);
 static char	*make_string(cups_jwt_t *jwt, bool with_signature);
 
 
@@ -108,6 +109,7 @@ cupsJWTDelete(cups_jwt_t *jwt)		// I - JWT object
     free(jwt->jose_string);
     cupsJSONDelete(jwt->claims);
     free(jwt->claims_string);
+    free(jwt->sigkid);
     free(jwt->signature);
     free(jwt);
   }
@@ -319,6 +321,7 @@ cupsJWTHasValidSignature(
   bool		ret = false;		// Return value
   unsigned char	signature[_CUPS_JWT_MAX_SIGNATURE];
 					// Signature
+  const char	*sigkid;		// Key ID, if any
   size_t	sigsize = _CUPS_JWT_MAX_SIGNATURE;
 					// Size of signature
   char		*text;			// Signature text
@@ -351,7 +354,8 @@ cupsJWTHasValidSignature(
     case CUPS_JWA_HS384 :
     case CUPS_JWA_HS512 :
 	// Calculate signature with keys...
-	if (!make_signature(jwt, jwt->sigalg, jwk, signature, &sigsize))
+	sigkid = jwt->sigkid;
+	if (!make_signature(jwt, jwt->sigalg, jwk, signature, &sigsize, &sigkid))
 	  break;
 
 	DEBUG_printf(("1cupsJWTHasValidSignature: calc sig(%u) = %02X%02X%02X%02X...%02X%02X%02X%02X", (unsigned)sigsize, signature[0], signature[1], signature[2], signature[3], signature[sigsize - 4], signature[sigsize - 3], signature[sigsize - 2], signature[sigsize - 1]));
@@ -527,6 +531,8 @@ cupsJWTImportString(
     // Import JSON...
     cups_json_t	*json,			// JSON data
 		*json_value,		// BASE64URL-encoded string value node
+		*header,		// Unprotected header
+		*kid,			// Key ID node
 		*signatures,		// Signatures array
 		*signature;		// Signature element to load
     const char	*value,			// C string value
@@ -612,6 +618,9 @@ cupsJWTImportString(
       memcpy(jwt->signature, data, datalen);
       jwt->sigsize = datalen;
     }
+
+    if ((header = cupsJSONFind(signature, "header")) != NULL && (kid = cupsJSONFind(header, "kid")) != NULL && (value = cupsJSONGetString(kid)) == NULL)
+      jwt->sigkid = strdup(value);
   }
 
   // Check the algorithm used in the protected header...
@@ -1089,6 +1098,7 @@ cupsJWTSign(cups_jwt_t  *jwt,		// I - JWT object
 					// Signature
   size_t	sigsize = _CUPS_JWT_MAX_SIGNATURE;
 					// Size of signature
+  const char	*sigkid = NULL;		// Key ID, if any
 
 
   // Range check input...
@@ -1107,13 +1117,18 @@ cupsJWTSign(cups_jwt_t  *jwt,		// I - JWT object
 
   // Clear existing signature...
   free(jwt->signature);
+  free(jwt->sigkid);
   jwt->signature = NULL;
+  jwt->sigkid    = NULL;
   jwt->sigsize   = 0;
   jwt->sigalg    = CUPS_JWA_NONE;
 
   // Create new signature...
-  if (!make_signature(jwt, alg, jwk, signature, &sigsize))
+  if (!make_signature(jwt, alg, jwk, signature, &sigsize, &sigkid))
     return (false);
+
+  if (sigkid)
+    jwt->sigkid = strdup(sigkid);
 
   if ((jwt->signature = malloc(sigsize)) == NULL)
     return (false);
@@ -1552,9 +1567,11 @@ make_signature(cups_jwt_t    *jwt,	// I  - JWT
                cups_jwa_t    alg,	// I  - Algorithm
                cups_json_t   *jwk,	// I  - JSON Web Key Set
                unsigned char *signature,// I  - Signature buffer
-               size_t        *sigsize)	// IO - Signature size
+               size_t        *sigsize,	// IO - Signature size
+               const char    **sigkid)	// IO - Key ID string, if any
 {
   bool			ret = false;	// Return value
+  cups_json_t		*keys;		// Array of keys
   char			*text;		// JWS Signing Input
   size_t		text_len;	// Length of signing input
 #ifdef HAVE_OPENSSL
@@ -1572,6 +1589,49 @@ make_signature(cups_jwt_t    *jwt,	// I  - JWT
   // Get text to sign...
   text     = make_string(jwt, false);
   text_len = strlen(text);
+
+  if ((keys = cupsJSONFind(jwk, "keys")) != NULL)
+  {
+    // Full key set, find the key we need to use...
+    size_t	i,			// Looping var
+		count;			// Number of keys
+    cups_json_t	*current;		// Current key
+    const char	*curkid,		// Current key ID
+		*curkty;		// Current key type
+
+    count = cupsJSONGetCount(keys);
+
+    if (*sigkid)
+    {
+      // Find the matching key ID
+      for (i = 0; i < count; i ++)
+      {
+        current = cupsJSONGetChild(keys, i);
+        curkid  = cupsJSONGetString(cupsJSONFind(current, "kid"));
+
+        if (curkid && !strcmp(curkid, *sigkid))
+        {
+          jwk = current;
+          break;
+	}
+      }
+    }
+    else
+    {
+      // Find a key that can be used for the specified algorithm
+      for (i = 0; i < count; i ++)
+      {
+        current = cupsJSONGetChild(keys, i);
+        curkty  = cupsJSONGetString(cupsJSONFind(current, "kty"));
+
+        if (((!curkty || !strcmp(curkty, "ocy")) && alg >= CUPS_JWA_HS256 && alg <= CUPS_JWA_HS512) || (curkty && !strcmp(curkty, "RSA") && alg >= CUPS_JWA_RS256 && alg <= CUPS_JWA_RS512) || (curkty && !strcmp(curkty, "EC") && alg >= CUPS_JWA_ES256 && alg <= CUPS_JWA_ES512))
+        {
+          jwk = current;
+          break;
+	}
+      }
+    }
+  }
 
   if (alg >= CUPS_JWA_HS256 && alg <= CUPS_JWA_HS512)
   {
@@ -1714,7 +1774,9 @@ make_signature(cups_jwt_t    *jwt,	// I  - JWT
 
   free(text);
 
-  if (!ret)
+  if (ret)
+    *sigkid = cupsJSONGetString(cupsJSONFind(jwk, "kid"));
+  else
     *sigsize = 0;
 
   return (ret);
