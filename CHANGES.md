@@ -5,7 +5,10 @@ libcups v3.0b2 (TBD)
 --------------------
 
 - Added `cupsFormDecode` and `cupsFormEncode` APIs (Issue #49)
-- Added `cupsJWT` APIs to support JSON Web Tokens (Issue #50)
+- Added `cupsJWT` APIs to support JSON Web Tokens (Issue #50, Issue #52)
+- Added `cupsCreateCredentialsRequest` and `cupsSignCredentialsRequest` APIs and
+  updated `cupsCreateCredentials` API to better support X.509 certificates
+  (Issue #59)
 - Updated the configure script to add `_FORTIFY_SOURCE=3` (previous level was 2)
   when not using address sanitizer and when it hasn't already been added
   (Issue #51)
@@ -13,6 +16,7 @@ libcups v3.0b2 (TBD)
 - Fixed ipptool limit on the size of an attribute value that would be printed
   (Issue #5)
 - Fixed some configure script issues (Issue #48)
+- Fixed JSON output bug in ipptool
 
 
 libcups v3.0b1 (February 9, 2023)

@@ -99,10 +99,15 @@ cupsCondDestroy
 cupsCondInit
 cupsCondWait
 cupsConnectDest
+cupsCopyCredentials
+cupsCopyCredentialsKey
+cupsCopyCredentialsRequest
 cupsCopyDest
 cupsCopyDestConflicts
 cupsCopyDestInfo
 cupsCopyString
+cupsCreateCredentials
+cupsCreateCredentialsRequest
 cupsCreateDestJob
 cupsDNSSDAssembleFullName
 cupsDNSSDBrowseDelete
@@ -229,6 +234,11 @@ cupsJWTGetClaimString
 cupsJWTGetClaimType
 cupsJWTGetClaimValue
 cupsJWTGetClaims
+cupsJWTGetHeaderNumber
+cupsJWTGetHeaderString
+cupsJWTGetHeaderType
+cupsJWTGetHeaderValue
+cupsJWTGetHeaders
 cupsJWTHasValidSignature
 cupsJWTImportString
 cupsJWTMakePrivateKey
@@ -237,6 +247,9 @@ cupsJWTNew
 cupsJWTSetClaimNumber
 cupsJWTSetClaimString
 cupsJWTSetClaimValue
+cupsJWTSetHeaderNumber
+cupsJWTSetHeaderString
+cupsJWTSetHeaderValue
 cupsJWTSign
 cupsLangAddStrings
 cupsLangDefault
@@ -255,7 +268,6 @@ cupsLastErrorString
 cupsLocalizeDestMedia
 cupsLocalizeDestOption
 cupsLocalizeDestValue
-cupsMakeServerCredentials
 cupsMutexDestroy
 cupsMutexInit
 cupsMutexLock
@@ -282,6 +294,7 @@ cupsRasterWritePixels
 cupsReadResponseData
 cupsRemoveDest
 cupsRemoveOption
+cupsSaveCredentials
 cupsSendRequest
 cupsSetClientCertCB
 cupsSetCredentials
@@ -295,6 +308,7 @@ cupsSetServerCertCB
 cupsSetServerCredentials
 cupsSetUser
 cupsSetUserAgent
+cupsSignCredentialsRequest
 cupsStartDestDocument
 cupsTempFd
 cupsTempFile
