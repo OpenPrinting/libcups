@@ -216,7 +216,7 @@ cupsCreateCredentials(
   ASN1_TIME_free(notAfter);
 
   serial = ASN1_INTEGER_new();
-  ASN1_INTEGER_set(serial, (int)curtime);
+  ASN1_INTEGER_set(serial, (long)curtime);
   X509_set_serialNumber(cert, serial);
   ASN1_INTEGER_free(serial);
 
@@ -740,7 +740,7 @@ cupsSignCredentialsRequest(
   ASN1_TIME_free(notAfter);
 
   serial = ASN1_INTEGER_new();
-  ASN1_INTEGER_set(serial, (int)curtime);
+  ASN1_INTEGER_set(serial, (long)curtime);
   X509_set_serialNumber(cert, serial);
   ASN1_INTEGER_free(serial);
 

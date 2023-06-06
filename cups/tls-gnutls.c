@@ -125,7 +125,7 @@ cupsCreateCredentials(
   cups_file_t		*fp;		// Key/cert file
   unsigned char		buffer[65536];	// Buffer for x509 data
   size_t		bytes;		// Number of bytes of data
-  unsigned char		serial[4];	// Serial number buffer
+  unsigned char		serial[8];	// Serial number buffer
   time_t		curtime;	// Current time
   int			err;		// Result of GNU TLS calls
 
@@ -178,10 +178,14 @@ cupsCreateCredentials(
   DEBUG_puts("1cupsCreateCredentials: Generating X.509 certificate.");
 
   curtime   = time(NULL);
-  serial[0] = (unsigned char)(curtime >> 24);
-  serial[1] = (unsigned char)(curtime >> 16);
-  serial[2] = (unsigned char)(curtime >> 8);
-  serial[3] = (unsigned char)(curtime);
+  serial[0] = (unsigned char)(curtime >> 56);
+  serial[1] = (unsigned char)(curtime >> 48);
+  serial[2] = (unsigned char)(curtime >> 40);
+  serial[3] = (unsigned char)(curtime >> 32);
+  serial[4] = (unsigned char)(curtime >> 24);
+  serial[5] = (unsigned char)(curtime >> 16);
+  serial[6] = (unsigned char)(curtime >> 8);
+  serial[7] = (unsigned char)(curtime);
 
   if (!organization)
     organization = common_name;
@@ -687,7 +691,7 @@ cupsSignCredentialsRequest(
   cups_file_t		*fp;		// Key/cert file
   unsigned char		buffer[65536];	// Buffer for x509 data
   size_t		bytes;		// Number of bytes of data
-  unsigned char		serial[4];	// Serial number buffer
+  unsigned char		serial[8];	// Serial number buffer
   time_t		curtime;	// Current time
 
 
@@ -722,10 +726,14 @@ cupsSignCredentialsRequest(
   DEBUG_puts("1cupsSignCredentialsRequest: Generating X.509 certificate.");
 
   curtime   = time(NULL);
-  serial[0] = (unsigned char)(curtime >> 24);
-  serial[1] = (unsigned char)(curtime >> 16);
-  serial[2] = (unsigned char)(curtime >> 8);
-  serial[3] = (unsigned char)(curtime);
+  serial[0] = (unsigned char)(curtime >> 56);
+  serial[1] = (unsigned char)(curtime >> 48);
+  serial[2] = (unsigned char)(curtime >> 40);
+  serial[3] = (unsigned char)(curtime >> 32);
+  serial[4] = (unsigned char)(curtime >> 24);
+  serial[5] = (unsigned char)(curtime >> 16);
+  serial[6] = (unsigned char)(curtime >> 8);
+  serial[7] = (unsigned char)(curtime);
 
   gnutls_x509_crt_init(&crt);
   gnutls_x509_crt_set_crq(crt, crq);
