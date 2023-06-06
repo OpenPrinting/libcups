@@ -117,20 +117,66 @@ cupsJWTDelete(cups_jwt_t *jwt)		// I - JWT object
 
 
 //
-// 'cupsJWTExportString()' - Export a JWT with the JWS Compact Serialization format.
+// 'cupsJWTExportString()' - Export a JWT with the JWS Compact or JWS JSON (Flattened) Serialization format.
+//
+// This function exports a JWT to a JWS Compact or JWS JSON Serialization
+// string.  The JSON output is always the "flattened" format since the JWT
+// only contains a single signature.
+//
+// The return value must be freed using the `free` function.
 //
 
-char *					// O - JWT/JWS Compact Serialization string
+char *					// O - JWT/JWS Serialization string
 cupsJWTExportString(
     cups_jwt_t        *jwt,		// I - JWT object
     cups_jws_format_t format)		// I - JWS serialization format
 {
-  if (!jwt)
-    return (NULL);
-  else if (format == CUPS_JWS_FORMAT_COMPACT)
-    return (make_string(jwt, true));
-  else
-    return (NULL); // TODO: Implement JSON export
+  char	*ret = NULL;			// Return value
+
+
+  if (jwt)
+  {
+    if (format == CUPS_JWS_FORMAT_COMPACT)
+    {
+      // Compact token string
+      ret = make_string(jwt, true);
+    }
+    else
+    {
+      // JSON (flattened) serialized string
+      cups_json_t *json;		// JSON serialization
+      char	*payload,		// Payload value
+		signature[((_CUPS_JWT_MAX_SIGNATURE + 2) * 4 / 3) + 1];
+					// Base64URL-encoded signature value
+
+      // The payload is the compact token string without signature...
+      json = cupsJSONNew(NULL, NULL, CUPS_JTYPE_OBJECT);
+
+      payload = make_string(jwt, false);
+      cupsJSONNewString(json, cupsJSONNewKey(json, NULL, "payload"), payload);
+      free(payload);
+
+      if (jwt->sigsize)
+      {
+        if (jwt->sigkid)
+        {
+	  cups_json_t *header;		// Unprotected header
+
+	  header = cupsJSONNew(json, cupsJSONNewKey(json, NULL, "header"), CUPS_JTYPE_OBJECT);
+	  cupsJSONNewString(header, cupsJSONNewKey(header, NULL, "kid"), jwt->sigkid);
+	}
+
+        // Add the Base64URL-encoded signature value...
+        httpEncode64(signature, sizeof(signature), (char *)jwt->signature, jwt->sigsize, true);
+	cupsJSONNewString(json, cupsJSONNewKey(json, NULL, "signature"), signature);
+      }
+
+      ret = cupsJSONExportString(json);
+      cupsJSONDelete(json);
+    }
+  }
+
+  return (ret);
 }
 
 
