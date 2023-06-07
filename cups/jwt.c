@@ -665,7 +665,7 @@ cupsJWTImportString(
       jwt->sigsize = datalen;
     }
 
-    if ((header = cupsJSONFind(signature, "header")) != NULL && (kid = cupsJSONFind(header, "kid")) != NULL && (value = cupsJSONGetString(kid)) == NULL)
+    if ((header = cupsJSONFind(signature, "header")) != NULL && (kid = cupsJSONFind(header, "kid")) != NULL && (value = cupsJSONGetString(kid)) != NULL)
       jwt->sigkid = strdup(value);
   }
 
