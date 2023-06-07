@@ -6966,9 +6966,8 @@ show_media(ippeve_client_t  *client)	/* I - Client connection */
       if (ready_source && !strcmp(ready_source, media_source))
         break;
 
-      ready_source = NULL;
-      ready_size   = NULL;
-      ready_type   = NULL;
+      ready_size = NULL;
+      ready_type = NULL;
     }
 
     html_printf(client, "<tr><th>%s:</th>", media_source);
@@ -7000,6 +6999,8 @@ show_media(ippeve_client_t  *client)	/* I - Client connection */
     if (printer->web_forms)
     {
       html_printf(client, " <select name=\"type%u\"><option value=\"\">None</option>", (unsigned)i);
+      if (ready_type)
+        html_printf(client, "<option selected>%s</option>", ready_type);
       for (j = 0; j < num_types; j ++)
       {
 	media_type = ippGetString(media_types, j, NULL);
