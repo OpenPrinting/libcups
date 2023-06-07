@@ -139,6 +139,7 @@
     <ClCompile Include="..\cups\raster-error.c" />
     <ClCompile Include="..\cups\raster-stream.c" />
     <ClCompile Include="..\cups\request.c" />
+    <ClCompile Include="..\cups\smime.c" />
     <ClCompile Include="..\cups\string.c" />
     <ClCompile Include="..\cups\tempfile.c" />
     <ClCompile Include="..\cups\thread.c" />
@@ -160,6 +161,7 @@
     <ClInclude Include="..\cups\dnssd.h" />
     <ClInclude Include="..\cups\file-private.h" />
     <ClInclude Include="..\cups\file.h" />
+    <ClInclude Include="..\cups\form.h" />
     <ClInclude Include="..\cups\globals.h" />
     <ClInclude Include="..\cups\http-private.h" />
     <ClInclude Include="..\cups\http.h" />
@@ -176,6 +178,7 @@
     <ClInclude Include="..\cups\pwg.h" />
     <ClInclude Include="..\cups\raster-private.h" />
     <ClInclude Include="..\cups\raster.h" />
+    <ClInclude Include="..\cups\smime.h" />
     <ClInclude Include="..\cups\string-private.h" />
     <ClInclude Include="..\cups\thread.h" />
     <ClInclude Include="..\cups\transcode.h" />

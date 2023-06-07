@@ -294,6 +294,11 @@ cupsRasterWritePixels
 cupsReadResponseData
 cupsRemoveDest
 cupsRemoveOption
+cupsSMIMEClose
+cupsSMIMEOpen
+cupsSMIMEOpenIO
+cupsSMIMERead
+cupsSMIMEWrite
 cupsSaveCredentials
 cupsSendRequest
 cupsSetClientCertCB
