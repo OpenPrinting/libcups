@@ -315,7 +315,13 @@ cupsCreateCredentials(
   openssl_add_ext(exts, NID_authority_key_identifier, "keyid,issuer");
 
   while ((ext = sk_X509_EXTENSION_pop(exts)) != NULL)
-    X509_add_ext(cert, ext, -1);
+  {
+    if (!X509_add_ext(cert, ext, -1))
+    {
+      sk_X509_EXTENSION_pop_free(exts, X509_EXTENSION_free);
+      goto done;
+    }
+  }
 
   X509_set_version(cert, 2); // v3
 
@@ -449,7 +455,7 @@ cupsCreateCredentialsRequest(
     size_t             num_alt_names,	// I - Number of subject alternate names
     const char * const *alt_names)	// I - Subject Alternate Names
 {
-  char		*result = NULL;		// Return value
+  bool		ret = false;		// Return value
   EVP_PKEY	*pkey;			// Key pair
   X509_REQ	*csr;			// Certificate signing request
   X509_NAME	*name;			// Subject/issuer name
@@ -493,9 +499,8 @@ cupsCreateCredentialsRequest(
 
   if ((csr = X509_REQ_new()) == NULL)
   {
-    EVP_PKEY_free(pkey);
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create X.509 certificate signing request."), 1);
-    return (NULL);
+    goto done;
   }
 
   X509_REQ_set_pubkey(csr, pkey);
@@ -577,8 +582,7 @@ cupsCreateCredentialsRequest(
 
   BIO_free(bio);
 
-  // TODO: Copy CSR to returned string
-  result = strdup("");
+  ret = true;
   DEBUG_puts("1cupsCreateCredentialsRequest: Successfully created signing request.");
 
   // Cleanup...
@@ -587,7 +591,7 @@ cupsCreateCredentialsRequest(
   X509_REQ_free(csr);
   EVP_PKEY_free(pkey);
 
-  return (result);
+  return (ret);
 }
 
 

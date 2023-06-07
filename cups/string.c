@@ -169,7 +169,11 @@ cupsCopyString(char       *dst,		// O - Destination string
 {
   // Range check input...
   if (!dst || !src || dstsize == 0)
+  {
+    if (dst)
+      *dst = '\0';
     return (0);
+  }
 
 #ifdef HAVE_STRLCPY
   return (strlcpy(dst, src, dstsize));

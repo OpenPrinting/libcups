@@ -341,7 +341,7 @@ _cups_safe_vsnprintf(
 
       if (*format == '%')
       {
-        if (bufptr && bufptr < bufend)
+        if (bufptr < bufend)
 	  *bufptr++ = *format;
         bytes ++;
         format ++;
@@ -451,7 +451,7 @@ _cups_safe_vsnprintf(
 
             bytes += (int)strlen(temp);
 
-            if (bufptr && bufptr < bufend)
+            if (bufptr < bufend)
 	    {
 	      cupsCopyString(bufptr, temp, (size_t)(bufend - bufptr));
 	      bufptr += strlen(bufptr);
@@ -481,7 +481,7 @@ _cups_safe_vsnprintf(
 
             bytes += (int)strlen(temp);
 
-	    if (bufptr && bufptr < bufend)
+	    if (bufptr < bufend)
 	    {
 	      cupsCopyString(bufptr, temp, (size_t)(bufend - bufptr));
 	      bufptr += strlen(bufptr);
@@ -496,7 +496,7 @@ _cups_safe_vsnprintf(
 
             bytes += (int)strlen(temp);
 
-	    if (bufptr && bufptr < bufend)
+	    if (bufptr < bufend)
 	    {
 	      cupsCopyString(bufptr, temp, (size_t)(bufend - bufptr));
 	      bufptr += strlen(bufptr);
@@ -506,7 +506,7 @@ _cups_safe_vsnprintf(
         case 'c' : // Character or character array
 	    bytes += width;
 
-	    if (bufptr && bufptr < bufend)
+	    if (bufptr < bufend)
 	    {
 	      if (width <= 1)
 	      {
@@ -526,12 +526,6 @@ _cups_safe_vsnprintf(
 	case 's' : // String
 	    if ((s = va_arg(ap, char *)) == NULL)
 	      s = "(null)";
-
-            if (!bufptr)
-	    {
-	      bytes += 2 * strlen(s);
-	      break;
-	    }
 
             // Copy the C string, replacing control chars and \ with C character escapes...
             for (bufend --; *s && bufptr < bufend; s ++)
@@ -590,6 +584,9 @@ _cups_safe_vsnprintf(
 	      }
             }
 
+            if (bufptr >= bufend)
+	      bytes += 2 * strlen(s);
+
             bufend ++;
 	    break;
 
@@ -602,7 +599,7 @@ _cups_safe_vsnprintf(
     {
       bytes ++;
 
-      if (bufptr && bufptr < bufend)
+      if (bufptr < bufend)
         *bufptr++ = *format;
 
       format ++;
