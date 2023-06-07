@@ -49,6 +49,7 @@ LIBOBJS		= \
 		raster-error.o \
 		raster-stream.o \
 		request.o \
+		smime.o \
 		string.o \
 		tempfile.o \
 		thread.o \
@@ -76,6 +77,7 @@ TESTOBJS	= \
 		testoptions.o \
 		testpwg.o \
 		testraster.o \
+		testsmime.o \
 		testtestpage.o \
 		testthreads.o \
 		tlscheck.o
@@ -106,6 +108,7 @@ HEADERS	=	\
 		ppd.h \
 		pwg.h \
 		raster.h \
+		smime.h \
 		thread.h \
 		transcode.h
 
@@ -158,6 +161,7 @@ UNITTARGETS =	\
 		testoptions \
 		testpwg \
 		testraster \
+		testsmime \
 		testtestpage \
 		testthreads \
 		tlscheck
@@ -228,6 +232,8 @@ test:		$(UNITTARGETS)
 	echo Running raster API tests...
 	./testraster 2>>test.log
 	./testtestpage 2>>test.log
+	echo Running S/MIME API tests...
+	./testsmime 2>>test.log
 
 fuzz:		$(UNITTARGETS)
 	echo Fuzzing IPP API...
@@ -258,7 +264,7 @@ clean:
 #
 
 depend:
-	$(CC) -MM -I.. -D_CUPS_SOURCE $(CPPFLAGS) $(OPTIONS) $(OBJS:.o=.c) | sed -e '1,$$s/ \/usr\/include\/[^ ]*//g' -e '1,$$s/ \/usr\/local\/include\/[^ ]*//g' >Dependencies
+	$(CC) -MM -I.. -D_CUPS_SOURCE $(CPPFLAGS) $(OPTIONS) $(OBJS:.o=.c) | sed -e '1,$$s/ \/usr\/include\/[^ ]*//g' -e '1,$$s/ \/usr\/local\/include\/[^ ]*//g' -e '/^ *\\/d' >Dependencies
 
 
 #
@@ -607,6 +613,16 @@ testpwg:	testpwg.o $(LIBCUPS_STATIC) test.ppd
 testraster:	testraster.o $(LIBCUPS_STATIC)
 	echo Linking $@...
 	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testraster.o $(LIBCUPS_STATIC) $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
+
+
+#
+# testsmime (dependency on static CUPS library is intentional)
+#
+
+testsmime:	testsmime.o $(LIBCUPS_STATIC)
+	echo Linking $@...
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testsmime.o $(LIBCUPS_STATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 

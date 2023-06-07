@@ -8,26 +8,6 @@ ippeveprinter.o: ippeveprinter.c ../cups/cups-private.h \
   ../cups/ipp-private.h ../cups/cups.h ../cups/file.h ../cups/ipp.h \
   ../cups/http.h ../cups/language.h ../cups/transcode.h ../cups/pwg.h \
   ../cups/http-private.h \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
   ../cups/pwg-private.h ../cups/thread.h ../cups/dnssd.h printer-png.h \
   printer-lg-png.h printer-sm-png.h
 ippeveps.o: ippeveps.c ippevecommon.h ../cups/cups.h ../cups/file.h \
@@ -40,26 +20,6 @@ ippfind.o: ippfind.c ../cups/cups-private.h ../cups/string-private.h \
   ../cups/cups.h ../cups/file.h ../cups/ipp.h ../cups/http.h \
   ../cups/language.h ../cups/transcode.h ../cups/pwg.h \
   ../cups/http-private.h \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
   ../cups/pwg-private.h ../cups/thread.h ../cups/dnssd.h
 ipptool.o: ipptool.c ../cups/cups-private.h ../cups/string-private.h \
   ../config.h ../cups/base.h ../cups/debug-internal.h \
@@ -67,25 +27,5 @@ ipptool.o: ipptool.c ../cups/cups-private.h ../cups/string-private.h \
   ../cups/cups.h ../cups/file.h ../cups/ipp.h ../cups/http.h \
   ../cups/language.h ../cups/transcode.h ../cups/pwg.h \
   ../cups/http-private.h \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
   ../cups/pwg-private.h ../cups/thread.h ../cups/raster-testpage.h \
   ../cups/raster-private.h ../cups/raster.h
