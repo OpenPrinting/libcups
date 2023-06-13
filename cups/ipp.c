@@ -1120,7 +1120,7 @@ ippAddStringfv(ipp_t      *ipp,		// I - IPP message
     char	*bufmax,		// Buffer at max_bytes
 		*bufptr;		// Pointer into buffer
 
-    bufptr = buffer + strlen(buffer) - 1;
+    bufptr = buffer + strlen(buffer + 1);;
     bufmax = buffer + max_bytes - 1;
 
     while (bufptr > bufmax)
@@ -4154,7 +4154,7 @@ ippSetStringfv(ipp_t           *ipp,	// I  - IPP message
     char	*bufmax,		// Buffer at max_bytes
 		*bufptr;		// Pointer into buffer
 
-    bufptr = buffer + strlen(buffer) - 1;
+    bufptr = buffer + strlen(buffer + 1);;
     bufmax = buffer + max_bytes - 1;
 
     while (bufptr > bufmax)
