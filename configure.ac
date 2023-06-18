@@ -500,10 +500,10 @@ AS_IF([test -n "$GCC"], [
 	CFLAGS="$CFLAGS -Wno-$warning -Werror"
 
 	AC_COMPILE_IFELSE([AC_LANG_PROGRAM()], [
-	    AC_MSG_RESULT(yes)
+	    AC_MSG_RESULT([yes])
 	    WARNINGS="$WARNINGS -Wno-$warning"
         ], [
-	    AC_MSG_RESULT(no)
+	    AC_MSG_RESULT([no])
 	])
 
 	CFLAGS="$OLDCFLAGS"
@@ -523,38 +523,54 @@ AS_IF([test -n "$GCC"], [
 	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[]])],[
 	    OLDCFLAGS="-fPIC $OLDCFLAGS"
 	    LDFLAGS="-fPIE -Wl,-pie $LDFLAGS"
-	    AC_MSG_RESULT(yes)
+	    AC_MSG_RESULT([yes])
 	],[
-	    AC_MSG_RESULT(no)
+	    AC_MSG_RESULT([no])
 	])
     ], [*], [
 	CFLAGS="$CFLAGS -fPIC -fPIE -pie"
 	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[]])],[
 	    OLDCFLAGS="-fPIC $OLDCFLAGS"
 	    LDFLAGS="-fPIE -pie $LDFLAGS"
-	    AC_MSG_RESULT(yes)
+	    AC_MSG_RESULT([yes])
 	],[
-	    AC_MSG_RESULT(no)
+	    AC_MSG_RESULT([no])
 	])
     ])
     CFLAGS="$OLDCFLAGS"
 
     dnl OS-specific compiler options...
+    AC_MSG_CHECKING([for OS-specific compiler options])
     AS_CASE(["$host_os_name"], [linux*], [
     	# Make sure we get the full set of Linux APIs from the headers...
 	CPPFLAGS="$CPPFLAGS -D__USE_MISC -D_GNU_SOURCE"
 
 	# Mark read-only sections as relocatable to random addresses...
 	LDFLAGS="$LDFLAGS -Wl,-z,relro,-z,now"
+
+        AC_MSG_RESULT([-D__USE_MISC -D_GNU_SOURCE -Wl,-z,relro,-z,now])
     ], [darwin*], [
         # When not building for debug, target macOS 10.14 or later, "universal"
         # binaries when possible...
-        AS_IF([test "$host_os_version" -ge 200 -a x$enable_debug != xyes], [
+        AS_IF([echo "$CPPFLAGS $CFLAGS $LDFLAGS $OPTIM" | grep -q "\\-arch "], [
+            # Don't add architecture/min-version flags if they are already present
+            AC_MSG_RESULT([none])
+        ], [echo "$CPPFLAGS $CFLAGS $LDFLAGS $OPTIM" | grep -q "\\-mmacosx-version-"], [
+            # Don't add architecture/min-version flags if they are already present
+            AC_MSG_RESULT([none])
+        ], [test "$host_os_version" -ge 200 -a x$enable_debug != xyes], [
 	    # macOS 11.0 and higher support the Apple Silicon (arm64) CPUs
 	    OPTIM="$OPTIM -mmacosx-version-min=10.14 -arch x86_64 -arch arm64"
+            AC_MSG_RESULT([-mmacosx-version-min=10.14 -arch x86_64 -arch arm64])
 	], [test x$enable_debug != xyes], [
 	    OPTIM="$OPTIM -mmacosx-version-min=10.14 -arch x86_64"
+            AC_MSG_RESULT([-mmacosx-version-min=10.14 -arch x86_64])
+	], [
+	    # Don't add architecture/min-version flags if debug enabled
+            AC_MSG_RESULT([none])
 	])
+    ], [*], [
+        AC_MSG_RESULT([none])
     ])
 ])
 

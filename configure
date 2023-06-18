@@ -5379,7 +5379,9 @@ rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
 esac
     CFLAGS="$OLDCFLAGS"
 
-        case "$host_os_name" in #(
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for OS-specific compiler options" >&5
+printf %s "checking for OS-specific compiler options... " >&6; }
+    case "$host_os_name" in #(
   linux*) :
 
     	# Make sure we get the full set of Linux APIs from the headers...
@@ -5387,23 +5389,55 @@ esac
 
 	# Mark read-only sections as relocatable to random addresses...
 	LDFLAGS="$LDFLAGS -Wl,-z,relro,-z,now"
+
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: -D__USE_MISC -D_GNU_SOURCE -Wl,-z,relro,-z,now" >&5
+printf "%s\n" "-D__USE_MISC -D_GNU_SOURCE -Wl,-z,relro,-z,now" >&6; }
      ;; #(
   darwin*) :
 
         # When not building for debug, target macOS 10.14 or later, "universal"
         # binaries when possible...
-        if test "$host_os_version" -ge 200 -a x$enable_debug != xyes
+        if echo "$CPPFLAGS $CFLAGS $LDFLAGS $OPTIM" | grep -q "\\-arch "
+then :
+
+            # Don't add architecture/min-version flags if they are already present
+            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: none" >&5
+printf "%s\n" "none" >&6; }
+
+elif echo "$CPPFLAGS $CFLAGS $LDFLAGS $OPTIM" | grep -q "\\-mmacosx-version-"
+then :
+
+            # Don't add architecture/min-version flags if they are already present
+            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: none" >&5
+printf "%s\n" "none" >&6; }
+
+elif test "$host_os_version" -ge 200 -a x$enable_debug != xyes
 then :
 
 	    # macOS 11.0 and higher support the Apple Silicon (arm64) CPUs
 	    OPTIM="$OPTIM -mmacosx-version-min=10.14 -arch x86_64 -arch arm64"
+            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: -mmacosx-version-min=10.14 -arch x86_64 -arch arm64" >&5
+printf "%s\n" "-mmacosx-version-min=10.14 -arch x86_64 -arch arm64" >&6; }
 
 elif test x$enable_debug != xyes
 then :
 
 	    OPTIM="$OPTIM -mmacosx-version-min=10.14 -arch x86_64"
+            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: -mmacosx-version-min=10.14 -arch x86_64" >&5
+printf "%s\n" "-mmacosx-version-min=10.14 -arch x86_64" >&6; }
+
+else $as_nop
+
+	    # Don't add architecture/min-version flags if debug enabled
+            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: none" >&5
+printf "%s\n" "none" >&6; }
 
 fi
+     ;; #(
+  *) :
+
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: none" >&5
+printf "%s\n" "none" >&6; }
      ;; #(
   *) :
      ;;
