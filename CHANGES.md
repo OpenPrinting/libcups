@@ -16,7 +16,8 @@ libcups v3.0b2 (TBD)
 - Fixed ipptool limit on the size of an attribute value that would be printed
   (Issue #5)
 - Fixed some configure script issues (Issue #48)
-- Fixed JSON output bug in ipptool
+- Fixed JSON output bug in ipptool.
+- Fixed `CUPS_DNSSD_IF_LOCAL` when using Avahi.
 
 
 libcups v3.0b1 (February 9, 2023)

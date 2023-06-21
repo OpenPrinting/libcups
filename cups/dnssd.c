@@ -38,6 +38,7 @@
 #  include <avahi-common/malloc.h>
 #  include <avahi-common/simple-watch.h>
 #  define AVAHI_DNS_TYPE_LOC 29		// Per RFC 1876
+#  include <net/if.h>
 #endif // HAVE_MDNSRESPONDER
 
 
@@ -1970,7 +1971,7 @@ avahi_if_index(uint32_t if_index)	// I - DNS-SD interface index
   if (if_index == CUPS_DNSSD_IF_INDEX_ANY)
     return (AVAHI_IF_UNSPEC);
   else if (if_index == CUPS_DNSSD_IF_INDEX_LOCAL)
-    return (0);
+    return (if_nametoindex("lo"));
   else
     return ((int)if_index);
 }
