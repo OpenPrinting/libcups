@@ -464,7 +464,7 @@ cupsFileGetConf(cups_file_t *fp,	/* I  - CUPS file */
         * Strip trailing whitespace and > for lines that begin with <...
 	*/
 
-        ptr += strlen(ptr) - 1;
+        ptr += strlen(ptr + 1);
 
         if (buf[0] == '<' && *ptr == '>')
 	  *ptr-- = '\0';
