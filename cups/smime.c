@@ -10,10 +10,12 @@
 #include "cups-private.h"
 #include "smime.h"
 #ifdef HAVE_OPENSSL
-#  include <openssl/ecdsa.h>
-#  include <openssl/evp.h>
-#  include <openssl/rsa.h>
-#else
+#  include <openssl/crypto.h>
+#  include <openssl/err.h>
+#  include <openssl/pem.h>
+#  include <openssl/x509_vfy.h>
+#  include <openssl/x509v3.h>
+#else // HAVE_GNUTLS
 #  include <gnutls/gnutls.h>
 #  include <gnutls/abstract.h>
 #  include <gnutls/crypto.h>
@@ -61,6 +63,25 @@ cupsSMIMEOpen(
   (void)credentials;
   (void)key;
   (void)password;
+
+
+#ifdef HAVE_OPENSSL
+
+  // Encrypt/write path:
+  //
+  // - Create STACK_OF(X509) *certs for credentials
+  // - bio for file IO, or HTTP BIO
+  // - Can't use PKCS7_de/encrypt since it doesn't support streaming
+  // - EVP_CIPHER_CTX_new to create a nw
+  // - EVP_CIPHER * is EVP_aes_256_gcm() for writing, EVP_aes_128/256_cbc/gcm() for reading
+  // - EVP_De/EncryptInit to start de/encryption
+  // - EVP_De/EncryptUpdate to de/encrypt a buffer
+  // - EVP_De/EncryptFinal to finish de/encryption
+  // -
+  // -
+
+#else // HAVE_GNUTLS
+#endif // HAVE_OPENSSL
 
   return (NULL);
 }
