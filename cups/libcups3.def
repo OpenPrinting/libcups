@@ -424,6 +424,7 @@ ippAddBoolean
 ippAddBooleans
 ippAddCollection
 ippAddCollections
+ippAddCredentialsString
 ippAddDate
 ippAddInteger
 ippAddIntegers
@@ -443,6 +444,7 @@ ippContainsInteger
 ippContainsString
 ippCopyAttribute
 ippCopyAttributes
+ippCopyCredentialsString
 ippCreateRequestedArray
 ippDateToTime
 ippDelete
