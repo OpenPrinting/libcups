@@ -77,7 +77,8 @@ cupsSMIMEOpen(
   // - EVP_De/EncryptInit to start de/encryption
   // - EVP_De/EncryptUpdate to de/encrypt a buffer
   // - EVP_De/EncryptFinal to finish de/encryption
-  // -
+  // - CMS_AuthEnvelopedData_create
+  // - CMS_add1_recipient_cert
   // -
 
 #else // HAVE_GNUTLS
