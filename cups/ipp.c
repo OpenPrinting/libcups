@@ -378,22 +378,42 @@ ippAddCredentialsString(
   for (num_values = 0, cptr = cvalue; cptr;)
   {
     // Find the next delimiter
-    // TODO: Handle CR LF in credentials strings???
-    if (*cptr)
+    if (*cptr && *cptr != '\r' && *cptr != '\n')
       num_values ++;
 
-    if ((cptr = strchr(cptr, '\n')) != NULL)
+    if ((cptr = strchr(cptr, '\r')) != NULL)
+    {
+      // Skip CR or CR LF
+      if (cptr[1] == '\n')
+        cptr += 2;
+      else
+        cptr ++;
+    }
+    else if ((cptr = strchr(cptr, '\n')) != NULL)
+    {
+      // Skip LF
       cptr ++;
+    }
   }
 
   // Create the empty attribute and copy the values...
   if ((attr = ippAddStrings(ipp, group, IPP_TAG_TEXT, name, num_values, NULL, NULL)) != NULL)
   {
-    for (i = 0, cptr = cvalue; cptr;)
+    for (i = 0, cptr = cvalue; cptr && i < num_values;)
     {
       cstart = cptr;
-      if ((cptr = strchr(cptr, '\n')) != NULL)
+      if ((cptr = strchr(cptr, '\r')) != NULL)
+      {
+        // Terminate on CR
         *cptr++ = '\0';
+        if (*cptr == '\n')
+          cptr ++;			// Skip LF
+      }
+      else if ((cptr = strchr(cptr, '\n')) != NULL)
+      {
+        // Terminate on LF
+        *cptr++ = '\0';
+      }
 
       if (*cstart)
         attr->values[i++].string.text = _cupsStrAlloc(cstart);
