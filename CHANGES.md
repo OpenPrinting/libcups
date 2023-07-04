@@ -6,6 +6,8 @@ libcups v3.0b2 (TBD)
 
 - Added `cupsFormDecode` and `cupsFormEncode` APIs (Issue #49)
 - Added `cupsJWT` APIs to support JSON Web Tokens (Issue #50, Issue #52)
+- Added `ippAddCredentialsString` and `ippCopyCredentialsString` APIs
+  (Issue #58)
 - Added `cupsCreateCredentialsRequest` and `cupsSignCredentialsRequest` APIs and
   updated `cupsCreateCredentials` API to better support X.509 certificates
   (Issue #59)

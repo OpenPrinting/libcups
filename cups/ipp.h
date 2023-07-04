@@ -539,6 +539,7 @@ extern ipp_attribute_t	*ippAddBoolean(ipp_t *ipp, ipp_tag_t group, const char *n
 extern ipp_attribute_t	*ippAddBooleans(ipp_t *ipp, ipp_tag_t group, const char *name, size_t num_values, const bool *values) _CUPS_PUBLIC;
 extern ipp_attribute_t	*ippAddCollection(ipp_t *ipp, ipp_tag_t group, const char *name, ipp_t *value) _CUPS_PUBLIC;
 extern ipp_attribute_t	*ippAddCollections(ipp_t *ipp, ipp_tag_t group, const char *name, size_t num_values, const ipp_t **values) _CUPS_PUBLIC;
+extern ipp_attribute_t	*ippAddCredentialsString(ipp_t *ipp, ipp_tag_t group, const char *name, const char *credentials) _CUPS_PUBLIC;
 extern ipp_attribute_t	*ippAddDate(ipp_t *ipp, ipp_tag_t group, const char *name, const ipp_uchar_t *value) _CUPS_PUBLIC;
 extern ipp_attribute_t	*ippAddInteger(ipp_t *ipp, ipp_tag_t group, ipp_tag_t value_tag, const char *name, int value) _CUPS_PUBLIC;
 extern ipp_attribute_t	*ippAddIntegers(ipp_t *ipp, ipp_tag_t group, ipp_tag_t value_tag, const char *name, size_t num_values, const int *values) _CUPS_PUBLIC;
@@ -559,6 +560,7 @@ extern bool		ippContainsInteger(ipp_attribute_t *attr, int value) _CUPS_PUBLIC;
 extern bool		ippContainsString(ipp_attribute_t *attr, const char *value) _CUPS_PUBLIC;
 extern ipp_attribute_t	*ippCopyAttribute(ipp_t *dst, ipp_attribute_t *attr, bool quickcopy) _CUPS_PUBLIC;
 extern bool		ippCopyAttributes(ipp_t *dst, ipp_t *src, bool quickcopy, ipp_copy_cb_t cb, void *context) _CUPS_PUBLIC;
+extern char		*ippCopyCredentialsString(ipp_attribute_t *attr) _CUPS_PUBLIC;
 extern cups_array_t	*ippCreateRequestedArray(ipp_t *request) _CUPS_PUBLIC;
 
 extern time_t		ippDateToTime(const ipp_uchar_t *date) _CUPS_PUBLIC;
