@@ -128,6 +128,8 @@ Renamed Types
 API Changes
 -----------
 
+- `cupsDoAuthentication` now returns a `bool` value - `true` on success or
+  `false` on failure - instead of the old `int` values 0 and -1, respectively.
 - `httpGets` now has the `http_t` pointer as the first argument.
 - The `cups_size_t` structure now includes `source` and `type` members to allow
   specification of media source (input tray/roll) and type.

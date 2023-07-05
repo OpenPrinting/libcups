@@ -327,7 +327,7 @@ extern bool		cupsCreateCredentials(const char *path, bool ca_cert, cups_credpurp
 extern bool		cupsCreateCredentialsRequest(const char *path, cups_credpurpose_t purpose, cups_credtype_t type, cups_credusage_t usage, const char *organization, const char *org_unit, const char *locality, const char *state_province, const char *country, const char *common_name, size_t num_alt_names, const char * const *alt_names) _CUPS_PUBLIC;
 extern ipp_status_t	cupsCreateDestJob(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, int *job_id, const char *title, size_t num_options, cups_option_t *options) _CUPS_PUBLIC;
 
-extern int		cupsDoAuthentication(http_t *http, const char *method, const char *resource) _CUPS_PUBLIC;
+extern bool		cupsDoAuthentication(http_t *http, const char *method, const char *resource) _CUPS_PUBLIC;
 extern ipp_t		*cupsDoFileRequest(http_t *http, ipp_t *request, const char *resource, const char *filename) _CUPS_PUBLIC;
 extern ipp_t		*cupsDoIORequest(http_t *http, ipp_t *request, const char *resource, int infile, int outfile) _CUPS_PUBLIC;
 extern ipp_t		*cupsDoRequest(http_t *http, ipp_t *request, const char *resource) _CUPS_PUBLIC;

@@ -9,10 +9,6 @@
 // information.
 //
 
-//
-// Include necessary headers...
-//
-
 #include "cups-private.h"
 #include "debug-internal.h"
 #include <fcntl.h>
@@ -73,42 +69,33 @@ cupsGetDefault(http_t *http)		// I - Connection to server or `CUPS_HTTP_DEFAULT`
   _cups_globals_t *cg = _cupsGlobals();	// Pointer to library globals
 
 
- /*
-  * See if we have a user default printer set...
-  */
-
+  // See if we have a user default printer set...
   if (_cupsGetUserDefault(cg->def_printer, sizeof(cg->def_printer)))
     return (cg->def_printer);
 
- /*
-  * Connect to the server as needed...
-  */
-
+  // Connect to the server as needed...
   if (!http)
+  {
     if ((http = _cupsConnect()) == NULL)
       return (NULL);
+  }
 
- /*
-  * Build a CUPS_GET_DEFAULT request, which requires the following
-  * attributes:
-  *
-  *    attributes-charset
-  *    attributes-natural-language
-  */
+  //
+  // Build a CUPS_GET_DEFAULT request, which requires the following
+  // attributes:
+  //
+  //    attributes-charset
+  //    attributes-natural-language
+  //
 
   request = ippNewRequest(IPP_OP_CUPS_GET_DEFAULT);
 
- /*
-  * Do the request and get back a response...
-  */
-
+  // Do the request and get back a response...
   if ((response = cupsDoRequest(http, request, "/")) != NULL)
   {
-    if ((attr = ippFindAttribute(response, "printer-name",
-                                 IPP_TAG_NAME)) != NULL)
+    if ((attr = ippFindAttribute(response, "printer-name", IPP_TAG_NAME)) != NULL)
     {
-      cupsCopyString(cg->def_printer, attr->values[0].string.text,
-              sizeof(cg->def_printer));
+      cupsCopyString(cg->def_printer, attr->values[0].string.text, sizeof(cg->def_printer));
       ippDelete(response);
       return (cg->def_printer);
     }
@@ -123,10 +110,17 @@ cupsGetDefault(http_t *http)		// I - Connection to server or `CUPS_HTTP_DEFAULT`
 //
 // 'cupsGetJobs()' - Get the jobs from the specified server.
 //
-// A "whichjobs" value of `CUPS_WHICHJOBS_ALL` returns all jobs regardless of
-// state, while `CUPS_WHICHJOBS_ACTIVE` returns jobs that are pending,
-// processing, or held and `CUPS_WHICHJOBS_COMPLETED` returns jobs that are
-// stopped, canceled, aborted, or completed.
+// This function gets an array of jobs from the specified server.
+//
+// The "name" argument specifies a destination name.  The "myjobs" argument
+// specifies whether to only show jobs for the current user (`true`) or for
+// all users (`false`).
+//
+// The "whichjobs" argument specifies which jobs to return -
+// `CUPS_WHICHJOBS_ALL` to return all jobs regardless of state,
+// `CUPS_WHICHJOBS_ACTIVE` to return jobs that are pending, processing, or held,
+// and `CUPS_WHICHJOBS_COMPLETED` to return jobs that are stopped, canceled,
+// aborted, or completed.
 //
 
 size_t					// O - Number of jobs
@@ -141,7 +135,7 @@ cupsGetJobs(http_t           *http,	// I - Connection to server or `CUPS_HTTP_DE
 		*response;		// IPP Response
   ipp_attribute_t *attr;		// Current attribute
   cups_job_t	*temp;			// Temporary pointer
-  int		id,			// job-id
+  int		job_id,			// job-id
 		priority,		// job-priority
 		size;			// job-k-octets
   ipp_jstate_t	state;			// job-state
@@ -169,33 +163,28 @@ cupsGetJobs(http_t           *http,	// I - Connection to server or `CUPS_HTTP_DE
 		};
 
 
- /*
-  * Range check input...
-  */
-
+  // Range check input...
   if (!jobs)
   {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), 0);
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), false);
 
     return (0);
   }
 
- /*
-  * Get the right URI...
-  */
-
+  // Get the right URI...
   if (name)
   {
     if (httpAssembleURIf(HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", NULL, "localhost", 0, "/printers/%s", name) < HTTP_URI_STATUS_OK)
     {
-      _cupsSetError(IPP_STATUS_ERROR_INTERNAL,
-                    _("Unable to create printer-uri"), 1);
+      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create printer-uri"), true);
 
       return (0);
     }
   }
   else
+  {
     cupsCopyString(uri, "ipp://localhost/", sizeof(uri));
+  }
 
   if (!http)
   {
@@ -203,45 +192,36 @@ cupsGetJobs(http_t           *http,	// I - Connection to server or `CUPS_HTTP_DE
       return (0);
   }
 
- /*
-  * Build an IPP_GET_JOBS request, which requires the following
-  * attributes:
-  *
-  *    attributes-charset
-  *    attributes-natural-language
-  *    printer-uri
-  *    requesting-user-name
-  *    which-jobs
-  *    my-jobs
-  *    requested-attributes
-  */
+  //
+  // Build an IPP_GET_JOBS request, which requires the following
+  // attributes:
+  //
+  //   attributes-charset
+  //   attributes-natural-language
+  //   printer-uri
+  //   requesting-user-name
+  //   which-jobs
+  //   my-jobs
+  //   requested-attributes
+  //
 
   request = ippNewRequest(IPP_OP_GET_JOBS);
 
-  ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI,
-               "printer-uri", NULL, uri);
+  ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, uri);
 
-  ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME,
-               "requesting-user-name", NULL, cupsGetUser());
+  ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsGetUser());
 
   if (myjobs)
-    ippAddBoolean(request, IPP_TAG_OPERATION, "my-jobs", 1);
+    ippAddBoolean(request, IPP_TAG_OPERATION, "my-jobs", true);
 
   if (whichjobs == CUPS_WHICHJOBS_COMPLETED)
-    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD,
-                 "which-jobs", NULL, "completed");
+    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD, "which-jobs", NULL, "completed");
   else if (whichjobs == CUPS_WHICHJOBS_ALL)
-    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD,
-                 "which-jobs", NULL, "all");
+    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD, "which-jobs", NULL, "all");
 
-  ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD,
-                "requested-attributes", sizeof(attrs) / sizeof(attrs[0]),
-		NULL, attrs);
+  ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD, "requested-attributes", sizeof(attrs) / sizeof(attrs[0]), NULL, attrs);
 
- /*
-  * Do the request and get back a response...
-  */
-
+  // Do the request and get back a response...
   n     = 0;
   *jobs = NULL;
 
@@ -249,21 +229,15 @@ cupsGetJobs(http_t           *http,	// I - Connection to server or `CUPS_HTTP_DE
   {
     for (attr = response->attrs; attr; attr = attr->next)
     {
-     /*
-      * Skip leading attributes until we hit a job...
-      */
-
+      // Skip leading attributes until we hit a job...
       while (attr && attr->group_tag != IPP_TAG_JOB)
         attr = attr->next;
 
       if (!attr)
         break;
 
-     /*
-      * Pull the needed attributes from this job...
-      */
-
-      id              = 0;
+      // Pull the needed attributes from this job...
+      job_id          = 0;
       size            = 0;
       priority        = 50;
       state           = IPP_JSTATE_PENDING;
@@ -277,52 +251,57 @@ cupsGetJobs(http_t           *http,	// I - Connection to server or `CUPS_HTTP_DE
 
       while (attr && attr->group_tag == IPP_TAG_JOB)
       {
-        if (!strcmp(attr->name, "job-id") &&
-	    attr->value_tag == IPP_TAG_INTEGER)
-	  id = attr->values[0].integer;
-        else if (!strcmp(attr->name, "job-state") &&
-	         attr->value_tag == IPP_TAG_ENUM)
+        if (!strcmp(attr->name, "job-id") && attr->value_tag == IPP_TAG_INTEGER)
+        {
+	  job_id = attr->values[0].integer;
+        }
+        else if (!strcmp(attr->name, "job-state") && attr->value_tag == IPP_TAG_ENUM)
+	{
 	  state = (ipp_jstate_t)attr->values[0].integer;
-        else if (!strcmp(attr->name, "job-priority") &&
-	         attr->value_tag == IPP_TAG_INTEGER)
+        }
+        else if (!strcmp(attr->name, "job-priority") && attr->value_tag == IPP_TAG_INTEGER)
+	{
 	  priority = attr->values[0].integer;
-        else if (!strcmp(attr->name, "job-k-octets") &&
-	         attr->value_tag == IPP_TAG_INTEGER)
+        }
+        else if (!strcmp(attr->name, "job-k-octets") && attr->value_tag == IPP_TAG_INTEGER)
+	{
 	  size = attr->values[0].integer;
-        else if (!strcmp(attr->name, "time-at-completed") &&
-	         attr->value_tag == IPP_TAG_INTEGER)
+        }
+        else if (!strcmp(attr->name, "time-at-completed") && attr->value_tag == IPP_TAG_INTEGER)
+	{
 	  completed_time = attr->values[0].integer;
-        else if (!strcmp(attr->name, "time-at-creation") &&
-	         attr->value_tag == IPP_TAG_INTEGER)
+        }
+        else if (!strcmp(attr->name, "time-at-creation") && attr->value_tag == IPP_TAG_INTEGER)
+	{
 	  creation_time = attr->values[0].integer;
-        else if (!strcmp(attr->name, "time-at-processing") &&
-	         attr->value_tag == IPP_TAG_INTEGER)
+        }
+        else if (!strcmp(attr->name, "time-at-processing") && attr->value_tag == IPP_TAG_INTEGER)
+	{
 	  processing_time = attr->values[0].integer;
-        else if (!strcmp(attr->name, "job-printer-uri") &&
-	         attr->value_tag == IPP_TAG_URI)
+        }
+        else if (!strcmp(attr->name, "job-printer-uri") && attr->value_tag == IPP_TAG_URI)
 	{
 	  if ((dest = strrchr(attr->values[0].string.text, '/')) != NULL)
 	    dest ++;
         }
-        else if (!strcmp(attr->name, "job-originating-user-name") &&
-	         attr->value_tag == IPP_TAG_NAME)
+        else if (!strcmp(attr->name, "job-originating-user-name") && attr->value_tag == IPP_TAG_NAME)
+	{
 	  user = attr->values[0].string.text;
-        else if (!strcmp(attr->name, "document-format") &&
-	         attr->value_tag == IPP_TAG_MIMETYPE)
+        }
+        else if (!strcmp(attr->name, "document-format") && attr->value_tag == IPP_TAG_MIMETYPE)
+        {
 	  format = attr->values[0].string.text;
-        else if (!strcmp(attr->name, "job-name") &&
-	         (attr->value_tag == IPP_TAG_TEXT ||
-		  attr->value_tag == IPP_TAG_NAME))
+        }
+        else if (!strcmp(attr->name, "job-name") && (attr->value_tag == IPP_TAG_TEXT || attr->value_tag == IPP_TAG_NAME))
+        {
 	  title = attr->values[0].string.text;
+        }
 
         attr = attr->next;
       }
 
-     /*
-      * See if we have everything needed...
-      */
-
-      if (!dest || !id)
+      // See if we have everything needed...
+      if (!dest || !job_id)
       {
         if (!attr)
 	  break;
@@ -330,10 +309,7 @@ cupsGetJobs(http_t           *http,	// I - Connection to server or `CUPS_HTTP_DE
           continue;
       }
 
-     /*
-      * Allocate memory for the job...
-      */
-
+      // Allocate memory for the job...
       if (n == 0)
         temp = malloc(sizeof(cups_job_t));
       else
@@ -341,11 +317,8 @@ cupsGetJobs(http_t           *http,	// I - Connection to server or `CUPS_HTTP_DE
 
       if (!temp)
       {
-       /*
-        * Ran out of memory!
-        */
-
-        _cupsSetError(IPP_STATUS_ERROR_INTERNAL, NULL, 0);
+        // Ran out of memory!
+        _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(ENOMEM), false);
 
 	cupsFreeJobs(n, *jobs);
 	*jobs = NULL;
@@ -359,15 +332,12 @@ cupsGetJobs(http_t           *http,	// I - Connection to server or `CUPS_HTTP_DE
       temp  += n;
       n ++;
 
-     /*
-      * Copy the data over...
-      */
-
+      // Copy the data over...
       temp->dest            = _cupsStrAlloc(dest);
       temp->user            = _cupsStrAlloc(user);
       temp->format          = _cupsStrAlloc(format);
       temp->title           = _cupsStrAlloc(title);
-      temp->id              = id;
+      temp->id              = job_id;
       temp->priority        = priority;
       temp->state           = state;
       temp->size            = size;

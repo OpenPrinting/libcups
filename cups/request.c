@@ -354,7 +354,7 @@ cupsGetResponse(http_t     *http,	// I - Connection to server or `CUPS_HTTP_DEFA
       // See if we can do authentication...
       DEBUG_puts("2cupsGetResponse: Need authorization...");
 
-      if (!cupsDoAuthentication(http, "POST", resource))
+      if (cupsDoAuthentication(http, "POST", resource))
       {
         if (!httpReconnect(http, 30000, NULL))
           http->status = HTTP_STATUS_ERROR;
@@ -380,9 +380,7 @@ cupsGetResponse(http_t     *http,	// I - Connection to server or `CUPS_HTTP_DEFA
 
     attr = ippFindAttribute(response, "status-message", IPP_TAG_TEXT);
 
-    DEBUG_printf(("1cupsGetResponse: status-code=%s, status-message=\"%s\"",
-                  ippErrorString(response->request.status.status_code),
-                  attr ? attr->values[0].string.text : ""));
+    DEBUG_printf(("1cupsGetResponse: status-code=%s, status-message=\"%s\"", ippErrorString(response->request.status.status_code), attr ? attr->values[0].string.text : ""));
 
     _cupsSetError(response->request.status.status_code, attr ? attr->values[0].string.text : ippErrorString(response->request.status.status_code), false);
   }
@@ -651,7 +649,7 @@ cupsSendRequest(http_t     *http,	// I - Connection to server or `CUPS_HTTP_DEFA
           return (status);
 
       case HTTP_STATUS_UNAUTHORIZED :
-          if (cupsDoAuthentication(http, "POST", resource))
+          if (!cupsDoAuthentication(http, "POST", resource))
 	  {
             DEBUG_puts("1cupsSendRequest: Returning HTTP_STATUS_CUPS_AUTHORIZATION_CANCELED.");
 	    return (HTTP_STATUS_CUPS_AUTHORIZATION_CANCELED);

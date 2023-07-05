@@ -1214,7 +1214,7 @@ cupsJSONImportURL(
       // See if we can do authentication...
       new_auth = true;
 
-      if (cupsDoAuthentication(http, "GET", resource))
+      if (!cupsDoAuthentication(http, "GET", resource))
       {
         status = HTTP_STATUS_CUPS_AUTHORIZATION_CANCELED;
         break;
