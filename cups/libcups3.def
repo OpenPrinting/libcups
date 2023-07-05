@@ -192,6 +192,8 @@ cupsGetDestMediaDefault
 cupsGetDestWithURI
 cupsGetDests
 cupsGetEncryption
+cupsGetError
+cupsGetErrorString
 cupsGetFd
 cupsGetFile
 cupsGetIntegerOption
@@ -263,8 +265,6 @@ cupsLangPrintf
 cupsLangPuts
 cupsLangSetDirectory
 cupsLangSetLocale
-cupsLastError
-cupsLastErrorString
 cupsLocalizeDestMedia
 cupsLocalizeDestOption
 cupsLocalizeDestValue
@@ -481,6 +481,7 @@ ippGetDate
 ippGetFirstAttribute
 ippGetGroupTag
 ippGetInteger
+ippGetLength
 ippGetName
 ippGetNextAttribute
 ippGetOctetString
@@ -494,7 +495,6 @@ ippGetStatusCode
 ippGetString
 ippGetValueTag
 ippGetVersion
-ippLength
 ippNew
 ippNewRequest
 ippNewResponse
