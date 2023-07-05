@@ -51,8 +51,8 @@ main(int  argc,				// I - Number of command-line arguments
     gettimeofday(&end, NULL);
     secs = end.tv_sec - start.tv_sec + 0.000001 * (end.tv_usec - start.tv_usec);
 
-    if (cupsLastError() != IPP_STATUS_OK)
-      testEndMessage(false, "%s", cupsLastErrorString());
+    if (cupsGetError() != IPP_STATUS_OK)
+      testEndMessage(false, "%s", cupsGetErrorString());
     else
       testEndMessage(secs < 2.0, "%u printers in %.3f seconds", (unsigned)num_dests, secs);
 

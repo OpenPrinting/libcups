@@ -596,7 +596,6 @@ extern bool		ippFileWriteAttributes(ipp_file_t *file, ipp_t *ipp, bool with_grou
 extern bool		ippFileWriteComment(ipp_file_t *file, const char *comment, ...) _CUPS_FORMAT(2,3) _CUPS_PUBLIC;
 extern bool		ippFileWriteToken(ipp_file_t *file, const char *token) _CUPS_PUBLIC;
 extern bool		ippFileWriteTokenf(ipp_file_t *file, const char *token, ...) _CUPS_FORMAT(2,3) _CUPS_PUBLIC;
-
 extern ipp_attribute_t	*ippFindAttribute(ipp_t *ipp, const char *name, ipp_tag_t value_tag) _CUPS_PUBLIC;
 extern ipp_attribute_t	*ippFindNextAttribute(ipp_t *ipp, const char *name, ipp_tag_t value_tag) _CUPS_PUBLIC;
 
@@ -607,6 +606,7 @@ extern const ipp_uchar_t *ippGetDate(ipp_attribute_t *attr, size_t element) _CUP
 extern ipp_attribute_t	*ippGetFirstAttribute(ipp_t *ipp) _CUPS_PUBLIC;
 extern ipp_tag_t	ippGetGroupTag(ipp_attribute_t *attr) _CUPS_PUBLIC;
 extern int		ippGetInteger(ipp_attribute_t *attr, size_t element) _CUPS_PUBLIC;
+extern size_t		ippGetLength(ipp_t *ipp) _CUPS_PUBLIC;
 extern const char	*ippGetName(ipp_attribute_t *attr) _CUPS_PUBLIC;
 extern ipp_attribute_t	*ippGetNextAttribute(ipp_t *ipp) _CUPS_PUBLIC;
 extern void		*ippGetOctetString(ipp_attribute_t *attr, size_t element, size_t *datalen) _CUPS_PUBLIC;
@@ -620,8 +620,6 @@ extern ipp_status_t	ippGetStatusCode(ipp_t *ipp) _CUPS_PUBLIC;
 extern const char	*ippGetString(ipp_attribute_t *attr, size_t element, const char **language) _CUPS_PUBLIC;
 extern ipp_tag_t	ippGetValueTag(ipp_attribute_t *attr) _CUPS_PUBLIC;
 extern int		ippGetVersion(ipp_t *ipp, int *minor) _CUPS_PUBLIC;
-
-extern size_t		ippLength(ipp_t *ipp) _CUPS_PUBLIC;
 
 extern ipp_t		*ippNew(void) _CUPS_PUBLIC;
 extern ipp_t		*ippNewRequest(ipp_op_t op) _CUPS_PUBLIC;

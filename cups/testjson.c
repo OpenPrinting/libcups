@@ -194,7 +194,7 @@ main(int  argc,				// I - Number of command-line arguments
     }
     else
     {
-      testEndMessage(false, "%s", cupsLastErrorString());
+      testEndMessage(false, "%s", cupsGetErrorString());
     }
 
     testBegin("cupsJSONExportString(root)");
@@ -211,7 +211,7 @@ main(int  argc,				// I - Number of command-line arguments
     }
     else
     {
-      testEndMessage(false, "%s", cupsLastErrorString());
+      testEndMessage(false, "%s", cupsGetErrorString());
     }
 
     testBegin("cupsJSONDelete(root)");
@@ -233,20 +233,20 @@ main(int  argc,				// I - Number of command-line arguments
 
       if (json)
         testEnd(true);
-      else if (cupsLastError() == IPP_STATUS_OK_EVENTS_COMPLETE)
+      else if (cupsGetError() == IPP_STATUS_OK_EVENTS_COMPLETE)
         testEndMessage(true, "no change from last request");
       else
-        testEndMessage(false, cupsLastErrorString());
+        testEndMessage(false, cupsGetErrorString());
 
       cupsJSONDelete(json);
     }
-    else if (cupsLastError() == IPP_STATUS_ERROR_SERVICE_UNAVAILABLE)
+    else if (cupsGetError() == IPP_STATUS_ERROR_SERVICE_UNAVAILABLE)
     {
-      testEndMessage(true, "%s", cupsLastErrorString());
+      testEndMessage(true, "%s", cupsGetErrorString());
     }
     else
     {
-      testEndMessage(false, "%s", cupsLastErrorString());
+      testEndMessage(false, "%s", cupsGetErrorString());
     }
 
     if (!testsPassed)
@@ -263,12 +263,12 @@ main(int  argc,				// I - Number of command-line arguments
         if ((json = cupsJSONImportString(argv[i])) != NULL)
           printf("string%d: OK, %u key/value pairs in root object.\n", i, (unsigned)(cupsJSONGetCount(json) / 2));
         else
-          fprintf(stderr, "string%d: %s\n", i, cupsLastErrorString());
+          fprintf(stderr, "string%d: %s\n", i, cupsGetErrorString());
       }
       else if ((json = cupsJSONImportFile(argv[i])) != NULL)
 	printf("%s: OK, %u key/value pairs in root object.\n", argv[i], (unsigned)(cupsJSONGetCount(json) / 2));
       else
-	fprintf(stderr, "%s: %s\n", argv[i], cupsLastErrorString());
+	fprintf(stderr, "%s: %s\n", argv[i], cupsGetErrorString());
 
       cupsJSONDelete(json);
     }

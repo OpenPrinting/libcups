@@ -751,11 +751,11 @@ cupsCopyDestInfo(
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsGetUser());
     ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD, "requested-attributes", (int)(sizeof(requested_attrs) / sizeof(requested_attrs[0])), NULL, requested_attrs);
     response = cupsDoRequest(http, request, resource);
-    status   = cupsLastError();
+    status   = cupsGetError();
 
     if (status > IPP_STATUS_OK_IGNORED_OR_SUBSTITUTED)
     {
-      DEBUG_printf(("1cupsCopyDestInfo: Get-Printer-Attributes for '%s' returned %s (%s)", dest->name, ippErrorString(status), cupsLastErrorString()));
+      DEBUG_printf(("1cupsCopyDestInfo: Get-Printer-Attributes for '%s' returned %s (%s)", dest->name, ippErrorString(status), cupsGetErrorString()));
 
       ippDelete(response);
       response = NULL;

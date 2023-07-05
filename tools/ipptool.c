@@ -994,7 +994,7 @@ connect_printer(ipptool_test_t *data)	// I - Test data
 
   if ((http = httpConnect(hostname, atoi(port), NULL, data->family, encryption, 1, 30000, NULL)) == NULL)
   {
-    print_fatal_error(data, "Unable to connect to '%s' on port %s: %s", hostname, port, cupsLastErrorString());
+    print_fatal_error(data, "Unable to connect to '%s' on port %s: %s", hostname, port, cupsGetErrorString());
     return (NULL);
   }
 
@@ -1193,7 +1193,7 @@ do_monitor_printer_state(
 
   if ((http = httpConnect(host, port, NULL, data->family, encryption, 1, 30000, NULL)) == NULL)
   {
-    print_fatal_error(data, "Unable to connect to \"%s\" on port %d - %s", host, port, cupsLastErrorString());
+    print_fatal_error(data, "Unable to connect to \"%s\" on port %d - %s", host, port, cupsGetErrorString());
     return (0);
   }
 
@@ -1235,7 +1235,7 @@ do_monitor_printer_state(
     // Poll the printer state...
     ippSetRequestId(request, ippGetRequestId(request) + 1);
 
-    if ((status = cupsSendRequest(http, request, resource, ippLength(request))) != HTTP_STATUS_ERROR)
+    if ((status = cupsSendRequest(http, request, resource, ippGetLength(request))) != HTTP_STATUS_ERROR)
     {
       response = cupsGetResponse(http, resource);
       status   = httpGetStatus(http);
@@ -1575,7 +1575,7 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
       * Send request using content length...
       */
 
-      length = ippLength(request);
+      length = ippGetLength(request);
 
       if (data->file[0] && (reqfile = cupsFileOpen(data->file, "r")) != NULL)
       {
@@ -1726,7 +1726,7 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
       * No response, log error...
       */
 
-      add_stringf(data->errors, "IPP request failed with status %s (%s)", ippErrorString(cupsLastError()), cupsLastErrorString());
+      add_stringf(data->errors, "IPP request failed with status %s (%s)", ippErrorString(cupsGetError()), cupsGetErrorString());
     }
     else
     {
@@ -1868,7 +1868,7 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
 	}
 
 	if (!ippValidateAttribute(attrptr))
-	  cupsArrayAdd(data->errors, (void *)cupsLastErrorString());
+	  cupsArrayAdd(data->errors, (void *)cupsGetErrorString());
 
 	if (ippGetName(attrptr))
 	{
@@ -1937,7 +1937,7 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
 	    continue;
 
 	  if (!data->statuses[i].repeat_match || repeat_count >= data->statuses[i].repeat_limit)
-	    add_stringf(data->errors, "EXPECTED: STATUS %s (got %s)", ippErrorString(data->statuses[i].status), ippErrorString(cupsLastError()));
+	    add_stringf(data->errors, "EXPECTED: STATUS %s (got %s)", ippErrorString(data->statuses[i].status), ippErrorString(cupsGetError()));
 	}
 
 	if ((attrptr = ippFindAttribute(response, "status-message", IPP_TAG_TEXT)) != NULL)
@@ -2286,7 +2286,7 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
     cupsFilePuts(data->outfile, "<key>Successful</key>\n");
     cupsFilePuts(data->outfile, data->prev_pass ? "<true />\n" : "<false />\n");
     cupsFilePuts(data->outfile, "<key>StatusCode</key>\n");
-    print_xml_string(data->outfile, "string", ippErrorString(cupsLastError()));
+    print_xml_string(data->outfile, "string", ippErrorString(cupsGetError()));
     cupsFilePuts(data->outfile, "<key>ResponseAttributes</key>\n");
     cupsFilePuts(data->outfile, "<array>\n");
     cupsFilePuts(data->outfile, "<dict>\n");
@@ -2350,8 +2350,8 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
 
     if (!data->prev_pass || (data->verbosity && response))
     {
-      cupsFilePrintf(cupsFileStdout(), "        RECEIVED: %lu bytes in response\n", (unsigned long)ippLength(response));
-      cupsFilePrintf(cupsFileStdout(), "        status-code = %s (%s)\n", ippErrorString(cupsLastError()), cupsLastErrorString());
+      cupsFilePrintf(cupsFileStdout(), "        RECEIVED: %lu bytes in response\n", (unsigned long)ippGetLength(response));
+      cupsFilePrintf(cupsFileStdout(), "        status-code = %s (%s)\n", ippErrorString(cupsGetError()), cupsGetErrorString());
 
       if (data->verbosity && response)
       {
@@ -2361,7 +2361,7 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
     }
   }
   else if (!data->prev_pass && data->output != IPPTOOL_OUTPUT_QUIET)
-    fprintf(stderr, "%s\n", cupsLastErrorString());
+    fprintf(stderr, "%s\n", cupsGetErrorString());
 
   if (data->prev_pass && data->output >= IPPTOOL_OUTPUT_LIST && !data->verbosity && data->num_displayed > 0)
   {
@@ -2484,13 +2484,13 @@ do_tests(const char     *testfile,	// I - Test file to use
   // Run tests...
   if ((file = ippFileNew(data->parent, NULL, (ipp_ferror_cb_t)error_cb, data)) == NULL)
   {
-    print_fatal_error(data, "Unable to create test file parser: %s", cupsLastErrorString());
+    print_fatal_error(data, "Unable to create test file parser: %s", cupsGetErrorString());
     return (false);
   }
 
   if (!ippFileOpen(file, testfile, "r"))
   {
-    print_fatal_error(data, "Unable to open '%s': %s", testfile, cupsLastErrorString());
+    print_fatal_error(data, "Unable to open '%s': %s", testfile, cupsGetErrorString());
     return (false);
   }
 
@@ -3065,9 +3065,9 @@ parse_generate_file(
 
   httpClose(http);
 
-  if (cupsLastError() >= IPP_STATUS_ERROR_BAD_REQUEST)
+  if (cupsGetError() >= IPP_STATUS_ERROR_BAD_REQUEST)
   {
-    print_fatal_error(data, "GENERATE-FILE query failure on line %d of '%s': %s", ippFileGetLineNumber(f), ippFileGetFilename(f), cupsLastErrorString());
+    print_fatal_error(data, "GENERATE-FILE query failure on line %d of '%s': %s", ippFileGetLineNumber(f), ippFileGetFilename(f), cupsGetErrorString());
     ippDelete(response);
     return (false);
   }
@@ -6968,7 +6968,7 @@ with_content(
 
     if ((http = httpConnect(host, port, NULL, AF_UNSPEC, encryption, 1, 30000, NULL)) == NULL)
     {
-      add_stringf(errors, "Unable to connect to '%s' on port %d: %s", host, port, cupsLastErrorString());
+      add_stringf(errors, "Unable to connect to '%s' on port %d: %s", host, port, cupsGetErrorString());
       ret = false;
       continue;
     }
@@ -6977,7 +6977,7 @@ with_content(
     {
       if (!httpWriteRequest(http, "HEAD", resource))
       {
-	add_stringf(errors, "Unable to send HEAD request to '%s': %s", uri, cupsLastErrorString());
+	add_stringf(errors, "Unable to send HEAD request to '%s': %s", uri, cupsGetErrorString());
 	ret = false;
 	goto http_done;
       }
@@ -7109,9 +7109,9 @@ with_content(
 
       ippDelete(cupsDoRequest(http, request, resource));
 
-      if (cupsLastError() > IPP_STATUS_OK_EVENTS_COMPLETE)
+      if (cupsGetError() > IPP_STATUS_OK_EVENTS_COMPLETE)
       {
-        add_stringf(errors, "Got unexpected status-code '%s' (%s) for Get-Printer-Attributes request to '%s'.", ippErrorString(cupsLastError()), cupsLastErrorString(), uri);
+        add_stringf(errors, "Got unexpected status-code '%s' (%s) for Get-Printer-Attributes request to '%s'.", ippErrorString(cupsGetError()), cupsGetErrorString(), uri);
         ret = false;
       }
     }

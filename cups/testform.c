@@ -183,7 +183,7 @@ main(int  argc,				// I - Number of command-line arguments
 		num_vars = cupsFormDecode(argv[i], &vars);
 		if (num_vars == 0)
 		{
-		  fprintf(stderr, "testform: %s\n", cupsLastErrorString());
+		  fprintf(stderr, "testform: %s\n", cupsGetErrorString());
 		  status = 1;
 		}
 		else
@@ -217,7 +217,7 @@ main(int  argc,				// I - Number of command-line arguments
 		}
 		else
 		{
-		  fprintf(stderr, "testform: %s\n", cupsLastErrorString());
+		  fprintf(stderr, "testform: %s\n", cupsGetErrorString());
 		  status = 1;
 		}
 
@@ -314,7 +314,7 @@ do_test(_form_data_t *test)		// I - Test data
   data = cupsFormEncode(test->url, num_vars, vars);
 
   if (!data && test->encoded[0])
-    testEndMessage(false, cupsLastErrorString());
+    testEndMessage(false, cupsGetErrorString());
   else if (data && strcmp(data, test->encoded))
     testEndMessage(false, "Got \"%s\", expected \"%s\"", data, test->encoded);
   else

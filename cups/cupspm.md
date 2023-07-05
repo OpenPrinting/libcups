@@ -1216,6 +1216,7 @@ The following functions have been renamed in CUPS 3.0:
 | `httpTrace`               | `httpWriteRequest`      |
 | `httpWrite2`              | `httpWrite`             |
 | `ippFirstAttribute`       | `ippGetFirstAttribute`  |
+| `ippLength`               | `ippGetLength`          |
 | `ippNextAttribute`        | `ippGetNextAttribute`   |
 | `ippPort`                 | `ippGetPort`            |
 

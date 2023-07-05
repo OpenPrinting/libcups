@@ -51,7 +51,7 @@ main(int  argc,				// I - Number of command-line arguments
     {
       testBegin("cupsHashData('%s')", tests[i][0]);
       if ((hashsize = cupsHashData(tests[i][0], text, strlen(text), hash, sizeof(hash))) < 0)
-        testEndMessage(false, "%s", cupsLastErrorString());
+        testEndMessage(false, "%s", cupsGetErrorString());
       else if (strcasecmp(cupsHashString(hash, (size_t)hashsize, hex, sizeof(hex)), tests[i][1]))
         testEndMessage(false, "expected '%s', got '%s'", tests[i][1], hex);
       else
@@ -62,7 +62,7 @@ main(int  argc,				// I - Number of command-line arguments
 
       testBegin("cupsHMACData('%s')", tests[i][0]);
       if ((hashsize = cupsHMACData(tests[i][0], (unsigned char *)key, strlen(key), text, strlen(text), hash, sizeof(hash))) < 0)
-        testEndMessage(false, "%s", cupsLastErrorString());
+        testEndMessage(false, "%s", cupsGetErrorString());
       else if (strcasecmp(cupsHashString(hash, (size_t)hashsize, hex, sizeof(hex)), tests[i][2]))
         testEndMessage(false, "expected '%s', got '%s'", tests[i][1], hex);
       else
@@ -145,7 +145,7 @@ main(int  argc,				// I - Number of command-line arguments
 
         if (hashsize < 0)
         {
-          fprintf(stderr, "'%s': %s\n", argv[i], cupsLastErrorString());
+          fprintf(stderr, "'%s': %s\n", argv[i], cupsGetErrorString());
 	  return (1);
 	}
 

@@ -330,7 +330,7 @@ cups_load_localizations(
 
     if ((http2 = httpConnect(hostname, port, NULL, AF_UNSPEC, encryption, 1, 30000, NULL)) == NULL)
     {
-      DEBUG_printf(("4cups_load_localizations: Unable to connect to %s:%d: %s", hostname, port, cupsLastErrorString()));
+      DEBUG_printf(("4cups_load_localizations: Unable to connect to %s:%d: %s", hostname, port, cupsGetErrorString()));
       return;
     }
   }
@@ -338,7 +338,7 @@ cups_load_localizations(
   // Get a temporary file...
   if ((temp = cupsTempFile(NULL, ".strings", tempfile, sizeof(tempfile))) == NULL)
   {
-    DEBUG_printf(("4cups_load_localizations: Unable to create temporary file: %s", cupsLastErrorString()));
+    DEBUG_printf(("4cups_load_localizations: Unable to create temporary file: %s", cupsGetErrorString()));
     if (http2 != http)
       httpClose(http2);
     return;

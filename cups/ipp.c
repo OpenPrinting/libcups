@@ -2221,6 +2221,17 @@ ippGetInteger(ipp_attribute_t *attr,	// I - IPP attribute
 
 
 //
+// 'ippGetLength()' - Compute the length of an IPP message.
+//
+
+size_t					// O - Size of IPP message
+ippGetLength(ipp_t *ipp)		// I - IPP message
+{
+  return (ipp_length(ipp, 0));
+}
+
+
+//
 // 'ippGetName()' - Get the attribute name.
 //
 
@@ -2483,17 +2494,6 @@ ippGetVersion(ipp_t *ipp,		// I - IPP message
     *minor = ipp->request.any.version[1];
 
   return (ipp->request.any.version[0]);
-}
-
-
-//
-// 'ippLength()' - Compute the length of an IPP message.
-//
-
-size_t					// O - Size of IPP message
-ippLength(ipp_t *ipp)			// I - IPP message
-{
-  return (ipp_length(ipp, 0));
 }
 
 
@@ -4258,7 +4258,7 @@ ippTimeToDate(time_t t)			// I - Time in seconds
 //
 // This function validates the contents of an attribute based on the name and
 // value tag.  `true` is returned if the attribute is valid, `false` otherwise.
-// On failure, @link cupsLastErrorString@ is set to a human-readable message.
+// On failure, @link cupsGetErrorString@ is set to a human-readable message.
 //
 
 bool					// O - `true` if valid, `false` otherwise
@@ -4754,7 +4754,7 @@ ippValidateAttribute(
 // 'ippValidateAttributes()' - Validate all attributes in an IPP message.
 //
 // This function validates the contents of the IPP message, including each
-// attribute.  Like @link ippValidateAttribute@, @link cupsLastErrorString@ is
+// attribute.  Like @link ippValidateAttribute@, @link cupsGetErrorString@ is
 // set to a human-readable message on failure.
 //
 

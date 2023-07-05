@@ -50,7 +50,7 @@ cupsCancelDestJob(http_t      *http,	/* I - Connection to destination */
     cupsFreeDestInfo(info);
   }
 
-  return (cupsLastError());
+  return (cupsGetError());
 }
 
 
@@ -139,10 +139,10 @@ cupsCloseDestJob(
 
   ippDelete(cupsDoRequest(http, request, info->resource));
 
-  DEBUG_printf(("1cupsCloseDestJob: %s (%s)", ippErrorString(cupsLastError()),
-                cupsLastErrorString()));
+  DEBUG_printf(("1cupsCloseDestJob: %s (%s)", ippErrorString(cupsGetError()),
+                cupsGetErrorString()));
 
-  return (cupsLastError());
+  return (cupsGetError());
 }
 
 
@@ -235,10 +235,10 @@ cupsCreateDestJob(
   * Return the status code from the Create-Job request...
   */
 
-  DEBUG_printf(("1cupsCreateDestJob: %s (%s)", ippErrorString(cupsLastError()),
-                cupsLastErrorString()));
+  DEBUG_printf(("1cupsCreateDestJob: %s (%s)", ippErrorString(cupsGetError()),
+                cupsGetErrorString()));
 
-  return (cupsLastError());
+  return (cupsGetError());
 }
 
 
@@ -281,9 +281,9 @@ cupsFinishDestDocument(
   ippDelete(cupsGetResponse(http, info->resource));
 
   DEBUG_printf(("1cupsFinishDestDocument: %s (%s)",
-                ippErrorString(cupsLastError()), cupsLastErrorString()));
+                ippErrorString(cupsGetError()), cupsGetErrorString()));
 
-  return (cupsLastError());
+  return (cupsGetError());
 }
 
 

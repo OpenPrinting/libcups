@@ -441,14 +441,14 @@ do_unit_tests(void)
     }
     else
     {
-      testEndMessage(false, "%s", cupsLastErrorString());
+      testEndMessage(false, "%s", cupsGetErrorString());
     }
 
     testBegin("cupsCreateCredentials(printer w/alt names, %s, signed by CA cert)", types[type]);
     if (cupsCreateCredentials(TEST_CERT_PATH, false, CUPS_CREDPURPOSE_SERVER_AUTH, type, CUPS_CREDUSAGE_DEFAULT_TLS, "Organization", "Unit", "Locality", "Ontario", "CA", "printer", sizeof(alt_names) / sizeof(alt_names[0]), alt_names, "_site_", time(NULL) + 30 * 86400))
       testEnd(true);
     else
-      testEndMessage(false, "%s", cupsLastErrorString());
+      testEndMessage(false, "%s", cupsGetErrorString());
 
     testBegin("cupsCreateCredentialsRequest(altprinter w/alt names, %s)", types[type]);
     if (cupsCreateCredentialsRequest(TEST_CERT_PATH, CUPS_CREDPURPOSE_SERVER_AUTH, type, CUPS_CREDUSAGE_DEFAULT_TLS, "Organization", "Unit", "Locality", "Ontario", "CA", "altprinter", sizeof(alt_names) / sizeof(alt_names[0]), alt_names))
@@ -473,7 +473,7 @@ do_unit_tests(void)
         }
         else
         {
-	  testEndMessage(true, "%s", cupsLastErrorString());
+	  testEndMessage(true, "%s", cupsGetErrorString());
         }
 
         free(data);
@@ -481,7 +481,7 @@ do_unit_tests(void)
     }
     else
     {
-      testEndMessage(false, "%s", cupsLastErrorString());
+      testEndMessage(false, "%s", cupsGetErrorString());
     }
 
     testBegin("cupsCreateCredentialsRequest(altprinter w/o alt names, %s)", types[type]);
@@ -512,7 +512,7 @@ do_unit_tests(void)
         }
         else
         {
-	  testEndMessage(false, "%s", cupsLastErrorString());
+	  testEndMessage(false, "%s", cupsGetErrorString());
         }
 
         free(data);
@@ -520,7 +520,7 @@ do_unit_tests(void)
     }
     else
     {
-      testEndMessage(false, "%s", cupsLastErrorString());
+      testEndMessage(false, "%s", cupsGetErrorString());
     }
   }
 
@@ -586,7 +586,7 @@ test_ca(const char *common_name,	// I - Common name
 
   if (!cupsSignCredentialsRequest(TEST_CERT_PATH, common_name, request, root_name, CUPS_CREDPURPOSE_ALL, CUPS_CREDUSAGE_ALL, /*cb*/NULL, /*cb_data*/NULL, time(NULL) + days * 86400))
   {
-    fprintf(stderr, "testcreds: Unable to create certificate (%s)\n", cupsLastErrorString());
+    fprintf(stderr, "testcreds: Unable to create certificate (%s)\n", cupsGetErrorString());
     free(request);
     return (1);
   }
@@ -635,7 +635,7 @@ test_cert(
 
   if (!cupsCreateCredentials(TEST_CERT_PATH, ca_cert, purpose, type, keyusage, organization, org_unit, locality, state, country, common_name, num_alt_names, alt_names, root_name, time(NULL) + days * 86400))
   {
-    fprintf(stderr, "testcreds: Unable to create certificate (%s)\n", cupsLastErrorString());
+    fprintf(stderr, "testcreds: Unable to create certificate (%s)\n", cupsGetErrorString());
     return (1);
   }
 
@@ -695,7 +695,7 @@ test_client(const char *uri)		// I - URI
 
   if ((http = httpConnect(hostname, port, NULL, AF_UNSPEC, HTTP_ENCRYPTION_ALWAYS, 1, 30000, NULL)) == NULL)
   {
-    fprintf(stderr, "testcreds: Unable to connect to '%s' on port %d: %s\n", hostname, port, cupsLastErrorString());
+    fprintf(stderr, "testcreds: Unable to connect to '%s' on port %d: %s\n", hostname, port, cupsGetErrorString());
     return (1);
   }
 
@@ -710,7 +710,7 @@ test_client(const char *uri)		// I - URI
     if (trust == HTTP_TRUST_OK)
       puts("    Trust: OK");
     else
-      printf("    Trust: %s (%s)\n", trusts[trust], cupsLastErrorString());
+      printf("    Trust: %s (%s)\n", trusts[trust], cupsGetErrorString());
     printf("    Expiration: %s\n", httpGetDateString(httpCredentialsGetExpiration(hcreds), datestr, sizeof(datestr)));
     printf("    IsValidName: %s\n", httpCredentialsAreValidForName(hcreds, hostname) ? "true" : "false");
     printf("    String: \"%s\"\n", hinfo);
@@ -751,7 +751,7 @@ test_csr(
 
   if (!cupsCreateCredentialsRequest(TEST_CERT_PATH, purpose, type, keyusage, organization, org_unit, locality, state, country, common_name, num_alt_names, alt_names))
   {
-    fprintf(stderr, "testcreds: Unable to create certificate request (%s)\n", cupsLastErrorString());
+    fprintf(stderr, "testcreds: Unable to create certificate request (%s)\n", cupsGetErrorString());
     return (1);
   }
 
@@ -821,7 +821,7 @@ test_server(const char *host_port)	// I - Hostname/port
 
   if (num_listeners == 0)
   {
-    fprintf(stderr, "testcreds: Unable to listen on port %d: %s\n", port, cupsLastErrorString());
+    fprintf(stderr, "testcreds: Unable to listen on port %d: %s\n", port, cupsGetErrorString());
     return (1);
   }
 
@@ -854,7 +854,7 @@ test_server(const char *host_port)	// I - Hostname/port
         if ((http = httpAcceptConnection(listeners[i].fd, true)) != NULL)
           break;
 
-        fprintf(stderr, "testcreds: Unable to accept connection: %s\n", cupsLastErrorString());
+        fprintf(stderr, "testcreds: Unable to accept connection: %s\n", cupsGetErrorString());
       }
     }
 
@@ -864,7 +864,7 @@ test_server(const char *host_port)	// I - Hostname/port
     // Negotiate a secure connection...
     if (!httpSetEncryption(http, HTTP_ENCRYPTION_ALWAYS))
     {
-      fprintf(stderr, "testcreds: Unable to encrypt connection: %s\n", cupsLastErrorString());
+      fprintf(stderr, "testcreds: Unable to encrypt connection: %s\n", cupsGetErrorString());
       httpClose(http);
       continue;
     }

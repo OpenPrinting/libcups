@@ -371,10 +371,10 @@ main(int  argc,			/* I - Number of command-line arguments */
     ippDelete(cols[0]);
     ippDelete(cols[1]);
 
-    length = ippLength(request);
+    length = ippGetLength(request);
     if (length != sizeof(collection))
     {
-      testEndMessage(false, "wrong ippLength(), %d instead of %d bytes",
+      testEndMessage(false, "wrong ippGetLength(), %d instead of %d bytes",
              (int)length, (int)sizeof(collection));
       status = 1;
     }
@@ -445,7 +445,7 @@ main(int  argc,			/* I - Number of command-line arguments */
 	break;
     }
 
-    length = ippLength(request);
+    length = ippGetLength(request);
 
     if (state != IPP_STATE_DATA)
     {
@@ -699,7 +699,7 @@ main(int  argc,			/* I - Number of command-line arguments */
       if (state == IPP_STATE_ERROR)
 	break;
 
-    length = ippLength(request);
+    length = ippGetLength(request);
 
     if (state != IPP_STATE_DATA)
     {
@@ -826,7 +826,7 @@ main(int  argc,			/* I - Number of command-line arguments */
 
 	if (state != IPP_STATE_DATA)
 	{
-	  printf("Error reading IPP message from \"%s\": %s\n", argv[i], cupsLastErrorString());
+	  printf("Error reading IPP message from \"%s\": %s\n", argv[i], cupsGetErrorString());
 	  status = 1;
 
 	  ippDelete(request);
@@ -854,7 +854,7 @@ main(int  argc,			/* I - Number of command-line arguments */
 
 	if (state != IPP_STATE_DATA)
 	{
-	  printf("Error reading IPP message from \"%s\": %s\n", argv[i], cupsLastErrorString());
+	  printf("Error reading IPP message from \"%s\": %s\n", argv[i], cupsGetErrorString());
 	  status = 1;
 
 	  ippDelete(request);

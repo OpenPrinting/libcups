@@ -169,7 +169,7 @@ main(int  argc,				// I - Number of command-line arguments
 
   if (!http)
   {
-    fprintf(stderr, "tlscheck: Unable to connect to '%s:%d': %s\n", server, port, cupsLastErrorString());
+    fprintf(stderr, "tlscheck: Unable to connect to '%s:%d': %s\n", server, port, cupsGetErrorString());
     return (1);
   }
 

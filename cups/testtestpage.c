@@ -268,7 +268,7 @@ main(int  argc,				// I - Number of command-line arguments
 
       if ((ras = cupsRasterOpen(fd, CUPS_RASTER_WRITE_PWG)) == NULL)
       {
-	fprintf(stderr, "testtestpage: Unable to open raster stream for '%s': %s\n", filename ? filename : "(stdout)", cupsLastErrorString());
+	fprintf(stderr, "testtestpage: Unable to open raster stream for '%s': %s\n", filename ? filename : "(stdout)", cupsGetErrorString());
 	close(fd);
 	return (1);
       }

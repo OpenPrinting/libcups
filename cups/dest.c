@@ -311,7 +311,7 @@ _cupsAppleCopyDefaultPrinter(void)
  * '_cupsAppleGetUseLastPrinter()' - Get whether to use the last used printer.
  */
 
-int					/* O - 1 to use last printer, 0 otherwise */
+bool					/* O - `true` to use last printer, `false` otherwise */
 _cupsAppleGetUseLastPrinter(void)
 {
   Boolean	uselast,		/* Use last printer preference value */
@@ -319,15 +319,13 @@ _cupsAppleGetUseLastPrinter(void)
 
 
   if (getenv("CUPS_DISABLE_APPLE_DEFAULT"))
-    return (0);
+    return (false);
 
-  uselast = CFPreferencesGetAppBooleanValue(kUseLastPrinter,
-                                            kCUPSPrintingPrefs,
-					    &uselast_set);
+  uselast = CFPreferencesGetAppBooleanValue(kUseLastPrinter, kCUPSPrintingPrefs, &uselast_set);
   if (!uselast_set)
-    return (1);
+    return (true);
   else
-    return (uselast);
+    return ((bool)uselast);
 }
 
 
@@ -785,7 +783,7 @@ _cupsCreateDest(const char *name,	/* I - Printer name */
   if ((attr = ippFindAttribute(response, "printer-state", IPP_TAG_ENUM)) != NULL)
     state = (ipp_pstate_t)ippGetInteger(attr, 0);
 
-  while (state == IPP_PSTATE_STOPPED && cupsLastError() == IPP_STATUS_OK)
+  while (state == IPP_PSTATE_STOPPED && cupsGetError() == IPP_STATUS_OK)
   {
     sleep(1);
     ippDelete(response);
@@ -1832,7 +1830,7 @@ cupsSetDests(http_t      *http,		/* I - Connection to server or @code CUPS_HTTP_
 
   num_temps = _cupsGetDests(http, IPP_OP_CUPS_GET_PRINTERS, NULL, &temps, 0, 0);
 
-  if (cupsLastError() >= IPP_STATUS_REDIRECTION_OTHER_SITE)
+  if (cupsGetError() >= IPP_STATUS_REDIRECTION_OTHER_SITE)
   {
     cupsFreeDests(num_temps, temps);
     return (false);

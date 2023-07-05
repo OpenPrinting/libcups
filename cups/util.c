@@ -1,17 +1,17 @@
-/*
- * Printing utilities for CUPS.
- *
- * Copyright © 2021-2022 by OpenPrinting.
- * Copyright © 2007-2018 by Apple Inc.
- * Copyright © 1997-2006 by Easy Software Products.
- *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more
- * information.
- */
+//
+// Printing utilities for CUPS.
+//
+// Copyright © 2021-2023 by OpenPrinting.
+// Copyright © 2007-2018 by Apple Inc.
+// Copyright © 1997-2006 by Easy Software Products.
+//
+// Licensed under Apache License v2.0.  See the file "LICENSE" for more
+// information.
+//
 
-/*
- * Include necessary headers...
- */
+//
+// Include necessary headers...
+//
 
 #include "cups-private.h"
 #include "debug-internal.h"
@@ -21,19 +21,19 @@
 #  include <io.h>
 #else
 #  include <unistd.h>
-#endif /* _WIN32 || __EMX__ */
+#endif // _WIN32 || __EMX__
 
 
-/*
- * 'cupsFreeJobs()' - Free memory used by job data.
- */
+//
+// 'cupsFreeJobs()' - Free memory used by job data.
+//
 
 void
-cupsFreeJobs(size_t     num_jobs,	/* I - Number of jobs */
-             cups_job_t *jobs)		/* I - Jobs */
+cupsFreeJobs(size_t     num_jobs,	// I - Number of jobs
+             cups_job_t *jobs)		// I - Jobs
 {
-  size_t	i;			/* Looping var */
-  cups_job_t	*job;			/* Current job */
+  size_t	i;			// Looping var
+  cups_job_t	*job;			// Current job
 
 
   if (num_jobs <= 0 || !jobs)
@@ -51,26 +51,26 @@ cupsFreeJobs(size_t     num_jobs,	/* I - Number of jobs */
 }
 
 
-/*
- * 'cupsGetDefault()' - Get the default printer or class for the specified server.
- *
- * This function returns the default printer or class as defined by
- * the LPDEST or PRINTER environment variables. If these environment
- * variables are not set, the server default destination is returned.
- * Applications should use the @link cupsGetDests@ and @link cupsGetDest@
- * functions to get the user-defined default printer, as this function does
- * not support the lpoptions-defined default printer.
- *
- *
- */
+//
+// 'cupsGetDefault()' - Get the default printer or class for the specified server.
+//
+// This function returns the default printer or class as defined by
+// the LPDEST or PRINTER environment variables. If these environment
+// variables are not set, the server default destination is returned.
+// Applications should use the @link cupsGetDests@ and @link cupsGetDest@
+// functions to get the user-defined default printer, as this function does
+// not support the lpoptions-defined default printer.
+//
+//
+//
 
-const char *				/* O - Default printer or `NULL` for none */
-cupsGetDefault(http_t *http)		/* I - Connection to server or `CUPS_HTTP_DEFAULT` */
+const char *				// O - Default printer or `NULL` for none
+cupsGetDefault(http_t *http)		// I - Connection to server or `CUPS_HTTP_DEFAULT`
 {
-  ipp_t		*request,		/* IPP Request */
-		*response;		/* IPP Response */
-  ipp_attribute_t *attr;		/* Current attribute */
-  _cups_globals_t *cg = _cupsGlobals();	/* Pointer to library globals */
+  ipp_t		*request,		// IPP Request
+		*response;		// IPP Response
+  ipp_attribute_t *attr;		// Current attribute
+  _cups_globals_t *cg = _cupsGlobals();	// Pointer to library globals
 
 
  /*
@@ -120,40 +120,40 @@ cupsGetDefault(http_t *http)		/* I - Connection to server or `CUPS_HTTP_DEFAULT`
 }
 
 
-/*
- * 'cupsGetJobs()' - Get the jobs from the specified server.
- *
- * A "whichjobs" value of `CUPS_WHICHJOBS_ALL` returns all jobs regardless of
- * state, while `CUPS_WHICHJOBS_ACTIVE` returns jobs that are pending,
- * processing, or held and `CUPS_WHICHJOBS_COMPLETED` returns jobs that are
- * stopped, canceled, aborted, or completed.
- */
+//
+// 'cupsGetJobs()' - Get the jobs from the specified server.
+//
+// A "whichjobs" value of `CUPS_WHICHJOBS_ALL` returns all jobs regardless of
+// state, while `CUPS_WHICHJOBS_ACTIVE` returns jobs that are pending,
+// processing, or held and `CUPS_WHICHJOBS_COMPLETED` returns jobs that are
+// stopped, canceled, aborted, or completed.
+//
 
-size_t					/* O - Number of jobs */
-cupsGetJobs(http_t           *http,	/* I - Connection to server or `CUPS_HTTP_DEFAULT` */
-            cups_job_t       **jobs,	/* O - Job data */
-            const char       *name,	/* I - `NULL` = all destinations, otherwise show jobs for named destination */
-            bool             myjobs,	/* I - `false` = all users, `true` = mine */
-	    cups_whichjobs_t whichjobs)	/* I - `CUPS_WHICHJOBS_ALL`, `CUPS_WHICHJOBS_ACTIVE`, or `CUPS_WHICHJOBS_COMPLETED` */
+size_t					// O - Number of jobs
+cupsGetJobs(http_t           *http,	// I - Connection to server or `CUPS_HTTP_DEFAULT`
+            cups_job_t       **jobs,	// O - Job data
+            const char       *name,	// I - `NULL` = all destinations, otherwise show jobs for named destination
+            bool             myjobs,	// I - `false` = all users, `true` = mine
+	    cups_whichjobs_t whichjobs)	// I - `CUPS_WHICHJOBS_ALL`, `CUPS_WHICHJOBS_ACTIVE`, or `CUPS_WHICHJOBS_COMPLETED`
 {
-  size_t	n;			/* Number of jobs */
-  ipp_t		*request,		/* IPP Request */
-		*response;		/* IPP Response */
-  ipp_attribute_t *attr;		/* Current attribute */
-  cups_job_t	*temp;			/* Temporary pointer */
-  int		id,			/* job-id */
-		priority,		/* job-priority */
-		size;			/* job-k-octets */
-  ipp_jstate_t	state;			/* job-state */
-  time_t	completed_time,		/* time-at-completed */
-		creation_time,		/* time-at-creation */
-		processing_time;	/* time-at-processing */
-  const char	*dest,			/* job-printer-uri */
-		*format,		/* document-format */
-		*title,			/* job-name */
-		*user;			/* job-originating-user-name */
-  char		uri[HTTP_MAX_URI];	/* URI for jobs */
-  static const char * const attrs[] =	/* Requested attributes */
+  size_t	n;			// Number of jobs
+  ipp_t		*request,		// IPP Request
+		*response;		// IPP Response
+  ipp_attribute_t *attr;		// Current attribute
+  cups_job_t	*temp;			// Temporary pointer
+  int		id,			// job-id
+		priority,		// job-priority
+		size;			// job-k-octets
+  ipp_jstate_t	state;			// job-state
+  time_t	completed_time,		// time-at-completed
+		creation_time,		// time-at-creation
+		processing_time;	// time-at-processing
+  const char	*dest,			// job-printer-uri
+		*format,		// document-format
+		*title,			// job-name
+		*user;			// job-originating-user-name
+  char		uri[HTTP_MAX_URI];	// URI for jobs
+  static const char * const attrs[] =	// Requested attributes
 		{
 		  "document-format",
 		  "job-id",

@@ -275,12 +275,12 @@ main(int  argc,				// I - Number of command-line arguments
         }
         else
         {
-          testEndMessage(false, "%s", cupsLastErrorString());
+          testEndMessage(false, "%s", cupsGetErrorString());
         }
       }
       else
       {
-        testEndMessage(false, "%s", cupsLastErrorString());
+        testEndMessage(false, "%s", cupsGetErrorString());
       }
 
       cupsJSONDelete(jwk);
@@ -303,7 +303,7 @@ main(int  argc,				// I - Number of command-line arguments
       }
       else
       {
-	fprintf(stderr, "%s: %s\n", argv[i], cupsLastErrorString());
+	fprintf(stderr, "%s: %s\n", argv[i], cupsGetErrorString());
 	return (1);
       }
     }

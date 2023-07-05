@@ -178,13 +178,13 @@ main(int  argc,				// I - Number of command-line arguments
 
       if ((dest = cupsGetNamedDest(CUPS_HTTP_DEFAULT, argv[2], NULL)) == NULL)
       {
-        printf("Unable to find printer '%s': %s\n", argv[2], cupsLastErrorString());
+        printf("Unable to find printer '%s': %s\n", argv[2], cupsGetErrorString());
         return (1);
       }
 
       if ((dinfo = cupsCopyDestInfo(CUPS_HTTP_DEFAULT, dest)) == NULL)
       {
-        printf("Unable to get information about printer '%s': %s\n", argv[2], cupsLastErrorString());
+        printf("Unable to get information about printer '%s': %s\n", argv[2], cupsGetErrorString());
         return (1);
       }
 
@@ -196,7 +196,7 @@ main(int  argc,				// I - Number of command-line arguments
 
       if (cupsCreateDestJob(CUPS_HTTP_DEFAULT, dest, dinfo, &job_id, "testcups", 0, NULL) > IPP_STATUS_OK_CONFLICTING)
       {
-	printf("Unable to create print job on '%s': %s\n", argv[2], cupsLastErrorString());
+	printf("Unable to create print job on '%s': %s\n", argv[2], cupsGetErrorString());
 	return (1);
       }
 
@@ -450,7 +450,7 @@ main(int  argc,				// I - Number of command-line arguments
   if (cupsPrintFile(dest->name, "../test/testfile.pdf", "Test Page",
                     dest->num_options, dest->options) <= 0)
   {
-    testEndMessage(false, "%s", cupsLastErrorString());
+    testEndMessage(false, "%s", cupsGetErrorString());
     return (1);
   }
   else

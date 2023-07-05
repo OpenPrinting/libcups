@@ -355,6 +355,8 @@ extern bool		cupsGetDestMediaDefault(http_t *http, cups_dest_t *dest, cups_dinfo
 extern cups_dest_t	*cupsGetDestWithURI(const char *name, const char *uri) _CUPS_PUBLIC;
 extern size_t		cupsGetDests(http_t *http, cups_dest_t **dests) _CUPS_PUBLIC;
 extern http_encryption_t cupsGetEncryption(void) _CUPS_PUBLIC;
+extern ipp_status_t	cupsGetError(void) _CUPS_PUBLIC;
+extern const char	*cupsGetErrorString(void) _CUPS_PUBLIC;
 extern http_status_t	cupsGetFd(http_t *http, const char *resource, int fd) _CUPS_PUBLIC;
 extern http_status_t	cupsGetFile(http_t *http, const char *resource, const char *filename) _CUPS_PUBLIC;
 extern int		cupsGetIntegerOption(const char *name, size_t num_options, cups_option_t *options) _CUPS_PUBLIC;
@@ -372,8 +374,6 @@ extern ssize_t		cupsHashData(const char *algorithm, const void *data, size_t dat
 extern const char	*cupsHashString(const unsigned char *hash, size_t hashsize, char *buffer, size_t bufsize) _CUPS_PUBLIC;
 extern ssize_t		cupsHMACData(const char *algorithm, const unsigned char *key, size_t keylen, const void *data, size_t datalen, unsigned char *hash, size_t hashsize) _CUPS_PUBLIC;
 
-extern ipp_status_t	cupsLastError(void) _CUPS_PUBLIC;
-extern const char	*cupsLastErrorString(void) _CUPS_PUBLIC;
 extern const char	*cupsLocalizeDestMedia(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, unsigned flags, cups_size_t *size) _CUPS_PUBLIC;
 extern const char	*cupsLocalizeDestOption(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, const char *option) _CUPS_PUBLIC;
 extern const char	*cupsLocalizeDestValue(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, const char *option, const char *value) _CUPS_PUBLIC;

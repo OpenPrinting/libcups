@@ -1095,7 +1095,7 @@ cupsJSONImportString(const char *s)	// I - JSON string
 // On success, a pointer to the root JSON object node is returned and the
 // "last_modified" variable, if not `NULL`, is updated to the Last-Modified
 // date and time returned by the server.  Otherwise, `NULL` is returned with
-// the @link cupsLastError@ value set to `IPP_STATUS_OK_EVENTS_COMPLETE` if
+// the @link cupsGetError@ value set to `IPP_STATUS_OK_EVENTS_COMPLETE` if
 // the JSON data has not been updated since the "last_modified" date and time
 // or a suitable `IPP_STATUS_ERROR_` value if an error occurred.
 //

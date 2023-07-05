@@ -102,6 +102,7 @@ Renamed Functions
 | `httpTrace`               | `httpWriteRequest`      |
 | `httpWrite2`              | `httpWrite`             |
 | `ippFirstAttribute`       | `ippGetFirstAttribute`  |
+| `ippLength`               | `ippGetLength`          |
 | `ippNextAttribute`        | `ippGetNextAttribute`   |
 | `ippPort`                 | `ippGetPort`            |
 

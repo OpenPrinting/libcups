@@ -884,25 +884,25 @@ run_client(
     if (verbosity)
       show_attributes("Create-Job response", 0, response);
 
-    if (cupsLastError() == IPP_STATUS_ERROR_BUSY)
+    if (cupsGetError() == IPP_STATUS_ERROR_BUSY)
     {
       puts("Printer is busy - retrying in 5 seconds...");
       sleep(5);
       ippDelete(response);
       response = NULL;
     }
-    else if (cupsLastError() >= IPP_STATUS_REDIRECTION_OTHER_SITE)
+    else if (cupsGetError() >= IPP_STATUS_REDIRECTION_OTHER_SITE)
     {
-      printf("Unable to create print job: %s\n", cupsLastErrorString());
+      printf("Unable to create print job: %s\n", cupsGetErrorString());
 
       ldata.job_state = IPP_JSTATE_ABORTED;
       ippDelete(response);
       response = NULL;
     }
   }
-  while (cupsLastError() == IPP_STATUS_ERROR_BUSY);
+  while (cupsGetError() == IPP_STATUS_ERROR_BUSY);
 
-  if (cupsLastError() >= IPP_STATUS_REDIRECTION_OTHER_SITE)
+  if (cupsGetError() >= IPP_STATUS_REDIRECTION_OTHER_SITE)
     goto cleanup;
 
   if ((attr = ippFindAttribute(response, "job-id", IPP_TAG_INTEGER)) == NULL)
@@ -935,9 +935,9 @@ run_client(
   if (verbosity)
     show_attributes("Send-Document response", 0, response);
 
-  if (cupsLastError() >= IPP_STATUS_REDIRECTION_OTHER_SITE)
+  if (cupsGetError() >= IPP_STATUS_REDIRECTION_OTHER_SITE)
   {
-    printf("Unable to print file: %s\n", cupsLastErrorString());
+    printf("Unable to print file: %s\n", cupsGetErrorString());
 
     ldata.job_state = IPP_JSTATE_ABORTED;
 

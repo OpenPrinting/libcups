@@ -1859,16 +1859,16 @@ list_service(ippfind_srv_t *service)	/* I - Service */
 
       response = cupsDoRequest(http, request, service->resource);
 
-      if (cupsLastError() == IPP_STATUS_ERROR_BAD_REQUEST && version > 11)
+      if (cupsGetError() == IPP_STATUS_ERROR_BAD_REQUEST && version > 11)
         version = 11;
     }
-    while (cupsLastError() > IPP_STATUS_OK_EVENTS_COMPLETE && version > 11);
+    while (cupsGetError() > IPP_STATUS_OK_EVENTS_COMPLETE && version > 11);
 
    /*
     * Show results...
     */
 
-    if (cupsLastError() > IPP_STATUS_OK_EVENTS_COMPLETE)
+    if (cupsGetError() > IPP_STATUS_OK_EVENTS_COMPLETE)
     {
       cupsLangPrintf(stdout, "%s: unavailable", service->uri);
       return (0);

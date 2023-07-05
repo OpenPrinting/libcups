@@ -102,13 +102,13 @@ run_query(cups_dest_t *dest)		/* I - Destination to query */
 
   if ((http = cupsConnectDest(dest, dflags, 300, NULL, NULL, 0, NULL, NULL)) == NULL)
   {
-    printf("testthreads: Unable to connect to destination \"%s\": %s\n", dest->name, cupsLastErrorString());
+    printf("testthreads: Unable to connect to destination \"%s\": %s\n", dest->name, cupsGetErrorString());
     return (NULL);
   }
 
   if ((dinfo = cupsCopyDestInfo(http, dest)) == NULL)
   {
-    printf("testdest: Unable to get information for destination \"%s\": %s\n", dest->name, cupsLastErrorString());
+    printf("testdest: Unable to get information for destination \"%s\": %s\n", dest->name, cupsGetErrorString());
     return (NULL);
   }
 
