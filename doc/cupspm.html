@@ -407,6 +407,8 @@ span.string {
 <li><a href="#cupsGetDestWithURI">cupsGetDestWithURI</a></li>
 <li><a href="#cupsGetDests">cupsGetDests</a></li>
 <li><a href="#cupsGetEncryption">cupsGetEncryption</a></li>
+<li><a href="#cupsGetError">cupsGetError</a></li>
+<li><a href="#cupsGetErrorString">cupsGetErrorString</a></li>
 <li><a href="#cupsGetFd">cupsGetFd</a></li>
 <li><a href="#cupsGetFile">cupsGetFile</a></li>
 <li><a href="#cupsGetIntegerOption">cupsGetIntegerOption</a></li>
@@ -478,8 +480,6 @@ span.string {
 <li><a href="#cupsLangPuts">cupsLangPuts</a></li>
 <li><a href="#cupsLangSetDirectory">cupsLangSetDirectory</a></li>
 <li><a href="#cupsLangSetLocale">cupsLangSetLocale</a></li>
-<li><a href="#cupsLastError">cupsLastError</a></li>
-<li><a href="#cupsLastErrorString">cupsLastErrorString</a></li>
 <li><a href="#cupsLocalizeDestMedia">cupsLocalizeDestMedia</a></li>
 <li><a href="#cupsLocalizeDestOption">cupsLocalizeDestOption</a></li>
 <li><a href="#cupsLocalizeDestValue">cupsLocalizeDestValue</a></li>
@@ -694,6 +694,7 @@ span.string {
 <li><a href="#ippGetFirstAttribute">ippGetFirstAttribute</a></li>
 <li><a href="#ippGetGroupTag">ippGetGroupTag</a></li>
 <li><a href="#ippGetInteger">ippGetInteger</a></li>
+<li><a href="#ippGetLength">ippGetLength</a></li>
 <li><a href="#ippGetName">ippGetName</a></li>
 <li><a href="#ippGetNextAttribute">ippGetNextAttribute</a></li>
 <li><a href="#ippGetOctetString">ippGetOctetString</a></li>
@@ -707,7 +708,6 @@ span.string {
 <li><a href="#ippGetString">ippGetString</a></li>
 <li><a href="#ippGetValueTag">ippGetValueTag</a></li>
 <li><a href="#ippGetVersion">ippGetVersion</a></li>
-<li><a href="#ippLength">ippLength</a></li>
 <li><a href="#ippNew">ippNew</a></li>
 <li><a href="#ippNewRequest">ippNewRequest</a></li>
 <li><a href="#ippNewResponse">ippNewResponse</a></li>
@@ -1740,6 +1740,12 @@ cups_password_cb(<span class="reserved">const</span> <span class="reserved">char
 <tr><td> <code>cupsLangGet</code></td>
 <td> <code>cupsLangFind</code></td>
 </tr>
+<tr><td> <code>cupsLastError</code></td>
+<td> <code>cupsGetError</code></td>
+</tr>
+<tr><td> <code>cupsLastErrorString</code></td>
+<td> <code>cupsGetErrorString</code></td>
+</tr>
 <tr><td> <code>cupsRasterInitPWGHeader</code></td>
 <td> <code>cupsRasterInitHeader</code></td>
 </tr>
@@ -1838,6 +1844,9 @@ cups_password_cb(<span class="reserved">const</span> <span class="reserved">char
 </tr>
 <tr><td> <code>ippFirstAttribute</code></td>
 <td> <code>ippGetFirstAttribute</code></td>
+</tr>
+<tr><td> <code>ippLength</code></td>
+<td> <code>ippGetLength</code></td>
 </tr>
 <tr><td> <code>ippNextAttribute</code></td>
 <td> <code>ippGetNextAttribute</code></td>
@@ -4403,6 +4412,20 @@ Note: The current encryption setting is tracked separately for each thread
 in a program. Multi-threaded programs that override the setting via the
 <a href="#cupsSetEncryption"><code>cupsSetEncryption</code></a> function need to do so in each thread for the same
 setting to be used.</p>
+<h3 class="function"><a id="cupsGetError">cupsGetError</a></h3>
+<p class="description">Return the last IPP status code received on the current
+                    thread.</p>
+<p class="code">
+ipp_status_t cupsGetError(void);</p>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">IPP status code from last request</p>
+<h3 class="function"><a id="cupsGetErrorString">cupsGetErrorString</a></h3>
+<p class="description">Return the last IPP status-message received on the
+                          current thread.</p>
+<p class="code">
+const char *cupsGetErrorString(void);</p>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">&quot;status-message&quot; text from last request</p>
 <h3 class="function"><a id="cupsGetFd">cupsGetFd</a></h3>
 <p class="description">Get a file from the server.</p>
 <p class="code">
@@ -4888,7 +4911,7 @@ from the URL.<br>
 On success, a pointer to the root JSON object node is returned and the
 &quot;last_modified&quot; variable, if not <code>NULL</code>, is updated to the Last-Modified
 date and time returned by the server.  Otherwise, <code>NULL</code> is returned with
-the <a href="#cupsLastError"><code>cupsLastError</code></a> value set to <code>IPP_STATUS_OK_EVENTS_COMPLETE</code> if
+the <a href="#cupsGetError"><code>cupsGetError</code></a> value set to <code>IPP_STATUS_OK_EVENTS_COMPLETE</code> if
 the JSON data has not been updated since the &quot;last_modified&quot; date and time
 or a suitable <code>IPP_STATUS_ERROR_</code> value if an error occurred.</p>
 <h3 class="function"><a id="cupsJSONNew">cupsJSONNew</a></h3>
@@ -5420,20 +5443,6 @@ void cupsLangSetLocale(char *argv[]);</p>
 <tr><th>argv[]</th>
 <td class="description">Command-line arguments</td></tr>
 </tbody></table>
-<h3 class="function"><a id="cupsLastError">cupsLastError</a></h3>
-<p class="description">Return the last IPP status code received on the current
-                    thread.</p>
-<p class="code">
-ipp_status_t cupsLastError(void);</p>
-<h4 class="returnvalue">Return Value</h4>
-<p class="description">IPP status code from last request</p>
-<h3 class="function"><a id="cupsLastErrorString">cupsLastErrorString</a></h3>
-<p class="description">Return the last IPP status-message received on the
-                          current thread.</p>
-<p class="code">
-const char *cupsLastErrorString(void);</p>
-<h4 class="returnvalue">Return Value</h4>
-<p class="description">&quot;status-message&quot; text from last request</p>
 <h3 class="function"><a id="cupsLocalizeDestMedia">cupsLocalizeDestMedia</a></h3>
 <p class="description">Get the localized string for a destination media
                             size.</p>
@@ -5895,9 +5904,8 @@ ssize_t cupsReadResponseData(<a href="#http_t">http_t</a> *http, char *buffer, s
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Bytes read, 0 on EOF, -1 on error</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">This function is used after <a href="#cupsGetResponse"><code>cupsGetResponse</code></a> to read the PPD or document
-files from <code>CUPS_GET_PPD</code> and <code>CUPS_GET_DOCUMENT</code> requests,
-respectively.</p>
+<p class="discussion">This function is used after <a href="#cupsGetResponse"><code>cupsGetResponse</code></a> to read any trailing
+document data after an IPP response.</p>
 <h3 class="function"><a id="cupsRemoveDest">cupsRemoveDest</a></h3>
 <p class="description">Remove a destination from the destination list.</p>
 <p class="code">
@@ -9237,6 +9245,17 @@ int ippGetInteger(<a href="#ipp_attribute_t">ipp_attribute_t</a> *attr, size_t e
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">The &quot;element&quot; parameter specifies which value to get from <code>0</code> to
 <code>ippGetCount(attr)</code> - 1.</p>
+<h3 class="function"><a id="ippGetLength">ippGetLength</a></h3>
+<p class="description">Compute the length of an IPP message.</p>
+<p class="code">
+size_t ippGetLength(<a href="#ipp_t">ipp_t</a> *ipp);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>ipp</th>
+<td class="description">IPP message</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Size of IPP message</p>
 <h3 class="function"><a id="ippGetName">ippGetName</a></h3>
 <p class="description">Get the attribute name.</p>
 <p class="code">
@@ -9406,17 +9425,6 @@ int ippGetVersion(<a href="#ipp_t">ipp_t</a> *ipp, int *minor);</p>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Major version number or 0 on error</p>
-<h3 class="function"><a id="ippLength">ippLength</a></h3>
-<p class="description">Compute the length of an IPP message.</p>
-<p class="code">
-size_t ippLength(<a href="#ipp_t">ipp_t</a> *ipp);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>ipp</th>
-<td class="description">IPP message</td></tr>
-</tbody></table>
-<h4 class="returnvalue">Return Value</h4>
-<p class="description">Size of IPP message</p>
 <h3 class="function"><a id="ippNew">ippNew</a></h3>
 <p class="description">Allocate a new IPP message.</p>
 <p class="code">
@@ -10046,7 +10054,7 @@ bool ippValidateAttribute(<a href="#ipp_attribute_t">ipp_attribute_t</a> *attr);
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">This function validates the contents of an attribute based on the name and
 value tag.  <code>true</code> is returned if the attribute is valid, <code>false</code> otherwise.
-On failure, <a href="#cupsLastErrorString"><code>cupsLastErrorString</code></a> is set to a human-readable message.</p>
+On failure, <a href="#cupsGetErrorString"><code>cupsGetErrorString</code></a> is set to a human-readable message.</p>
 <h3 class="function"><a id="ippValidateAttributes">ippValidateAttributes</a></h3>
 <p class="description">Validate all attributes in an IPP message.</p>
 <p class="code">
@@ -10060,7 +10068,7 @@ bool ippValidateAttributes(<a href="#ipp_t">ipp_t</a> *ipp);</p>
 <p class="description"><code>true</code> if valid, <code>false</code> otherwise</p>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">This function validates the contents of the IPP message, including each
-attribute.  Like <a href="#ippValidateAttribute"><code>ippValidateAttribute</code></a>, <a href="#cupsLastErrorString"><code>cupsLastErrorString</code></a> is
+attribute.  Like <a href="#ippValidateAttribute"><code>ippValidateAttribute</code></a>, <a href="#cupsGetErrorString"><code>cupsGetErrorString</code></a> is
 set to a human-readable message on failure.</p>
 <h3 class="function"><a id="ippWrite">ippWrite</a></h3>
 <p class="description">Write data for an IPP message to a HTTP connection.</p>

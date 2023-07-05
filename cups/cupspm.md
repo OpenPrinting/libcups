@@ -1183,6 +1183,8 @@ The following functions have been renamed in CUPS 3.0:
 | `cupsGetDests2`           | `cupsGetDests`          |
 | `cupsGetPassword2`        | `cupsGetPassword`       |
 | `cupsLangGet`             | `cupsLangFind`          |
+| `cupsLastError`           | `cupsGetError`          |
+| `cupsLastErrorString`     | `cupsGetErrorString`    |
 | `cupsRasterInitPWGHeader` | `cupsRasterInitHeader`  |
 | `cupsRasterReadHeader2`   | `cupsRasterReadHeader`  |
 | `cupsRasterWriteHeader2`  | `cupsRasterWriteHeader` |
