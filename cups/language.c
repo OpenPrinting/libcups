@@ -102,7 +102,7 @@ cupsLangFind(const char *language)	// I - Language or locale name
   cups_lang_t	*lang;			// Current language...
 
 
-  DEBUG_printf(("2cupsLangFind(language=\"%s\")", language));
+  DEBUG_printf("2cupsLangFind(language=\"%s\")", language);
 
   if (!language)
     return (cupsLangDefault());
@@ -182,7 +182,7 @@ cupsLangGetString(cups_lang_t *lang,	// I - Language
   const char		*text;		// Localized message text
 
 
-  DEBUG_printf(("cupsLangGetString(lang=%p(%s), message=\"%s\")", (void *)lang, lang ? lang->language : "null", message));
+  DEBUG_printf("cupsLangGetString(lang=%p(%s), message=\"%s\")", (void *)lang, lang ? lang->language : "null", message);
 
   // Range check input...
   if (!lang || !lang->num_messages || !message || !*message)
@@ -561,7 +561,7 @@ cupsLangSetDirectory(const char *d)	// I - Directory name
 //
 // 'cups_lang_new()' - Create a new language.
 //
-  
+
 static cups_lang_t *			// O - Language data
 cups_lang_new(const char *language)	// I - Language name
 {

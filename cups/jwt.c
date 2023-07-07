@@ -392,7 +392,7 @@ cupsJWTHasValidSignature(
   if (!jwt || !jwt->signature || !jwk)
     return (false);
 
-  DEBUG_printf(("1cupsJWTHasValidSignature: orig sig(%u) = %02X%02X%02X%02X...%02X%02X%02X%02X", (unsigned)jwt->sigsize, jwt->signature[0], jwt->signature[1], jwt->signature[2], jwt->signature[3], jwt->signature[jwt->sigsize - 4], jwt->signature[jwt->sigsize - 3], jwt->signature[jwt->sigsize - 2], jwt->signature[jwt->sigsize - 1]));
+  DEBUG_printf("1cupsJWTHasValidSignature: orig sig(%u) = %02X%02X%02X%02X...%02X%02X%02X%02X", (unsigned)jwt->sigsize, jwt->signature[0], jwt->signature[1], jwt->signature[2], jwt->signature[3], jwt->signature[jwt->sigsize - 4], jwt->signature[jwt->sigsize - 3], jwt->signature[jwt->sigsize - 2], jwt->signature[jwt->sigsize - 1]);
 
   switch (jwt->sigalg)
   {
@@ -404,7 +404,7 @@ cupsJWTHasValidSignature(
 	if (!make_signature(jwt, jwt->sigalg, jwk, signature, &sigsize, &sigkid))
 	  break;
 
-	DEBUG_printf(("1cupsJWTHasValidSignature: calc sig(%u) = %02X%02X%02X%02X...%02X%02X%02X%02X", (unsigned)sigsize, signature[0], signature[1], signature[2], signature[3], signature[sigsize - 4], signature[sigsize - 3], signature[sigsize - 2], signature[sigsize - 1]));
+	DEBUG_printf("1cupsJWTHasValidSignature: calc sig(%u) = %02X%02X%02X%02X...%02X%02X%02X%02X", (unsigned)sigsize, signature[0], signature[1], signature[2], signature[3], signature[sigsize - 4], signature[sigsize - 3], signature[sigsize - 2], signature[sigsize - 1]);
 
 	// Compare and return the result...
 	ret = jwt->sigsize == sigsize && !memcmp(jwt->signature, signature, sigsize);
@@ -503,7 +503,7 @@ cupsJWTHasValidSignature(
         break;
 
     default :
-        DEBUG_printf(("1cupsJWTHasValidSignature: Algorithm %d not supported.", jwt->sigalg));
+        DEBUG_printf("1cupsJWTHasValidSignature: Algorithm %d not supported.", jwt->sigalg);
 	break;
   }
 

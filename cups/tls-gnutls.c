@@ -130,7 +130,7 @@ cupsCreateCredentials(
   int			err;		// Result of GNU TLS calls
 
 
-  DEBUG_printf(("cupsCreateCredentials(path=\"%s\", ca_cert=%s, purpose=0x%x, type=%d, usage=0x%x, organization=\"%s\", org_unit=\"%s\", locality=\"%s\", state_province=\"%s\", country=\"%s\", common_name=\"%s\", num_alt_names=%u, alt_names=%p, root_name=\"%s\", expiration_date=%ld)", path, ca_cert ? "true" : "false", purpose, type, usage, organization, org_unit, locality, state_province, country, common_name, (unsigned)num_alt_names, alt_names, root_name, (long)expiration_date));
+  DEBUG_printf("cupsCreateCredentials(path=\"%s\", ca_cert=%s, purpose=0x%x, type=%d, usage=0x%x, organization=\"%s\", org_unit=\"%s\", locality=\"%s\", state_province=\"%s\", country=\"%s\", common_name=\"%s\", num_alt_names=%u, alt_names=%p, root_name=\"%s\", expiration_date=%ld)", path, ca_cert ? "true" : "false", purpose, type, usage, organization, org_unit, locality, state_province, country, common_name, (unsigned)num_alt_names, alt_names, root_name, (long)expiration_date);
 
   // Filenames...
   if (!path)
@@ -157,19 +157,19 @@ cupsCreateCredentials(
 
   if ((err = gnutls_x509_privkey_export(key, GNUTLS_X509_FMT_PEM, buffer, &bytes)) < 0)
   {
-    DEBUG_printf(("1cupsCreateCredentials: Unable to export private key: %s", gnutls_strerror(err)));
+    DEBUG_printf("1cupsCreateCredentials: Unable to export private key: %s", gnutls_strerror(err));
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, gnutls_strerror(err), 0);
     goto done;
   }
   else if ((fp = cupsFileOpen(keyfile, "w")) != NULL)
   {
-    DEBUG_printf(("1cupsCreateCredentials: Writing private key to \"%s\".", keyfile));
+    DEBUG_printf("1cupsCreateCredentials: Writing private key to \"%s\".", keyfile);
     cupsFileWrite(fp, (char *)buffer, bytes);
     cupsFileClose(fp);
   }
   else
   {
-    DEBUG_printf(("1cupsCreateCredentials: Unable to create private key file \"%s\": %s", keyfile, strerror(errno)));
+    DEBUG_printf("1cupsCreateCredentials: Unable to create private key file \"%s\": %s", keyfile, strerror(errno));
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
     goto done;
   }
@@ -262,7 +262,7 @@ cupsCreateCredentials(
     gnutls_usage |= GNUTLS_KEY_ENCIPHER_ONLY;
   if (usage & CUPS_CREDUSAGE_DECIPHER_ONLY)
     gnutls_usage |= GNUTLS_KEY_DECIPHER_ONLY;
- 
+
   gnutls_x509_crt_set_key_usage(crt, gnutls_usage);
   gnutls_x509_crt_set_version(crt, 3);
 
@@ -329,19 +329,19 @@ cupsCreateCredentials(
   bytes = sizeof(buffer);
   if ((err = gnutls_x509_crt_export(crt, GNUTLS_X509_FMT_PEM, buffer, &bytes)) < 0)
   {
-    DEBUG_printf(("1cupsCreateCredentials: Unable to export public key and X.509 certificate: %s", gnutls_strerror(err)));
+    DEBUG_printf("1cupsCreateCredentials: Unable to export public key and X.509 certificate: %s", gnutls_strerror(err));
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, gnutls_strerror(err), 0);
     goto done;
   }
   else if ((fp = cupsFileOpen(crtfile, "w")) != NULL)
   {
-    DEBUG_printf(("1cupsCreateCredentials: Writing public key and X.509 certificate to \"%s\".", crtfile));
+    DEBUG_printf("1cupsCreateCredentials: Writing public key and X.509 certificate to \"%s\".", crtfile);
     cupsFileWrite(fp, (char *)buffer, bytes);
     cupsFileClose(fp);
   }
   else
   {
-    DEBUG_printf(("1cupsCreateCredentials: Unable to create public key and X.509 certificate file \"%s\": %s", crtfile, strerror(errno)));
+    DEBUG_printf("1cupsCreateCredentials: Unable to create public key and X.509 certificate file \"%s\": %s", crtfile, strerror(errno));
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
     goto done;
   }
@@ -445,7 +445,7 @@ cupsCreateCredentialsRequest(
   int			err;		// GNU TLS status
 
 
-  DEBUG_printf(("cupsCreateCredentialsRequest(path=\"%s\", purpose=0x%x, type=%d, usage=0x%x, organization=\"%s\", org_unit=\"%s\", locality=\"%s\", state_province=\"%s\", country=\"%s\", common_name=\"%s\", num_alt_names=%u, alt_names=%p)", path, purpose, type, usage, organization, org_unit, locality, state_province, country, common_name, (unsigned)num_alt_names, alt_names));
+  DEBUG_printf("cupsCreateCredentialsRequest(path=\"%s\", purpose=0x%x, type=%d, usage=0x%x, organization=\"%s\", org_unit=\"%s\", locality=\"%s\", state_province=\"%s\", country=\"%s\", common_name=\"%s\", num_alt_names=%u, alt_names=%p)", path, purpose, type, usage, organization, org_unit, locality, state_province, country, common_name, (unsigned)num_alt_names, alt_names);
 
   // Filenames...
   if (!path)
@@ -472,18 +472,18 @@ cupsCreateCredentialsRequest(
 
   if ((err = gnutls_x509_privkey_export(key, GNUTLS_X509_FMT_PEM, buffer, &bytes)) < 0)
   {
-    DEBUG_printf(("1cupsCreateCredentialsRequest: Unable to export private key: %s", gnutls_strerror(err)));
+    DEBUG_printf("1cupsCreateCredentialsRequest: Unable to export private key: %s", gnutls_strerror(err));
     goto done;
   }
   else if ((fp = cupsFileOpen(keyfile, "w")) != NULL)
   {
-    DEBUG_printf(("1cupsCreateCredentialsRequest: Writing private key to \"%s\".", keyfile));
+    DEBUG_printf("1cupsCreateCredentialsRequest: Writing private key to \"%s\".", keyfile);
     cupsFileWrite(fp, (char *)buffer, bytes);
     cupsFileClose(fp);
   }
   else
   {
-    DEBUG_printf(("1cupsCreateCredentialsRequest: Unable to create private key file \"%s\": %s", keyfile, strerror(errno)));
+    DEBUG_printf("1cupsCreateCredentialsRequest: Unable to create private key file \"%s\": %s", keyfile, strerror(errno));
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
     goto done;
   }
@@ -572,19 +572,19 @@ cupsCreateCredentialsRequest(
   bytes = sizeof(buffer);
   if ((err = gnutls_x509_crq_export(crq, GNUTLS_X509_FMT_PEM, buffer, &bytes)) < 0)
   {
-    DEBUG_printf(("1cupsCreateCredentialsRequest: Unable to export public key and X.509 certificate request: %s", gnutls_strerror(err)));
+    DEBUG_printf("1cupsCreateCredentialsRequest: Unable to export public key and X.509 certificate request: %s", gnutls_strerror(err));
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, gnutls_strerror(err), 0);
     goto done;
   }
   else if ((fp = cupsFileOpen(csrfile, "w")) != NULL)
   {
-    DEBUG_printf(("1cupsCreateCredentialsRequest: Writing public key and X.509 certificate request to \"%s\".", csrfile));
+    DEBUG_printf("1cupsCreateCredentialsRequest: Writing public key and X.509 certificate request to \"%s\".", csrfile);
     cupsFileWrite(fp, (char *)buffer, bytes);
     cupsFileClose(fp);
   }
   else
   {
-    DEBUG_printf(("1cupsCreateCredentialsRequest: Unable to create public key and X.509 certificate request file \"%s\": %s", csrfile, strerror(errno)));
+    DEBUG_printf("1cupsCreateCredentialsRequest: Unable to create public key and X.509 certificate request file \"%s\": %s", csrfile, strerror(errno));
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
     goto done;
   }
@@ -695,7 +695,7 @@ cupsSignCredentialsRequest(
   time_t		curtime;	// Current time
 
 
-  DEBUG_printf(("cupsSignCredentialsRequest(path=\"%s\", common_name=\"%s\", request=\"%s\", root_name=\"%s\", allowed_purpose=0x%x, allowed_usage=0x%x, cb=%p, cb_data=%p, expiration_date=%ld)", path, common_name, request, root_name, allowed_purpose, allowed_usage, cb, cb_data, (long)expiration_date));
+  DEBUG_printf("cupsSignCredentialsRequest(path=\"%s\", common_name=\"%s\", request=\"%s\", root_name=\"%s\", allowed_purpose=0x%x, allowed_usage=0x%x, cb=%p, cb_data=%p, expiration_date=%ld)", path, common_name, request, root_name, allowed_purpose, allowed_usage, cb, cb_data, (long)expiration_date);
 
   // Filenames...
   if (!path)
@@ -792,7 +792,7 @@ cupsSignCredentialsRequest(
 
     temp[tempsize] = '\0';
 
-    DEBUG_printf(("1cupsSignCredentialsRequest: SAN %s", temp));
+    DEBUG_printf("1cupsSignCredentialsRequest: SAN %s", temp);
 
     if (type != GNUTLS_SAN_DNSNAME || (cb)(common_name, temp, cb_data))
     {
@@ -824,7 +824,7 @@ cupsSignCredentialsRequest(
     if (!strcmp(temp, GNUTLS_KP_OCSP_SIGNING))
       purpose |= CUPS_CREDPURPOSE_OCSP_SIGNING;
   }
-  DEBUG_printf(("1cupsSignCredentialsRequest: purpose=0x%04x", purpose));
+  DEBUG_printf("1cupsSignCredentialsRequest: purpose=0x%04x", purpose);
 
   if (purpose & ~allowed_purpose)
   {
@@ -873,7 +873,7 @@ cupsSignCredentialsRequest(
     if (gnutls_usage & GNUTLS_KEY_DECIPHER_ONLY)
       usage |= CUPS_CREDUSAGE_DECIPHER_ONLY;
 
-    DEBUG_printf(("1cupsSignCredentialsRequest: usage=0x%04x", usage));
+    DEBUG_printf("1cupsSignCredentialsRequest: usage=0x%04x", usage);
 
     if (usage & ~allowed_usage)
     {
@@ -942,19 +942,19 @@ cupsSignCredentialsRequest(
   bytes = sizeof(buffer);
   if ((err = gnutls_x509_crt_export(crt, GNUTLS_X509_FMT_PEM, buffer, &bytes)) < 0)
   {
-    DEBUG_printf(("1cupsSignCredentialsRequest: Unable to export public key and X.509 certificate: %s", gnutls_strerror(err)));
+    DEBUG_printf("1cupsSignCredentialsRequest: Unable to export public key and X.509 certificate: %s", gnutls_strerror(err));
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, gnutls_strerror(err), 0);
     goto done;
   }
   else if ((fp = cupsFileOpen(crtfile, "w")) != NULL)
   {
-    DEBUG_printf(("1cupsSignCredentialsRequest: Writing public key and X.509 certificate to \"%s\".", crtfile));
+    DEBUG_printf("1cupsSignCredentialsRequest: Writing public key and X.509 certificate to \"%s\".", crtfile);
     cupsFileWrite(fp, (char *)buffer, bytes);
     cupsFileClose(fp);
   }
   else
   {
-    DEBUG_printf(("1cupsSignCredentialsRequest: Unable to create public key and X.509 certificate file \"%s\": %s", crtfile, strerror(errno)));
+    DEBUG_printf("1cupsSignCredentialsRequest: Unable to create public key and X.509 certificate file \"%s\": %s", crtfile, strerror(errno));
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
     goto done;
   }
@@ -993,7 +993,7 @@ httpCopyCredentials(
   const gnutls_datum_t *certs;		// Certificates
 
 
-  DEBUG_printf(("httpCopyCredentials(http=%p, credentials=%p)", http, credentials));
+  DEBUG_printf("httpCopyCredentials(http=%p, credentials=%p)", http, credentials);
 
   if (credentials)
     *credentials = NULL;
@@ -1004,7 +1004,7 @@ httpCopyCredentials(
   *credentials = cupsArrayNew(NULL, NULL, NULL, 0, NULL, NULL);
   certs        = gnutls_certificate_get_peers(http->tls, &count);
 
-  DEBUG_printf(("1httpCopyCredentials: certs=%p, count=%u", certs, count));
+  DEBUG_printf("1httpCopyCredentials: certs=%p, count=%u", certs, count);
 
   if (certs && count)
   {
@@ -1277,7 +1277,7 @@ httpCredentialsString(
   gnutls_x509_crt_t	cert;		// Certificate
 
 
-  DEBUG_printf(("httpCredentialsString(credentials=%p, buffer=%p, bufsize=" CUPS_LLFMT ")", credentials, buffer, CUPS_LLCAST bufsize));
+  DEBUG_printf("httpCredentialsString(credentials=%p, buffer=%p, bufsize=" CUPS_LLFMT ")", credentials, buffer, CUPS_LLCAST bufsize);
 
   if (!buffer)
     return (0);
@@ -1318,7 +1318,7 @@ httpCredentialsString(
     gnutls_x509_crt_deinit(cert);
   }
 
-  DEBUG_printf(("1httpCredentialsString: Returning \"%s\".", buffer));
+  DEBUG_printf("1httpCredentialsString: Returning \"%s\".", buffer);
 
   return (strlen(buffer));
 }
@@ -1349,14 +1349,14 @@ gnutls_create_credential(
   gnutls_datum_t	datum;			// Data record
 
 
-  DEBUG_printf(("3gnutls_create_credential(credential=%p)", credential));
+  DEBUG_printf("3gnutls_create_credential(credential=%p)", credential);
 
   if (!credential)
     return (NULL);
 
   if ((err = gnutls_x509_crt_init(&cert)) < 0)
   {
-    DEBUG_printf(("4gnutls_create_credential: init error: %s", gnutls_strerror(err)));
+    DEBUG_printf("4gnutls_create_credential: init error: %s", gnutls_strerror(err));
     return (NULL);
   }
 
@@ -1365,7 +1365,7 @@ gnutls_create_credential(
 
   if ((err = gnutls_x509_crt_import(cert, &datum, GNUTLS_X509_FMT_DER)) < 0)
   {
-    DEBUG_printf(("4gnutls_create_credential: import error: %s", gnutls_strerror(err)));
+    DEBUG_printf("4gnutls_create_credential: import error: %s", gnutls_strerror(err));
 
     gnutls_x509_crt_deinit(cert);
     return (NULL);
@@ -1522,7 +1522,7 @@ gnutls_http_read(
   ssize_t	bytes;			// Bytes read
 
 
-  DEBUG_printf(("5gnutls_http_read(ptr=%p, data=%p, length=%d)", ptr, data, (int)length));
+  DEBUG_printf("5gnutls_http_read(ptr=%p, data=%p, length=%d)", ptr, data, (int)length);
 
   http = (http_t *)ptr;
 
@@ -1540,7 +1540,7 @@ gnutls_http_read(
   }
 
   bytes = recv(http->fd, data, length, 0);
-  DEBUG_printf(("5gnutls_http_read: bytes=%d", (int)bytes));
+  DEBUG_printf("5gnutls_http_read: bytes=%d", (int)bytes);
   return (bytes);
 }
 
@@ -1558,10 +1558,9 @@ gnutls_http_write(
   ssize_t bytes;			// Bytes written
 
 
-  DEBUG_printf(("5gnutls_http_write(ptr=%p, data=%p, length=%d)", ptr, data,
-                (int)length));
+  DEBUG_printf("5gnutls_http_write(ptr=%p, data=%p, length=%d)", ptr, data, (int)length);
   bytes = send(((http_t *)ptr)->fd, data, length, 0);
-  DEBUG_printf(("5gnutls_http_write: bytes=%d", (int)bytes));
+  DEBUG_printf("5gnutls_http_write: bytes=%d", (int)bytes);
 
   return (bytes);
 }
@@ -1658,13 +1657,13 @@ _httpTLSStart(http_t *http)		// I - Connection to server
   };
 
 
-  DEBUG_printf(("3_httpTLSStart(http=%p)", http));
+  DEBUG_printf("3_httpTLSStart(http=%p)", http);
 
   if (tls_options < 0)
   {
     DEBUG_puts("4_httpTLSStart: Setting defaults.");
     _cupsSetDefaults();
-    DEBUG_printf(("4_httpTLSStart: tls_options=%x", tls_options));
+    DEBUG_printf("4_httpTLSStart: tls_options=%x", tls_options);
   }
 
   if (http->mode == _HTTP_MODE_SERVER && !tls_keypath)
@@ -1681,8 +1680,7 @@ _httpTLSStart(http_t *http)		// I - Connection to server
                     malloc(sizeof(gnutls_certificate_credentials_t));
   if (credentials == NULL)
   {
-    DEBUG_printf(("8_httpStartTLS: Unable to allocate credentials: %s",
-                  strerror(errno)));
+    DEBUG_printf("8_httpStartTLS: Unable to allocate credentials: %s", strerror(errno));
     http->error  = errno;
     http->status = HTTP_STATUS_ERROR;
     _cupsSetHTTPError(HTTP_STATUS_ERROR);
@@ -1700,7 +1698,7 @@ _httpTLSStart(http_t *http)		// I - Connection to server
     http->error  = EIO;
     http->status = HTTP_STATUS_ERROR;
 
-    DEBUG_printf(("4_httpTLSStart: Unable to initialize common TLS parameters: %s", gnutls_strerror(status)));
+    DEBUG_printf("4_httpTLSStart: Unable to initialize common TLS parameters: %s", gnutls_strerror(status));
     _cupsSetError(IPP_STATUS_ERROR_CUPS_PKI, gnutls_strerror(status), 0);
 
     gnutls_deinit(http->tls);
@@ -1751,7 +1749,7 @@ _httpTLSStart(http_t *http)		// I - Connection to server
       addrlen = sizeof(addr);
       if (getsockname(http->fd, (struct sockaddr *)&addr, &addrlen))
       {
-	DEBUG_printf(("4_httpTLSStart: Unable to get socket address: %s", strerror(errno)));
+	DEBUG_printf("4_httpTLSStart: Unable to get socket address: %s", strerror(errno));
 	hostname[0] = '\0';
       }
       else if (httpAddrIsLocalhost(&addr))
@@ -1761,7 +1759,7 @@ _httpTLSStart(http_t *http)		// I - Connection to server
       else
       {
 	httpAddrLookup(&addr, hostname, sizeof(hostname));
-        DEBUG_printf(("4_httpTLSStart: Resolved socket address to \"%s\".", hostname));
+        DEBUG_printf("4_httpTLSStart: Resolved socket address to \"%s\".", hostname);
       }
     }
 
@@ -1813,7 +1811,7 @@ _httpTLSStart(http_t *http)		// I - Connection to server
 
     if (!have_creds && tls_auto_create && cn)
     {
-      DEBUG_printf(("4_httpTLSStart: Auto-create credentials for \"%s\".", cn));
+      DEBUG_printf("4_httpTLSStart: Auto-create credentials for \"%s\".", cn);
 
       if (!cupsCreateCredentials(tls_keypath, false, CUPS_CREDPURPOSE_SERVER_AUTH, CUPS_CREDTYPE_DEFAULT, CUPS_CREDUSAGE_DEFAULT_TLS, NULL, NULL, NULL, NULL, NULL, cn, 0, NULL, NULL, time(NULL) + 3650 * 86400))
       {
@@ -1829,7 +1827,7 @@ _httpTLSStart(http_t *http)		// I - Connection to server
 
     cupsMutexUnlock(&tls_mutex);
 
-    DEBUG_printf(("4_httpTLSStart: Using certificate \"%s\" and private key \"%s\".", crtfile, keyfile));
+    DEBUG_printf("4_httpTLSStart: Using certificate \"%s\" and private key \"%s\".", crtfile, keyfile);
 
     status = gnutls_certificate_set_x509_key_file(*credentials, crtfile, keyfile, GNUTLS_X509_FMT_PEM);
   }
@@ -1842,7 +1840,7 @@ _httpTLSStart(http_t *http)		// I - Connection to server
     http->error  = EIO;
     http->status = HTTP_STATUS_ERROR;
 
-    DEBUG_printf(("4_httpTLSStart: Unable to complete client/server setup: %s", gnutls_strerror(status)));
+    DEBUG_printf("4_httpTLSStart: Unable to complete client/server setup: %s", gnutls_strerror(status));
     _cupsSetError(IPP_STATUS_ERROR_CUPS_PKI, gnutls_strerror(status), 0);
 
     gnutls_deinit(http->tls);
@@ -1923,8 +1921,7 @@ _httpTLSStart(http_t *http)		// I - Connection to server
   // Do the TLS handshake...
   while ((status = gnutls_handshake(http->tls)) != GNUTLS_E_SUCCESS)
   {
-    DEBUG_printf(("5_httpStartTLS: gnutls_handshake returned %d (%s)",
-                  status, gnutls_strerror(status)));
+    DEBUG_printf("5_httpStartTLS: gnutls_handshake returned %d (%s)", status, gnutls_strerror(status));
 
     if (gnutls_error_is_fatal(status))
     {
@@ -1991,7 +1988,7 @@ _httpTLSWrite(http_t     *http,		// I - Connection to server
   ssize_t	result;			// Return value
 
 
-  DEBUG_printf(("5_httpTLSWrite(http=%p, buf=%p, len=%d)", http, buf, len));
+  DEBUG_printf("5_httpTLSWrite(http=%p, buf=%p, len=%d)", http, buf, len);
 
   result = gnutls_record_send(http->tls, buf, (size_t)len);
 
@@ -2016,7 +2013,7 @@ _httpTLSWrite(http_t     *http,		// I - Connection to server
     result = -1;
   }
 
-  DEBUG_printf(("5_httpTLSWrite: Returning %d.", (int)result));
+  DEBUG_printf("5_httpTLSWrite: Returning %d.", (int)result);
 
   return ((int)result);
 }

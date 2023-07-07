@@ -173,7 +173,7 @@ cupsCreateCredentials(
   cups_credusage_t usage_bit;		// Current usage
 
 
-  DEBUG_printf(("cupsCreateCredentials(path=\"%s\", ca_cert=%s, purpose=0x%x, type=%d, usage=0x%x, organization=\"%s\", org_unit=\"%s\", locality=\"%s\", state_province=\"%s\", country=\"%s\", common_name=\"%s\", num_alt_names=%u, alt_names=%p, root_name=\"%s\", expiration_date=%ld)", path, ca_cert ? "true" : "false", purpose, type, usage, organization, org_unit, locality, state_province, country, common_name, (unsigned)num_alt_names, alt_names, root_name, (long)expiration_date));
+  DEBUG_printf("cupsCreateCredentials(path=\"%s\", ca_cert=%s, purpose=0x%x, type=%d, usage=0x%x, organization=\"%s\", org_unit=\"%s\", locality=\"%s\", state_province=\"%s\", country=\"%s\", common_name=\"%s\", num_alt_names=%u, alt_names=%p, root_name=\"%s\", expiration_date=%ld)", path, ca_cert ? "true" : "false", purpose, type, usage, organization, org_unit, locality, state_province, country, common_name, (unsigned)num_alt_names, alt_names, root_name, (long)expiration_date);
 
   // Filenames...
   if (!path)
@@ -471,7 +471,7 @@ cupsCreateCredentialsRequest(
   cups_credusage_t usage_bit;		// Current usage
 
 
-  DEBUG_printf(("cupsCreateCredentialsRequest(path=\"%s\", purpose=0x%x, type=%d, usage=0x%x, organization=\"%s\", org_unit=\"%s\", locality=\"%s\", state_province=\"%s\", country=\"%s\", common_name=\"%s\", num_alt_names=%u, alt_names=%p)", path, purpose, type, usage, organization, org_unit, locality, state_province, country, common_name, (unsigned)num_alt_names, alt_names));
+  DEBUG_printf("cupsCreateCredentialsRequest(path=\"%s\", purpose=0x%x, type=%d, usage=0x%x, organization=\"%s\", org_unit=\"%s\", locality=\"%s\", state_province=\"%s\", country=\"%s\", common_name=\"%s\", num_alt_names=%u, alt_names=%p)", path, purpose, type, usage, organization, org_unit, locality, state_province, country, common_name, (unsigned)num_alt_names, alt_names);
 
   // Filenames...
   if (!path)
@@ -687,7 +687,7 @@ cupsSignCredentialsRequest(
 		saw_san = false;	// Saw NID_subject_alt_name?
 
 
-  DEBUG_printf(("cupsSignCredentialsRequest(path=\"%s\", common_name=\"%s\", request=\"%s\", root_name=\"%s\", allowed_purpose=0x%x, allowed_usage=0x%x, cb=%p, cb_data=%p, expiration_date=%ld)", path, common_name, request, root_name, allowed_purpose, allowed_usage, cb, cb_data, (long)expiration_date));
+  DEBUG_printf("cupsSignCredentialsRequest(path=\"%s\", common_name=\"%s\", request=\"%s\", root_name=\"%s\", allowed_purpose=0x%x, allowed_usage=0x%x, cb=%p, cb_data=%p, expiration_date=%ld)", path, common_name, request, root_name, allowed_purpose, allowed_usage, cb, cb_data, (long)expiration_date);
 
   // Filenames...
   if (!path)
@@ -777,7 +777,7 @@ cupsSignCredentialsRequest(
     for (j = 0, tempptr = temp; j < datalen; j ++, tempptr += 2)
       snprintf(tempptr, sizeof(temp) - (size_t)(tempptr - temp), "%02X", data[j]);
 
-    DEBUG_printf(("1cupsSignCredentialsRequest: EXT%d=%s", OBJ_obj2nid(obj), temp));
+    DEBUG_printf("1cupsSignCredentialsRequest: EXT%d=%s", OBJ_obj2nid(obj), temp);
 #endif // DEBUG
 
     switch (OBJ_obj2nid(obj))
@@ -826,7 +826,7 @@ cupsSignCredentialsRequest(
             }
           }
 
-          DEBUG_printf(("1cupsSignCredentialsRequest: purpose=0x%04x", purpose));
+          DEBUG_printf("1cupsSignCredentialsRequest: purpose=0x%04x", purpose);
 
           if (purpose & ~allowed_purpose)
           {
@@ -865,7 +865,7 @@ cupsSignCredentialsRequest(
           if (datalen == 7 && (data[6] & 0x80))
 	    usage |= CUPS_CREDUSAGE_DECIPHER_ONLY;
 
-          DEBUG_printf(("1cupsSignCredentialsRequest: usage=0x%04x", usage));
+          DEBUG_printf("1cupsSignCredentialsRequest: usage=0x%04x", usage);
 
           if (usage & ~allowed_usage)
           {
@@ -893,7 +893,7 @@ cupsSignCredentialsRequest(
               memcpy(temp, data + j + 2, data[j + 1]);
               temp[data[j + 1]] = '\0';
 
-              DEBUG_printf(("1cupsSignCredentialsRequest: SAN %s", temp));
+              DEBUG_printf("1cupsSignCredentialsRequest: SAN %s", temp);
 
               if (!(cb)(common_name, temp, cb_data))
               {
@@ -1035,7 +1035,7 @@ httpCopyCredentials(
   STACK_OF(X509) *chain;		// Certificate chain
 
 
-  DEBUG_printf(("httpCopyCredentials(http=%p, credentials=%p)", http, credentials));
+  DEBUG_printf("httpCopyCredentials(http=%p, credentials=%p)", http, credentials);
 
   if (credentials)
     *credentials = NULL;
@@ -1046,7 +1046,7 @@ httpCopyCredentials(
   *credentials = cupsArrayNew(NULL, NULL, NULL, 0, NULL, NULL);
   chain        = SSL_get_peer_cert_chain(http->tls);
 
-  DEBUG_printf(("1httpCopyCredentials: chain=%p", chain));
+  DEBUG_printf("1httpCopyCredentials: chain=%p", chain);
 
   if (chain)
   {
@@ -1300,7 +1300,7 @@ httpCredentialsString(
   X509			*cert;		// Certificate
 
 
-  DEBUG_printf(("httpCredentialsString(credentials=%p, buffer=%p, bufsize=" CUPS_LLFMT ")", credentials, buffer, CUPS_LLCAST bufsize));
+  DEBUG_printf("httpCredentialsString(credentials=%p, buffer=%p, bufsize=" CUPS_LLFMT ")", credentials, buffer, CUPS_LLCAST bufsize);
 
   if (!buffer)
     return (0);
@@ -1368,7 +1368,7 @@ httpCredentialsString(
     X509_free(cert);
   }
 
-  DEBUG_printf(("1httpCredentialsString: Returning \"%s\".", buffer));
+  DEBUG_printf("1httpCredentialsString: Returning \"%s\".", buffer);
 
   return (strlen(buffer));
 }
@@ -1420,7 +1420,7 @@ _httpTLSRead(http_t *http,		// I - Connection to server
   int bytes = SSL_read((SSL *)(http->tls), buf, len);
 					// Bytes read
 
-  DEBUG_printf(("7_httpTLSRead(http=%p, buf=%p, len=%d) returning %d", (void *)http, (void *)buf, len, bytes));
+  DEBUG_printf("7_httpTLSRead(http=%p, buf=%p, len=%d) returning %d", (void *)http, (void *)buf, len, bytes);
 
   return (bytes);
 }
@@ -1454,13 +1454,13 @@ _httpTLSStart(http_t *http)		// I - Connection to server
   };
 
 
-  DEBUG_printf(("3_httpTLSStart(http=%p)", http));
+  DEBUG_printf("3_httpTLSStart(http=%p)", http);
 
   if (tls_options < 0)
   {
     DEBUG_puts("4_httpTLSStart: Setting defaults.");
     _cupsSetDefaults();
-    DEBUG_printf(("4_httpTLSStart: tls_options=%x", tls_options));
+    DEBUG_printf("4_httpTLSStart: tls_options=%x", tls_options);
   }
 
   if (http->mode == _HTTP_MODE_SERVER && !tls_keypath)
@@ -1505,7 +1505,7 @@ _httpTLSStart(http_t *http)		// I - Connection to server
       if (getsockname(http->fd, (struct sockaddr *)&addr, &addrlen))
       {
         // Unable to get local socket address so use default...
-	DEBUG_printf(("4_httpTLSStart: Unable to get socket address: %s", strerror(errno)));
+	DEBUG_printf("4_httpTLSStart: Unable to get socket address: %s", strerror(errno));
 	hostname[0] = '\0';
       }
       else if (httpAddrIsLocalhost(&addr))
@@ -1517,7 +1517,7 @@ _httpTLSStart(http_t *http)		// I - Connection to server
       {
         // Lookup the socket address...
 	httpAddrLookup(&addr, hostname, sizeof(hostname));
-        DEBUG_printf(("4_httpTLSStart: Resolved socket address to \"%s\".", hostname));
+        DEBUG_printf("4_httpTLSStart: Resolved socket address to \"%s\".", hostname);
       }
     }
 
@@ -1569,7 +1569,7 @@ _httpTLSStart(http_t *http)		// I - Connection to server
 
     if (!have_creds && tls_auto_create && cn)
     {
-      DEBUG_printf(("4_httpTLSStart: Auto-create credentials for \"%s\".", cn));
+      DEBUG_printf("4_httpTLSStart: Auto-create credentials for \"%s\".", cn);
 
       if (!cupsCreateCredentials(tls_keypath, false, CUPS_CREDPURPOSE_SERVER_AUTH, CUPS_CREDTYPE_DEFAULT, CUPS_CREDUSAGE_DEFAULT_TLS, NULL, NULL, NULL, NULL, NULL, cn, 0, NULL, NULL, time(NULL) + 3650 * 86400))
       {
@@ -1586,8 +1586,8 @@ _httpTLSStart(http_t *http)		// I - Connection to server
 
     cupsMutexUnlock(&tls_mutex);
 
-    DEBUG_printf(("4_httpTLSStart: Using private key file '%s'.", keyfile));
-    DEBUG_printf(("4_httpTLSStart: Using certificate file '%s'.", crtfile));
+    DEBUG_printf("4_httpTLSStart: Using private key file '%s'.", keyfile);
+    DEBUG_printf("4_httpTLSStart: Using certificate file '%s'.", crtfile);
 
     if (!SSL_CTX_use_PrivateKey_file(context, keyfile, SSL_FILETYPE_PEM) || !SSL_CTX_use_certificate_chain_file(context, crtfile))
     {
@@ -1615,7 +1615,7 @@ _httpTLSStart(http_t *http)		// I - Connection to server
     cupsConcatString(cipherlist, ":!SHA1:!SHA256:!SHA384", sizeof(cipherlist));
   cupsConcatString(cipherlist, ":@STRENGTH", sizeof(cipherlist));
 
-  DEBUG_printf(("4_httpTLSStart: cipherlist='%s', tls_min_version=%d, tls_max_version=%d", cipherlist, tls_min_version, tls_max_version));
+  DEBUG_printf("4_httpTLSStart: cipherlist='%s', tls_min_version=%d, tls_max_version=%d", cipherlist, tls_min_version, tls_max_version);
 
   SSL_CTX_set_min_proto_version(context, versions[tls_min_version]);
   SSL_CTX_set_max_proto_version(context, versions[tls_max_version]);
@@ -1659,7 +1659,7 @@ _httpTLSStart(http_t *http)		// I - Connection to server
       SSL_free(http->tls);
       http->tls = NULL;
 
-      DEBUG_printf(("4_httpTLSStart: Returning false (%s)", ERR_error_string(error, NULL)));
+      DEBUG_printf("4_httpTLSStart: Returning false (%s)", ERR_error_string(error, NULL));
 
       return (false);
     }
@@ -1682,7 +1682,7 @@ _httpTLSStart(http_t *http)		// I - Connection to server
       SSL_free(http->tls);
       http->tls = NULL;
 
-      DEBUG_printf(("4_httpTLSStart: Returning false (%s)", ERR_error_string(error, NULL)));
+      DEBUG_printf("4_httpTLSStart: Returning false (%s)", ERR_error_string(error, NULL));
 
       return (false);
     }
@@ -1737,7 +1737,7 @@ http_bio_ctrl(BIO  *h,			// I - BIO data
 	      long arg1,		// I - First argument
 	      void *arg2)		// I - Second argument
 {
-  DEBUG_printf(("8http_bio_ctl(h=%p, cmd=%d, arg1=%ld, arg2=%p)", (void *)h, cmd, arg1, arg2));
+  DEBUG_printf("8http_bio_ctl(h=%p, cmd=%d, arg1=%ld, arg2=%p)", (void *)h, cmd, arg1, arg2);
 
   (void)arg1;
 
@@ -1778,7 +1778,7 @@ http_bio_ctrl(BIO  *h,			// I - BIO data
 static int				// O - 1 on success, 0 on failure
 http_bio_free(BIO *h)			// I - BIO data
 {
-  DEBUG_printf(("8http_bio_free(h=%p)", (void *)h));
+  DEBUG_printf("8http_bio_free(h=%p)", (void *)h);
 
   if (!h)
     return (0);
@@ -1797,7 +1797,7 @@ http_bio_free(BIO *h)			// I - BIO data
 static int				// O - 1 on success, 0 on failure
 http_bio_new(BIO *h)			// I - BIO data
 {
-  DEBUG_printf(("8http_bio_new(h=%p)", (void *)h));
+  DEBUG_printf("8http_bio_new(h=%p)", (void *)h);
 
   if (!h)
     return (0);
@@ -1817,7 +1817,7 @@ static int				// O - Bytes written
 http_bio_puts(BIO        *h,		// I - BIO data
               const char *str)		// I - String to write
 {
-  DEBUG_printf(("8http_bio_puts(h=%p, str=\"%s\")", (void *)h, str));
+  DEBUG_printf("8http_bio_puts(h=%p, str=\"%s\")", (void *)h, str);
 
 #ifdef WIN32
   return (send(((http_t *)BIO_get_data(h))->fd, str, (int)strlen(str), 0));
@@ -1840,10 +1840,10 @@ http_bio_read(BIO  *h,			// I - BIO data
   int		bytes;			// Bytes read
 
 
-  DEBUG_printf(("8http_bio_read(h=%p, buf=%p, size=%d)", (void *)h, (void *)buf, size));
+  DEBUG_printf("8http_bio_read(h=%p, buf=%p, size=%d)", (void *)h, (void *)buf, size);
 
   http = (http_t *)BIO_get_data(h);
-  DEBUG_printf(("9http_bio_read: http=%p", (void *)http));
+  DEBUG_printf("9http_bio_read: http=%p", (void *)http);
 
   if (!http->blocking)
   {
@@ -1862,7 +1862,7 @@ http_bio_read(BIO  *h,			// I - BIO data
   }
 
   bytes = (int)recv(http->fd, buf, (size_t)size, 0);
-  DEBUG_printf(("9http_bio_read: Returning %d.", bytes));
+  DEBUG_printf("9http_bio_read: Returning %d.", bytes);
 
   return (bytes);
 }
@@ -1880,11 +1880,11 @@ http_bio_write(BIO        *h,		// I - BIO data
   int	bytes;				// Bytes written
 
 
-  DEBUG_printf(("8http_bio_write(h=%p, buf=%p, num=%d)", (void *)h, (void *)buf, num));
+  DEBUG_printf("8http_bio_write(h=%p, buf=%p, num=%d)", (void *)h, (void *)buf, num);
 
   bytes = (int)send(((http_t *)BIO_get_data(h))->fd, buf, (size_t)num, 0);
 
-  DEBUG_printf(("9http_bio_write: Returning %d.", bytes));
+  DEBUG_printf("9http_bio_write: Returning %d.", bytes);
   return (bytes);
 }
 
@@ -1902,7 +1902,7 @@ openssl_add_ext(
   X509_EXTENSION *ext = NULL;		// Extension
 
 
-  DEBUG_printf(("3openssl_add_ext(exts=%p, nid=%d, value=\"%s\")", (void *)exts, nid, value));
+  DEBUG_printf("3openssl_add_ext(exts=%p, nid=%d, value=\"%s\")", (void *)exts, nid, value);
 
   // Create and add the extension...
   if ((ext = X509V3_EXT_conf_nid(/*conf*/NULL, /*ctx*/NULL, nid, value)) == NULL)

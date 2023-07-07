@@ -150,7 +150,7 @@ cupsSetServerCredentials(
   char	temp[1024];			// Default path buffer
 
 
-  DEBUG_printf(("cupsSetServerCredentials(path=\"%s\", common_name=\"%s\", auto_create=%d)", path, common_name, auto_create));
+  DEBUG_printf("cupsSetServerCredentials(path=\"%s\", common_name=\"%s\", auto_create=%d)", path, common_name, auto_create);
 
  /*
   * Use defaults as needed...
@@ -462,7 +462,7 @@ http_default_path(
   {
     if (mkdir(cg->userconfig, 0755) && errno != EEXIST)
     {
-      DEBUG_printf(("1http_default_path: Failed to make directory '%s': %s", cg->userconfig, strerror(errno)));
+      DEBUG_printf("1http_default_path: Failed to make directory '%s': %s", cg->userconfig, strerror(errno));
       return (NULL);
     }
 
@@ -470,7 +470,7 @@ http_default_path(
 
     if (mkdir(buffer, 0700) && errno != EEXIST)
     {
-      DEBUG_printf(("1http_default_path: Failed to make directory '%s': %s", buffer, strerror(errno)));
+      DEBUG_printf("1http_default_path: Failed to make directory '%s': %s", buffer, strerror(errno));
       return (NULL);
     }
   }
@@ -478,7 +478,7 @@ http_default_path(
   {
     if (mkdir(cg->sysconfig, 0755) && errno != EEXIST)
     {
-      DEBUG_printf(("1http_default_path: Failed to make directory '%s': %s", cg->sysconfig, strerror(errno)));
+      DEBUG_printf("1http_default_path: Failed to make directory '%s': %s", cg->sysconfig, strerror(errno));
       return (NULL);
     }
 
@@ -486,12 +486,12 @@ http_default_path(
 
     if (mkdir(buffer, 0700) && errno != EEXIST)
     {
-      DEBUG_printf(("1http_default_path: Failed to make directory '%s': %s", buffer, strerror(errno)));
+      DEBUG_printf("1http_default_path: Failed to make directory '%s': %s", buffer, strerror(errno));
       return (NULL);
     }
   }
 
-  DEBUG_printf(("1http_default_path: Using default path \"%s\".", buffer));
+  DEBUG_printf("1http_default_path: Using default path \"%s\".", buffer);
 
   return (buffer);
 }

@@ -655,14 +655,13 @@ httpGetDateTime(const char *s)		// I - Date/time string
 		{ 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366 };
 
 
-  DEBUG_printf(("2httpGetDateTime(s=\"%s\")", s));
+  DEBUG_printf("2httpGetDateTime(s=\"%s\")", s);
 
   // Extract the date and time from the formatted string...
   if (sscanf(s, "%*s%d%15s%d%d:%d:%d", &day, mon, &year, &hour, &min, &sec) < 6)
     return (0);
 
-  DEBUG_printf(("4httpGetDateTime: day=%d, mon=\"%s\", year=%d, hour=%d, "
-                "min=%d, sec=%d", day, mon, year, hour, min, sec));
+  DEBUG_printf("4httpGetDateTime: day=%d, mon=\"%s\", year=%d, hour=%d, min=%d, sec=%d", day, mon, year, hour, min, sec);
 
   // Check for invalid year (RFC 7231 says it's 4DIGIT)
   if (year > 9999)
@@ -676,7 +675,7 @@ httpGetDateTime(const char *s)		// I - Date/time string
   if (i >= 12)
     return (0);
 
-  DEBUG_printf(("4httpGetDateTime: i=%d", i));
+  DEBUG_printf("4httpGetDateTime: i=%d", i);
 
   // Now convert the date and time to a UNIX time value in seconds since
   // 1970.  We can't use mktime() since the timezone may not be UTC but
@@ -686,14 +685,14 @@ httpGetDateTime(const char *s)		// I - Date/time string
   else
     days = normal_days[i] + day - 1;
 
-  DEBUG_printf(("4httpGetDateTime: days=%d", days));
+  DEBUG_printf("4httpGetDateTime: days=%d", days);
 
   days += (year - 1970) * 365 +		// 365 days per year (normally)
           ((year - 1) / 4 - 492) -	// + leap days
 	  ((year - 1) / 100 - 19) +	// - 100 year days
           ((year - 1) / 400 - 4);	// + 400 year days
 
-  DEBUG_printf(("4httpGetDateTime: days=%d\n", days));
+  DEBUG_printf("4httpGetDateTime: days=%d\n", days);
 
   return (days * 86400 + hour * 3600 + min * 60 + sec);
 }
@@ -1005,7 +1004,7 @@ _httpSetDigestAuthString(
   _cups_globals_t *cg = _cupsGlobals();	// Per-thread globals
 
 
-  DEBUG_printf(("2_httpSetDigestAuthString(http=%p, nonce=\"%s\", method=\"%s\", resource=\"%s\")", (void *)http, nonce, method, resource));
+  DEBUG_printf("2_httpSetDigestAuthString(http=%p, nonce=\"%s\", method=\"%s\", resource=\"%s\")", (void *)http, nonce, method, resource);
 
   if (nonce && *nonce && strcmp(nonce, http->nonce))
   {
@@ -1510,7 +1509,7 @@ httpResolveURI(
 #endif // DEBUG
 
 
-  DEBUG_printf(("httpResolveURI(uri=\"%s\", resolved_uri=%p, resolved_size=" CUPS_LLFMT ", options=0x%x, cb=%p, cb_data=%p)", uri, (void *)resolved_uri, CUPS_LLCAST resolved_size, options, (void *)cb, cb_data));
+  DEBUG_printf("httpResolveURI(uri=\"%s\", resolved_uri=%p, resolved_size=" CUPS_LLFMT ", options=0x%x, cb=%p, cb_data=%p)", uri, (void *)resolved_uri, CUPS_LLCAST resolved_size, options, (void *)cb, cb_data);
 
   // Get the device URI...
 #ifdef DEBUG
@@ -1519,7 +1518,7 @@ httpResolveURI(
   if (httpSeparateURI(HTTP_URI_CODING_ALL, uri, scheme, sizeof(scheme), userpass, sizeof(userpass), hostname, sizeof(hostname), &port, resource, sizeof(resource)) < HTTP_URI_STATUS_OK)
 #endif // DEBUG
   {
-    DEBUG_printf(("2httpResolveURI: httpSeparateURI returned %d.", status));
+    DEBUG_printf("2httpResolveURI: httpSeparateURI returned %d.", status);
     DEBUG_puts("1httpResolveURI: Returning NULL");
     return (NULL);
   }
@@ -1561,7 +1560,7 @@ httpResolveURI(
     uribuf.resource = resource;
     uribuf.uuid     = uuid;
 
-    DEBUG_printf(("2httpResolveURI: Resolving name=\"%s\", regtype=\"%s\",  domain=\"%s\"\n", name, regtype, domain));
+    DEBUG_printf("2httpResolveURI: Resolving name=\"%s\", regtype=\"%s\",  domain=\"%s\"\n", name, regtype, domain);
 
     uri = NULL;
 
@@ -1609,7 +1608,7 @@ httpResolveURI(
     uri = resolved_uri;
   }
 
-  DEBUG_printf(("2httpResolveURI: Returning \"%s\"", uri));
+  DEBUG_printf("2httpResolveURI: Returning \"%s\"", uri);
 
   return (uri);
 }
@@ -1764,14 +1763,14 @@ http_resolve_cb(
 			*resource;	// Resource path
 
 
-  DEBUG_printf(("4http_resolve_cb(res=%p, cb_data=%p, flags=%x, if_index=%u, fullname=\"%s\", host=\"%s\", port=%u, num_txt=%u, txt=%p)", (void *)res, cb_data, flags, if_index, fullname, host, port, (unsigned)num_txt, (void *)txt));
+  DEBUG_printf("4http_resolve_cb(res=%p, cb_data=%p, flags=%x, if_index=%u, fullname=\"%s\", host=\"%s\", port=%u, num_txt=%u, txt=%p)", (void *)res, cb_data, flags, if_index, fullname, host, port, (unsigned)num_txt, (void *)txt);
 
   // If we have a UUID, compare it...
   if (uribuf->uuid && (value = cupsGetOption("UUID", num_txt, txt)) != NULL)
   {
     if (_cups_strcasecmp(value, uribuf->uuid))
     {
-      DEBUG_printf(("5http_resolve_cb: Found UUID %s, looking for %s.", value, uribuf->uuid));
+      DEBUG_printf("5http_resolve_cb: Found UUID %s, looking for %s.", value, uribuf->uuid);
       return;
     }
   }
@@ -1827,7 +1826,7 @@ http_resolve_cb(
     http_addrlist_t	*addrlist,	// List of addresses
 			*addr;		// Current address
 
-    DEBUG_printf(("5http_resolve_cb: Looking up \"%s\".", host));
+    DEBUG_printf("5http_resolve_cb: Looking up \"%s\".", host);
 
     snprintf(fqdn, sizeof(fqdn), "%d", ntohs(port));
     if ((addrlist = httpAddrGetList(host, AF_UNSPEC, fqdn)) != NULL)
@@ -1838,7 +1837,7 @@ http_resolve_cb(
 
         if (!error)
 	{
-	  DEBUG_printf(("5http_resolve_cb: Found \"%s\".", fqdn));
+	  DEBUG_printf("5http_resolve_cb: Found \"%s\".", fqdn);
 
 	  if ((hostptr = fqdn + strlen(fqdn) - 6) <= fqdn || _cups_strcasecmp(hostptr, ".local"))
 	  {
@@ -1848,7 +1847,7 @@ http_resolve_cb(
 	}
 #ifdef DEBUG
 	else
-	  DEBUG_printf(("5http_resolve_cb: \"%s\" did not resolve: %d", httpAddrGetString(&(addr->addr), fqdn, sizeof(fqdn)), error));
+	  DEBUG_printf("5http_resolve_cb: \"%s\" did not resolve: %d", httpAddrGetString(&(addr->addr), fqdn, sizeof(fqdn)), error);
 #endif // DEBUG
       }
 
@@ -1862,5 +1861,5 @@ http_resolve_cb(
   else
     httpAssembleURIf(HTTP_URI_CODING_ALL, uribuf->buffer, uribuf->bufsize, scheme, NULL, host, port, "/%s", resource);
 
-  DEBUG_printf(("5http_resolve_cb: Resolved URI is \"%s\"...", uribuf->buffer));
+  DEBUG_printf("5http_resolve_cb: Resolved URI is \"%s\"...", uribuf->buffer);
 }

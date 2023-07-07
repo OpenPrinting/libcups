@@ -267,7 +267,7 @@ cups_lang_default(void)
 
     if (getenv("SOFTWARE") != NULL && (lang = getenv("LANG")) != NULL)
     {
-      DEBUG_printf(("3cups_lang_default: Using LANG=%s", lang));
+      DEBUG_printf("3cups_lang_default: Using LANG=%s", lang);
       cupsCopyString(cg->lang_name, lang, sizeof(cg->lang_name));
       return (cg->lang_name);
     }
@@ -288,7 +288,7 @@ cups_lang_default(void)
 	{
 	  // See if we have an Info.plist file in the bundle...
 	  CFStringGetCString(cfpath, path, sizeof(path), kCFStringEncodingUTF8);
-	  DEBUG_printf(("3cups_lang_default: Got a resource URL (\"%s\")", path));
+	  DEBUG_printf("3cups_lang_default: Got a resource URL (\"%s\")", path);
 	  cupsConcatString(path, "Contents/Info.plist", sizeof(path));
 
           if (!access(path, R_OK))
@@ -320,7 +320,7 @@ cups_lang_default(void)
     {
 #  ifdef DEBUG
       if (CFGetTypeID(localizationList) == CFArrayGetTypeID())
-        DEBUG_printf(("3cups_lang_default: Got localizationList, %d entries.", (int)CFArrayGetCount(localizationList)));
+        DEBUG_printf("3cups_lang_default: Got localizationList, %d entries.", (int)CFArrayGetCount(localizationList));
       else
         DEBUG_puts("3cups_lang_default: Got localizationList but not an array.");
 #  endif // DEBUG
@@ -373,7 +373,7 @@ cups_lang_default(void)
     lang = setlocale(LC_ALL, NULL);
 #  endif // LC_MESSAGES
 
-    DEBUG_printf(("3cups_lang_default: Current locale is \"%s\".", lang));
+    DEBUG_printf("3cups_lang_default: Current locale is \"%s\".", lang);
 
     charset[0] = '\0';
 
@@ -399,7 +399,7 @@ cups_lang_default(void)
 	}
 
         *csptr = '\0';
-        DEBUG_printf(("3cups_lang_default: Charset set to \"%s\" via environment.", charset));
+        DEBUG_printf("3cups_lang_default: Charset set to \"%s\" via environment.", charset);
       }
 
       // Get the locale for messages from the LC_MESSAGES locale setting...
@@ -429,7 +429,7 @@ cups_lang_default(void)
 
         *csptr = '\0';
 
-        DEBUG_printf(("3cups_lang_default: Charset set to \"%s\" via setlocale().", charset));
+        DEBUG_printf("3cups_lang_default: Charset set to \"%s\" via setlocale().", charset);
 
         if ((csptr = strchr(cg->lang_name, '.')) != NULL)
           *csptr = '\0';		// Strip charset from locale name...
@@ -449,7 +449,7 @@ cups_lang_default(void)
       }
       *csptr = '\0';
 
-      DEBUG_printf(("3cups_lang_default: Charset set to \"%s\" via nl_langinfo(CODESET).", charset));
+      DEBUG_printf("3cups_lang_default: Charset set to \"%s\" via nl_langinfo(CODESET).", charset);
     }
 #endif // CODESET
 
@@ -503,11 +503,11 @@ cups_lang_default(void)
       cupsCopyString(cg->lang_name, "zh_TW", sizeof(cg->lang_name));
     }
 
-    DEBUG_printf(("3cups_lang_default: Using locale \"%s\".", cg->lang_name));
+    DEBUG_printf("3cups_lang_default: Using locale \"%s\".", cg->lang_name);
   }
   else
   {
-    DEBUG_printf(("3cups_lang_default: Using previous locale \"%s\".", cg->lang_name));
+    DEBUG_printf("3cups_lang_default: Using previous locale \"%s\".", cg->lang_name);
   }
 
   // Return the cached locale...

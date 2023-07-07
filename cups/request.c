@@ -44,7 +44,7 @@ cupsDoFileRequest(http_t     *http,	// I - Connection to server or `CUPS_HTTP_DE
   int		infile;			// Input file
 
 
-  DEBUG_printf(("cupsDoFileRequest(http=%p, request=%p(%s), resource=\"%s\", filename=\"%s\")", (void *)http, (void *)request, request ? ippOpString(request->request.op.operation_id) : "?", resource, filename));
+  DEBUG_printf("cupsDoFileRequest(http=%p, request=%p(%s), resource=\"%s\", filename=\"%s\")", (void *)http, (void *)request, request ? ippOpString(request->request.op.operation_id) : "?", resource, filename);
 
   if (filename)
   {
@@ -101,7 +101,7 @@ cupsDoIORequest(http_t     *http,	// I - Connection to server or `CUPS_HTTP_DEFA
   char		buffer[32768];		// Output buffer
 
 
-  DEBUG_printf(("cupsDoIORequest(http=%p, request=%p(%s), resource=\"%s\", infile=%d, outfile=%d)", (void *)http, (void *)request, request ? ippOpString(request->request.op.operation_id) : "?", resource, infile, outfile));
+  DEBUG_printf("cupsDoIORequest(http=%p, request=%p(%s), resource=\"%s\", infile=%d, outfile=%d)", (void *)http, (void *)request, request ? ippOpString(request->request.op.operation_id) : "?", resource, infile, outfile);
 
   // Range check input...
   if (!request || !resource)
@@ -158,7 +158,7 @@ cupsDoIORequest(http_t     *http,	// I - Connection to server or `CUPS_HTTP_DEFA
     length = ippGetLength(request);
   }
 
-  DEBUG_printf(("2cupsDoIORequest: Request length=%ld, total length=%ld", (long)ippGetLength(request), (long)length));
+  DEBUG_printf("2cupsDoIORequest: Request length=%ld, total length=%ld", (long)ippGetLength(request), (long)length);
 
   // Clear any "Local" authentication data since it is probably stale...
   if (http->authstring && !strncmp(http->authstring, "Local ", 6))
@@ -172,7 +172,7 @@ cupsDoIORequest(http_t     *http,	// I - Connection to server or `CUPS_HTTP_DEFA
     // Send the request...
     status = cupsSendRequest(http, request, resource, length);
 
-    DEBUG_printf(("2cupsDoIORequest: status=%d", status));
+    DEBUG_printf("2cupsDoIORequest: status=%d", status);
 
     if (status == HTTP_STATUS_CONTINUE && request->state == IPP_STATE_DATA && infile >= 0)
     {
@@ -199,7 +199,7 @@ cupsDoIORequest(http_t     *http,	// I - Connection to server or `CUPS_HTTP_DEFA
       status   = httpGetStatus(http);
     }
 
-    DEBUG_printf(("2cupsDoIORequest: status=%d", status));
+    DEBUG_printf("2cupsDoIORequest: status=%d", status);
 
     if (status == HTTP_STATUS_ERROR || (status >= HTTP_STATUS_BAD_REQUEST && status != HTTP_STATUS_UNAUTHORIZED && status != HTTP_STATUS_UPGRADE_REQUIRED))
     {
@@ -243,7 +243,7 @@ cupsDoRequest(http_t     *http,		// I - Connection to server or `CUPS_HTTP_DEFAU
               ipp_t      *request,	// I - IPP request
               const char *resource)	// I - HTTP resource for POST
 {
-  DEBUG_printf(("cupsDoRequest(http=%p, request=%p(%s), resource=\"%s\")", (void *)http, (void *)request, request ? ippOpString(request->request.op.operation_id) : "?", resource));
+  DEBUG_printf("cupsDoRequest(http=%p, request=%p(%s), resource=\"%s\")", (void *)http, (void *)request, request ? ippOpString(request->request.op.operation_id) : "?", resource);
 
   return (cupsDoIORequest(http, request, resource, -1, -1));
 }
@@ -267,8 +267,8 @@ cupsGetResponse(http_t     *http,	// I - Connection to server or `CUPS_HTTP_DEFA
   ipp_t		*response = NULL;	// IPP response
 
 
-  DEBUG_printf(("cupsGetResponse(http=%p, resource=\"%s\")", (void *)http, resource));
-  DEBUG_printf(("1cupsGetResponse: http->state=%d", http ? http->state : HTTP_STATE_ERROR));
+  DEBUG_printf("cupsGetResponse(http=%p, resource=\"%s\")", (void *)http, resource);
+  DEBUG_printf("1cupsGetResponse: http->state=%d", http ? http->state : HTTP_STATE_ERROR);
 
   // Connect to the default server as needed...
   if (!http)
@@ -305,7 +305,7 @@ cupsGetResponse(http_t     *http,	// I - Connection to server or `CUPS_HTTP_DEFA
   }
 
   // Wait for a response from the server...
-  DEBUG_printf(("2cupsGetResponse: Update loop, http->status=%d...", http->status));
+  DEBUG_printf("2cupsGetResponse: Update loop, http->status=%d...", http->status);
 
   do
   {
@@ -313,7 +313,7 @@ cupsGetResponse(http_t     *http,	// I - Connection to server or `CUPS_HTTP_DEFA
   }
   while (status == HTTP_STATUS_CONTINUE);
 
-  DEBUG_printf(("2cupsGetResponse: status=%d", status));
+  DEBUG_printf("2cupsGetResponse: status=%d", status);
 
   if (status == HTTP_STATUS_OK)
   {
@@ -380,7 +380,7 @@ cupsGetResponse(http_t     *http,	// I - Connection to server or `CUPS_HTTP_DEFA
 
     attr = ippFindAttribute(response, "status-message", IPP_TAG_TEXT);
 
-    DEBUG_printf(("1cupsGetResponse: status-code=%s, status-message=\"%s\"", ippErrorString(response->request.status.status_code), attr ? attr->values[0].string.text : ""));
+    DEBUG_printf("1cupsGetResponse: status-code=%s, status-message=\"%s\"", ippErrorString(response->request.status.status_code), attr ? attr->values[0].string.text : "");
 
     _cupsSetError(response->request.status.status_code, attr ? attr->values[0].string.text : ippErrorString(response->request.status.status_code), false);
   }
@@ -427,7 +427,7 @@ cupsReadResponseData(
     size_t length)			// I - Number of bytes to read
 {
   // Get the default connection as needed...
-  DEBUG_printf(("cupsReadResponseData(http=%p, buffer=%p, length=" CUPS_LLFMT ")", (void *)http, (void *)buffer, CUPS_LLCAST length));
+  DEBUG_printf("cupsReadResponseData(http=%p, buffer=%p, length=" CUPS_LLFMT ")", (void *)http, (void *)buffer, CUPS_LLCAST length);
 
   if (!http)
   {
@@ -476,7 +476,7 @@ cupsSendRequest(http_t     *http,	// I - Connection to server or `CUPS_HTTP_DEFA
   int			digest;		// Are we using Digest authentication?
 
 
-  DEBUG_printf(("cupsSendRequest(http=%p, request=%p(%s), resource=\"%s\", length=" CUPS_LLFMT ")", (void *)http, (void *)request, request ? ippOpString(request->request.op.operation_id) : "?", resource, CUPS_LLCAST length));
+  DEBUG_printf("cupsSendRequest(http=%p, request=%p(%s), resource=\"%s\", length=" CUPS_LLFMT ")", (void *)http, (void *)request, request ? ippOpString(request->request.op.operation_id) : "?", resource, CUPS_LLCAST length);
 
   // Range check input...
   if (!request || !resource)
@@ -498,7 +498,7 @@ cupsSendRequest(http_t     *http,	// I - Connection to server or `CUPS_HTTP_DEFA
   }
   else if (http->state != HTTP_STATE_WAITING)
   {
-    DEBUG_printf(("1cupsSendRequest: Unknown HTTP state (%d), reconnecting.", http->state));
+    DEBUG_printf("1cupsSendRequest: Unknown HTTP state (%d), reconnecting.", http->state);
     if (!httpReconnect(http, 30000, NULL))
       return (HTTP_STATUS_ERROR);
   }
@@ -548,7 +548,7 @@ cupsSendRequest(http_t     *http,	// I - Connection to server or `CUPS_HTTP_DEFA
 
     httpSetField(http, HTTP_FIELD_AUTHORIZATION, http->authstring);
 
-    DEBUG_printf(("2cupsSendRequest: authstring=\"%s\"", http->authstring));
+    DEBUG_printf("2cupsSendRequest: authstring=\"%s\"", http->authstring);
 
     // Try the request...
     DEBUG_puts("2cupsSendRequest: Sending HTTP POST...");
@@ -622,7 +622,7 @@ cupsSendRequest(http_t     *http,	// I - Connection to server or `CUPS_HTTP_DEFA
       }
     }
 
-    DEBUG_printf(("2cupsSendRequest: status=%d", status));
+    DEBUG_printf("2cupsSendRequest: status=%d", status);
 
     // Process the current HTTP status...
     if (status >= HTTP_STATUS_MULTIPLE_CHOICES)
@@ -645,7 +645,7 @@ cupsSendRequest(http_t     *http,	// I - Connection to server or `CUPS_HTTP_DEFA
       case HTTP_STATUS_CONTINUE :
       case HTTP_STATUS_OK :
       case HTTP_STATUS_ERROR :
-          DEBUG_printf(("1cupsSendRequest: Returning %d.", status));
+          DEBUG_printf("1cupsSendRequest: Returning %d.", status);
           return (status);
 
       case HTTP_STATUS_UNAUTHORIZED :
@@ -721,7 +721,7 @@ cupsWriteRequestData(
 
 
   // Get the default connection as needed...
-  DEBUG_printf(("cupsWriteRequestData(http=%p, buffer=%p, length=" CUPS_LLFMT ")", (void *)http, (void *)buffer, CUPS_LLCAST length));
+  DEBUG_printf("cupsWriteRequestData(http=%p, buffer=%p, length=" CUPS_LLFMT ")", (void *)http, (void *)buffer, CUPS_LLCAST length);
 
   if (!http)
   {
@@ -768,7 +768,7 @@ cupsWriteRequestData(
         httpFlush(http);
       }
 
-      DEBUG_printf(("1cupsWriteRequestData: Returning %d.\n", status));
+      DEBUG_printf("1cupsWriteRequestData: Returning %d.\n", status);
       return (status);
     }
   }
@@ -889,7 +889,7 @@ _cupsSetError(ipp_status_t status,	// I - IPP status code
     }
   }
 
-  DEBUG_printf(("4_cupsSetError: last_error=%s, last_status_message=\"%s\"", ippErrorString(cg->last_error), cg->last_status_message));
+  DEBUG_printf("4_cupsSetError: last_error=%s, last_status_message=\"%s\"", ippErrorString(cg->last_error), cg->last_status_message);
 }
 
 
@@ -951,7 +951,7 @@ _cupsSetHTTPError(http_status_t status)	// I - HTTP status code
         break;
 
     default :
-	DEBUG_printf(("4_cupsSetHTTPError: HTTP error %d mapped to IPP_STATUS_ERROR_SERVICE_UNAVAILABLE!", status));
+	DEBUG_printf("4_cupsSetHTTPError: HTTP error %d mapped to IPP_STATUS_ERROR_SERVICE_UNAVAILABLE!", status);
 	_cupsSetError(IPP_STATUS_ERROR_SERVICE_UNAVAILABLE, httpStatusString(status), false);
 	break;
   }

@@ -75,7 +75,7 @@ _cupsStrAlloc(const char *s)		// I - String
     item->ref_count ++;
 
 #ifdef DEBUG_GUARDS
-    DEBUG_printf(("5_cupsStrAlloc: Using string %p(%s) for \"%s\", guard=%08x, ref_count=%d", item, item->str, s, item->guard, item->ref_count));
+    DEBUG_printf("5_cupsStrAlloc: Using string %p(%s) for \"%s\", guard=%08x, ref_count=%d", item, item->str, s, item->guard, item->ref_count);
 
     if (item->guard != _CUPS_STR_GUARD)
       abort();
@@ -102,7 +102,7 @@ _cupsStrAlloc(const char *s)		// I - String
 #ifdef DEBUG_GUARDS
   item->guard = _CUPS_STR_GUARD;
 
-  DEBUG_printf(("5_cupsStrAlloc: Created string %p(%s) for \"%s\", guard=%08x, ref_count=%d", item, item->str, s, item->guard, item->ref_count));
+  DEBUG_printf("5_cupsStrAlloc: Created string %p(%s) for \"%s\", guard=%08x, ref_count=%d", item, item->str, s, item->guard, item->ref_count);
 #endif // DEBUG_GUARDS
 
   // Add the string to the pool and return it...
@@ -208,7 +208,7 @@ _cupsStrFlush(void)
   _cups_sp_item_t	*item;		// Current item
 
 
-  DEBUG_printf(("4_cupsStrFlush: %u strings in array", (unsigned)cupsArrayGetCount(stringpool)));
+  DEBUG_printf("4_cupsStrFlush: %u strings in array", (unsigned)cupsArrayGetCount(stringpool));
 
   cupsMutexLock(&sp_mutex);
 
@@ -333,7 +333,7 @@ _cupsStrFree(const char *s)		// I - String to free
 #ifdef DEBUG_GUARDS
     if (key->guard != _CUPS_STR_GUARD)
     {
-      DEBUG_printf(("5_cupsStrFree: Freeing string %p(%s), guard=%08x, ref_count=%d", key, key->str, key->guard, key->ref_count));
+      DEBUG_printf("5_cupsStrFree: Freeing string %p(%s), guard=%08x, ref_count=%d", key, key->str, key->guard, key->ref_count);
       abort();
     }
 #endif // DEBUG_GUARDS
@@ -374,8 +374,7 @@ _cupsStrRetain(const char *s)		// I - String to retain
 #ifdef DEBUG_GUARDS
     if (item->guard != _CUPS_STR_GUARD)
     {
-      DEBUG_printf(("5_cupsStrRetain: Retaining string %p(%s), guard=%08x, "
-                    "ref_count=%d", item, s, item->guard, item->ref_count));
+      DEBUG_printf("5_cupsStrRetain: Retaining string %p(%s), guard=%08x, ref_count=%d", item, s, item->guard, item->ref_count);
       abort();
     }
 #endif // DEBUG_GUARDS

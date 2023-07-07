@@ -142,7 +142,7 @@ httpAddrGetString(
     char              *s,		// I - String buffer
     size_t            slen)		// I - Length of string buffer
 {
-  DEBUG_printf(("httpAddrGetString(addr=%p, s=%p, slen=%u)", (void *)addr, (void *)s, (unsigned)slen));
+  DEBUG_printf("httpAddrGetString(addr=%p, s=%p, slen=%u)", (void *)addr, (void *)s, (unsigned)slen);
 
   // Range check input...
   if (!addr || !s || slen <= 2)
@@ -200,7 +200,7 @@ httpAddrGetString(
     cupsCopyString(s, "UNKNOWN", (size_t)slen);
   }
 
-  DEBUG_printf(("1httpAddrGetString: returning \"%s\"...", s));
+  DEBUG_printf("1httpAddrGetString: returning \"%s\"...", s);
 
   return (s);
 }
@@ -317,13 +317,13 @@ httpAddrListen(http_addr_t *addr,	// I - Address to bind to
 
   val = 1;
   if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, CUPS_SOCAST &val, sizeof(val)))
-    DEBUG_printf(("httpAddrListen: setsockopt(SO_REUSEADDR) failed - %s", strerror(errno)));
+    DEBUG_printf("httpAddrListen: setsockopt(SO_REUSEADDR) failed - %s", strerror(errno));
 
 #ifdef IPV6_V6ONLY
   if (addr->addr.sa_family == AF_INET6)
   {
     if (setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, CUPS_SOCAST &val, sizeof(val)))
-      DEBUG_printf(("httpAddrListen: setsockopt(IPv6_V6ONLY) failed - %s", strerror(errno)));
+      DEBUG_printf("httpAddrListen: setsockopt(IPv6_V6ONLY) failed - %s", strerror(errno));
   }
 #endif // IPV6_V6ONLY
 
@@ -346,7 +346,7 @@ httpAddrListen(http_addr_t *addr,	// I - Address to bind to
     // Restore the umask and fix permissions...
     umask(mask);
     if (chmod(addr->un.sun_path, 0140777))
-      DEBUG_printf(("httpAddrListen: chmod of '%s' failed - %s", addr->un.sun_path, strerror(errno)));
+      DEBUG_printf("httpAddrListen: chmod of '%s' failed - %s", addr->un.sun_path, strerror(errno));
   }
   else
 #endif // AF_LOCAL
@@ -378,14 +378,14 @@ httpAddrListen(http_addr_t *addr,	// I - Address to bind to
   // Close on exec...
 #ifndef _WIN32
   if (fcntl(fd, F_SETFD, fcntl(fd, F_GETFD) | FD_CLOEXEC))
-    DEBUG_printf(("httpAddrListen: fcntl(F_SETFD, FD_CLOEXEC) failed - %s", strerror(errno)));
+    DEBUG_printf("httpAddrListen: fcntl(F_SETFD, FD_CLOEXEC) failed - %s", strerror(errno));
 #endif // !_WIN32
 
 #ifdef SO_NOSIGPIPE
   // Disable SIGPIPE for this socket.
   val = 1;
   if (setsockopt(fd, SOL_SOCKET, SO_NOSIGPIPE, CUPS_SOCAST &val, sizeof(val)))
-    DEBUG_printf(("httpAddrListen: setsockopt(SO_NOSIGPIPE) failed - %s", strerror(errno)));
+    DEBUG_printf("httpAddrListen: setsockopt(SO_NOSIGPIPE) failed - %s", strerror(errno));
 #endif // SO_NOSIGPIPE
 
   return (fd);
@@ -406,7 +406,7 @@ httpAddrLookup(
 					// Global data
 
 
-  DEBUG_printf(("httpAddrLookup(addr=%p, name=%p, namelen=%u)", (void *)addr, (void *)name, (unsigned)namelen));
+  DEBUG_printf("httpAddrLookup(addr=%p, name=%p, namelen=%u)", (void *)addr, (void *)name, (unsigned)namelen);
 
   // Range check input...
   if (!addr || !name || namelen <= 2)
@@ -459,7 +459,7 @@ httpAddrLookup(
     return (httpAddrGetString(addr, name, namelen));
   }
 
-  DEBUG_printf(("1httpAddrLookup: returning \"%s\"...", name));
+  DEBUG_printf("1httpAddrLookup: returning \"%s\"...", name);
 
   return (name);
 }

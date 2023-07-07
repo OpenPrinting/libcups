@@ -925,7 +925,7 @@ cupsFileOpenFd(int        fd,		/* I - File descriptor */
 
 #ifndef _WIN32
   if (fcntl(fp->fd, F_SETFD, fcntl(fp->fd, F_GETFD) | FD_CLOEXEC))
-    DEBUG_printf(("cupsFileOpenFd: fcntl(F_SETFD, FD_CLOEXEC) failed - %s", strerror(errno)));
+    DEBUG_printf("cupsFileOpenFd: fcntl(F_SETFD, FD_CLOEXEC) failed - %s", strerror(errno));
 #endif /* !_WIN32 */
 
   return (fp);

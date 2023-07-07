@@ -254,7 +254,7 @@ cups_globals_alloc(void)
 				// User profile (home) directory
     char	*userptr;	// Pointer into user profile
 
-    DEBUG_printf(("cups_globals_alloc: USERPROFILE=\"%s\"", userprofile));
+    DEBUG_printf("cups_globals_alloc: USERPROFILE=\"%s\"", userprofile);
 
     snprintf(userconfig, sizeof(userconfig), "%s/AppData/Local/cups", userprofile);
     for (userptr = userconfig; *userptr; userptr ++)
@@ -264,7 +264,7 @@ cups_globals_alloc(void)
         *userptr = '/';
     }
 
-    DEBUG_printf(("cups_globals_alloc: userconfig=\"%s\"", userconfig));
+    DEBUG_printf("cups_globals_alloc: userconfig=\"%s\"", userconfig);
   }
 
   cg->userconfig = userconfig;

@@ -54,7 +54,7 @@ cupsDoAuthentication(
   _cups_globals_t *cg = _cupsGlobals();	// Global data
 
 
-  DEBUG_printf(("cupsDoAuthentication(http=%p, method=\"%s\", resource=\"%s\")", (void *)http, method, resource));
+  DEBUG_printf("cupsDoAuthentication(http=%p, method=\"%s\", resource=\"%s\")", (void *)http, method, resource);
 
   // Range check input...
   if (!http)
@@ -63,8 +63,8 @@ cupsDoAuthentication(
   if (!http || !method || !resource)
     return (false);
 
-  DEBUG_printf(("2cupsDoAuthentication: digest_tries=%d, userpass=\"%s\"", http->digest_tries, http->userpass));
-  DEBUG_printf(("2cupsDoAuthentication: WWW-Authenticate=\"%s\"", httpGetField(http, HTTP_FIELD_WWW_AUTHENTICATE)));
+  DEBUG_printf("2cupsDoAuthentication: digest_tries=%d, userpass=\"%s\"", http->digest_tries, http->userpass);
+  DEBUG_printf("2cupsDoAuthentication: WWW-Authenticate=\"%s\"", httpGetField(http, HTTP_FIELD_WWW_AUTHENTICATE));
 
   // Clear the current authentication string...
   httpSetAuthString(http, NULL, NULL);
@@ -74,7 +74,7 @@ cupsDoAuthentication(
   {
     if (cups_do_local_auth(http))
     {
-      DEBUG_printf(("2cupsDoAuthentication: authstring=\"%s\"", http->authstring));
+      DEBUG_printf("2cupsDoAuthentication: authstring=\"%s\"", http->authstring);
 
       if (http->status == HTTP_STATUS_UNAUTHORIZED)
 	http->digest_tries ++;
@@ -92,7 +92,7 @@ cupsDoAuthentication(
   for (schemedata = cups_auth_scheme(www_auth, scheme, sizeof(scheme)); schemedata; schemedata = cups_auth_scheme(schemedata + strlen(scheme), scheme, sizeof(scheme)))
   {
     // Check the scheme name...
-    DEBUG_printf(("2cupsDoAuthentication: Trying scheme \"%s\"...", scheme));
+    DEBUG_printf("2cupsDoAuthentication: Trying scheme \"%s\"...", scheme);
 
     if (!_cups_strcasecmp(scheme, "Bearer"))
     {
@@ -128,7 +128,7 @@ cupsDoAuthentication(
     else if (_cups_strcasecmp(scheme, "Basic") && _cups_strcasecmp(scheme, "Digest") && _cups_strcasecmp(scheme, "Negotiate"))
     {
       // Other schemes not yet supported...
-      DEBUG_printf(("2cupsDoAuthentication: Scheme \"%s\" not yet supported.", scheme));
+      DEBUG_printf("2cupsDoAuthentication: Scheme \"%s\" not yet supported.", scheme);
       continue;
     }
 
@@ -166,7 +166,7 @@ cupsDoAuthentication(
 
     if (http->status == HTTP_STATUS_UNAUTHORIZED && http->digest_tries >= 3)
     {
-      DEBUG_printf(("1cupsDoAuthentication: Too many authentication tries (%d)", http->digest_tries));
+      DEBUG_printf("1cupsDoAuthentication: Too many authentication tries (%d)", http->digest_tries);
 
       http->status = HTTP_STATUS_CUPS_AUTHORIZATION_CANCELED;
       return (false);
@@ -203,7 +203,7 @@ cupsDoAuthentication(
 
   if (http->authstring && http->authstring[0])
   {
-    DEBUG_printf(("1cupsDoAuthentication: authstring=\"%s\".", http->authstring));
+    DEBUG_printf("1cupsDoAuthentication: authstring=\"%s\".", http->authstring);
 
     return (true);
   }
@@ -232,21 +232,21 @@ cups_auth_find(const char *www_authenticate,	// I - Pointer into WWW-Authenticat
   size_t	schemelen = strlen(scheme);	// Length of scheme
 
 
-  DEBUG_printf(("8cups_auth_find(www_authenticate=\"%s\", scheme=\"%s\"(%d))", www_authenticate, scheme, (int)schemelen));
+  DEBUG_printf("8cups_auth_find(www_authenticate=\"%s\", scheme=\"%s\"(%d))", www_authenticate, scheme, (int)schemelen);
 
   while (*www_authenticate)
   {
     // Skip leading whitespace and commas...
-    DEBUG_printf(("9cups_auth_find: Before whitespace: \"%s\"", www_authenticate));
+    DEBUG_printf("9cups_auth_find: Before whitespace: \"%s\"", www_authenticate);
     while (isspace(*www_authenticate & 255) || *www_authenticate == ',')
       www_authenticate ++;
-    DEBUG_printf(("9cups_auth_find: After whitespace: \"%s\"", www_authenticate));
+    DEBUG_printf("9cups_auth_find: After whitespace: \"%s\"", www_authenticate);
 
     // See if this is "Scheme" followed by whitespace or the end of the string.
     if (!strncmp(www_authenticate, scheme, schemelen) && (isspace(www_authenticate[schemelen] & 255) || www_authenticate[schemelen] == ',' || !www_authenticate[schemelen]))
     {
       // Yes, this is the start of the scheme-specific information...
-      DEBUG_printf(("9cups_auth_find: Returning \"%s\".", www_authenticate));
+      DEBUG_printf("9cups_auth_find: Returning \"%s\".", www_authenticate);
 
       return (www_authenticate);
     }
@@ -261,13 +261,13 @@ cups_auth_find(const char *www_authenticate,	// I - Pointer into WWW-Authenticat
         while (*www_authenticate && *www_authenticate != '\"')
           www_authenticate ++;
 
-        DEBUG_printf(("9cups_auth_find: After quoted: \"%s\"", www_authenticate));
+        DEBUG_printf("9cups_auth_find: After quoted: \"%s\"", www_authenticate);
       }
 
       www_authenticate ++;
     }
 
-    DEBUG_printf(("9cups_auth_find: After skip: \"%s\"", www_authenticate));
+    DEBUG_printf("9cups_auth_find: After skip: \"%s\"", www_authenticate);
   }
 
   DEBUG_puts("9cups_auth_find: Returning NULL.");
@@ -293,7 +293,7 @@ cups_auth_param(const char *scheme,		// I - Pointer to auth data
   bool		param;				// Is this a parameter?
 
 
-  DEBUG_printf(("8cups_auth_param(scheme=\"%s\", name=\"%s\", value=%p, valsize=%d)", scheme, name, (void *)value, (int)valsize));
+  DEBUG_printf("8cups_auth_param(scheme=\"%s\", name=\"%s\", value=%p, valsize=%d)", scheme, name, (void *)value, (int)valsize);
 
   while (!isspace(*scheme & 255) && *scheme)
     scheme ++;
@@ -332,7 +332,7 @@ cups_auth_param(const char *scheme,		// I - Pointer to auth data
 
       *valptr = '\0';
 
-      DEBUG_printf(("9cups_auth_param: Returning \"%s\".", value));
+      DEBUG_printf("9cups_auth_param: Returning \"%s\".", value);
 
       return (value);
     }
@@ -389,7 +389,7 @@ cups_auth_scheme(const char *www_authenticate,	// I - Pointer into WWW-Authentic
   bool		param;				// Is this a parameter?
 
 
-  DEBUG_printf(("8cups_auth_scheme(www_authenticate=\"%s\", scheme=%p, schemesize=%d)", www_authenticate, (void *)scheme, (int)schemesize));
+  DEBUG_printf("8cups_auth_scheme(www_authenticate=\"%s\", scheme=%p, schemesize=%d)", www_authenticate, (void *)scheme, (int)schemesize);
 
   while (*www_authenticate)
   {
@@ -423,7 +423,7 @@ cups_auth_scheme(const char *www_authenticate,	// I - Pointer into WWW-Authentic
     {
       *sptr = '\0';
 
-      DEBUG_printf(("9cups_auth_scheme: Returning \"%s\".", start));
+      DEBUG_printf("9cups_auth_scheme: Returning \"%s\".", start);
 
       return (start);
     }
@@ -448,7 +448,7 @@ cups_do_local_auth(http_t *http)	// I - HTTP connection to server
   char			hostaddr[256];	// Host address string
 
 
-  DEBUG_printf(("7cups_do_local_auth(http=%p) hostaddr=%s, hostname=\"%s\"", (void *)http, httpAddrGetString(http->hostaddr, hostaddr, sizeof(hostaddr)), http->hostname));
+  DEBUG_printf("7cups_do_local_auth(http=%p) hostaddr=%s, hostname=\"%s\"", (void *)http, httpAddrGetString(http->hostaddr, hostaddr, sizeof(hostaddr)), http->hostname);
 #endif // DEBUG
 
 #if defined(SO_PEERCRED) && defined(AF_LOCAL)
@@ -473,7 +473,7 @@ cups_do_local_auth(http_t *http)	// I - HTTP connection to server
     {
       httpSetAuthString(http, "PeerCred", username);
 
-      DEBUG_printf(("8cups_do_local_auth: Returning true, authstring=\"%s\".", http->authstring));
+      DEBUG_printf("8cups_do_local_auth: Returning true, authstring=\"%s\".", http->authstring);
 
       return (true);
     }

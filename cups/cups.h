@@ -33,8 +33,6 @@ extern "C" {
 #  define CUPS_FORMAT_AUTO		"application/octet-stream"
 #  define CUPS_FORMAT_JPEG		"image/jpeg"
 #  define CUPS_FORMAT_PDF		"application/pdf"
-#  define CUPS_FORMAT_POSTSCRIPT	"application/postscript"
-#  define CUPS_FORMAT_RAW		"application/vnd.cups-raw"
 #  define CUPS_FORMAT_TEXT		"text/plain"
 #  define CUPS_HTTP_DEFAULT		(http_t *)0
 #  define CUPS_JOBID_ALL		-1

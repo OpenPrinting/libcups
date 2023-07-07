@@ -1485,7 +1485,7 @@ cups_set_ssl_options(
   cc->ssl_max_version = max_version;
   cc->ssl_min_version = min_version;
 
-  DEBUG_printf(("4cups_set_ssl_options(cc=%p, value=\"%s\") options=%x, min_version=%d, max_version=%d", (void *)cc, value, options, min_version, max_version));
+  DEBUG_printf("4cups_set_ssl_options(cc=%p, value=\"%s\") options=%x, min_version=%d, max_version=%d", (void *)cc, value, options, min_version, max_version);
 }
 #endif /* HAVE_TLS */
 

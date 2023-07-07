@@ -170,7 +170,7 @@ cupsJSONExportFile(
   int	fd;				// JSON file
 
 
-  DEBUG_printf(("cupsJSONExportFile(json=%p, filename=\"%s\")", (void *)json, filename));
+  DEBUG_printf("cupsJSONExportFile(json=%p, filename=\"%s\")", (void *)json, filename);
 
   // Get the JSON as a string...
   if ((s = cupsJSONExportString(json)) == NULL)
@@ -218,7 +218,7 @@ cupsJSONExportString(cups_json_t *json)	// I - JSON root node
   struct lconv	*loc;			// Locale data
 
 
-  DEBUG_printf(("cupsJSONExportString(json=%p)", (void *)json));
+  DEBUG_printf("cupsJSONExportString(json=%p)", (void *)json);
 
   // Range check input...
   if (!json)
@@ -302,7 +302,7 @@ cupsJSONExportString(cups_json_t *json)	// I - JSON root node
     }
   }
 
-  DEBUG_printf(("2cupsJSONExportString: length=%u", (unsigned)length));
+  DEBUG_printf("2cupsJSONExportString: length=%u", (unsigned)length);
 
   // Allocate memory and fill it up...
   if ((s = malloc(length)) == NULL)
@@ -448,7 +448,7 @@ cupsJSONExportString(cups_json_t *json)	// I - JSON root node
 
   *ptr = '\0';
 
-  DEBUG_printf(("3cupsJSONExportString: Returning \"%s\".", s));
+  DEBUG_printf("3cupsJSONExportString: Returning \"%s\".", s);
 
   return (s);
 }
@@ -687,7 +687,7 @@ cupsJSONImportString(const char *s)	// I - JSON string
   static const char *sep = ",]} \n\r\t";// Separator chars
 
 
-  DEBUG_printf(("cupsJSONImportString(s=\"%s\")", s));
+  DEBUG_printf("cupsJSONImportString(s=\"%s\")", s);
 
   // Range check input...
   if (!s || *s != '{')
@@ -797,19 +797,19 @@ cupsJSONImportString(const char *s)	// I - JSON string
           s ++;
           if (!*s || !strchr("\"\\/bfnrtu", *s))
           {
-	    DEBUG_printf(("2cupsJSONImportString: Bad escape '\\%c'.", *s));
+	    DEBUG_printf("2cupsJSONImportString: Bad escape '\\%c'.", *s);
             goto invalid;
           }
           else if (*s == 'u' && (!isxdigit(s[1] & 255) || !isxdigit(s[2] & 255) || !isxdigit(s[3] & 255) || !isxdigit(s[4] & 255)))
           {
-	    DEBUG_printf(("2cupsJSONImportString: Bad escape '\\%s'.", s));
+	    DEBUG_printf("2cupsJSONImportString: Bad escape '\\%s'.", s);
             goto invalid;
           }
         }
         else if ((*s & 255) < ' ')
         {
           // Control characters are not allowed in a string...
-	  DEBUG_printf(("2cupsJSONImportString: Bad control character 0x%02x in string.", *s));
+	  DEBUG_printf("2cupsJSONImportString: Bad control character 0x%02x in string.", *s);
           goto invalid;
         }
       }
@@ -927,7 +927,7 @@ cupsJSONImportString(const char *s)	// I - JSON string
       count ++;
       prev = current;
 
-      DEBUG_printf(("3cupsJSONImportString: Added %s '%s'.", current->type == CUPS_JTYPE_KEY ? "key" : "string", current->value.string));
+      DEBUG_printf("3cupsJSONImportString: Added %s '%s'.", current->type == CUPS_JTYPE_KEY ? "key" : "string", current->value.string);
     }
     else if (strchr("0123456789-", *s))
     {
@@ -939,7 +939,7 @@ cupsJSONImportString(const char *s)	// I - JSON string
       count ++;
       prev = current;
 
-      DEBUG_printf(("3cupsJSONImportString: Added number %g.", current->value.number));
+      DEBUG_printf("3cupsJSONImportString: Added number %g.", current->value.number);
     }
     else if (*s == '{')
     {
@@ -1052,7 +1052,7 @@ cupsJSONImportString(const char *s)	// I - JSON string
     else
     {
       // Something else we don't understand...
-      DEBUG_printf(("2cupsJSONImportString: Unexpected '%s'.", s));
+      DEBUG_printf("2cupsJSONImportString: Unexpected '%s'.", s);
       goto invalid;
     }
   }
@@ -1063,7 +1063,7 @@ cupsJSONImportString(const char *s)	// I - JSON string
     goto invalid;
   }
 
-  DEBUG_printf(("3cupsJSONImportString: Returning %p (%u children)", (void *)json, (unsigned)cupsJSONGetCount(json)));
+  DEBUG_printf("3cupsJSONImportString: Returning %p (%u children)", (void *)json, (unsigned)cupsJSONGetCount(json));
 
   return (json);
 
