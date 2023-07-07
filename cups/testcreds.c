@@ -875,10 +875,10 @@ test_server(const char *host_port)	// I - Hostname/port
 
     if (state == HTTP_STATE_ERROR)
     {
-      if (httpError(http) == EPIPE)
+      if (httpGetError(http) == EPIPE)
 	fputs("testcreds: Client closed connection.\n", stderr);
       else
-	fprintf(stderr, "testcreds: Bad request line (%s).\n", strerror(httpError(http)));
+	fprintf(stderr, "testcreds: Bad request line (%s).\n", strerror(httpGetError(http)));
     }
     else if (state == HTTP_STATE_UNKNOWN_METHOD)
     {

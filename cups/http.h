@@ -452,7 +452,6 @@ extern http_uri_status_t httpAssembleURI(http_uri_coding_t encoding, char *uri, 
 extern http_uri_status_t httpAssembleURIf(http_uri_coding_t encoding, char *uri, size_t urilen, const char *scheme, const char *username, const char *host, int port, const char *resourcef, ...) _CUPS_FORMAT(8, 9) _CUPS_PUBLIC;
 extern char		*httpAssembleUUID(const char *server, int port, const char *name, int number, char *buffer, size_t bufsize) _CUPS_PUBLIC;
 
-extern bool		httpCheck(http_t *http) _CUPS_PUBLIC;
 extern void		httpClearFields(http_t *http) _CUPS_PUBLIC;
 extern void		httpClose(http_t *http) _CUPS_PUBLIC;
 extern void		httpClearCookie(http_t *http) _CUPS_PUBLIC;
@@ -468,7 +467,6 @@ extern size_t		httpCredentialsString(cups_array_t *credentials, char *buffer, si
 extern char		*httpDecode64(char *out, size_t *outlen, const char *in, const char **end) _CUPS_PUBLIC;
 
 extern char		*httpEncode64(char *out, size_t outlen, const char *in, size_t inlen, bool url) _CUPS_PUBLIC;
-extern int		httpError(http_t *http) _CUPS_PUBLIC;
 
 extern http_field_t	httpFieldValue(const char *name) _CUPS_PUBLIC;
 extern void		httpFlush(http_t *http) _CUPS_PUBLIC;
@@ -484,6 +482,7 @@ extern const char	*httpGetCookie(http_t *http) _CUPS_PUBLIC;
 extern const char	*httpGetDateString(time_t t, char *s, size_t slen) _CUPS_PUBLIC;
 extern time_t		httpGetDateTime(const char *s) _CUPS_PUBLIC;
 extern http_encryption_t httpGetEncryption(http_t *http) _CUPS_PUBLIC;
+extern int		httpGetError(http_t *http) _CUPS_PUBLIC;
 extern http_status_t	httpGetExpect(http_t *http) _CUPS_PUBLIC;
 extern int		httpGetFd(http_t *http) _CUPS_PUBLIC;
 extern const char	*httpGetField(http_t *http, http_field_t field) _CUPS_PUBLIC;

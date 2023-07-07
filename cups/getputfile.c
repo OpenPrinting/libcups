@@ -304,7 +304,7 @@ cupsPutFd(http_t     *http,		// I - Connection to server or @code CUPS_HTTP_DEFA
 
       while ((bytes = read(fd, buffer, sizeof(buffer))) > 0)
       {
-	if (httpCheck(http))
+	if (httpWait(http, 0))
 	{
           if ((status = httpUpdate(http)) != HTTP_STATUS_CONTINUE)
             break;

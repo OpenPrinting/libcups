@@ -28,8 +28,8 @@ Removed Functions
 The following CUPS 2.x API functions have been removed from the CUPS library:
 
 - Old class/printer functions: `cupsGetClasses` and `cupsGetPrinters`.
-- HTTP functions: `httpConnect2`, `httpConnectEncrypt`, `httpDecode64_2`, and
-  `httpEncode64_2`.
+- HTTP functions: `httpCheck`, `httpConnect2`, `httpConnectEncrypt`,
+  `httpDecode64_2`, and `httpEncode64_2`.
 - PPD file functions: `ppdClose`, `ppdCollect`, `ppdCollect2`, `ppdConflicts`,
   `ppdEmit`, `ppdEmitAfterOrder`, `ppdEmitFd`, `ppdEmitJCL`, `ppdEmitJCLEnd`,
   `ppdEmitString`, `ppdErrorString`, `ppdFindAttr`, `ppdFindChoice`,
@@ -92,6 +92,7 @@ Renamed Functions
 | `httpDelete`              | `httpWriteRequest`      |
 | `httpEncode64_2`          | `httpEncode64`          |
 | `httpEncryption`          | `httpSetEncryption`     |
+| `httpError`               | `httpGetError`          |
 | `httpGet`                 | `httpWriteRequest`      |
 | `httpGetDateString2`      | `httpGetDateString`     |
 | `httpGetLength2`          | `httpGetLength`         |

@@ -1,17 +1,13 @@
-/*
- * HTTP routines for CUPS.
- *
- * Copyright © 2021-2022 by OpenPrinting.
- * Copyright © 2007-2021 by Apple Inc.
- * Copyright © 1997-2007 by Easy Software Products, all rights reserved.
- *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more
- * information.
- */
-
-/*
- * Include necessary headers...
- */
+//
+// HTTP routines for CUPS.
+//
+// Copyright © 2021-2023 by OpenPrinting.
+// Copyright © 2007-2021 by Apple Inc.
+// Copyright © 1997-2007 by Easy Software Products, all rights reserved.
+//
+// Licensed under Apache License v2.0.  See the file "LICENSE" for more
+// information.
+//
 
 #include "cups-private.h"
 #include "debug-internal.h"
@@ -28,9 +24,9 @@
 #include <zlib.h>
 
 
-/*
- * Local functions...
- */
+//
+// Local functions...
+//
 
 static void		http_add_field(http_t *http, http_field_t field, const char *value, bool append);
 static void		http_content_coding_finish(http_t *http);
@@ -55,111 +51,112 @@ static bool		http_tls_upgrade(http_t *http);
 #endif // HAVE_TLS
 
 
-/*
- * Local globals...
- */
+//
+// Local globals...
+//
 
 static const char * const http_fields[HTTP_FIELD_MAX] =
-			{
-			  "Accept",
-			  "Accept-CH",
-			  "Accept-Encoding",
-			  "Accept-Language",
-			  "Accept-Ranges",
-			  "Access-Control-Allow-Credentials",
-			  "Access-Control-Allow-Headers",
-			  "Access-Control-Allow-Methods",
-			  "Access-Control-Allow-Origin",
-			  "Access-Control-Expose-Headers",
-			  "Access-Control-Max-Age",
-			  "Access-Control-Request-Headers",
-			  "Access-Control-Request-Method",
-			  "Age",
-			  "Allow",
-			  "Authentication-Control",
-			  "Authentication-Info",
-			  "Authorization",
-			  "Cache-Control",
-			  "Cache-Status",
-			  "Cert-Not-After",
-			  "Cert-Not-Before",
-			  "Connection",
-			  "Content-Disposition",
-			  "Content-Encoding",
-			  "Content-Language",
-			  "Content-Length",
-			  "Content-Location",
-			  "Content-Range",
-			  "Content-Security-Policy",
-			  "Content-Security-Policy-Report-Only",
-			  "Content-Type",
-			  "Cross-Origin-Embedder-Policy",
-			  "Cross-Origin-Embedder-Policy-Report-Only",
-			  "Cross-Origin-Opener-Policy",
-			  "Cross-Origin-Opener-Policy-Report-Only",
-			  "Cross-Origin-Resource-Policy",
-			  "DASL",
-			  "Date",
-			  "DAV",
-			  "Depth",
-			  "Destination",
-			  "ETag",
-			  "Expires",
-			  "Forwarded",
-			  "From",
-			  "Host",
-			  "If",
-			  "If-Match",
-			  "If-Modified-Since",
-			  "If-None-Match",
-			  "If-Range",
-			  "If-Schedule-Tag-Match",
-			  "If-Unmodified-since",
-			  "Keep-Alive",
-			  "Last-Modified",
-			  "Link",
-			  "Location",
-			  "Lock-Token",
-			  "Max-Forwards",
-			  "Optional-WWW-Authenticate",
-			  "Origin",
-			  "OSCORE",
-			  "Overwrite",
-			  "Pragma",
-			  "Proxy-Authenticate",
-			  "Proxy-Authentication-Info",
-			  "Proxy-Authorization",
-			  "Proxy-Status",
-			  "Public",
-			  "Range",
-			  "Referer",
-			  "Refresh",
-			  "Replay-Nonce",
-			  "Retry-After",
-			  "Schedule-Reply",
-			  "Schedule-Tag",
-			  "Server",
-			  "Strict-Transport-Security",
-			  "TE",
-			  "Timeout",
-			  "Trailer",
-			  "Transfer-Encoding",
-			  "Upgrade",
-			  "User-Agent",
-			  "Vary",
-			  "Via",
-			  "WWW-Authenticate",
-			  "X-Content-Options",
-			  "X-Frame-Options"
-			};
+{
+  "Accept",
+  "Accept-CH",
+  "Accept-Encoding",
+  "Accept-Language",
+  "Accept-Ranges",
+  "Access-Control-Allow-Credentials",
+  "Access-Control-Allow-Headers",
+  "Access-Control-Allow-Methods",
+  "Access-Control-Allow-Origin",
+  "Access-Control-Expose-Headers",
+  "Access-Control-Max-Age",
+  "Access-Control-Request-Headers",
+  "Access-Control-Request-Method",
+  "Age",
+  "Allow",
+  "Authentication-Control",
+  "Authentication-Info",
+  "Authorization",
+  "Cache-Control",
+  "Cache-Status",
+  "Cert-Not-After",
+  "Cert-Not-Before",
+  "Connection",
+  "Content-Disposition",
+  "Content-Encoding",
+  "Content-Language",
+  "Content-Length",
+  "Content-Location",
+  "Content-Range",
+  "Content-Security-Policy",
+  "Content-Security-Policy-Report-Only",
+  "Content-Type",
+  "Cross-Origin-Embedder-Policy",
+  "Cross-Origin-Embedder-Policy-Report-Only",
+  "Cross-Origin-Opener-Policy",
+  "Cross-Origin-Opener-Policy-Report-Only",
+  "Cross-Origin-Resource-Policy",
+  "DASL",
+  "Date",
+  "DAV",
+  "Depth",
+  "Destination",
+  "ETag",
+  "Expires",
+  "Forwarded",
+  "From",
+  "Host",
+  "If",
+  "If-Match",
+  "If-Modified-Since",
+  "If-None-Match",
+  "If-Range",
+  "If-Schedule-Tag-Match",
+  "If-Unmodified-since",
+  "Keep-Alive",
+  "Last-Modified",
+  "Link",
+  "Location",
+  "Lock-Token",
+  "Max-Forwards",
+  "Optional-WWW-Authenticate",
+  "Origin",
+  "OSCORE",
+  "Overwrite",
+  "Pragma",
+  "Proxy-Authenticate",
+  "Proxy-Authentication-Info",
+  "Proxy-Authorization",
+  "Proxy-Status",
+  "Public",
+  "Range",
+  "Referer",
+  "Refresh",
+  "Replay-Nonce",
+  "Retry-After",
+  "Schedule-Reply",
+  "Schedule-Tag",
+  "Server",
+  "Strict-Transport-Security",
+  "TE",
+  "Timeout",
+  "Trailer",
+  "Transfer-Encoding",
+  "Upgrade",
+  "User-Agent",
+  "Vary",
+  "Via",
+  "WWW-Authenticate",
+  "X-Content-Options",
+  "X-Frame-Options"
+};
 
 
-/*
- * 'httpAcceptConnection()' - Accept a new HTTP client connection from the
- *                            specified listening socket.
- *
- *
- */
+//
+// 'httpAcceptConnection()' - Accept a new HTTP client connection.
+//
+// This function accepts a new HTTP client connection from the specified
+// listening socket "fd".  The "blocking" argument specifies whether the new
+// HTTP connection is blocking.
+//
 
 http_t *				// O - HTTP connection or `NULL`
 httpAcceptConnection(int  fd,		// I - Listen socket file descriptor
@@ -171,28 +168,17 @@ httpAcceptConnection(int  fd,		// I - Listen socket file descriptor
   int			val;		// Socket option value
 
 
- /*
-  * Range check input...
-  */
-
+  // Range check input...
   if (fd < 0)
     return (NULL);
 
- /*
-  * Create the client connection...
-  */
-
+  // Create the client connection...
   memset(&addrlist, 0, sizeof(addrlist));
 
-  if ((http = http_create(NULL, 0, &addrlist, AF_UNSPEC,
-                          HTTP_ENCRYPTION_IF_REQUESTED, blocking,
-                          _HTTP_MODE_SERVER)) == NULL)
+  if ((http = http_create(NULL, 0, &addrlist, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, blocking, _HTTP_MODE_SERVER)) == NULL)
     return (NULL);
 
- /*
-  * Accept the client and get the remote address...
-  */
-
+  // Accept the client and get the remote address...
   addrlen = sizeof(http_addr_t);
 
   if ((http->fd = accept(fd, (struct sockaddr *)&(http->hostlist->addr), &addrlen)) < 0)
@@ -211,31 +197,21 @@ httpAcceptConnection(int  fd,		// I - Listen socket file descriptor
     httpAddrGetString(http->hostaddr, http->hostname, sizeof(http->hostname));
 
 #ifdef SO_NOSIGPIPE
- /*
-  * Disable SIGPIPE for this socket.
-  */
-
+  // Disable SIGPIPE for this socket.
   val = 1;
   if (setsockopt(http->fd, SOL_SOCKET, SO_NOSIGPIPE, CUPS_SOCAST &val, sizeof(val)))
     DEBUG_printf("httpAcceptConnection: setsockopt(SO_NOSIGPIPE) failed - %s", strerror(errno));
 #endif // SO_NOSIGPIPE
 
- /*
-  * Using TCP_NODELAY improves responsiveness, especially on systems
-  * with a slow loopback interface.  Since we write large buffers
-  * when sending print files and requests, there shouldn't be any
-  * performance penalty for this...
-  */
-
+  // Using TCP_NODELAY improves responsiveness, especially on systems with a
+  // slow loopback interface.  Since we write large buffers when sending print
+  // files and requests, there shouldn't be any performance penalty for this...
   val = 1;
   if (setsockopt(http->fd, IPPROTO_TCP, TCP_NODELAY, CUPS_SOCAST &val, sizeof(val)))
     DEBUG_printf("httpAcceptConnection: setsockopt(TCP_NODELAY) failed - %s", strerror(errno));
 
 #ifdef FD_CLOEXEC
- /*
-  * Close this socket when starting another process...
-  */
-
+  // Close this socket when starting another process...
   if (fcntl(http->fd, F_SETFD, FD_CLOEXEC))
     DEBUG_printf("httpAcceptConnection: fcntl(F_SETFD, FD_CLOEXEC) failed - %s", strerror(errno));
 #endif // FD_CLOEXEC
@@ -244,11 +220,11 @@ httpAcceptConnection(int  fd,		// I - Listen socket file descriptor
 }
 
 
-/*
- * 'httpAddCredential()' - Allocates and adds a single credential to an array.
- *
- * Use @code httpCreateCredentials@ to create a credentials array.
- */
+//
+// 'httpAddCredential()' - Allocates and adds a single credential to an array.
+//
+// Use @code httpCreateCredentials@ to create a credentials array.
+//
 
 bool					// O - `true` on success, `false` on error
 httpAddCredential(
@@ -280,38 +256,9 @@ httpAddCredential(
 }
 
 
-/*
- * 'httpBlocking()' - Set blocking/non-blocking behavior on a connection.
- */
-
-void
-httpSetBlocking(http_t *http,		// I - HTTP connection
-                bool   b)		// I - `true` = blocking, `false` = non-blocking
-{
-  if (http)
-  {
-    http->blocking = b;
-    http_set_wait(http);
-  }
-}
-
-
 //
-// 'httpCheck()' - Check to see if there is a pending response from the server.
+// 'httpClearCookie()' - Clear the cookie value(s).
 //
-
-bool					// O - `true` when data is available, `false` otherwise
-httpCheck(http_t *http)			// I - HTTP connection
-{
-  return (httpWait(http, 0));
-}
-
-
-/*
- * 'httpClearCookie()' - Clear the cookie value(s).
- *
- *
- */
 
 void
 httpClearCookie(http_t *http)		// I - HTTP connection
@@ -327,9 +274,9 @@ httpClearCookie(http_t *http)		// I - HTTP connection
 }
 
 
-/*
- * 'httpClearFields()' - Clear HTTP request fields.
- */
+//
+// 'httpClearFields()' - Clear HTTP request/response fields.
+//
 
 void
 httpClearFields(http_t *http)		// I - HTTP connection
@@ -360,32 +307,23 @@ httpClearFields(http_t *http)		// I - HTTP connection
 }
 
 
-/*
- * 'httpClose()' - Close an HTTP connection.
- */
+//
+// 'httpClose()' - Close a HTTP connection.
+//
 
 void
 httpClose(http_t *http)			// I - HTTP connection
 {
   DEBUG_printf("httpClose(http=%p)", (void *)http);
 
- /*
-  * Range check input...
-  */
-
+  // Range check input...
   if (!http)
     return;
 
- /*
-  * Close any open connection...
-  */
-
+  // Close any open connection...
   _httpDisconnect(http);
 
- /*
-  * Free memory used...
-  */
-
+  // Free memory used...
   httpAddrFreeList(http->hostlist);
 
   httpClearFields(http);
@@ -398,9 +336,9 @@ httpClose(http_t *http)			// I - HTTP connection
 }
 
 
-/*
- * 'httpCompareCredentials()' - Compare two sets of X.509 credentials.
- */
+//
+// 'httpCompareCredentials()' - Compare two sets of X.509 credentials.
+//
 
 bool					// O - `true` if they match, `false` if they do not
 httpCompareCredentials(
@@ -422,9 +360,25 @@ httpCompareCredentials(
 }
 
 
-/*
- * 'httpConnect()' - Connect to a HTTP server.
- */
+//
+// 'httpConnect()' - Connect to a HTTP server.
+//
+// This function creates a connection to a HTTP server.  The "host" and "port"
+// arguments specify a hostname or IP address and port number to use while the
+// "addrlist" argument specifies a list of addresses to use or `NULL` to do a
+// fresh lookup.  The "family" argument specifies the address family to use -
+// `AF_UNSPEC` to try both IPv4 and IPv6, `AF_INET` for IPv4, or `AF_INET6` for
+// IPv6.
+//
+// The "encryption" argument specifies whether to encrypt the connection and the
+// "blocking" argument specifies whether to use blocking behavior when reading
+// or writing data.
+//
+// The "msec" argument specifies how long to try to connect to the server or `0`
+// to just create an unconnected `http_t` object.  The "cancel" argument
+// specifies an integer variable that can be set to a non-zero value to cancel
+// the connection process.
+//
 
 http_t *				// O - New HTTP connection
 httpConnect(
@@ -442,24 +396,15 @@ httpConnect(
 
   DEBUG_printf("httpConnect(host=\"%s\", port=%d, addrlist=%p, family=%d, encryption=%d, blocking=%d, msec=%d, cancel=%p)", host, port, (void *)addrlist, family, encryption, blocking, msec, (void *)cancel);
 
- /*
-  * Create the HTTP structure...
-  */
-
+  // Create the HTTP structure...
   if ((http = http_create(host, port, addrlist, family, encryption, blocking, _HTTP_MODE_CLIENT)) == NULL)
     return (NULL);
 
- /*
-  * Optionally connect to the remote system...
-  */
-
+  // Optionally connect to the remote system...
   if (msec == 0 || httpReconnect(http, msec, cancel))
     return (http);
 
- /*
-  * Could not connect to any known address - bail out!
-  */
-
+  // Could not connect to any known address - bail out!
   httpClose(http);
 
   return (NULL);
@@ -470,7 +415,7 @@ httpConnect(
 // 'httpCreateCredentials()' - Create a new array of HTTP credentials.
 //
 // This function creates a new array of HTTP credentials for use with the
-// @link httpAddCredentials@ and @link httpSetCredentials@ functions.
+// @link httpAddCredential@ and @link httpSetCredentials@ functions.
 //
 
 cups_array_t *				// O - Array
@@ -491,9 +436,9 @@ httpCreateCredentials(
 }
 
 
-/*
- * '_httpDisconnect()' - Disconnect a HTTP connection.
- */
+//
+// '_httpDisconnect()' - Disconnect a HTTP connection.
+//
 
 void
 _httpDisconnect(http_t *http)		// I - HTTP connection
@@ -509,70 +454,10 @@ _httpDisconnect(http_t *http)		// I - HTTP connection
 }
 
 
-/*
- * 'httpSetEncryption()' - Set the required encryption on the link.
- */
-
-bool					// O - `true` on success, `false` on error
-httpSetEncryption(
-    http_t            *http,		// I - HTTP connection
-    http_encryption_t e)		// I - New encryption preference
-{
-  DEBUG_printf("httpSetEncryption(http=%p, e=%d)", (void *)http, e);
-
-#ifdef HAVE_TLS
-  if (!http)
-    return (false);
-
-  if (http->mode == _HTTP_MODE_CLIENT)
-  {
-    http->encryption = e;
-
-    if ((http->encryption == HTTP_ENCRYPTION_ALWAYS && !http->tls) || (http->encryption == HTTP_ENCRYPTION_NEVER && http->tls))
-      return (httpReconnect(http, 30000, NULL));
-    else if (http->encryption == HTTP_ENCRYPTION_REQUIRED && !http->tls)
-      return (http_tls_upgrade(http));
-    else
-      return (true);
-  }
-  else
-  {
-    if (e == HTTP_ENCRYPTION_NEVER && http->tls)
-      return (false);
-
-    http->encryption = e;
-    if (e != HTTP_ENCRYPTION_IF_REQUESTED && !http->tls)
-      return (_httpTLSStart(http));
-    else
-      return (true);
-  }
-#else
-  if (e == HTTP_ENCRYPTION_ALWAYS || e == HTTP_ENCRYPTION_REQUIRED)
-    return (false);
-  else
-    return (true);
-#endif // HAVE_TLS
-}
-
-
-/*
- * 'httpError()' - Get the last error on a connection.
- */
-
-int					// O - Error code (errno) value
-httpError(http_t *http)			// I - HTTP connection
-{
-  if (http)
-    return (http->error);
-  else
-    return (EINVAL);
-}
-
-
-/*
- * 'httpFieldValue()' - Return the HTTP field enumeration value for a field
- *                      name.
- */
+//
+// 'httpFieldValue()' - Return the HTTP field enumeration value for a field
+//                      name.
+//
 
 http_field_t				// O - Field index
 httpFieldValue(const char *name)	// I - String name
@@ -588,9 +473,9 @@ httpFieldValue(const char *name)	// I - String name
 }
 
 
-/*
- * 'httpFlush()' - Flush data read from a HTTP connection.
- */
+//
+// 'httpFlush()' - Flush data read from a HTTP connection.
+//
 
 void
 httpFlush(http_t *http)			// I - HTTP connection
@@ -656,11 +541,11 @@ httpFlush(http_t *http)			// I - HTTP connection
 }
 
 
-/*
- * 'httpFlushWrite()' - Flush data written to a HTTP connection.
- *
- *
- */
+//
+// 'httpFlushWrite()' - Flush data written to a HTTP connection.
+//
+//
+//
 
 int					// O - Bytes written or -1 on error
 httpFlushWrite(http_t *http)		// I - HTTP connection
@@ -690,9 +575,9 @@ httpFlushWrite(http_t *http)		// I - HTTP connection
 }
 
 
-/*
- * 'httpFreeCredentials()' - Free an array of credentials.
- */
+//
+// 'httpFreeCredentials()' - Free an array of credentials.
+//
 
 void
 httpFreeCredentials(
@@ -702,11 +587,11 @@ httpFreeCredentials(
 }
 
 
-/*
- * 'httpGetActivity()' - Get the most recent activity for a connection.
- *
- * The return value is the time in seconds of the last read or write.
- */
+//
+// 'httpGetActivity()' - Get the most recent activity for a connection.
+//
+// The return value is the time in seconds of the last read or write.
+//
 
 time_t					// O - Time of last read or write
 httpGetActivity(http_t *http)		// I - HTTP connection
@@ -715,16 +600,16 @@ httpGetActivity(http_t *http)		// I - HTTP connection
 }
 
 
-/*
- * 'httpGetAuthString()' - Get the current authorization string.
- *
- * The authorization string is set by @link cupsDoAuthentication@ and
- * @link httpSetAuthString@.  Use @link httpGetAuthString@ to retrieve the
- * string to use with @link httpSetField@ for the
- * `HTTP_FIELD_AUTHORIZATION` value.
- *
- *
- */
+//
+// 'httpGetAuthString()' - Get the current authorization string.
+//
+// The authorization string is set by @link cupsDoAuthentication@ and
+// @link httpSetAuthString@.  Use @link httpGetAuthString@ to retrieve the
+// string to use with @link httpSetField@ for the
+// `HTTP_FIELD_AUTHORIZATION` value.
+//
+//
+//
 
 char *					// O - Authorization string
 httpGetAuthString(http_t *http)		// I - HTTP connection
@@ -736,11 +621,11 @@ httpGetAuthString(http_t *http)		// I - HTTP connection
 }
 
 
-/*
- * 'httpGetBlocking()' - Get the blocking/non-blocking state of a connection.
- *
- *
- */
+//
+// 'httpGetBlocking()' - Get the blocking/non-blocking state of a connection.
+//
+//
+//
 
 bool					// O - `true` if blocking, `false` if non-blocking
 httpGetBlocking(http_t *http)		// I - HTTP connection
@@ -749,17 +634,17 @@ httpGetBlocking(http_t *http)		// I - HTTP connection
 }
 
 
-/*
- * 'httpGetContentEncoding()' - Get a common content encoding, if any, between
- *                              the client and server.
- *
- * This function uses the value of the Accepts-Encoding HTTP header and must be
- * called after receiving a response from the server or a request from the
- * client.  The value returned can be use in subsequent requests (for clients)
- * or in the response (for servers) in order to compress the content stream.
- *
- *
- */
+//
+// 'httpGetContentEncoding()' - Get a common content encoding, if any, between
+//                              the client and server.
+//
+// This function uses the value of the Accepts-Encoding HTTP header and must be
+// called after receiving a response from the server or a request from the
+// client.  The value returned can be use in subsequent requests (for clients)
+// or in the response (for servers) in order to compress the content stream.
+//
+//
+//
 
 const char *				/* O - Content-Coding value or
 					       `NULL` for the identity
@@ -835,11 +720,11 @@ httpGetContentEncoding(http_t *http)	// I - HTTP connection
 }
 
 
-/*
- * 'httpGetCookie()' - Get any cookie data from the response.
- *
- *
- */
+//
+// 'httpGetCookie()' - Get any cookie data from the response.
+//
+//
+//
 
 const char *				// O - Cookie data or `NULL`
 httpGetCookie(http_t *http)		// I - HTTP connection
@@ -848,13 +733,13 @@ httpGetCookie(http_t *http)		// I - HTTP connection
 }
 
 
-/*
- * 'httpGetEncryption()' - Get the current encryption mode of a connection.
- *
- * This function returns the encryption mode for the connection. Use the
- * @link httpIsEncrypted@ function to determine whether a TLS session has
- * been established.
- */
+//
+// 'httpGetEncryption()' - Get the current encryption mode of a connection.
+//
+// This function returns the encryption mode for the connection. Use the
+// @link httpIsEncrypted@ function to determine whether a TLS session has
+// been established.
+//
 
 http_encryption_t			// O - Current encryption mode
 httpGetEncryption(http_t *http)		// I - HTTP connection
@@ -863,14 +748,28 @@ httpGetEncryption(http_t *http)		// I - HTTP connection
 }
 
 
-/*
- * 'httpGetExpect()' - Get the value of the Expect header, if any.
- *
- * Returns `HTTP_STATUS_NONE` if there is no Expect header, otherwise
- * returns the expected HTTP status code, typically `HTTP_STATUS_CONTINUE`.
- *
- *
- */
+//
+// 'httpGetError()' - Get the last error on a connection.
+//
+
+int					// O - Error code (errno) value
+httpGetError(http_t *http)		// I - HTTP connection
+{
+  if (http)
+    return (http->error);
+  else
+    return (EINVAL);
+}
+
+
+//
+// 'httpGetExpect()' - Get the value of the Expect header, if any.
+//
+// Returns `HTTP_STATUS_NONE` if there is no Expect header, otherwise
+// returns the expected HTTP status code, typically `HTTP_STATUS_CONTINUE`.
+//
+//
+//
 
 http_status_t				// O - Expect: status, if any
 httpGetExpect(http_t *http)		// I - HTTP connection
@@ -882,11 +781,11 @@ httpGetExpect(http_t *http)		// I - HTTP connection
 }
 
 
-/*
- * 'httpGetFd()' - Get the file descriptor associated with a connection.
- *
- *
- */
+//
+// 'httpGetFd()' - Get the file descriptor associated with a connection.
+//
+//
+//
 
 int					// O - File descriptor or -1 if none
 httpGetFd(http_t *http)			// I - HTTP connection
@@ -895,9 +794,9 @@ httpGetFd(http_t *http)			// I - HTTP connection
 }
 
 
-/*
- * 'httpGetField()' - Get a field value from a request/response.
- */
+//
+// 'httpGetField()' - Get a field value from a request/response.
+//
 
 const char *				// O - Field value
 httpGetField(http_t       *http,	// I - HTTP connection
@@ -912,9 +811,9 @@ httpGetField(http_t       *http,	// I - HTTP connection
 }
 
 
-/*
- * 'httpGetKeepAlive()' - Get the current Keep-Alive state of the connection.
- */
+//
+// 'httpGetKeepAlive()' - Get the current Keep-Alive state of the connection.
+//
 
 http_keepalive_t			// O - Keep-Alive state
 httpGetKeepAlive(http_t *http)		// I - HTTP connection
@@ -923,15 +822,15 @@ httpGetKeepAlive(http_t *http)		// I - HTTP connection
 }
 
 
-/*
- * 'httpGetLength()' - Get the amount of data remaining from the content-length
- *                     or transfer-encoding fields.
- *
- * This function returns the complete content length, even for content larger
- * than 2^31 - 1.
- *
- *
- */
+//
+// 'httpGetLength()' - Get the amount of data remaining from the content-length
+//                     or transfer-encoding fields.
+//
+// This function returns the complete content length, even for content larger
+// than 2^31 - 1.
+//
+//
+//
 
 off_t					// O - Content length
 httpGetLength(http_t *http)		// I - HTTP connection
@@ -989,9 +888,9 @@ httpGetLength(http_t *http)		// I - HTTP connection
 }
 
 
-/*
- * 'httpGetPending()' - Get the number of bytes that are buffered for writing.
- */
+//
+// 'httpGetPending()' - Get the number of bytes that are buffered for writing.
+//
 
 size_t					// O - Number of bytes buffered
 httpGetPending(http_t *http)		// I - HTTP connection
@@ -1000,9 +899,9 @@ httpGetPending(http_t *http)		// I - HTTP connection
 }
 
 
-/*
- * 'httpGetReady()' - Get the number of bytes that can be read without blocking.
- */
+//
+// 'httpGetReady()' - Get the number of bytes that can be read without blocking.
+//
 
 size_t					// O - Number of bytes available
 httpGetReady(http_t *http)		// I - HTTP connection
@@ -1020,13 +919,13 @@ httpGetReady(http_t *http)		// I - HTTP connection
 }
 
 
-/*
- * 'httpGetRemaining()' - Get the number of remaining bytes in the message
- *                        body or current chunk.
- *
- * The @link httpIsChunked@ function can be used to determine whether the
- * message body is chunked or fixed-length.
- */
+//
+// 'httpGetRemaining()' - Get the number of remaining bytes in the message
+//                        body or current chunk.
+//
+// The @link httpIsChunked@ function can be used to determine whether the
+// message body is chunked or fixed-length.
+//
 
 size_t					// O - Remaining bytes
 httpGetRemaining(http_t *http)		// I - HTTP connection
@@ -1035,9 +934,9 @@ httpGetRemaining(http_t *http)		// I - HTTP connection
 }
 
 
-/*
- * 'httpGets()' - Get a line of text from a HTTP connection.
- */
+//
+// 'httpGets()' - Get a line of text from a HTTP connection.
+//
 
 char *					// O - Line or `NULL`
 httpGets(http_t *http,			// I - HTTP connection
@@ -1208,9 +1107,9 @@ httpGets(http_t *http,			// I - HTTP connection
 }
 
 
-/*
- * 'httpGetState()' - Get the current state of the HTTP request.
- */
+//
+// 'httpGetState()' - Get the current state of the HTTP request.
+//
 
 http_state_t				// O - HTTP state
 httpGetState(http_t *http)		// I - HTTP connection
@@ -1219,11 +1118,11 @@ httpGetState(http_t *http)		// I - HTTP connection
 }
 
 
-/*
- * 'httpGetStatus()' - Get the status of the last HTTP request.
- *
- *
- */
+//
+// 'httpGetStatus()' - Get the status of the last HTTP request.
+//
+//
+//
 
 http_status_t				// O - HTTP status
 httpGetStatus(http_t *http)		// I - HTTP connection
@@ -1232,11 +1131,11 @@ httpGetStatus(http_t *http)		// I - HTTP connection
 }
 
 
-/*
- * 'httpGetSubField()' - Get a sub-field value.
- *
- *
- */
+//
+// 'httpGetSubField()' - Get a sub-field value.
+//
+//
+//
 
 char *					// O - Value or `NULL`
 httpGetSubField(http_t       *http,	// I - HTTP connection
@@ -1366,9 +1265,9 @@ httpGetSubField(http_t       *http,	// I - HTTP connection
 }
 
 
-/*
- * 'httpGetVersion()' - Get the HTTP version at the other end.
- */
+//
+// 'httpGetVersion()' - Get the HTTP version at the other end.
+//
 
 http_version_t				// O - Version number
 httpGetVersion(http_t *http)		// I - HTTP connection
@@ -1377,10 +1276,10 @@ httpGetVersion(http_t *http)		// I - HTTP connection
 }
 
 
-/*
- * 'httpInitialize()' - Initialize the HTTP interface library and set the
- *                      default HTTP proxy (if any).
- */
+//
+// 'httpInitialize()' - Initialize the HTTP interface library and set the
+//                      default HTTP proxy (if any).
+//
 
 void
 httpInitialize(void)
@@ -1436,11 +1335,11 @@ httpIsChunked(http_t *http)		// I - HTTP connection
 }
 
 
-/*
- * 'httpIsEncrypted()' - Report whether a connection is encrypted.
- *
- * This function returns `true` if the connection is currently encrypted.
- */
+//
+// 'httpIsEncrypted()' - Report whether a connection is encrypted.
+//
+// This function returns `true` if the connection is currently encrypted.
+//
 
 bool					// O - `true` if encrypted, `false` if not
 httpIsEncrypted(http_t *http)		// I - HTTP connection
@@ -1449,17 +1348,17 @@ httpIsEncrypted(http_t *http)		// I - HTTP connection
 }
 
 
-/*
- * 'httpPeek()' - Peek at data from a HTTP connection.
- *
- * This function copies available data from the given HTTP connection, reading
- * a buffer as needed.  The data is still available for reading using
- * @link httpRead@.
- *
- * For non-blocking connections the usual timeouts apply.
- *
- *
- */
+//
+// 'httpPeek()' - Peek at data from a HTTP connection.
+//
+// This function copies available data from the given HTTP connection, reading
+// a buffer as needed.  The data is still available for reading using
+// @link httpRead@.
+//
+// For non-blocking connections the usual timeouts apply.
+//
+//
+//
 
 ssize_t					// O - Number of bytes copied
 httpPeek(http_t *http,			// I - HTTP connection
@@ -1685,11 +1584,11 @@ httpPeek(http_t *http,			// I - HTTP connection
 }
 
 
-/*
- * 'httpPrintf()' - Print a formatted string to a HTTP connection.
- *
- * @private@
- */
+//
+// 'httpPrintf()' - Print a formatted string to a HTTP connection.
+//
+// @private@
+//
 
 ssize_t					// O - Number of bytes written or `-1` on error
 httpPrintf(http_t     *http,		// I - HTTP connection
@@ -1733,11 +1632,11 @@ httpPrintf(http_t     *http,		// I - HTTP connection
 }
 
 
-/*
- * 'httpRead()' - Read data from a HTTP connection.
- *
- *
- */
+//
+// 'httpRead()' - Read data from a HTTP connection.
+//
+//
+//
 
 ssize_t					// O - Number of bytes read
 httpRead(http_t *http,			// I - HTTP connection
@@ -1920,11 +1819,11 @@ httpRead(http_t *http,			// I - HTTP connection
 }
 
 
-/*
- * 'httpReadRequest()' - Read a HTTP request from a connection.
- *
- *
- */
+//
+// 'httpReadRequest()' - Read a HTTP request from a connection.
+//
+//
+//
 
 http_state_t				// O - New state of connection
 httpReadRequest(http_t *http,		// I - HTTP connection
@@ -2204,14 +2103,14 @@ httpReconnect(http_t *http,		// I - HTTP connection
 }
 
 
-/*
- * 'httpSetAuthString()' - Set the current authorization string.
- *
- * This function stores a copy of the current authorization string in the HTTP
- * connection object.  You must still call @link httpSetField@ to set
- * `HTTP_FIELD_AUTHORIZATION` prior to issuing a HTTP request using
- * @link httpWriteRequest@.
- */
+//
+// 'httpSetAuthString()' - Set the current authorization string.
+//
+// This function stores a copy of the current authorization string in the HTTP
+// connection object.  You must still call @link httpSetField@ to set
+// `HTTP_FIELD_AUTHORIZATION` prior to issuing a HTTP request using
+// @link httpWriteRequest@.
+//
 
 void
 httpSetAuthString(http_t     *http,	// I - HTTP connection
@@ -2254,10 +2153,30 @@ httpSetAuthString(http_t     *http,	// I - HTTP connection
 }
 
 
-/*
- * 'httpSetCredentials()' - Set the credentials associated with an encrypted
- *			    connection.
- */
+//
+// 'httpSetBlocking()' - Set blocking/non-blocking behavior on a connection.
+//
+// This function sets whether a connection uses blocking behavior when reading
+// or writing data.  The "http" argument specifies the HTTP connection and the
+// "blocking" argument specifies whether to use blocking behavior.
+//
+
+void
+httpSetBlocking(http_t *http,		// I - HTTP connection
+                bool   blocking)	// I - `true` = blocking, `false` = non-blocking
+{
+  if (http)
+  {
+    http->blocking = blocking;
+    http_set_wait(http);
+  }
+}
+
+
+//
+// 'httpSetCredentials()' - Set the credentials associated with an encrypted
+//			    connection.
+//
 
 bool					// O - `true` on success, `false` on error
 httpSetCredentials(
@@ -2277,9 +2196,9 @@ httpSetCredentials(
 }
 
 
-/*
- * 'httpSetCookie()' - Set the cookie value(s).
- */
+//
+// 'httpSetCookie()' - Set the cookie value(s).
+//
 
 void
 httpSetCookie(http_t     *http,		// I - Connection
@@ -2297,14 +2216,14 @@ httpSetCookie(http_t     *http,		// I - Connection
 }
 
 
-/*
- * 'httpSetDefaultField()' - Set the default value of an HTTP header.
- *
- * This function sets the default value for an HTTP header.
- *
- * > *Note:* Currently only the `HTTP_FIELD_ACCEPT_ENCODING`,
- * > `HTTP_FIELD_SERVER`, and `HTTP_FIELD_USER_AGENT` fields can be set.
- */
+//
+// 'httpSetDefaultField()' - Set the default value of a HTTP header.
+//
+// This function sets the default value for a HTTP header.
+//
+// > *Note:* Currently only the `HTTP_FIELD_ACCEPT_ENCODING`,
+// > `HTTP_FIELD_SERVER`, and `HTTP_FIELD_USER_AGENT` fields can be set.
+//
 
 void
 httpSetDefaultField(http_t       *http,	// I - HTTP connection
@@ -2319,6 +2238,52 @@ httpSetDefaultField(http_t       *http,	// I - HTTP connection
   free(http->default_fields[field]);
 
   http->default_fields[field] = value ? strdup(value) : NULL;
+}
+
+
+//
+// 'httpSetEncryption()' - Set the required encryption on a HTTP connection.
+//
+
+bool					// O - `true` on success, `false` on error
+httpSetEncryption(
+    http_t            *http,		// I - HTTP connection
+    http_encryption_t e)		// I - New encryption preference
+{
+  DEBUG_printf("httpSetEncryption(http=%p, e=%d)", (void *)http, e);
+
+#ifdef HAVE_TLS
+  if (!http)
+    return (false);
+
+  if (http->mode == _HTTP_MODE_CLIENT)
+  {
+    http->encryption = e;
+
+    if ((http->encryption == HTTP_ENCRYPTION_ALWAYS && !http->tls) || (http->encryption == HTTP_ENCRYPTION_NEVER && http->tls))
+      return (httpReconnect(http, 30000, NULL));
+    else if (http->encryption == HTTP_ENCRYPTION_REQUIRED && !http->tls)
+      return (http_tls_upgrade(http));
+    else
+      return (true);
+  }
+  else
+  {
+    if (e == HTTP_ENCRYPTION_NEVER && http->tls)
+      return (false);
+
+    http->encryption = e;
+    if (e != HTTP_ENCRYPTION_IF_REQUESTED && !http->tls)
+      return (_httpTLSStart(http));
+    else
+      return (true);
+  }
+#else
+  if (e == HTTP_ENCRYPTION_ALWAYS || e == HTTP_ENCRYPTION_REQUIRED)
+    return (false);
+  else
+    return (true);
+#endif // HAVE_TLS
 }
 
 
@@ -2341,9 +2306,9 @@ httpSetExpect(http_t        *http,	// I - HTTP connection
 }
 
 
-/*
- * 'httpSetField()' - Set the value of an HTTP header.
- */
+//
+// 'httpSetField()' - Set the value of a HTTP header.
+//
 
 void
 httpSetField(http_t       *http,	// I - HTTP connection
@@ -2359,9 +2324,9 @@ httpSetField(http_t       *http,	// I - HTTP connection
 }
 
 
-/*
- * 'httpSetKeepAlive()' - Set the current Keep-Alive state of a connection.
- */
+//
+// 'httpSetKeepAlive()' - Set the current Keep-Alive state of a connection.
+//
 
 void
 httpSetKeepAlive(
@@ -2373,13 +2338,13 @@ httpSetKeepAlive(
 }
 
 
-/*
- * 'httpSetLength()' - Set the `Content-Length` and `Transfer-Encoding` fields.
- *
- * This function sets the `Content-Length` and `Transfer-Encoding` fields.
- * Passing `0` to the "length" argument specifies a chunked transfer encoding
- * while other values specify a fixed `Content-Length`.
- */
+//
+// 'httpSetLength()' - Set the `Content-Length` and `Transfer-Encoding` fields.
+//
+// This function sets the `Content-Length` and `Transfer-Encoding` fields.
+// Passing `0` to the "length" argument specifies a chunked transfer encoding
+// while other values specify a fixed `Content-Length`.
+//
 
 void
 httpSetLength(http_t *http,		// I - HTTP connection
@@ -2409,7 +2374,7 @@ httpSetLength(http_t *http,		// I - HTTP connection
 //
 // 'httpSetTimeout()' - Set read/write timeouts and an optional callback.
 //
-// This function sets the read/write timeouts for an HTTP connection with an
+// This function sets the read/write timeouts for a HTTP connection with an
 // optional timeout callback.  The timeout callback receives both the HTTP
 // connection pointer and a user data pointer, and returns `true` to continue or
 // `false` to error (time) out.
@@ -2444,9 +2409,9 @@ httpSetTimeout(
 }
 
 
-/*
- * 'httpShutdown()' - Shutdown one side of an HTTP connection.
- */
+//
+// 'httpShutdown()' - Shutdown one side of a HTTP connection.
+//
 
 void
 httpShutdown(http_t *http)		// I - HTTP connection
@@ -2467,12 +2432,12 @@ httpShutdown(http_t *http)		// I - HTTP connection
 }
 
 
-/*
- * '_httpUpdate()' - Update the current HTTP status for incoming data.
- *
- * Note: Unlike httpUpdate(), this function does not flush pending write data
- * and only retrieves a single status line from the HTTP connection.
- */
+//
+// '_httpUpdate()' - Update the current HTTP status for incoming data.
+//
+// Note: Unlike httpUpdate(), this function does not flush pending write data
+// and only retrieves a single status line from the HTTP connection.
+//
 
 int					// O - 1 to continue, 0 to stop
 _httpUpdate(http_t        *http,	// I - HTTP connection
@@ -2661,9 +2626,9 @@ _httpUpdate(http_t        *http,	// I - HTTP connection
 }
 
 
-/*
- * 'httpUpdate()' - Update the current HTTP state for incoming data.
- */
+//
+// 'httpUpdate()' - Update the current HTTP state for incoming data.
+//
 
 http_status_t				// O - HTTP status
 httpUpdate(http_t *http)		// I - HTTP connection
@@ -2825,11 +2790,11 @@ httpWait(http_t *http,			// I - HTTP connection
 }
 
 
-/*
- * 'httpWrite()' - Write data to a HTTP connection.
- *
- *
- */
+//
+// 'httpWrite()' - Write data to a HTTP connection.
+//
+//
+//
 
 ssize_t					// O - Number of bytes written
 httpWrite(http_t     *http,		// I - HTTP connection
@@ -3229,9 +3194,9 @@ httpWriteResponse(http_t        *http,	// I - HTTP connection
 }
 
 
-/*
- * 'http_add_field()' - Add a value for a HTTP field, appending if needed.
- */
+//
+// 'http_add_field()' - Add a value for a HTTP field, appending if needed.
+//
 
 static void
 http_add_field(http_t       *http,	// I - HTTP connection
@@ -3341,9 +3306,9 @@ http_add_field(http_t       *http,	// I - HTTP connection
 }
 
 
-/*
- * 'http_content_coding_finish()' - Finish doing any content encoding.
- */
+//
+// 'http_content_coding_finish()' - Finish doing any content encoding.
+//
 
 static void
 http_content_coding_finish(
@@ -3415,9 +3380,9 @@ http_content_coding_finish(
 }
 
 
-/*
- * 'http_content_coding_start()' - Start doing content encoding.
- */
+//
+// 'http_content_coding_start()' - Start doing content encoding.
+//
 
 static void
 http_content_coding_start(
@@ -3569,9 +3534,9 @@ http_content_coding_start(
 }
 
 
-/*
- * 'http_create()' - Create an unconnected HTTP connection.
- */
+//
+// 'http_create()' - Create an unconnected HTTP connection.
+//
 
 static http_t *				// O - HTTP connection
 http_create(
@@ -3655,9 +3620,9 @@ http_create(
 
 
 #ifdef DEBUG
-/*
- * 'http_debug_hex()' - Do a hex dump of a buffer.
- */
+//
+// 'http_debug_hex()' - Do a hex dump of a buffer.
+//
 
 static void
 http_debug_hex(const char *prefix,	// I - Prefix for line
@@ -3724,12 +3689,12 @@ http_free_credential(
 }
 
 
-/*
- * 'http_read()' - Read a buffer from a HTTP connection.
- *
- * This function does the low-level read from the socket, retrying and timing
- * out as needed.
- */
+//
+// 'http_read()' - Read a buffer from a HTTP connection.
+//
+// This function does the low-level read from the socket, retrying and timing
+// out as needed.
+//
 
 static ssize_t				// O - Number of bytes read or -1 on error
 http_read(http_t *http,			// I - HTTP connection
@@ -3823,11 +3788,11 @@ http_read(http_t *http,			// I - HTTP connection
 }
 
 
-/*
- * 'http_read_buffered()' - Do a buffered read from a HTTP connection.
- *
- * This function reads data from the HTTP buffer or from the socket, as needed.
- */
+//
+// 'http_read_buffered()' - Do a buffered read from a HTTP connection.
+//
+// This function reads data from the HTTP buffer or from the socket, as needed.
+//
 
 static ssize_t				// O - Number of bytes read or -1 on error
 http_read_buffered(http_t *http,	// I - HTTP connection
@@ -3861,12 +3826,12 @@ http_read_buffered(http_t *http,	// I - HTTP connection
 }
 
 
-/*
- * 'http_read_chunk()' - Read a chunk from a HTTP connection.
- *
- * This function reads and validates the chunk length, then does a buffered read
- * returning the number of bytes placed in the buffer.
- */
+//
+// 'http_read_chunk()' - Read a chunk from a HTTP connection.
+//
+// This function reads and validates the chunk length, then does a buffered read
+// returning the number of bytes placed in the buffer.
+//
 
 static ssize_t				// O - Number of bytes read or -1 on error
 http_read_chunk(http_t *http,		// I - HTTP connection
@@ -3926,9 +3891,9 @@ http_read_chunk(http_t *http,		// I - HTTP connection
 }
 
 
-/*
- * 'http_send()' - Send a request with all fields and the trailing blank line.
- */
+//
+// 'http_send()' - Send a request with all fields and the trailing blank line.
+//
 
 static bool				// O - `true` on success, `false` on error
 http_send(http_t       *http,		// I - HTTP connection
@@ -4129,9 +4094,9 @@ http_send(http_t       *http,		// I - HTTP connection
 }
 
 
-/*
- * 'http_set_length()' - Set the data_encoding and data_remaining values.
- */
+//
+// 'http_set_length()' - Set the data_encoding and data_remaining values.
+//
 
 static off_t				// O - Remainder or -1 on error
 http_set_length(http_t *http)		// I - Connection
@@ -4167,9 +4132,9 @@ http_set_length(http_t *http)		// I - Connection
   return (remaining);
 }
 
-/*
- * 'http_set_timeout()' - Set the socket timeout values.
- */
+//
+// 'http_set_timeout()' - Set the socket timeout values.
+//
 
 static void
 http_set_timeout(int    fd,		// I - File descriptor
@@ -4199,9 +4164,9 @@ http_set_timeout(int    fd,		// I - File descriptor
 }
 
 
-/*
- * 'http_set_wait()' - Set the default wait value for reads.
- */
+//
+// 'http_set_wait()' - Set the default wait value for reads.
+//
 
 static void
 http_set_wait(http_t *http)		// I - HTTP connection
@@ -4219,9 +4184,9 @@ http_set_wait(http_t *http)		// I - HTTP connection
 
 
 #ifdef HAVE_TLS
-/*
- * 'http_tls_upgrade()' - Force upgrade to TLS encryption.
- */
+//
+// 'http_tls_upgrade()' - Force upgrade to TLS encryption.
+//
 
 static bool				// O - `true` on success, `false` on failure
 http_tls_upgrade(http_t *http)		// I - HTTP connection
@@ -4289,9 +4254,9 @@ http_tls_upgrade(http_t *http)		// I - HTTP connection
 #endif // HAVE_TLS
 
 
-/*
- * 'http_write()' - Write a buffer to a HTTP connection.
- */
+//
+// 'http_write()' - Write a buffer to a HTTP connection.
+//
 
 static ssize_t				// O - Number of bytes written
 http_write(http_t     *http,		// I - HTTP connection
@@ -4416,9 +4381,9 @@ http_write(http_t     *http,		// I - HTTP connection
 }
 
 
-/*
- * 'http_write_chunk()' - Write a chunked buffer.
- */
+//
+// 'http_write_chunk()' - Write a chunked buffer.
+//
 
 static ssize_t				// O - Number bytes written
 http_write_chunk(http_t     *http,	// I - HTTP connection

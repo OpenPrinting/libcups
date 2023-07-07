@@ -5052,10 +5052,10 @@ process_http(ippeve_client_t *client)	/* I - Client connection */
 
   if (http_state == HTTP_STATE_ERROR)
   {
-    if (httpError(client->http) == EPIPE)
+    if (httpGetError(client->http) == EPIPE)
       fprintf(stderr, "%s Client closed connection.\n", client->hostname);
     else
-      fprintf(stderr, "%s Bad request line (%s).\n", client->hostname, strerror(httpError(client->http)));
+      fprintf(stderr, "%s Bad request line (%s).\n", client->hostname, strerror(httpGetError(client->http)));
 
     return (0);
   }

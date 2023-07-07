@@ -576,7 +576,7 @@ cupsSendRequest(http_t     *http,	// I - Connection to server or `CUPS_HTTP_DEFA
 
     while ((state = ippWrite(http, request)) != IPP_STATE_DATA)
     {
-      if (httpCheck(http))
+      if (httpWait(http, 0))
       {
         got_status = true;
 
@@ -616,7 +616,7 @@ cupsSendRequest(http_t     *http,	// I - Connection to server or `CUPS_HTTP_DEFA
 	if (httpWait(http, 1000))
 	  _httpUpdate(http, &status);
       }
-      else if (httpCheck(http))
+      else if (httpWait(http, 0))
       {
 	_httpUpdate(http, &status);
       }

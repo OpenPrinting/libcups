@@ -1241,11 +1241,11 @@ do_monitor_printer_state(
       status   = httpGetStatus(http);
     }
 
-    if (!data->monitor_done && !Cancel && status == HTTP_STATUS_ERROR && httpError(data->http) != EINVAL &&
+    if (!data->monitor_done && !Cancel && status == HTTP_STATUS_ERROR && httpGetError(data->http) != EINVAL &&
 #ifdef _WIN32
-	httpError(data->http) != WSAETIMEDOUT)
+	httpGetError(data->http) != WSAETIMEDOUT)
 #else
-	httpError(data->http) != ETIMEDOUT)
+	httpGetError(data->http) != ETIMEDOUT)
 #endif // _WIN32
     {
       if (!httpReconnect(http, 30000, NULL))
@@ -1646,11 +1646,11 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
 	  status   = httpGetStatus(data->http);
 	}
 
-	if (!Cancel && status == HTTP_STATUS_ERROR && httpError(data->http) != EINVAL &&
+	if (!Cancel && status == HTTP_STATUS_ERROR && httpGetError(data->http) != EINVAL &&
 #ifdef _WIN32
-	    httpError(data->http) != WSAETIMEDOUT)
+	    httpGetError(data->http) != WSAETIMEDOUT)
 #else
-	    httpError(data->http) != ETIMEDOUT)
+	    httpGetError(data->http) != ETIMEDOUT)
 #endif /* _WIN32 */
 	{
 	  if (!httpReconnect(data->http, 30000, NULL))
@@ -1673,11 +1673,11 @@ do_test(ipp_file_t     *f,		/* I - IPP data file */
       }
     }
 
-    if (!Cancel && status == HTTP_STATUS_ERROR && httpError(data->http) != EINVAL &&
+    if (!Cancel && status == HTTP_STATUS_ERROR && httpGetError(data->http) != EINVAL &&
 #ifdef _WIN32
-	httpError(data->http) != WSAETIMEDOUT)
+	httpGetError(data->http) != WSAETIMEDOUT)
 #else
-	httpError(data->http) != ETIMEDOUT)
+	httpGetError(data->http) != ETIMEDOUT)
 #endif /* _WIN32 */
     {
       if (!httpReconnect(data->http, 30000, NULL))
