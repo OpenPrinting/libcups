@@ -1,18 +1,18 @@
-/*
- * Public file definitions for CUPS.
- *
- * Since stdio files max out at 256 files on many systems, we have to
- * write similar functions without this limit.  At the same time, using
- * our own file functions allows us to provide transparent support of
- * different line endings, gzip'd print files, PPD files, etc.
- *
- * Copyright © 2022 by OpenPrinting.
- * Copyright © 2007-2018 by Apple Inc.
- * Copyright © 1997-2007 by Easy Software Products, all rights reserved.
- *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more
- * information.
- */
+//
+// Public file definitions for CUPS.
+//
+// Since stdio files max out at 256 files on many systems, we have to
+// write similar functions without this limit.  At the same time, using
+// our own file functions allows us to provide transparent support of
+// different line endings, gzip'd print files, PPD files, etc.
+//
+// Copyright © 2022-2023 by OpenPrinting.
+// Copyright © 2007-2018 by Apple Inc.
+// Copyright © 1997-2007 by Easy Software Products, all rights reserved.
+//
+// Licensed under Apache License v2.0.  See the file "LICENSE" for more
+// information.
+//
 
 #ifndef _CUPS_FILE_H_
 #  define _CUPS_FILE_H_
@@ -21,24 +21,24 @@
 #  include <sys/types.h>
 #  if defined(_WIN32) && !defined(__CUPS_SSIZE_T_DEFINED)
 #    define __CUPS_SSIZE_T_DEFINED
-/* Windows does not support the ssize_t type, so map it to off_t... */
-typedef off_t ssize_t;			/* @private@ */
-#  endif /* _WIN32 && !__CUPS_SSIZE_T_DEFINED */
+// Windows does not support the ssize_t type, so map it to off_t... */
+typedef off_t ssize_t;			// @private@
+#  endif // _WIN32 && !__CUPS_SSIZE_T_DEFINED
 #  ifdef __cplusplus
 extern "C" {
-#  endif /* __cplusplus */
+#  endif // __cplusplus
 
 
-/*
- * Types and structures...
- */
+//
+// Types and structures...
+//
 
-typedef struct _cups_file_s cups_file_t;/**** CUPS file type ****/
+typedef struct _cups_file_s cups_file_t;// CUPS file type
 
 
-/*
- * Prototypes...
- */
+//
+// Prototypes...
+//
 
 extern bool		cupsFileClose(cups_file_t *fp) _CUPS_PUBLIC;
 extern bool		cupsFileEOF(cups_file_t *fp) _CUPS_PUBLIC;
@@ -71,5 +71,5 @@ extern bool		cupsFileWrite(cups_file_t *fp, const char *buf, size_t bytes) _CUPS
 
 #  ifdef __cplusplus
 }
-#  endif /* __cplusplus */
-#endif /* !_CUPS_FILE_H_ */
+#  endif // __cplusplus
+#endif // !_CUPS_FILE_H_
