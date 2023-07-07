@@ -475,7 +475,7 @@ extern void		httpFreeCredentials(cups_array_t *certs) _CUPS_PUBLIC;
 
 extern time_t		httpGetActivity(http_t *http) _CUPS_PUBLIC;
 extern http_addr_t	*httpGetAddress(http_t *http) _CUPS_PUBLIC;
-extern char		*httpGetAuthString(http_t *http) _CUPS_PUBLIC;
+extern const char	*httpGetAuthString(http_t *http) _CUPS_PUBLIC;
 extern bool		httpGetBlocking(http_t *http) _CUPS_PUBLIC;
 extern const char	*httpGetContentEncoding(http_t *http) _CUPS_PUBLIC;
 extern const char	*httpGetCookie(http_t *http) _CUPS_PUBLIC;

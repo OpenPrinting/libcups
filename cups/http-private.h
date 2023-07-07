@@ -180,7 +180,7 @@ extern void		_httpTLSSetOptions(int options, int min_version, int max_version) _
 extern bool		_httpTLSStart(http_t *http) _CUPS_PRIVATE;
 extern void		_httpTLSStop(http_t *http) _CUPS_PRIVATE;
 extern int		_httpTLSWrite(http_t *http, const char *buf, int len) _CUPS_PRIVATE;
-extern int		_httpUpdate(http_t *http, http_status_t *status) _CUPS_PRIVATE;
+extern bool		_httpUpdate(http_t *http, http_status_t *status) _CUPS_PRIVATE;
 extern bool		_httpWait(http_t *http, int msec, bool usessl) _CUPS_PRIVATE;
 
 
