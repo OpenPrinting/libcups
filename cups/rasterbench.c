@@ -9,10 +9,6 @@
 // information.
 //
 
-//
-// Include necessary headers...
-//
-
 #include <config.h>
 #include <cups/raster.h>
 #include <stdio.h>
@@ -62,10 +58,7 @@ main(int  argc,				// I - Number of command-line args
   cups_raster_mode_t mode;		// Write mode
 
 
- /*
-  * See if we have anything on the command-line...
-  */
-
+  // See if we have anything on the command-line...
   if (argc > 2 || (argc == 2 && strcmp(argv[1], "-z")))
   {
     puts("Usage: rasterbench [-z]");
@@ -74,18 +67,11 @@ main(int  argc,				// I - Number of command-line args
 
   mode = argc > 1 ? CUPS_RASTER_WRITE_COMPRESSED : CUPS_RASTER_WRITE;
 
- /*
-  * Ignore SIGPIPE...
-  */
-
+  // Ignore SIGPIPE...
   signal(SIGPIPE, SIG_IGN);
 
- /*
-  * Run the tests several times to get a good average...
-  */
-
-  printf("Test read/write speed of %d pages, %dx%d pixels...\n\n",
-         TEST_PAGES, TEST_WIDTH, TEST_HEIGHT);
+  // Run the tests several times to get a good average...
+  printf("Test read/write speed of %d pages, %dx%d pixels...\n\n", TEST_PAGES, TEST_WIDTH, TEST_HEIGHT);
   for (i = 0; i < TEST_PASSES; i ++)
   {
     printf("PASS %2d: ", i + 1);
@@ -126,23 +112,21 @@ compute_median(double *secs)		// I - Array of time samples
   double	temp;			// Swap variable
 
 
- /*
-  * Sort the array into ascending order using a quicky bubble sort...
-  */
-
+  // Sort the array into ascending order using a quicky bubble sort...
   for (i = 0; i < (TEST_PASSES - 1); i ++)
+  {
     for (j = i + 1; j < TEST_PASSES; j ++)
+    {
       if (secs[i] > secs[j])
       {
         temp    = secs[i];
 	secs[i] = secs[j];
 	secs[j] = temp;
       }
+    }
+  }
 
- /*
-  * Return the average of the middle two samples...
-  */
-
+  // Return the average of the middle two samples...
   return (0.5 * (secs[TEST_PASSES / 2 - 1] + secs[TEST_PASSES / 2]));
 }
 
@@ -176,10 +160,7 @@ read_test(int fd)			// I - File descriptor to read from
 					// Read buffer
 
 
- /*
-  * Test read speed...
-  */
-
+  // Test read speed...
   if ((r = cupsRasterOpen(fd, CUPS_RASTER_READ)) == NULL)
   {
     perror("Unable to create raster input stream");
@@ -212,10 +193,7 @@ run_read_test(void)
 
   if ((pid = fork()) < 0)
   {
-   /*
-    * Fork error - return -1 on error...
-    */
-
+    // Fork error - return -1 on error...
     close(ras_pipes[0]);
     close(ras_pipes[1]);
 
@@ -223,20 +201,14 @@ run_read_test(void)
   }
   else if (pid == 0)
   {
-   /*
-    * Child comes here - read data from the input pipe...
-    */
-
+    // Child comes here - read data from the input pipe...
     close(ras_pipes[1]);
     read_test(ras_pipes[0]);
     exit(0);
   }
   else
   {
-   /*
-    * Parent comes here - return the output pipe...
-    */
-
+    // Parent comes here - return the output pipe...
     close(ras_pipes[0]);
     return (ras_pipes[1]);
   }
@@ -259,11 +231,8 @@ write_test(int                fd,	// I - File descriptor to write to
 					// Raster data to write
 
 
- /*
-  * Create a combination of random data and repeated data to simulate
-  * text with some whitespace.
-  */
-
+  // Create a combination of random data and repeated data to simulate
+  // text with some whitespace.
   memset(data, 0, sizeof(data));
 
   for (y = 0; y < 28; y ++)
@@ -285,10 +254,7 @@ write_test(int                fd,	// I - File descriptor to write to
     }
   }
 
- /*
-  * Test write speed...
-  */
-
+  // Test write speed...
   if ((r = cupsRasterOpen(fd, mode)) == NULL)
   {
     perror("Unable to create raster output stream");

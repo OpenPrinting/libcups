@@ -1,17 +1,13 @@
-/*
- * IPP unit test program for libcups.
- *
- * Copyright © 2021-2022 by OpenPrinting.
- * Copyright © 2007-2019 by Apple Inc.
- * Copyright © 1997-2005 by Easy Software Products.
- *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more
- * information.
- */
-
-/*
- * Include necessary headers...
- */
+//
+// IPP unit test program for libcups.
+//
+// Copyright © 2021-2022 by OpenPrinting.
+// Copyright © 2007-2019 by Apple Inc.
+// Copyright © 1997-2005 by Easy Software Products.
+//
+// Licensed under Apache License v2.0.  See the file "LICENSE" for more
+// information.
+//
 
 #include "file.h"
 #include "string-private.h"
@@ -22,271 +18,271 @@
 #else
 #  include <unistd.h>
 #  include <fcntl.h>
-#endif /* _WIN32 */
+#endif // _WIN32
 
 
-/*
- * Local types...
- */
+//
+// Local types...
+//
 
 typedef struct _ippdata_t
 {
-  size_t	rpos,			/* Read position */
-		wused,			/* Bytes used */
-		wsize;			/* Max size of buffer */
-  ipp_uchar_t	*wbuffer;		/* Buffer */
+  size_t	rpos,			// Read position
+		wused,			// Bytes used
+		wsize;			// Max size of buffer
+  ipp_uchar_t	*wbuffer;		// Buffer
 } _ippdata_t;
 
 
-/*
- * Local globals...
- */
+//
+// Local globals...
+//
 
-static ipp_uchar_t collection[] =	/* Collection buffer */
+static ipp_uchar_t collection[] =	// Collection buffer
 		{
-		  0x01, 0x01,		/* IPP version */
-		  0x00, 0x02,		/* Print-Job operation */
+		  0x01, 0x01,		// IPP version
+		  0x00, 0x02,		// Print-Job operation
 		  0x00, 0x00, 0x00, 0x01,
-					/* Request ID */
+					// Request ID
 
 		  IPP_TAG_OPERATION,
 
 		  IPP_TAG_CHARSET,
-		  0x00, 0x12,		/* Name length + name */
+		  0x00, 0x12,		// Name length + name
 		  'a','t','t','r','i','b','u','t','e','s','-',
 		  'c','h','a','r','s','e','t',
-		  0x00, 0x05,		/* Value length + value */
+		  0x00, 0x05,		// Value length + value
 		  'u','t','f','-','8',
 
 		  IPP_TAG_LANGUAGE,
-		  0x00, 0x1b,		/* Name length + name */
+		  0x00, 0x1b,		// Name length + name
 		  'a','t','t','r','i','b','u','t','e','s','-',
 		  'n','a','t','u','r','a','l','-','l','a','n',
 		  'g','u','a','g','e',
-		  0x00, 0x02,		/* Value length + value */
+		  0x00, 0x02,		// Value length + value
 		  'e','n',
 
 		  IPP_TAG_URI,
-		  0x00, 0x0b,		/* Name length + name */
+		  0x00, 0x0b,		// Name length + name
 		  'p','r','i','n','t','e','r','-','u','r','i',
-		  0x00, 0x1c,			/* Value length + value */
+		  0x00, 0x1c,			// Value length + value
 		  'i','p','p',':','/','/','l','o','c','a','l',
 		  'h','o','s','t','/','p','r','i','n','t','e',
 		  'r','s','/','f','o','o',
 
-		  IPP_TAG_JOB,		/* job group tag */
+		  IPP_TAG_JOB,		// job group tag
 
 		  IPP_TAG_BEGIN_COLLECTION,
-					/* begCollection tag */
-		  0x00, 0x09,		/* Name length + name */
+					// begCollection tag
+		  0x00, 0x09,		// Name length + name
 		  'm', 'e', 'd', 'i', 'a', '-', 'c', 'o', 'l',
-		  0x00, 0x00,		/* No value */
-		    IPP_TAG_MEMBERNAME,	/* memberAttrName tag */
-		    0x00, 0x00,		/* No name */
-		    0x00, 0x0a,		/* Value length + value */
+		  0x00, 0x00,		// No value
+		    IPP_TAG_MEMBERNAME,	// memberAttrName tag
+		    0x00, 0x00,		// No name
+		    0x00, 0x0a,		// Value length + value
 		    'm', 'e', 'd', 'i', 'a', '-', 's', 'i', 'z', 'e',
 		    IPP_TAG_BEGIN_COLLECTION,
-					/* begCollection tag */
-		    0x00, 0x00,		/* Name length + name */
-		    0x00, 0x00,		/* No value */
+					// begCollection tag
+		    0x00, 0x00,		// Name length + name
+		    0x00, 0x00,		// No value
 		      IPP_TAG_MEMBERNAME,
-					/* memberAttrName tag */
-		      0x00, 0x00,	/* No name */
-		      0x00, 0x0b,	/* Value length + value */
+					// memberAttrName tag
+		      0x00, 0x00,	// No name
+		      0x00, 0x0b,	// Value length + value
 		      'x', '-', 'd', 'i', 'm', 'e', 'n', 's', 'i', 'o', 'n',
-		      IPP_TAG_INTEGER,	/* integer tag */
-		      0x00, 0x00,	/* No name */
-		      0x00, 0x04,	/* Value length + value */
+		      IPP_TAG_INTEGER,	// integer tag
+		      0x00, 0x00,	// No name
+		      0x00, 0x04,	// Value length + value
 		      0x00, 0x00, 0x54, 0x56,
 		      IPP_TAG_MEMBERNAME,
-					/* memberAttrName tag */
-		      0x00, 0x00,	/* No name */
-		      0x00, 0x0b,	/* Value length + value */
+					// memberAttrName tag
+		      0x00, 0x00,	// No name
+		      0x00, 0x0b,	// Value length + value
 		      'y', '-', 'd', 'i', 'm', 'e', 'n', 's', 'i', 'o', 'n',
-		      IPP_TAG_INTEGER,	/* integer tag */
-		      0x00, 0x00,	/* No name */
-		      0x00, 0x04,	/* Value length + value */
+		      IPP_TAG_INTEGER,	// integer tag
+		      0x00, 0x00,	// No name
+		      0x00, 0x04,	// Value length + value
 		      0x00, 0x00, 0x6d, 0x24,
 		    IPP_TAG_END_COLLECTION,
-					/* endCollection tag */
-		    0x00, 0x00,		/* No name */
-		    0x00, 0x00,		/* No value */
-		    IPP_TAG_MEMBERNAME,	/* memberAttrName tag */
-		    0x00, 0x00,		/* No name */
-		    0x00, 0x0b,		/* Value length + value */
+					// endCollection tag
+		    0x00, 0x00,		// No name
+		    0x00, 0x00,		// No value
+		    IPP_TAG_MEMBERNAME,	// memberAttrName tag
+		    0x00, 0x00,		// No name
+		    0x00, 0x0b,		// Value length + value
 		    'm', 'e', 'd', 'i', 'a', '-', 'c', 'o', 'l', 'o', 'r',
-		    IPP_TAG_KEYWORD,	/* keyword tag */
-		    0x00, 0x00,		/* No name */
-		    0x00, 0x04,		/* Value length + value */
+		    IPP_TAG_KEYWORD,	// keyword tag
+		    0x00, 0x00,		// No name
+		    0x00, 0x04,		// Value length + value
 		    'b', 'l', 'u', 'e',
 
-		    IPP_TAG_MEMBERNAME,	/* memberAttrName tag */
-		    0x00, 0x00,		/* No name */
-		    0x00, 0x0a,		/* Value length + value */
+		    IPP_TAG_MEMBERNAME,	// memberAttrName tag
+		    0x00, 0x00,		// No name
+		    0x00, 0x0a,		// Value length + value
 		    'm', 'e', 'd', 'i', 'a', '-', 't', 'y', 'p', 'e',
-		    IPP_TAG_KEYWORD,	/* keyword tag */
-		    0x00, 0x00,		/* No name */
-		    0x00, 0x05,		/* Value length + value */
+		    IPP_TAG_KEYWORD,	// keyword tag
+		    0x00, 0x00,		// No name
+		    0x00, 0x05,		// Value length + value
 		    'p', 'l', 'a', 'i', 'n',
 		  IPP_TAG_END_COLLECTION,
-					/* endCollection tag */
-		  0x00, 0x00,		/* No name */
-		  0x00, 0x00,		/* No value */
+					// endCollection tag
+		  0x00, 0x00,		// No name
+		  0x00, 0x00,		// No value
 
 		  IPP_TAG_BEGIN_COLLECTION,
-					/* begCollection tag */
-		  0x00, 0x00,		/* No name */
-		  0x00, 0x00,		/* No value */
-		    IPP_TAG_MEMBERNAME,	/* memberAttrName tag */
-		    0x00, 0x00,		/* No name */
-		    0x00, 0x0a,		/* Value length + value */
+					// begCollection tag
+		  0x00, 0x00,		// No name
+		  0x00, 0x00,		// No value
+		    IPP_TAG_MEMBERNAME,	// memberAttrName tag
+		    0x00, 0x00,		// No name
+		    0x00, 0x0a,		// Value length + value
 		    'm', 'e', 'd', 'i', 'a', '-', 's', 'i', 'z', 'e',
 		    IPP_TAG_BEGIN_COLLECTION,
-					/* begCollection tag */
-		    0x00, 0x00,		/* Name length + name */
-		    0x00, 0x00,		/* No value */
+					// begCollection tag
+		    0x00, 0x00,		// Name length + name
+		    0x00, 0x00,		// No value
 		      IPP_TAG_MEMBERNAME,
-					/* memberAttrName tag */
-		      0x00, 0x00,	/* No name */
-		      0x00, 0x0b,	/* Value length + value */
+					// memberAttrName tag
+		      0x00, 0x00,	// No name
+		      0x00, 0x0b,	// Value length + value
 		      'x', '-', 'd', 'i', 'm', 'e', 'n', 's', 'i', 'o', 'n',
-		      IPP_TAG_INTEGER,	/* integer tag */
-		      0x00, 0x00,	/* No name */
-		      0x00, 0x04,	/* Value length + value */
+		      IPP_TAG_INTEGER,	// integer tag
+		      0x00, 0x00,	// No name
+		      0x00, 0x04,	// Value length + value
 		      0x00, 0x00, 0x52, 0x08,
 		      IPP_TAG_MEMBERNAME,
-					/* memberAttrName tag */
-		      0x00, 0x00,	/* No name */
-		      0x00, 0x0b,	/* Value length + value */
+					// memberAttrName tag
+		      0x00, 0x00,	// No name
+		      0x00, 0x0b,	// Value length + value
 		      'y', '-', 'd', 'i', 'm', 'e', 'n', 's', 'i', 'o', 'n',
-		      IPP_TAG_INTEGER,	/* integer tag */
-		      0x00, 0x00,	/* No name */
-		      0x00, 0x04,	/* Value length + value */
+		      IPP_TAG_INTEGER,	// integer tag
+		      0x00, 0x00,	// No name
+		      0x00, 0x04,	// Value length + value
 		      0x00, 0x00, 0x74, 0x04,
 		    IPP_TAG_END_COLLECTION,
-					/* endCollection tag */
-		    0x00, 0x00,		/* No name */
-		    0x00, 0x00,		/* No value */
-		    IPP_TAG_MEMBERNAME,	/* memberAttrName tag */
-		    0x00, 0x00,		/* No name */
-		    0x00, 0x0b,		/* Value length + value */
+					// endCollection tag
+		    0x00, 0x00,		// No name
+		    0x00, 0x00,		// No value
+		    IPP_TAG_MEMBERNAME,	// memberAttrName tag
+		    0x00, 0x00,		// No name
+		    0x00, 0x0b,		// Value length + value
 		    'm', 'e', 'd', 'i', 'a', '-', 'c', 'o', 'l', 'o', 'r',
-		    IPP_TAG_KEYWORD,	/* keyword tag */
-		    0x00, 0x00,		/* No name */
-		    0x00, 0x05,		/* Value length + value */
+		    IPP_TAG_KEYWORD,	// keyword tag
+		    0x00, 0x00,		// No name
+		    0x00, 0x05,		// Value length + value
 		    'p', 'l', 'a', 'i', 'd',
 
-		    IPP_TAG_MEMBERNAME,	/* memberAttrName tag */
-		    0x00, 0x00,		/* No name */
-		    0x00, 0x0a,		/* Value length + value */
+		    IPP_TAG_MEMBERNAME,	// memberAttrName tag
+		    0x00, 0x00,		// No name
+		    0x00, 0x0a,		// Value length + value
 		    'm', 'e', 'd', 'i', 'a', '-', 't', 'y', 'p', 'e',
-		    IPP_TAG_KEYWORD,	/* keyword tag */
-		    0x00, 0x00,		/* No name */
-		    0x00, 0x06,		/* Value length + value */
+		    IPP_TAG_KEYWORD,	// keyword tag
+		    0x00, 0x00,		// No name
+		    0x00, 0x06,		// Value length + value
 		    'g', 'l', 'o', 's', 's', 'y',
 		  IPP_TAG_END_COLLECTION,
-					/* endCollection tag */
-		  0x00, 0x00,		/* No name */
-		  0x00, 0x00,		/* No value */
+					// endCollection tag
+		  0x00, 0x00,		// No name
+		  0x00, 0x00,		// No value
 
-		  IPP_TAG_END		/* end tag */
+		  IPP_TAG_END		// end tag
 		};
-static ipp_uchar_t bad_collection[] =	/* Collection buffer (bad encoding) */
+static ipp_uchar_t bad_collection[] =	// Collection buffer (bad encoding)
 		{
-		  0x01, 0x01,		/* IPP version */
-		  0x00, 0x02,		/* Print-Job operation */
+		  0x01, 0x01,		// IPP version
+		  0x00, 0x02,		// Print-Job operation
 		  0x00, 0x00, 0x00, 0x01,
-					/* Request ID */
+					// Request ID
 
 		  IPP_TAG_OPERATION,
 
 		  IPP_TAG_CHARSET,
-		  0x00, 0x12,		/* Name length + name */
+		  0x00, 0x12,		// Name length + name
 		  'a','t','t','r','i','b','u','t','e','s','-',
 		  'c','h','a','r','s','e','t',
-		  0x00, 0x05,		/* Value length + value */
+		  0x00, 0x05,		// Value length + value
 		  'u','t','f','-','8',
 
 		  IPP_TAG_LANGUAGE,
-		  0x00, 0x1b,		/* Name length + name */
+		  0x00, 0x1b,		// Name length + name
 		  'a','t','t','r','i','b','u','t','e','s','-',
 		  'n','a','t','u','r','a','l','-','l','a','n',
 		  'g','u','a','g','e',
-		  0x00, 0x02,		/* Value length + value */
+		  0x00, 0x02,		// Value length + value
 		  'e','n',
 
 		  IPP_TAG_URI,
-		  0x00, 0x0b,		/* Name length + name */
+		  0x00, 0x0b,		// Name length + name
 		  'p','r','i','n','t','e','r','-','u','r','i',
-		  0x00, 0x1c,			/* Value length + value */
+		  0x00, 0x1c,			// Value length + value
 		  'i','p','p',':','/','/','l','o','c','a','l',
 		  'h','o','s','t','/','p','r','i','n','t','e',
 		  'r','s','/','f','o','o',
 
-		  IPP_TAG_JOB,		/* job group tag */
+		  IPP_TAG_JOB,		// job group tag
 
 		  IPP_TAG_BEGIN_COLLECTION,
-					/* begCollection tag */
-		  0x00, 0x09,		/* Name length + name */
+					// begCollection tag
+		  0x00, 0x09,		// Name length + name
 		  'm', 'e', 'd', 'i', 'a', '-', 'c', 'o', 'l',
-		  0x00, 0x00,		/* No value */
+		  0x00, 0x00,		// No value
 		    IPP_TAG_BEGIN_COLLECTION,
-					/* begCollection tag */
-		    0x00, 0x0a,		/* Name length + name */
+					// begCollection tag
+		    0x00, 0x0a,		// Name length + name
 		    'm', 'e', 'd', 'i', 'a', '-', 's', 'i', 'z', 'e',
-		    0x00, 0x00,		/* No value */
-		      IPP_TAG_INTEGER,	/* integer tag */
-		      0x00, 0x0b,	/* Name length + name */
+		    0x00, 0x00,		// No value
+		      IPP_TAG_INTEGER,	// integer tag
+		      0x00, 0x0b,	// Name length + name
 		      'x', '-', 'd', 'i', 'm', 'e', 'n', 's', 'i', 'o', 'n',
-		      0x00, 0x04,	/* Value length + value */
+		      0x00, 0x04,	// Value length + value
 		      0x00, 0x00, 0x54, 0x56,
-		      IPP_TAG_INTEGER,	/* integer tag */
-		      0x00, 0x0b,	/* Name length + name */
+		      IPP_TAG_INTEGER,	// integer tag
+		      0x00, 0x0b,	// Name length + name
 		      'y', '-', 'd', 'i', 'm', 'e', 'n', 's', 'i', 'o', 'n',
-		      0x00, 0x04,	/* Value length + value */
+		      0x00, 0x04,	// Value length + value
 		      0x00, 0x00, 0x6d, 0x24,
 		    IPP_TAG_END_COLLECTION,
-					/* endCollection tag */
-		    0x00, 0x00,		/* No name */
-		    0x00, 0x00,		/* No value */
+					// endCollection tag
+		    0x00, 0x00,		// No name
+		    0x00, 0x00,		// No value
 		  IPP_TAG_END_COLLECTION,
-					/* endCollection tag */
-		  0x00, 0x00,		/* No name */
-		  0x00, 0x00,		/* No value */
+					// endCollection tag
+		  0x00, 0x00,		// No name
+		  0x00, 0x00,		// No value
 
-		  IPP_TAG_END		/* end tag */
+		  IPP_TAG_END		// end tag
 		};
 
-static ipp_uchar_t mixed[] =		/* Mixed value buffer */
+static ipp_uchar_t mixed[] =		// Mixed value buffer
 		{
-		  0x01, 0x01,		/* IPP version */
-		  0x00, 0x02,		/* Print-Job operation */
+		  0x01, 0x01,		// IPP version
+		  0x00, 0x02,		// Print-Job operation
 		  0x00, 0x00, 0x00, 0x01,
-					/* Request ID */
+					// Request ID
 
 		  IPP_TAG_OPERATION,
 
-		  IPP_TAG_INTEGER,	/* integer tag */
-		  0x00, 0x1f,		/* Name length + name */
+		  IPP_TAG_INTEGER,	// integer tag
+		  0x00, 0x1f,		// Name length + name
 		  'n', 'o', 't', 'i', 'f', 'y', '-', 'l', 'e', 'a', 's', 'e',
 		  '-', 'd', 'u', 'r', 'a', 't', 'i', 'o', 'n', '-', 's', 'u',
 		  'p', 'p', 'o', 'r', 't', 'e', 'd',
-		  0x00, 0x04,		/* Value length + value */
+		  0x00, 0x04,		// Value length + value
 		  0x00, 0x00, 0x00, 0x01,
 
-		  IPP_TAG_RANGE,	/* rangeOfInteger tag */
-		  0x00, 0x00,		/* No name */
-		  0x00, 0x08,		/* Value length + value */
+		  IPP_TAG_RANGE,	// rangeOfInteger tag
+		  0x00, 0x00,		// No name
+		  0x00, 0x08,		// Value length + value
 		  0x00, 0x00, 0x00, 0x10,
 		  0x00, 0x00, 0x00, 0x20,
 
-		  IPP_TAG_END		/* end tag */
+		  IPP_TAG_END		// end tag
 		};
 
 
-/*
- * Local functions...
- */
+//
+// Local functions...
+//
 
 void	print_attributes(ipp_t *ipp, int indent);
 ssize_t	read_cb(_ippdata_t *data, ipp_uchar_t *buffer, size_t bytes);
@@ -295,40 +291,37 @@ bool	token_cb(ipp_file_t *f, void *user_data, const char *token);
 ssize_t	write_cb(_ippdata_t *data, ipp_uchar_t *buffer, size_t bytes);
 
 
-/*
- * 'main()' - Main entry.
- */
+//
+// 'main()' - Main entry.
+//
 
-int				/* O - Exit status */
-main(int  argc,			/* I - Number of command-line arguments */
-     char *argv[])		/* I - Command-line arguments */
+int				// O - Exit status
+main(int  argc,			// I - Number of command-line arguments
+     char *argv[])		// I - Command-line arguments
 {
-  _ippdata_t	data;		/* IPP buffer */
-  ipp_uchar_t	buffer[8192];	/* Write buffer data */
-  ipp_t		*cols[2],	/* Collections */
-		*size;		/* media-size collection */
-  ipp_t		*request;	/* Request */
-  ipp_attribute_t *media_col,	/* media-col attribute */
-		*media_size,	/* media-size attribute */
-		*attr;		/* Other attribute */
-  ipp_state_t	state;		/* State */
-  size_t	length;		/* Length of data */
-  cups_file_t	*fp;		/* File pointer */
-  size_t	i;		/* Looping var */
-  int		status;		/* Status of tests (0 = success, 1 = fail) */
+  _ippdata_t	data;		// IPP buffer
+  ipp_uchar_t	buffer[8192];	// Write buffer data
+  ipp_t		*cols[2],	// Collections
+		*size;		// media-size collection
+  ipp_t		*request;	// Request
+  ipp_attribute_t *media_col,	// media-col attribute
+		*media_size,	// media-size attribute
+		*attr;		// Other attribute
+  ipp_state_t	state;		// State
+  size_t	length;		// Length of data
+  cups_file_t	*fp;		// File pointer
+  size_t	i;		// Looping var
+  int		status;		// Status of tests (0 = success, 1 = fail)
 #ifdef DEBUG
-  const char	*name;		/* Option name */
-#endif /* DEBUG */
+  const char	*name;		// Option name
+#endif // DEBUG
 
 
   status = 0;
 
   if (argc == 1)
   {
-   /*
-    * Test request generation code...
-    */
-
+    // Test request generation code...
     testBegin("Create Sample Request");
 
     request = ippNew();
@@ -381,10 +374,7 @@ main(int  argc,			/* I - Number of command-line arguments */
     else
       testEnd(true);
 
-   /*
-    * Write test #1...
-    */
-
+    // Write test #1...
     testBegin("Write Sample to Memory");
 
     data.wused   = 0;
@@ -429,10 +419,7 @@ main(int  argc,			/* I - Number of command-line arguments */
 
     ippDelete(request);
 
-   /*
-    * Read the data back in and confirm...
-    */
-
+    // Read the data back in and confirm...
     testBegin("Read Sample from Memory");
 
     request   = ippNew();
@@ -609,10 +596,7 @@ main(int  argc,			/* I - Number of command-line arguments */
       }
     }
 
-   /*
-    * Test hierarchical find...
-    */
-
+    // Test hierarchical find...
     testBegin("ippFindAttribute(media-col/media-size/x-dimension)");
     if ((attr = ippFindAttribute(request, "media-col/media-size/x-dimension", IPP_TAG_INTEGER)) != NULL)
     {
@@ -658,10 +642,7 @@ main(int  argc,			/* I - Number of command-line arguments */
 
     ippDelete(request);
 
-   /*
-    * Read the bad collection data and confirm we get an error...
-    */
-
+    // Read the bad collection data and confirm we get an error...
     testBegin("Read Bad Collection from Memory");
 
     request = ippNew();
@@ -681,11 +662,8 @@ main(int  argc,			/* I - Number of command-line arguments */
     else
       testEnd(true);
 
-   /*
-    * Read the mixed data and confirm we converted everything to rangeOfInteger
-    * values...
-    */
-
+    // Read the mixed data and confirm we converted everything to rangeOfInteger
+    // values...
     testBegin("Read Mixed integer/rangeOfInteger from Memory");
 
     request = ippNew();
@@ -758,24 +736,20 @@ main(int  argc,			/* I - Number of command-line arguments */
     ippDelete(request);
 
 #ifdef DEBUG
-   /*
-    * Test that private option array is sorted...
-    */
-
+    // Test that private option array is sorted...
     testBegin("_ippCheckOptions");
     if ((name = _ippCheckOptions()) == NULL)
+    {
       testEnd(true);
+    }
     else
     {
       testEndMessage(false, "\"%s\" out of order", name);
       status = 1;
     }
-#endif /* DEBUG */
+#endif // DEBUG
 
-   /*
-    * Test _ippFindOption() private API...
-    */
-
+    // Test _ippFindOption() private API...
     testBegin("_ippFindOption(\"printer-type\")");
     if (_ippFindOption("printer-type"))
       testEnd(true);
@@ -787,18 +761,12 @@ main(int  argc,			/* I - Number of command-line arguments */
   }
   else
   {
-   /*
-    * Read IPP files...
-    */
-
+    // Read IPP files...
     for (i = 1; i < (size_t)argc; i ++)
     {
       if (strlen(argv[i]) > 5 && !strcmp(argv[i] + strlen(argv[i]) - 5, ".test"))
       {
-       /*
-        * Read an ASCII IPP message...
-        */
-
+        // Read an ASCII IPP message...
         ipp_file_t *file;		// IPP data file
 
         file    = ippFileNew(NULL, NULL, NULL, NULL);
@@ -810,10 +778,7 @@ main(int  argc,			/* I - Number of command-line arguments */
       }
       else if (strlen(argv[i]) > 4 && !strcmp(argv[i] + strlen(argv[i]) - 4, ".hex"))
       {
-       /*
-        * Read a hex-encoded IPP message...
-        */
-
+        // Read a hex-encoded IPP message...
 	if ((fp = cupsFileOpen(argv[i], "r")) == NULL)
 	{
 	  printf("Unable to open \"%s\" - %s\n", argv[i], strerror(errno));
@@ -837,10 +802,7 @@ main(int  argc,			/* I - Number of command-line arguments */
       }
       else
       {
-       /*
-        * Read a raw (binary) IPP message...
-        */
-
+        // Read a raw (binary) IPP message...
 	if ((fp = cupsFileOpen(argv[i], "r")) == NULL)
 	{
 	  printf("Unable to open \"%s\" - %s\n", argv[i], strerror(errno));
@@ -877,17 +839,17 @@ main(int  argc,			/* I - Number of command-line arguments */
 }
 
 
-/*
- * 'print_attributes()' - Print the attributes in a request...
- */
+//
+// 'print_attributes()' - Print the attributes in a request...
+//
 
 void
-print_attributes(ipp_t *ipp,		/* I - IPP request */
-                 int   indent)		/* I - Indentation */
+print_attributes(ipp_t *ipp,		// I - IPP request
+                 int   indent)		// I - Indentation
 {
-  ipp_tag_t		group;		/* Current group */
-  ipp_attribute_t	*attr;		/* Current attribute */
-  char                  buffer[2048];   /* Value string */
+  ipp_tag_t		group;		// Current group
+  ipp_attribute_t	*attr;		// Current attribute
+  char                  buffer[2048];   // Value string
 
 
   for (group = IPP_TAG_ZERO, attr = ipp->attrs; attr; attr = attr->next)
@@ -913,48 +875,42 @@ print_attributes(ipp_t *ipp,		/* I - IPP request */
 }
 
 
-/*
- * 'read_cb()' - Read data from a buffer.
- */
+//
+// 'read_cb()' - Read data from a buffer.
+//
 
-ssize_t					/* O - Number of bytes read */
-read_cb(_ippdata_t   *data,		/* I - Data */
-        ipp_uchar_t *buffer,		/* O - Buffer to read */
-	size_t      bytes)		/* I - Number of bytes to read */
+ssize_t					// O - Number of bytes read
+read_cb(_ippdata_t   *data,		// I - Data
+        ipp_uchar_t *buffer,		// O - Buffer to read
+	size_t      bytes)		// I - Number of bytes to read
 {
-  size_t	count;			/* Number of bytes */
+  size_t	count;			// Number of bytes
 
 
- /*
-  * Copy bytes from the data buffer to the read buffer...
-  */
-
+  // Copy bytes from the data buffer to the read buffer...
   if ((count = data->wsize - data->rpos) > bytes)
     count = bytes;
 
   memcpy(buffer, data->wbuffer + data->rpos, count);
   data->rpos += count;
 
- /*
-  * Return the number of bytes read...
-  */
-
+  // Return the number of bytes read...
   return ((ssize_t)count);
 }
 
 
-/*
- * 'read_hex()' - Read a hex dump of an IPP request.
- */
+//
+// 'read_hex()' - Read a hex dump of an IPP request.
+//
 
-ssize_t					/* O - Number of bytes read */
-read_hex(cups_file_t *fp,		/* I - File to read from */
-         ipp_uchar_t *buffer,		/* I - Buffer to read */
-         size_t      bytes)		/* I - Number of bytes to read */
+ssize_t					// O - Number of bytes read
+read_hex(cups_file_t *fp,		// I - File to read from
+         ipp_uchar_t *buffer,		// I - Buffer to read
+         size_t      bytes)		// I - Number of bytes to read
 {
-  size_t	total = 0;		/* Total bytes read */
-  static char	hex[256] = "";		/* Line from file */
-  static char	*hexptr = NULL;		/* Pointer in line */
+  size_t	total = 0;		// Total bytes read
+  static char	hex[256] = "";		// Line from file
+  static char	*hexptr = NULL;		// Pointer in line
 
 
   while (total < bytes)
@@ -985,14 +941,14 @@ read_hex(cups_file_t *fp,		/* I - File to read from */
 }
 
 
-/*
- * 'token_cb()' - Token callback for ASCII IPP data file parser.
- */
+//
+// 'token_cb()' - Token callback for ASCII IPP data file parser.
+//
 
-bool					/* O - `true` on success, `false` on failure */
-token_cb(ipp_file_t *f,			/* I - IPP file data */
-         void       *user_data,		/* I - User data pointer */
-         const char *token)		/* I - Token string */
+bool					// O - `true` on success, `false` on failure
+token_cb(ipp_file_t *f,			// I - IPP file data
+         void       *user_data,		// I - User data pointer
+         const char *token)		// I - Token string
 {
   (void)user_data;
 
@@ -1007,31 +963,25 @@ token_cb(ipp_file_t *f,			/* I - IPP file data */
 }
 
 
-/*
- * 'write_cb()' - Write data into a buffer.
- */
+//
+// 'write_cb()' - Write data into a buffer.
+//
 
-ssize_t					/* O - Number of bytes written */
-write_cb(_ippdata_t   *data,		/* I - Data */
-         ipp_uchar_t *buffer,		/* I - Buffer to write */
-	 size_t      bytes)		/* I - Number of bytes to write */
+ssize_t					// O - Number of bytes written
+write_cb(_ippdata_t   *data,		// I - Data
+         ipp_uchar_t *buffer,		// I - Buffer to write
+	 size_t      bytes)		// I - Number of bytes to write
 {
-  size_t	count;			/* Number of bytes */
+  size_t	count;			// Number of bytes
 
 
- /*
-  * Loop until all bytes are written...
-  */
-
+  // Loop until all bytes are written...
   if ((count = data->wsize - data->wused) > bytes)
     count = bytes;
 
   memcpy(data->wbuffer + data->wused, buffer, count);
   data->wused += count;
 
- /*
-  * Return the number of bytes written...
-  */
-
+  // Return the number of bytes written...
   return ((ssize_t)count);
 }

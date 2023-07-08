@@ -1171,59 +1171,61 @@ The following CUPS 2.x API functions have been removed from the CUPS library:
 
 The following functions have been renamed in CUPS 3.0:
 
-| Old CUPS 2.x Name         | New CUPS 3.0 Name       |
-|---------------------------|-------------------------|
-| `cupsArrayCount`          | `cupsArrayGetCount`     |
-| `cupsArrayFirst`          | `cupsArrayGetFirst`     |
-| `cupsArrayIndex`          | `cupsArrayGetElement`   |
-| `cupsArrayLast`           | `cupsArrayGetLast`      |
-| `cupsArrayNew3`           | `cupsArrayNew`          |
-| `cupsArrayNext`           | `cupsArrayGetNext`      |
-| `cupsArrayPrev`           | `cupsArrayGetPrev`      |
-| `cupsEncryption`          | `cupsGetEncryption`     |
-| `cupsFileCompression`     | `cupsFileIsCompressed`  |
-| `cupsGetDests2`           | `cupsGetDests`          |
-| `cupsGetPassword2`        | `cupsGetPassword`       |
-| `cupsLangGet`             | `cupsLangFind`          |
-| `cupsLastError`           | `cupsGetError`          |
-| `cupsLastErrorString`     | `cupsGetErrorString`    |
-| `cupsRasterInitPWGHeader` | `cupsRasterInitHeader`  |
-| `cupsRasterReadHeader2`   | `cupsRasterReadHeader`  |
-| `cupsRasterWriteHeader2`  | `cupsRasterWriteHeader` |
-| `cupsServer`              | `cupsGetServer`         |
-| `cupsSetPasswordCB2`      | `cupsSetPasswordCB`     |
-| `cupsTempFile2`           | `cupsTempFile`          |
-| `cupsUser`                | `cupsGetUser`           |
-| `cupsUserAgent`           | `cupsGetUserAgent`      |
-| `httpAddrAny`             | `httpAddrIsAny`         |
-| `httpAddrEqual`           | `httpAddrIsEqual`       |
-| `httpAddrFamily`          | `httpAddrGetFamily`     |
-| `httpAddrLength`          | `httpAddrGetLength`     |
-| `httpAddrLocalhost`       | `httpAddrIsLocalhost`   |
-| `httpAddrPort`            | `httpAddrGetPort`       |
-| `httpAddrString`          | `httpAddrGetString`     |
-| `httpBlocking`            | `httpSetBlocking`       |
-| `httpConnect2`            | `httpConnect`           |
-| `httpDecode64_2`          | `httpDecode64`          |
-| `httpDelete`              | `httpWriteRequest`      |
-| `httpEncode64_2`          | `httpEncode64`          |
-| `httpEncryption`          | `httpSetEncryption`     |
-| `httpError`               | `httpGetError`          |
-| `httpGet`                 | `httpWriteRequest`      |
-| `httpGetDateString2`      | `httpGetDateString`     |
-| `httpGetLength2`          | `httpGetLength`         |
-| `httpOptions`             | `httpWriteRequest`      |
-| `httpPost`                | `httpWriteRequest`      |
-| `httpPut`                 | `httpWriteRequest`      |
-| `httpRead2`               | `httpRead`              |
-| `httpReconnect2`          | `httpReconnect`         |
-| `httpStatus`              | `httpStatusString`      |
-| `httpTrace`               | `httpWriteRequest`      |
-| `httpWrite2`              | `httpWrite`             |
-| `ippFirstAttribute`       | `ippGetFirstAttribute`  |
-| `ippLength`               | `ippGetLength`          |
-| `ippNextAttribute`        | `ippGetNextAttribute`   |
-| `ippPort`                 | `ippGetPort`            |
+| Old CUPS 2.x Name         | New CUPS 3.0 Name           |
+|---------------------------|-----------------------------|
+| `cupsArrayCount`          | `cupsArrayGetCount`         |
+| `cupsArrayFirst`          | `cupsArrayGetFirst`         |
+| `cupsArrayIndex`          | `cupsArrayGetElement`       |
+| `cupsArrayLast`           | `cupsArrayGetLast`          |
+| `cupsArrayNew3`           | `cupsArrayNew`              |
+| `cupsArrayNext`           | `cupsArrayGetNext`          |
+| `cupsArrayPrev`           | `cupsArrayGetPrev`          |
+| `cupsEncryption`          | `cupsGetEncryption`         |
+| `cupsFileCompression`     | `cupsFileIsCompressed`      |
+| `cupsGetDests2`           | `cupsGetDests`              |
+| `cupsGetPassword2`        | `cupsGetPassword`           |
+| `cupsLangGet`             | `cupsLangFind`              |
+| `cupsLastError`           | `cupsGetError`              |
+| `cupsLastErrorString`     | `cupsGetErrorString`        |
+| `cupsNotifySubject`       | `cupsLocalizeNotifySubject` |
+| `cupsNotifyText`          | `cupsLocalizeNotifyText`    |
+| `cupsRasterInitPWGHeader` | `cupsRasterInitHeader`      |
+| `cupsRasterReadHeader2`   | `cupsRasterReadHeader`      |
+| `cupsRasterWriteHeader2`  | `cupsRasterWriteHeader`     |
+| `cupsServer`              | `cupsGetServer`             |
+| `cupsSetPasswordCB2`      | `cupsSetPasswordCB`         |
+| `cupsTempFile2`           | `cupsTempFile`              |
+| `cupsUser`                | `cupsGetUser`               |
+| `cupsUserAgent`           | `cupsGetUserAgent`          |
+| `httpAddrAny`             | `httpAddrIsAny`             |
+| `httpAddrEqual`           | `httpAddrIsEqual`           |
+| `httpAddrFamily`          | `httpAddrGetFamily`         |
+| `httpAddrLength`          | `httpAddrGetLength`         |
+| `httpAddrLocalhost`       | `httpAddrIsLocalhost`       |
+| `httpAddrPort`            | `httpAddrGetPort`           |
+| `httpAddrString`          | `httpAddrGetString`         |
+| `httpBlocking`            | `httpSetBlocking`           |
+| `httpConnect2`            | `httpConnect`               |
+| `httpDecode64_2`          | `httpDecode64`              |
+| `httpDelete`              | `httpWriteRequest`          |
+| `httpEncode64_2`          | `httpEncode64`              |
+| `httpEncryption`          | `httpSetEncryption`         |
+| `httpError`               | `httpGetError`              |
+| `httpGet`                 | `httpWriteRequest`          |
+| `httpGetDateString2`      | `httpGetDateString`         |
+| `httpGetLength2`          | `httpGetLength`             |
+| `httpOptions`             | `httpWriteRequest`          |
+| `httpPost`                | `httpWriteRequest`          |
+| `httpPut`                 | `httpWriteRequest`          |
+| `httpRead2`               | `httpRead`                  |
+| `httpReconnect2`          | `httpReconnect`             |
+| `httpStatus`              | `httpStatusString`          |
+| `httpTrace`               | `httpWriteRequest`          |
+| `httpWrite2`              | `httpWrite`                 |
+| `ippFirstAttribute`       | `ippGetFirstAttribute`      |
+| `ippLength`               | `ippGetLength`              |
+| `ippNextAttribute`        | `ippGetNextAttribute`       |
+| `ippPort`                 | `ippGetPort`                |
 
 
 Similarly, the following types have been renamed in CUPS 3.0:

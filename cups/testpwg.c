@@ -7,10 +7,6 @@
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more information.
 //
 
-/*
- * Include necessary headers...
- */
-
 #include "cups.h"
 #include "pwg-private.h"
 #include "test-internal.h"

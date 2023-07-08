@@ -1,33 +1,29 @@
-/*
- * Localization test program for CUPS.
- *
- * Usage:
- *
- *   ./testlang [-l locale] [-p ppd] ["String to localize"]
- *
- * Copyright © 2021 by OpenPrinting.
- * Copyright © 2007-2017 by Apple Inc.
- * Copyright © 1997-2006 by Easy Software Products.
- *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more
- * information.
- */
-
-/*
- * Include necessary headers...
- */
+//
+// Localization test program for CUPS.
+//
+// Usage:
+//
+//   ./testlang [-l locale] [-p ppd] ["String to localize"]
+//
+// Copyright © 2021 by OpenPrinting.
+// Copyright © 2007-2017 by Apple Inc.
+// Copyright © 1997-2006 by Easy Software Products.
+//
+// Licensed under Apache License v2.0.  See the file "LICENSE" for more
+// information.
+//
 
 #include "cups-private.h"
 #include "ppd-private.h"
 #ifdef __APPLE__
 #  include <CoreFoundation/CoreFoundation.h>
-#endif /* __APPLE__ */
+#endif // __APPLE__
 #include <cups/dir.h>
 
 
-/*
- * Local functions...
- */
+//
+// Local functions...
+//
 
 static int	show_ppd(const char *filename);
 #ifdef __APPLE__
@@ -38,26 +34,23 @@ static int	test_string(cups_lang_t *language, const char *msgid);
 static void	usage(void);
 
 
-/*
- * 'main()' - Load the specified language and show the strings for yes and no.
- */
+//
+// 'main()' - Load the specified language and show the strings for yes and no.
+//
 
-int					/* O - Exit status */
-main(int  argc,				/* I - Number of command-line arguments */
-     char *argv[])			/* I - Command-line arguments */
+int					// O - Exit status
+main(int  argc,				// I - Number of command-line arguments
+     char *argv[])			// I - Command-line arguments
 {
-  int		i;			/* Looping var */
-  const char	*opt;			/* Current option */
-  int		errors = 0;		/* Number of errors */
-  int		dotests = 1;		/* Do standard tests? */
-  const char	*lang = NULL;		/* Single language test? */
-  cups_lang_t	*language = NULL;	/* Message catalog */
+  int		i;			// Looping var
+  const char	*opt;			// Current option
+  int		errors = 0;		// Number of errors
+  int		dotests = 1;		// Do standard tests?
+  const char	*lang = NULL;		// Single language test?
+  cups_lang_t	*language = NULL;	// Message catalog
 
 
- /*
-  * Parse command-line...
-  */
-
+  // Parse command-line...
   _cupsSetLocale(argv);
 
   for (i = 1; i < argc; i ++)
@@ -118,20 +111,14 @@ main(int  argc,				/* I - Number of command-line arguments */
   {
     if (lang)
     {
-     /*
-      * Test a single language...
-      */
-
+      // Test a single language...
       errors += test_language(lang);
     }
     else
     {
-     /*
-      * Test all locales we find in LOCALEDIR...
-      */
-
-      cups_dir_t	*dir;		/* Locale directory */
-      cups_dentry_t	*dent;		/* Directory entry */
+      // Test all locales we find in LOCALEDIR...
+      cups_dir_t	*dir;		// Locale directory
+      cups_dentry_t	*dent;		// Directory entry
 
       if ((dir = cupsDirOpen(getenv("LOCALEDIR"))) != NULL)
       {
@@ -159,19 +146,19 @@ main(int  argc,				/* I - Number of command-line arguments */
 }
 
 
-/*
- * 'show_ppd()' - Show localized strings in a PPD file.
- *
- * TODO: Move this to the testppd program.
- */
+//
+// 'show_ppd()' - Show localized strings in a PPD file.
+//
+// TODO: Move this to the testppd program.
+//
 
-static int				/* O - Number of errors */
-show_ppd(const char *filename)		/* I - Filename */
+static int				// O - Number of errors
+show_ppd(const char *filename)		// I - Filename
 {
-  ppd_file_t	*ppd;			/* PPD file */
-  ppd_option_t	*option;		/* PageSize option */
-  ppd_choice_t	*choice;		/* PageSize/Letter choice */
-  char		buffer[1024];		/* String buffer */
+  ppd_file_t	*ppd;			// PPD file
+  ppd_option_t	*option;		// PageSize option
+  ppd_choice_t	*choice;		// PageSize/Letter choice
+  char		buffer[1024];		// String buffer
 
 
   if ((ppd = ppdOpenFile(filename)) == NULL)
@@ -211,31 +198,28 @@ show_ppd(const char *filename)		/* I - Filename */
 
 
 #ifdef __APPLE__
-/*
- * 'test_apple()' - Test macOS locale handing...
- */
+//
+// 'test_apple()' - Test macOS locale handing...
+//
 
-static int				/* O - Number of errors */
+static int				// O - Number of errors
 test_apple(void)
 {
-  int		errors = 0;		/* Number of errors */
-  CFIndex	i,			/* Looping var */
-		num_locales;		/* Number of locales */
-  CFArrayRef	locales;		/* Locales */
-  CFStringRef	locale_id,		/* Current locale ID */
-		language_id;		/* Current language ID */
-  cups_lang_t	*language = NULL;	/* Message catalog */
-  char		locale_str[256],	/* Locale ID C string */
-		language_str[256],	/* Language ID C string */
-		buffer[1024],		/* String buffer */
-		*bufptr;		/* Pointer to ".UTF-8" in POSIX locale */
-  size_t	buflen;			/* Length of POSIX locale */
+  int		errors = 0;		// Number of errors
+  CFIndex	i,			// Looping var
+		num_locales;		// Number of locales
+  CFArrayRef	locales;		// Locales
+  CFStringRef	locale_id,		// Current locale ID
+		language_id;		// Current language ID
+  cups_lang_t	*language = NULL;	// Message catalog
+  char		locale_str[256],	// Locale ID C string
+		language_str[256],	// Language ID C string
+		buffer[1024],		// String buffer
+		*bufptr;		// Pointer to ".UTF-8" in POSIX locale
+  size_t	buflen;			// Length of POSIX locale
 
 
- /*
-  * Test all possible language IDs for compatibility with _cupsAppleLocale...
-  */
-
+  // Test all possible language IDs for compatibility with _cupsAppleLocale...
   locales     = CFLocaleCopyAvailableLocaleIdentifiers();
   num_locales = CFArrayGetCount(locales);
 
@@ -305,21 +289,21 @@ test_apple(void)
 #endif // __APPLE__
 
 
-/*
- * 'test_language()' - Test a specific language...
- */
+//
+// 'test_language()' - Test a specific language...
+//
 
-static int				/* O - Number of errors */
-test_language(const char *lang)		/* I - Locale language code, NULL for default */
+static int				// O - Number of errors
+test_language(const char *lang)		// I - Locale language code, NULL for default
 {
-  int		i;			/* Looping var */
-  int		errors = 0;		/* Number of errors */
-  cups_lang_t	*language = NULL,	/* Message catalog */
-		*language2 = NULL;	/* Message catalog (second time) */
-  struct lconv	*loc;			/* Locale data */
-  char		buffer[1024];		/* String buffer */
-  double	number;			/* Number */
-  static const char * const tests[] =	/* Test strings */
+  int		i;			// Looping var
+  int		errors = 0;		// Number of errors
+  cups_lang_t	*language = NULL,	// Message catalog
+		*language2 = NULL;	// Message catalog (second time)
+  struct lconv	*loc;			// Locale data
+  char		buffer[1024];		// String buffer
+  double	number;			// Number
+  static const char * const tests[] =	// Test strings
   {
     "1",
     "-1",
@@ -432,24 +416,21 @@ test_language(const char *lang)		/* I - Locale language code, NULL for default *
 }
 
 
-/*
- * 'test_string()' - Test the localization of a string.
- */
+//
+// 'test_string()' - Test the localization of a string.
+//
 
-static int				/* O - 1 on failure, 0 on success */
-test_string(cups_lang_t *language,	/* I - Language */
-            const char  *msgid)		/* I - Message */
+static int				// O - 1 on failure, 0 on success
+test_string(cups_lang_t *language,	// I - Language
+            const char  *msgid)		// I - Message
 {
-  const char  *msgstr;			/* Localized string */
+  const char  *msgstr;			// Localized string
 
 
- /*
-  * Get the localized string and then see if we got what we expected.
-  *
-  * For the POSIX locale, the string pointers should be the same.
-  * For any other locale, the string pointers should be different.
-  */
-
+  // Get the localized string and then see if we got what we expected.
+  //
+  // For the POSIX locale, the string pointers should be the same.
+  // For any other locale, the string pointers should be different.
   printf("_cupsLangString(\"%s\"): ", msgid);
   msgstr = _cupsLangString(language, msgid);
   if (strcmp(language->language, "C") && msgid == msgstr)
@@ -469,9 +450,9 @@ test_string(cups_lang_t *language,	/* I - Language */
 }
 
 
-/*
- * 'usage()' - Show program usage.
- */
+//
+// 'usage()' - Show program usage.
+//
 
 static void
 usage(void)

@@ -1,17 +1,13 @@
-/*
- * Array test program for CUPS.
- *
- * Copyright © 2021-2022 by OpenPrinting.
- * Copyright © 2007-2014 by Apple Inc.
- * Copyright © 1997-2006 by Easy Software Products.
- *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more
- * information.
- */
-
-/*
- * Include necessary headers...
- */
+//
+// Array test program for CUPS.
+//
+// Copyright © 2021-2023 by OpenPrinting.
+// Copyright © 2007-2014 by Apple Inc.
+// Copyright © 1997-2006 by Easy Software Products.
+//
+// Licensed under Apache License v2.0.  See the file "LICENSE" for more
+// information.
+//
 
 #include "string-private.h"
 #include "debug-private.h"
@@ -20,75 +16,67 @@
 #include "test-internal.h"
 
 
-/*
- * Local functions...
- */
+//
+// Local functions...
+//
 
 static double	get_seconds(void);
 static int	load_words(const char *filename, cups_array_t *array);
 
 
-/*
- * 'main()' - Main entry.
- */
+//
+// 'main()' - Main entry.
+//
 
-int					/* O - Exit status */
+int					// O - Exit status
 main(void)
 {
-  int		i;			/* Looping var */
-  cups_array_t	*array,			/* Test array */
-		*dup_array;		/* Duplicate array */
-  int		status;			/* Exit status */
-  char		*text;			/* Text from array */
-  char		word[256];		/* Word from file */
-  double	start,			/* Start time */
-		end;			/* End time */
-  cups_dir_t	*dir;			/* Current directory */
-  cups_dentry_t	*dent;			/* Directory entry */
-  char		*saved[32];		/* Saved entries */
-  void		*data;			/* User data for arrays */
+  int		i;			// Looping var
+  cups_array_t	*array,			// Test array
+		*dup_array;		// Duplicate array
+  int		status;			// Exit status
+  char		*text;			// Text from array
+  char		word[256];		// Word from file
+  double	start,			// Start time
+		end;			// End time
+  cups_dir_t	*dir;			// Current directory
+  cups_dentry_t	*dent;			// Directory entry
+  char		*saved[32];		// Saved entries
+  void		*data;			// User data for arrays
 
 
- /*
-  * No errors so far...
-  */
-
+  // No errors so far...
   status = 0;
 
- /*
-  * cupsArrayNew()
-  */
-
+  // cupsArrayNew()
   testBegin("cupsArrayNew");
 
   data  = (void *)"testarray";
   array = cupsArrayNew((cups_array_cb_t)strcmp, data, NULL, 0, (cups_acopy_cb_t)strdup, (cups_afree_cb_t)free);
 
   if (array)
+  {
     testEnd(true);
+  }
   else
   {
     testEndMessage(false, "returned NULL, expected pointer");
     status ++;
   }
 
- /*
-  * cupsArrayGetUserData()
-  */
-
+  // cupsArrayGetUserData()
   testBegin("cupsArrayGetUserData");
   if (cupsArrayGetUserData(array) == data)
+  {
     testEnd(true);
+  }
   else
   {
     testEndMessage(false, "returned %p instead of %p", cupsArrayGetUserData(array), data);
     status ++;
   }
 
- /*
-  * cupsArrayAdd()
-  */
-
+  // cupsArrayAdd()
   testBegin("cupsArrayAdd");
 
   if (!cupsArrayAdd(array, "One Fish"))
@@ -123,141 +111,128 @@ main(void)
     }
   }
 
- /*
-  * cupsArrayGetCount()
-  */
-
+  // cupsArrayGetCount()
   testBegin("cupsArrayGetCount");
   if (cupsArrayGetCount(array) == 4)
+  {
     testEnd(true);
+  }
   else
   {
     testEndMessage(false, "returned %d, expected 4", cupsArrayGetCount(array));
     status ++;
   }
 
- /*
-  * cupsArrayGetFirst()
-  */
-
+  // cupsArrayGetFirst()
   testBegin("cupsArrayGetFirst");
   if ((text = (char *)cupsArrayGetFirst(array)) != NULL && !strcmp(text, "Blue Fish"))
+  {
     testEnd(true);
+  }
   else
   {
     testEndMessage(false, "returned \"%s\", expected \"Blue Fish\"", text);
     status ++;
   }
 
- /*
-  * cupsArrayGetNext()
-  */
-
+  // cupsArrayGetNext()
   testBegin("cupsArrayGetNext");
   if ((text = (char *)cupsArrayGetNext(array)) != NULL && !strcmp(text, "One Fish"))
+  {
     testEnd(true);
+  }
   else
   {
     testEndMessage(false, "returned \"%s\", expected \"One Fish\"", text);
     status ++;
   }
 
- /*
-  * cupsArrayGetLast()
-  */
-
+  // cupsArrayGetLast()
   testBegin("cupsArrayGetLast");
   if ((text = (char *)cupsArrayGetLast(array)) != NULL && !strcmp(text, "Two Fish"))
+  {
     testEnd(true);
+  }
   else
   {
     testEndMessage(false, "returned \"%s\", expected \"Two Fish\"", text);
     status ++;
   }
 
- /*
-  * cupsArrayGetPrev()
-  */
-
+  // cupsArrayGetPrev()
   testBegin("cupsArrayGetPrev");
   if ((text = (char *)cupsArrayGetPrev(array)) != NULL && !strcmp(text, "Red Fish"))
+  {
     testEnd(true);
+  }
   else
   {
     testEndMessage(false, "returned \"%s\", expected \"Red Fish\"", text);
     status ++;
   }
 
- /*
-  * cupsArrayFind()
-  */
-
+  // cupsArrayFind()
   testBegin("cupsArrayFind");
   if ((text = (char *)cupsArrayFind(array, (void *)"One Fish")) != NULL && !strcmp(text, "One Fish"))
+  {
     testEnd(true);
+  }
   else
   {
     testEndMessage(false, "returned \"%s\", expected \"One Fish\"", text);
     status ++;
   }
 
- /*
-  * cupsArrayGetCurrent()
-  */
-
+  // cupsArrayGetCurrent()
   testBegin("cupsArrayGetCurrent");
   if ((text = (char *)cupsArrayGetCurrent(array)) != NULL && !strcmp(text, "One Fish"))
+  {
     testEnd(true);
+  }
   else
   {
     testEndMessage(false, "returned \"%s\", expected \"One Fish\"", text);
     status ++;
   }
 
- /*
-  * cupsArrayDup()
-  */
-
+  // cupsArrayDup()
   testBegin("cupsArrayDup");
   if ((dup_array = cupsArrayDup(array)) != NULL && cupsArrayGetCount(dup_array) == 4)
+  {
     testEnd(true);
+  }
   else
   {
     testEndMessage(false, "returned %p with %d elements, expected pointer with 4 elements", (void *)dup_array, cupsArrayGetCount(dup_array));
     status ++;
   }
 
- /*
-  * cupsArrayRemove()
-  */
-
+  // cupsArrayRemove()
   testBegin("cupsArrayRemove");
   if (cupsArrayRemove(array, (void *)"One Fish") && cupsArrayGetCount(array) == 3)
+  {
     testEnd(true);
+  }
   else
   {
     testEndMessage(false, "returned 0 with %d elements, expected 1 with 4 elements", cupsArrayGetCount(array));
     status ++;
   }
 
- /*
-  * cupsArrayClear()
-  */
-
+  // cupsArrayClear()
   testBegin("cupsArrayClear");
   cupsArrayClear(array);
   if (cupsArrayGetCount(array) == 0)
+  {
     testEnd(true);
+  }
   else
   {
     testEndMessage(false, "%d elements, expected 0 elements", cupsArrayGetCount(array));
     status ++;
   }
 
- /*
-  * Now load this source file and grab all of the unique words...
-  */
-
+  // Now load this source file and grab all of the unique words...
   testBegin("Load unique words");
 
   start = get_seconds();
@@ -293,17 +268,11 @@ main(void)
 
       for (text = (char *)cupsArrayGetFirst(array); text;)
       {
-       /*
-	* Copy this word to the word buffer (safe because we strdup'd from
-	* the same buffer in the first place... :)
-	*/
-
+        // Copy this word to the word buffer (safe because we strdup'd from
+	// the same buffer in the first place... :)
 	cupsCopyString(word, text, sizeof(word));
 
-       /*
-	* Grab the next word and compare...
-	*/
-
+        // Grab the next word and compare...
 	if ((text = (char *)cupsArrayGetNext(array)) == NULL)
 	  break;
 
@@ -317,14 +286,13 @@ main(void)
 	status ++;
       }
       else
+      {
 	testEndMessage(true, "%d words in %.3f seconds - %.0f words/sec", cupsArrayGetCount(array), end - start, cupsArrayGetCount(array) / (end - start));
+      }
     }
   }
 
- /*
-  * Test deleting with iteration...
-  */
-
+  // Test deleting with iteration...
   testBegin("Delete While Iterating");
 
   text = (char *)cupsArrayGetFirst(array);
@@ -337,12 +305,11 @@ main(void)
     status ++;
   }
   else
+  {
     testEnd(true);
+  }
 
- /*
-  * Test save/restore...
-  */
-
+  // Test save/restore...
   testBegin("cupsArraySave");
 
   for (i = 0, text = (char *)cupsArrayGetFirst(array); i < 32; i ++, text = (char *)cupsArrayGetNext(array))
@@ -374,17 +341,11 @@ main(void)
   else
     testEnd(true);
 
- /*
-  * Delete the arrays...
-  */
-
+  // Delete the arrays...
   cupsArrayDelete(array);
   cupsArrayDelete(dup_array);
 
- /*
-  * Test the array with string functions...
-  */
-
+  // Test the array with string functions...
   testBegin("cupsArrayNewStrings(\" \\t\\nfoo bar\\tboo\\nfar\", ' ')");
   array = cupsArrayNewStrings(" \t\nfoo bar\tboo\nfar", ' ');
   if (!array)
@@ -418,7 +379,9 @@ main(void)
     testEndMessage(false, "fourth element \"%s\", expected \"foo\"", text);
   }
   else
+  {
     testEnd(true);
+  }
 
   testBegin("cupsArrayAddStrings(array, \"foo2,bar2\", ',')");
   cupsArrayAddStrings(array, "foo2,bar2", ',');
@@ -494,9 +457,9 @@ main(void)
 }
 
 
-/*
- * 'get_seconds()' - Get the current time in seconds...
- */
+//
+// 'get_seconds()' - Get the current time in seconds...
+//
 
 #ifdef _WIN32
 #  include <windows.h>
@@ -513,25 +476,25 @@ get_seconds(void)
 static double
 get_seconds(void)
 {
-  struct timeval	curtime;	/* Current time */
+  struct timeval	curtime;	// Current time
 
 
   gettimeofday(&curtime, NULL);
   return (curtime.tv_sec + 0.000001 * curtime.tv_usec);
 }
-#endif /* _WIN32 */
+#endif // _WIN32
 
 
-/*
- * 'load_words()' - Load words from a file.
- */
+//
+// 'load_words()' - Load words from a file.
+//
 
-static int				/* O - 1 on success, 0 on failure */
-load_words(const char   *filename,	/* I - File to load */
-           cups_array_t *array)		/* I - Array to add to */
+static int				// O - 1 on success, 0 on failure
+load_words(const char   *filename,	// I - File to load
+           cups_array_t *array)		// I - Array to add to
 {
-  FILE		*fp;			/* Test file */
-  char		word[256];		/* Word from file */
+  FILE		*fp;			// Test file
+  char		word[256];		// Word from file
 
 
   testProgress();

@@ -1,28 +1,23 @@
-/*
- * Option encoding routines for CUPS.
- *
- * Copyright © 2021 by OpenPrinting.
- * Copyright © 2007-2019 by Apple Inc.
- * Copyright © 1997-2007 by Easy Software Products.
- *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more
- * information.
- */
-
-/*
- * Include necessary headers...
- */
+//
+// Option encoding routines for CUPS.
+//
+// Copyright © 2021-2023 by OpenPrinting.
+// Copyright © 2007-2019 by Apple Inc.
+// Copyright © 1997-2007 by Easy Software Products.
+//
+// Licensed under Apache License v2.0.  See the file "LICENSE" for more
+// information.
+//
 
 #include "cups-private.h"
-#include "debug-internal.h"
 
 
-/*
- * Local list of option names, the value tags they should use, and the list of
- * supported operations...
- *
- * **** THIS LIST MUST BE SORTED BY ATTRIBUTE NAME ****
- */
+//
+// Local list of option names, the value tags they should use, and the list of
+// supported operations...
+//
+// **** THIS LIST MUST BE SORTED BY ATTRIBUTE NAME ****
+//
 
 static const ipp_op_t ipp_job_creation[] =
 {
@@ -87,9 +82,9 @@ static const _ipp_option_t ipp_options[] =
   { 0, "copies",		IPP_TAG_INTEGER,	IPP_TAG_JOB,
 							IPP_TAG_DOCUMENT },
   { 0, "copies-default",	IPP_TAG_INTEGER,	IPP_TAG_PRINTER },
-  { 0, "date-time-at-completed",IPP_TAG_DATE,		IPP_TAG_ZERO }, /* never send as option */
-  { 0, "date-time-at-creation",	IPP_TAG_DATE,		IPP_TAG_ZERO }, /* never send as option */
-  { 0, "date-time-at-processing",IPP_TAG_DATE,		IPP_TAG_ZERO }, /* never send as option */
+  { 0, "date-time-at-completed",IPP_TAG_DATE,		IPP_TAG_ZERO }, // never send as option
+  { 0, "date-time-at-creation",	IPP_TAG_DATE,		IPP_TAG_ZERO }, // never send as option
+  { 0, "date-time-at-processing",IPP_TAG_DATE,		IPP_TAG_ZERO }, // never send as option
   { 0, "device-uri",		IPP_TAG_URI,		IPP_TAG_PRINTER },
   { 1, "document-copies",	IPP_TAG_RANGE,		IPP_TAG_JOB,
 							IPP_TAG_DOCUMENT,
@@ -117,19 +112,19 @@ static const _ipp_option_t ipp_options[] =
   { 0, "job-cancel-after-default", IPP_TAG_INTEGER,	IPP_TAG_PRINTER },
   { 0, "job-hold-until",	IPP_TAG_KEYWORD,	IPP_TAG_JOB },
   { 0, "job-hold-until-default", IPP_TAG_KEYWORD,	IPP_TAG_PRINTER },
-  { 0, "job-id",		IPP_TAG_INTEGER,	IPP_TAG_ZERO }, /* never send as option */
+  { 0, "job-id",		IPP_TAG_INTEGER,	IPP_TAG_ZERO }, // never send as option
   { 0, "job-impressions",	IPP_TAG_INTEGER,	IPP_TAG_OPERATION },
-  { 0, "job-impressions-completed", IPP_TAG_INTEGER,	IPP_TAG_ZERO }, /* never send as option */
+  { 0, "job-impressions-completed", IPP_TAG_INTEGER,	IPP_TAG_ZERO }, // never send as option
   { 0, "job-k-limit",		IPP_TAG_INTEGER,	IPP_TAG_PRINTER },
   { 0, "job-k-octets",		IPP_TAG_INTEGER,	IPP_TAG_OPERATION },
-  { 0, "job-k-octets-completed",IPP_TAG_INTEGER,	IPP_TAG_ZERO }, /* never send as option */
+  { 0, "job-k-octets-completed",IPP_TAG_INTEGER,	IPP_TAG_ZERO }, // never send as option
   { 0, "job-media-sheets",	IPP_TAG_INTEGER,	IPP_TAG_OPERATION },
-  { 0, "job-media-sheets-completed", IPP_TAG_INTEGER,	IPP_TAG_ZERO }, /* never send as option */
+  { 0, "job-media-sheets-completed", IPP_TAG_INTEGER,	IPP_TAG_ZERO }, // never send as option
   { 0, "job-name",		IPP_TAG_NAME,		IPP_TAG_OPERATION,
 							IPP_TAG_JOB },
   { 0, "job-page-limit",	IPP_TAG_INTEGER,	IPP_TAG_PRINTER },
   { 0, "job-pages",		IPP_TAG_INTEGER,	IPP_TAG_OPERATION },
-  { 0, "job-pages-completed",	IPP_TAG_INTEGER,	IPP_TAG_ZERO }, /* never send as option */
+  { 0, "job-pages-completed",	IPP_TAG_INTEGER,	IPP_TAG_ZERO }, // never send as option
   { 0, "job-password",          IPP_TAG_STRING,         IPP_TAG_OPERATION,
 							IPP_TAG_ZERO,
 							ipp_job_creation },
@@ -143,9 +138,9 @@ static const _ipp_option_t ipp_options[] =
   { 1, "job-sheets-col",	IPP_TAG_BEGIN_COLLECTION, IPP_TAG_JOB },
   { 1, "job-sheets-col-default", IPP_TAG_BEGIN_COLLECTION, IPP_TAG_PRINTER },
   { 1, "job-sheets-default",	IPP_TAG_NAME,		IPP_TAG_PRINTER },
-  { 0, "job-state",		IPP_TAG_ENUM,		IPP_TAG_ZERO }, /* never send as option */
-  { 0, "job-state-message",	IPP_TAG_TEXT,		IPP_TAG_ZERO }, /* never send as option */
-  { 0, "job-state-reasons",	IPP_TAG_KEYWORD,	IPP_TAG_ZERO }, /* never send as option */
+  { 0, "job-state",		IPP_TAG_ENUM,		IPP_TAG_ZERO }, // never send as option
+  { 0, "job-state-message",	IPP_TAG_TEXT,		IPP_TAG_ZERO }, // never send as option
+  { 0, "job-state-reasons",	IPP_TAG_KEYWORD,	IPP_TAG_ZERO }, // never send as option
   { 0, "job-uuid",		IPP_TAG_URI,		IPP_TAG_JOB },
   { 1, "marker-change-time",	IPP_TAG_INTEGER,	IPP_TAG_PRINTER },
   { 1, "marker-colors",		IPP_TAG_NAME,		IPP_TAG_PRINTER },
@@ -268,9 +263,9 @@ static const _ipp_option_t ipp_options[] =
   { 0, "sides",			IPP_TAG_KEYWORD,	IPP_TAG_JOB,
 							IPP_TAG_DOCUMENT },
   { 0, "sides-default",		IPP_TAG_KEYWORD,	IPP_TAG_PRINTER },
-  { 0, "time-at-completed",	IPP_TAG_INTEGER,	IPP_TAG_ZERO }, /* never send as option */
-  { 0, "time-at-creation",	IPP_TAG_INTEGER,	IPP_TAG_ZERO }, /* never send as option */
-  { 0, "time-at-processing",	IPP_TAG_INTEGER,	IPP_TAG_ZERO }, /* never send as option */
+  { 0, "time-at-completed",	IPP_TAG_INTEGER,	IPP_TAG_ZERO }, // never send as option
+  { 0, "time-at-creation",	IPP_TAG_INTEGER,	IPP_TAG_ZERO }, // never send as option
+  { 0, "time-at-processing",	IPP_TAG_INTEGER,	IPP_TAG_ZERO }, // never send as option
   { 0, "x-dimension",		IPP_TAG_INTEGER,	IPP_TAG_JOB,
 							IPP_TAG_DOCUMENT },
   { 0, "y-dimension",		IPP_TAG_INTEGER,	IPP_TAG_JOB,
@@ -278,45 +273,42 @@ static const _ipp_option_t ipp_options[] =
 };
 
 
-/*
- * Local functions...
- */
+//
+// Local functions...
+//
 
 static int	compare_ipp_options(_ipp_option_t *a, _ipp_option_t *b);
 
 
-/*
- * '_cupsEncodeOption()' - Encode a single option as an IPP attribute.
- */
+//
+// '_cupsEncodeOption()' - Encode a single option as an IPP attribute.
+//
 
-ipp_attribute_t *			/* O - New attribute or @code NULL@ on error */
+ipp_attribute_t *			// O - New attribute or @code NULL@ on error
 _cupsEncodeOption(
-    ipp_t         *ipp,			/* I - IPP request/response/collection */
-    ipp_tag_t     group_tag,		/* I - Group tag */
-    _ipp_option_t *map,			/* I - Option mapping, if any */
-    const char    *name,		/* I - Attribute name */
-    const char    *value)		/* I - Value */
+    ipp_t         *ipp,			// I - IPP request/response/collection
+    ipp_tag_t     group_tag,		// I - Group tag
+    _ipp_option_t *map,			// I - Option mapping, if any
+    const char    *name,		// I - Attribute name
+    const char    *value)		// I - Value
 {
-  size_t		i,		/* Looping var */
-			count;		/* Number of values */
-  char			*s,		/* Pointer into option value */
-			*val,		/* Pointer to option value */
-			*copy,		/* Copy of option value */
-			*sep,		/* Option separator */
-			quote;		/* Quote character */
-  ipp_attribute_t	*attr;		/* IPP attribute */
-  ipp_tag_t		value_tag;	/* IPP value tag */
-  ipp_t			*collection;	/* Collection value */
-  size_t		num_cols;	/* Number of collection values */
-  cups_option_t		*cols;		/* Collection values */
+  size_t		i,		// Looping var
+			count;		// Number of values
+  char			*s,		// Pointer into option value
+			*val,		// Pointer to option value
+			*copy,		// Copy of option value
+			*sep,		// Option separator
+			quote;		// Quote character
+  ipp_attribute_t	*attr;		// IPP attribute
+  ipp_tag_t		value_tag;	// IPP value tag
+  ipp_t			*collection;	// Collection value
+  size_t		num_cols;	// Number of collection values
+  cups_option_t		*cols;		// Collection values
 
 
   DEBUG_printf("_cupsEncodeOption(ipp=%p(%s), group=%s, map=%p, name=\"%s\", value=\"%s\")", (void *)ipp, ipp ? ippOpString(ippGetOperation(ipp)) : "", ippTagString(group_tag), (void *)map, name, value);
 
- /*
-  * Figure out the attribute syntax for encoding...
-  */
-
+  // Figure out the attribute syntax for encoding...
   if (!map)
     map = _ippFindOption(name);
 
@@ -329,61 +321,51 @@ _cupsEncodeOption(
   else
     value_tag = IPP_TAG_NAME;
 
- /*
-  * Count the number of values...
-  */
-
+  // Count the number of values...
   if (map && map->multivalue)
   {
     for (count = 1, sep = (char *)value, quote = 0; *sep; sep ++)
     {
       if (*sep == quote)
+      {
 	quote = 0;
+      }
       else if (!quote && (*sep == '\'' || *sep == '\"'))
       {
-       /*
-	* Skip quoted option value...
-	*/
-
+        // Skip quoted option value...
 	quote = *sep;
       }
       else if (*sep == ',' && !quote)
+      {
 	count ++;
+      }
       else if (*sep == '\\' && sep[1])
+      {
 	sep ++;
+      }
     }
   }
   else
+  {
     count = 1;
+  }
 
   DEBUG_printf("2_cupsEncodeOption: value_tag=%s, count=%u", ippTagString(value_tag), (unsigned)count);
 
- /*
-  * Allocate memory for the attribute values...
-  */
-
+  // Allocate memory for the attribute values...
   if ((attr = ippAddStrings(ipp, group_tag, value_tag, name, count, NULL, NULL)) == NULL)
   {
-   /*
-    * Ran out of memory!
-    */
-
+    // Ran out of memory!
     DEBUG_puts("1_cupsEncodeOption: Ran out of memory for attributes.");
     return (NULL);
   }
 
   if (count > 1)
   {
-   /*
-    * Make a copy of the value we can fiddle with...
-    */
-
+    // Make a copy of the value we can fiddle with...
     if ((copy = strdup(value)) == NULL)
     {
-     /*
-      * Ran out of memory!
-      */
-
+      // Ran out of memory!
       DEBUG_puts("1_cupsEncodeOption: Ran out of memory for value copy.");
       ippDeleteAttribute(ipp, attr);
       return (NULL);
@@ -393,52 +375,36 @@ _cupsEncodeOption(
   }
   else
   {
-   /*
-    * Since we have a single value, use the value directly...
-    */
-
+    // Since we have a single value, use the value directly...
     val  = (char *)value;
     copy = NULL;
   }
 
- /*
-  * Scan the value string for values...
-  */
-
+  // Scan the value string for values...
   for (i = 0, sep = val; i < count; val = sep, i ++)
   {
-   /*
-    * Find the end of this value and mark it if needed...
-    */
-
+    // Find the end of this value and mark it if needed...
     if (count > 1)
     {
       for (quote = 0; *sep; sep ++)
       {
 	if (*sep == quote)
 	{
-	 /*
-	  * Finish quoted value...
-	  */
-
+	  // Finish quoted value...
 	  quote = 0;
 	}
 	else if (!quote && (*sep == '\'' || *sep == '\"'))
 	{
-	 /*
-	  * Handle quoted option value...
-	  */
-
+	  // Handle quoted option value...
 	  quote = *sep;
 	}
 	else if (*sep == ',')
+	{
 	  break;
+	}
 	else if (*sep == '\\' && sep[1])
 	{
-	 /*
-	  * Skip quoted character...
-	  */
-
+	  // Skip quoted character...
 	  memmove(sep, sep + 1, strlen(sep));
 	}
       }
@@ -447,47 +413,35 @@ _cupsEncodeOption(
 	*sep++ = '\0';
     }
 
-   /*
-    * Copy the option value(s) over as needed by the type...
-    */
-
+    // Copy the option value(s) over as needed by the type...
     switch (attr->value_tag)
     {
       case IPP_TAG_INTEGER :
       case IPP_TAG_ENUM :
-	 /*
-	  * Integer/enumeration value...
-	  */
-
-	  ippSetInteger(ipp, &attr, i, (int)strtol(val, &s, 10));
+	  // Integer/enumeration value...
+	  if (isdigit(*val) || *val == '-' || *val == '+')
+	    ippSetInteger(ipp, &attr, i, (int)strtol(val, &s, 10));
+	  else
+	    ippSetInteger(ipp, &attr, i, ippEnumValue(name, val));
 	  break;
 
       case IPP_TAG_BOOLEAN :
 	  if (!_cups_strcasecmp(val, "true") || !_cups_strcasecmp(val, "on") || !_cups_strcasecmp(val, "yes"))
 	  {
-	   /*
-	    * Boolean value - true...
-	    */
-
+	    // Boolean value - true...
             ippSetBoolean(ipp, &attr, i, 1);
 	  }
 	  else
 	  {
-	   /*
-	    * Boolean value - false...
-	    */
-
+	    // Boolean value - false...
             ippSetBoolean(ipp, &attr, i, 0);
 	  }
 	  break;
 
       case IPP_TAG_RANGE :
           {
-	   /*
-	    * Range...
-	    */
-
-	    int lower, upper;		/* Lower and upper ranges... */
+	    // Range...
+	    int lower, upper;		// Lower and upper ranges...
 
 	    if (*val == '-')
 	    {
@@ -495,7 +449,9 @@ _cupsEncodeOption(
 	      s     = val;
 	    }
 	    else
+	    {
 	      lower = (int)strtol(val, &s, 10);
+	    }
 
 	    if (*s == '-')
 	    {
@@ -505,7 +461,9 @@ _cupsEncodeOption(
 		upper = 2147483647;
 	    }
 	    else
+	    {
 	      upper = lower;
+	    }
 
             ippSetRange(ipp, &attr, i, lower, upper);
 	  }
@@ -513,11 +471,9 @@ _cupsEncodeOption(
 
       case IPP_TAG_RESOLUTION :
           {
-	   /*
-	    * Resolution...
-	    */
-	    int		xres, yres;	/* Resolution values */
-	    ipp_res_t	units;		/* Resolution units */
+	    // Resolution...
+	    int		xres, yres;	// Resolution values
+	    ipp_res_t	units;		// Resolution units
 
 	    xres = (int)strtol(val, &s, 10);
 
@@ -536,18 +492,12 @@ _cupsEncodeOption(
 	  break;
 
       case IPP_TAG_STRING :
-	 /*
-	  * octetString
-	  */
-
+	  // octetString
           ippSetOctetString(ipp, &attr, i, val, strlen(val));
 	  break;
 
       case IPP_TAG_BEGIN_COLLECTION :
-	 /*
-	  * Collection value
-	  */
-
+	  // Collection value
 	  num_cols = cupsParseOptions(val, 0, &cols);
 	  if ((collection = ippNew()) == NULL)
 	  {
@@ -578,64 +528,55 @@ _cupsEncodeOption(
 }
 
 
-/*
- * 'cupsEncodeOption()' - Encode a single option into an IPP attribute.
- *
- *
- */
+//
+// 'cupsEncodeOption()' - Encode a single option into an IPP attribute.
+//
+//
+//
 
-ipp_attribute_t	*			/* O - New attribute or @code NULL@ on error */
-cupsEncodeOption(ipp_t      *ipp,	/* I - IPP request/response */
-                 ipp_tag_t  group_tag,	/* I - Attribute group */
-                 const char *name,	/* I - Option name */
-                 const char *value)	/* I - Option string value */
+ipp_attribute_t	*			// O - New attribute or @code NULL@ on error
+cupsEncodeOption(ipp_t      *ipp,	// I - IPP request/response
+                 ipp_tag_t  group_tag,	// I - Attribute group
+                 const char *name,	// I - Option name
+                 const char *value)	// I - Option string value
 {
   return (_cupsEncodeOption(ipp, group_tag, _ippFindOption(name), name, value));
 }
 
 
-/*
- * 'cupsEncodeOptions()' - Encode printer options into IPP attributes for a group.
- *
- * This function encodes options as IPP attributes for a single group. Call this
- * function multiple times for each group as needed.
- */
+//
+// 'cupsEncodeOptions()' - Encode printer options into IPP attributes for a group.
+//
+// This function encodes options as IPP attributes for a single group. Call this
+// function multiple times for each group as needed.
+//
 
 void
 cupsEncodeOptions(
-    ipp_t         *ipp,			/* I - IPP request/response */
-    size_t        num_options,		/* I - Number of options */
-    cups_option_t *options,		/* I - Options */
-    ipp_tag_t     group_tag)		/* I - Group to encode */
+    ipp_t         *ipp,			// I - IPP request/response
+    size_t        num_options,		// I - Number of options
+    cups_option_t *options,		// I - Options
+    ipp_tag_t     group_tag)		// I - Group to encode
 {
-  size_t			i;		/* Looping var */
-  char			*val;		/* Pointer to option value */
-  cups_option_t		*option;	/* Current option */
-  ipp_op_t		op;		/* Operation for this request */
-  const ipp_op_t	*ops;		/* List of allowed operations */
+  size_t			i;		// Looping var
+  char			*val;		// Pointer to option value
+  cups_option_t		*option;	// Current option
+  ipp_op_t		op;		// Operation for this request
+  const ipp_op_t	*ops;		// List of allowed operations
 
 
   DEBUG_printf("cupsEncodeOptions(ipp=%p(%s), num_options=%u, options=%p, group_tag=%x)", (void *)ipp, ipp ? ippOpString(ippGetOperation(ipp)) : "", (unsigned)num_options, (void *)options, group_tag);
 
- /*
-  * Range check input...
-  */
-
+  // Range check input...
   if (!ipp || num_options < 1 || !options)
     return;
 
- /*
-  * Do special handling for the document-format/raw options...
-  */
-
+  // Do special handling for the document-format/raw options...
   op = ippGetOperation(ipp);
 
   if (group_tag == IPP_TAG_OPERATION && (op == IPP_OP_PRINT_JOB || op == IPP_OP_PRINT_URI || op == IPP_OP_SEND_DOCUMENT || op == IPP_OP_SEND_URI))
   {
-   /*
-    * Handle the document format stuff first...
-    */
-
+    // Handle the document format stuff first...
     if ((val = (char *)cupsGetOption("document-format", num_options, options)) != NULL)
       ippAddString(ipp, IPP_TAG_OPERATION, IPP_TAG_MIMETYPE, "document-format", NULL, val);
     else if (cupsGetOption("raw", num_options, options))
@@ -644,40 +585,41 @@ cupsEncodeOptions(
       ippAddString(ipp, IPP_TAG_OPERATION, IPP_TAG_MIMETYPE, "document-format", NULL, "application/octet-stream");
   }
 
- /*
-  * Then loop through the options...
-  */
-
+  // Then loop through the options...
   for (i = num_options, option = options; i > 0; i --, option ++)
   {
-    _ipp_option_t	*match;		/* Matching attribute */
+    _ipp_option_t	*match;		// Matching attribute
 
-   /*
-    * Skip document format options that are handled above...
-    */
-
+    // Skip document format options that are handled above...
     if (!_cups_strcasecmp(option->name, "raw") || !_cups_strcasecmp(option->name, "document-format") || !option->name[0])
       continue;
 
-   /*
-    * Figure out the proper value and group tags for this option...
-    */
-
+    // Figure out the proper value and group tags for this option...
     if ((match = _ippFindOption(option->name)) != NULL)
     {
       if (match->group_tag != group_tag && match->alt_group_tag != group_tag)
         continue;
 
       if (match->operations)
+      {
         ops = match->operations;
+      }
       else if (group_tag == IPP_TAG_JOB)
+      {
         ops = ipp_job_creation;
+      }
       else if (group_tag == IPP_TAG_DOCUMENT)
+      {
         ops = ipp_doc_creation;
+      }
       else if (group_tag == IPP_TAG_SUBSCRIPTION)
+      {
         ops = ipp_sub_creation;
+      }
       else if (group_tag == IPP_TAG_PRINTER)
+      {
         ops = ipp_set_printer;
+      }
       else
       {
 	DEBUG_printf("2cupsEncodeOptions: Skipping \"%s\".", option->name);
@@ -686,7 +628,7 @@ cupsEncodeOptions(
     }
     else
     {
-      int	namelen;		/* Length of name */
+      int	namelen;		// Length of name
 
       namelen = (int)strlen(option->name);
 
@@ -712,15 +654,14 @@ cupsEncodeOptions(
         ops = ipp_set_printer;
     }
 
-   /*
-    * Verify that we send this attribute for this operation...
-    */
-
+    // Verify that we send this attribute for this operation...
     while (*ops != IPP_OP_CUPS_NONE)
+    {
       if (op == *ops)
         break;
       else
         ops ++;
+    }
 
     if (*ops == IPP_OP_CUPS_NONE && op != IPP_OP_CUPS_NONE)
     {
@@ -734,14 +675,14 @@ cupsEncodeOptions(
 
 
 #ifdef DEBUG
-/*
- * '_ippCheckOptions()' - Validate that the option array is sorted properly.
- */
+//
+// '_ippCheckOptions()' - Validate that the option array is sorted properly.
+//
 
-const char *				/* O - First out-of-order option or NULL */
+const char *				// O - First out-of-order option or NULL
 _ippCheckOptions(void)
 {
-  int	i;				/* Looping var */
+  int	i;				// Looping var
 
 
   for (i = 0; i < (int)(sizeof(ipp_options) / sizeof(ipp_options[0]) - 1); i ++)
@@ -750,23 +691,20 @@ _ippCheckOptions(void)
 
   return (NULL);
 }
-#endif /* DEBUG */
+#endif // DEBUG
 
 
-/*
- * '_ippFindOption()' - Find the attribute information for an option.
- */
+//
+// '_ippFindOption()' - Find the attribute information for an option.
+//
 
-_ipp_option_t *				/* O - Attribute information */
-_ippFindOption(const char *name)	/* I - Option/attribute name */
+_ipp_option_t *				// O - Attribute information
+_ippFindOption(const char *name)	// I - Option/attribute name
 {
-  _ipp_option_t	key;			/* Search key */
+  _ipp_option_t	key;			// Search key
 
 
- /*
-  * Lookup the proper value and group tags for this option...
-  */
-
+  // Lookup the proper value and group tags for this option...
   key.name = name;
 
   return ((_ipp_option_t *)bsearch(&key, ipp_options,
@@ -777,13 +715,13 @@ _ippFindOption(const char *name)	/* I - Option/attribute name */
 }
 
 
-/*
- * 'compare_ipp_options()' - Compare two IPP options.
- */
+//
+// 'compare_ipp_options()' - Compare two IPP options.
+//
 
-static int				/* O - Result of comparison */
-compare_ipp_options(_ipp_option_t *a,	/* I - First option */
-                    _ipp_option_t *b)	/* I - Second option */
+static int				// O - Result of comparison
+compare_ipp_options(_ipp_option_t *a,	// I - First option
+                    _ipp_option_t *b)	// I - Second option
 {
   return (strcmp(a->name, b->name));
 }

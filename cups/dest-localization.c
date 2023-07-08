@@ -1,61 +1,53 @@
-/*
- * Destination localization support for CUPS.
- *
- * Copyright © 2021-2022 by OpenPrinting.
- * Copyright © 2012-2017 by Apple Inc.
- *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more
- * information.
- */
-
-/*
- * Include necessary headers...
- */
+//
+// Destination localization support for CUPS.
+//
+// Copyright © 2021-2022 by OpenPrinting.
+// Copyright © 2012-2017 by Apple Inc.
+//
+// Licensed under Apache License v2.0.  See the file "LICENSE" for more
+// information.
+//
 
 #include "cups-private.h"
-#include "debug-internal.h"
 
 
-/*
- * Local functions...
- */
+//
+// Local functions...
+//
 
 static void	cups_load_localizations(http_t *http, cups_dinfo_t *dinfo);
 
 
-/*
- * 'cupsLocalizeDestMedia()' - Get the localized string for a destination media
- *                             size.
- *
- * The returned string is stored in the destination information and will become
- * invalid if the destination information is deleted.
- */
+//
+// 'cupsLocalizeDestMedia()' - Get the localized string for a destination media
+//                             size.
+//
+// The returned string is stored in the destination information and will become
+// invalid if the destination information is deleted.
+//
 
-const char *				/* O - Localized string */
+const char *				// O - Localized string
 cupsLocalizeDestMedia(
-    http_t       *http,			/* I - Connection to destination */
-    cups_dest_t  *dest,			/* I - Destination */
-    cups_dinfo_t *dinfo,		/* I - Destination information */
-    unsigned     flags,			/* I - Media flags */
-    cups_size_t  *size)			/* I - Media size */
+    http_t       *http,			// I - Connection to destination
+    cups_dest_t  *dest,			// I - Destination
+    cups_dinfo_t *dinfo,		// I - Destination information
+    unsigned     flags,			// I - Media flags
+    cups_size_t  *size)			// I - Media size
 {
-  cups_lang_t		*lang;		/* Standard localizations */
-  pwg_media_t		*pwg;		/* PWG media information */
-  cups_array_t		*db;		/* Media database */
-  _cups_media_db_t	*mdb;		/* Media database entry */
-  char			lstr[1024],	/* Localized size name */
-			temp[256];	/* Temporary string */
-  const char		*lsize,		/* Localized media size */
-			*lsource,	/* Localized media source */
-			*ltype;		/* Localized media type */
+  cups_lang_t		*lang;		// Standard localizations
+  pwg_media_t		*pwg;		// PWG media information
+  cups_array_t		*db;		// Media database
+  _cups_media_db_t	*mdb;		// Media database entry
+  char			lstr[1024],	// Localized size name
+			temp[256];	// Temporary string
+  const char		*lsize,		// Localized media size
+			*lsource,	// Localized media source
+			*ltype;		// Localized media type
 
 
   DEBUG_printf("cupsLocalizeDestMedia(http=%p, dest=%p, dinfo=%p, flags=%x, size=%p(\"%s\"))", (void *)http, (void *)dest, (void *)dinfo, flags, (void *)size, size ? size->media : "(null)");
 
- /*
-  * Range check input...
-  */
-
+  // Range check input...
   if (!http || !dest || !dinfo || !size)
   {
     DEBUG_puts("1cupsLocalizeDestMedia: Returning NULL.");
@@ -63,10 +55,7 @@ cupsLocalizeDestMedia(
     return (NULL);
   }
 
- /*
-  * Find the matching media database entry...
-  */
-
+  // Find the matching media database entry...
   if (flags & CUPS_MEDIA_FLAGS_READY)
     db = dinfo->ready_db;
   else
@@ -91,10 +80,7 @@ cupsLocalizeDestMedia(
     }
   }
 
- /*
-  * See if the localization is cached...
-  */
-
+  // See if the localization is cached...
   lang = cupsLangDefault();
 
   if (!dinfo->localizations)
@@ -182,20 +168,20 @@ cupsLocalizeDestMedia(
 }
 
 
-/*
- * 'cupsLocalizeDestOption()' - Get the localized string for a destination
- *                              option.
- *
- * The returned string is stored in the destination information and will become
- * invalid if the destination information is deleted.
- */
+//
+// 'cupsLocalizeDestOption()' - Get the localized string for a destination
+//                              option.
+//
+// The returned string is stored in the destination information and will become
+// invalid if the destination information is deleted.
+//
 
-const char *				/* O - Localized string */
+const char *				// O - Localized string
 cupsLocalizeDestOption(
-    http_t       *http,			/* I - Connection to destination */
-    cups_dest_t  *dest,			/* I - Destination */
-    cups_dinfo_t *dinfo,		/* I - Destination information */
-    const char   *option)		/* I - Option to localize */
+    http_t       *http,			// I - Connection to destination
+    cups_dest_t  *dest,			// I - Destination
+    cups_dinfo_t *dinfo,		// I - Destination information
+    const char   *option)		// I - Option to localize
 {
   const char *localized;		// Localized string
 
@@ -215,24 +201,24 @@ cupsLocalizeDestOption(
 }
 
 
-/*
- * 'cupsLocalizeDestValue()' - Get the localized string for a destination
- *                             option+value pair.
- *
- * The returned string is stored in the destination information and will become
- * invalid if the destination information is deleted.
- */
+//
+// 'cupsLocalizeDestValue()' - Get the localized string for a destination
+//                             option+value pair.
+//
+// The returned string is stored in the destination information and will become
+// invalid if the destination information is deleted.
+//
 
-const char *				/* O - Localized string */
+const char *				// O - Localized string
 cupsLocalizeDestValue(
-    http_t       *http,			/* I - Connection to destination */
-    cups_dest_t  *dest,			/* I - Destination */
-    cups_dinfo_t *dinfo,		/* I - Destination information */
-    const char   *option,		/* I - Option to localize */
-    const char   *value)		/* I - Value to localize */
+    http_t       *http,			// I - Connection to destination
+    cups_dest_t  *dest,			// I - Destination
+    cups_dinfo_t *dinfo,		// I - Destination information
+    const char   *option,		// I - Option to localize
+    const char   *value)		// I - Value to localize
 {
-  char		pair[256];		/* option.value pair */
-  const char	*localized;		/* Localized string */
+  char		pair[256];		// option.value pair
+  const char	*localized;		// Localized string
 
 
   DEBUG_printf("cupsLocalizeDestValue(http=%p, dest=%p, dinfo=%p, option=\"%s\", value=\"%s\")", (void *)http, (void *)dest, (void *)dinfo, option, value);
@@ -269,29 +255,29 @@ cupsLocalizeDestValue(
 }
 
 
-/*
- * 'cups_load_localizations()' - Load the localization strings for a
- *                               destination.
- */
+//
+// 'cups_load_localizations()' - Load the localization strings for a
+//                               destination.
+//
 
 static void
 cups_load_localizations(
-    http_t       *http,			/* I - Connection to destination */
-    cups_dinfo_t *dinfo)		/* I - Destination informations */
+    http_t       *http,			// I - Connection to destination
+    cups_dinfo_t *dinfo)		// I - Destination informations
 {
-  http_t		*http2;		/* Connection for strings file */
-  http_status_t		status;		/* Request status */
-  ipp_attribute_t	*attr;		/* "printer-strings-uri" attribute */
-  char			scheme[32],	/* URI scheme */
-  			userpass[256],	/* Username/password info */
-  			hostname[256],	/* Hostname */
-  			resource[1024],	/* Resource */
+  http_t		*http2;		// Connection for strings file
+  http_status_t		status;		// Request status
+  ipp_attribute_t	*attr;		// "printer-strings-uri" attribute
+  char			scheme[32],	// URI scheme
+  			userpass[256],	// Username/password info
+  			hostname[256],	// Hostname
+  			resource[1024],	// Resource
   			http_hostname[256],
-  					/* Hostname of connection */
-			tempfile[1024];	/* Temporary filename */
-  int			port;		/* Port number */
-  http_encryption_t	encryption;	/* Encryption to use */
-  cups_file_t		*temp;		/* Temporary file */
+  					// Hostname of connection
+			tempfile[1024];	// Temporary filename
+  int			port;		// Port number
+  http_encryption_t	encryption;	// Encryption to use
+  cups_file_t		*temp;		// Temporary file
 
 
   // See if there are any localizations...

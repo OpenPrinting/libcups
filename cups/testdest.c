@@ -1,23 +1,20 @@
-/*
- * CUPS destination API test program for CUPS.
- *
- * Copyright © 2012-2018 by Apple Inc.
- *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more information.
- */
-
-/*
- * Include necessary headers...
- */
+//
+// CUPS destination API test program for CUPS.
+//
+// Copyright © 2020-2023 by OpenPrinting.
+// Copyright © 2012-2018 by Apple Inc.
+//
+// Licensed under Apache License v2.0.  See the file "LICENSE" for more information.
+//
 
 #include <stdio.h>
 #include <errno.h>
 #include "cups.h"
 
 
-/*
- * Local functions...
- */
+//
+// Local functions...
+//
 
 static bool	enum_cb(void *user_data, unsigned flags, cups_dest_t *dest);
 static void	localize(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, const char *option, const char *value);
@@ -29,21 +26,21 @@ static void	show_supported(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo,
 static void	usage(const char *arg) _CUPS_NORETURN;
 
 
-/*
- * 'main()' - Main entry.
- */
+//
+// 'main()' - Main entry.
+//
 
-int					/* O - Exit status */
-main(int  argc,				/* I - Number of command-line arguments */
-     char *argv[])			/* I - Command-line arguments */
+int					// O - Exit status
+main(int  argc,				// I - Number of command-line arguments
+     char *argv[])			// I - Command-line arguments
 {
-  int		i;			/* Looping var */
-  size_t	n;			/* Looping var */
-  http_t	*http;			/* Connection to destination */
-  cups_dest_t	*dest = NULL;		/* Destination */
-  cups_dinfo_t	*dinfo;			/* Destination info */
+  int		i;			// Looping var
+  size_t	n;			// Looping var
+  http_t	*http;			// Connection to destination
+  cups_dest_t	*dest = NULL;		// Destination
+  cups_dinfo_t	*dinfo;			// Destination info
   unsigned	dflags = CUPS_DEST_FLAGS_NONE;
-					/* Destination flags */
+					// Destination flags
 
 
   if (argc < 2)
@@ -51,9 +48,9 @@ main(int  argc,				/* I - Number of command-line arguments */
 
   if (!strcmp(argv[1], "--get"))
   {
-    cups_dest_t	*dests;			/* Destinations */
+    cups_dest_t	*dests;			// Destinations
     size_t	num_dests = cupsGetDests(CUPS_HTTP_DEFAULT, &dests);
-					/* Number of destinations */
+					// Number of destinations
 
     for (n = 0; n < num_dests; n ++)
       enum_cb(NULL, 0, dests + n);
@@ -63,8 +60,8 @@ main(int  argc,				/* I - Number of command-line arguments */
   }
   else if (!strcmp(argv[1], "--enum"))
   {
-    cups_ptype_t	type = 0,	/* Printer type filter */
-			mask = 0;	/* Printer type mask */
+    cups_ptype_t	type = 0,	// Printer type filter
+			mask = 0;	// Printer type mask
 
 
     for (i = 2; i < argc; i ++)
@@ -168,8 +165,8 @@ main(int  argc,				/* I - Number of command-line arguments */
   }
   else if (!strcmp(argv[i], "conflicts") && (i + 1) < argc)
   {
-    size_t		num_options = 0;/* Number of options */
-    cups_option_t	*options = NULL;/* Options */
+    size_t		num_options = 0;// Number of options
+    cups_option_t	*options = NULL;// Options
 
     for (i ++; i < argc; i ++)
       num_options = cupsParseOptions(argv[i], num_options, &options);
@@ -192,9 +189,9 @@ main(int  argc,				/* I - Number of command-line arguments */
   }
   else if (!strcmp(argv[i], "media"))
   {
-    const char	*name = NULL;		/* Media name, if any */
+    const char	*name = NULL;		// Media name, if any
     unsigned	flags = CUPS_MEDIA_FLAGS_DEFAULT;
-					/* Media selection flags */
+					// Media selection flags
 
     for (i ++; i < argc; i ++)
     {
@@ -216,8 +213,8 @@ main(int  argc,				/* I - Number of command-line arguments */
   }
   else if (!strcmp(argv[i], "print") && (i + 1) < argc)
   {
-    size_t		num_options = 0;/* Number of options */
-    cups_option_t	*options = NULL;/* Options */
+    size_t		num_options = 0;// Number of options
+    cups_option_t	*options = NULL;// Options
     const char		*filename = argv[i + 1];
 
     for (i += 2; i < argc; i ++)
@@ -232,16 +229,16 @@ main(int  argc,				/* I - Number of command-line arguments */
 }
 
 
-/*
- * 'enum_cb()' - Print the results from the enumeration of destinations.
- */
+//
+// 'enum_cb()' - Print the results from the enumeration of destinations.
+//
 
-static bool				/* O - `true` to continue */
-enum_cb(void        *user_data,		/* I - User data (unused) */
-        unsigned    flags,		/* I - Flags */
-	cups_dest_t *dest)		/* I - Destination */
+static bool				// O - `true` to continue
+enum_cb(void        *user_data,		// I - User data (unused)
+        unsigned    flags,		// I - Flags
+	cups_dest_t *dest)		// I - Destination
 {
-  size_t	i;			/* Looping var */
+  size_t	i;			// Looping var
 
 
   (void)user_data;
@@ -261,20 +258,20 @@ enum_cb(void        *user_data,		/* I - User data (unused) */
 }
 
 
-/*
- * 'localize()' - Localize an option and value.
- */
+//
+// 'localize()' - Localize an option and value.
+//
 
 static void
-localize(http_t       *http,		/* I - Connection to destination */
-         cups_dest_t  *dest,		/* I - Destination */
-	 cups_dinfo_t *dinfo,		/* I - Destination information */
-         const char   *option,		/* I - Option */
-	 const char   *value)		/* I - Value, if any */
+localize(http_t       *http,		// I - Connection to destination
+         cups_dest_t  *dest,		// I - Destination
+	 cups_dinfo_t *dinfo,		// I - Destination information
+         const char   *option,		// I - Option
+	 const char   *value)		// I - Value, if any
 {
-  ipp_attribute_t	*attr;		/* Attribute */
-  size_t		i,		/* Looping var */
-			count;		/* Number of values */
+  ipp_attribute_t	*attr;		// Attribute
+  size_t		i,		// Looping var
+			count;		// Number of values
 
 
   if (!option)
@@ -289,7 +286,7 @@ localize(http_t       *http,		/* I - Connection to destination */
     else
     {
       static const char * const options[] =
-      {					/* List of standard options */
+      {					// List of standard options
         CUPS_COPIES,
 	CUPS_FINISHINGS,
 	CUPS_MEDIA,
@@ -397,23 +394,23 @@ localize(http_t       *http,		/* I - Connection to destination */
 }
 
 
-/*
- * 'print_file()' - Print a file.
- */
+//
+// 'print_file()' - Print a file.
+//
 
 static void
-print_file(http_t        *http,		/* I - Connection to destination */
-           cups_dest_t   *dest,		/* I - Destination */
-	   cups_dinfo_t  *dinfo,	/* I - Destination information */
-           const char    *filename,	/* I - File to print */
-	   size_t        num_options,	/* I - Number of options */
-	   cups_option_t *options)	/* I - Options */
+print_file(http_t        *http,		// I - Connection to destination
+           cups_dest_t   *dest,		// I - Destination
+	   cups_dinfo_t  *dinfo,	// I - Destination information
+           const char    *filename,	// I - File to print
+	   size_t        num_options,	// I - Number of options
+	   cups_option_t *options)	// I - Options
 {
-  cups_file_t	*fp;			/* File to print */
-  int		job_id;			/* Job ID */
-  const char	*title;			/* Title of job */
-  char		buffer[32768];		/* File buffer */
-  ssize_t	bytes;			/* Bytes read/to write */
+  cups_file_t	*fp;			// File to print
+  int		job_id;			// Job ID
+  const char	*title;			// Title of job
+  char		buffer[32768];		// File buffer
+  ssize_t	bytes;			// Bytes read/to write
 
 
   if ((fp = cupsFileOpen(filename, "r")) == NULL)
@@ -464,17 +461,17 @@ print_file(http_t        *http,		/* I - Connection to destination */
 }
 
 
-/*
- * 'show_conflicts()' - Show conflicts for selected options.
- */
+//
+// 'show_conflicts()' - Show conflicts for selected options.
+//
 
 static void
 show_conflicts(
-    http_t        *http,		/* I - Connection to destination */
-    cups_dest_t   *dest,		/* I - Destination */
-    cups_dinfo_t  *dinfo,		/* I - Destination information */
-    size_t        num_options,		/* I - Number of options */
-    cups_option_t *options)		/* I - Options */
+    http_t        *http,		// I - Connection to destination
+    cups_dest_t   *dest,		// I - Destination
+    cups_dinfo_t  *dinfo,		// I - Destination information
+    size_t        num_options,		// I - Number of options
+    cups_option_t *options)		// I - Options
 {
   (void)http;
   (void)dest;
@@ -484,23 +481,20 @@ show_conflicts(
 }
 
 
-/*
- * 'show_default()' - Show default value for option.
- */
+//
+// 'show_default()' - Show default value for option.
+//
 
 static void
-show_default(http_t       *http,	/* I - Connection to destination */
-	     cups_dest_t  *dest,	/* I - Destination */
-	     cups_dinfo_t *dinfo,	/* I - Destination information */
-	     const char   *option)	/* I - Option */
+show_default(http_t       *http,	// I - Connection to destination
+	     cups_dest_t  *dest,	// I - Destination
+	     cups_dinfo_t *dinfo,	// I - Destination information
+	     const char   *option)	// I - Option
 {
   if (!strcmp(option, "media"))
   {
-   /*
-    * Show default media option...
-    */
-
-    cups_size_t size;                   /* Media size information */
+    // Show default media option...
+    cups_size_t size;                   // Media size information
 
     if (cupsGetDestMediaDefault(http, dest, dinfo, CUPS_MEDIA_FLAGS_DEFAULT, &size))
       printf("%s (%.2fx%.2fmm, margins=[%.2f %.2f %.2f %.2f])\n", size.media, size.width * 0.01, size.length * 0.01, size.left * 0.01, size.bottom * 0.01, size.right * 0.01, size.top * 0.01);
@@ -509,47 +503,46 @@ show_default(http_t       *http,	/* I - Connection to destination */
   }
   else
   {
-   /*
-    * Show default other option...
-    */
-
-    ipp_attribute_t *defattr;           /* Default attribute */
+    // Show default other option...
+    ipp_attribute_t *defattr;           // Default attribute
 
     if ((defattr = cupsFindDestDefault(http, dest, dinfo, option)) != NULL)
     {
-      char value[1024];                 /* Value of default attribute */
+      char value[1024];                 // Value of default attribute
 
       ippAttributeString(defattr, value, sizeof(value));
       puts(value);
     }
     else
+    {
       puts("FAILED");
+    }
   }
 }
 
 
-/*
- * 'show_media()' - Show available media.
- */
+//
+// 'show_media()' - Show available media.
+//
 
 static void
-show_media(http_t       *http,		/* I - Connection to destination */
-	   cups_dest_t  *dest,		/* I - Destination */
-	   cups_dinfo_t *dinfo,		/* I - Destination information */
-	   unsigned     flags,		/* I - Media flags */
-	   const char   *name)		/* I - Size name */
+show_media(http_t       *http,		// I - Connection to destination
+	   cups_dest_t  *dest,		// I - Destination
+	   cups_dinfo_t *dinfo,		// I - Destination information
+	   unsigned     flags,		// I - Media flags
+	   const char   *name)		// I - Size name
 {
-  size_t	i,			/* Looping var */
-		count;			/* Number of sizes */
-  cups_size_t	size;			/* Media size info */
+  size_t	i,			// Looping var
+		count;			// Number of sizes
+  cups_size_t	size;			// Media size info
 
 
   if (name)
   {
-    double	dw, dl;			/* Width and length from name */
-    char	units[32];		/* Units */
-    int		width,			/* Width in 100ths of millimeters */
-		length;			/* Length in 100ths of millimeters */
+    double	dw, dl;			// Width and length from name
+    char	units[32];		// Units
+    int		width,			// Width in 100ths of millimeters
+		length;			// Length in 100ths of millimeters
 
 
     if (sscanf(name, "%lfx%lf%31s", &dw, &dl, units) == 3)
@@ -604,20 +597,20 @@ show_media(http_t       *http,		/* I - Connection to destination */
 }
 
 
-/*
- * 'show_supported()' - Show supported options, values, etc.
- */
+//
+// 'show_supported()' - Show supported options, values, etc.
+//
 
 static void
-show_supported(http_t       *http,	/* I - Connection to destination */
-	       cups_dest_t  *dest,	/* I - Destination */
-	       cups_dinfo_t *dinfo,	/* I - Destination information */
-	       const char   *option,	/* I - Option, if any */
-	       const char   *value)	/* I - Value, if any */
+show_supported(http_t       *http,	// I - Connection to destination
+	       cups_dest_t  *dest,	// I - Destination
+	       cups_dinfo_t *dinfo,	// I - Destination information
+	       const char   *option,	// I - Option, if any
+	       const char   *value)	// I - Value, if any
 {
-  ipp_attribute_t	*attr;		/* Attribute */
-  size_t		i,		/* Looping var */
-			count;		/* Number of values */
+  ipp_attribute_t	*attr;		// Attribute
+  size_t		i,		// Looping var
+			count;		// Number of values
 
 
   if (!option)
@@ -632,7 +625,7 @@ show_supported(http_t       *http,	/* I - Connection to destination */
     else
     {
       static const char * const options[] =
-      {					/* List of standard options */
+      {					// List of standard options
         CUPS_COPIES,
 	CUPS_FINISHINGS,
 	CUPS_MEDIA,
@@ -752,12 +745,12 @@ show_supported(http_t       *http,	/* I - Connection to destination */
 }
 
 
-/*
- * 'usage()' - Show program usage.
- */
+//
+// 'usage()' - Show program usage.
+//
 
 static void
-usage(const char *arg)			/* I - Argument for usage message */
+usage(const char *arg)			// I - Argument for usage message
 {
   if (arg)
     printf("testdest: Unknown option \"%s\".\n", arg);

@@ -1,17 +1,13 @@
-/*
- * Internationalization test for CUPS.
- *
- * Copyright © 2021-2022 by OpenPrinting.
- * Copyright © 2007-2014 by Apple Inc.
- * Copyright © 1997-2006 by Easy Software Products.
- *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more
- * information.
- */
-
-/*
- * Include necessary headers...
- */
+//
+// Internationalization test for CUPS.
+//
+// Copyright © 2021-2022 by OpenPrinting.
+// Copyright © 2007-2014 by Apple Inc.
+// Copyright © 1997-2006 by Easy Software Products.
+//
+// Licensed under Apache License v2.0.  See the file "LICENSE" for more
+// information.
+//
 
 #include "string-private.h"
 #include "language.h"
@@ -22,12 +18,12 @@
 #include <unistd.h>
 
 
-/*
- * Local globals...
- */
+//
+// Local globals...
+//
 
 static const char * const lang_encodings[] =
-			{		/* Encoding strings */
+			{		// Encoding strings
 			  "us-ascii",		"iso-8859-1",
 			  "iso-8859-2",		"iso-8859-3",
 			  "iso-8859-4",		"iso-8859-5",
@@ -98,53 +94,53 @@ static const char * const lang_encodings[] =
 			};
 
 
-/*
- * Local functions...
- */
+//
+// Local functions...
+//
 
 static void	print_utf8(const char *msg, const char *src);
 
 
-/*
- * 'main()' - Main entry for internationalization test module.
- */
+//
+// 'main()' - Main entry for internationalization test module.
+//
 
-int					/* O - Exit code */
-main(int  argc,				/* I - Argument Count */
-     char *argv[])			/* I - Arguments */
+int					// O - Exit code
+main(int  argc,				// I - Argument Count
+     char *argv[])			// I - Arguments
 {
-  FILE		*fp;			/* File pointer */
-  int		count;			/* File line counter */
-  int		status,			/* Status of current test */
-		errors;			/* Error count */
-  char		line[1024];		/* File line source string */
-  int		len;			/* Length (count) of string */
-  char		legsrc[1024],		/* Legacy source string */
-		legdest[1024],		/* Legacy destination string */
-		*legptr;		/* Pointer into legacy string */
-  char		utf8latin[] =		/* UTF-8 Latin-1 source */
+  FILE		*fp;			// File pointer
+  int		count;			// File line counter
+  int		status,			// Status of current test
+		errors;			// Error count
+  char		line[1024];		// File line source string
+  int		len;			// Length (count) of string
+  char		legsrc[1024],		// Legacy source string
+		legdest[1024],		// Legacy destination string
+		*legptr;		// Pointer into legacy string
+  char		utf8latin[] =		// UTF-8 Latin-1 source
     { 0x41, 0x20, 0x21, 0x3D, 0x20, (char)0xC3, (char)0x84, 0x2E, 0x00 };
-    /* "A != <A WITH DIAERESIS>." - use ISO 8859-1 */
-  char		utf8repla[] =		/* UTF-8 Latin-1 replacement */
+    // "A != <A WITH DIAERESIS>." - use ISO 8859-1
+  char		utf8repla[] =		// UTF-8 Latin-1 replacement
     { 0x41, 0x20, (char)0xE2, (char)0x89, (char)0xA2, 0x20, (char)0xC3, (char)0x84, 0x2E, 0x00 };
-    /* "A <NOT IDENTICAL TO> <A WITH DIAERESIS>." */
-  char		utf8greek[] =		/* UTF-8 Greek source string */
+    // "A <NOT IDENTICAL TO> <A WITH DIAERESIS>."
+  char		utf8greek[] =		// UTF-8 Greek source string
     { 0x41, 0x20, 0x21, 0x3D, 0x20, (char)0xCE, (char)0x91, 0x2E, 0x00 };
-    /* "A != <ALPHA>." - use ISO 8859-7 */
-  char		utf8japan[] =		/* UTF-8 Japanese source */
+    // "A != <ALPHA>." - use ISO 8859-7
+  char		utf8japan[] =		// UTF-8 Japanese source
     { 0x41, 0x20, 0x21, 0x3D, 0x20, (char)0xEE, (char)0x9C, (char)0x80, 0x2E, 0x00 };
-    /* "A != <PRIVATE U+E700>." - use Windows 932 or EUC-JP */
-  char		utf8taiwan[] =		/* UTF-8 Chinese source */
+    // "A != <PRIVATE U+E700>." - use Windows 932 or EUC-JP
+  char		utf8taiwan[] =		// UTF-8 Chinese source
     { 0x41, 0x20, 0x21, 0x3D, 0x20, (char)0xE4, (char)0xB9, (char)0x82, 0x2E, 0x00 };
-    /* "A != <CJK U+4E42>." - use Windows 950 (Big5) or EUC-TW */
-  char		utf8dest[1024];		/* UTF-8 destination string */
-  cups_utf32_t	utf32dest[1024];	/* UTF-32 destination string */
+    // "A != <CJK U+4E42>." - use Windows 950 (Big5) or EUC-TW
+  char		utf8dest[1024];		// UTF-8 destination string
+  cups_utf32_t	utf32dest[1024];	// UTF-32 destination string
 
 
   if (argc > 1)
   {
-    int			i;		/* Looping var */
-    cups_encoding_t	encoding;	/* Source encoding */
+    int			i;		// Looping var
+    cups_encoding_t	encoding;	// Source encoding
 
     if (argc != 3)
     {
@@ -190,10 +186,7 @@ main(int  argc,				/* I - Argument Count */
     return (0);
   }
 
- /*
-  * Start with some conversion tests from a UTF-8 test file.
-  */
-
+  // Start with some conversion tests from a UTF-8 test file.
   errors = 0;
 
   if ((fp = fopen("utf8demo.txt", "rb")) == NULL)
@@ -202,10 +195,7 @@ main(int  argc,				/* I - Argument Count */
     return (1);
   }
 
- /*
-  * cupsUTF8ToUTF32
-  */
-
+  // cupsUTF8ToUTF32
   testBegin("cupsUTF8ToUTF32 of utfdemo.txt");
 
   for (count = 0, status = 0; fgets(line, sizeof(line), fp);)
@@ -224,10 +214,7 @@ main(int  argc,				/* I - Argument Count */
   if (!status)
     testEnd(true);
 
- /*
-  * cupsUTF8ToCharset(CUPS_EUC_JP)
-  */
-
+  // cupsUTF8ToCharset(CUPS_EUC_JP)
   testBegin("cupsUTF8ToCharset(CUPS_ENCODING_EUC_JP) of utfdemo.txt");
 
   rewind(fp);
@@ -251,10 +238,7 @@ main(int  argc,				/* I - Argument Count */
 
   fclose(fp);
 
- /*
-  * Test UTF-8 to legacy charset (ISO 8859-1)...
-  */
-
+  // Test UTF-8 to legacy charset (ISO 8859-1)...
   testBegin("cupsUTF8ToCharset(CUPS_ENCODING_ISO8859_1)");
 
   legdest[0] = 0;
@@ -268,10 +252,7 @@ main(int  argc,				/* I - Argument Count */
   else
     testEnd(true);
 
- /*
-  * cupsCharsetToUTF8
-  */
-
+  // cupsCharsetToUTF8
   testBegin("cupsCharsetToUTF8(CUPS_ENCODING_ISO8859_1)");
 
   cupsCopyString(legsrc, legdest, sizeof(legsrc));
@@ -299,10 +280,7 @@ main(int  argc,				/* I - Argument Count */
   else
     testEnd(true);
 
- /*
-  * Test UTF-8 to/from legacy charset (ISO 8859-7)...
-  */
-
+  // Test UTF-8 to/from legacy charset (ISO 8859-7)...
   testBegin("cupsUTF8ToCharset(CUPS_ENCODING_ISO8859_7)");
 
   if (cupsUTF8ToCharset(legdest, utf8greek, 1024, CUPS_ENCODING_ISO8859_7) < 0)
@@ -345,10 +323,7 @@ main(int  argc,				/* I - Argument Count */
   else
     testEnd(true);
 
- /*
-  * Test UTF-8 to/from legacy charset (Windows 932)...
-  */
-
+  // Test UTF-8 to/from legacy charset (Windows 932)...
   testBegin("cupsUTF8ToCharset(CUPS_ENCODING_WINDOWS_932)");
 
   if (cupsUTF8ToCharset(legdest, utf8japan, 1024, CUPS_ENCODING_WINDOWS_932) < 0)
@@ -391,10 +366,7 @@ main(int  argc,				/* I - Argument Count */
   else
     testEnd(true);
 
- /*
-  * Test UTF-8 to/from legacy charset (EUC-JP)...
-  */
-
+  // Test UTF-8 to/from legacy charset (EUC-JP)...
   testBegin("cupsUTF8ToCharset(CUPS_ENCODING_EUC_JP)");
 
   if (cupsUTF8ToCharset(legdest, utf8japan, 1024, CUPS_ENCODING_EUC_JP) < 0)
@@ -437,12 +409,9 @@ main(int  argc,				/* I - Argument Count */
   }
   else
     testEnd(true);
-#endif /* !__linux && !__GLIBC__ */
+#endif // !__linux && !__GLIBC__
 
- /*
-  * Test UTF-8 to/from legacy charset (Windows 950)...
-  */
-
+  // Test UTF-8 to/from legacy charset (Windows 950)...
   testBegin("cupsUTF8ToCharset(CUPS_ENCODING_WINDOWS_950)");
 
   if (cupsUTF8ToCharset(legdest, utf8taiwan, 1024, CUPS_ENCODING_WINDOWS_950) < 0)
@@ -485,10 +454,7 @@ main(int  argc,				/* I - Argument Count */
   else
     testEnd(true);
 
- /*
-  * Test UTF-8 to/from legacy charset (EUC-TW)...
-  */
-
+  // Test UTF-8 to/from legacy charset (EUC-TW)...
   testBegin("cupsUTF8ToCharset(CUPS_ENCODING_EUC_TW)");
 
   if (cupsUTF8ToCharset(legdest, utf8taiwan, 1024, CUPS_ENCODING_EUC_TW) < 0)
@@ -535,15 +501,15 @@ main(int  argc,				/* I - Argument Count */
 }
 
 
-/*
- * 'print_utf8()' - Print UTF-8 string with (optional) message.
- */
+//
+// 'print_utf8()' - Print UTF-8 string with (optional) message.
+//
 
 static void
-print_utf8(const char *msg,		/* I - Message String */
-	   const char *src)		/* I - UTF-8 Source String */
+print_utf8(const char *msg,		// I - Message String
+	   const char *src)		// I - UTF-8 Source String
 {
-  const char	*prefix;		/* Prefix string */
+  const char	*prefix;		// Prefix string
 
 
   if (msg)

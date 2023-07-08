@@ -1,44 +1,37 @@
-/*
- * Option unit test program for CUPS.
- *
- * Copyright © 2021 by OpenPrinting.
- * Copyright © 2008-2016 by Apple Inc.
- *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more
- * information.
- */
-
-/*
- * Include necessary headers...
- */
+//
+// Option unit test program for CUPS.
+//
+// Copyright © 2021 by OpenPrinting.
+// Copyright © 2008-2016 by Apple Inc.
+//
+// Licensed under Apache License v2.0.  See the file "LICENSE" for more
+// information.
+//
 
 #include "cups-private.h"
 #include "test-internal.h"
 
 
-/*
- * 'main()' - Test option processing functions.
- */
+//
+// 'main()' - Test option processing functions.
+//
 
-int					/* O - Exit status */
-main(int  argc,				/* I - Number of command-line arguments */
-     char *argv[])			/* I - Command-line arguments */
+int					// O - Exit status
+main(int  argc,				// I - Number of command-line arguments
+     char *argv[])			// I - Command-line arguments
 {
-  int		status = 0;		/* Exit status */
-  size_t	num_options;		/* Number of options */
-  cups_option_t	*options;		/* Options */
-  const char	*value;			/* Value of an option */
-  ipp_t		*request;		/* IPP request */
-  ipp_attribute_t *attr;		/* IPP attribute */
-  size_t	count;			/* Number of attributes */
+  int		status = 0;		// Exit status
+  size_t	num_options;		// Number of options
+  cups_option_t	*options;		// Options
+  const char	*value;			// Value of an option
+  ipp_t		*request;		// IPP request
+  ipp_attribute_t *attr;		// IPP attribute
+  size_t	count;			// Number of attributes
 
 
   if (argc == 1)
   {
-   /*
-    * cupsParseOptions()
-    */
-
+    // cupsParseOptions()
     testBegin("cupsParseOptions");
 
     num_options = cupsParseOptions("foo=1234 "
@@ -149,8 +142,8 @@ main(int  argc,				/* I - Number of command-line arguments */
   }
   else
   {
-    size_t		i;		/* Looping var */
-    cups_option_t	*option;	/* Current option */
+    size_t		i;		// Looping var
+    cups_option_t	*option;	// Current option
 
 
     num_options = cupsParseOptions(argv[1], 0, &options);

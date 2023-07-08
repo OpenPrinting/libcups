@@ -9,10 +9,6 @@
 // information.
 //
 
-//
-// Include necessary headers...
-//
-
 #include "raster-private.h"
 #include "debug-internal.h"
 

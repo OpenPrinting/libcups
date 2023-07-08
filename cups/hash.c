@@ -8,12 +8,7 @@
 // information.
 //
 
-//
-// Include necessary headers...
-//
-
 #include "cups-private.h"
-#include "debug-internal.h"
 #include "md5-internal.h"
 #ifdef HAVE_OPENSSL
 #  include <openssl/evp.h>

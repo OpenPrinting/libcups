@@ -7,10 +7,6 @@
 // information.
 //
 
-//
-// Include necessary headers...
-//
-
 #include "form.h"
 #include "test-internal.h"
 

@@ -1,56 +1,46 @@
-/*
- * Notification routines for CUPS.
- *
- * Copyright © 2021-2022 by OpenPrinting.
- * Copyright © 2007-2013 by Apple Inc.
- * Copyright © 2005-2006 by Easy Software Products.
- *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more
- * information.
- */
-
-/*
- * Include necessary headers...
- */
+//
+// Notification routines for CUPS.
+//
+// Copyright © 2021-2023 by OpenPrinting.
+// Copyright © 2007-2013 by Apple Inc.
+// Copyright © 2005-2006 by Easy Software Products.
+//
+// Licensed under Apache License v2.0.  See the file "LICENSE" for more
+// information.
+//
 
 #include "cups-private.h"
-#include "debug-internal.h"
 
 
-/*
- * 'cupsNotifySubject()' - Return the localized subject for the given notification message.
- *
- * This function returns a localized subject string for the given notification
- * message.  The returned string must be freed by the caller using `free`.
- */
+//
+// 'cupsLocalizeNotifySubject()' - Return the localized subject for the given notification message.
+//
+// This function returns a localized subject string for the given notification
+// message.  The returned string must be freed by the caller using `free`.
+//
 
-char *					/* O - Subject string or `NULL` */
-cupsNotifySubject(cups_lang_t *lang,	/* I - Language data */
-                  ipp_t       *event)	/* I - Event data */
+char *					// O - Subject string or `NULL`
+cupsLocalizeNotifySubject(
+    cups_lang_t *lang,			// I - Language data
+    ipp_t       *event)			// I - Event data
 {
-  char			buffer[1024];	/* Subject buffer */
-  const char		*prefix,	/* Prefix on subject */
-			*state;		/* Printer/job state string */
-  ipp_attribute_t	*job_id,	/* notify-job-id */
-			*job_name,	/* job-name */
-			*job_state,	/* job-state */
-			*printer_name,	/* printer-name */
-			*printer_state,	/* printer-state */
-			*printer_uri,	/* notify-printer-uri */
-			*subscribed;	/* notify-subscribed-event */
+  char			buffer[1024];	// Subject buffer
+  const char		*prefix,	// Prefix on subject
+			*state;		// Printer/job state string
+  ipp_attribute_t	*job_id,	// notify-job-id
+			*job_name,	// job-name
+			*job_state,	// job-state
+			*printer_name,	// printer-name
+			*printer_state,	// printer-state
+			*printer_uri,	// notify-printer-uri
+			*subscribed;	// notify-subscribed-event
 
 
- /*
-  * Range check input...
-  */
-
+  // Range check input...
   if (!event || !lang)
     return (NULL);
 
- /*
-  * Get the required attributes...
-  */
-
+  // Get the required attributes...
   job_id        = ippFindAttribute(event, "notify-job-id", IPP_TAG_INTEGER);
   job_name      = ippFindAttribute(event, "job-name", IPP_TAG_NAME);
   job_state     = ippFindAttribute(event, "job-state", IPP_TAG_ENUM);
@@ -62,10 +52,7 @@ cupsNotifySubject(cups_lang_t *lang,	/* I - Language data */
 
   if (job_id && printer_name && printer_uri && job_state)
   {
-   /*
-    * Job event...
-    */
-
+    // Job event...
     prefix = cupsLangGetString(lang, _("Print Job:"));
 
     switch (job_state->values[0].integer)
@@ -100,10 +87,7 @@ cupsNotifySubject(cups_lang_t *lang,	/* I - Language data */
   }
   else if (printer_uri && printer_name && printer_state)
   {
-   /*
-    * Printer event...
-    */
-
+    // Printer event...
     prefix = cupsLangGetString(lang, _("Printer:"));
 
     switch (printer_state->values[0].integer)
@@ -125,49 +109,42 @@ cupsNotifySubject(cups_lang_t *lang,	/* I - Language data */
     snprintf(buffer, sizeof(buffer), "%s %s %s", prefix, printer_name->values[0].string.text, state);
   }
   else if (subscribed)
+  {
     cupsCopyString(buffer, subscribed->values[0].string.text, sizeof(buffer));
+  }
   else
+  {
     return (NULL);
+  }
 
- /*
-  * Duplicate and return the subject string...
-  */
-
+  // Duplicate and return the subject string...
   return (strdup(buffer));
 }
 
 
-/*
- * 'cupsNotifyText()' - Return the localized text for the given notification message.
- *
- * This function returns a localized text string for the given notification
- * message.  The returned string must be freed by the caller using `free`.
- */
+//
+// 'cupsLocalizeNotifyText()' - Return the localized text for the given notification message.
+//
+// This function returns a localized text string for the given notification
+// message.  The returned string must be freed by the caller using `free`.
+//
 
-char *					/* O - Message text or `NULL` */
-cupsNotifyText(cups_lang_t *lang,	/* I - Language data */
-               ipp_t       *event)	/* I - Event data */
+char *					// O - Message text or `NULL`
+cupsLocalizeNotifyText(
+    cups_lang_t *lang,			// I - Language data
+    ipp_t       *event)			// I - Event data
 {
-  ipp_attribute_t	*notify_text;	/* notify-text */
+  ipp_attribute_t	*notify_text;	// notify-text
 
 
- /*
-  * Range check input...
-  */
-
+  // Range check input...
   if (!event || !lang)
     return (NULL);
 
- /*
-  * Get the notify-text attribute from the server...
-  */
-
+  // Get the notify-text attribute from the server...
   if ((notify_text = ippFindAttribute(event, "notify-text", IPP_TAG_TEXT)) == NULL)
     return (NULL);
 
- /*
-  * Return a copy...
-  */
-
+  // Return a copy...
   return (strdup(notify_text->values[0].string.text));
 }

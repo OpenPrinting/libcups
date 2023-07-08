@@ -1,17 +1,13 @@
-/*
- * IPP fuzzing program for CUPS.
- *
- * Copyright © 2021 by OpenPrinting.
- * Copyright © 2007-2021 by Apple Inc.
- * Copyright © 1997-2005 by Easy Software Products.
- *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more
- * information.
- */
-
-/*
- * Include necessary headers...
- */
+//
+// IPP fuzzing program for CUPS.
+//
+// Copyright © 2021-2023 by OpenPrinting.
+// Copyright © 2007-2021 by Apple Inc.
+// Copyright © 1997-2005 by Easy Software Products.
+//
+// Licensed under Apache License v2.0.  See the file "LICENSE" for more
+// information.
+//
 
 #include "file.h"
 #include "string-private.h"
@@ -24,7 +20,7 @@
 #else
 #  include <unistd.h>
 #  include <fcntl.h>
-#endif /* _WIN32 */
+#endif // _WIN32
 
 
 //
@@ -34,9 +30,9 @@
 #define NUM_FUZZ	10		// Number of fuzzers to run in parallel
 
 
-/*
- * Local types...
- */
+//
+// Local types...
+//
 
 typedef struct _ippdata_t		// Data
 {
@@ -46,18 +42,18 @@ typedef struct _ippdata_t		// Data
 } _ippdata_t;
 
 
-/*
- * Local functions...
- */
+//
+// Local functions...
+//
 
 void	fuzz_data(_ippdata_t *data);
 int	wait_child(int pid, const char *filename);
 ssize_t	write_cb(_ippdata_t *data, ipp_uchar_t *buffer, size_t bytes);
 
 
-/*
- * 'main()' - Main entry.
- */
+//
+// 'main()' - Main entry.
+//
 
 int				// O - Exit status
 main(int  argc,			// I - Number of command-line arguments
@@ -343,31 +339,25 @@ wait_child(int        pid,		// I - Child process ID
 }
 
 
-/*
- * 'write_cb()' - Write data into a buffer.
- */
+//
+// 'write_cb()' - Write data into a buffer.
+//
 
-ssize_t					/* O - Number of bytes written */
-write_cb(_ippdata_t   *data,		/* I - Data */
-         ipp_uchar_t *buffer,		/* I - Buffer to write */
-	 size_t      bytes)		/* I - Number of bytes to write */
+ssize_t					// O - Number of bytes written
+write_cb(_ippdata_t   *data,		// I - Data
+         ipp_uchar_t *buffer,		// I - Buffer to write
+	 size_t      bytes)		// I - Number of bytes to write
 {
-  size_t	count;			/* Number of bytes */
+  size_t	count;			// Number of bytes
 
 
- /*
-  * Loop until all bytes are written...
-  */
-
+  // Loop until all bytes are written...
   if ((count = data->wsize - data->wused) > bytes)
     count = bytes;
 
   memcpy(data->wbuffer + data->wused, buffer, count);
   data->wused += count;
 
- /*
-  * Return the number of bytes written...
-  */
-
+  // Return the number of bytes written...
   return ((ssize_t)count);
 }

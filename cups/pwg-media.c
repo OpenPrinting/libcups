@@ -1,34 +1,29 @@
-/*
- * PWG media name API implementation for CUPS.
- *
- * Copyright © 2022-2023 by OpenPrinting.
- * Copyright © 2009-2019 by Apple Inc.
- *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more
- * information.
- */
-
-/*
- * Include necessary headers...
- */
+//
+// PWG media name API implementation for CUPS.
+//
+// Copyright © 2022-2023 by OpenPrinting.
+// Copyright © 2009-2019 by Apple Inc.
+//
+// Licensed under Apache License v2.0.  See the file "LICENSE" for more
+// information.
+//
 
 #include "cups-private.h"
-#include "debug-internal.h"
 #include <math.h>
 
 
-/*
- * Local macros...
- */
+//
+// Local macros...
+//
 
 #define _PWG_MEDIA_IN(p,l,a,x,y) {p, l, a, (int)(x * 2540), (int)(y * 2540)}
 #define _PWG_MEDIA_MM(p,l,a,x,y) {p, l, a, (int)(x * 100), (int)(y * 100)}
 #define _PWG_EPSILON	50		// Matching tolerance
 
 
-/*
- * Local functions...
- */
+//
+// Local functions...
+//
 
 static int	pwg_compare_legacy(pwg_media_t *a, pwg_media_t *b);
 static int	pwg_compare_pwg(pwg_media_t *a, pwg_media_t *b);
@@ -38,9 +33,9 @@ static char	*pwg_format_millimeters(char *buf, size_t bufsize, int val);
 static int	pwg_scan_measurement(const char *buf, char **bufptr, int numer, int denom);
 
 
-/*
- * Local globals...
- */
+//
+// Local globals...
+//
 
 static pwg_media_t const cups_pwg_media[] =
 {					// Media size lookup table
@@ -86,7 +81,7 @@ static pwg_media_t const cups_pwg_media[] =
   _PWG_MEDIA_MM("iso_b9_44x62mm", "iso-b9", "ISOB9", 44, 62),
   _PWG_MEDIA_MM("iso_b8_62x88mm", "iso-b8", "ISOB8", 62, 88),
   _PWG_MEDIA_MM("iso_b7_88x125mm", "iso-b7", "ISOB7", 88, 125),
-  /* iso_id-3 is iso_b7_88x125mm. */
+  // iso_id-3 is iso_b7_88x125mm.
   _PWG_MEDIA_MM("iso_b6_125x176mm", "iso-b6", "ISOB6", 125, 176),
   _PWG_MEDIA_MM("iso_b6c4_125x324mm", NULL, "125x324mm", 125, 324),
   _PWG_MEDIA_MM("iso_b5_176x250mm", "iso-b5", "ISOB5", 176, 250),
@@ -228,7 +223,7 @@ static pwg_media_t const cups_pwg_media[] =
   _PWG_MEDIA_IN("oe_photo-30r_30x40in", NULL, "30x40", 30, 40),
   _PWG_MEDIA_IN("oe_photo-l_3.5x5in", NULL, "3.5x5", 3.5, 5),
   _PWG_MEDIA_IN("oe_photo-s8r_8x12in", NULL, "8x12", 8, 12),
-  /* oe_photo-s10r is na_10x15_10x15in. */
+  // oe_photo-s10r is na_10x15_10x15in.
   _PWG_MEDIA_IN("oe_square-photo_4x4in", NULL, "4x4", 4, 4),
   _PWG_MEDIA_IN("oe_square-photo_5x5in", NULL, "5x5", 5, 5),
 
@@ -255,7 +250,7 @@ static pwg_media_t const cups_pwg_media[] =
   _PWG_MEDIA_MM("om_photo-50x75_500x750mm", NULL, "500x750mm", 500, 750),
   _PWG_MEDIA_MM("om_photo-50x76_500x760mm", NULL, "500x760mm", 500, 760),
   _PWG_MEDIA_MM("om_photo-60x90_600x900mm", NULL, "600x900mm", 600, 900),
-  /* om_postfix is iso_c6c5_114x229mm. */
+  // om_postfix is iso_c6c5_114x229mm.
   _PWG_MEDIA_MM("om_small-photo_100x150mm", NULL, "100x150mm", 100, 150),
   _PWG_MEDIA_MM("om_square-photo_89x89mm", NULL, "89x89mm", 89, 89),
   _PWG_MEDIA_MM("om_wide-photo_100x200mm", NULL, "100x200mm", 100, 200),
@@ -264,14 +259,14 @@ static pwg_media_t const cups_pwg_media[] =
   _PWG_MEDIA_MM("prc_1_102x165mm", NULL, "EnvPRC1", 102, 165),
   _PWG_MEDIA_MM("prc_16k_146x215mm", NULL, "PRC16K", 146, 215),
   _PWG_MEDIA_MM("prc_2_102x176mm", NULL, "EnvPRC2", 102, 176),
-  /* prc_3 is iso_b6_125x176mm. */
+  // prc_3 is iso_b6_125x176mm.
   _PWG_MEDIA_MM("prc_32k_97x151mm", NULL, "PRC32K", 97, 151),
   _PWG_MEDIA_MM("prc_4_110x208mm", NULL, "EnvPRC4", 110, 208),
-  /* prc_5 is iso_dl_110x220mm. */
+  // prc_5 is iso_dl_110x220mm.
   _PWG_MEDIA_MM("prc_8_120x309mm", NULL, "EnvPRC8", 120, 309),
   _PWG_MEDIA_MM("prc_6_120x320mm", NULL, NULL, 120, 320),
   _PWG_MEDIA_MM("prc_7_160x230mm", NULL, "EnvPRC7", 160, 230),
-  /* prc_10 is iso_c3_324x458mm. */
+  // prc_10 is iso_c3_324x458mm.
 
   // Chinese Standard Sheet Media Inch Sizes
   _PWG_MEDIA_IN("roc_16k_7.75x10.75in", NULL, "roc16k", 7.75, 10.75),
@@ -279,24 +274,24 @@ static pwg_media_t const cups_pwg_media[] =
 };
 
 
-/*
- * 'pwgFormatSizeName()' - Generate a PWG self-describing media size name.
- *
- * This function generates a PWG self-describing media size name of the form
- * "prefix_name_WIDTHxLENGTHunits".  The prefix is typically "custom" or "roll"
- * for user-supplied sizes but can also be "disc", "iso", "jis", "jpn", "na",
- * "oe", "om", "prc", or "roc".  A value of `NULL` automatically chooses
- * "oe" or "om" depending on the units.
- *
- * The size name may only contain lowercase letters, numbers, "-", and ".".  If
- * `NULL` is passed, the size name will contain the formatted dimensions.
- *
- * The width and length are specified in hundredths of millimeters, equivalent
- * to 1/100000th of a meter or 1/2540th of an inch.  The width, length, and
- * units used for the generated size name are calculated automatically if the
- * units string is `NULL`, otherwise inches ("in") or millimeters ("mm")
- * are used.
- */
+//
+// 'pwgFormatSizeName()' - Generate a PWG self-describing media size name.
+//
+// This function generates a PWG self-describing media size name of the form
+// "prefix_name_WIDTHxLENGTHunits".  The prefix is typically "custom" or "roll"
+// for user-supplied sizes but can also be "disc", "iso", "jis", "jpn", "na",
+// "oe", "om", "prc", or "roc".  A value of `NULL` automatically chooses
+// "oe" or "om" depending on the units.
+//
+// The size name may only contain lowercase letters, numbers, "-", and ".".  If
+// `NULL` is passed, the size name will contain the formatted dimensions.
+//
+// The width and length are specified in hundredths of millimeters, equivalent
+// to 1/100000th of a meter or 1/2540th of an inch.  The width, length, and
+// units used for the generated size name are calculated automatically if the
+// units string is `NULL`, otherwise inches ("in") or millimeters ("mm")
+// are used.
+//
 
 bool					// O - `true` on success, `false` on failure
 pwgFormatSizeName(char       *keyword,	// I - Keyword buffer
@@ -395,18 +390,18 @@ pwgFormatSizeName(char       *keyword,	// I - Keyword buffer
 }
 
 
-/*
- * 'pwgInitSize()' - Initialize a pwg_size_t structure using IPP Job Template
- *                   attributes.
- *
- * This function initializes a pwg_size_t structure from an IPP "media" or
- * "media-col" attribute in the specified IPP message.  0 is returned if neither
- * attribute is found in the message or the values are not valid.
- *
- * The "margins_set" variable is initialized to 1 if any "media-xxx-margin"
- * member attribute was specified in the "media-col" Job Template attribute,
- * otherwise it is initialized to 0.
- */
+//
+// 'pwgInitSize()' - Initialize a pwg_size_t structure using IPP Job Template
+//                   attributes.
+//
+// This function initializes a pwg_size_t structure from an IPP "media" or
+// "media-col" attribute in the specified IPP message.  0 is returned if neither
+// attribute is found in the message or the values are not valid.
+//
+// The "margins_set" variable is initialized to 1 if any "media-xxx-margin"
+// member attribute was specified in the "media-col" Job Template attribute,
+// otherwise it is initialized to 0.
+//
 
 bool					// O - `true` on success, `false` on failure
 pwgInitSize(pwg_size_t *size,		// I - Size to initialize
@@ -537,12 +532,12 @@ pwgInitSize(pwg_size_t *size,		// I - Size to initialize
 }
 
 
-/*
- * 'pwgMediaForLegacy()' - Find a PWG media size by ISO/IPP legacy name.
- *
- * The "name" argument specifies the legacy ISO media size name, for example
- * "iso-a4" or "na-letter".
- */
+//
+// 'pwgMediaForLegacy()' - Find a PWG media size by ISO/IPP legacy name.
+//
+// The "name" argument specifies the legacy ISO media size name, for example
+// "iso-a4" or "na-letter".
+//
 
 pwg_media_t *				// O - Matching size or NULL
 pwgMediaForLegacy(const char *legacy)	// I - Legacy size name
@@ -576,18 +571,18 @@ pwgMediaForLegacy(const char *legacy)	// I - Legacy size name
 }
 
 
-/*
- * 'pwgMediaForPPD()' - Find a PWG media size by Adobe PPD name.
- *
- * The "ppd" argument specifies an Adobe page size name as defined in Table B.1
- * of the Adobe PostScript Printer Description File Format Specification Version
- * 4.3.
- *
- * If the name is non-standard, the returned PWG media size is stored in
- * thread-local storage and is overwritten by each call to the function in the
- * thread.  Custom names can be of the form "Custom.WIDTHxLENGTH[units]" or
- * "WIDTHxLENGTH[units]".
- */
+//
+// 'pwgMediaForPPD()' - Find a PWG media size by Adobe PPD name.
+//
+// The "ppd" argument specifies an Adobe page size name as defined in Table B.1
+// of the Adobe PostScript Printer Description File Format Specification Version
+// 4.3.
+//
+// If the name is non-standard, the returned PWG media size is stored in
+// thread-local storage and is overwritten by each call to the function in the
+// thread.  Custom names can be of the form "Custom.WIDTHxLENGTH[units]" or
+// "WIDTHxLENGTH[units]".
+//
 
 pwg_media_t *				// O - Matching size or NULL
 pwgMediaForPPD(const char *ppd)		// I - PPD size name
@@ -730,16 +725,16 @@ pwgMediaForPPD(const char *ppd)		// I - PPD size name
 }
 
 
-/*
- * 'pwgMediaForPWG()' - Find a PWG media size by 5101.1 self-describing name.
- *
- * The "pwg" argument specifies a self-describing media size name of the form
- * "prefix_name_WIDTHxLENGTHunits" as defined in PWG 5101.1.
- *
- * If the name is non-standard, the returned PWG media size is stored in
- * thread-local storage and is overwritten by each call to the function in the
- * thread.
- */
+//
+// 'pwgMediaForPWG()' - Find a PWG media size by 5101.1 self-describing name.
+//
+// The "pwg" argument specifies a self-describing media size name of the form
+// "prefix_name_WIDTHxLENGTHunits" as defined in PWG 5101.1.
+//
+// If the name is non-standard, the returned PWG media size is stored in
+// thread-local storage and is overwritten by each call to the function in the
+// thread.
+//
 
 pwg_media_t *				// O - Matching size or NULL
 pwgMediaForPWG(const char *pwg)		// I - PWG size name
@@ -824,16 +819,16 @@ pwgMediaForPWG(const char *pwg)		// I - PWG size name
 }
 
 
-/*
- * 'pwgMediaForSize()' - Get the PWG media size for the given dimensions.
- *
- * The "width" and "length" are in hundredths of millimeters, equivalent to
- * 1/100000th of a meter or 1/2540th of an inch.
- *
- * If the dimensions are non-standard, the returned PWG media size is stored in
- * thread-local storage and is overwritten by each call to the function in the
- * thread.
- */
+//
+// 'pwgMediaForSize()' - Get the PWG media size for the given dimensions.
+//
+// The "width" and "length" are in hundredths of millimeters, equivalent to
+// 1/100000th of a meter or 1/2540th of an inch.
+//
+// If the dimensions are non-standard, the returned PWG media size is stored in
+// thread-local storage and is overwritten by each call to the function in the
+// thread.
+//
 
 pwg_media_t *				// O - PWG media name
 pwgMediaForSize(int width,		// I - Width in hundredths of millimeters
@@ -846,9 +841,9 @@ pwgMediaForSize(int width,		// I - Width in hundredths of millimeters
 }
 
 
-/*
- * '_pwgMediaNearSize()' - Get the PWG media size within the given tolerance.
- */
+//
+// '_pwgMediaNearSize()' - Get the PWG media size within the given tolerance.
+//
 
 pwg_media_t *				// O - PWG media name
 _pwgMediaNearSize(int width,	        // I - Width in hundredths of millimeters
@@ -912,9 +907,9 @@ _pwgMediaNearSize(int width,	        // I - Width in hundredths of millimeters
 }
 
 
-/*
- * '_pwgMediaTable()' - Return the internal media size table.
- */
+//
+// '_pwgMediaTable()' - Return the internal media size table.
+//
 
 const pwg_media_t *			// O - Pointer to first entry
 _pwgMediaTable(size_t *num_media)	// O - Number of entries
@@ -925,9 +920,9 @@ _pwgMediaTable(size_t *num_media)	// O - Number of entries
 }
 
 
-/*
- * 'pwg_compare_legacy()' - Compare two sizes using the legacy names.
- */
+//
+// 'pwg_compare_legacy()' - Compare two sizes using the legacy names.
+//
 
 static int				// O - Result of comparison
 pwg_compare_legacy(pwg_media_t *a,	// I - First size
@@ -937,9 +932,9 @@ pwg_compare_legacy(pwg_media_t *a,	// I - First size
 }
 
 
-/*
- * 'pwg_compare_ppd()' - Compare two sizes using the PPD names.
- */
+//
+// 'pwg_compare_ppd()' - Compare two sizes using the PPD names.
+//
 
 static int				// O - Result of comparison
 pwg_compare_ppd(pwg_media_t *a,	// I - First size
@@ -949,9 +944,9 @@ pwg_compare_ppd(pwg_media_t *a,	// I - First size
 }
 
 
-/*
- * 'pwg_compare_pwg()' - Compare two sizes using the PWG names.
- */
+//
+// 'pwg_compare_pwg()' - Compare two sizes using the PWG names.
+//
 
 static int				// O - Result of comparison
 pwg_compare_pwg(pwg_media_t *a,	// I - First size
@@ -961,9 +956,9 @@ pwg_compare_pwg(pwg_media_t *a,	// I - First size
 }
 
 
-/*
- * 'pwg_format_inches()' - Convert and format PWG units as inches.
- */
+//
+// 'pwg_format_inches()' - Convert and format PWG units as inches.
+//
 
 static char *				// O - String
 pwg_format_inches(char   *buf,		// I - Buffer
@@ -997,9 +992,9 @@ pwg_format_inches(char   *buf,		// I - Buffer
 }
 
 
-/*
- * 'pwg_format_millimeters()' - Convert and format PWG units as millimeters.
- */
+//
+// 'pwg_format_millimeters()' - Convert and format PWG units as millimeters.
+//
 
 static char *				// O - String
 pwg_format_millimeters(char   *buf,	// I - Buffer
@@ -1026,13 +1021,13 @@ pwg_format_millimeters(char   *buf,	// I - Buffer
 }
 
 
-/*
- * 'pwg_scan_measurement()' - Scan a measurement in inches or millimeters.
- *
- * The "factor" argument specifies the scale factor for the units to convert to
- * hundredths of millimeters.  The returned value is NOT rounded but is an
- * exact conversion of the fraction value (no floating point is used).
- */
+//
+// 'pwg_scan_measurement()' - Scan a measurement in inches or millimeters.
+//
+// The "factor" argument specifies the scale factor for the units to convert to
+// hundredths of millimeters.  The returned value is NOT rounded but is an
+// exact conversion of the fraction value (no floating point is used).
+//
 
 static int				// O - Hundredths of millimeters
 pwg_scan_measurement(

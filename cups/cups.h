@@ -375,9 +375,8 @@ extern ssize_t		cupsHMACData(const char *algorithm, const unsigned char *key, si
 extern const char	*cupsLocalizeDestMedia(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, unsigned flags, cups_size_t *size) _CUPS_PUBLIC;
 extern const char	*cupsLocalizeDestOption(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, const char *option) _CUPS_PUBLIC;
 extern const char	*cupsLocalizeDestValue(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, const char *option, const char *value) _CUPS_PUBLIC;
-
-extern char		*cupsNotifySubject(cups_lang_t *lang, ipp_t *event) _CUPS_PUBLIC;
-extern char		*cupsNotifyText(cups_lang_t *lang, ipp_t *event) _CUPS_PUBLIC;
+extern char		*cupsLocalizeNotifySubject(cups_lang_t *lang, ipp_t *event) _CUPS_PUBLIC;
+extern char		*cupsLocalizeNotifyText(cups_lang_t *lang, ipp_t *event) _CUPS_PUBLIC;
 
 extern size_t		cupsParseOptions(const char *arg, size_t num_options, cups_option_t **options) _CUPS_PUBLIC;
 extern http_status_t	cupsPutFd(http_t *http, const char *resource, int fd) _CUPS_PUBLIC;

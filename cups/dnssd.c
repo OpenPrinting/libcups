@@ -7,10 +7,8 @@
 // information.
 //
 
-#include <config.h>
 #include "cups-private.h"
 #include "dnssd.h"
-#include "debug-internal.h"
 
 #ifdef __APPLE__
 #  include <nameser.h>

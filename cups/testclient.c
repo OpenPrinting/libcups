@@ -1,16 +1,12 @@
-/*
- * Simulated client test program for CUPS.
- *
- * Copyright © 2020-2022 by OpenPrinting
- * Copyright © 2017-2019 by Apple Inc.
- *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more
- * information.
- */
-
-/*
- * Include necessary headers...
- */
+//
+// Simulated client test program for CUPS.
+//
+// Copyright © 2020-2023 by OpenPrinting
+// Copyright © 2017-2019 by Apple Inc.
+//
+// Licensed under Apache License v2.0.  See the file "LICENSE" for more
+// information.
+//
 
 #include <config.h>
 #include <stdio.h>
@@ -21,51 +17,51 @@
 #include <cups/thread.h>
 
 
-/*
- * Constants...
- */
+//
+// Constants...
+//
 
-#define MAX_CLIENTS	100		/* Maximum number of client threads */
+#define MAX_CLIENTS	100		// Maximum number of client threads
 
 
-/*
- * Local types...
- */
+//
+// Local types...
+//
 
 typedef struct _client_data_s
 {
-  const char		*uri,		/* Printer URI */
-			*hostname,	/* Hostname */
-			*user,		/* Username */
-			*resource;	/* Resource path */
-  int			port;		/* Port number */
-  http_encryption_t	encryption;	/* Use encryption? */
-  const char		*docfile,	/* Document file */
-			*docformat;	/* Document format */
-  int			grayscale,	/* Force grayscale? */
-			keepfile;	/* Keep temporary file? */
-  ipp_pstate_t		printer_state;	/* Current printer state */
+  const char		*uri,		// Printer URI
+			*hostname,	// Hostname
+			*user,		// Username
+			*resource;	// Resource path
+  int			port;		// Port number
+  http_encryption_t	encryption;	// Use encryption?
+  const char		*docfile,	// Document file
+			*docformat;	// Document format
+  int			grayscale,	// Force grayscale?
+			keepfile;	// Keep temporary file?
+  ipp_pstate_t		printer_state;	// Current printer state
   char			printer_state_reasons[1024];
-					/* Current printer-state-reasons */
-  int			job_id; 	/* Job ID for submitted job */
-  ipp_jstate_t		job_state;	/* Current job state */
+					// Current printer-state-reasons
+  int			job_id; 	// Job ID for submitted job
+  ipp_jstate_t		job_state;	// Current job state
   char			job_state_reasons[1024];
-					/* Current job-state-reasons */
+					// Current job-state-reasons
 } _client_data_t;
 
 
-/*
- * Local globals...
- */
+//
+// Local globals...
+//
 
 static int		client_count = 0;
 static cups_mutex_t	client_mutex = CUPS_MUTEX_INITIALIZER;
 static int		verbosity = 0;
 
 
-/*
- * Local functions...
- */
+//
+// Local functions...
+//
 
 static const char	*make_raster_file(ipp_t *response, int grayscale, char *tempname, size_t tempsize, const char **format);
 static void		*monitor_printer(_client_data_t *data);
@@ -75,28 +71,25 @@ static void		show_capabilities(ipp_t *response);
 static void		usage(void);
 
 
-/*
- * 'main()' - Main entry.
- */
+//
+// 'main()' - Main entry.
+//
 
-int					/* O - Exit status */
-main(int  argc,				/* I - Number of command-line arguments */
-     char *argv[])			/* I - Command-line arguments */
+int					// O - Exit status
+main(int  argc,				// I - Number of command-line arguments
+     char *argv[])			// I - Command-line arguments
 {
-  int			i;		/* Looping var */
-  const char		*opt;		/* Current option */
-  int			num_clients = 0;/* Number of clients to simulate */
-  char			scheme[32],     /* URI scheme */
-			userpass[256],  /* Username:password */
-			hostname[256],  /* Hostname */
-			resource[256];  /* Resource path */
-  _client_data_t	data;		/* Client data */
+  int			i;		// Looping var
+  const char		*opt;		// Current option
+  int			num_clients = 0;// Number of clients to simulate
+  char			scheme[32],     // URI scheme
+			userpass[256],  // Username:password
+			hostname[256],  // Hostname
+			resource[256];  // Resource path
+  _client_data_t	data;		// Client data
 
 
- /*
-  * Parse command-line options...
-  */
-
+  // Parse command-line options...
   if (argc == 1)
     return (0);
 
@@ -110,7 +103,7 @@ main(int  argc,				/* I - Number of command-line arguments */
       {
         switch (*opt)
         {
-          case 'c' : /* -c num-clients */
+          case 'c' : // -c num-clients
               if (num_clients)
               {
                 puts("Number of clients can only be specified once.");
@@ -134,7 +127,7 @@ main(int  argc,				/* I - Number of command-line arguments */
               }
               break;
 
-          case 'd' : /* -d document-format */
+          case 'd' : // -d document-format
               if (data.docformat)
               {
                 puts("Document format can only be specified once.");
@@ -153,7 +146,7 @@ main(int  argc,				/* I - Number of command-line arguments */
               data.docformat = argv[i];
               break;
 
-          case 'f' : /* -f print-file */
+          case 'f' : // -f print-file
               if (data.docfile)
               {
                 puts("Print file can only be specified once.");
@@ -201,10 +194,7 @@ main(int  argc,				/* I - Number of command-line arguments */
       data.uri = argv[i];
   }
 
- /*
-  * Make sure we have everything we need.
-  */
-
+  // Make sure we have everything we need.
   if (!data.uri)
   {
     puts("Expected printer URI.");
@@ -215,10 +205,7 @@ main(int  argc,				/* I - Number of command-line arguments */
   if (num_clients < 1)
     num_clients = 1;
 
- /*
-  * Connect to the printer...
-  */
-
+  // Connect to the printer...
   if (httpSeparateURI(HTTP_URI_CODING_ALL, data.uri, scheme, sizeof(scheme), userpass, sizeof(userpass), hostname, sizeof(hostname), &data.port, resource, sizeof(resource)) < HTTP_URI_STATUS_OK)
   {
     printf("Bad printer URI '%s'.\n", data.uri);
@@ -233,10 +220,7 @@ main(int  argc,				/* I - Number of command-line arguments */
   else
     data.encryption = HTTP_ENCRYPTION_IF_REQUESTED;
 
- /*
-  * Start the client threads...
-  */
-
+  // Start the client threads...
   data.hostname = hostname;
   data.resource = resource;
 
@@ -245,7 +229,7 @@ main(int  argc,				/* I - Number of command-line arguments */
     cupsMutexLock(&client_mutex);
     if (client_count < MAX_CLIENTS)
     {
-      cups_thread_t	tid;		/* New thread */
+      cups_thread_t	tid;		// New thread
 
       client_count ++;
       cupsMutexUnlock(&client_mutex);
@@ -271,42 +255,42 @@ main(int  argc,				/* I - Number of command-line arguments */
 }
 
 
-/*
- * 'make_raster_file()' - Create a temporary raster file.
- */
+//
+// 'make_raster_file()' - Create a temporary raster file.
+//
 
-static const char *                     /* O - Print filename */
-make_raster_file(ipp_t      *response,  /* I - Printer attributes */
-                 int        grayscale,  /* I - Force grayscale? */
-                 char       *tempname,  /* I - Temporary filename buffer */
-                 size_t     tempsize,   /* I - Size of temp file buffer */
-                 const char **format)   /* O - Print format */
+static const char *                     // O - Print filename
+make_raster_file(ipp_t      *response,  // I - Printer attributes
+                 int        grayscale,  // I - Force grayscale?
+                 char       *tempname,  // I - Temporary filename buffer
+                 size_t     tempsize,   // I - Size of temp file buffer
+                 const char **format)   // O - Print format
 {
-  size_t		i,		/* Looping var */
-			count;		/* Number of values */
-  ipp_attribute_t       *attr;          /* Printer attribute */
-  const char            *type = NULL;   /* Raster type (colorspace + bits) */
-  pwg_media_t           *pwg = NULL;	/* Media size */
-  cups_size_t		media;		/* Media information */
-  int                   xdpi = 0,       /* Horizontal resolution */
-                        ydpi = 0;       /* Vertical resolution */
-  int                   fd;             /* Temporary file */
-  cups_raster_mode_t	mode;		/* Raster mode */
-  cups_raster_t         *ras;           /* Raster stream */
-  cups_page_header_t	header;		/* Page header */
-  unsigned char         *line,          /* Line of raster data */
-                        *lineptr;       /* Pointer into line */
-  unsigned              y,              /* Current position on page */
-                        xcount, ycount, /* Current count for X and Y */
-                        xrep, yrep,     /* Repeat count for X and Y */
-                        xoff, yoff,     /* Offsets for X and Y */
-                        yend;           /* End Y value */
-  int                   temprow,        /* Row in template */
-                        tempcolor;      /* Template color */
-  const char            *template;      /* Pointer into template */
-  const unsigned char   *color;         /* Current color */
+  size_t		i,		// Looping var
+			count;		// Number of values
+  ipp_attribute_t       *attr;          // Printer attribute
+  const char            *type = NULL;   // Raster type (colorspace + bits)
+  pwg_media_t           *pwg = NULL;	// Media size
+  cups_size_t		media;		// Media information
+  int                   xdpi = 0,       // Horizontal resolution
+                        ydpi = 0;       // Vertical resolution
+  int                   fd;             // Temporary file
+  cups_raster_mode_t	mode;		// Raster mode
+  cups_raster_t         *ras;           // Raster stream
+  cups_page_header_t	header;		// Page header
+  unsigned char         *line,          // Line of raster data
+                        *lineptr;       // Pointer into line
+  unsigned              y,              // Current position on page
+                        xcount, ycount, // Current count for X and Y
+                        xrep, yrep,     // Repeat count for X and Y
+                        xoff, yoff,     // Offsets for X and Y
+                        yend;           // End Y value
+  int                   temprow,        // Row in template
+                        tempcolor;      // Template color
+  const char            *template;      // Pointer into template
+  const unsigned char   *color;         // Current color
   static const unsigned char colors[][3] =
-  {                                     /* Colors for test */
+  {                                     // Colors for test
     { 191, 191, 191 },
     { 127, 127, 127 },
     {  63,  63,  63 },
@@ -324,7 +308,7 @@ make_raster_file(ipp_t      *response,  /* I - Printer attributes */
     { 255,   0, 255 }
   };
   static const char * const templates[] =
-  {                                     /* Raster template */
+  {                                     // Raster template
     " CCC   U   U  PPPP    SSS          TTTTT  EEEEE   SSS   TTTTT          000     1     222    333      4   55555   66    77777   888    999   ",
     "C   C  U   U  P   P  S   S           T    E      S   S    T           0   0   11    2   2  3   3  4  4   5      6          7  8   8  9   9  ",
     "C      U   U  P   P  S               T    E      S        T           0   0    1        2      3  4  4   5      6         7   8   8  9   9  ",
@@ -336,10 +320,7 @@ make_raster_file(ipp_t      *response,  /* I - Printer attributes */
   };
 
 
- /*
-  * Figure out the output format...
-  */
-
+  // Figure out the output format...
   if ((attr = ippFindAttribute(response, "document-format-supported", IPP_TAG_MIMETYPE)) == NULL)
   {
     puts("No supported document formats, aborting.");
@@ -366,42 +347,27 @@ make_raster_file(ipp_t      *response,  /* I - Printer attributes */
   }
   else if (ippContainsString(attr, "image/urf"))
   {
-   /*
-    * Apple Raster format...
-    */
-
+    // Apple Raster format...
     *format = "image/urf";
     mode    = CUPS_RASTER_WRITE_APPLE;
   }
   else if (ippContainsString(attr, "image/pwg-raster"))
   {
-   /*
-    * PWG Raster format...
-    */
-
+    // PWG Raster format...
     *format = "image/pwg-raster";
     mode    = CUPS_RASTER_WRITE_PWG;
   }
   else
   {
-   /*
-    * No supported raster format...
-    */
-
+    // No supported raster format...
     puts("Printer does not support Apple or PWG raster files, aborting.");
     return (NULL);
   }
 
- /*
-  * Figure out the the media, resolution, and color mode...
-  */
-
+  // Figure out the the media, resolution, and color mode...
   if ((attr = ippFindAttribute(response, "media-ready", IPP_TAG_KEYWORD)) != NULL)
   {
-   /*
-    * Use ready media...
-    */
-
+    // Use ready media...
     if (ippContainsString(attr, "na_letter_8.5x11in"))
       pwg = pwgMediaForPWG("na_letter_8.5x11in");
     else if (ippContainsString(attr, "iso_a4_210x297mm"))
@@ -411,10 +377,7 @@ make_raster_file(ipp_t      *response,  /* I - Printer attributes */
   }
   else if ((attr = ippFindAttribute(response, "media-default", IPP_TAG_KEYWORD)) != NULL)
   {
-   /*
-    * Use default media...
-    */
-
+    // Use default media...
     pwg = pwgMediaForPWG(ippGetString(attr, 0, NULL));
   }
   else
@@ -474,10 +437,7 @@ make_raster_file(ipp_t      *response,  /* I - Printer attributes */
     return (NULL);
   }
 
- /*
-  * Make the raster context and details...
-  */
-
+  // Make the raster context and details...
   memset(&media, 0, sizeof(media));
   cupsCopyString(media.media, pwg->pwg, sizeof(media.media));
   media.width  = pwg->width;
@@ -506,10 +466,7 @@ make_raster_file(ipp_t      *response,  /* I - Printer attributes */
   yrep = xrep * header.HWResolution[1] / header.HWResolution[0];
   yend = header.cupsHeight - yoff;
 
- /*
-  * Prepare the raster file...
-  */
-
+  // Prepare the raster file...
   if ((line = malloc(header.cupsBytesPerLine)) == NULL)
   {
     printf("Unable to allocate %u bytes for raster output: %s\n", header.cupsBytesPerLine, strerror(errno));
@@ -531,10 +488,7 @@ make_raster_file(ipp_t      *response,  /* I - Printer attributes */
     return (NULL);
   }
 
- /*
-  * Write a single page consisting of the template dots repeated over the page.
-  */
-
+  // Write a single page consisting of the template dots repeated over the page.
   cupsRasterWriteHeader(ras, &header);
 
   memset(line, 0xff, header.cupsBytesPerLine);
@@ -562,10 +516,7 @@ make_raster_file(ipp_t      *response,  /* I - Printer attributes */
 
     if (header.cupsColorSpace == CUPS_CSPACE_SW)
     {
-     /*
-      * Do grayscale output...
-      */
-
+      // Do grayscale output...
       for (lineptr = line + xoff; *template; template ++)
       {
         if (*template != ' ')
@@ -581,10 +532,7 @@ make_raster_file(ipp_t      *response,  /* I - Printer attributes */
     }
     else
     {
-     /*
-      * Do color output...
-      */
-
+      // Do color output...
       for (lineptr = line + 3 * xoff; *template; template ++)
       {
         if (*template != ' ')
@@ -620,45 +568,39 @@ make_raster_file(ipp_t      *response,  /* I - Printer attributes */
 }
 
 
-/*
- * 'monitor_printer()' - Monitor the job and printer states.
- */
+//
+// 'monitor_printer()' - Monitor the job and printer states.
+//
 
-static void *				/* O - Thread exit code */
+static void *				// O - Thread exit code
 monitor_printer(
-    _client_data_t *data)		/* I - Client data */
+    _client_data_t *data)		// I - Client data
 {
-  http_t	*http;			/* Connection to printer */
-  ipp_t		*request,		/* IPP request */
-		*response;		/* IPP response */
-  ipp_attribute_t *attr;		/* Attribute in response */
-  ipp_pstate_t	printer_state;		/* Printer state */
+  http_t	*http;			// Connection to printer
+  ipp_t		*request,		// IPP request
+		*response;		// IPP response
+  ipp_attribute_t *attr;		// Attribute in response
+  ipp_pstate_t	printer_state;		// Printer state
   char          printer_state_reasons[1024];
-                                        /* Printer state reasons */
-  ipp_jstate_t	job_state;		/* Job state */
-  char          job_state_reasons[1024];/* Printer state reasons */
-  static const char * const jattrs[] =  /* Job attributes we want */
+                                        // Printer state reasons
+  ipp_jstate_t	job_state;		// Job state
+  char          job_state_reasons[1024];// Printer state reasons
+  static const char * const jattrs[] =  // Job attributes we want
   {
     "job-state",
     "job-state-reasons"
   };
-  static const char * const pattrs[] =  /* Printer attributes we want */
+  static const char * const pattrs[] =  // Printer attributes we want
   {
     "printer-state",
     "printer-state-reasons"
   };
 
 
- /*
-  * Open a connection to the printer...
-  */
-
+  // Open a connection to the printer...
   http = httpConnect(data->hostname, data->port, NULL, AF_UNSPEC, data->encryption, 1, 0, NULL);
 
- /*
-  * Loop until the job is canceled, aborted, or completed.
-  */
-
+  // Loop until the job is canceled, aborted, or completed.
   printer_state            = (ipp_pstate_t)0;
   printer_state_reasons[0] = '\0';
 
@@ -667,19 +609,13 @@ monitor_printer(
 
   while (data->job_state < IPP_JSTATE_CANCELED)
   {
-   /*
-    * Reconnect to the printer as needed...
-    */
-
+    // Reconnect to the printer as needed...
     if (httpGetFd(http) < 0)
       httpReconnect(http, 30000, NULL);
 
     if (httpGetFd(http) >= 0)
     {
-     /*
-      * Connected, so check on the printer state...
-      */
-
+      // Connected, so check on the printer state...
       request = ippNewRequest(IPP_OP_GET_PRINTER_ATTRIBUTES);
       ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, data->uri);
       ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsGetUser());
@@ -705,10 +641,7 @@ monitor_printer(
 
       if (data->job_id > 0)
       {
-       /*
-        * Check the status of the job itself...
-        */
-
+        // Check the status of the job itself...
         request = ippNewRequest(IPP_OP_GET_JOB_ATTRIBUTES);
         ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, data->uri);
         ippAddInteger(request, IPP_TAG_OPERATION, IPP_TAG_INTEGER, "job-id", data->job_id);
@@ -737,18 +670,12 @@ monitor_printer(
 
     if (data->job_state < IPP_JSTATE_CANCELED)
     {
-     /*
-      * Sleep for 5 seconds...
-      */
-
+      // Sleep for 5 seconds...
       sleep(5);
     }
   }
 
- /*
-  * Cleanup and return...
-  */
-
+  // Cleanup and return...
   httpClose(http);
 
   printf("FINISHED MONITORING JOB %d\n", data->job_id);
@@ -757,23 +684,23 @@ monitor_printer(
 }
 
 
-/*
- * 'run_client()' - Run a client thread.
- */
+//
+// 'run_client()' - Run a client thread.
+//
 
-static void *				/* O - Thread exit code */
+static void *				// O - Thread exit code
 run_client(
-    _client_data_t *data)		/* I - Client data */
+    _client_data_t *data)		// I - Client data
 {
-  cups_thread_t	monitor_id;		/* Monitoring thread ID */
-  const char	*name;			/* Job name */
-  char		tempfile[1024] = "";	/* Temporary file (if any) */
-  _client_data_t ldata;			/* Local client data */
-  http_t	*http;			/* Connection to printer */
-  ipp_t		*request,		/* IPP request */
-		*response;		/* IPP response */
-  ipp_attribute_t *attr;		/* Attribute in response */
-  static const char * const pattrs[] =  /* Printer attributes we are interested in */
+  cups_thread_t	monitor_id;		// Monitoring thread ID
+  const char	*name;			// Job name
+  char		tempfile[1024] = "";	// Temporary file (if any)
+  _client_data_t ldata;			// Local client data
+  http_t	*http;			// Connection to printer
+  ipp_t		*request,		// IPP request
+		*response;		// IPP response
+  ipp_attribute_t *attr;		// Attribute in response
+  static const char * const pattrs[] =  // Printer attributes we are interested in
   {
     "all",
     "media-col-database"
@@ -782,22 +709,13 @@ run_client(
 
   ldata = *data;
 
- /*
-  * Start monitoring the printer in the background...
-  */
-
+  // Start monitoring the printer in the background...
   monitor_id = cupsThreadCreate((cups_thread_func_t)monitor_printer, &ldata);
 
- /*
-  * Open a connection to the printer...
-  */
-
+  // Open a connection to the printer...
   http = httpConnect(data->hostname, data->port, NULL, AF_UNSPEC, data->encryption, 1, 0, NULL);
 
- /*
-  * Query printer status and capabilities...
-  */
-
+  // Query printer status and capabilities...
   request = ippNewRequest(IPP_OP_GET_PRINTER_ATTRIBUTES);
   ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, ldata.uri);
   ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsGetUser());
@@ -808,23 +726,15 @@ run_client(
   if (verbosity)
     show_capabilities(response);
 
- /*
-  * Now figure out what we will be printing...
-  */
-
+  // Now figure out what we will be printing...
   if (ldata.docfile)
   {
-   /*
-    * User specified a print file, figure out the format...
-    */
-    const char *ext;			/* Filename extension */
+    // User specified a print file, figure out the format...
+    const char *ext;			// Filename extension
 
     if ((ext = strrchr(ldata.docfile, '.')) != NULL)
     {
-     /*
-      * Guess the format from the extension...
-      */
-
+      // Guess the format from the extension...
       if (!strcmp(ext, ".jpg"))
         ldata.docformat = "image/jpeg";
       else if (!strcmp(ext, ".pdf"))
@@ -840,29 +750,20 @@ run_client(
     }
     else
     {
-     /*
-      * Tell the printer to auto-detect...
-      */
-
+      // Tell the printer to auto-detect...
       ldata.docformat = "application/octet-stream";
     }
   }
   else
   {
-   /*
-    * No file specified, make something to test with...
-    */
-
+    // No file specified, make something to test with...
     if ((ldata.docfile = make_raster_file(response, ldata.grayscale, tempfile, sizeof(tempfile), &ldata.docformat)) == NULL)
       return ((void *)1);
   }
 
   ippDelete(response);
 
- /*
-  * Create a job and wait for completion...
-  */
-
+  // Create a job and wait for completion...
   do
   {
     request = ippNewRequest(IPP_OP_CREATE_JOB);
@@ -949,10 +850,7 @@ run_client(
   while (ldata.job_state < IPP_JSTATE_CANCELED)
     sleep(1);
 
- /*
-  * Cleanup after ourselves...
-  */
-
+  // Cleanup after ourselves...
   cleanup:
 
   httpClose(http);
@@ -970,22 +868,22 @@ run_client(
 }
 
 
-/*
- * 'show_attributes()' - Show attributes in a request or response.
- */
+//
+// 'show_attributes()' - Show attributes in a request or response.
+//
 
 static void
-show_attributes(const char *title,      /* I - Title */
-                int        request,     /* I - 1 for request, 0 for response */
-                ipp_t      *ipp)        /* I - IPP request/response */
+show_attributes(const char *title,      // I - Title
+                int        request,     // I - 1 for request, 0 for response
+                ipp_t      *ipp)        // I - IPP request/response
 {
   int                   minor, major = ippGetVersion(ipp, &minor);
-                                        /* IPP version number */
+                                        // IPP version number
   ipp_tag_t             group = IPP_TAG_ZERO;
-                                        /* Current group tag */
-  ipp_attribute_t       *attr;          /* Current attribute */
-  const char            *name;          /* Attribute name */
-  char                  buffer[1024];   /* Value */
+                                        // Current group tag
+  ipp_attribute_t       *attr;          // Current attribute
+  const char            *name;          // Attribute name
+  char                  buffer[1024];   // Value
 
 
   printf("%s:\n", title);
@@ -1012,17 +910,17 @@ show_attributes(const char *title,      /* I - Title */
 }
 
 
-/*
- * 'show_capabilities()' - Show printer capabilities.
- */
+//
+// 'show_capabilities()' - Show printer capabilities.
+//
 
 static void
-show_capabilities(ipp_t *response)      /* I - Printer attributes */
+show_capabilities(ipp_t *response)      // I - Printer attributes
 {
-  int                   i;              /* Looping var */
-  ipp_attribute_t       *attr;          /* Attribute */
-  char                  buffer[1024];   /* Attribute value buffer */
-  static const char * const pattrs[] =  /* Attributes we want to show */
+  int                   i;              // Looping var
+  ipp_attribute_t       *attr;          // Attribute
+  char                  buffer[1024];   // Attribute value buffer
+  static const char * const pattrs[] =  // Attributes we want to show
   {
     "copies-default",
     "copies-supported",
@@ -1058,9 +956,9 @@ show_capabilities(ipp_t *response)      /* I - Printer attributes */
 }
 
 
-/*
- * 'usage()' - Show program usage...
- */
+//
+// 'usage()' - Show program usage...
+//
 
 static void
 usage(void)

@@ -10,7 +10,6 @@
 //
 
 #include "cups-private.h"
-#include "debug-internal.h"
 #include <fcntl.h>
 #include <math.h>
 #include <sys/stat.h>

@@ -1,41 +1,37 @@
-/*
- * Raster test program routines for CUPS.
- *
- * Copyright © 2021-2022 by OpenPrinting.
- * Copyright © 2007-2019 by Apple Inc.
- * Copyright © 1997-2007 by Easy Software Products.
- *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more
- * information.
- */
-
-/*
- * Include necessary headers...
- */
+//
+// Raster test program routines for CUPS.
+//
+// Copyright © 2021-2022 by OpenPrinting.
+// Copyright © 2007-2019 by Apple Inc.
+// Copyright © 1997-2007 by Easy Software Products.
+//
+// Licensed under Apache License v2.0.  See the file "LICENSE" for more
+// information.
+//
 
 #include "raster-private.h"
 #include "test-internal.h"
 #include <math.h>
 
 
-/*
- * Local functions...
- */
+//
+// Local functions...
+//
 
 static int	do_ras_file(const char *filename);
 static int	do_raster_tests(cups_raster_mode_t mode);
 static void	print_changes(cups_page_header_t *header, cups_page_header_t *expected);
 
 
-/*
- * 'main()' - Test the raster functions.
- */
+//
+// 'main()' - Test the raster functions.
+//
 
-int					/* O - Exit status */
-main(int  argc,				/* I - Number of command-line args */
-     char *argv[])			/* I - Command-line arguments */
+int					// O - Exit status
+main(int  argc,				// I - Number of command-line args
+     char *argv[])			// I - Command-line arguments
 {
-  int	errors = 0;			/* Number of errors */
+  int	errors = 0;			// Number of errors
 
 
   if (argc == 1)
@@ -47,7 +43,7 @@ main(int  argc,				/* I - Number of command-line args */
   }
   else
   {
-    int			i;		/* Looping var */
+    int			i;		// Looping var
 
     for (i = 1; i < argc; i ++)
       errors += do_ras_file(argv[i]);
@@ -57,20 +53,20 @@ main(int  argc,				/* I - Number of command-line args */
 }
 
 
-/*
- * 'do_ras_file()' - Test reading of a raster file.
- */
+//
+// 'do_ras_file()' - Test reading of a raster file.
+//
 
-static int				/* O - Number of errors */
-do_ras_file(const char *filename)	/* I - Filename */
+static int				// O - Number of errors
+do_ras_file(const char *filename)	// I - Filename
 {
-  unsigned		y;		/* Looping vars */
-  int			fd;		/* File descriptor */
-  cups_raster_t		*ras;		/* Raster stream */
-  cups_page_header_t	header;		/* Page header */
-  unsigned char		*data;		/* Raster data */
-  int			errors = 0;	/* Number of errors */
-  unsigned		pages = 0;	/* Number of pages */
+  unsigned		y;		// Looping vars
+  int			fd;		// File descriptor
+  cups_raster_t		*ras;		// Raster stream
+  cups_page_header_t	header;		// Page header
+  unsigned char		*data;		// Raster data
+  int			errors = 0;	// Number of errors
+  unsigned		pages = 0;	// Number of pages
 
 
   if ((fd = open(filename, O_RDONLY)) < 0)
@@ -120,26 +116,23 @@ do_ras_file(const char *filename)	/* I - Filename */
 }
 
 
-/*
- * 'do_raster_tests()' - Test reading and writing of raster data.
- */
+//
+// 'do_raster_tests()' - Test reading and writing of raster data.
+//
 
-static int				/* O - Number of errors */
-do_raster_tests(cups_raster_mode_t mode)/* O - Write mode */
+static int				// O - Number of errors
+do_raster_tests(cups_raster_mode_t mode)// O - Write mode
 {
-  unsigned		page, x, y, count;/* Looping vars */
-  FILE			*fp;		/* Raster file */
-  cups_raster_t		*r;		/* Raster stream */
-  cups_page_header_t	header,		/* Page header */
-			expected;	/* Expected page header */
-  unsigned char		data[2048];	/* Raster data */
-  int			errors = 0;	/* Number of errors */
+  unsigned		page, x, y, count;// Looping vars
+  FILE			*fp;		// Raster file
+  cups_raster_t		*r;		// Raster stream
+  cups_page_header_t	header,		// Page header
+			expected;	// Expected page header
+  unsigned char		data[2048];	// Raster data
+  int			errors = 0;	// Number of errors
 
 
- /*
-  * Test writing...
-  */
-
+  // Test writing...
   testBegin("cupsRasterOpen(%s)", mode == CUPS_RASTER_WRITE ? "CUPS_RASTER_WRITE" : mode == CUPS_RASTER_WRITE_COMPRESSED ? "CUPS_RASTER_WRITE_COMPRESSED" : mode == CUPS_RASTER_WRITE_PWG ? "CUPS_RASTER_WRITE_PWG" : "CUPS_RASTER_WRITE_APPLE");
 
   if ((fp = fopen("test.raster", "wb")) == NULL)
@@ -273,10 +266,7 @@ do_raster_tests(cups_raster_mode_t mode)/* O - Write mode */
   cupsRasterClose(r);
   fclose(fp);
 
- /*
-  * Test reading...
-  */
-
+  // Test reading...
   testBegin("cupsRasterOpen(CUPS_RASTER_READ)");
   fflush(stdout);
 
@@ -519,16 +509,16 @@ do_raster_tests(cups_raster_mode_t mode)/* O - Write mode */
 }
 
 
-/*
- * 'print_changes()' - Print differences in the page header.
- */
+//
+// 'print_changes()' - Print differences in the page header.
+//
 
 static void
 print_changes(
-    cups_page_header_t *header,		/* I - Actual page header */
-    cups_page_header_t *expected)	/* I - Expected page header */
+    cups_page_header_t *header,		// I - Actual page header
+    cups_page_header_t *expected)	// I - Expected page header
 {
-  int	i;				/* Looping var */
+  int	i;				// Looping var
 
 
   if (strcmp(header->MediaClass, expected->MediaClass))
