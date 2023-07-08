@@ -1037,10 +1037,7 @@ _httpSetDigestAuthString(
 
     if (!_cups_strcasecmp(http->algorithm, "MD5"))
     {
-     /*
-      * RFC 2617 Digest with MD5
-      */
-
+      // RFC 2617 Digest with MD5
       if (cg->digestoptions == _CUPS_DIGESTOPTIONS_DENYMD5)
       {
 	DEBUG_puts("3_httpSetDigestAuthString: MD5 Digest is disabled.");
@@ -1614,9 +1611,9 @@ httpResolveURI(
 }
 
 
-/*
- * 'http_copy_decode()' - Copy and decode a URI.
- */
+//
+// 'http_copy_decode()' - Copy and decode a URI.
+//
 
 static const char *			// O - New source pointer or NULL on error
 http_copy_decode(char       *dst,	// O - Destination buffer
@@ -1630,11 +1627,8 @@ http_copy_decode(char       *dst,	// O - Destination buffer
   int	quoted;				// Quoted character
 
 
- /*
-  * Copy the src to the destination until we hit a terminating character
-  * or the end of the string.
-  */
-
+  // Copy the src to the destination until we hit a terminating character
+  // or the end of the string.
   for (ptr = dst, end = dst + dstsize - 1; *src && (!term || !strchr(term, *src)); src ++)
   {
     if (ptr < end)
@@ -1643,10 +1637,7 @@ http_copy_decode(char       *dst,	// O - Destination buffer
       {
         if (isxdigit(src[1] & 255) && isxdigit(src[2] & 255))
 	{
-	 /*
-	  * Grab a hex-encoded character...
-	  */
-
+	  // Grab a hex-encoded character...
           src ++;
 	  if (isalpha(*src))
 	    quoted = (tolower(*src) - 'a' + 10) << 4;
@@ -1663,21 +1654,22 @@ http_copy_decode(char       *dst,	// O - Destination buffer
 	}
 	else
 	{
-	 /*
-	  * Bad hex-encoded character...
-	  */
-
+	  // Bad hex-encoded character...
 	  *ptr = '\0';
 	  return (NULL);
 	}
       }
       else if ((*src & 255) <= 0x20 || (*src & 255) >= 0x7f)
       {
+        // Bad control character...
         *ptr = '\0';
         return (NULL);
       }
       else
+      {
+        // Good literal...
 	*ptr++ = *src;
+      }
     }
   }
 
@@ -1687,9 +1679,9 @@ http_copy_decode(char       *dst,	// O - Destination buffer
 }
 
 
-/*
- * 'http_copy_encode()' - Copy and encode a URI.
- */
+//
+// 'http_copy_encode()' - Copy and encode a URI.
+//
 
 static char *				// O - End of current URI
 http_copy_encode(char       *dst,	// O - Destination buffer
@@ -1707,13 +1699,9 @@ http_copy_encode(char       *dst,	// O - Destination buffer
     if (term && *src == *term)
       return (dst);
 
-    if (encode && (*src == '%' || *src <= ' ' || *src & 128 ||
-                   (reserved && strchr(reserved, *src))))
+    if (encode && (*src == '%' || *src <= ' ' || *src & 128 || (reserved && strchr(reserved, *src))))
     {
-     /*
-      * Hex encode reserved characters...
-      */
-
+      // Hex encode reserved characters...
       if ((dst + 2) >= dstend)
         break;
 
@@ -1724,7 +1712,10 @@ http_copy_encode(char       *dst,	// O - Destination buffer
       src ++;
     }
     else
+    {
+      // Copy literal...
       *dst++ = *src++;
+    }
   }
 
   *dst = '\0';
