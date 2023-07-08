@@ -98,7 +98,6 @@
  * Which encryption libraries do we have?
  */
 
-#undef HAVE_TLS
 #undef HAVE_OPENSSL
 #undef HAVE_GNUTLS
 

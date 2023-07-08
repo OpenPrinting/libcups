@@ -5036,9 +5036,6 @@ then :
 printf "%s\n" "yes" >&6; }
 	    have_tls="1"
 
-printf "%s\n" "#define HAVE_TLS 1" >>confdefs.h
-
-
 printf "%s\n" "#define HAVE_OPENSSL 1" >>confdefs.h
 
 	    CPPFLAGS="$CPPFLAGS $($PKGCONFIG --cflags openssl)"
@@ -5074,9 +5071,6 @@ then :
 		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
 	        have_tls="1"
-
-printf "%s\n" "#define HAVE_TLS 1" >>confdefs.h
-
 
 printf "%s\n" "#define HAVE_GNUTLS 1" >>confdefs.h
 

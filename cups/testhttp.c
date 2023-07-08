@@ -704,7 +704,6 @@ main(int  argc,				// I - Number of command-line arguments
 
 	continue;
       }
-#ifdef HAVE_TLS
       else if (status == HTTP_STATUS_UPGRADE_REQUIRED)
       {
 	// Flush any error message...
@@ -723,7 +722,6 @@ main(int  argc,				// I - Number of command-line arguments
 	// Try again, this time with encryption enabled...
 	continue;
       }
-#endif // HAVE_TLS
     }
     while (status == HTTP_STATUS_UNAUTHORIZED ||
            status == HTTP_STATUS_UPGRADE_REQUIRED);
@@ -800,7 +798,6 @@ main(int  argc,				// I - Number of command-line arguments
 
 	continue;
       }
-#ifdef HAVE_TLS
       else if (status == HTTP_STATUS_UPGRADE_REQUIRED)
       {
 	// Flush any error message...
@@ -819,7 +816,6 @@ main(int  argc,				// I - Number of command-line arguments
 	// Try again, this time with encryption enabled...
 	continue;
       }
-#endif // HAVE_TLS
     }
     while (status == HTTP_STATUS_UNAUTHORIZED || status == HTTP_STATUS_UPGRADE_REQUIRED);
 
