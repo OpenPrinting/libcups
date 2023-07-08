@@ -1,13 +1,13 @@
-/*
- * Private string definitions for CUPS.
- *
- * Copyright © 2021-2022 by OpenPrinting.
- * Copyright © 2007-2018 by Apple Inc.
- * Copyright © 1997-2006 by Easy Software Products.
- *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more
- * information.
- */
+//
+// Private string definitions for CUPS.
+//
+// Copyright © 2021-2023 by OpenPrinting.
+// Copyright © 2007-2018 by Apple Inc.
+// Copyright © 1997-2006 by Easy Software Products.
+//
+// Licensed under Apache License v2.0.  See the file "LICENSE" for more
+// information.
+//
 
 #ifndef _CUPS_STRING_PRIVATE_H_
 #  define _CUPS_STRING_PRIVATE_H_
@@ -23,32 +23,32 @@
 #  include <time.h>
 #  ifdef __cplusplus
 extern "C" {
-#  endif /* __cplusplus */
+#  endif // __cplusplus
 
 
-/*
- * String pool structures...
- */
+//
+// String pool structures...
+//
 
 #  define _CUPS_STR_GUARD	0x12344321
 
-typedef struct _cups_sp_item_s		/**** String Pool Item ****/
+typedef struct _cups_sp_item_s		// String Pool Item
 {
 #  ifdef DEBUG_GUARDS
-  unsigned int	guard;			/* Guard word */
-#  endif /* DEBUG_GUARDS */
-  unsigned int	ref_count;		/* Reference count */
-  char		str[1];			/* String */
+  unsigned int	guard;			// Guard word
+#  endif // DEBUG_GUARDS
+  unsigned int	ref_count;		// Reference count
+  char		str[1];			// String
 } _cups_sp_item_t;
 
 
-/*
- * Replacements for the ctype macros that are not affected by locale, since we
- * really only care about testing for ASCII characters when parsing files, etc.
- *
- * The _CUPS_INLINE definition controls whether we get an inline function body,
- * and external function body, or an external definition.
- */
+//
+// Replacements for the ctype macros that are not affected by locale, since we
+// really only care about testing for ASCII characters when parsing files, etc.
+//
+// The _CUPS_INLINE definition controls whether we get an inline function body,
+// and external function body, or an external definition.
+//
 
 #  if defined(__GNUC__) || __STDC_VERSION__ >= 199901L
 #    define _CUPS_INLINE static inline
@@ -56,51 +56,47 @@ typedef struct _cups_sp_item_s		/**** String Pool Item ****/
 #    define _CUPS_INLINE static __inline
 #  elif defined(_CUPS_STRING_C_)
 #    define _CUPS_INLINE
-#  endif /* __GNUC__ || __STDC_VERSION__ */
+#  endif // __GNUC__ || __STDC_VERSION__
 
 #  ifdef _CUPS_INLINE
-_CUPS_INLINE int			/* O - 1 on match, 0 otherwise */
-_cups_isalnum(int ch)			/* I - Character to test */
+_CUPS_INLINE int			// O - 1 on match, 0 otherwise
+_cups_isalnum(int ch)			// I - Character to test
 {
-  return ((ch >= '0' && ch <= '9') ||
-          (ch >= 'A' && ch <= 'Z') ||
-          (ch >= 'a' && ch <= 'z'));
+  return ((ch >= '0' && ch <= '9') || (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z'));
 }
 
-_CUPS_INLINE int			/* O - 1 on match, 0 otherwise */
-_cups_isalpha(int ch)			/* I - Character to test */
+_CUPS_INLINE int			// O - 1 on match, 0 otherwise
+_cups_isalpha(int ch)			// I - Character to test
 {
-  return ((ch >= 'A' && ch <= 'Z') ||
-          (ch >= 'a' && ch <= 'z'));
+  return ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z'));
 }
 
-_CUPS_INLINE int			/* O - 1 on match, 0 otherwise */
-_cups_islower(int ch)			/* I - Character to test */
+_CUPS_INLINE int			// O - 1 on match, 0 otherwise
+_cups_islower(int ch)			// I - Character to test
 {
   return (ch >= 'a' && ch <= 'z');
 }
 
-_CUPS_INLINE int			/* O - 1 on match, 0 otherwise */
-_cups_isspace(int ch)			/* I - Character to test */
+_CUPS_INLINE int			// O - 1 on match, 0 otherwise
+_cups_isspace(int ch)			// I - Character to test
 {
-  return (ch == ' ' || ch == '\f' || ch == '\n' || ch == '\r' || ch == '\t' ||
-          ch == '\v');
+  return (ch == ' ' || ch == '\f' || ch == '\n' || ch == '\r' || ch == '\t' || ch == '\v');
 }
 
-_CUPS_INLINE int			/* O - 1 on match, 0 otherwise */
-_cups_isupper(int ch)			/* I - Character to test */
+_CUPS_INLINE int			// O - 1 on match, 0 otherwise
+_cups_isupper(int ch)			// I - Character to test
 {
   return (ch >= 'A' && ch <= 'Z');
 }
 
-_CUPS_INLINE int			/* O - Converted character */
-_cups_tolower(int ch)			/* I - Character to convert */
+_CUPS_INLINE int			// O - Converted character
+_cups_tolower(int ch)			// I - Character to convert
 {
   return (_cups_isupper(ch) ? ch - 'A' + 'a' : ch);
 }
 
-_CUPS_INLINE int			/* O - Converted character */
-_cups_toupper(int ch)			/* I - Character to convert */
+_CUPS_INLINE int			// O - Converted character
+_cups_toupper(int ch)			// I - Character to convert
 {
   return (_cups_islower(ch) ? ch - 'a' + 'A' : ch);
 }
@@ -112,12 +108,12 @@ extern int _cups_isspace(int ch);
 extern int _cups_isupper(int ch);
 extern int _cups_tolower(int ch);
 extern int _cups_toupper(int ch);
-#  endif /* _CUPS_INLINE */
+#  endif // _CUPS_INLINE
 
 
-/*
- * Prototypes...
- */
+//
+// Prototypes...
+//
 
 extern ssize_t	_cups_safe_vsnprintf(char *buffer, size_t bufsize, const char *format, va_list args) _CUPS_PRIVATE;
 extern void	_cups_strcpy(char *dst, const char *src) _CUPS_PRIVATE;
@@ -135,5 +131,5 @@ extern double	_cupsStrScand(const char *buf, char **bufptr, struct lconv *loc) _
 
 #  ifdef __cplusplus
 }
-#  endif /* __cplusplus */
-#endif /* !_CUPS_STRING_H_ */
+#  endif // __cplusplus
+#endif // !_CUPS_STRING_PRIVATE_H_
