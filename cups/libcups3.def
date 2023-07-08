@@ -268,12 +268,12 @@ cupsLangSetLocale
 cupsLocalizeDestMedia
 cupsLocalizeDestOption
 cupsLocalizeDestValue
+cupsLocalizeNotifySubject
+cupsLocalizeNotifyText
 cupsMutexDestroy
 cupsMutexInit
 cupsMutexLock
 cupsMutexUnlock
-cupsNotifySubject
-cupsNotifyText
 cupsParseOptions
 cupsPutFd
 cupsPutFile
@@ -340,7 +340,6 @@ httpAddrSetPort
 httpAssembleURI
 httpAssembleURIf
 httpAssembleUUID
-httpCheck
 httpClearCookie
 httpClearFields
 httpClose
@@ -354,7 +353,6 @@ httpCredentialsGetTrust
 httpCredentialsString
 httpDecode64
 httpEncode64
-httpError
 httpFieldValue
 httpFlush
 httpFlushWrite
@@ -368,6 +366,7 @@ httpGetCookie
 httpGetDateString
 httpGetDateTime
 httpGetEncryption
+httpGetError
 httpGetExpect
 httpGetFd
 httpGetField
