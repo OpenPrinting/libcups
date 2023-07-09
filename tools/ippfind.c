@@ -1,19 +1,15 @@
-/*
- * Utility to find IPP printers via Bonjour/DNS-SD and optionally run
- * commands such as IPP and Bonjour conformance tests.  This tool is
- * inspired by the UNIX "find" command, thus its name.
- *
- * Copyright © 2021-2022 by OpenPrinting.
- * Copyright © 2020 by the IEEE-ISTO Printer Working Group
- * Copyright © 2008-2018 by Apple Inc.
- *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more
- * information.
- */
-
-/*
- * Include necessary headers.
- */
+//
+// Utility to find IPP printers via Bonjour/DNS-SD and optionally run
+// commands such as IPP and Bonjour conformance tests.  This tool is
+// inspired by the UNIX "find" command, thus its name.
+//
+// Copyright © 2021-2022 by OpenPrinting.
+// Copyright © 2020 by the IEEE-ISTO Printer Working Group
+// Copyright © 2008-2018 by Apple Inc.
+//
+// Licensed under Apache License v2.0.  See the file "LICENSE" for more
+// information.
+//
 
 #define _CUPS_NO_DEPRECATED
 #include <cups/cups-private.h>
@@ -22,112 +18,112 @@
 #  include <sys/timeb.h>
 #else
 #  include <sys/wait.h>
-#endif /* _WIN32 */
+#endif // _WIN32
 #include <regex.h>
 #include <cups/dnssd.h>
 
 #ifndef _WIN32
-extern char **environ;			/* Process environment variables */
-#endif /* !_WIN32 */
+extern char **environ;			// Process environment variables
+#endif // !_WIN32
 
 
-/*
- * Structures...
- */
+//
+// Structures...
+//
 
-typedef enum ippfind_exit_e		/* Exit codes */
+typedef enum ippfind_exit_e		// Exit codes
 {
-  IPPFIND_EXIT_TRUE = 0,		/* OK and result is true */
-  IPPFIND_EXIT_FALSE,			/* OK but result is false*/
-  IPPFIND_EXIT_BONJOUR,			/* Browse/resolve failure */
-  IPPFIND_EXIT_SYNTAX,			/* Bad option or syntax error */
-  IPPFIND_EXIT_MEMORY			/* Out of memory */
+  IPPFIND_EXIT_TRUE = 0,		// OK and result is true
+  IPPFIND_EXIT_FALSE,			// OK but result is false
+  IPPFIND_EXIT_BONJOUR,			// Browse/resolve failure
+  IPPFIND_EXIT_SYNTAX,			// Bad option or syntax error
+  IPPFIND_EXIT_MEMORY			// Out of memory
 } ippfind_exit_t;
 
-typedef enum ippfind_op_e		/* Operations for expressions */
+typedef enum ippfind_op_e		// Operations for expressions
 {
-  /* "Evaluation" operations */
-  IPPFIND_OP_NONE,			/* No operation */
-  IPPFIND_OP_AND,			/* Logical AND of all children */
-  IPPFIND_OP_OR,			/* Logical OR of all children */
-  IPPFIND_OP_TRUE,			/* Always true */
-  IPPFIND_OP_FALSE,			/* Always false */
-  IPPFIND_OP_IS_LOCAL,			/* Is a local service */
-  IPPFIND_OP_IS_REMOTE,			/* Is a remote service */
-  IPPFIND_OP_DOMAIN_REGEX,		/* Domain matches regular expression */
-  IPPFIND_OP_NAME_REGEX,		/* Name matches regular expression */
-  IPPFIND_OP_NAME_LITERAL,		/* Name matches literal string */
-  IPPFIND_OP_HOST_REGEX,		/* Hostname matches regular expression */
-  IPPFIND_OP_PORT_RANGE,		/* Port matches range */
-  IPPFIND_OP_PATH_REGEX,		/* Path matches regular expression */
-  IPPFIND_OP_TXT_EXISTS,		/* TXT record key exists */
-  IPPFIND_OP_TXT_REGEX,			/* TXT record key matches regular expression */
-  IPPFIND_OP_URI_REGEX,			/* URI matches regular expression */
+  // "Evaluation" operations
+  IPPFIND_OP_NONE,			// No operation
+  IPPFIND_OP_AND,			// Logical AND of all children
+  IPPFIND_OP_OR,			// Logical OR of all children
+  IPPFIND_OP_TRUE,			// Always true
+  IPPFIND_OP_FALSE,			// Always false
+  IPPFIND_OP_IS_LOCAL,			// Is a local service
+  IPPFIND_OP_IS_REMOTE,			// Is a remote service
+  IPPFIND_OP_DOMAIN_REGEX,		// Domain matches regular expression
+  IPPFIND_OP_NAME_REGEX,		// Name matches regular expression
+  IPPFIND_OP_NAME_LITERAL,		// Name matches literal string
+  IPPFIND_OP_HOST_REGEX,		// Hostname matches regular expression
+  IPPFIND_OP_PORT_RANGE,		// Port matches range
+  IPPFIND_OP_PATH_REGEX,		// Path matches regular expression
+  IPPFIND_OP_TXT_EXISTS,		// TXT record key exists
+  IPPFIND_OP_TXT_REGEX,			// TXT record key matches regular expression
+  IPPFIND_OP_URI_REGEX,			// URI matches regular expression
 
-  /* "Output" operations */
-  IPPFIND_OP_EXEC,			/* Execute when true */
-  IPPFIND_OP_LIST,			/* List when true */
-  IPPFIND_OP_PRINT_NAME,		/* Print URI when true */
-  IPPFIND_OP_PRINT_URI,			/* Print name when true */
-  IPPFIND_OP_QUIET			/* No output when true */
+  // "Output" operations
+  IPPFIND_OP_EXEC,			// Execute when true
+  IPPFIND_OP_LIST,			// List when true
+  IPPFIND_OP_PRINT_NAME,		// Print URI when true
+  IPPFIND_OP_PRINT_URI,			// Print name when true
+  IPPFIND_OP_QUIET			// No output when true
 } ippfind_op_t;
 
-typedef struct ippfind_expr_s		/* Expression */
+typedef struct ippfind_expr_s		// Expression
 {
   struct ippfind_expr_s
-		*prev,			/* Previous expression */
-		*next,			/* Next expression */
-		*parent,		/* Parent expressions */
-		*child;			/* Child expressions */
-  ippfind_op_t	op;			/* Operation code (see above) */
-  bool		invert;			/* Invert the result? */
-  char		*name;			/* TXT record key or literal name */
-  regex_t	re;			/* Regular expression for matching */
-  int		range[2];		/* Port number range */
-  size_t	num_args;		/* Number of arguments for exec */
-  char		**args;			/* Arguments for exec */
+		*prev,			// Previous expression
+		*next,			// Next expression
+		*parent,		// Parent expressions
+		*child;			// Child expressions
+  ippfind_op_t	op;			// Operation code (see above)
+  bool		invert;			// Invert the result?
+  char		*name;			// TXT record key or literal name
+  regex_t	re;			// Regular expression for matching
+  int		range[2];		// Port number range
+  size_t	num_args;		// Number of arguments for exec
+  char		**args;			// Arguments for exec
 } ippfind_expr_t;
 
-typedef struct ippfind_srvs_s		/* Services array */
+typedef struct ippfind_srvs_s		// Services array
 {
-  cups_rwlock_t	rwlock;			/* R/W lock */
-  cups_array_t	*services;		/* Services array */
+  cups_rwlock_t	rwlock;			// R/W lock
+  cups_array_t	*services;		// Services array
 } ippfind_srvs_t;
 
-typedef struct ippfind_srv_s		/* Service information */
+typedef struct ippfind_srv_s		// Service information
 {
-  cups_dnssd_resolve_t *resolve;	/* Resolve request */
-  char		*name,			/* Service name */
-		*domain,		/* Domain name */
-		*regtype,		/* Registration type */
-		*fullName,		/* Full name */
-		*host,			/* Hostname */
-		*resource,		/* Resource path */
-		*uri;			/* URI */
-  size_t	num_txt;		/* Number of TXT record keys */
-  cups_option_t	*txt;			/* TXT record keys */
-  int		port;			/* Port number */
-  bool		is_local,		/* Is a local service? */
-		is_processed,		/* Did we process the service? */
-		is_resolved;		/* Got the resolve data? */
+  cups_dnssd_resolve_t *resolve;	// Resolve request
+  char		*name,			// Service name
+		*domain,		// Domain name
+		*regtype,		// Registration type
+		*fullName,		// Full name
+		*host,			// Hostname
+		*resource,		// Resource path
+		*uri;			// URI
+  size_t	num_txt;		// Number of TXT record keys
+  cups_option_t	*txt;			// TXT record keys
+  int		port;			// Port number
+  bool		is_local,		// Is a local service?
+		is_processed,		// Did we process the service?
+		is_resolved;		// Got the resolve data?
 } ippfind_srv_t;
 
 
-/*
- * Local globals...
- */
+//
+// Local globals...
+//
 
-static cups_dnssd_t *dnssd;		/* DNS-SD context */
+static cups_dnssd_t *dnssd;		// DNS-SD context
 static int	address_family = AF_UNSPEC;
-					/* Address family for LIST */
-static int	bonjour_error = 0;	/* Error browsing/resolving? */
-static double	bonjour_timeout = 1.0;	/* Timeout in seconds */
-static int	ipp_version = 20;	/* IPP version for LIST */
+					// Address family for LIST
+static int	bonjour_error = 0;	// Error browsing/resolving?
+static double	bonjour_timeout = 1.0;	// Timeout in seconds
+static int	ipp_version = 20;	// IPP version for LIST
 
 
-/*
- * Local functions...
- */
+//
+// Local functions...
+//
 
 static void		browse_callback(cups_dnssd_browse_t *browse, void *context, cups_dnssd_flags_t flags, uint32_t if_index, const char *serviceName, const char *regtype, const char *replyDomain);
 static int		compare_services(ippfind_srv_t *a, ippfind_srv_t *b);
@@ -146,35 +142,35 @@ static char		*win32_escape_dup(const char *s);
 #endif // _WIN32
 
 
-/*
- * 'main()' - Browse for printers.
- */
+//
+// 'main()' - Browse for printers.
+//
 
-int					/* O - Exit status */
-main(int  argc,				/* I - Number of command-line args */
-     char *argv[])			/* I - Command-line arguments */
+int					// O - Exit status
+main(int  argc,				// I - Number of command-line args
+     char *argv[])			// I - Command-line arguments
 {
-  int			i,		/* Looping var */
-			have_output = 0,/* Have output expression */
+  int			i,		// Looping var
+			have_output = 0,// Have output expression
 			status = IPPFIND_EXIT_FALSE;
-					/* Exit status */
-  const char		*opt,		/* Option character */
-			*search;	/* Current browse/resolve string */
-  cups_array_t		*searches;	/* Things to browse/resolve */
-  ippfind_srvs_t	services;	/* Services array */
-  ippfind_srv_t		*service;	/* Current service */
+					// Exit status
+  const char		*opt,		// Option character
+			*search;	// Current browse/resolve string
+  cups_array_t		*searches;	// Things to browse/resolve
+  ippfind_srvs_t	services;	// Services array
+  ippfind_srv_t		*service;	// Current service
   ippfind_expr_t	*expressions = NULL,
-					/* Expression tree */
-			*temp = NULL,	/* New expression */
-			*parent = NULL,	/* Parent expression */
-			*current = NULL,/* Current expression */
-			*parens[100];	/* Markers for parenthesis */
-  int			num_parens = 0;	/* Number of parenthesis */
+					// Expression tree
+			*temp = NULL,	// New expression
+			*parent = NULL,	// Parent expression
+			*current = NULL,// Current expression
+			*parens[100];	// Markers for parenthesis
+  int			num_parens = 0;	// Number of parenthesis
   ippfind_op_t		logic = IPPFIND_OP_AND;
-					/* Logic for next expression */
-  int			invert = 0;	/* Invert expression? */
-  double		endtime;	/* End time */
-  static const char * const ops[] =	/* Node operation names */
+					// Logic for next expression
+  int			invert = 0;	// Invert expression?
+  double		endtime;	// End time
+  static const char * const ops[] =	// Node operation names
   {
     "NONE",
     "AND",
@@ -200,28 +196,21 @@ main(int  argc,				/* I - Number of command-line args */
   };
 
 
- /*
-  * Initialize the locale...
-  */
-
+  // Initialize the locale...
   cupsLangSetLocale(argv);
 
- /*
-  * Create arrays to track services and things we want to browse/resolve...
-  */
-
+  // Create arrays to track services and things we want to browse/resolve...
   searches = cupsArrayNew(NULL, NULL, NULL, 0, NULL, NULL);
 
   cupsRWInit(&services.rwlock);
   services.services = cupsArrayNew((cups_array_cb_t)compare_services, NULL, NULL, 0, NULL, NULL);
 
- /*
-  * Parse command-line...
-  */
-
+  // Parse command-line...
   if (getenv("IPPFIND_DEBUG"))
+  {
     for (i = 1; i < argc; i ++)
       fprintf(stderr, "argv[%d]=\"%s\"\n", i, argv[i]);
+  }
 
   for (i = 1; i < argc; i ++)
   {
@@ -229,10 +218,7 @@ main(int  argc,				/* I - Number of command-line args */
     {
       if (argv[i][1] == '-')
       {
-       /*
-        * Parse --option options...
-        */
-
+        // Parse --option options...
         if (!strcmp(argv[i], "--and"))
         {
           if (logic == IPPFIND_OP_OR)
@@ -377,29 +363,19 @@ main(int  argc,				/* I - Number of command-line args */
 
           if (parent && parent->op == IPPFIND_OP_OR)
           {
-           /*
-            * Already setup to do "foo --or bar --or baz"...
-            */
-
+            // Already setup to do "foo --or bar --or baz"...
             temp = NULL;
           }
           else if (!current->prev && parent)
           {
-           /*
-            * Change parent node into an OR node...
-            */
-
+            // Change parent node into an OR node...
             parent->op = IPPFIND_OP_OR;
             temp       = NULL;
           }
           else if (!current->prev)
           {
-           /*
-            * Need to group "current" in a new OR node...
-            */
-
-	    if ((temp = new_expr(IPPFIND_OP_OR, 0, NULL, NULL,
-				 NULL)) == NULL)
+            // Need to group "current" in a new OR node...
+	    if ((temp = new_expr(IPPFIND_OP_OR, 0, NULL, NULL, NULL)) == NULL)
 	      exit(IPPFIND_EXIT_MEMORY);
 
             temp->parent    = parent;
@@ -416,13 +392,8 @@ main(int  argc,				/* I - Number of command-line args */
 	  }
 	  else
 	  {
-	   /*
-	    * Need to group previous expressions in an AND node, and then
-	    * put that in an OR node...
-	    */
-
-	    if ((temp = new_expr(IPPFIND_OP_AND, 0, NULL, NULL,
-				 NULL)) == NULL)
+	    // Need to group previous expressions in an AND node, and then put that in an OR node...
+	    if ((temp = new_expr(IPPFIND_OP_AND, 0, NULL, NULL, NULL)) == NULL)
 	      exit(IPPFIND_EXIT_MEMORY);
 
 	    while (current->prev)
@@ -435,8 +406,7 @@ main(int  argc,				/* I - Number of command-line args */
 	    temp->child     = current;
 	    current         = temp;
 
-	    if ((temp = new_expr(IPPFIND_OP_OR, 0, NULL, NULL,
-				 NULL)) == NULL)
+	    if ((temp = new_expr(IPPFIND_OP_OR, 0, NULL, NULL, NULL)) == NULL)
 	      exit(IPPFIND_EXIT_MEMORY);
 
             temp->parent    = parent;
@@ -533,7 +503,7 @@ main(int  argc,				/* I - Number of command-line args */
         }
         else if (!strncmp(argv[i], "--txt-", 6))
         {
-          const char *key = argv[i] + 6;/* TXT key */
+          const char *key = argv[i] + 6;// TXT key
 
           i ++;
           if (i >= argc)
@@ -576,46 +546,28 @@ main(int  argc,				/* I - Number of command-line args */
 
         if (temp)
         {
-         /*
-          * Add new expression...
-          */
-
-	  if (logic == IPPFIND_OP_AND &&
-	      current && current->prev &&
-	      parent && parent->op != IPPFIND_OP_AND)
+          // Add new expression...
+	  if (logic == IPPFIND_OP_AND && current && current->prev && parent && parent->op != IPPFIND_OP_AND)
           {
-           /*
-            * Need to re-group "current" in a new AND node...
-            */
+            // Need to re-group "current" in a new AND node...
+            ippfind_expr_t *tempand;	// Temporary AND node
 
-            ippfind_expr_t *tempand;	/* Temporary AND node */
-
-	    if ((tempand = new_expr(IPPFIND_OP_AND, 0, NULL, NULL,
-				    NULL)) == NULL)
+	    if ((tempand = new_expr(IPPFIND_OP_AND, 0, NULL, NULL, NULL)) == NULL)
 	      exit(IPPFIND_EXIT_MEMORY);
 
-           /*
-            * Replace "current" with new AND node at the end of this list...
-            */
-
+            // Replace "current" with new AND node at the end of this list...
             current->prev->next = tempand;
             tempand->prev       = current->prev;
             tempand->parent     = parent;
 
-           /*
-            * Add "current to the new AND node...
-            */
-
+            // Add "current to the new AND node...
             tempand->child  = current;
             current->parent = tempand;
             current->prev   = NULL;
 	    parent          = tempand;
 	  }
 
-         /*
-          * Add the new node at current level...
-          */
-
+          // Add the new node at current level...
 	  temp->parent = parent;
 	  temp->prev   = current;
 
@@ -634,10 +586,7 @@ main(int  argc,				/* I - Number of command-line args */
       }
       else
       {
-       /*
-        * Parse -o options
-        */
-
+        // Parse -o options
         for (opt = argv[i] + 1; *opt; opt ++)
         {
           switch (*opt)
@@ -650,7 +599,7 @@ main(int  argc,				/* I - Number of command-line args */
                 address_family = AF_INET6;
                 break;
 
-            case 'N' : /* Literal name */
+            case 'N' : // Literal name
 		i ++;
 		if (i >= argc)
 		{
@@ -868,46 +817,28 @@ main(int  argc,				/* I - Number of command-line args */
 
 	  if (temp)
 	  {
-	   /*
-	    * Add new expression...
-	    */
-
-	    if (logic == IPPFIND_OP_AND &&
-	        current && current->prev &&
-	        parent && parent->op != IPPFIND_OP_AND)
+	    // Add new expression...
+	    if (logic == IPPFIND_OP_AND && current && current->prev && parent && parent->op != IPPFIND_OP_AND)
 	    {
-	     /*
-	      * Need to re-group "current" in a new AND node...
-	      */
+	      // Need to re-group "current" in a new AND node...
+	      ippfind_expr_t *tempand;	// Temporary AND node
 
-	      ippfind_expr_t *tempand;	/* Temporary AND node */
-
-	      if ((tempand = new_expr(IPPFIND_OP_AND, 0, NULL, NULL,
-				      NULL)) == NULL)
+	      if ((tempand = new_expr(IPPFIND_OP_AND, 0, NULL, NULL, NULL)) == NULL)
 		exit(IPPFIND_EXIT_MEMORY);
 
-	     /*
-	      * Replace "current" with new AND node at the end of this list...
-	      */
-
+	      // Replace "current" with new AND node at the end of this list...
 	      current->prev->next = tempand;
 	      tempand->prev       = current->prev;
 	      tempand->parent     = parent;
 
-	     /*
-	      * Add "current to the new AND node...
-	      */
-
+	      // Add "current to the new AND node...
 	      tempand->child  = current;
 	      current->parent = tempand;
 	      current->prev   = NULL;
 	      parent          = tempand;
 	    }
 
-	   /*
-	    * Add the new node at current level...
-	    */
-
+	    // Add the new node at current level...
 	    temp->parent = parent;
 	    temp->prev   = current;
 
@@ -972,14 +903,11 @@ main(int  argc,				/* I - Number of command-line args */
     }
     else
     {
-     /*
-      * _regtype._tcp[,subtype][.domain]
-      *
-      *   OR
-      *
-      * service-name[._regtype._tcp[.domain]]
-      */
-
+      // _regtype._tcp[,subtype][.domain]
+      //
+      // OR
+      //
+      // service-name[._regtype._tcp[.domain]]
       cupsArrayAdd(searches, argv[i]);
     }
   }
@@ -992,10 +920,7 @@ main(int  argc,				/* I - Number of command-line args */
 
   if (!have_output)
   {
-   /*
-    * Add an implicit --print-uri to the end...
-    */
-
+    // Add an implicit --print-uri to the end...
     if ((temp = new_expr(IPPFIND_OP_PRINT_URI, 0, NULL, NULL, NULL)) == NULL)
       exit(IPPFIND_EXIT_MEMORY);
 
@@ -1013,39 +938,31 @@ main(int  argc,				/* I - Number of command-line args */
 
   if (cupsArrayGetCount(searches) == 0)
   {
-   /*
-    * Add an implicit browse for IPP printers ("_ipp._tcp")...
-    */
-
+    // Add an implicit browse for IPP printers ("_ipp._tcp")...
     cupsArrayAdd(searches, "_ipp._tcp");
   }
 
   if (getenv("IPPFIND_DEBUG"))
   {
-    int		indent = 4;		/* Indentation */
+    int		indent = 4;		// Indentation
 
     puts("Expression tree:");
     current = expressions;
     while (current)
     {
-     /*
-      * Print the current node...
-      */
+      // Print the current node...
+      printf("%*s%s%s\n", indent, "", current->invert ? "!" : "", ops[current->op]);
 
-      printf("%*s%s%s\n", indent, "", current->invert ? "!" : "",
-             ops[current->op]);
-
-     /*
-      * Advance to the next node...
-      */
-
+      // Advance to the next node...
       if (current->child)
       {
         current = current->child;
         indent += 4;
       }
       else if (current->next)
+      {
         current = current->next;
+      }
       else if (current->parent)
       {
         while (current->parent)
@@ -1059,31 +976,26 @@ main(int  argc,				/* I - Number of command-line args */
         current = current->next;
       }
       else
+      {
         current = NULL;
+      }
     }
 
     puts("\nSearch items:");
-    for (search = (const char *)cupsArrayGetFirst(searches);
-	 search;
-	 search = (const char *)cupsArrayGetNext(searches))
+    for (search = (const char *)cupsArrayGetFirst(searches); search; search = (const char *)cupsArrayGetNext(searches))
       printf("    %s\n", search);
   }
 
- /*
-  * Start up browsing/resolving...
-  */
-
+  // Start up browsing/resolving...
   if ((dnssd = cupsDNSSDNew(NULL, NULL)) == NULL)
     exit(IPPFIND_EXIT_BONJOUR);
 
-  for (search = (const char *)cupsArrayGetFirst(searches);
-       search;
-       search = (const char *)cupsArrayGetNext(searches))
+  for (search = (const char *)cupsArrayGetFirst(searches); search; search = (const char *)cupsArrayGetNext(searches))
   {
-    char		buf[1024],	/* Full name string */
-			*name = NULL,	/* Service instance name */
-			*regtype,	/* Registration type */
-			*domain;	/* Domain, if any */
+    char	buf[1024],		// Full name string
+		*name = NULL,		// Service instance name
+		*regtype,		// Registration type
+		*domain;		// Domain, if any
 
     cupsCopyString(buf, search, sizeof(buf));
 
@@ -1095,30 +1007,20 @@ main(int  argc,				/* I - Number of command-line args */
     {
       if (strcmp(regtype, "._tcp"))
       {
-       /*
-        * "something._protocol._tcp" -> search for something with the given
-        * protocol...
-        */
-
+        // "something._protocol._tcp" -> search for something with the given protocol...
 	name = buf;
 	*regtype++ = '\0';
       }
       else
       {
-       /*
-        * "_protocol._tcp" -> search for everything with the given protocol...
-        */
-
-        /* name = NULL; */
+        // "_protocol._tcp" -> search for everything with the given protocol...
+        // name = NULL;
         regtype = buf;
       }
     }
     else
     {
-     /*
-      * "something" -> search for something with IPP protocol...
-      */
-
+      // "something" -> search for something with IPP protocol...
       name    = buf;
       regtype = "_ipp._tcp";
     }
@@ -1137,10 +1039,7 @@ main(int  argc,				/* I - Number of command-line args */
 
     if (name)
     {
-     /*
-      * Resolve the given service instance name, regtype, and domain...
-      */
-
+      // Resolve the given service instance name, regtype, and domain...
       if (!domain)
         domain = "local.";
 
@@ -1154,10 +1053,7 @@ main(int  argc,				/* I - Number of command-line args */
     }
     else
     {
-     /*
-      * Browse for services of the given type...
-      */
-
+      // Browse for services of the given type...
       if (getenv("IPPFIND_DEBUG"))
         fprintf(stderr, "Browsing for regtype=\"%s\", domain=\"%s\"\n", regtype, domain);
 
@@ -1166,10 +1062,7 @@ main(int  argc,				/* I - Number of command-line args */
     }
   }
 
- /*
-  * Process browse/resolve requests...
-  */
-
+  // Process browse/resolve requests...
   if (bonjour_timeout > 1.0)
     endtime = get_time() + bonjour_timeout;
   else
@@ -1177,15 +1070,12 @@ main(int  argc,				/* I - Number of command-line args */
 
   while (get_time() < endtime)
   {
-   /*
-    * Process any services that we have found...
-    */
-
-    size_t	j,			/* Looping var */
-		count,			/* Number of services */
-		active = 0,		/* Number of active resolves */
-		resolved = 0,		/* Number of resolved services */
-		processed = 0;		/* Number of processed services */
+    // Process any services that we have found...
+    size_t	j,			// Looping var
+		count,			// Number of services
+		active = 0,		// Number of active resolves
+		resolved = 0,		// Number of resolved services
+		processed = 0;		// Number of processed services
 
     cupsRWLockRead(&services.rwlock);
     for (j = 0, count = cupsArrayGetCount(services.services); j < count; j ++)
@@ -1200,10 +1090,7 @@ main(int  argc,				/* I - Number of command-line args */
 
       if (!service->resolve && !service->is_resolved)
       {
-       /*
-	* Found a service, now resolve it (but limit to 50 active resolves...)
-	*/
-
+        // Found a service, now resolve it (but limit to 50 active resolves...)
 	if (active < 50)
 	{
 	  if ((service->resolve = cupsDNSSDResolveNew(dnssd, CUPS_DNSSD_IF_INDEX_ANY, service->name, service->regtype, service->domain, resolve_callback, service)) == NULL)
@@ -1214,10 +1101,7 @@ main(int  argc,				/* I - Number of command-line args */
       }
       else if (service->is_resolved && !service->is_processed)
       {
-       /*
-	* Resolved, not process this service against the expressions...
-	*/
-
+        // Resolved, not process this service against the expressions...
 	cupsDNSSDResolveDelete(service->resolve);
 	service->resolve = NULL;
 
@@ -1234,20 +1118,14 @@ main(int  argc,				/* I - Number of command-line args */
     }
     cupsRWUnlock(&services.rwlock);
 
-   /*
-    * If we have processed all services we have discovered, then we are done.
-    */
-
+    // If we have processed all services we have discovered, then we are done.
     if (getenv("IPPFIND_DEBUG"))
       fprintf(stderr, "STATUS processed=%u, resolved=%u, count=%u\n", (unsigned)processed, (unsigned)resolved, (unsigned)count);
 
     if (processed > 0 && processed == cupsArrayGetCount(services.services) && bonjour_timeout <= 1.0)
       break;
 
-   /*
-    * Give the browsers/resolvers some time...
-    */
-
+    // Give the browsers/resolvers some time...
     usleep(250000);
   }
 
@@ -1258,75 +1136,66 @@ main(int  argc,				/* I - Number of command-line args */
 }
 
 
-/*
- * 'browse_callback()' - Browse devices.
- */
+//
+// 'browse_callback()' - Browse devices.
+//
 
 static void
 browse_callback(
-    cups_dnssd_browse_t *browse,	/* I - Browse request */
-    void                *context,	/* I - Services array */
-    cups_dnssd_flags_t  flags,		/* I - Flags */
-    uint32_t            if_index,	/* I - Interface */
-    const char          *serviceName,	/* I - Name of service/device */
-    const char          *regtype,	/* I - Type of service */
-    const char          *replyDomain)	/* I - Service domain */
+    cups_dnssd_browse_t *browse,	// I - Browse request
+    void                *context,	// I - Services array
+    cups_dnssd_flags_t  flags,		// I - Flags
+    uint32_t            if_index,	// I - Interface
+    const char          *serviceName,	// I - Name of service/device
+    const char          *regtype,	// I - Type of service
+    const char          *replyDomain)	// I - Service domain
 {
-  ippfind_srv_t	*service;		/* Service */
+  ippfind_srv_t	*service;		// Service
 
   if (getenv("IPPFIND_DEBUG"))
     fprintf(stderr, "B flags=0x%04X, if_index=%u, serviceName=\"%s\", regtype=\"%s\", replyDomain=\"%s\"\n", flags, if_index, serviceName, regtype, replyDomain);
 
   (void)browse;
 
- /*
-  * Only process "add" data...
-  */
-
+  // Only process "add" data...
   if ((flags & CUPS_DNSSD_FLAGS_ERROR) || !(flags & CUPS_DNSSD_FLAGS_ADD))
     return;
 
- /*
-  * Get the device...
-  */
-
+  // Get the device...
   service = get_service((ippfind_srvs_t *)context, serviceName, regtype, replyDomain);
   if (if_index == CUPS_DNSSD_IF_INDEX_LOCAL)
     service->is_local = 1;
 }
 
 
-/*
- * 'compare_services()' - Compare two devices.
- */
+//
+// 'compare_services()' - Compare two devices.
+//
 
-static int				/* O - Result of comparison */
-compare_services(ippfind_srv_t *a,	/* I - First device */
-                 ippfind_srv_t *b)	/* I - Second device */
+static int				// O - Result of comparison
+compare_services(ippfind_srv_t *a,	// I - First device
+                 ippfind_srv_t *b)	// I - Second device
 {
   return (_cups_strcasecmp(a->name, b->name));
 }
 
 
-/*
- * 'eval_expr()' - Evaluate the expressions against the specified service.
- *
- * Returns 1 for true and 0 for false.
- */
+//
+// 'eval_expr()' - Evaluate the expressions against the specified service.
+//
+// Returns 1 for true and 0 for false.
+//
 
-static int				/* O - Result of evaluation */
-eval_expr(ippfind_srv_t  *service,	/* I - Service */
-	  ippfind_expr_t *expressions)	/* I - Expressions */
+static int				// O - Result of evaluation
+eval_expr(ippfind_srv_t  *service,	// I - Service
+	  ippfind_expr_t *expressions)	// I - Expressions
 {
-  ippfind_op_t		logic;		/* Logical operation */
-  int			result;		/* Result of current expression */
-  ippfind_expr_t	*expression;	/* Current expression */
-  const char		*val;		/* TXT value */
+  ippfind_op_t		logic;		// Logical operation
+  int			result;		// Result of current expression
+  ippfind_expr_t	*expression;	// Current expression
+  const char		*val;		// TXT value
 
- /*
-  * Loop through the expressions...
-  */
-
+  // Loop through the expressions...
   if (expressions && expressions->parent)
     logic = expressions->parent->op;
   else
@@ -1424,65 +1293,55 @@ eval_expr(ippfind_srv_t  *service,	/* I - Service */
 }
 
 
-/*
- * 'exec_program()' - Execute a program for a service.
- */
+//
+// 'exec_program()' - Execute a program for a service.
+//
 
-static int				/* O - 1 if program terminated
-					       successfully, 0 otherwise. */
-exec_program(ippfind_srv_t *service,	/* I - Service */
-             size_t        num_args,	/* I - Number of command-line args */
-             char          **args)	/* I - Command-line arguments */
+static int				// O - 1 if program terminated successfully, 0 otherwise
+exec_program(ippfind_srv_t *service,	// I - Service
+             size_t        num_args,	// I - Number of command-line args
+             char          **args)	// I - Command-line arguments
 {
-  char		**myargv,		/* Command-line arguments */
-		**myenvp,		/* Environment variables */
-		*ptr,			/* Pointer into variable */
-		domain[1024],		/* IPPFIND_SERVICE_DOMAIN */
-		hostname[1024],		/* IPPFIND_SERVICE_HOSTNAME */
-		name[256],		/* IPPFIND_SERVICE_NAME */
-		port[32],		/* IPPFIND_SERVICE_PORT */
-		regtype[256],		/* IPPFIND_SERVICE_REGTYPE */
-		scheme[128],		/* IPPFIND_SERVICE_SCHEME */
-		uri[1024],		/* IPPFIND_SERVICE_URI */
-		txt[100][256];		/* IPPFIND_TXT_foo */
-  size_t	i,			/* Looping var */
-		myenvc;			/* Number of environment variables */
-  int		status;			/* Exit status of program */
+  char		**myargv,		// Command-line arguments
+		**myenvp,		// Environment variables
+		*ptr,			// Pointer into variable
+		domain[1024],		// IPPFIND_SERVICE_DOMAIN
+		hostname[1024],		// IPPFIND_SERVICE_HOSTNAME
+		name[256],		// IPPFIND_SERVICE_NAME
+		port[32],		// IPPFIND_SERVICE_PORT
+		regtype[256],		// IPPFIND_SERVICE_REGTYPE
+		scheme[128],		// IPPFIND_SERVICE_SCHEME
+		uri[1024],		// IPPFIND_SERVICE_URI
+		txt[100][256];		// IPPFIND_TXT_foo
+  size_t	i,			// Looping var
+		myenvc;			// Number of environment variables
+  int		status;			// Exit status of program
 #ifndef _WIN32
-  char		program[1024];		/* Program to execute */
-  int		pid;			/* Process ID */
-#endif /* !_WIN32 */
+  char		program[1024];		// Program to execute
+  int		pid;			// Process ID
+#endif // !_WIN32
 
 
- /*
-  * Environment variables...
-  */
-
-  snprintf(domain, sizeof(domain), "IPPFIND_SERVICE_DOMAIN=%s",
-           service->domain);
-  snprintf(hostname, sizeof(hostname), "IPPFIND_SERVICE_HOSTNAME=%s",
-           service->host);
+  // Environment variables...
+  snprintf(domain, sizeof(domain), "IPPFIND_SERVICE_DOMAIN=%s", service->domain);
+  snprintf(hostname, sizeof(hostname), "IPPFIND_SERVICE_HOSTNAME=%s", service->host);
   snprintf(name, sizeof(name), "IPPFIND_SERVICE_NAME=%s", service->name);
   snprintf(port, sizeof(port), "IPPFIND_SERVICE_PORT=%d", service->port);
-  snprintf(regtype, sizeof(regtype), "IPPFIND_SERVICE_REGTYPE=%s",
-           service->regtype);
-  snprintf(scheme, sizeof(scheme), "IPPFIND_SERVICE_SCHEME=%s",
-           !strncmp(service->regtype, "_http._tcp", 10) ? "http" :
-               !strncmp(service->regtype, "_https._tcp", 11) ? "https" :
-               !strncmp(service->regtype, "_ipp._tcp", 9) ? "ipp" :
-               !strncmp(service->regtype, "_ipps._tcp", 10) ? "ipps" : "lpd");
+  snprintf(regtype, sizeof(regtype), "IPPFIND_SERVICE_REGTYPE=%s", service->regtype);
+  snprintf(scheme, sizeof(scheme), "IPPFIND_SERVICE_SCHEME=%s", !strncmp(service->regtype, "_http._tcp", 10) ? "http" : !strncmp(service->regtype, "_https._tcp", 11) ? "https" : !strncmp(service->regtype, "_ipp._tcp", 9) ? "ipp" : !strncmp(service->regtype, "_ipps._tcp", 10) ? "ipps" : "lpd");
   snprintf(uri, sizeof(uri), "IPPFIND_SERVICE_URI=%s", service->uri);
   for (i = 0; i < service->num_txt && i < 100; i ++)
   {
-    snprintf(txt[i], sizeof(txt[i]), "IPPFIND_TXT_%s=%s", service->txt[i].name,
-             service->txt[i].value);
+    snprintf(txt[i], sizeof(txt[i]), "IPPFIND_TXT_%s=%s", service->txt[i].name, service->txt[i].value);
     for (ptr = txt[i] + 12; *ptr && *ptr != '='; ptr ++)
       *ptr = (char)_cups_toupper(*ptr);
   }
 
   for (i = 0, myenvc = 7 + service->num_txt; environ[i]; i ++)
+  {
     if (strncmp(environ[i], "IPPFIND_", 8))
       myenvc ++;
+  }
 
   if ((myenvp = calloc(sizeof(char *), (size_t)(myenvc + 1))) == NULL)
   {
@@ -1491,8 +1350,10 @@ exec_program(ippfind_srv_t *service,	/* I - Service */
   }
 
   for (i = 0, myenvc = 0; environ[i]; i ++)
+  {
     if (strncmp(environ[i], "IPPFIND_", 8))
       myenvp[myenvc++] = environ[i];
+  }
 
   myenvp[myenvc++] = domain;
   myenvp[myenvc++] = hostname;
@@ -1505,10 +1366,7 @@ exec_program(ippfind_srv_t *service,	/* I - Service */
   for (i = 0; i < service->num_txt && i < 100; i ++)
     myenvp[myenvc++] = txt[i];
 
- /*
-  * Allocate and copy command-line arguments...
-  */
-
+  // Allocate and copy command-line arguments...
   if ((myargv = calloc(sizeof(char *), (size_t)(num_args + 1))) == NULL)
   {
     cupsLangPuts(stderr, _("ippfind: Out of memory."));
@@ -1519,27 +1377,25 @@ exec_program(ippfind_srv_t *service,	/* I - Service */
   {
     if (strchr(args[i], '{'))
     {
-      char	temp[2048],		/* Temporary string */
-		*tptr,			/* Pointer into temporary string */
-		keyword[256],		/* {keyword} */
-		*kptr;			/* Pointer into keyword */
+      char	temp[2048],		// Temporary string
+		*tptr,			// Pointer into temporary string
+		keyword[256],		// {keyword}
+		*kptr;			// Pointer into keyword
 
       for (ptr = args[i], tptr = temp; *ptr; ptr ++)
       {
         if (*ptr == '{')
         {
-         /*
-          * Do a {var} substitution...
-          */
-
+          // Do a {var} substitution...
           for (kptr = keyword, ptr ++; *ptr && *ptr != '}'; ptr ++)
+          {
             if (kptr < (keyword + sizeof(keyword) - 1))
               *kptr++ = *ptr;
+          }
 
           if (*ptr != '}')
           {
-            cupsLangPuts(stderr,
-                          _("ippfind: Missing close brace in substitution."));
+            cupsLangPuts(stderr, _("ippfind: Missing close brace in substitution."));
             exit(IPPFIND_EXIT_SYNTAX);
           }
 
@@ -1608,12 +1464,11 @@ exec_program(ippfind_srv_t *service,	/* I - Service */
   status = _spawnvpe(_P_WAIT, args[0], myargv, myenvp);
 
 #else
- /*
-  * Execute the program...
-  */
-
+  // Execute the program...
   if (strchr(args[0], '/') && !access(args[0], X_OK))
+  {
     cupsCopyString(program, args[0], sizeof(program));
+  }
   else if (!cupsFileFind(args[0], getenv("PATH"), 1, program, sizeof(program)))
   {
     cupsLangPrintf(stderr, _("ippfind: Unable to execute \"%s\": %s"),
@@ -1634,10 +1489,7 @@ exec_program(ippfind_srv_t *service,	/* I - Service */
 
   if ((pid = fork()) == 0)
   {
-   /*
-    * Child comes here...
-    */
-
+    // Child comes here...
     execve(program, myargv, myenvp);
     exit(1);
   }
@@ -1649,29 +1501,20 @@ exec_program(ippfind_srv_t *service,	/* I - Service */
   }
   else
   {
-   /*
-    * Wait for it to complete...
-    */
-
+    // Wait for it to complete...
     while (wait(&status) != pid)
       ;
   }
-#endif /* _WIN32 */
+#endif // _WIN32
 
- /*
-  * Free memory...
-  */
-
+  // Free memory...
   for (i = 0; i < num_args; i ++)
     free(myargv[i]);
 
   free(myargv);
   free(myenvp);
 
- /*
-  * Return whether the program succeeded or crashed...
-  */
-
+  // Return whether the program succeeded or crashed...
   if (getenv("IPPFIND_DEBUG"))
   {
 #ifdef _WIN32
@@ -1681,34 +1524,31 @@ exec_program(ippfind_srv_t *service,	/* I - Service */
       printf("Exit Status: %d\n", WEXITSTATUS(status));
     else
       printf("Terminating Signal: %d\n", WTERMSIG(status));
-#endif /* _WIN32 */
+#endif // _WIN32
   }
 
   return (status == 0);
 }
 
 
-/*
- * 'get_service()' - Create or update a device.
- */
+//
+// 'get_service()' - Create or update a device.
+//
 
-static ippfind_srv_t *			/* O - Service */
-get_service(ippfind_srvs_t *services,	/* I - Service array */
-	    const char     *serviceName,/* I - Name of service/device */
-	    const char     *regtype,	/* I - Type of service */
-	    const char     *replyDomain)/* I - Service domain */
+static ippfind_srv_t *			// O - Service
+get_service(ippfind_srvs_t *services,	// I - Service array
+	    const char     *serviceName,// I - Name of service/device
+	    const char     *regtype,	// I - Type of service
+	    const char     *replyDomain)// I - Service domain
 {
-  size_t	i,			/* Looping var */
-		count;			/* Number of services */
-  ippfind_srv_t	key,			/* Search key */
-		*service;		/* Service */
-  char		fullName[1024];		/* Full name for query */
+  size_t	i,			// Looping var
+		count;			// Number of services
+  ippfind_srv_t	key,			// Search key
+		*service;		// Service
+  char		fullName[1024];		// Full name for query
 
 
- /*
-  * See if this is a new device...
-  */
-
+  // See if this is a new device...
   key.name    = (char *)serviceName;
   key.regtype = (char *)regtype;
 
@@ -1723,14 +1563,13 @@ get_service(ippfind_srvs_t *services,	/* I - Service array */
       return (service);
     }
     else if (_cups_strcasecmp(service->name, key.name) > 0)
+    {
       break;
+    }
   }
   cupsRWUnlock(&services->rwlock);
 
- /*
-  * Yes, add the service...
-  */
-
+  // Yes, add the service...
   if ((service = calloc(sizeof(ippfind_srv_t), 1)) == NULL)
     return (NULL);
 
@@ -1742,11 +1581,7 @@ get_service(ippfind_srvs_t *services,	/* I - Service array */
   cupsArrayAdd(services->services, service);
   cupsRWUnlock(&services->rwlock);
 
- /*
-  * Set the "full name" of this service, which is used for queries and
-  * resolves...
-  */
-
+  // Set the "full name" of this service, which is used for queries and resolves...
   cupsDNSSDAssembleFullName(fullName, sizeof(fullName), serviceName, regtype, replyDomain);
   service->fullName = strdup(fullName);
 
@@ -1754,40 +1589,40 @@ get_service(ippfind_srvs_t *services,	/* I - Service array */
 }
 
 
-/*
- * 'get_time()' - Get the current time-of-day in seconds.
- */
+//
+// 'get_time()' - Get the current time-of-day in seconds.
+//
 
 static double
 get_time(void)
 {
 #ifdef _WIN32
-  struct _timeb curtime;		/* Current Windows time */
+  struct _timeb curtime;		// Current Windows time
 
   _ftime(&curtime);
 
   return (curtime.time + 0.001 * curtime.millitm);
 
 #else
-  struct timeval	curtime;	/* Current UNIX time */
+  struct timeval	curtime;	// Current UNIX time
 
   if (gettimeofday(&curtime, NULL))
     return (0.0);
   else
     return (curtime.tv_sec + 0.000001 * curtime.tv_usec);
-#endif /* _WIN32 */
+#endif // _WIN32
 }
 
 
-/*
- * 'list_service()' - List the contents of a service.
- */
+//
+// 'list_service()' - List the contents of a service.
+//
 
-static int				/* O - 1 if successful, 0 otherwise */
-list_service(ippfind_srv_t *service)	/* I - Service */
+static int				// O - 1 if successful, 0 otherwise
+list_service(ippfind_srv_t *service)	// I - Service
 {
-  http_addrlist_t	*addrlist;	/* Address(es) of service */
-  char			port[10];	/* Port number of service */
+  http_addrlist_t	*addrlist;	// Address(es) of service
+  char			port[10];	// Port number of service
 
 
   snprintf(port, sizeof(port), "%d", service->port);
@@ -1801,33 +1636,27 @@ list_service(ippfind_srv_t *service)	/* I - Service */
   if (!strncmp(service->regtype, "_ipp._tcp", 9) ||
       !strncmp(service->regtype, "_ipps._tcp", 10))
   {
-   /*
-    * IPP/IPPS printer
-    */
-
-    http_t		*http;		/* HTTP connection */
-    ipp_t		*request,	/* IPP request */
-			*response;	/* IPP response */
-    ipp_attribute_t	*attr;		/* IPP attribute */
-    size_t		i,		/* Looping var */
-			count;		/* Number of values */
-    int			version;	/* IPP version */
-    bool		paccepting;	/* printer-is-accepting-jobs value */
-    ipp_pstate_t	pstate;		/* printer-state value */
-    char		preasons[1024],	/* Comma-delimited printer-state-reasons */
-			*ptr,		/* Pointer into reasons */
-			*end;		/* End of reasons buffer */
-    static const char * const rattrs[] =/* Requested attributes */
+    // IPP/IPPS printer
+    http_t		*http;		// HTTP connection
+    ipp_t		*request,	// IPP request
+			*response;	// IPP response
+    ipp_attribute_t	*attr;		// IPP attribute
+    size_t		i,		// Looping var
+			count;		// Number of values
+    int			version;	// IPP version
+    bool		paccepting;	// printer-is-accepting-jobs value
+    ipp_pstate_t	pstate;		// printer-state value
+    char		preasons[1024],	// Comma-delimited printer-state-reasons
+			*ptr,		// Pointer into reasons
+			*end;		// End of reasons buffer
+    static const char * const rattrs[] =// Requested attributes
     {
       "printer-is-accepting-jobs",
       "printer-state",
       "printer-state-reasons"
     };
 
-   /*
-    * Connect to the printer...
-    */
-
+    // Connect to the printer...
     http = httpConnect(service->host, service->port, addrlist, address_family, !strncmp(service->regtype, "_ipps._tcp", 10) ? HTTP_ENCRYPTION_ALWAYS : HTTP_ENCRYPTION_IF_REQUESTED, 1, 30000, NULL);
 
     httpAddrFreeList(addrlist);
@@ -1838,10 +1667,7 @@ list_service(ippfind_srv_t *service)	/* I - Service */
       return (0);
     }
 
-   /*
-    * Get the current printer state...
-    */
-
+    // Get the current printer state...
     response = NULL;
     version  = ipp_version;
 
@@ -1849,13 +1675,9 @@ list_service(ippfind_srv_t *service)	/* I - Service */
     {
       request = ippNewRequest(IPP_OP_GET_PRINTER_ATTRIBUTES);
       ippSetVersion(request, version / 10, version % 10);
-      ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL,
-                   service->uri);
-      ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME,
-                   "requesting-user-name", NULL, cupsGetUser());
-      ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD,
-                    "requested-attributes",
-                    (int)(sizeof(rattrs) / sizeof(rattrs[0])), NULL, rattrs);
+      ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, service->uri);
+      ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsGetUser());
+      ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD, "requested-attributes", sizeof(rattrs) / sizeof(rattrs[0]), NULL, rattrs);
 
       response = cupsDoRequest(http, request, service->resource);
 
@@ -1864,65 +1686,50 @@ list_service(ippfind_srv_t *service)	/* I - Service */
     }
     while (cupsGetError() > IPP_STATUS_OK_EVENTS_COMPLETE && version > 11);
 
-   /*
-    * Show results...
-    */
-
+    // Show results...
     if (cupsGetError() > IPP_STATUS_OK_EVENTS_COMPLETE)
     {
       cupsLangPrintf(stdout, "%s: unavailable", service->uri);
       return (0);
     }
 
-    if ((attr = ippFindAttribute(response, "printer-state",
-                                 IPP_TAG_ENUM)) != NULL)
+    if ((attr = ippFindAttribute(response, "printer-state", IPP_TAG_ENUM)) != NULL)
       pstate = (ipp_pstate_t)ippGetInteger(attr, 0);
     else
       pstate = IPP_PSTATE_STOPPED;
 
-    if ((attr = ippFindAttribute(response, "printer-is-accepting-jobs",
-                                 IPP_TAG_BOOLEAN)) != NULL)
+    if ((attr = ippFindAttribute(response, "printer-is-accepting-jobs", IPP_TAG_BOOLEAN)) != NULL)
       paccepting = ippGetBoolean(attr, 0);
     else
       paccepting = 0;
 
-    if ((attr = ippFindAttribute(response, "printer-state-reasons",
-                                 IPP_TAG_KEYWORD)) != NULL)
+    if ((attr = ippFindAttribute(response, "printer-state-reasons", IPP_TAG_KEYWORD)) != NULL)
     {
       cupsCopyString(preasons, ippGetString(attr, 0, NULL), sizeof(preasons));
 
-      for (i = 1, count = ippGetCount(attr), ptr = preasons + strlen(preasons),
-               end = preasons + sizeof(preasons) - 1;
-           i < count && ptr < end;
-           i ++, ptr += strlen(ptr))
+      for (i = 1, count = ippGetCount(attr), ptr = preasons + strlen(preasons), end = preasons + sizeof(preasons) - 1; i < count && ptr < end; i ++, ptr += strlen(ptr))
       {
         *ptr++ = ',';
         cupsCopyString(ptr, ippGetString(attr, i, NULL), (size_t)(end - ptr + 1));
       }
     }
     else
+    {
       cupsCopyString(preasons, "none", sizeof(preasons));
+    }
 
     ippDelete(response);
     httpClose(http);
 
     cupsLangPrintf(stdout, "%s %s %s %s", service->uri, ippEnumString("printer-state", (int)pstate), paccepting ? "accepting-jobs" : "not-accepting-jobs", preasons);
   }
-  else if (!strncmp(service->regtype, "_http._tcp", 10) ||
-           !strncmp(service->regtype, "_https._tcp", 11))
+  else if (!strncmp(service->regtype, "_http._tcp", 10) || !strncmp(service->regtype, "_https._tcp", 11))
   {
-   /*
-    * HTTP/HTTPS web page
-    */
+    // HTTP/HTTPS web page
+    http_t		*http;		// HTTP connection
+    http_status_t	status;		// HEAD status
 
-    http_t		*http;		/* HTTP connection */
-    http_status_t	status;		/* HEAD status */
-
-
-   /*
-    * Connect to the web server...
-    */
-
+    // Connect to the web server...
     http = httpConnect(service->host, service->port, addrlist, address_family, !strncmp(service->regtype, "_ipps._tcp", 10) ? HTTP_ENCRYPTION_ALWAYS : HTTP_ENCRYPTION_IF_REQUESTED, 1, 30000, NULL);
 
     httpAddrFreeList(addrlist);
@@ -1958,12 +1765,8 @@ list_service(ippfind_srv_t *service)	/* I - Service */
   }
   else if (!strncmp(service->regtype, "_printer._tcp", 13))
   {
-   /*
-    * LPD printer
-    */
-
-    int	sock;				/* Socket */
-
+    // LPD printer
+    int	sock;				// Socket
 
     if (!httpAddrConnect(addrlist, &sock, 30000, NULL))
     {
@@ -1988,18 +1791,18 @@ list_service(ippfind_srv_t *service)	/* I - Service */
 }
 
 
-/*
- * 'new_expr()' - Create a new expression.
- */
+//
+// 'new_expr()' - Create a new expression.
+//
 
-static ippfind_expr_t *			/* O - New expression */
-new_expr(ippfind_op_t op,		/* I - Operation */
-         bool         invert,		/* I - Invert result? */
-         const char   *value,		/* I - TXT key or port range */
-	 const char   *regex,		/* I - Regular expression */
-	 char         **args)		/* I - Pointer to argument strings */
+static ippfind_expr_t *			// O - New expression
+new_expr(ippfind_op_t op,		// I - Operation
+         bool         invert,		// I - Invert result?
+         const char   *value,		// I - TXT key or port range
+	 const char   *regex,		// I - Regular expression
+	 char         **args)		// I - Pointer to argument strings
 {
-  ippfind_expr_t	*temp;		/* New expression */
+  ippfind_expr_t	*temp;		// New expression
 
 
   if ((temp = calloc(1, sizeof(ippfind_expr_t))) == NULL)
@@ -2014,11 +1817,8 @@ new_expr(ippfind_op_t op,		/* I - Operation */
   }
   else if (op == IPPFIND_OP_PORT_RANGE)
   {
-   /*
-    * Pull port number range of the form "number", "-number" (0-number),
-    * "number-" (number-65535), and "number-number".
-    */
-
+    // Pull port number range of the form "number", "-number" (0-number),
+    // "number-" (number-65535), and "number-number".
     if (*value == '-')
     {
       temp->range[1] = atoi(value + 1);
@@ -2040,18 +1840,17 @@ new_expr(ippfind_op_t op,		/* I - Operation */
 
     if (err)
     {
-      char	message[256];		/* Error message */
+      char	message[256];		// Error message
 
       regerror(err, &(temp->re), message, sizeof(message));
-      cupsLangPrintf(stderr, _("ippfind: Bad regular expression: %s"),
-                      message);
+      cupsLangPrintf(stderr, _("ippfind: Bad regular expression: %s"), message);
       exit(IPPFIND_EXIT_SYNTAX);
     }
   }
 
   if (args)
   {
-    size_t	num_args;		/* Number of arguments */
+    size_t	num_args;		// Number of arguments
 
     for (num_args = 1; args[num_args]; num_args ++)
     {
@@ -2073,26 +1872,26 @@ new_expr(ippfind_op_t op,		/* I - Operation */
 }
 
 
-/*
- * 'resolve_callback()' - Process resolve data.
- */
+//
+// 'resolve_callback()' - Process resolve data.
+//
 
 static void
 resolve_callback(
-    cups_dnssd_resolve_t *resolve,	/* I - Resolver */
-    void                 *context,	/* I - Service */
-    cups_dnssd_flags_t   flags,		/* I - Flags */
-    uint32_t             if_index,	/* I - Interface index */
-    const char           *fullName,	/* I - Full service name */
-    const char           *hostTarget,	/* I - Hostname */
-    uint16_t             port,		/* I - Port number */
-    size_t               num_txt,	/* I - Number of TXT key/value pairs */
-    cups_option_t        *txt)		/* I - TXT key/value pairs */
+    cups_dnssd_resolve_t *resolve,	// I - Resolver
+    void                 *context,	// I - Service
+    cups_dnssd_flags_t   flags,		// I - Flags
+    uint32_t             if_index,	// I - Interface index
+    const char           *fullName,	// I - Full service name
+    const char           *hostTarget,	// I - Hostname
+    uint16_t             port,		// I - Port number
+    size_t               num_txt,	// I - Number of TXT key/value pairs
+    cups_option_t        *txt)		// I - TXT key/value pairs
 {
   ippfind_srv_t		*service = (ippfind_srv_t *)context;
-					/* Service */
-  size_t		i;		/* Looping var */
-  char			*value;		/* Pointer into value */
+					// Service
+  size_t		i;		// Looping var
+  char			*value;		// Pointer into value
 
 
   if (getenv("IPPFIND_DEBUG"))
@@ -2102,10 +1901,7 @@ resolve_callback(
   (void)if_index;
   (void)fullName;
 
- /*
-  * Only process "add" data...
-  */
-
+  // Only process "add" data...
   if (flags & CUPS_DNSSD_FLAGS_ERROR)
   {
     bonjour_error = 1;
@@ -2120,10 +1916,7 @@ resolve_callback(
   if (value >= service->host && *value == '.')
     *value = '\0';
 
- /*
-  * Loop through the TXT key/value pairs and add them to an array...
-  */
-
+  // Loop through the TXT key/value pairs and add them to an array...
   for (i = 0; i < num_txt; i ++)
     service->num_txt = cupsAddOption(txt[i].name, txt[i].value, service->num_txt, &service->txt);
 
@@ -2131,16 +1924,16 @@ resolve_callback(
 }
 
 
-/*
- * 'set_service_uri()' - Set the URI of the service.
- */
+//
+// 'set_service_uri()' - Set the URI of the service.
+//
 
 static void
-set_service_uri(ippfind_srv_t *service)	/* I - Service */
+set_service_uri(ippfind_srv_t *service)	// I - Service
 {
-  char		uri[1024];		/* URI */
-  const char	*path,			/* Resource path */
-		*scheme;		/* URI scheme */
+  char		uri[1024];		// URI
+  const char	*path,			// Resource path
+		*scheme;		// URI scheme
 
 
   if (!strncmp(service->regtype, "_http.", 6))
@@ -2189,9 +1982,9 @@ set_service_uri(ippfind_srv_t *service)	/* I - Service */
 }
 
 
-/*
- * 'show_usage()' - Show program usage.
- */
+//
+// 'show_usage()' - Show program usage.
+//
 
 static void
 show_usage(void)
@@ -2276,9 +2069,9 @@ show_usage(void)
 }
 
 
-/*
- * 'show_version()' - Show program version.
- */
+//
+// 'show_version()' - Show program version.
+//
 
 static void
 show_version(void)

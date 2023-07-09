@@ -1,16 +1,12 @@
-/*
- * Generic Adobe PostScript printer command for ippeveprinter/CUPS.
- *
- * Copyright © 2021-2023 by OpenPrinting.
- * Copyright © 2019 by Apple Inc.
- *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more
- * information.
- */
-
-/*
- * Include necessary headers...
- */
+//
+// Generic Adobe PostScript printer command for ippeveprinter/CUPS.
+//
+// Copyright © 2021-2023 by OpenPrinting.
+// Copyright © 2019 by Apple Inc.
+//
+// Licensed under Apache License v2.0.  See the file "LICENSE" for more
+// information.
+//
 
 #include "ippevecommon.h"
 #include <limits.h>
@@ -20,12 +16,12 @@
 #  define PDFTOPS "/usr/libexec/cups/filter/cgpdftops"
 #else
 #  define PDFTOPS "pdftops"
-#endif /* __APPLE__ */
+#endif // __APPLE__
 
 
-/*
- * Local functions...
- */
+//
+// Local functions...
+//
 
 static void	ascii85(const unsigned char *data, int length, int eod);
 static void	dsc_header(int num_pages);
@@ -38,25 +34,22 @@ static int	ps_to_ps(const char *filename, int copies);
 static int	raster_to_ps(const char *filename);
 
 
-/*
- * 'main()' - Main entry for PostScript printer command.
- */
+//
+// 'main()' - Main entry for PostScript printer command.
+//
 
-int					/* O - Exit status */
-main(int  argc,				/* I - Number of command-line arguments */
-     char *argv[])			/* I - Command-line arguments */
+int					// O - Exit status
+main(int  argc,				// I - Number of command-line arguments
+     char *argv[])			// I - Command-line arguments
 {
-  const char	*content_type,		/* Content type to print */
-		*ipp_copies;		/* IPP_COPIES value */
-  int		copies;			/* Number of copies */
-  size_t	num_options;		/* Number of options */
-  cups_option_t	*options;		/* Options */
+  const char	*content_type,		// Content type to print
+		*ipp_copies;		// IPP_COPIES value
+  int		copies;			// Number of copies
+  size_t	num_options;		// Number of options
+  cups_option_t	*options;		// Options
 
 
- /*
-  * Get print options...
-  */
-
+  // Get print options...
   num_options = get_options(&options);
   if ((ipp_copies = getenv("IPP_COPIES")) != NULL)
   {
@@ -64,12 +57,11 @@ main(int  argc,				/* I - Number of command-line arguments */
       copies = 1;
   }
   else
+  {
     copies = 1;
+  }
 
- /*
-  * Print it...
-  */
-
+  // Print it...
   if (argc > 2)
   {
     fputs("ERROR: Too many arguments supplied, aborting.\n", stderr);
@@ -104,20 +96,20 @@ main(int  argc,				/* I - Number of command-line arguments */
 }
 
 
-/*
- * 'ascii85()' - Write binary data using a Base85 encoding...
- */
+//
+// 'ascii85()' - Write binary data using a Base85 encoding...
+//
 
 static void
-ascii85(const unsigned char *data,	/* I - Data to write */
-        int                 length,	/* I - Number of bytes to write */
-        int                 eod)	/* I - 1 if this is the end, 0 otherwise */
+ascii85(const unsigned char *data,	// I - Data to write
+        int                 length,	// I - Number of bytes to write
+        int                 eod)	// I - 1 if this is the end, 0 otherwise
 {
-  unsigned	b = 0;			/* Current 32-bit word */
-  unsigned char	c[5];			/* Base-85 encoded characters */
-  static int	col = 0;		/* Column */
-  static unsigned char leftdata[4];	/* Leftover data at the end */
-  static int	leftcount = 0;		/* Size of leftover data */
+  unsigned	b = 0;			// Current 32-bit word
+  unsigned char	c[5];			// Base-85 encoded characters
+  static int	col = 0;		// Column
+  static unsigned char leftdata[4];	// Leftover data at the end
+  static int	leftcount = 0;		// Size of leftover data
 
 
   length += leftcount;
@@ -218,16 +210,16 @@ ascii85(const unsigned char *data,	/* I - Data to write */
 }
 
 
-/*
- * 'dsc_header()' - Write out a standard Document Structuring Conventions
- *                  PostScript header.
- */
+//
+// 'dsc_header()' - Write out a standard Document Structuring Conventions
+//                  PostScript header.
+//
 
 static void
-dsc_header(int num_pages)		/* I - Number of pages or 0 if not known */
+dsc_header(int num_pages)		// I - Number of pages or 0 if not known
 {
   const char	*job_name = getenv("IPP_JOB_NAME");
-					/* job-name value */
+					// job-name value
 
 
   puts("%!PS-Adobe-3.0");
@@ -255,12 +247,12 @@ dsc_header(int num_pages)		/* I - Number of pages or 0 if not known */
 }
 
 
-/*
- * 'dsc_page()' - Mark the start of a page.
- */
+//
+// 'dsc_page()' - Mark the start of a page.
+//
 
 static void
-dsc_page(int page)			/* I - Page numebr (1-based) */
+dsc_page(int page)			// I - Page numebr (1-based)
 {
   printf("%%%%Page: (%d) %d\n", page, page);
 
@@ -268,12 +260,12 @@ dsc_page(int page)			/* I - Page numebr (1-based) */
 }
 
 
-/*
- * 'dsc_trailer()' - Mark the end of the document.
- */
+//
+// 'dsc_trailer()' - Mark the end of the document.
+//
 
 static void
-dsc_trailer(int num_pages)		/* I - Number of pages */
+dsc_trailer(int num_pages)		// I - Number of pages
 {
   if (num_pages > 0)
   {
@@ -285,52 +277,44 @@ dsc_trailer(int num_pages)		/* I - Number of pages */
 }
 
 
-/*
- * 'get_options()' - Get the PPD options corresponding to the IPP Job Template
- *                   attributes.
- */
+//
+// 'get_options()' - Get the PPD options corresponding to the IPP Job Template
+//                   attributes.
+//
 
-static size_t				/* O - Number of options */
-get_options(cups_option_t **options)	/* O - Options */
+static size_t				// O - Number of options
+get_options(cups_option_t **options)	// O - Options
 {
-  size_t	num_options = 0;	/* Number of options */
-  const char	*value;			/* Option value */
-  pwg_media_t	*media = NULL;		/* Media mapping */
-  size_t	num_media_col = 0;	/* Number of media-col values */
-  cups_option_t	*media_col = NULL;	/* media-col values */
+  size_t	num_options = 0;	// Number of options
+  const char	*value;			// Option value
+  pwg_media_t	*media = NULL;		// Media mapping
+  size_t	num_media_col = 0;	// Number of media-col values
+  cups_option_t	*media_col = NULL;	// media-col values
 
 
- /*
-  * No options to start...
-  */
-
+  // No options to start...
   *options = NULL;
 
- /*
-  * Media...
-  */
-
+  // Media...
   if ((value = getenv("IPP_MEDIA")) == NULL)
+  {
     if ((value = getenv("IPP_MEDIA_COL")) == NULL)
+    {
       if ((value = getenv("IPP_MEDIA_DEFAULT")) == NULL)
         value = getenv("IPP_MEDIA_COL_DEFAULT");
+    }
+  }
 
   if (value)
   {
     if (*value == '{')
     {
-     /*
-      * media-col value...
-      */
-
+      // media-col value...
       num_media_col = cupsParseOptions(value, 0, &media_col);
     }
     else
     {
-     /*
-      * media value - map to media-col.media-size-name...
-      */
-
+      // media value - map to media-col.media-size-name...
       num_media_col = cupsAddOption("media-size-name", value, 0, &media_col);
     }
   }
@@ -341,10 +325,10 @@ get_options(cups_option_t **options)	/* O - Options */
   }
   else if ((value = cupsGetOption("media-size", num_media_col, media_col)) != NULL)
   {
-    size_t	num_media_size;		/* Number of media-size values */
-    cups_option_t *media_size;		/* media-size values */
-    const char	*x_dimension,		/* x-dimension value */
-		*y_dimension;		/* y-dimension value */
+    size_t	num_media_size;		// Number of media-size values
+    cups_option_t *media_size;		// media-size values
+    const char	*x_dimension,		// x-dimension value
+		*y_dimension;		// y-dimension value
 
     num_media_size = cupsParseOptions(value, 0, &media_size);
 
@@ -363,38 +347,35 @@ get_options(cups_option_t **options)	/* O - Options */
 }
 
 
-/*
- * 'jpeg_to_ps()' - Convert a JPEG file to PostScript.
- */
+//
+// 'jpeg_to_ps()' - Convert a JPEG file to PostScript.
+//
 
-static int				/* O - Exit status */
-jpeg_to_ps(const char    *filename,	/* I - Filename */
-           int           copies)	/* I - Number of copies */
+static int				// O - Exit status
+jpeg_to_ps(const char    *filename,	// I - Filename
+           int           copies)	// I - Number of copies
 {
-  int		fd;			/* JPEG file descriptor */
-  int		copy;			/* Current copy */
-  int		width = 0,		/* Width */
-		height = 0,		/* Height */
-		depth = 0,		/* Number of colors */
-		length;			/* Length of marker */
-  unsigned char	buffer[65536],		/* Copy buffer */
-		*bufptr,		/* Pointer info buffer */
-		*bufend;		/* End of buffer */
-  ssize_t	bytes;			/* Bytes in buffer */
-  const char	*decode;		/* Decode array */
-  float		page_left,		/* Left margin */
-		page_top,		/* Top margin */
-		page_width,		/* Page width in points */
-		page_height,		/* Page heigth in points */
-		x_factor,		/* X image scaling factor */
-		y_factor,		/* Y image scaling factor */
-		page_scaling;		/* Image scaling factor */
+  int		fd;			// JPEG file descriptor
+  int		copy;			// Current copy
+  int		width = 0,		// Width
+		height = 0,		// Height
+		depth = 0,		// Number of colors
+		length;			// Length of marker
+  unsigned char	buffer[65536],		// Copy buffer
+		*bufptr,		// Pointer info buffer
+		*bufend;		// End of buffer
+  ssize_t	bytes;			// Bytes in buffer
+  const char	*decode;		// Decode array
+  float		page_left,		// Left margin
+		page_top,		// Top margin
+		page_width,		// Page width in points
+		page_height,		// Page heigth in points
+		x_factor,		// X image scaling factor
+		y_factor,		// Y image scaling factor
+		page_scaling;		// Image scaling factor
 
 
- /*
-  * Open the input file...
-  */
-
+  // Open the input file...
   if (filename)
   {
     if ((fd = open(filename, O_RDONLY)) < 0)
@@ -409,10 +390,7 @@ jpeg_to_ps(const char    *filename,	/* I - Filename */
     copies = 1;
   }
 
- /*
-  * Read the JPEG dimensions...
-  */
-
+  // Read the JPEG dimensions...
   bytes = read(fd, buffer, sizeof(buffer));
 
   if (bytes < 3 || memcmp(buffer, "\377\330\377", 3))
@@ -427,20 +405,14 @@ jpeg_to_ps(const char    *filename,	/* I - Filename */
 
   for (bufptr = buffer + 2, bufend = buffer + bytes; bufptr < bufend;)
   {
-   /*
-    * Scan the file for a SOFn marker, then we can get the dimensions...
-    */
-
+    // Scan the file for a SOFn marker, then we can get the dimensions...
     if (*bufptr == 0xff)
     {
       bufptr ++;
 
       if (bufptr >= bufend)
       {
-       /*
-	* If we are at the end of the current buffer, re-fill and continue...
-	*/
-
+        // If we are at the end of the current buffer, re-fill and continue...
 	if ((bytes = read(fd, buffer, sizeof(buffer))) <= 0)
 	  break;
 
@@ -453,10 +425,7 @@ jpeg_to_ps(const char    *filename,	/* I - Filename */
 
       if ((bufptr + 16) >= bufend)
       {
-       /*
-	* Read more of the marker...
-	*/
-
+        // Read more of the marker...
 	bytes = bufend - bufptr;
 
 	memmove(buffer, bufptr, (size_t)bytes);
@@ -473,20 +442,14 @@ jpeg_to_ps(const char    *filename,	/* I - Filename */
 
       if ((*bufptr >= 0xc0 && *bufptr <= 0xc3) || (*bufptr >= 0xc5 && *bufptr <= 0xc7) || (*bufptr >= 0xc9 && *bufptr <= 0xcb) || (*bufptr >= 0xcd && *bufptr <= 0xcf))
       {
-       /*
-	* SOFn marker, look for dimensions...
-	*/
-
+        // SOFn marker, look for dimensions...
 	width  = (bufptr[6] << 8) | bufptr[7];
 	height = (bufptr[4] << 8) | bufptr[5];
 	depth  = bufptr[8];
 	break;
       }
 
-     /*
-      * Skip past this marker...
-      */
-
+      // Skip past this marker...
       bufptr ++;
       bytes = bufend - bufptr;
 
@@ -522,10 +485,7 @@ jpeg_to_ps(const char    *filename,	/* I - Filename */
 
   fputs("ATTR: job-impressions=1\n", stderr);
 
- /*
-  * Figure out the dimensions/scaling of the final image...
-  */
-
+  // Figure out the dimensions/scaling of the final image...
   page_left   = 18.0f;
   page_top    = 756.0f;
   page_width  = 576.0f;
@@ -533,7 +493,7 @@ jpeg_to_ps(const char    *filename,	/* I - Filename */
 
   fprintf(stderr, "DEBUG: page_left=%.2f, page_top=%.2f, page_width=%.2f, page_height=%.2f\n", page_left, page_top, page_width, page_height);
 
-  /* TODO: Support orientation/rotation, different print-scaling modes */
+  // TODO: Support orientation/rotation, different print-scaling modes
   x_factor = page_width / width;
   y_factor = page_height / height;
 
@@ -544,10 +504,7 @@ jpeg_to_ps(const char    *filename,	/* I - Filename */
 
   fprintf(stderr, "DEBUG: Scaled dimensions are %.2fx%.2f\n", width * page_scaling, height * page_scaling);
 
- /*
-  * Write pages...
-  */
-
+  // Write pages...
   dsc_header(copies);
 
   for (copy = 1; copy <= copies; copy ++)
@@ -593,38 +550,32 @@ jpeg_to_ps(const char    *filename,	/* I - Filename */
 }
 
 
-/*
- * 'pdf_to_ps()' - Convert a PDF file to PostScript.
- */
+//
+// 'pdf_to_ps()' - Convert a PDF file to PostScript.
+//
 
-static int				/* O - Exit status */
-pdf_to_ps(const char    *filename,	/* I - Filename */
-	  int           copies,		/* I - Number of copies */
-	  size_t        num_options,	/* I - Number of options */
-	  cups_option_t *options)	/* I - options */
+static int				// O - Exit status
+pdf_to_ps(const char    *filename,	// I - Filename
+	  int           copies,		// I - Number of copies
+	  size_t        num_options,	// I - Number of options
+	  cups_option_t *options)	// I - options
 {
-  int		status;			/* Exit status */
-  char		tempfile[1024];		/* Temporary file */
-  int		tempfd;			/* Temporary file descriptor */
-  int		pid;			/* Process ID */
-  const char	*pdf_argv[8];		/* Command-line arguments */
-  const char	*value;			/* Option value */
+  int		status;			// Exit status
+  char		tempfile[1024];		// Temporary file
+  int		tempfd;			// Temporary file descriptor
+  int		pid;			// Process ID
+  const char	*pdf_argv[8];		// Command-line arguments
+  const char	*value;			// Option value
 
 
- /*
-  * Create a temporary file for the PostScript version...
-  */
-
+  // Create a temporary file for the PostScript version...
   if ((tempfd = cupsTempFd(NULL, ".ps", tempfile, sizeof(tempfile))) < 0)
   {
     fprintf(stderr, "ERROR: Unable to create temporary file: %s\n", strerror(errno));
     return (1);
   }
 
- /*
-  * Run cgpdftops or pdftops...
-  */
-
+  // Run cgpdftops or pdftops...
 #ifdef __APPLE__
   const char	*job_id,		// job-id value
 		*job_name;		// job-name value
@@ -683,10 +634,7 @@ pdf_to_ps(const char    *filename,	/* I - Filename */
 
   if ((pid = fork()) == 0)
   {
-   /*
-    * Child comes here...
-    */
-
+    // Child comes here...
     close(1);
     dup2(tempfd, 1);
     close(tempfd);
@@ -696,10 +644,7 @@ pdf_to_ps(const char    *filename,	/* I - Filename */
   }
   else if (pid < 0)
   {
-   /*
-    * Unable to fork process...
-    */
-
+    // Unable to fork process...
     perror("ERROR: Unable to start PDF filter");
 
     close(tempfd);
@@ -709,17 +654,14 @@ pdf_to_ps(const char    *filename,	/* I - Filename */
   }
   else
   {
-   /*
-    * Wait for the filter to complete...
-    */
-
+    // Wait for the filter to complete...
     close(tempfd);
 
 #  ifdef HAVE_WAITPID
     while (waitpid(pid, &status, 0) < 0);
 #  else
     while (wait(&status) < 0);
-#  endif /* HAVE_WAITPID */
+#  endif // HAVE_WAITPID
 
     if (status)
     {
@@ -733,10 +675,7 @@ pdf_to_ps(const char    *filename,	/* I - Filename */
     }
   }
 
- /*
-  * Copy the PostScript output from the command...
-  */
-
+  // Copy the PostScript output from the command...
   status = ps_to_ps(tempfile, copies);
 
   unlink(tempfile);
@@ -745,29 +684,26 @@ pdf_to_ps(const char    *filename,	/* I - Filename */
 }
 
 
-/*
- * 'ps_to_ps()' - Copy PostScript to the standard output.
- */
+//
+// 'ps_to_ps()' - Copy PostScript to the standard output.
+//
 
-static int				/* O - Exit status */
-ps_to_ps(const char    *filename,	/* I - Filename */
-	 int           copies)		/* I - Number of copies */
+static int				// O - Exit status
+ps_to_ps(const char    *filename,	// I - Filename
+	 int           copies)		// I - Number of copies
 {
-  FILE		*fp;			/* File to read from */
-  int		copy,			/* Current copy */
-		page,			/* Current page number */
-		num_pages = 0,		/* Total number of pages */
-		first_page,		/* First page */
-		last_page;		/* Last page */
-  const char	*page_ranges;		/* page-ranges option */
-  long		first_pos = -1;		/* Offset for first page */
-  char		line[1024];		/* Line from file */
+  FILE		*fp;			// File to read from
+  int		copy,			// Current copy
+		page,			// Current page number
+		num_pages = 0,		// Total number of pages
+		first_page,		// First page
+		last_page;		// Last page
+  const char	*page_ranges;		// page-ranges option
+  long		first_pos = -1;		// Offset for first page
+  char		line[1024];		// Line from file
 
 
- /*
-  * Open the print file...
-  */
-
+  // Open the print file...
   if (filename)
   {
     if ((fp = fopen(filename, "rb")) == NULL)
@@ -782,10 +718,7 @@ ps_to_ps(const char    *filename,	/* I - Filename */
     fp     = stdin;
   }
 
- /*
-  * Check page ranges...
-  */
-
+  // Check page ranges...
   if ((page_ranges = getenv("IPP_PAGE_RANGES")) != NULL)
   {
     if (sscanf(page_ranges, "%d-%d", &first_page, &last_page) != 2)
@@ -800,10 +733,7 @@ ps_to_ps(const char    *filename,	/* I - Filename */
     last_page  = INT_MAX;
   }
 
- /*
-  * Write the PostScript header for the document...
-  */
-
+  // Write the PostScript header for the document...
   dsc_header(0);
 
   first_pos = 0;
@@ -827,7 +757,7 @@ ps_to_ps(const char    *filename,	/* I - Filename */
   {
     for (copy = 0; copy < copies; copy ++)
     {
-      int copy_page = 0;		/* Do we copy the page data? */
+      int copy_page = 0;		// Do we copy the page data?
 
       if (fp != stdin)
       {
@@ -869,39 +799,36 @@ ps_to_ps(const char    *filename,	/* I - Filename */
 }
 
 
-/*
- * 'raster_to_ps()' - Convert PWG Raster/Apple Raster to PostScript.
- *
- * The current implementation locally-decodes the raster data and then writes
- * whole, non-blank lines as 1-line high images with base-85 encoding, resulting
- * in between 10 and 20 times larger output.  A alternate implementation (if it
- * is deemed necessary) would be to implement a PostScript decode procedure that
- * handles the modified packbits decompression so that we just have the base-85
- * encoding overhead (25%).  Furthermore, Level 3 PostScript printers also
- * support Flate compression.
- *
- * That said, the most efficient path with the highest quality is for Clients
- * to supply PDF files and us to use the existing PDF to PostScript conversion
- * filters.
- */
+//
+// 'raster_to_ps()' - Convert PWG Raster/Apple Raster to PostScript.
+//
+// The current implementation locally-decodes the raster data and then writes
+// whole, non-blank lines as 1-line high images with base-85 encoding, resulting
+// in between 10 and 20 times larger output.  A alternate implementation (if it
+// is deemed necessary) would be to implement a PostScript decode procedure that
+// handles the modified packbits decompression so that we just have the base-85
+// encoding overhead (25%).  Furthermore, Level 3 PostScript printers also
+// support Flate compression.
+//
+// That said, the most efficient path with the highest quality is for Clients
+// to supply PDF files and us to use the existing PDF to PostScript conversion
+// filters.
+//
 
-static int				/* O - Exit status */
-raster_to_ps(const char *filename)	/* I - Filename */
+static int				// O - Exit status
+raster_to_ps(const char *filename)	// I - Filename
 {
-  int			fd;		/* Input file */
-  cups_raster_t		*ras;		/* Raster stream */
-  cups_page_header_t	header;		/* Page header */
-  int			page = 0;	/* Current page */
-  unsigned		y;		/* Current line */
-  unsigned char		*line;		/* Line buffer */
-  unsigned char		white;		/* White color */
-  const char		*decode;	/* Image decode array */
+  int			fd;		// Input file
+  cups_raster_t		*ras;		// Raster stream
+  cups_page_header_t	header;		// Page header
+  int			page = 0;	// Current page
+  unsigned		y;		// Current line
+  unsigned char		*line;		// Line buffer
+  unsigned char		white;		// White color
+  const char		*decode;	// Image decode array
 
 
- /*
-  * Open the input file...
-  */
-
+  // Open the input file...
   if (filename)
   {
     if ((fd = open(filename, O_RDONLY)) < 0)
@@ -915,10 +842,7 @@ raster_to_ps(const char *filename)	/* I - Filename */
     fd = 0;
   }
 
- /*
-  * Open the raster stream and send pages...
-  */
-
+  // Open the raster stream and send pages...
   if ((ras = cupsRasterOpen(fd, CUPS_RASTER_READ)) == NULL)
   {
     fputs("ERROR: Unable to read raster data, aborting.\n", stderr);
