@@ -1209,6 +1209,7 @@ The following functions have been renamed in CUPS 3.0:
 | `httpAddrString`                 | `httpAddrGetString`              |
 | `httpBlocking`                   | `httpSetBlocking`                |
 | `httpConnect2`                   | `httpConnect`                    |
+| `httpCopyCredentials`            | `httpCopyPeerCredentials`        |
 | `httpCredentialsAreValidForName` | `cupsAreCredentialsValidForName` |
 | `httpCredentialsGetExpiration`   | `cupsGetCredentialsExpiration`   |
 | `httpCredentialsGetTrust`        | `cupsGetCredentialsTrust`        |
