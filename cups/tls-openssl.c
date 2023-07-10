@@ -30,7 +30,6 @@ static int		http_bio_read(BIO *h, char *buf, int size);
 static int		http_bio_write(BIO *h, const char *buf, int num);
 
 static bool		openssl_add_ext(STACK_OF(X509_EXTENSION) *exts, int nid, const char *value);
-static X509		*openssl_create_credential(http_credential_t *credential);
 static X509_NAME	*openssl_create_name(const char *organization, const char *org_unit, const char *locality, const char *state_province, const char *country, const char *common_name);
 static EVP_PKEY		*openssl_create_key(cups_credtype_t type);
 static X509_EXTENSION	*openssl_create_san(const char *common_name, size_t num_alt_names, const char * const *alt_names);
@@ -65,6 +64,31 @@ static const char * const tls_usage_strings[] =
   "encipherOnly",
   "decipherOnly"
 };
+
+
+//
+// 'cupsAreCredentialsValidForName()' - Return whether the credentials are valid
+//                                      for the given name.
+//
+
+bool					// O - `true` if valid, `false` otherwise
+cupsAreCredentialsValidForName(
+    const char *common_name,		// I - Name to check
+    const char *credentials)		// I - Credentials
+{
+  STACK_OF(X509)	*certs;		// Certificate chain
+  bool			result = false;	// Result
+
+
+  if ((certs = _httpCreateCredentials(credentials)) != NULL)
+  {
+    result = X509_check_host(sk_X509_value(certs, 0), common_name, strlen(common_name), 0, NULL) != 0;
+
+    sk_X509_free(certs);
+  }
+
+  return (result);
+}
 
 
 //
@@ -596,6 +620,266 @@ cupsCreateCredentialsRequest(
 
 
 //
+// 'cupsGetCredentialsExpiration()' - Return the expiration date of the credentials.
+//
+
+time_t					// O - Expiration date of credentials
+cupsGetCredentialsExpiration(
+    const char *credentials)		// I - Credentials
+{
+  time_t		result = 0;	// Result
+  STACK_OF(X509)	*certs;		// Certificate chain
+
+
+  if ((certs = _httpCreateCredentials(credentials)) != NULL)
+  {
+    result = openssl_get_date(sk_X509_value(certs, 0), 1);
+    sk_X509_free(certs);
+  }
+
+  return (result);
+}
+
+
+//
+// 'cupsGetCredentialsInfo()' - Return a string describing the credentials.
+//
+
+char *					// O - Credentials description or `NULL` on error
+cupsGetCredentialsInfo(
+    const char *credentials,		// I - Credentials
+    char       *buffer,			// I - Buffer
+    size_t     bufsize)			// I - Size of buffer
+{
+  STACK_OF(X509)	*certs;		// Certificate chain
+  X509			*cert;		// Certificate
+
+
+  // Range check input...
+  DEBUG_printf("cupsGetCredentialsInfo(credentials=%p, buffer=%p, bufsize=" CUPS_LLFMT ")", credentials, buffer, CUPS_LLCAST bufsize);
+
+  if (buffer)
+    *buffer = '\0';
+
+  if (!credentials || !buffer || bufsize < 32)
+  {
+    DEBUG_puts("1cupsGetCredentialsInfo: Returning NULL.");
+    return (NULL);
+  }
+
+  if ((certs = _httpCreateCredentials(credentials)) != NULL)
+  {
+    char		name[256],	// Common name associated with cert
+			issuer[256],	// Issuer associated with cert
+			expdate[256];	// Expiration data as string
+    time_t		expiration;	// Expiration date of cert
+    const char		*sigalg;	// Signature algorithm
+    unsigned char	md5_digest[16];	// MD5 result
+
+    cert = sk_X509_value(certs, 0);
+
+    X509_NAME_get_text_by_NID(X509_get_subject_name(cert), NID_commonName, name, sizeof(name));
+    X509_NAME_get_text_by_NID(X509_get_issuer_name(cert), NID_commonName, issuer, sizeof(issuer));
+    expiration = openssl_get_date(cert, 1);
+
+    switch (X509_get_signature_nid(cert))
+    {
+      case NID_ecdsa_with_SHA1 :
+          sigalg = "SHA1WithECDSAEncryption";
+          break;
+      case NID_ecdsa_with_SHA224 :
+          sigalg = "SHA224WithECDSAEncryption";
+          break;
+      case NID_ecdsa_with_SHA256 :
+          sigalg = "SHA256WithECDSAEncryption";
+          break;
+      case NID_ecdsa_with_SHA384 :
+          sigalg = "SHA384WithECDSAEncryption";
+          break;
+      case NID_ecdsa_with_SHA512 :
+          sigalg = "SHA512WithECDSAEncryption";
+          break;
+      case NID_sha1WithRSAEncryption :
+          sigalg = "SHA1WithRSAEncryption";
+          break;
+      case NID_sha224WithRSAEncryption :
+          sigalg = "SHA224WithRSAEncryption";
+          break;
+      case NID_sha256WithRSAEncryption :
+          sigalg = "SHA256WithRSAEncryption";
+          break;
+      case NID_sha384WithRSAEncryption :
+          sigalg = "SHA384WithRSAEncryption";
+          break;
+      case NID_sha512WithRSAEncryption :
+          sigalg = "SHA512WithRSAEncryption";
+          break;
+      default :
+          sigalg = "Unknown";
+          break;
+    }
+
+    cupsHashData("md5", credentials, strlen(credentials), md5_digest, sizeof(md5_digest));
+
+    snprintf(buffer, bufsize, "%s (issued by %s) / %s / %s / %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X", name, issuer, httpGetDateString(expiration, expdate, sizeof(expdate)), sigalg, md5_digest[0], md5_digest[1], md5_digest[2], md5_digest[3], md5_digest[4], md5_digest[5], md5_digest[6], md5_digest[7], md5_digest[8], md5_digest[9], md5_digest[10], md5_digest[11], md5_digest[12], md5_digest[13], md5_digest[14], md5_digest[15]);
+    sk_X509_free(certs);
+  }
+
+  DEBUG_printf("1cupsGetCredentialsInfo: Returning \"%s\".", buffer);
+
+  return (buffer);
+}
+
+
+//
+// 'cupsGetCredentialsTrust()' - Return the trust of credentials.
+//
+
+http_trust_t				// O - Level of trust
+cupsGetCredentialsTrust(
+    const char *path,			// I - Directory path for certificate/key store or `NULL` for default
+    const char *common_name,		// I - Common name for trust lookup
+    const char *credentials)		// I - Credentials
+{
+  http_trust_t		trust = HTTP_TRUST_OK;
+					// Trusted?
+  STACK_OF(X509)	*certs;		// Certificate chain
+  X509			*cert;		// Certificate
+  char			*tcreds = NULL;	// Trusted credentials
+  char			defpath[1024];	// Default path
+  _cups_globals_t *cg = _cupsGlobals();	// Per-thread globals
+
+
+  // Range check input...
+  if (!path)
+    path = http_default_path(defpath, sizeof(defpath));
+
+  if (!path || !credentials || !common_name)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), false);
+    return (HTTP_TRUST_UNKNOWN);
+  }
+
+  // Load the credentials...
+  if ((certs = _httpCreateCredentials(credentials)) == NULL)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to import credentials."), true);
+    return (HTTP_TRUST_UNKNOWN);
+  }
+
+  cert = sk_X509_value(certs, 0);
+
+  if (cg->any_root < 0)
+  {
+    _cupsSetDefaults();
+//    openssl_load_crl();
+  }
+
+  // Look this common name up in the default keychains...
+  if ((tcreds = cupsCopyCredentials(path, common_name)) != NULL)
+  {
+    char	credentials_str[1024],	// String for incoming credentials
+		tcreds_str[1024];	// String for saved credentials
+
+    cupsGetCredentialsInfo(credentials, credentials_str, sizeof(credentials_str));
+    cupsGetCredentialsInfo(tcreds, tcreds_str, sizeof(tcreds_str));
+
+    if (strcmp(credentials_str, tcreds_str))
+    {
+      // Credentials don't match, let's look at the expiration date of the new
+      // credentials and allow if the new ones have a later expiration...
+      if (!cg->trust_first)
+      {
+        // Do not trust certificates on first use...
+        _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Trust on first use is disabled."), 1);
+
+        trust = HTTP_TRUST_INVALID;
+      }
+      else if (cupsGetCredentialsExpiration(credentials) <= cupsGetCredentialsExpiration(tcreds))
+      {
+        // The new credentials are not newly issued...
+        _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("New credentials are older than stored credentials."), 1);
+
+        trust = HTTP_TRUST_INVALID;
+      }
+      else if (!cupsAreCredentialsValidForName(credentials, common_name))
+      {
+        // The common name does not match the issued certificate...
+        _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("New credentials are not valid for name."), 1);
+
+        trust = HTTP_TRUST_INVALID;
+      }
+      else if (cupsGetCredentialsExpiration(tcreds) < time(NULL))
+      {
+        // Save the renewed credentials...
+	trust = HTTP_TRUST_RENEWED;
+
+        cupsSaveCredentials(path, common_name, credentials, NULL);
+      }
+    }
+
+    free(tcreds);
+  }
+  else if (cg->validate_certs && !cupsAreCredentialsValidForName(credentials, common_name))
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("No stored credentials, not valid for name."), 1);
+    trust = HTTP_TRUST_INVALID;
+  }
+  else if (!cg->trust_first)
+  {
+    // See if we have a site CA certificate we can compare...
+    if ((tcreds = cupsCopyCredentials(path, "_site_")) != NULL)
+    {
+      size_t	credslen,		// Length of credentials
+		tcredslen;		// Length of trust root
+
+
+      // Do a tail comparison of the root...
+      credslen  = strlen(credentials);
+      tcredslen = strlen(tcreds);
+      if (credslen <= tcredslen || strcmp(credentials + (credslen - tcredslen), tcreds))
+      {
+        // Certificate isn't directly generated from the CA cert...
+        trust = HTTP_TRUST_INVALID;
+      }
+
+      if (trust != HTTP_TRUST_OK)
+	_cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Credentials do not validate against site CA certificate."), 1);
+
+      free(tcreds);
+    }
+    else
+    {
+      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Trust on first use is disabled."), 1);
+      trust = HTTP_TRUST_INVALID;
+    }
+  }
+
+  if (trust == HTTP_TRUST_OK && !cg->expired_certs)
+  {
+    time_t	curtime;		// Current date/time
+
+    time(&curtime);
+    if (curtime < openssl_get_date(cert, 0) || curtime > openssl_get_date(cert, 1))
+    {
+      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Credentials have expired."), 1);
+      trust = HTTP_TRUST_EXPIRED;
+    }
+  }
+
+  if (trust == HTTP_TRUST_OK && !cg->any_root && sk_X509_num(certs) == 1)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Self-signed credentials are blocked."), 1);
+    trust = HTTP_TRUST_INVALID;
+  }
+
+  sk_X509_free(certs);
+
+  return (trust);
+}
+
+
+//
 // 'cupsSignCredentialsRequest()' - Sign an X.509 certificate signing request to produce an X.509 certificate chain.
 //
 // This function creates an X.509 certificate from a signing request.  The
@@ -695,7 +979,7 @@ cupsSignCredentialsRequest(
 
   if (!path || !common_name || !request)
   {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), 0);
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), false);
     return (false);
   }
 
@@ -1023,60 +1307,69 @@ cupsSignCredentialsRequest(
 
 
 //
-// 'httpCopyCredentials()' - Copy the credentials associated with the peer in
-//                           an encrypted connection.
+// 'httpCopyPeerCredentials()' - Copy the credentials associated with the peer in an encrypted connection.
 //
 
-bool					// O - Status of call (`true` = success)
-httpCopyCredentials(
-    http_t	 *http,			// I - Connection to server
-    cups_array_t **credentials)		// O - Array of credentials
+char *					// O - PEM-encoded X.509 certificate chain or `NULL`
+httpCopyPeerCredentials(http_t *http)	// I - Connection to server
 {
+  char		*credentials = NULL;	// Return value
+  size_t	alloc_creds = 0;	// Allocated size
   STACK_OF(X509) *chain;		// Certificate chain
 
 
-  DEBUG_printf("httpCopyCredentials(http=%p, credentials=%p)", http, credentials);
+  DEBUG_printf("httpCopyCredentials(http=%p)", http);
 
-  if (credentials)
-    *credentials = NULL;
-
-  if (!http || !http->tls || !credentials)
-    return (false);
-
-  *credentials = cupsArrayNew(NULL, NULL, NULL, 0, NULL, NULL);
-  chain        = SSL_get_peer_cert_chain(http->tls);
-
-  DEBUG_printf("1httpCopyCredentials: chain=%p", chain);
-
-  if (chain)
+  if (http && http->tls)
   {
-    int	i,				// Looping var
-	count;				// Number of certs
+    // Get the chain of certificates for the remote end...
+    chain = SSL_get_peer_cert_chain(http->tls);
 
-    for (i = 0, count = sk_X509_num(chain); i < count; i ++)
+    DEBUG_printf("1httpCopyCredentials: chain=%p", chain);
+
+    if (chain)
     {
-      X509	*cert = sk_X509_value(chain, i);
-					// Current certificate
-      BIO	*bio = BIO_new(BIO_s_mem());
-					// Memory buffer for cert
+      // Loop through the certificates, adding them to the string...
+      int	i,			// Looping var
+		count;			// Number of certs
 
-      if (bio)
+      for (i = 0, count = sk_X509_num(chain); i < count; i ++)
       {
-	long	bytes;			// Number of bytes
-	char	*buffer;		// Pointer to bytes
+	X509	*cert = sk_X509_value(chain, i);
+					  // Current certificate
+	BIO	*bio = BIO_new(BIO_s_mem());
+					  // Memory buffer for cert
 
-	if (PEM_write_bio_X509(bio, cert))
+	if (bio)
 	{
-	  bytes = BIO_get_mem_data(bio, &buffer);
-	  httpAddCredential(*credentials, buffer, (size_t)bytes);
-	}
+	  long	bytes;			// Number of bytes
+	  char	*buffer;		// Pointer to bytes
 
-	BIO_free(bio);
+	  if (PEM_write_bio_X509(bio, cert))
+	  {
+	    if ((bytes = BIO_get_mem_data(bio, &buffer)) > 0)
+	    {
+	      // Expand credentials string...
+	      if ((credentials = realloc(credentials, alloc_creds + (size_t)bytes + 1)) != NULL)
+	      {
+	        // Copy PEM-encoded data...
+	        memcpy(credentials + alloc_creds, buffer, bytes);
+	        credentials[alloc_creds + (size_t)bytes] = '\0';
+	        alloc_creds += (size_t)bytes;
+	      }
+	    }
+	  }
+
+	  BIO_free(bio);
+
+	  if (!credentials)
+	    break;
+	}
       }
     }
   }
 
-  return (true);
+  return (credentials);
 }
 
 
@@ -1084,293 +1377,48 @@ httpCopyCredentials(
 // '_httpCreateCredentials()' - Create credentials in the internal format.
 //
 
-http_tls_credentials_t			// O - Internal credentials
+http_tls_credentials_t			// O - Internal credentials (STACK_OF(X509) *)
 _httpCreateCredentials(
-    cups_array_t *credentials)		// I - Array of credentials
+    const char *credentials)		// I - Credentials string
 {
-  (void)credentials;
-
-  return (NULL);
-}
-
-
-//
-// 'httpCredentialsAreValidForName()' - Return whether the credentials are valid
-//                                      for the given name.
-//
-
-bool					// O - `true` if valid, `false` otherwise
-httpCredentialsAreValidForName(
-    cups_array_t *credentials,		// I - Credentials
-    const char   *common_name)		// I - Name to check
-{
-  X509	*cert;				// Certificate
-  bool	result = false;			// Result
+  STACK_OF(X509)	*certs = NULL;	// Certificate chain
+  X509			*cert = NULL;	// Current certificate
+  BIO			*bio;		// Basic I/O for string
 
 
-  cert = openssl_create_credential((http_credential_t *)cupsArrayGetFirst(credentials));
-  if (cert)
+  // Range check input...
+  if (!credentials)
+    return (NULL);
+
+  // Make a BIO memory buffer for the string...
+  if ((bio = BIO_new_mem_buf(credentials, strlen(credentials))) == NULL)
+    return (NULL);
+
+  // Read all the X509 certificates from the string...
+  while (PEM_read_bio_X509(bio, &cert, NULL, (void *)""))
   {
-    result = X509_check_host(cert, common_name, strlen(common_name), 0, NULL) != 0;
-
-    X509_free(cert);
-  }
-
-  return (result);
-}
-
-
-//
-// 'httpCredentialsGetTrust()' - Return the trust of credentials.
-//
-
-http_trust_t				// O - Level of trust
-httpCredentialsGetTrust(
-    cups_array_t *credentials,		// I - Credentials
-    const char   *common_name)		// I - Common name for trust lookup
-{
-  http_trust_t	trust = HTTP_TRUST_OK;	// Trusted?
-  X509		*cert;			// Certificate
-  cups_array_t	*tcreds = NULL;		// Trusted credentials
-  _cups_globals_t *cg = _cupsGlobals();	// Per-thread globals
-
-
-  if (!common_name)
-  {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("No common name specified."), 1);
-    return (HTTP_TRUST_UNKNOWN);
-  }
-
-  if ((cert = openssl_create_credential((http_credential_t *)cupsArrayGetFirst(credentials))) == NULL)
-  {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create credentials from array."), 1);
-    return (HTTP_TRUST_UNKNOWN);
-  }
-
-  if (cg->any_root < 0)
-  {
-    _cupsSetDefaults();
-//    openssl_load_crl();
-  }
-
-  // Look this common name up in the default keychains...
-  httpLoadCredentials(NULL, &tcreds, common_name);
-
-  if (tcreds)
-  {
-    char	credentials_str[1024],	// String for incoming credentials
-		tcreds_str[1024];	// String for saved credentials
-
-    httpCredentialsString(credentials, credentials_str, sizeof(credentials_str));
-    httpCredentialsString(tcreds, tcreds_str, sizeof(tcreds_str));
-
-    if (strcmp(credentials_str, tcreds_str))
+    if (!certs)
     {
-      // Credentials don't match, let's look at the expiration date of the new
-      // credentials and allow if the new ones have a later expiration...
-      if (!cg->trust_first)
-      {
-        // Do not trust certificates on first use...
-        _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Trust on first use is disabled."), 1);
-
-        trust = HTTP_TRUST_INVALID;
-      }
-      else if (httpCredentialsGetExpiration(credentials) <= httpCredentialsGetExpiration(tcreds))
-      {
-        // The new credentials are not newly issued...
-        _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("New credentials are older than stored credentials."), 1);
-
-        trust = HTTP_TRUST_INVALID;
-      }
-      else if (!httpCredentialsAreValidForName(credentials, common_name))
-      {
-        // The common name does not match the issued certificate...
-        _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("New credentials are not valid for name."), 1);
-
-        trust = HTTP_TRUST_INVALID;
-      }
-      else if (httpCredentialsGetExpiration(tcreds) < time(NULL))
-      {
-        // Save the renewed credentials...
-	trust = HTTP_TRUST_RENEWED;
-
-        httpSaveCredentials(NULL, credentials, common_name);
-      }
+      // Make a new stack of X509 certs...
+      certs = sk_X509_new_null();
     }
 
-    httpFreeCredentials(tcreds);
-  }
-  else if (cg->validate_certs && !httpCredentialsAreValidForName(credentials, common_name))
-  {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("No stored credentials, not valid for name."), 1);
-    trust = HTTP_TRUST_INVALID;
-  }
-  else if (!cg->trust_first)
-  {
-    // See if we have a site CA certificate we can compare...
-    if (!httpLoadCredentials(NULL, &tcreds, "site"))
+    if (certs)
     {
-      if (cupsArrayGetCount(credentials) != (cupsArrayGetCount(tcreds) + 1))
-      {
-        // Certificate isn't directly generated from the CA cert...
-        trust = HTTP_TRUST_INVALID;
-      }
-      else
-      {
-        // Do a tail comparison of the two certificates...
-        http_credential_t	*a, *b;		// Certificates
-
-        for (a = (http_credential_t *)cupsArrayGetFirst(tcreds), b = (http_credential_t *)cupsArrayGetElement(credentials, 1); a && b; a = (http_credential_t *)cupsArrayGetNext(tcreds), b = (http_credential_t *)cupsArrayGetNext(credentials))
-        {
-	  if (a->datalen != b->datalen || memcmp(a->data, b->data, a->datalen))
-	    break;
-	}
-
-        if (a || b)
-	  trust = HTTP_TRUST_INVALID;
-      }
-
-      if (trust != HTTP_TRUST_OK)
-	_cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Credentials do not validate against site CA certificate."), 1);
+      // Add the X509 certificate...
+      sk_X509_push(certs, cert);
     }
     else
     {
-      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Trust on first use is disabled."), 1);
-      trust = HTTP_TRUST_INVALID;
+      // Unable to add, free and stop...
+      X509_free(cert);
+      break;
     }
   }
 
-  if (trust == HTTP_TRUST_OK && !cg->expired_certs)
-  {
-    time_t	curtime;		// Current date/time
+  BIO_free(bio);
 
-    time(&curtime);
-    if (curtime < openssl_get_date(cert, 0) || curtime > openssl_get_date(cert, 1))
-    {
-      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Credentials have expired."), 1);
-      trust = HTTP_TRUST_EXPIRED;
-    }
-  }
-
-  if (trust == HTTP_TRUST_OK && !cg->any_root && cupsArrayGetCount(credentials) == 1)
-  {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Self-signed credentials are blocked."), 1);
-    trust = HTTP_TRUST_INVALID;
-  }
-
-  X509_free(cert);
-
-  return (trust);
-}
-
-
-//
-// 'httpCredentialsGetExpiration()' - Return the expiration date of the credentials.
-//
-
-time_t					// O - Expiration date of credentials
-httpCredentialsGetExpiration(
-    cups_array_t *credentials)		// I - Credentials
-{
-  time_t	result = 0;		// Result
-  X509		*cert;			// Certificate
-
-
-  if ((cert = openssl_create_credential((http_credential_t *)cupsArrayGetFirst(credentials))) != NULL)
-  {
-    result = openssl_get_date(cert, 1);
-    X509_free(cert);
-  }
-
-  return (result);
-}
-
-
-//
-// 'httpCredentialsString()' - Return a string representing the credentials.
-//
-
-size_t					// O - Total size of credentials string
-httpCredentialsString(
-    cups_array_t *credentials,		// I - Credentials
-    char         *buffer,		// I - Buffer
-    size_t       bufsize)		// I - Size of buffer
-{
-  http_credential_t	*first;		// First certificate
-  X509			*cert;		// Certificate
-
-
-  DEBUG_printf("httpCredentialsString(credentials=%p, buffer=%p, bufsize=" CUPS_LLFMT ")", credentials, buffer, CUPS_LLCAST bufsize);
-
-  if (!buffer)
-    return (0);
-
-  if (bufsize > 0)
-    *buffer = '\0';
-
-  first = (http_credential_t *)cupsArrayGetFirst(credentials);
-  cert  = openssl_create_credential(first);
-
-  if (cert)
-  {
-    char		name[256],	// Common name associated with cert
-			issuer[256],	// Issuer associated with cert
-			expdate[256];	// Expiration data as string
-    time_t		expiration;	// Expiration date of cert
-    const char		*sigalg;	// Signature algorithm
-    unsigned char	md5_digest[16];	// MD5 result
-
-
-    X509_NAME_get_text_by_NID(X509_get_subject_name(cert), NID_commonName, name, sizeof(name));
-    X509_NAME_get_text_by_NID(X509_get_issuer_name(cert), NID_commonName, issuer, sizeof(issuer));
-    expiration = openssl_get_date(cert, 1);
-
-    switch (X509_get_signature_nid(cert))
-    {
-      case NID_ecdsa_with_SHA1 :
-          sigalg = "SHA1WithECDSAEncryption";
-          break;
-      case NID_ecdsa_with_SHA224 :
-          sigalg = "SHA224WithECDSAEncryption";
-          break;
-      case NID_ecdsa_with_SHA256 :
-          sigalg = "SHA256WithECDSAEncryption";
-          break;
-      case NID_ecdsa_with_SHA384 :
-          sigalg = "SHA384WithECDSAEncryption";
-          break;
-      case NID_ecdsa_with_SHA512 :
-          sigalg = "SHA512WithECDSAEncryption";
-          break;
-      case NID_sha1WithRSAEncryption :
-          sigalg = "SHA1WithRSAEncryption";
-          break;
-      case NID_sha224WithRSAEncryption :
-          sigalg = "SHA224WithRSAEncryption";
-          break;
-      case NID_sha256WithRSAEncryption :
-          sigalg = "SHA256WithRSAEncryption";
-          break;
-      case NID_sha384WithRSAEncryption :
-          sigalg = "SHA384WithRSAEncryption";
-          break;
-      case NID_sha512WithRSAEncryption :
-          sigalg = "SHA512WithRSAEncryption";
-          break;
-      default :
-          sigalg = "Unknown";
-          break;
-    }
-
-    cupsHashData("md5", first->data, first->datalen, md5_digest, sizeof(md5_digest));
-
-    snprintf(buffer, bufsize, "%s (issued by %s) / %s / %s / %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X", name, issuer, httpGetDateString(expiration, expdate, sizeof(expdate)), sigalg, md5_digest[0], md5_digest[1], md5_digest[2], md5_digest[3], md5_digest[4], md5_digest[5], md5_digest[6], md5_digest[7], md5_digest[8], md5_digest[9], md5_digest[10], md5_digest[11], md5_digest[12], md5_digest[13], md5_digest[14], md5_digest[15]);
-    X509_free(cert);
-  }
-
-  DEBUG_printf("1httpCredentialsString: Returning \"%s\".", buffer);
-
-  return (strlen(buffer));
+  return (certs);
 }
 
 
@@ -1382,7 +1430,7 @@ void
 _httpFreeCredentials(
     http_tls_credentials_t credentials)	// I - Internal credentials
 {
-  X509_free(credentials);
+  sk_X509_free(credentials);
 }
 
 
@@ -1914,32 +1962,6 @@ openssl_add_ext(
   sk_X509_EXTENSION_push(exts, ext);
 
   return (true);
-}
-
-
-//
-// 'openssl_create_credential()' - Create a single credential in the internal format.
-//
-
-static X509 *				// O - Certificate
-openssl_create_credential(
-    http_credential_t *credential)	// I - Credential
-{
-  X509	*cert = NULL;			// Certificate
-  BIO	*bio;				// Basic I/O for string
-
-
-  if (!credential)
-    return (NULL);
-
-  if ((bio = BIO_new_mem_buf(credential->data, credential->datalen)) == NULL)
-    return (NULL);
-
-  PEM_read_bio_X509(bio, &cert, NULL, (void *)"");
-
-  BIO_free(bio);
-
-  return (cert);
 }
 
 

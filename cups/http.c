@@ -34,7 +34,6 @@ static http_t		*http_create(const char *host, int port, http_addrlist_t *addrlis
 #ifdef DEBUG
 static void		http_debug_hex(const char *prefix, const char *buffer, int bytes);
 #endif // DEBUG
-static void		http_free_credential(http_credential_t *c);
 static ssize_t		http_read(http_t *http, char *buffer, size_t length);
 static ssize_t		http_read_buffered(http_t *http, char *buffer, size_t length);
 static ssize_t		http_read_chunk(http_t *http, char *buffer, size_t length);
@@ -217,42 +216,6 @@ httpAcceptConnection(int  fd,		// I - Listen socket file descriptor
 
 
 //
-// 'httpAddCredential()' - Allocates and adds a single credential to an array.
-//
-// Use @code httpCreateCredentials@ to create a credentials array.
-//
-
-bool					// O - `true` on success, `false` on error
-httpAddCredential(
-    cups_array_t *credentials,		// I - Credentials array
-    const void   *data,			// I - PEM-encoded X.509 data
-    size_t       datalen)		// I - Length of data
-{
-  http_credential_t	*credential;	// Credential data
-
-
-  if (!credentials)
-    return (false);
-
-  if ((credential = malloc(sizeof(http_credential_t))) != NULL)
-  {
-    credential->datalen = datalen;
-
-    if ((credential->data = malloc(datalen)) != NULL)
-    {
-      memcpy(credential->data, data, datalen);
-      cupsArrayAdd(credentials, credential);
-      return (true);
-    }
-
-    free(credential);
-  }
-
-  return (false);
-}
-
-
-//
 // 'httpClearCookie()' - Clear the cookie value(s).
 //
 
@@ -333,30 +296,6 @@ httpClose(http_t *http)			// I - HTTP connection
 
 
 //
-// 'httpCompareCredentials()' - Compare two sets of X.509 credentials.
-//
-
-bool					// O - `true` if they match, `false` if they do not
-httpCompareCredentials(
-    cups_array_t *cred1,		// I - First set of X.509 credentials
-    cups_array_t *cred2)		// I - Second set of X.509 credentials
-{
-  http_credential_t	*temp1, *temp2;	// Temporary credentials
-
-
-  for (temp1 = (http_credential_t *)cupsArrayGetFirst(cred1), temp2 = (http_credential_t *)cupsArrayGetFirst(cred2); temp1 && temp2; temp1 = (http_credential_t *)cupsArrayGetNext(cred1), temp2 = (http_credential_t *)cupsArrayGetNext(cred2))
-  {
-    if (temp1->datalen != temp2->datalen)
-      return (false);
-    else if (memcmp(temp1->data, temp2->data, temp1->datalen))
-      return (false);
-  }
-
-  return (temp1 == temp2);
-}
-
-
-//
 // 'httpConnect()' - Connect to a HTTP server.
 //
 // This function creates a connection to a HTTP server.  The "host" and "port"
@@ -404,31 +343,6 @@ httpConnect(
   httpClose(http);
 
   return (NULL);
-}
-
-
-//
-// 'httpCreateCredentials()' - Create a new array of HTTP credentials.
-//
-// This function creates a new array of HTTP credentials for use with the
-// @link httpAddCredential@ and @link httpSetCredentials@ functions.
-//
-
-cups_array_t *				// O - Array
-httpCreateCredentials(
-    const void   *data,			// I - PEM-encoded X.509 data
-    size_t       datalen)		// I - Length of data
-{
-  cups_array_t	*a = cupsArrayNew(NULL, NULL, NULL, 0, NULL, (cups_afree_cb_t)http_free_credential);
-
-
-  if (data && datalen > 0 && !httpAddCredential(a, data, datalen))
-  {
-    cupsArrayDelete(a);
-    return (NULL);
-  }
-
-  return (a);
 }
 
 
@@ -546,18 +460,6 @@ httpFlushWrite(http_t *http)		// I - HTTP connection
   DEBUG_printf("1httpFlushWrite: Returning %d, errno=%d.", (int)bytes, errno);
 
   return ((int)bytes);
-}
-
-
-//
-// 'httpFreeCredentials()' - Free an array of credentials.
-//
-
-void
-httpFreeCredentials(
-    cups_array_t *credentials)		// I - Array of credentials
-{
-  cupsArrayDelete(credentials);
 }
 
 
@@ -2043,10 +1945,10 @@ httpSetBlocking(http_t *http,		// I - HTTP connection
 
 bool					// O - `true` on success, `false` on error
 httpSetCredentials(
-    http_t       *http,			// I - HTTP connection
-    cups_array_t *credentials)		// I - Array of credentials
+    http_t     *http,			// I - HTTP connection
+    const char *credentials)		// I - Credentials string
 {
-  if (!http || cupsArrayGetCount(credentials) < 1)
+  if (!http || !credentials || !*credentials)
     return (false);
 
   _httpFreeCredentials(http->tls_credentials);
@@ -3415,19 +3317,6 @@ http_debug_hex(const char *prefix,	// I - Prefix for line
   }
 }
 #endif // DEBUG
-
-
-//
-// 'http_free_credential()' - Free a single credential.
-//
-
-static void
-http_free_credential(
-    http_credential_t *c)		// I - Credential
-{
-  free((void *)c->data);
-  free(c);
-}
 
 
 //

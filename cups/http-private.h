@@ -72,7 +72,7 @@ extern "C" {
 
 #  ifdef HAVE_OPENSSL
 typedef SSL *http_tls_t;
-typedef X509 *http_tls_credentials_t;
+typedef STACK_OF(X509) *http_tls_credentials_t;
 #  else // HAVE_GNUTLS
 typedef gnutls_session_t http_tls_t;
 typedef gnutls_certificate_credentials_t *http_tls_credentials_t;
@@ -166,7 +166,7 @@ extern const char *_cups_hstrerror(int error);
 // Prototypes...
 //
 
-extern http_tls_credentials_t _httpCreateCredentials(cups_array_t *credentials) _CUPS_PRIVATE;
+extern http_tls_credentials_t _httpCreateCredentials(const char *credentials) _CUPS_PRIVATE;
 extern char		*_httpDecodeURI(char *dst, const char *src, size_t dstsize) _CUPS_PRIVATE;
 extern void		_httpDisconnect(http_t *http) _CUPS_PRIVATE;
 extern char		*_httpEncodeURI(char *dst, const char *src, size_t dstsize) _CUPS_PRIVATE;

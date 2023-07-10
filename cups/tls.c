@@ -59,7 +59,7 @@ static bool		http_save_file(const char *path, const char *common_name, const cha
 #    include "tls-openssl.c"
 #else // HAVE_GNUTLS
 #  include "tls-gnutls.c"
-#endif /* HAVE_OPENSSL */
+#endif // HAVE_OPENSSL
 
 
 //
@@ -102,19 +102,14 @@ cupsCopyCredentialsRequest(
 
 
 //
-// 'cupsSaveServerCredentials()' - Save the X.509 certificate chain associated
-//                                 with a server.
+// 'cupsSaveCredentials()' - Save the credentials associated with a printer/server.
 //
-// This function saves the the PEM-encoded X.509 certificate chain string to
-// the directory "path" or, if "path" is `NULL`, in a per-user or system-wide
-// (when running as root) certificate/key store.  The "common_name" value must
-// match the value supplied when the @link cupsMakeServerRequest@ function was
-// called to obtain the certificate signing request (CSR).  The saved
-// certificate is paired with the private key that was generated for the CSR,
-// allowing it to be used for encryption and signing.
+// This function saves the the PEM-encoded X.509 certificate chain string and
+// private key (if not `NULL`) to the directory "path" or, if "path" is `NULL`,
+// in a per-user or system-wide (when running as root) certificate/key store.
 //
 
-extern bool				// O - `true` on success, `false` on failure
+bool					// O - `true` on success, `false` on failure
 cupsSaveCredentials(
     const char *path,			// I - Directory path for certificate/key store or `NULL` for default
     const char *common_name,		// I - Common name for certificate
@@ -151,17 +146,11 @@ cupsSetServerCredentials(
 
   DEBUG_printf("cupsSetServerCredentials(path=\"%s\", common_name=\"%s\", auto_create=%d)", path, common_name, auto_create);
 
- /*
-  * Use defaults as needed...
-  */
-
+  // Use defaults as needed...
   if (!path)
     path = http_default_path(temp, sizeof(temp));
 
- /*
-  * Range check input...
-  */
-
+  // Range check input...
   if (!path || !common_name)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), 0);
@@ -170,20 +159,14 @@ cupsSetServerCredentials(
 
   cupsMutexLock(&tls_mutex);
 
- /*
-  * Free old values...
-  */
-
+  // Free old values...
   if (tls_keypath)
     _cupsStrFree(tls_keypath);
 
   if (tls_common_name)
     _cupsStrFree(tls_common_name);
 
- /*
-  * Save the new values...
-  */
-
+  // Save the new values...
   tls_keypath     = _cupsStrAlloc(path);
   tls_auto_create = auto_create;
   tls_common_name = _cupsStrAlloc(common_name);
@@ -191,184 +174,6 @@ cupsSetServerCredentials(
   cupsMutexUnlock(&tls_mutex);
 
   return (1);
-}
-
-
-//
-// 'httpLoadCredentials()' - Load X.509 credentials from a keychain file.
-//
-
-bool					// O - `true` on success, `false` on error
-httpLoadCredentials(
-    const char   *path,			// I  - Keychain/PKCS#12 path
-    cups_array_t **credentials,		// IO - Credentials
-    const char   *common_name)		// I  - Common name for credentials
-{
-  cups_file_t		*fp;		// Certificate file
-  char			filename[1024],	// filename.crt
-			temp[1024],	// Temporary string
-			line[256];	// Base64-encoded line
-  unsigned char		*data = NULL;	// Buffer for cert data
-  size_t		alloc_data = 0,	// Bytes allocated
-			num_data = 0,	// Bytes used
-			decoded;	// Bytes decoded
-  bool			in_certificate = false;
-					// In a certificate?
-
-
-  if (credentials)
-    *credentials = NULL;
-
-  if (!credentials || !common_name)
-    return (false);
-
-  if (!path)
-    path = http_default_path(temp, sizeof(temp));
-  if (!path)
-    return (false);
-
-  http_make_path(filename, sizeof(filename), path, common_name, "crt");
-
-  if ((fp = cupsFileOpen(filename, "r")) == NULL)
-    return (false);
-
-  while (cupsFileGets(fp, line, sizeof(line)))
-  {
-    if (!strcmp(line, "-----BEGIN CERTIFICATE-----"))
-    {
-      if (in_certificate)
-      {
-        // Missing END CERTIFICATE...
-        httpFreeCredentials(*credentials);
-	*credentials = NULL;
-        break;
-      }
-
-      in_certificate = true;
-    }
-    else if (!strcmp(line, "-----END CERTIFICATE-----"))
-    {
-      if (!in_certificate || !num_data)
-      {
-        // Missing data...
-        httpFreeCredentials(*credentials);
-	*credentials = NULL;
-        break;
-      }
-
-      if (!*credentials)
-        *credentials = cupsArrayNew(NULL, NULL, NULL, 0, NULL, NULL);
-
-      if (httpAddCredential(*credentials, data, num_data))
-      {
-        httpFreeCredentials(*credentials);
-	*credentials = NULL;
-        break;
-      }
-
-      num_data       = 0;
-      in_certificate = false;
-    }
-    else if (in_certificate)
-    {
-      if (alloc_data == 0)
-      {
-        data       = malloc(2048);
-	alloc_data = 2048;
-
-        if (!data)
-	  break;
-      }
-      else if ((num_data + strlen(line)) >= alloc_data)
-      {
-        unsigned char *tdata = realloc(data, alloc_data + 1024);
-					// Expanded buffer
-
-	if (!tdata)
-	{
-	  httpFreeCredentials(*credentials);
-	  *credentials = NULL;
-	  break;
-	}
-
-	data       = tdata;
-        alloc_data += 1024;
-      }
-
-      decoded = alloc_data - num_data;
-      httpDecode64((char *)data + num_data, &decoded, line, NULL);
-      num_data += (size_t)decoded;
-    }
-  }
-
-  cupsFileClose(fp);
-
-  if (in_certificate)
-  {
-    // Missing END CERTIFICATE...
-    httpFreeCredentials(*credentials);
-    *credentials = NULL;
-  }
-
-  if (data)
-    free(data);
-
-  return (*credentials != NULL);
-}
-
-
-//
-// 'httpSaveCredentials()' - Save X.509 credentials to a keychain file.
-//
-
-bool					// O - `true` on success, `false` on error
-httpSaveCredentials(
-    const char   *path,			// I - Keychain/PKCS#12 path
-    cups_array_t *credentials,		// I - Credentials
-    const char   *common_name)		// I - Common name for credentials
-{
-  cups_file_t		*fp;		// Certificate file
-  char			filename[1024],	// filename.crt
-			nfilename[1024],// filename.crt.N
-			temp[1024],	// Temporary string
-			line[256];	// Base64-encoded line
-  const unsigned char	*ptr;		// Pointer into certificate
-  ssize_t		remaining;	// Bytes left
-  http_credential_t	*cred;		// Current credential
-
-
-  if (!credentials || !common_name)
-    return (false);
-
-  if (!path)
-    path = http_default_path(temp, sizeof(temp));
-  if (!path)
-    return (false);
-
-  http_make_path(filename, sizeof(filename), path, common_name, "crt");
-  snprintf(nfilename, sizeof(nfilename), "%s.N", filename);
-
-  if ((fp = cupsFileOpen(nfilename, "w")) == NULL)
-    return (false);
-
-#ifndef _WIN32
-  fchmod(cupsFileNumber(fp), 0600);
-#endif // !_WIN32
-
-  for (cred = (http_credential_t *)cupsArrayGetFirst(credentials); cred; cred = (http_credential_t *)cupsArrayGetNext(credentials))
-  {
-    cupsFilePuts(fp, "-----BEGIN CERTIFICATE-----\n");
-    for (ptr = cred->data, remaining = (ssize_t)cred->datalen; remaining > 0; remaining -= 45, ptr += 45)
-    {
-      httpEncode64(line, sizeof(line), (char *)ptr, remaining > 45 ? 45 : (size_t)remaining, false);
-      cupsFilePrintf(fp, "%s\n", line);
-    }
-    cupsFilePuts(fp, "-----END CERTIFICATE-----\n");
-  }
-
-  cupsFileClose(fp);
-
-  return (!rename(nfilename, filename));
 }
 
 
@@ -394,7 +199,7 @@ _httpTLSSetOptions(int options,		// I - Options
 // 'http_copy_file()' - Copy the contents of a file to a string.
 //
 
-static char *
+static char *				// O - Contents of file or `NULL` on error
 http_copy_file(const char *path,	// I - Directory
                const char *common_name,	// I - Common name
                const char *ext)		// I - Extension

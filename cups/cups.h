@@ -308,6 +308,7 @@ extern size_t		cupsAddDest(const char *name, const char *instance, size_t num_de
 extern size_t		cupsAddDestMediaOptions(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, unsigned flags, cups_size_t *size, size_t num_options, cups_option_t **options) _CUPS_PUBLIC;
 extern size_t		cupsAddIntegerOption(const char *name, int value, size_t num_options, cups_option_t **options) _CUPS_PUBLIC;
 extern size_t		cupsAddOption(const char *name, const char *value, size_t num_options, cups_option_t **options) _CUPS_PUBLIC;
+extern bool		cupsAreCredentialsValidForName(const char *common_name, const char *credentials);
 
 extern ipp_status_t	cupsCancelDestJob(http_t *http, cups_dest_t *dest, int job_id) _CUPS_PUBLIC;
 extern bool		cupsCheckDestSupported(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, const char *option, const char *value) _CUPS_PUBLIC;
@@ -343,6 +344,9 @@ extern void		cupsFreeDests(size_t num_dests, cups_dest_t *dests) _CUPS_PUBLIC;
 extern void		cupsFreeJobs(size_t num_jobs, cups_job_t *jobs) _CUPS_PUBLIC;
 extern void		cupsFreeOptions(size_t num_options, cups_option_t *options) _CUPS_PUBLIC;
 
+extern time_t		cupsGetCredentialsExpiration(const char *credentials) _CUPS_PUBLIC;
+extern char		*cupsGetCredentialsInfo(const char *credentials, char *buffer, size_t bufsize) _CUPS_PUBLIC;
+extern http_trust_t	cupsGetCredentialsTrust(const char *path, const char *common_name, const char *credentials) _CUPS_PUBLIC;
 extern const char	*cupsGetDefault(http_t *http) _CUPS_PUBLIC;
 extern cups_dest_t	*cupsGetDest(const char *name, const char *instance, size_t num_dests, cups_dest_t *dests) _CUPS_PUBLIC;
 extern bool		cupsGetDestMediaByIndex(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, size_t n, unsigned flags, cups_size_t *size) _CUPS_PUBLIC;
@@ -390,7 +394,7 @@ extern bool		cupsSaveCredentials(const char *path, const char *common_name, cons
 extern http_status_t	cupsSendRequest(http_t *http, ipp_t *request, const char *resource, size_t length) _CUPS_PUBLIC;
 extern void		cupsSetOAuthCB(cups_oauth_cb_t cb, void *data) _CUPS_PUBLIC;
 extern void		cupsSetClientCertCB(cups_client_cert_cb_t cb, void *user_data) _CUPS_PUBLIC;
-extern bool		cupsSetCredentials(cups_array_t *certs) _CUPS_PUBLIC;
+extern bool		cupsSetCredentials(const char *credentials) _CUPS_PUBLIC;
 extern void		cupsSetDefaultDest(const char *name, const char *instance, size_t num_dests, cups_dest_t *dests) _CUPS_PUBLIC;
 extern bool		cupsSetDests(http_t *http, size_t num_dests, cups_dest_t *dests) _CUPS_PUBLIC;
 extern void		cupsSetEncryption(http_encryption_t e) _CUPS_PUBLIC;

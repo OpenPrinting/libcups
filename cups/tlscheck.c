@@ -31,7 +31,7 @@ main(int  argc,				// I - Number of command-line arguments
   http_t	*http = NULL;		// HTTP connection
   const char	*server = NULL;		// Hostname from command-line
   int		port = 0;		// Port number
-  cups_array_t	*creds;			// Server credentials
+  char		*creds;			// Server credentials
   char		creds_str[2048];	// Credentials string
   const char	*cipherName;		// Cipher suite name
   int		tlsVersion = 0;		// TLS version number
@@ -173,15 +173,15 @@ main(int  argc,				// I - Number of command-line arguments
     return (1);
   }
 
-  if (httpCopyCredentials(http, &creds))
+  if ((creds = httpCopyPeerCredentials(http)) == NULL)
   {
     cupsCopyString(creds_str, "Unable to get server X.509 credentials.", sizeof(creds_str));
   }
   else
   {
-    if (!httpCredentialsString(creds, creds_str, sizeof(creds_str)))
+    if (!cupsGetCredentialsInfo(creds, creds_str, sizeof(creds_str)))
       cupsCopyString(creds_str, "Unable to convert X.509 credential to string.", sizeof(creds_str));
-    httpFreeCredentials(creds);
+    free(creds);
   }
 
 #ifdef HAVE_OPENSSL

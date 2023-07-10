@@ -679,7 +679,7 @@ test_client(const char *uri)		// I - URI
 		resource[HTTP_MAX_URI];	// Resource from URI
   int		port;			// Port number from URI
   http_trust_t	trust;			// Trust evaluation for connection
-  cups_array_t	*hcreds;		// Credentials from connection
+  char		*hcreds;		// Credentials from connection
   char		hinfo[1024],		// String for connection credentials
 		datestr[256];		// Date string
   static const char *trusts[] =		// Trust strings
@@ -700,22 +700,22 @@ test_client(const char *uri)		// I - URI
   }
 
   puts("TLS Server Credentials:");
-  if (httpCopyCredentials(http, &hcreds))
+  if ((hcreds = httpCopyPeerCredentials(http)) != NULL)
   {
-    trust = httpCredentialsGetTrust(hcreds, hostname);
+    trust = cupsGetCredentialsTrust(TEST_CERT_PATH, hostname, hcreds);
 
-    httpCredentialsString(hcreds, hinfo, sizeof(hinfo));
+    cupsGetCredentialsInfo(hcreds, hinfo, sizeof(hinfo));
 
-    printf("    Certificate Count: %u\n", (unsigned)cupsArrayGetCount(hcreds));
+//    printf("    Certificate Count: %u\n", (unsigned)cupsArrayGetCount(hcreds));
     if (trust == HTTP_TRUST_OK)
       puts("    Trust: OK");
     else
       printf("    Trust: %s (%s)\n", trusts[trust], cupsGetErrorString());
-    printf("    Expiration: %s\n", httpGetDateString(httpCredentialsGetExpiration(hcreds), datestr, sizeof(datestr)));
-    printf("    IsValidName: %s\n", httpCredentialsAreValidForName(hcreds, hostname) ? "true" : "false");
-    printf("    String: \"%s\"\n", hinfo);
+    printf("    Expiration: %s\n", httpGetDateString(cupsGetCredentialsExpiration(hcreds), datestr, sizeof(datestr)));
+    printf("     ValidName: %s\n", cupsAreCredentialsValidForName(hostname, hcreds) ? "true" : "false");
+    printf("          Info: \"%s\"\n", hinfo);
 
-    httpFreeCredentials(hcreds);
+    free(hcreds);
   }
   else
   {
@@ -932,23 +932,23 @@ test_server(const char *host_port)	// I - Hostname/port
 static int				// O - Exit status
 test_show(const char *common_name)	// I - Common name
 {
-  cups_array_t	*tcreds;		// Credentials from trust store
-  char		tinfo[1024],		// String for trust store credentials
-		datestr[256];		// Date string
+  char	*tcreds,			// Credentials from trust store
+	tinfo[1024],			// String for trust store credentials
+	datestr[256];			// Date string
 
 
   printf("Trust Store for \"%s\":\n", common_name);
 
-  if (httpLoadCredentials(NULL, &tcreds, common_name))
+  if ((tcreds = cupsCopyCredentials(TEST_CERT_PATH, common_name)) != NULL)
   {
-    httpCredentialsString(tcreds, tinfo, sizeof(tinfo));
+    cupsGetCredentialsInfo(tcreds, tinfo, sizeof(tinfo));
 
-    printf("    Certificate Count: %u\n", (unsigned)cupsArrayGetCount(tcreds));
-    printf("    Expiration: %s\n", httpGetDateString(httpCredentialsGetExpiration(tcreds), datestr, sizeof(datestr)));
-    printf("    IsValidName: %s\n", httpCredentialsAreValidForName(tcreds, common_name) ? "true" : "false");
-    printf("    String: \"%s\"\n", tinfo);
+//    printf("    Certificate Count: %u\n", (unsigned)cupsArrayGetCount(tcreds));
+    printf("    Expiration: %s\n", httpGetDateString(cupsGetCredentialsExpiration(tcreds), datestr, sizeof(datestr)));
+    printf("     ValidName: %s\n", cupsAreCredentialsValidForName(common_name, tcreds) ? "true" : "false");
+    printf("          Info: \"%s\"\n", tinfo);
 
-    httpFreeCredentials(tcreds);
+    free(tcreds);
   }
   else
   {

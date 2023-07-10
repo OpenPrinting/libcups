@@ -282,6 +282,7 @@ span.string {
 <li><a href="#cupsAddDestMediaOptions">cupsAddDestMediaOptions</a></li>
 <li><a href="#cupsAddIntegerOption">cupsAddIntegerOption</a></li>
 <li><a href="#cupsAddOption">cupsAddOption</a></li>
+<li><a href="#cupsAreCredentialsValidForName">cupsAreCredentialsValidForName</a></li>
 <li><a href="#cupsArrayAdd">cupsArrayAdd</a></li>
 <li><a href="#cupsArrayAddStrings">cupsArrayAddStrings</a></li>
 <li><a href="#cupsArrayClear">cupsArrayClear</a></li>
@@ -397,6 +398,9 @@ span.string {
 <li><a href="#cupsFreeDests">cupsFreeDests</a></li>
 <li><a href="#cupsFreeJobs">cupsFreeJobs</a></li>
 <li><a href="#cupsFreeOptions">cupsFreeOptions</a></li>
+<li><a href="#cupsGetCredentialsExpiration">cupsGetCredentialsExpiration</a></li>
+<li><a href="#cupsGetCredentialsInfo">cupsGetCredentialsInfo</a></li>
+<li><a href="#cupsGetCredentialsTrust">cupsGetCredentialsTrust</a></li>
 <li><a href="#cupsGetDefault">cupsGetDefault</a></li>
 <li><a href="#cupsGetDest">cupsGetDest</a></li>
 <li><a href="#cupsGetDestMediaByIndex">cupsGetDestMediaByIndex</a></li>
@@ -483,12 +487,12 @@ span.string {
 <li><a href="#cupsLocalizeDestMedia">cupsLocalizeDestMedia</a></li>
 <li><a href="#cupsLocalizeDestOption">cupsLocalizeDestOption</a></li>
 <li><a href="#cupsLocalizeDestValue">cupsLocalizeDestValue</a></li>
+<li><a href="#cupsLocalizeNotifySubject">cupsLocalizeNotifySubject</a></li>
+<li><a href="#cupsLocalizeNotifyText">cupsLocalizeNotifyText</a></li>
 <li><a href="#cupsMutexDestroy">cupsMutexDestroy</a></li>
 <li><a href="#cupsMutexInit">cupsMutexInit</a></li>
 <li><a href="#cupsMutexLock">cupsMutexLock</a></li>
 <li><a href="#cupsMutexUnlock">cupsMutexUnlock</a></li>
-<li><a href="#cupsNotifySubject">cupsNotifySubject</a></li>
-<li><a href="#cupsNotifyText">cupsNotifyText</a></li>
 <li><a href="#cupsParseOptions">cupsParseOptions</a></li>
 <li><a href="#cupsPutFd">cupsPutFd</a></li>
 <li><a href="#cupsPutFile">cupsPutFile</a></li>
@@ -509,6 +513,7 @@ span.string {
 <li><a href="#cupsReadResponseData">cupsReadResponseData</a></li>
 <li><a href="#cupsRemoveDest">cupsRemoveDest</a></li>
 <li><a href="#cupsRemoveOption">cupsRemoveOption</a></li>
+<li><a href="#cupsSaveCredentials">cupsSaveCredentials</a></li>
 <li><a href="#cupsSendRequest">cupsSendRequest</a></li>
 <li><a href="#cupsSetClientCertCB">cupsSetClientCertCB</a></li>
 <li><a href="#cupsSetCredentials">cupsSetCredentials</a></li>
@@ -535,7 +540,6 @@ span.string {
 <li><a href="#cupsUTF8ToUTF32">cupsUTF8ToUTF32</a></li>
 <li><a href="#cupsWriteRequestData">cupsWriteRequestData</a></li>
 <li><a href="#httpAcceptConnection">httpAcceptConnection</a></li>
-<li><a href="#httpAddCredential">httpAddCredential</a></li>
 <li><a href="#httpAddrClose">httpAddrClose</a></li>
 <li><a href="#httpAddrConnect">httpAddrConnect</a></li>
 <li><a href="#httpAddrCopyList">httpAddrCopyList</a></li>
@@ -554,25 +558,16 @@ span.string {
 <li><a href="#httpAssembleURI">httpAssembleURI</a></li>
 <li><a href="#httpAssembleURIf">httpAssembleURIf</a></li>
 <li><a href="#httpAssembleUUID">httpAssembleUUID</a></li>
-<li><a href="#httpCheck">httpCheck</a></li>
 <li><a href="#httpClearCookie">httpClearCookie</a></li>
 <li><a href="#httpClearFields">httpClearFields</a></li>
 <li><a href="#httpClose">httpClose</a></li>
-<li><a href="#httpCompareCredentials">httpCompareCredentials</a></li>
 <li><a href="#httpConnect">httpConnect</a></li>
-<li><a href="#httpCopyCredentials">httpCopyCredentials</a></li>
-<li><a href="#httpCreateCredentials">httpCreateCredentials</a></li>
-<li><a href="#httpCredentialsAreValidForName">httpCredentialsAreValidForName</a></li>
-<li><a href="#httpCredentialsGetExpiration">httpCredentialsGetExpiration</a></li>
-<li><a href="#httpCredentialsGetTrust">httpCredentialsGetTrust</a></li>
-<li><a href="#httpCredentialsString">httpCredentialsString</a></li>
+<li><a href="#httpCopyPeerCredentials">httpCopyPeerCredentials</a></li>
 <li><a href="#httpDecode64">httpDecode64</a></li>
 <li><a href="#httpEncode64">httpEncode64</a></li>
-<li><a href="#httpError">httpError</a></li>
 <li><a href="#httpFieldValue">httpFieldValue</a></li>
 <li><a href="#httpFlush">httpFlush</a></li>
 <li><a href="#httpFlushWrite">httpFlushWrite</a></li>
-<li><a href="#httpFreeCredentials">httpFreeCredentials</a></li>
 <li><a href="#httpGetActivity">httpGetActivity</a></li>
 <li><a href="#httpGetAddress">httpGetAddress</a></li>
 <li><a href="#httpGetAuthString">httpGetAuthString</a></li>
@@ -582,6 +577,7 @@ span.string {
 <li><a href="#httpGetDateString">httpGetDateString</a></li>
 <li><a href="#httpGetDateTime">httpGetDateTime</a></li>
 <li><a href="#httpGetEncryption">httpGetEncryption</a></li>
+<li><a href="#httpGetError">httpGetError</a></li>
 <li><a href="#httpGetExpect">httpGetExpect</a></li>
 <li><a href="#httpGetFd">httpGetFd</a></li>
 <li><a href="#httpGetField">httpGetField</a></li>
@@ -599,14 +595,13 @@ span.string {
 <li><a href="#httpInitialize">httpInitialize</a></li>
 <li><a href="#httpIsChunked">httpIsChunked</a></li>
 <li><a href="#httpIsEncrypted">httpIsEncrypted</a></li>
-<li><a href="#httpLoadCredentials">httpLoadCredentials</a></li>
 <li><a href="#httpPeek">httpPeek</a></li>
+<li><a href="#httpPrintf">httpPrintf</a></li>
 <li><a href="#httpRead">httpRead</a></li>
 <li><a href="#httpReadRequest">httpReadRequest</a></li>
 <li><a href="#httpReconnect">httpReconnect</a></li>
 <li><a href="#httpResolveHostname">httpResolveHostname</a></li>
 <li><a href="#httpResolveURI">httpResolveURI</a></li>
-<li><a href="#httpSaveCredentials">httpSaveCredentials</a></li>
 <li><a href="#httpSeparateURI">httpSeparateURI</a></li>
 <li><a href="#httpSetAuthString">httpSetAuthString</a></li>
 <li><a href="#httpSetBlocking">httpSetBlocking</a></li>
@@ -1671,11 +1666,15 @@ cups_password_cb(<span class="reserved">const</span> <span class="reserved">char
 </ul>
 <h3 class="title" id="specific-api-changes">Specific API Changes</h3>
 <ul>
+<li><p><code>cupsDoAuthentication</code> now returns a <code>bool</code> value - <code>true</code> on success or <code>false</code> on failure - instead of the old <code>int</code> values 0 and -1, respectively.</p>
+</li>
 <li><p><code>httpGets</code> now has the <code>http_t</code> pointer as the first argument.</p>
 </li>
 <li><p>The <code>cups_size_t</code> structure now includes &quot;color&quot;, &quot;source&quot;, and &quot;type&quot; members to allow specification of media color, source (input tray/roll), and type.</p>
 </li>
 <li><p>The <code>cups_encoding_t</code> enumeration values now use the <code>CUPS_ENCODING_</code> prefix for consistency with other enumerated types.</p>
+</li>
+<li><p>X.509 certificates are now passed as C strings containing the PEM-encoded data instead of a <code>cups_array_t *</code> of raw data.</p>
 </li>
 </ul>
 <h3 class="title" id="removed-functions">Removed Functions</h3>
@@ -1683,7 +1682,7 @@ cups_password_cb(<span class="reserved">const</span> <span class="reserved">char
 <ul>
 <li><p>Old class/printer functions: <code>cupsGetClasses</code> and <code>cupsGetPrinters</code>.</p>
 </li>
-<li><p>HTTP functions: <code>httpConnect2</code>, <code>httpConnectEncrypt</code>, <code>httpDecode64_2</code>, and <code>httpEncode64_2</code>.</p>
+<li><p>HTTP functions: <code>httpAddCredential</code>, <code>httpCheck</code>, <code>httpCompareCredentials</code>, <code>httpConnect2</code>, <code>httpConnectEncrypt</code>, <code>httpCreateCredentials</code>, <code>httpDecode64_2</code>, <code>httpEncode64_2</code>, and <code>httpFreeCredentials</code>.</p>
 </li>
 <li><p>PPD file functions: <code>ppdClose</code>, <code>ppdCollect</code>, <code>ppdCollect2</code>, <code>ppdConflicts</code>, <code>ppdEmit</code>, <code>ppdEmitAfterOrder</code>, <code>ppdEmitFd</code>, <code>ppdEmitJCL</code>, <code>ppdEmitJCLEnd</code>, <code>ppdEmitString</code>, <code>ppdErrorString</code>, <code>ppdFindAttr</code>, <code>ppdFindChoice</code>, <code>ppdFindCustomOption</code>, <code>ppdFindCustomParam</code>, <code>ppdFindMarkedChoice</code>, <code>ppdFindNextAttr</code>, <code>ppdFindOption</code>, <code>ppdFirstCustomParam</code>, <code>ppdFirstOption</code>, <code>ppdInstallableConflict</code>, <code>ppdIsMarked</code>, <code>ppdLastError</code>, <code>ppdLocalize</code>, <code>ppdLocalizeAttr</code>, <code>ppdLocalizeIPPReason</code>, <code>ppdLocalizeMarkerName</code>, <code>ppdMarkDefaults</code>, <code>ppdMarkOption</code>, <code>ppdNextCustomParam</code>, <code>ppdNextOption</code>, <code>ppdOpen</code>, <code>ppdOpen2</code>, <code>ppdOpenFd</code>, <code>ppdOpenFile</code>, <code>ppdPageLength</code>, <code>ppdPageSize</code>, <code>ppdPageSizeLimits</code>, <code>ppdPageWidth</code>, and <code>ppdSetConformance</code>.</p>
 </li>
@@ -1746,6 +1745,12 @@ cups_password_cb(<span class="reserved">const</span> <span class="reserved">char
 <tr><td> <code>cupsLastErrorString</code></td>
 <td> <code>cupsGetErrorString</code></td>
 </tr>
+<tr><td> <code>cupsNotifySubject</code></td>
+<td> <code>cupsLocalizeNotifySubject</code></td>
+</tr>
+<tr><td> <code>cupsNotifyText</code></td>
+<td> <code>cupsLocalizeNotifyText</code></td>
+</tr>
 <tr><td> <code>cupsRasterInitPWGHeader</code></td>
 <td> <code>cupsRasterInitHeader</code></td>
 </tr>
@@ -1797,6 +1802,18 @@ cups_password_cb(<span class="reserved">const</span> <span class="reserved">char
 <tr><td> <code>httpConnect2</code></td>
 <td> <code>httpConnect</code></td>
 </tr>
+<tr><td> <code>httpCredentialsAreValidForName</code></td>
+<td> <code>cupsAreCredentialsValidForName</code></td>
+</tr>
+<tr><td> <code>httpCredentialsGetExpiration</code></td>
+<td> <code>cupsGetCredentialsExpiration</code></td>
+</tr>
+<tr><td> <code>httpCredentialsGetTrust</code></td>
+<td> <code>cupsGetCredentialsTrust</code></td>
+</tr>
+<tr><td> <code>httpCredentialsString</code></td>
+<td> <code>cupsGetCredentialsInfo</code></td>
+</tr>
 <tr><td> <code>httpDecode64_2</code></td>
 <td> <code>httpDecode64</code></td>
 </tr>
@@ -1809,6 +1826,9 @@ cups_password_cb(<span class="reserved">const</span> <span class="reserved">char
 <tr><td> <code>httpEncryption</code></td>
 <td> <code>httpSetEncryption</code></td>
 </tr>
+<tr><td> <code>httpError</code></td>
+<td> <code>httpGetError</code></td>
+</tr>
 <tr><td> <code>httpGet</code></td>
 <td> <code>httpWriteRequest</code></td>
 </tr>
@@ -1817,6 +1837,9 @@ cups_password_cb(<span class="reserved">const</span> <span class="reserved">char
 </tr>
 <tr><td> <code>httpGetLength2</code></td>
 <td> <code>httpGetLength</code></td>
+</tr>
+<tr><td> <code>httpLoadCredentials</code></td>
+<td> <code>cupsLoadCredentials</code></td>
 </tr>
 <tr><td> <code>httpOptions</code></td>
 <td> <code>httpWriteRequest</code></td>
@@ -1832,6 +1855,9 @@ cups_password_cb(<span class="reserved">const</span> <span class="reserved">char
 </tr>
 <tr><td> <code>httpReconnect2</code></td>
 <td> <code>httpReconnect</code></td>
+</tr>
+<tr><td> <code>httpSaveCredentials</code></td>
+<td> <code>cupsSaveCredentials</code></td>
 </tr>
 <tr><td> <code>httpStatus</code></td>
 <td> <code>httpStatusString</code></td>
@@ -1982,6 +2008,20 @@ size_t cupsAddOption(const char *name, const char *value, size_t num_options, <a
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">New option arrays can be initialized simply by passing 0 for the
 &quot;num_options&quot; parameter.</p>
+<h3 class="function"><a id="cupsAreCredentialsValidForName">cupsAreCredentialsValidForName</a></h3>
+<p class="description">Return whether the credentials are valid
+                                     for the given name.</p>
+<p class="code">
+bool cupsAreCredentialsValidForName(const char *common_name, const char *credentials);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>common_name</th>
+<td class="description">Name to check</td></tr>
+<tr><th>credentials</th>
+<td class="description">Credentials</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description"><code>true</code> if valid, <code>false</code> otherwise</p>
 <h3 class="function"><a id="cupsArrayAdd">cupsArrayAdd</a></h3>
 <p class="description">Add an element to an array.</p>
 <p class="code">
@@ -2382,7 +2422,9 @@ ipp_status_t cupsCancelDestJob(<a href="#http_t">http_t</a> *http, <a href="#cup
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Status of cancel operation</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The &quot;job_id&quot; is the number returned by cupsCreateDestJob.<br>
+<p class="discussion">This function cancels the specified job.  The &quot;dest&quot; argument is the name
+of the destination printer while the &quot;job_id&quot; is the number returned by
+<a href="#cupsCreateDestJob"><code>cupsCreateDestJob</code></a>.<br>
 <br>
 Returns <code>IPP_STATUS_OK</code> on success and
 <code>IPP_STATUS_ERROR_NOT_AUTHORIZED</code> or
@@ -2444,8 +2486,9 @@ ipp_status_t cupsCloseDestJob(<a href="#http_t">http_t</a> *http, <a href="#cups
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">IPP status code</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">Use when the last call to cupsStartDocument passed 0 for &quot;last_document&quot;.
-&quot;job_id&quot; is the job ID returned by cupsCreateDestJob. Returns <code>IPP_STATUS_OK</code>
+<p class="discussion">This function closes a job and starts printing.  Use when the last call to
+<a href="#cupsStartDestDocument"><code>cupsStartDestDocument</code></a> passed <code>false</code> for &quot;last_document&quot;.  &quot;job_id&quot;
+is the job ID returned by <a href="#cupsCreateDestJob"><code>cupsCreateDestJob</code></a>.  Returns <code>IPP_STATUS_OK</code>
 on success.</p>
 <h3 class="function"><a id="cupsConcatString">cupsConcatString</a></h3>
 <p class="description">Safely concatenate two strings.</p>
@@ -2920,7 +2963,7 @@ ipp_status_t cupsCreateDestJob(<a href="#http_t">http_t</a> *http, <a href="#cup
 <tr><th>info</th>
 <td class="description">Destination information</td></tr>
 <tr><th>job_id</th>
-<td class="description">Job ID or 0 on error</td></tr>
+<td class="description">Job ID or <code>0</code> on error</td></tr>
 <tr><th>title</th>
 <td class="description">Job name</td></tr>
 <tr><th>num_options</th>
@@ -2931,7 +2974,15 @@ ipp_status_t cupsCreateDestJob(<a href="#http_t">http_t</a> *http, <a href="#cup
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">IPP status code</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">Returns <code>IPP_STATUS_OK</code> or <code>IPP_STATUS_OK_SUBST</code> on success, saving the job ID
+<p class="discussion">This function creates a job on the specified destination &quot;dest&quot;.  The &quot;info&quot;
+argument contains information about the destination obtained using the
+<a href="#cupsCopyDestInfo"><code>cupsCopyDestInfo</code></a> function.<br>
+<br>
+The &quot;job_id&quot; argument provides an integer to hold the new job's ID number.
+The &quot;title&quot; argument provides the title of the job.  The &quot;num_options&quot; and
+&quot;options&quot; arguments provide an array of job options for the job.<br>
+<br>
+Returns <code>IPP_STATUS_OK</code> or <code>IPP_STATUS_OK_SUBST</code> on success, saving the job ID
 in the variable pointed to by &quot;job_id&quot;.</p>
 <h3 class="function"><a id="cupsDNSSDAssembleFullName">cupsDNSSDAssembleFullName</a></h3>
 <p class="description">Create a full service name from the instance
@@ -3437,7 +3488,7 @@ void cupsDirRewind(<a href="#cups_dir_t">cups_dir_t</a> *dp);</p>
 <h3 class="function"><a id="cupsDoAuthentication">cupsDoAuthentication</a></h3>
 <p class="description">Authenticate a request.</p>
 <p class="code">
-int cupsDoAuthentication(<a href="#http_t">http_t</a> *http, const char *method, const char *resource);</p>
+bool cupsDoAuthentication(<a href="#http_t">http_t</a> *http, const char *method, const char *resource);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>http</th>
@@ -3448,10 +3499,11 @@ int cupsDoAuthentication(<a href="#http_t">http_t</a> *http, const char *method,
 <td class="description">Resource path</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">0 on success, -1 on error</p>
+<p class="description"><code>true</code> on success, <code>false</code> on failure/error</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">This function should be called in response to a <code>HTTP_STATUS_UNAUTHORIZED</code>
-status, prior to resubmitting your request.</p>
+<p class="discussion">This function performs authentication for a request.  It should be called in
+response to a <code>HTTP_STATUS_UNAUTHORIZED</code> status, prior to resubmitting your
+request.</p>
 <h3 class="function"><a id="cupsDoFileRequest">cupsDoFileRequest</a></h3>
 <p class="description">Do an IPP request with a file.</p>
 <p class="code">
@@ -3791,7 +3843,11 @@ int cupsFileNumber(<a href="#cups_file_t">cups_file_t</a> *fp);</p>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">CUPS file or <code>NULL</code> if the file or socket cannot be opened</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The &quot;mode&quot; parameter can be &quot;r&quot; to read, &quot;w&quot; to write, overwriting any
+<p class="discussion">This function opens a file or socket for use with the CUPS file API.<br>
+<br>
+The &quot;filename&quot; argument is a filename or socket address.<br>
+<br>
+The &quot;mode&quot; parameter can be &quot;r&quot; to read, &quot;w&quot; to write, overwriting any
 existing file, &quot;a&quot; to append to an existing file or create a new file,
 or &quot;s&quot; to open a socket connection.<br>
 <br>
@@ -3817,7 +3873,11 @@ a choice.</p>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">CUPS file or <code>NULL</code> if the file could not be opened</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The &quot;mode&quot; parameter can be &quot;r&quot; to read, &quot;w&quot; to write, &quot;a&quot; to append,
+<p class="discussion">This function prepares a file descriptor for use with the CUPS file API.<br>
+<br>
+The &quot;fd&quot; argument specifies the file descriptor.<br>
+<br>
+The &quot;mode&quot; argument can be &quot;r&quot; to read, &quot;w&quot; to write, &quot;a&quot; to append,
 or &quot;s&quot; to treat the file descriptor as a bidirectional socket connection.<br>
 <br>
 When opening for writing (&quot;w&quot;), an optional number from <code>1</code> to <code>9</code> can be
@@ -4073,7 +4133,11 @@ ipp_status_t cupsFinishDestDocument(<a href="#http_t">http_t</a> *http, <a href=
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Status of document submission</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">Returns <code>IPP_STATUS_OK</code> or <code>IPP_STATUS_OK_SUBST</code> on success.</p>
+<p class="discussion">This function finished the current document for a job on the specified
+destination &quot;dest&quot;.  The &quot;info&quot; argument contains information about the
+destination obtained using the <a href="#cupsCopyDestInfo"><code>cupsCopyDestInfo</code></a> function.<br>
+<br>
+Returns <code>IPP_STATUS_OK</code> or <code>IPP_STATUS_OK_SUBST</code> on success.</p>
 <h3 class="function"><a id="cupsFormDecode">cupsFormDecode</a></h3>
 <p class="description">Decode URL-encoded form data.</p>
 <p class="code">
@@ -4156,6 +4220,47 @@ void cupsFreeOptions(size_t num_options, <a href="#cups_option_t">cups_option_t<
 <tr><th>options</th>
 <td class="description">Pointer to options</td></tr>
 </tbody></table>
+<h3 class="function"><a id="cupsGetCredentialsExpiration">cupsGetCredentialsExpiration</a></h3>
+<p class="description">Return the expiration date of the credentials.</p>
+<p class="code">
+time_t cupsGetCredentialsExpiration(const char *credentials);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>credentials</th>
+<td class="description">Credentials</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Expiration date of credentials</p>
+<h3 class="function"><a id="cupsGetCredentialsInfo">cupsGetCredentialsInfo</a></h3>
+<p class="description">Return a string describing the credentials.</p>
+<p class="code">
+char *cupsGetCredentialsInfo(const char *credentials, char *buffer, size_t bufsize);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>credentials</th>
+<td class="description">Credentials</td></tr>
+<tr><th>buffer</th>
+<td class="description">Buffer</td></tr>
+<tr><th>bufsize</th>
+<td class="description">Size of buffer</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Credentials description or <code>NULL</code> on error</p>
+<h3 class="function"><a id="cupsGetCredentialsTrust">cupsGetCredentialsTrust</a></h3>
+<p class="description">Return the trust of credentials.</p>
+<p class="code">
+<a href="#http_trust_t">http_trust_t</a> cupsGetCredentialsTrust(const char *path, const char *common_name, const char *credentials);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>path</th>
+<td class="description">Directory path for certificate/key store or <code>NULL</code> for default</td></tr>
+<tr><th>common_name</th>
+<td class="description">Common name for trust lookup</td></tr>
+<tr><th>credentials</th>
+<td class="description">Credentials</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Level of trust</p>
 <h3 class="function"><a id="cupsGetDefault">cupsGetDefault</a></h3>
 <p class="description">Get the default printer or class for the specified server.</p>
 <p class="code">
@@ -4498,10 +4603,17 @@ size_t cupsGetJobs(<a href="#http_t">http_t</a> *http, <a href="#cups_job_t">cup
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Number of jobs</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">A &quot;whichjobs&quot; value of <code>CUPS_WHICHJOBS_ALL</code> returns all jobs regardless of
-state, while <code>CUPS_WHICHJOBS_ACTIVE</code> returns jobs that are pending,
-processing, or held and <code>CUPS_WHICHJOBS_COMPLETED</code> returns jobs that are
-stopped, canceled, aborted, or completed.</p>
+<p class="discussion">This function gets an array of jobs from the specified server.<br>
+<br>
+The &quot;name&quot; argument specifies a destination name.  The &quot;myjobs&quot; argument
+specifies whether to only show jobs for the current user (<code>true</code>) or for
+all users (<code>false</code>).<br>
+<br>
+The &quot;whichjobs&quot; argument specifies which jobs to return -
+<code>CUPS_WHICHJOBS_ALL</code> to return all jobs regardless of state,
+<code>CUPS_WHICHJOBS_ACTIVE</code> to return jobs that are pending, processing, or held,
+and <code>CUPS_WHICHJOBS_COMPLETED</code> to return jobs that are stopped, canceled,
+aborted, or completed.</p>
 <h3 class="function"><a id="cupsGetNamedDest">cupsGetNamedDest</a></h3>
 <p class="description">Get options for the named destination.</p>
 <p class="code">
@@ -5510,6 +5622,38 @@ const char *cupsLocalizeDestValue(<a href="#http_t">http_t</a> *http, <a href="#
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">The returned string is stored in the destination information and will become
 invalid if the destination information is deleted.</p>
+<h3 class="function"><a id="cupsLocalizeNotifySubject">cupsLocalizeNotifySubject</a></h3>
+<p class="description">Return the localized subject for the given notification message.</p>
+<p class="code">
+char *cupsLocalizeNotifySubject(<a href="#cups_lang_t">cups_lang_t</a> *lang, <a href="#ipp_t">ipp_t</a> *event);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>lang</th>
+<td class="description">Language data</td></tr>
+<tr><th>event</th>
+<td class="description">Event data</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Subject string or <code>NULL</code></p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function returns a localized subject string for the given notification
+message.  The returned string must be freed by the caller using <code>free</code>.</p>
+<h3 class="function"><a id="cupsLocalizeNotifyText">cupsLocalizeNotifyText</a></h3>
+<p class="description">Return the localized text for the given notification message.</p>
+<p class="code">
+char *cupsLocalizeNotifyText(<a href="#cups_lang_t">cups_lang_t</a> *lang, <a href="#ipp_t">ipp_t</a> *event);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>lang</th>
+<td class="description">Language data</td></tr>
+<tr><th>event</th>
+<td class="description">Event data</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Message text or <code>NULL</code></p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function returns a localized text string for the given notification
+message.  The returned string must be freed by the caller using <code>free</code>.</p>
 <h3 class="function"><a id="cupsMutexDestroy">cupsMutexDestroy</a></h3>
 <p class="description">Destroy a mutex.</p>
 <p class="code">
@@ -5546,38 +5690,6 @@ void cupsMutexUnlock(<a href="#cups_mutex_t">cups_mutex_t</a> *mutex);</p>
 <tr><th>mutex</th>
 <td class="description">Mutex</td></tr>
 </tbody></table>
-<h3 class="function"><a id="cupsNotifySubject">cupsNotifySubject</a></h3>
-<p class="description">Return the localized subject for the given notification message.</p>
-<p class="code">
-char *cupsNotifySubject(<a href="#cups_lang_t">cups_lang_t</a> *lang, <a href="#ipp_t">ipp_t</a> *event);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>lang</th>
-<td class="description">Language data</td></tr>
-<tr><th>event</th>
-<td class="description">Event data</td></tr>
-</tbody></table>
-<h4 class="returnvalue">Return Value</h4>
-<p class="description">Subject string or <code>NULL</code></p>
-<h4 class="discussion">Discussion</h4>
-<p class="discussion">This function returns a localized subject string for the given notification
-message.  The returned string must be freed by the caller using <code>free</code>.</p>
-<h3 class="function"><a id="cupsNotifyText">cupsNotifyText</a></h3>
-<p class="description">Return the localized text for the given notification message.</p>
-<p class="code">
-char *cupsNotifyText(<a href="#cups_lang_t">cups_lang_t</a> *lang, <a href="#ipp_t">ipp_t</a> *event);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>lang</th>
-<td class="description">Language data</td></tr>
-<tr><th>event</th>
-<td class="description">Event data</td></tr>
-</tbody></table>
-<h4 class="returnvalue">Return Value</h4>
-<p class="description">Message text or <code>NULL</code></p>
-<h4 class="discussion">Discussion</h4>
-<p class="discussion">This function returns a localized text string for the given notification
-message.  The returned string must be freed by the caller using <code>free</code>.</p>
 <h3 class="function"><a id="cupsParseOptions">cupsParseOptions</a></h3>
 <p class="description">Parse options from a command-line argument.</p>
 <p class="code">
@@ -5942,6 +6054,27 @@ size_t cupsRemoveOption(const char *name, size_t num_options, <a href="#cups_opt
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">New number of options</p>
+<h3 class="function"><a id="cupsSaveCredentials">cupsSaveCredentials</a></h3>
+<p class="description">Save the credentials associated with a printer/server.</p>
+<p class="code">
+bool cupsSaveCredentials(const char *path, const char *common_name, const char *credentials, const char *key);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>path</th>
+<td class="description">Directory path for certificate/key store or <code>NULL</code> for default</td></tr>
+<tr><th>common_name</th>
+<td class="description">Common name for certificate</td></tr>
+<tr><th>credentials</th>
+<td class="description">PEM-encoded certificate chain</td></tr>
+<tr><th>key</th>
+<td class="description">PEM-encoded private key or <code>NULL</code> for none</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description"><code>true</code> on success, <code>false</code> on failure</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function saves the the PEM-encoded X.509 certificate chain string and
+private key (if not <code>NULL</code>) to the directory &quot;path&quot; or, if &quot;path&quot; is <code>NULL</code>,
+in a per-user or system-wide (when running as root) certificate/key store.</p>
 <h3 class="function"><a id="cupsSendRequest">cupsSendRequest</a></h3>
 <p class="description">Send an IPP request.</p>
 <p class="code">
@@ -5989,14 +6122,14 @@ Note: The current certificate callback is tracked separately for each thread
 in a program. Multi-threaded programs that override the callback need to do
 so in each thread for the same callback to be used.</p>
 <h3 class="function"><a id="cupsSetCredentials">cupsSetCredentials</a></h3>
-<p class="description">Set the default credentials to be used for SSL/TLS
+<p class="description">Set the default credentials to be used for TLS
 			    connections.</p>
 <p class="code">
-bool cupsSetCredentials(<a href="#cups_array_t">cups_array_t</a> *credentials);</p>
+bool cupsSetCredentials(const char *credentials);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>credentials</th>
-<td class="description">Array of credentials</td></tr>
+<td class="description">PEM-encoded X.509 credentials string</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description"><code>true</code> on success, <code>false</code> on failure</p>
@@ -6306,12 +6439,28 @@ Unix <code>time_t</code> value in seconds.</p>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Status of document creation</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">&quot;job_id&quot; is the job ID returned by cupsCreateDestJob.  &quot;docname&quot; is the name
-of the document/file being printed, &quot;format&quot; is the MIME media type for the
-document (see CUPS_FORMAT_xxx constants), and &quot;num_options&quot; and &quot;options&quot;
-are the options do be applied to the document. &quot;last_document&quot; should be
-<code>true</code> if this is the last document to be submitted in the job.  Returns
-<code>HTTP_CONTINUE</code> on success.</p>
+<p class="discussion">This function starts a new document for the specified destination &quot;dest&quot; and
+job &quot;job_id&quot;.  The &quot;info&quot; argument contains information about the destination
+obtained using the <a href="#cupsCopyDestInfo"><code>cupsCopyDestInfo</code></a> function.<br>
+<br>
+The &quot;docname&quot; argument specifies the name of the document/file being printed.
+The &quot;format&quot; argument specifies the MIME media type for the document; the
+following constants are provided for convenience:
+
+</p><ul>
+<li><code>CUPS_FORMAT_AUTO</code>: Auto-type the file using its contents
+</li>
+<li><code>CUPS_FORMAT_JPEG</code>: JPEG image file
+</li>
+<li><code>CUPS_FORMAT_PDF</code>: PDF file
+</li>
+<li><code>CUPS_FORMAT_TEXT</code>: Plain text file</li>
+</ul>
+<p class="discussion">The &quot;num_options&quot; and &quot;options&quot; arguments provide the options to be applied
+to the document.  The &quot;last_document&quot; argument specifies whether this is the
+final document in the job (<code>true</code>) or not (<code>false</code>).<br>
+<br>
+Returns <code>HTTP_CONTINUE</code> on success.</p>
 <h3 class="function"><a id="cupsTempFd">cupsTempFd</a></h3>
 <p class="description">Creates a temporary file.</p>
 <p class="code">
@@ -6470,8 +6619,7 @@ C string to a UTF-32 (32-bit encoding of Unicode) string.</p>
 <p class="discussion">This function is used after <a href="#cupsSendRequest"><code>cupsSendRequest</code></a> to provide a PPD and
 after <a href="#cupsStartDocument"><code>cupsStartDocument</code></a> to provide a document file.</p>
 <h3 class="function"><a id="httpAcceptConnection">httpAcceptConnection</a></h3>
-<p class="description">Accept a new HTTP client connection from the
-                           specified listening socket.</p>
+<p class="description">Accept a new HTTP client connection.</p>
 <p class="code">
 <a href="#http_t">http_t</a> *httpAcceptConnection(int fd, bool blocking);</p>
 <h4 class="parameters">Parameters</h4>
@@ -6483,23 +6631,10 @@ after <a href="#cupsStartDocument"><code>cupsStartDocument</code></a> to provide
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">HTTP connection or <code>NULL</code></p>
-<h3 class="function"><a id="httpAddCredential">httpAddCredential</a></h3>
-<p class="description">Allocates and adds a single credential to an array.</p>
-<p class="code">
-bool httpAddCredential(<a href="#cups_array_t">cups_array_t</a> *credentials, const void *data, size_t datalen);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>credentials</th>
-<td class="description">Credentials array</td></tr>
-<tr><th>data</th>
-<td class="description">PEM-encoded X.509 data</td></tr>
-<tr><th>datalen</th>
-<td class="description">Length of data</td></tr>
-</tbody></table>
-<h4 class="returnvalue">Return Value</h4>
-<p class="description"><code>true</code> on success, <code>false</code> on error</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">Use <code>httpCreateCredentials</code> to create a credentials array.</p>
+<p class="discussion">This function accepts a new HTTP client connection from the specified
+listening socket &quot;fd&quot;.  The &quot;blocking&quot; argument specifies whether the new
+HTTP connection is blocking.</p>
 <h3 class="function"><a id="httpAddrClose">httpAddrClose</a></h3>
 <p class="description">Close a socket created by <a href="#httpAddrConnect"><code>httpAddrConnect</code></a> or
                     <a href="#httpAddrListen"><code>httpAddrListen</code></a>.</p>
@@ -6785,17 +6920,6 @@ name, port number, random data, and optionally an object name and/or object
 number.  The result is formatted as a UUID URN as defined in RFC 4122.<br>
 <br>
 The buffer needs to be at least 46 bytes in size.</p>
-<h3 class="function"><a id="httpCheck">httpCheck</a></h3>
-<p class="description">Check to see if there is a pending response from the server.</p>
-<p class="code">
-bool httpCheck(<a href="#http_t">http_t</a> *http);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>http</th>
-<td class="description">HTTP connection</td></tr>
-</tbody></table>
-<h4 class="returnvalue">Return Value</h4>
-<p class="description"><code>true</code> when data is available, <code>false</code> otherwise</p>
 <h3 class="function"><a id="httpClearCookie">httpClearCookie</a></h3>
 <p class="description">Clear the cookie value(s).</p>
 <p class="code">
@@ -6806,7 +6930,7 @@ void httpClearCookie(<a href="#http_t">http_t</a> *http);</p>
 <td class="description">HTTP connection</td></tr>
 </tbody></table>
 <h3 class="function"><a id="httpClearFields">httpClearFields</a></h3>
-<p class="description">Clear HTTP request fields.</p>
+<p class="description">Clear HTTP request/response fields.</p>
 <p class="code">
 void httpClearFields(<a href="#http_t">http_t</a> *http);</p>
 <h4 class="parameters">Parameters</h4>
@@ -6815,7 +6939,7 @@ void httpClearFields(<a href="#http_t">http_t</a> *http);</p>
 <td class="description">HTTP connection</td></tr>
 </tbody></table>
 <h3 class="function"><a id="httpClose">httpClose</a></h3>
-<p class="description">Close an HTTP connection.</p>
+<p class="description">Close a HTTP connection.</p>
 <p class="code">
 void httpClose(<a href="#http_t">http_t</a> *http);</p>
 <h4 class="parameters">Parameters</h4>
@@ -6823,19 +6947,6 @@ void httpClose(<a href="#http_t">http_t</a> *http);</p>
 <tr><th>http</th>
 <td class="description">HTTP connection</td></tr>
 </tbody></table>
-<h3 class="function"><a id="httpCompareCredentials">httpCompareCredentials</a></h3>
-<p class="description">Compare two sets of X.509 credentials.</p>
-<p class="code">
-bool httpCompareCredentials(<a href="#cups_array_t">cups_array_t</a> *cred1, <a href="#cups_array_t">cups_array_t</a> *cred2);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>cred1</th>
-<td class="description">First set of X.509 credentials</td></tr>
-<tr><th>cred2</th>
-<td class="description">Second set of X.509 credentials</td></tr>
-</tbody></table>
-<h4 class="returnvalue">Return Value</h4>
-<p class="description"><code>true</code> if they match, <code>false</code> if they do not</p>
 <h3 class="function"><a id="httpConnect">httpConnect</a></h3>
 <p class="description">Connect to a HTTP server.</p>
 <p class="code">
@@ -6861,89 +6972,33 @@ bool httpCompareCredentials(<a href="#cups_array_t">cups_array_t</a> *cred1, <a 
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">New HTTP connection</p>
-<h3 class="function"><a id="httpCopyCredentials">httpCopyCredentials</a></h3>
-<p class="description">Copy the credentials associated with the peer in
-                          an encrypted connection.</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function creates a connection to a HTTP server.  The &quot;host&quot; and &quot;port&quot;
+arguments specify a hostname or IP address and port number to use while the
+&quot;addrlist&quot; argument specifies a list of addresses to use or <code>NULL</code> to do a
+fresh lookup.  The &quot;family&quot; argument specifies the address family to use -
+<code>AF_UNSPEC</code> to try both IPv4 and IPv6, <code>AF_INET</code> for IPv4, or <code>AF_INET6</code> for
+IPv6.<br>
+<br>
+The &quot;encryption&quot; argument specifies whether to encrypt the connection and the
+&quot;blocking&quot; argument specifies whether to use blocking behavior when reading
+or writing data.<br>
+<br>
+The &quot;msec&quot; argument specifies how long to try to connect to the server or <code>0</code>
+to just create an unconnected <code>http_t</code> object.  The &quot;cancel&quot; argument
+specifies an integer variable that can be set to a non-zero value to cancel
+the connection process.</p>
+<h3 class="function"><a id="httpCopyPeerCredentials">httpCopyPeerCredentials</a></h3>
+<p class="description">Copy the credentials associated with the peer in an encrypted connection.</p>
 <p class="code">
-bool httpCopyCredentials(<a href="#http_t">http_t</a> *http, <a href="#cups_array_t">cups_array_t</a> **credentials);</p>
+char *httpCopyPeerCredentials(<a href="#http_t">http_t</a> *http);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>http</th>
 <td class="description">Connection to server</td></tr>
-<tr><th>credentials</th>
-<td class="description">Array of credentials</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">Status of call (<code>true</code> = success)</p>
-<h3 class="function"><a id="httpCreateCredentials">httpCreateCredentials</a></h3>
-<p class="description">Create a new array of HTTP credentials.</p>
-<p class="code">
-<a href="#cups_array_t">cups_array_t</a> *httpCreateCredentials(const void *data, size_t datalen);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>data</th>
-<td class="description">PEM-encoded X.509 data</td></tr>
-<tr><th>datalen</th>
-<td class="description">Length of data</td></tr>
-</tbody></table>
-<h4 class="returnvalue">Return Value</h4>
-<p class="description">Array</p>
-<h4 class="discussion">Discussion</h4>
-<p class="discussion">This function creates a new array of HTTP credentials for use with the
-<a href="#httpAddCredentials"><code>httpAddCredentials</code></a> and <a href="#httpSetCredentials"><code>httpSetCredentials</code></a> functions.</p>
-<h3 class="function"><a id="httpCredentialsAreValidForName">httpCredentialsAreValidForName</a></h3>
-<p class="description">Return whether the credentials are valid
-                                     for the given name.</p>
-<p class="code">
-bool httpCredentialsAreValidForName(<a href="#cups_array_t">cups_array_t</a> *credentials, const char *common_name);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>credentials</th>
-<td class="description">Credentials</td></tr>
-<tr><th>common_name</th>
-<td class="description">Name to check</td></tr>
-</tbody></table>
-<h4 class="returnvalue">Return Value</h4>
-<p class="description"><code>true</code> if valid, <code>false</code> otherwise</p>
-<h3 class="function"><a id="httpCredentialsGetExpiration">httpCredentialsGetExpiration</a></h3>
-<p class="description">Return the expiration date of the credentials.</p>
-<p class="code">
-time_t httpCredentialsGetExpiration(<a href="#cups_array_t">cups_array_t</a> *credentials);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>credentials</th>
-<td class="description">Credentials</td></tr>
-</tbody></table>
-<h4 class="returnvalue">Return Value</h4>
-<p class="description">Expiration date of credentials</p>
-<h3 class="function"><a id="httpCredentialsGetTrust">httpCredentialsGetTrust</a></h3>
-<p class="description">Return the trust of credentials.</p>
-<p class="code">
-<a href="#http_trust_t">http_trust_t</a> httpCredentialsGetTrust(<a href="#cups_array_t">cups_array_t</a> *credentials, const char *common_name);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>credentials</th>
-<td class="description">Credentials</td></tr>
-<tr><th>common_name</th>
-<td class="description">Common name for trust lookup</td></tr>
-</tbody></table>
-<h4 class="returnvalue">Return Value</h4>
-<p class="description">Level of trust</p>
-<h3 class="function"><a id="httpCredentialsString">httpCredentialsString</a></h3>
-<p class="description">Return a string representing the credentials.</p>
-<p class="code">
-size_t httpCredentialsString(<a href="#cups_array_t">cups_array_t</a> *credentials, char *buffer, size_t bufsize);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>credentials</th>
-<td class="description">Credentials</td></tr>
-<tr><th>buffer</th>
-<td class="description">Buffer</td></tr>
-<tr><th>bufsize</th>
-<td class="description">Size of buffer</td></tr>
-</tbody></table>
-<h4 class="returnvalue">Return Value</h4>
-<p class="description">Total size of credentials string</p>
+<p class="description">PEM-encoded X.509 certificate chain or <code>NULL</code></p>
 <h3 class="function"><a id="httpDecode64">httpDecode64</a></h3>
 <p class="description">Base64-decode a string.</p>
 <p class="code">
@@ -6997,17 +7052,6 @@ char *httpEncode64(char *out, size_t outlen, const char *in, size_t inlen, bool 
 <p class="discussion">This function encodes a Base64 string as defined by RFC 4648.  The &quot;url&quot;
 parameter controls whether the original Base64 (&quot;url&quot; = <code>false</code>) or the
 Base64url (&quot;url&quot; = <code>true</code>) alphabet is used.</p>
-<h3 class="function"><a id="httpError">httpError</a></h3>
-<p class="description">Get the last error on a connection.</p>
-<p class="code">
-int httpError(<a href="#http_t">http_t</a> *http);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>http</th>
-<td class="description">HTTP connection</td></tr>
-</tbody></table>
-<h4 class="returnvalue">Return Value</h4>
-<p class="description">Error code (errno) value</p>
 <h3 class="function"><a id="httpFieldValue">httpFieldValue</a></h3>
 <p class="description">Return the HTTP field enumeration value for a field
                      name.</p>
@@ -7040,15 +7084,6 @@ int httpFlushWrite(<a href="#http_t">http_t</a> *http);</p>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Bytes written or -1 on error</p>
-<h3 class="function"><a id="httpFreeCredentials">httpFreeCredentials</a></h3>
-<p class="description">Free an array of credentials.</p>
-<p class="code">
-void httpFreeCredentials(<a href="#cups_array_t">cups_array_t</a> *credentials);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>credentials</th>
-<td class="description">Array of credentials</td></tr>
-</tbody></table>
 <h3 class="function"><a id="httpGetActivity">httpGetActivity</a></h3>
 <p class="description">Get the most recent activity for a connection.</p>
 <p class="code">
@@ -7082,7 +7117,7 @@ Returns <code>NULL</code> if the socket is currently unconnected.</p>
 <h3 class="function"><a id="httpGetAuthString">httpGetAuthString</a></h3>
 <p class="description">Get the current authorization string.</p>
 <p class="code">
-char *httpGetAuthString(<a href="#http_t">http_t</a> *http);</p>
+const char *httpGetAuthString(<a href="#http_t">http_t</a> *http);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>http</th>
@@ -7117,9 +7152,7 @@ const char *httpGetContentEncoding(<a href="#http_t">http_t</a> *http);</p>
 <td class="description">HTTP connection</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">Content-Coding value or
-<code>NULL</code> for the identity
-coding.</p>
+<p class="description">Content-Coding value or <code>NULL</code> for the identity coding.</p>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">This function uses the value of the Accepts-Encoding HTTP header and must be
 called after receiving a response from the server or a request from the
@@ -7177,6 +7210,17 @@ time_t httpGetDateTime(const char *s);</p>
 <p class="discussion">This function returns the encryption mode for the connection. Use the
 <a href="#httpIsEncrypted"><code>httpIsEncrypted</code></a> function to determine whether a TLS session has
 been established.</p>
+<h3 class="function"><a id="httpGetError">httpGetError</a></h3>
+<p class="description">Get the last error on a connection.</p>
+<p class="code">
+int httpGetError(<a href="#http_t">http_t</a> *http);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>http</th>
+<td class="description">HTTP connection</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Error code (errno) value</p>
 <h3 class="function"><a id="httpGetExpect">httpGetExpect</a></h3>
 <p class="description">Get the value of the Expect header, if any.</p>
 <p class="code">
@@ -7367,8 +7411,7 @@ char *httpGets(<a href="#http_t">http_t</a> *http, char *line, size_t length);</
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Line or <code>NULL</code></p>
 <h3 class="function"><a id="httpInitialize">httpInitialize</a></h3>
-<p class="description">Initialize the HTTP interface library and set the
-                     default HTTP proxy (if any).</p>
+<p class="description">Initialize the HTTP interface library and set the default HTTP proxy (if any).</p>
 <p class="code">
 void httpInitialize(void);</p>
 <h3 class="function"><a id="httpIsChunked">httpIsChunked</a></h3>
@@ -7398,21 +7441,6 @@ bool httpIsEncrypted(<a href="#http_t">http_t</a> *http);</p>
 <p class="description"><code>true</code> if encrypted, <code>false</code> if not</p>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">This function returns <code>true</code> if the connection is currently encrypted.</p>
-<h3 class="function"><a id="httpLoadCredentials">httpLoadCredentials</a></h3>
-<p class="description">Load X.509 credentials from a keychain file.</p>
-<p class="code">
-bool httpLoadCredentials(const char *path, <a href="#cups_array_t">cups_array_t</a> **credentials, const char *common_name);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>path</th>
-<td class="description">Keychain/PKCS#12 path</td></tr>
-<tr><th>credentials</th>
-<td class="description">Credentials</td></tr>
-<tr><th>common_name</th>
-<td class="description">Common name for credentials</td></tr>
-</tbody></table>
-<h4 class="returnvalue">Return Value</h4>
-<p class="description"><code>true</code> on success, <code>false</code> on error</p>
 <h3 class="function"><a id="httpPeek">httpPeek</a></h3>
 <p class="description">Peek at data from a HTTP connection.</p>
 <p class="code">
@@ -7434,6 +7462,21 @@ a buffer as needed.  The data is still available for reading using
 <a href="#httpRead"><code>httpRead</code></a>.<br>
 <br>
 For non-blocking connections the usual timeouts apply.</p>
+<h3 class="function"><a id="httpPrintf">httpPrintf</a></h3>
+<p class="description">Print a formatted string to a HTTP connection.</p>
+<p class="code">
+ssize_t httpPrintf(<a href="#http_t">http_t</a> *http, const char *format, ...);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>http</th>
+<td class="description">HTTP connection</td></tr>
+<tr><th>format</th>
+<td class="description">printf-style format string</td></tr>
+<tr><th>...</th>
+<td class="description">Additional args as needed</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Number of bytes written or <code>-1</code> on error</p>
 <h3 class="function"><a id="httpRead">httpRead</a></h3>
 <p class="description">Read data from a HTTP connection.</p>
 <p class="code">
@@ -7533,21 +7576,6 @@ terminated.  The callback is provided the &quot;cb_data&quot; value and returns 
 <code>bool</code> value that is <code>true</code> to continue and <code>false</code> to stop.  If no callback
 is specified (&quot;cb&quot; is <code>NULL</code>), then this function will block up to 90 seconds
 to resolve the specified URI.</p>
-<h3 class="function"><a id="httpSaveCredentials">httpSaveCredentials</a></h3>
-<p class="description">Save X.509 credentials to a keychain file.</p>
-<p class="code">
-bool httpSaveCredentials(const char *path, <a href="#cups_array_t">cups_array_t</a> *credentials, const char *common_name);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>path</th>
-<td class="description">Keychain/PKCS#12 path</td></tr>
-<tr><th>credentials</th>
-<td class="description">Credentials</td></tr>
-<tr><th>common_name</th>
-<td class="description">Common name for credentials</td></tr>
-</tbody></table>
-<h4 class="returnvalue">Return Value</h4>
-<p class="description"><code>true</code> on success, <code>false</code> on error</p>
 <h3 class="function"><a id="httpSeparateURI">httpSeparateURI</a></h3>
 <p class="description">Separate a Universal Resource Identifier into its
                       components.</p>
@@ -7601,14 +7629,18 @@ connection object.  You must still call <a href="#httpSetField"><code>httpSetFie
 <h3 class="function"><a id="httpSetBlocking">httpSetBlocking</a></h3>
 <p class="description">Set blocking/non-blocking behavior on a connection.</p>
 <p class="code">
-void httpSetBlocking(<a href="#http_t">http_t</a> *http, bool b);</p>
+void httpSetBlocking(<a href="#http_t">http_t</a> *http, bool blocking);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>http</th>
 <td class="description">HTTP connection</td></tr>
-<tr><th>b</th>
+<tr><th>blocking</th>
 <td class="description"><code>true</code> = blocking, <code>false</code> = non-blocking</td></tr>
 </tbody></table>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function sets whether a connection uses blocking behavior when reading
+or writing data.  The &quot;http&quot; argument specifies the HTTP connection and the
+&quot;blocking&quot; argument specifies whether to use blocking behavior.</p>
 <h3 class="function"><a id="httpSetCookie">httpSetCookie</a></h3>
 <p class="description">Set the cookie value(s).</p>
 <p class="code">
@@ -7621,21 +7653,20 @@ void httpSetCookie(<a href="#http_t">http_t</a> *http, const char *cookie);</p>
 <td class="description">Cookie string</td></tr>
 </tbody></table>
 <h3 class="function"><a id="httpSetCredentials">httpSetCredentials</a></h3>
-<p class="description">Set the credentials associated with an encrypted
-			    connection.</p>
+<p class="description">Set the credentials associated with an encrypted connection.</p>
 <p class="code">
-bool httpSetCredentials(<a href="#http_t">http_t</a> *http, <a href="#cups_array_t">cups_array_t</a> *credentials);</p>
+bool httpSetCredentials(<a href="#http_t">http_t</a> *http, const char *credentials);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>http</th>
 <td class="description">HTTP connection</td></tr>
 <tr><th>credentials</th>
-<td class="description">Array of credentials</td></tr>
+<td class="description">Credentials string</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description"><code>true</code> on success, <code>false</code> on error</p>
 <h3 class="function"><a id="httpSetDefaultField">httpSetDefaultField</a></h3>
-<p class="description">Set the default value of an HTTP header.</p>
+<p class="description">Set the default value of a HTTP header.</p>
 <p class="code">
 void httpSetDefaultField(<a href="#http_t">http_t</a> *http, <a href="#http_field_t">http_field_t</a> field, const char *value);</p>
 <h4 class="parameters">Parameters</h4>
@@ -7648,13 +7679,13 @@ void httpSetDefaultField(<a href="#http_t">http_t</a> *http, <a href="#http_fiel
 <td class="description">Value</td></tr>
 </tbody></table>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">This function sets the default value for an HTTP header.<br>
+<p class="discussion">This function sets the default value for a HTTP header.<br>
 <br>
 </p><blockquote>
 <em>Note:</em> Currently only the <code>HTTP_FIELD_ACCEPT_ENCODING</code>,
 <code>HTTP_FIELD_SERVER</code>, and <code>HTTP_FIELD_USER_AGENT</code> fields can be set.</blockquote>
 <h3 class="function"><a id="httpSetEncryption">httpSetEncryption</a></h3>
-<p class="description">Set the required encryption on the link.</p>
+<p class="description">Set the required encryption on a HTTP connection.</p>
 <p class="code">
 bool httpSetEncryption(<a href="#http_t">http_t</a> *http, <a href="#http_encryption_t">http_encryption_t</a> e);</p>
 <h4 class="parameters">Parameters</h4>
@@ -7682,7 +7713,7 @@ void httpSetExpect(<a href="#http_t">http_t</a> *http, <a href="#http_status_t">
 <code>HTTP_STATUS_NONE</code> or <code>HTTP_STATUS_CONTINUE</code> is supported for the &quot;expect&quot;
 argument.</p>
 <h3 class="function"><a id="httpSetField">httpSetField</a></h3>
-<p class="description">Set the value of an HTTP header.</p>
+<p class="description">Set the value of a HTTP header.</p>
 <p class="code">
 void httpSetField(<a href="#http_t">http_t</a> *http, <a href="#http_field_t">http_field_t</a> field, const char *value);</p>
 <h4 class="parameters">Parameters</h4>
@@ -7736,7 +7767,7 @@ void httpSetTimeout(<a href="#http_t">http_t</a> *http, double timeout, <a href=
 <td class="description">Callback data pointer</td></tr>
 </tbody></table>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">This function sets the read/write timeouts for an HTTP connection with an
+<p class="discussion">This function sets the read/write timeouts for a HTTP connection with an
 optional timeout callback.  The timeout callback receives both the HTTP
 connection pointer and a user data pointer, and returns <code>true</code> to continue or
 <code>false</code> to error (time) out.
@@ -7750,7 +7781,7 @@ timeout_cb(http_t *http, void *user_data)
 </pre>
 </p>
 <h3 class="function"><a id="httpShutdown">httpShutdown</a></h3>
-<p class="description">Shutdown one side of an HTTP connection.</p>
+<p class="description">Shutdown one side of a HTTP connection.</p>
 <p class="code">
 void httpShutdown(<a href="#http_t">http_t</a> *http);</p>
 <h4 class="parameters">Parameters</h4>
@@ -7836,6 +7867,8 @@ ssize_t httpWrite(<a href="#http_t">http_t</a> *http, const char *buffer, size_t
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Number of bytes written</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">TODO: Expand this documentation to talk about chunking.</p>
 <h3 class="function"><a id="httpWriteRequest">httpWriteRequest</a></h3>
 <p class="description">Write a HTTP request.</p>
 <p class="code">

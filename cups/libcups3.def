@@ -67,6 +67,7 @@ cupsAddDest
 cupsAddDestMediaOptions
 cupsAddIntegerOption
 cupsAddOption
+cupsAreCredentialsValidForName
 cupsArrayAdd
 cupsArrayAddStrings
 cupsArrayClear
@@ -182,6 +183,9 @@ cupsFreeDestInfo
 cupsFreeDests
 cupsFreeJobs
 cupsFreeOptions
+cupsGetCredentialsExpiration
+cupsGetCredentialsInfo
+cupsGetCredentialsTrust
 cupsGetDefault
 cupsGetDest
 cupsGetDestMediaByIndex
@@ -321,7 +325,6 @@ cupsUTF8ToCharset
 cupsUTF8ToUTF32
 cupsWriteRequestData
 httpAcceptConnection
-httpAddCredential
 httpAddrClose
 httpAddrConnect
 httpAddrCopyList
@@ -343,20 +346,13 @@ httpAssembleUUID
 httpClearCookie
 httpClearFields
 httpClose
-httpCompareCredentials
 httpConnect
-httpCopyCredentials
-httpCreateCredentials
-httpCredentialsAreValidForName
-httpCredentialsGetExpiration
-httpCredentialsGetTrust
-httpCredentialsString
+httpCopyPeerCredentials
 httpDecode64
 httpEncode64
 httpFieldValue
 httpFlush
 httpFlushWrite
-httpFreeCredentials
 httpGetActivity
 httpGetAddress
 httpGetAuthString
@@ -384,7 +380,6 @@ httpGets
 httpInitialize
 httpIsChunked
 httpIsEncrypted
-httpLoadCredentials
 httpPeek
 httpPrintf
 httpRead
@@ -392,7 +387,6 @@ httpReadRequest
 httpReconnect
 httpResolveHostname
 httpResolveURI
-httpSaveCredentials
 httpSeparateURI
 httpSetAuthString
 httpSetBlocking

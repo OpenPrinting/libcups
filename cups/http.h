@@ -415,12 +415,6 @@ typedef struct http_addrlist_s		// Socket address list, which is used to enumera
 
 typedef struct _http_s http_t;		// HTTP connection type
 
-typedef struct http_credential_s	// HTTP credential data @exclude all@
-{
-  void		*data;			// Pointer to credential data
-  size_t	datalen;		// Credential length
-} http_credential_t;
-
 typedef bool (*http_resolve_cb_t)(void *data);
 					// @link httpResolveURI@ callback
 typedef bool (*http_timeout_cb_t)(http_t *http, void *user_data);
@@ -432,7 +426,6 @@ typedef bool (*http_timeout_cb_t)(http_t *http, void *user_data);
 //
 
 extern http_t		*httpAcceptConnection(int fd, bool blocking) _CUPS_PUBLIC;
-extern bool		httpAddCredential(cups_array_t *credentials, const void *data, size_t datalen) _CUPS_PUBLIC;
 extern bool		httpAddrClose(http_addr_t *addr, int fd) _CUPS_PUBLIC;
 extern http_addrlist_t	*httpAddrConnect(http_addrlist_t *addrlist, int *sock, int msec, int *cancel) _CUPS_PUBLIC;
 extern http_addrlist_t	*httpAddrCopyList(http_addrlist_t *src) _CUPS_PUBLIC;
@@ -455,14 +448,8 @@ extern char		*httpAssembleUUID(const char *server, int port, const char *name, i
 extern void		httpClearFields(http_t *http) _CUPS_PUBLIC;
 extern void		httpClose(http_t *http) _CUPS_PUBLIC;
 extern void		httpClearCookie(http_t *http) _CUPS_PUBLIC;
-extern bool		httpCompareCredentials(cups_array_t *cred1, cups_array_t *cred2) _CUPS_PUBLIC;
 extern http_t		*httpConnect(const char *host, int port, http_addrlist_t *addrlist, int family, http_encryption_t encryption, bool blocking, int msec, int *cancel) _CUPS_PUBLIC;
-extern bool		httpCopyCredentials(http_t *http, cups_array_t **credentials) _CUPS_PUBLIC;
-extern cups_array_t	*httpCreateCredentials(const void *data, size_t datalen) _CUPS_PUBLIC;
-extern bool		httpCredentialsAreValidForName(cups_array_t *credentials, const char *common_name);
-extern time_t		httpCredentialsGetExpiration(cups_array_t *credentials) _CUPS_PUBLIC;
-extern http_trust_t	httpCredentialsGetTrust(cups_array_t *credentials, const char *common_name) _CUPS_PUBLIC;
-extern size_t		httpCredentialsString(cups_array_t *credentials, char *buffer, size_t bufsize) _CUPS_PUBLIC;
+extern char		*httpCopyPeerCredentials(http_t *http) _CUPS_PUBLIC;
 
 extern char		*httpDecode64(char *out, size_t *outlen, const char *in, const char **end) _CUPS_PUBLIC;
 
@@ -471,7 +458,6 @@ extern char		*httpEncode64(char *out, size_t outlen, const char *in, size_t inle
 extern http_field_t	httpFieldValue(const char *name) _CUPS_PUBLIC;
 extern void		httpFlush(http_t *http) _CUPS_PUBLIC;
 extern int		httpFlushWrite(http_t *http) _CUPS_PUBLIC;
-extern void		httpFreeCredentials(cups_array_t *certs) _CUPS_PUBLIC;
 
 extern time_t		httpGetActivity(http_t *http) _CUPS_PUBLIC;
 extern http_addr_t	*httpGetAddress(http_t *http) _CUPS_PUBLIC;
@@ -502,8 +488,6 @@ extern void		httpInitialize(void) _CUPS_PUBLIC;
 extern bool		httpIsChunked(http_t *http) _CUPS_PUBLIC;
 extern bool		httpIsEncrypted(http_t *http) _CUPS_PUBLIC;
 
-extern bool		httpLoadCredentials(const char *path, cups_array_t **credentials, const char *common_name) _CUPS_PUBLIC;
-
 extern ssize_t		httpPeek(http_t *http, char *buffer, size_t length) _CUPS_PUBLIC;
 extern ssize_t		httpPrintf(http_t *http, const char *format, ...) _CUPS_FORMAT(2, 3) _CUPS_PUBLIC;
 
@@ -513,12 +497,11 @@ extern bool		httpReconnect(http_t *http, int msec, int *cancel) _CUPS_PUBLIC;
 extern const char	*httpResolveHostname(http_t *http, char *buffer, size_t bufsize) _CUPS_PUBLIC;
 extern const char	*httpResolveURI(const char *uri, char *resolved_uri, size_t resolved_size, http_resolve_t options, http_resolve_cb_t cb, void *cb_data) _CUPS_PUBLIC;
 
-extern bool		httpSaveCredentials(const char *path, cups_array_t *credentials, const char *common_name) _CUPS_PUBLIC;
 extern http_uri_status_t httpSeparateURI(http_uri_coding_t decoding, const char *uri, char *scheme, size_t schemelen, char *username, size_t usernamelen, char *host, size_t hostlen, int *port, char *resource, size_t resourcelen) _CUPS_PUBLIC;
 extern void		httpSetAuthString(http_t *http, const char *scheme, const char *data) _CUPS_PUBLIC;
 extern void		httpSetBlocking(http_t *http, bool b) _CUPS_PUBLIC;
 extern void		httpSetCookie(http_t *http, const char *cookie) _CUPS_PUBLIC;
-extern bool		httpSetCredentials(http_t *http, cups_array_t *certs) _CUPS_PUBLIC;
+extern bool		httpSetCredentials(http_t *http, const char *credentials) _CUPS_PUBLIC;
 extern void		httpSetDefaultField(http_t *http, http_field_t field, const char *value) _CUPS_PUBLIC;
 extern bool		httpSetEncryption(http_t *http, http_encryption_t e) _CUPS_PUBLIC;
 extern void		httpSetExpect(http_t *http, http_status_t expect) _CUPS_PUBLIC;

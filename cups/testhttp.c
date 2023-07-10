@@ -590,27 +590,28 @@ main(int  argc,				// I - Number of command-line arguments
 
     if (httpIsEncrypted(http))
     {
-      cups_array_t *creds;
+      char *creds;
       char info[1024], expstr[256];
       static const char *trusts[] = { "OK", "Invalid", "Changed", "Expired", "Renewed", "Unknown" };
-      if (!httpCopyCredentials(http, &creds))
+      if ((creds = httpCopyPeerCredentials(http)) != NULL)
       {
-	cups_array_t *lcreds;
-        http_trust_t trust = httpCredentialsGetTrust(creds, hostname);
+	char *lcreds;
+        http_trust_t trust = cupsGetCredentialsTrust(NULL, hostname, creds);
 
-        httpCredentialsString(creds, info, sizeof(info));
+        cupsGetCredentialsInfo(creds, info, sizeof(info));
 
-	printf("Count: %u\n", (unsigned)cupsArrayGetCount(creds));
+//	printf("Count: %u\n", (unsigned)cupsArrayGetCount(creds));
         printf("Trust: %s\n", trusts[trust]);
-        printf("Expiration: %s\n", httpGetDateString(httpCredentialsGetExpiration(creds), expstr, sizeof(expstr)));
-        printf("IsValidName: %s\n", httpCredentialsAreValidForName(creds, hostname) ? "true" : "false");
+        printf("Expiration: %s\n", httpGetDateString(cupsGetCredentialsExpiration(creds), expstr, sizeof(expstr)));
+        printf("IsValidName: %s\n", cupsAreCredentialsValidForName(hostname, creds) ? "true" : "false");
         printf("String: \"%s\"\n", info);
 
-	printf("LoadCredentials: %s\n", httpLoadCredentials(NULL, &lcreds, hostname) ? "true" : "false");
-	httpCredentialsString(lcreds, info, sizeof(info));
-	printf("    Count: %u\n", (unsigned)cupsArrayGetCount(lcreds));
+	printf("LoadCredentials: %s\n", (lcreds = cupsCopyCredentials(NULL, hostname)) != NULL ? "true" : "false");
+	cupsGetCredentialsInfo(lcreds, info, sizeof(info));
+//	printf("    Count: %u\n", (unsigned)cupsArrayGetCount(lcreds));
 	printf("    String: \"%s\"\n", info);
 
+#if 0
         if (lcreds && cupsArrayGetCount(creds) == cupsArrayGetCount(lcreds))
         {
           http_credential_t	*cred, *lcred;
@@ -627,18 +628,22 @@ main(int  argc,				// I - Number of command-line arguments
               printf("    Credential #%d: Matches\n", i);
           }
         }
+#endif // 0
 
         if (trust != HTTP_TRUST_OK)
 	{
-	  printf("SaveCredentials: %s\n", httpSaveCredentials(NULL, creds, hostname) ? "true" : "false");
-	  trust = httpCredentialsGetTrust(creds, hostname);
+	  printf("SaveCredentials: %s\n", cupsSaveCredentials(NULL, hostname, creds, /*key*/NULL) ? "true" : "false");
+	  trust = cupsGetCredentialsTrust(NULL, hostname, creds);
 	  printf("New Trust: %s\n", trusts[trust]);
 	}
 
-        httpFreeCredentials(creds);
+        free(creds);
+        free(lcreds);
       }
       else
+      {
         puts("No credentials!");
+      }
     }
 
     printf("Checking file \"%s\"...\n", resource);

@@ -64,8 +64,8 @@ typedef struct _cups_client_conf_s	// client.conf config data
   _cups_digestoptions_t	digestoptions;	// DigestOptions values
   _cups_uatokens_t	uatokens;	// UserAgentTokens values
   int			ssl_options,	// SSLOptions values
-			ssl_min_version,// Minimum SSL/TLS version
-			ssl_max_version;// Maximum SSL/TLS version
+			ssl_min_version,// Minimum TLS version
+			ssl_max_version;// Maximum TLS version
   int			trust_first,	// Trust on first use?
 			any_root,	// Allow any (e.g., self-signed) root
 			expired_certs,	// Allow expired certs
@@ -104,7 +104,7 @@ static void	cups_set_user(_cups_client_conf_t *cc, const char *value);
 // The default encryption setting comes from the CUPS_ENCRYPTION
 // environment variable, then the ~/.cups/client.conf file, and finally the
 // /etc/cups/client.conf file. If not set, the default is
-// @code HTTP_ENCRYPTION_IF_REQUESTED@.
+// `HTTP_ENCRYPTION_IF_REQUESTED`.
 //
 // Note: The current encryption setting is tracked separately for each thread
 // in a program. Multi-threaded programs that override the setting via the
@@ -208,7 +208,7 @@ cupsSetClientCertCB(
 
 
 //
-// 'cupsSetCredentials()' - Set the default credentials to be used for SSL/TLS
+// 'cupsSetCredentials()' - Set the default credentials to be used for TLS
 //			    connections.
 //
 // Note: The default credentials are tracked separately for each thread in a
@@ -218,12 +218,12 @@ cupsSetClientCertCB(
 
 bool					// O - `true` on success, `false` on failure
 cupsSetCredentials(
-    cups_array_t *credentials)		// I - Array of credentials
+    const char *credentials)		// I - PEM-encoded X.509 credentials string
 {
   _cups_globals_t *cg = _cupsGlobals();	// Pointer to library globals
 
 
-  if (cupsArrayGetCount(credentials) < 1)
+  if (!credentials || !*credentials)
     return (false);
 
   _httpFreeCredentials(cg->tls_credentials);
@@ -239,7 +239,7 @@ cupsSetCredentials(
 // The default encryption setting comes from the CUPS_ENCRYPTION
 // environment variable, then the ~/.cups/client.conf file, and finally the
 // /etc/cups/client.conf file. If not set, the default is
-// @code HTTP_ENCRYPTION_IF_REQUESTED@.
+// `HTTP_ENCRYPTION_IF_REQUESTED`.
 //
 // Note: The current encryption setting is tracked separately for each thread
 // in a program. Multi-threaded programs that override the setting need to do
@@ -1302,9 +1302,9 @@ cups_set_ssl_options(
     const char          *value)		// I - Value
 {
   // SSLOptions [AllowRC4] [AllowSSL3] [AllowDH] [DenyTLS1.0] [None]
-  int	options = _HTTP_TLS_NONE,	// SSL/TLS options
-	min_version = _HTTP_TLS_1_0,	// Minimum SSL/TLS version
-	max_version = _HTTP_TLS_MAX;	// Maximum SSL/TLS version
+  int	options = _HTTP_TLS_NONE,	// TLS options
+	min_version = _HTTP_TLS_1_0,	// Minimum TLS version
+	max_version = _HTTP_TLS_MAX;	// Maximum TLS version
   char	temp[256],			// Copy of value
 	*start,				// Start of option
 	*end;				// End of option
