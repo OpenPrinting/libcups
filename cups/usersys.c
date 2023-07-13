@@ -185,31 +185,7 @@ cupsGetServer(void)
 
 
 //
-// 'cupsSetClientCertCB()' - Set the client certificate callback.
-//
-// Pass `NULL` to restore the default callback.
-//
-// Note: The current certificate callback is tracked separately for each thread
-// in a program. Multi-threaded programs that override the callback need to do
-// so in each thread for the same callback to be used.
-//
-
-void
-cupsSetClientCertCB(
-    cups_client_cert_cb_t cb,		// I - Callback function
-    void                  *user_data)	// I - User data pointer
-{
-  _cups_globals_t *cg = _cupsGlobals();	// Pointer to library globals
-
-
-  cg->client_cert_cb	= cb;
-  cg->client_cert_data	= user_data;
-}
-
-
-//
-// 'cupsSetCredentials()' - Set the default credentials to be used for TLS
-//			    connections.
+// 'cupsSetCredentialsAndKey()' - Set the default credentials to be used for TLS connections.
 //
 // Note: The default credentials are tracked separately for each thread in a
 // program. Multi-threaded programs that override the setting need to do so in
@@ -217,19 +193,20 @@ cupsSetClientCertCB(
 //
 
 bool					// O - `true` on success, `false` on failure
-cupsSetCredentials(
-    const char *credentials)		// I - PEM-encoded X.509 credentials string
+cupsSetCredentialsAndKey(
+    const char *credentials,		// I - PEM-encoded X.509 credentials string
+    const char *key)			// I - PEM-encoded private key
 {
   _cups_globals_t *cg = _cupsGlobals();	// Pointer to library globals
 
 
-  if (!credentials || !*credentials)
+  if (!credentials || !*credentials || !key || !*key)
     return (false);
 
-  _httpFreeCredentials(cg->tls_credentials);
-  cg->tls_credentials = _httpCreateCredentials(credentials);
+  _httpFreeCredentials(cg->credentials);
+  cg->credentials = _httpCreateCredentials(credentials, key);
 
-  return (cg->tls_credentials != NULL);
+  return (cg->credentials != NULL);
 }
 
 
@@ -401,29 +378,6 @@ cupsSetServer(const char *server)	// I - Server name
     httpClose(cg->http);
     cg->http = NULL;
   }
-}
-
-
-//
-// 'cupsSetServerCertCB()' - Set the server certificate callback.
-//
-// Pass `NULL` to restore the default callback.
-//
-// Note: The current credentials callback is tracked separately for each thread
-// in a program. Multi-threaded programs that override the callback need to do
-// so in each thread for the same callback to be used.
-//
-
-void
-cupsSetServerCertCB(
-    cups_server_cert_cb_t cb,		// I - Callback function
-    void		  *user_data)	// I - User data pointer
-{
-  _cups_globals_t *cg = _cupsGlobals();	// Pointer to library globals
-
-
-  cg->server_cert_cb	= cb;
-  cg->server_cert_data	= user_data;
 }
 
 

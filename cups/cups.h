@@ -284,9 +284,6 @@ typedef struct cups_size_s		// Media information
 typedef bool (*cups_cert_san_cb_t)(const char *common_name, const char *subject_alt_name, void *user_data);
 					// Certificate signing subjectAltName callback
 
-typedef bool (*cups_client_cert_cb_t)(http_t *http, void *tls, cups_array_t *distinguished_names, void *user_data);
-					// Client credentials callback
-
 typedef bool (*cups_dest_cb_t)(void *user_data, cups_dest_flags_t flags, cups_dest_t *dest);
 			      		// Destination enumeration callback
 
@@ -295,9 +292,6 @@ typedef const char *(*cups_oauth_cb_t)(http_t *http, const char *realm, const ch
 
 typedef const char *(*cups_password_cb_t)(const char *prompt, http_t *http, const char *method, const char *resource, void *user_data);
 					// New password callback
-
-typedef bool (*cups_server_cert_cb_t)(http_t *http, void *tls, cups_array_t *certs, void *user_data);
-					// Server credentials callback
 
 
 //
@@ -393,14 +387,12 @@ extern size_t		cupsRemoveOption(const char *name, size_t num_options, cups_optio
 extern bool		cupsSaveCredentials(const char *path, const char *common_name, const char *credentials, const char *key) _CUPS_PUBLIC;
 extern http_status_t	cupsSendRequest(http_t *http, ipp_t *request, const char *resource, size_t length) _CUPS_PUBLIC;
 extern void		cupsSetOAuthCB(cups_oauth_cb_t cb, void *data) _CUPS_PUBLIC;
-extern void		cupsSetClientCertCB(cups_client_cert_cb_t cb, void *user_data) _CUPS_PUBLIC;
-extern bool		cupsSetCredentials(const char *credentials) _CUPS_PUBLIC;
+extern bool		cupsSetClientCredentialsAndKey(const char *credentials, const char *key) _CUPS_PUBLIC;
 extern void		cupsSetDefaultDest(const char *name, const char *instance, size_t num_dests, cups_dest_t *dests) _CUPS_PUBLIC;
 extern bool		cupsSetDests(http_t *http, size_t num_dests, cups_dest_t *dests) _CUPS_PUBLIC;
 extern void		cupsSetEncryption(http_encryption_t e) _CUPS_PUBLIC;
 extern void		cupsSetPasswordCB(cups_password_cb_t cb, void *user_data) _CUPS_PUBLIC;
 extern void		cupsSetServer(const char *server) _CUPS_PUBLIC;
-extern void		cupsSetServerCertCB(cups_server_cert_cb_t cb, void *user_data) _CUPS_PUBLIC;
 extern bool		cupsSetServerCredentials(const char *path, const char *common_name, bool auto_create) _CUPS_PUBLIC;
 extern void		cupsSetUser(const char *user) _CUPS_PUBLIC;
 extern void		cupsSetUserAgent(const char *user_agent) _CUPS_PUBLIC;

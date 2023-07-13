@@ -1,7 +1,7 @@
 //
 // Hyper-Text Transport Protocol definitions for CUPS.
 //
-// Copyright © 2021-2022 by OpenPrinting.
+// Copyright © 2021-2023 by OpenPrinting.
 // Copyright © 2007-2018 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products, all rights reserved.
 //
@@ -501,7 +501,7 @@ extern http_uri_status_t httpSeparateURI(http_uri_coding_t decoding, const char 
 extern void		httpSetAuthString(http_t *http, const char *scheme, const char *data) _CUPS_PUBLIC;
 extern void		httpSetBlocking(http_t *http, bool b) _CUPS_PUBLIC;
 extern void		httpSetCookie(http_t *http, const char *cookie) _CUPS_PUBLIC;
-extern bool		httpSetCredentials(http_t *http, const char *credentials) _CUPS_PUBLIC;
+extern bool		httpSetCredentialsAndKey(http_t *http, const char *credentials, const char *key) _CUPS_PUBLIC;
 extern void		httpSetDefaultField(http_t *http, http_field_t field, const char *value) _CUPS_PUBLIC;
 extern bool		httpSetEncryption(http_t *http, http_encryption_t e) _CUPS_PUBLIC;
 extern void		httpSetExpect(http_t *http, http_status_t expect) _CUPS_PUBLIC;

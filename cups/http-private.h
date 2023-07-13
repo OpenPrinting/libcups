@@ -71,17 +71,27 @@ extern "C" {
 //
 
 #  ifdef HAVE_OPENSSL
-typedef SSL *http_tls_t;
-typedef STACK_OF(X509) *http_tls_credentials_t;
+typedef SSL *_http_tls_t;
+typedef struct _http_tls_credentials_s	// Internal credentials
+{
+  size_t	use;			// Use count
+  STACK_OF(X509) *certs;		// X.509 certificates
+  EVP_PKEY	*key;			// Private key
+} _http_tls_credentials_t;
 #  else // HAVE_GNUTLS
-typedef gnutls_session_t http_tls_t;
-typedef gnutls_certificate_credentials_t *http_tls_credentials_t;
+typedef gnutls_session_t _http_tls_t;
+typedef struct _http_tls_credentials_s	// Internal credentials
+{
+  size_t	use;			// Use count
+  gnutls_certificate_credentials_t creds;
+					// X.509 certificates and private key
+} _http_tls_credentials_t;
 #  endif // HAVE_OPENSSL
 
 typedef enum _http_coding_e		// HTTP content coding enumeration
 {
   _HTTP_CODING_IDENTITY,		// No content coding
-  _HTTP_CODING_GZIP,			// LZ77+gzip decompression
+  _HTTP_CODING_GZIP,			// LZ77+gzip compression
   _HTTP_CODING_DEFLATE,			// LZ77+zlib compression
   _HTTP_CODING_GUNZIP,			// LZ77+gzip decompression
   _HTTP_CODING_INFLATE			// LZ77+zlib decompression
@@ -135,8 +145,9 @@ struct _http_s				// HTTP connection structure
 			realm[HTTP_MAX_VALUE];
 					// Realm from WWW-Authenticate
   http_encryption_t	encryption;	// Encryption requirements
-  http_tls_t		tls;		// TLS state information
-  http_tls_credentials_t tls_credentials;
+  _http_tls_t		tls;		// TLS state information
+  _http_tls_credentials_t *tls_credentials;
+					// TLS credentials
   bool			tls_upgrade;	// `true` if we are doing an upgrade
   char			wbuffer[HTTP_MAX_BUFFER];
 					// Buffer for outgoing data
@@ -166,11 +177,11 @@ extern const char *_cups_hstrerror(int error);
 // Prototypes...
 //
 
-extern http_tls_credentials_t _httpCreateCredentials(const char *credentials) _CUPS_PRIVATE;
+extern _http_tls_credentials_t *_httpCreateCredentials(const char *credentials, const char *key) _CUPS_PRIVATE;
 extern char		*_httpDecodeURI(char *dst, const char *src, size_t dstsize) _CUPS_PRIVATE;
 extern void		_httpDisconnect(http_t *http) _CUPS_PRIVATE;
 extern char		*_httpEncodeURI(char *dst, const char *src, size_t dstsize) _CUPS_PRIVATE;
-extern void		_httpFreeCredentials(http_tls_credentials_t credentials) _CUPS_PRIVATE;
+extern void		_httpFreeCredentials(_http_tls_credentials_t *hcreds) _CUPS_PRIVATE;
 extern bool		_httpSetDigestAuthString(http_t *http, const char *nonce, const char *method, const char *resource) _CUPS_PRIVATE;
 extern const char	*_httpStatusString(cups_lang_t *lang, http_status_t status) _CUPS_PRIVATE;
 extern void		_httpTLSInitialize(void) _CUPS_PRIVATE;
@@ -181,6 +192,7 @@ extern bool		_httpTLSStart(http_t *http) _CUPS_PRIVATE;
 extern void		_httpTLSStop(http_t *http) _CUPS_PRIVATE;
 extern int		_httpTLSWrite(http_t *http, const char *buf, int len) _CUPS_PRIVATE;
 extern bool		_httpUpdate(http_t *http, http_status_t *status) _CUPS_PRIVATE;
+extern _http_tls_credentials_t *_httpUseCredentials(_http_tls_credentials_t *hcreds) _CUPS_PRIVATE;
 extern bool		_httpWait(http_t *http, int msec, bool usessl) _CUPS_PRIVATE;
 
 

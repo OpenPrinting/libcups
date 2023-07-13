@@ -21,6 +21,8 @@
 // Local functions...
 //
 
+extern http_tls_credentials_t _httpCreateCredentials(const char *credentials) _CUPS_PRIVATE;
+extern void		_httpFreeCredentials(http_tls_credentials_t credentials) _CUPS_PRIVATE;
 
 static long		http_bio_ctrl(BIO *h, int cmd, long arg1, void *arg2);
 static int		http_bio_free(BIO *data);
@@ -820,7 +822,7 @@ cupsGetCredentialsTrust(
 
     free(tcreds);
   }
-  else if (cg->validate_certs && !cupsAreCredentialsValidForName(credentials, common_name))
+  else if (cg->validate_certs && !cupsAreCredentialsValidForName(common_name, credentials))
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("No stored credentials, not valid for name."), 1);
     trust = HTTP_TRUST_INVALID;
@@ -1431,6 +1433,27 @@ _httpFreeCredentials(
     http_tls_credentials_t credentials)	// I - Internal credentials
 {
   sk_X509_free(credentials);
+}
+
+
+//
+// 'httpSetCredentialsAndKey()' - Set the credentials associated with an encrypted connection.
+//
+
+bool					// O - `true` on success, `false` on error
+httpSetCredentialsAndKey(
+    http_t     *http,			// I - HTTP connection
+    const char *credentials,		// I - Credentials string
+    const char *key)			// I - Private key string
+{
+  if (!http || !credentials || !*credentials || !key || !*key)
+    return (false);
+
+  _httpFreeCredentials(http->tls_credentials);
+
+  http->tls_credentials = _httpCreateCredentials(credentials);
+
+  return (http->tls_credentials != NULL);
 }
 
 

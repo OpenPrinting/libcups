@@ -1940,26 +1940,6 @@ httpSetBlocking(http_t *http,		// I - HTTP connection
 
 
 //
-// 'httpSetCredentials()' - Set the credentials associated with an encrypted connection.
-//
-
-bool					// O - `true` on success, `false` on error
-httpSetCredentials(
-    http_t     *http,			// I - HTTP connection
-    const char *credentials)		// I - Credentials string
-{
-  if (!http || !credentials || !*credentials)
-    return (false);
-
-  _httpFreeCredentials(http->tls_credentials);
-
-  http->tls_credentials = _httpCreateCredentials(credentials);
-
-  return (http->tls_credentials != NULL);
-}
-
-
-//
 // 'httpSetCookie()' - Set the cookie value(s).
 //
 
