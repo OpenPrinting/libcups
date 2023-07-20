@@ -1350,7 +1350,7 @@ _httpCreateCredentials(
   if ((err = gnutls_certificate_allocate_credentials(&hcreds->creds)) < 0)
   {
     DEBUG_printf("1_httpCreateCredentials: allocate_credentials error: %s", gnutls_strerror(err));
-    free(creds);
+    free(hcreds);
     return (NULL);
   }
 
