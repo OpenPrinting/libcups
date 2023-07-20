@@ -21,9 +21,6 @@
 // Local functions...
 //
 
-extern http_tls_credentials_t _httpCreateCredentials(const char *credentials) _CUPS_PRIVATE;
-extern void		_httpFreeCredentials(http_tls_credentials_t credentials) _CUPS_PRIVATE;
-
 static long		http_bio_ctrl(BIO *h, int cmd, long arg1, void *arg2);
 static int		http_bio_free(BIO *data);
 static int		http_bio_new(BIO *h);
@@ -37,6 +34,7 @@ static EVP_PKEY		*openssl_create_key(cups_credtype_t type);
 static X509_EXTENSION	*openssl_create_san(const char *common_name, size_t num_alt_names, const char * const *alt_names);
 static time_t		openssl_get_date(X509 *cert, int which);
 //static void		openssl_load_crl(void);
+static STACK_OF(X509 *)	openssl_load_x509(const char *credentials);
 
 
 //
@@ -82,7 +80,7 @@ cupsAreCredentialsValidForName(
   bool			result = false;	// Result
 
 
-  if ((certs = _httpCreateCredentials(credentials)) != NULL)
+  if ((certs = openssl_load_x509(credentials)) != NULL)
   {
     result = X509_check_host(sk_X509_value(certs, 0), common_name, strlen(common_name), 0, NULL) != 0;
 
@@ -633,7 +631,7 @@ cupsGetCredentialsExpiration(
   STACK_OF(X509)	*certs;		// Certificate chain
 
 
-  if ((certs = _httpCreateCredentials(credentials)) != NULL)
+  if ((certs = openssl_load_x509(credentials)) != NULL)
   {
     result = openssl_get_date(sk_X509_value(certs, 0), 1);
     sk_X509_free(certs);
@@ -669,7 +667,7 @@ cupsGetCredentialsInfo(
     return (NULL);
   }
 
-  if ((certs = _httpCreateCredentials(credentials)) != NULL)
+  if ((certs = openssl_load_x509(credentials)) != NULL)
   {
     char		name[256],	// Common name associated with cert
 			issuer[256],	// Issuer associated with cert
@@ -763,7 +761,7 @@ cupsGetCredentialsTrust(
   }
 
   // Load the credentials...
-  if ((certs = _httpCreateCredentials(credentials)) == NULL)
+  if ((certs = openssl_load_x509(credentials)) == NULL)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to import credentials."), true);
     return (HTTP_TRUST_UNKNOWN);
@@ -1379,48 +1377,51 @@ httpCopyPeerCredentials(http_t *http)	// I - Connection to server
 // '_httpCreateCredentials()' - Create credentials in the internal format.
 //
 
-http_tls_credentials_t			// O - Internal credentials (STACK_OF(X509) *)
+_http_tls_credentials_t *		// O - Internal credentials
 _httpCreateCredentials(
-    const char *credentials)		// I - Credentials string
+    const char *credentials,		// I - Credentials string
+    const char *key)			// I - Private key string
 {
-  STACK_OF(X509)	*certs = NULL;	// Certificate chain
-  X509			*cert = NULL;	// Current certificate
-  BIO			*bio;		// Basic I/O for string
+  _http_tls_credentials_t *hcreds;	// Credentials
 
 
-  // Range check input...
-  if (!credentials)
+  DEBUG_printf("_httpCreateCredentials(credentials=\"%s\", key=\"%s\")", credentials, key);
+
+  if (!credentials || !*credentials || !key || !*key)
     return (NULL);
 
-  // Make a BIO memory buffer for the string...
-  if ((bio = BIO_new_mem_buf(credentials, strlen(credentials))) == NULL)
+  if ((hcreds = calloc(1, sizeof(_http_tls_credentials_t))) == NULL)
     return (NULL);
 
-  // Read all the X509 certificates from the string...
-  while (PEM_read_bio_X509(bio, &cert, NULL, (void *)""))
+  hcreds->use = 1;
+
+  // Load the certificates...
+  if ((hcreds->certs = openssl_load_x509(credentials)) == NULL)
   {
-    if (!certs)
+    _httpFreeCredentials(hcreds);
+    hcreds = NULL;
+  }
+  else
+  {
+    // Load the private key...
+    BIO	*bio;				// Basic I/O for string
+
+    if ((bio = BIO_new_mem_buf(key, strlen(key))) == NULL)
     {
-      // Make a new stack of X509 certs...
-      certs = sk_X509_new_null();
+      _httpFreeCredentials(hcreds);
+      hcreds = NULL;
     }
 
-    if (certs)
+    if (!PEM_read_bio_PrivateKey(bio, &hcreds->key, NULL, NULL))
     {
-      // Add the X509 certificate...
-      sk_X509_push(certs, cert);
-    }
-    else
-    {
-      // Unable to add, free and stop...
-      X509_free(cert);
-      break;
+      _httpFreeCredentials(hcreds);
+      hcreds = NULL;
     }
   }
 
-  BIO_free(bio);
+  DEBUG_printf("1_httpCreateCredentials: Returning %p.", hcreds);
 
-  return (certs);
+  return (hcreds);
 }
 
 
@@ -1430,30 +1431,16 @@ _httpCreateCredentials(
 
 void
 _httpFreeCredentials(
-    http_tls_credentials_t credentials)	// I - Internal credentials
+    _http_tls_credentials_t *hcreds)	// I - Internal credentials
 {
-  sk_X509_free(credentials);
-}
+  if (hcreds->use)
+    hcreds->use --;
 
+  if (hcreds->use)
+    return;
 
-//
-// 'httpSetCredentialsAndKey()' - Set the credentials associated with an encrypted connection.
-//
-
-bool					// O - `true` on success, `false` on error
-httpSetCredentialsAndKey(
-    http_t     *http,			// I - HTTP connection
-    const char *credentials,		// I - Credentials string
-    const char *key)			// I - Private key string
-{
-  if (!http || !credentials || !*credentials || !key || !*key)
-    return (false);
-
-  _httpFreeCredentials(http->tls_credentials);
-
-  http->tls_credentials = _httpCreateCredentials(credentials);
-
-  return (http->tls_credentials != NULL);
+  sk_X509_free(hcreds->certs);
+  free(hcreds);
 }
 
 
@@ -1548,6 +1535,18 @@ _httpTLSStart(http_t *http)		// I - Connection to server
   {
     // Negotiate a TLS connection as a client...
     context = SSL_CTX_new(TLS_client_method());
+    if (http->tls_credentials)
+    {
+      int	i,			// Looping var
+		count;			// Number of certificates
+
+      SSL_CTX_use_certificate(context, sk_X509_value(http->tls_credentials->certs, 0));
+      SSL_CTX_use_PrivateKey(context, http->tls_credentials->key);
+
+      count = sk_X509_num(http->tls_credentials->certs);
+      for (i = 1; i < count; i ++)
+        SSL_CTX_add_extra_chain_cert(context, sk_X509_value(http->tls_credentials->certs, i));
+    }
   }
   else
   {
@@ -1795,6 +1794,21 @@ _httpTLSWrite(http_t     *http,		// I - Connection to server
 	      int        len)		// I - Length of buffer
 {
   return (SSL_write(http->tls, buf, len));
+}
+
+
+//
+// '_httpUseCredentials()' - Increment the use count for internal credentials.
+//
+
+_http_tls_credentials_t *		// O - Internal credentials
+_httpUseCredentials(
+    _http_tls_credentials_t *hcreds)	// I - Internal credentials
+{
+  if (hcreds)
+    hcreds->use ++;
+
+  return (hcreds);
 }
 
 
@@ -2256,3 +2270,52 @@ openssl_load_crl(void)
   cupsMutexUnlock(&tls_mutex);
 }
 #endif // 0
+
+
+//
+// 'openssl_load_x509()' - Load a stack of X.509 certificates.
+//
+
+static STACK_OF(X509) *			// O - Stack of X.509 certificates
+openssl_load_x509(
+    const char *credentials)		// I - Credentials string
+{
+  STACK_OF(X509)	*certs = NULL;	// Certificate chain
+  X509			*cert = NULL;	// Current certificate
+  BIO			*bio;		// Basic I/O for string
+
+
+  // Range check input...
+  if (!credentials || !*credentials)
+    return (NULL);
+
+  // Make a BIO memory buffer for the string...
+  if ((bio = BIO_new_mem_buf(credentials, strlen(credentials))) == NULL)
+    return (NULL);
+
+  // Read all the X509 certificates from the string...
+  while (PEM_read_bio_X509(bio, &cert, NULL, (void *)""))
+  {
+    if (!certs)
+    {
+      // Make a new stack of X509 certs...
+      certs = sk_X509_new_null();
+    }
+
+    if (certs)
+    {
+      // Add the X509 certificate...
+      sk_X509_push(certs, cert);
+    }
+    else
+    {
+      // Unable to add, free and stop...
+      X509_free(cert);
+      break;
+    }
+  }
+
+  BIO_free(bio);
+
+  return (certs);
+}

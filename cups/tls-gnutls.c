@@ -1334,7 +1334,7 @@ _httpCreateCredentials(
     const char *key)			// I - Private key string
 {
   int			err;		// Result from GNU TLS
-  _http_tls_credentials_t *creds;	// Credentials
+  _http_tls_credentials_t *hcreds;	// Credentials
   gnutls_datum_t	cdatum,		// Credentials record
 			kdatum;		// Key record
 
@@ -1344,35 +1344,35 @@ _httpCreateCredentials(
   if (!credentials || !*credentials || !key || !*key)
     return (NULL);
 
-  if ((creds = calloc(1, sizeof(_http_tls_credentials_t))) == NULL)
+  if ((hcreds = calloc(1, sizeof(_http_tls_credentials_t))) == NULL)
     return (NULL);
 
-  if ((err = gnutls_certificate_allocate_credentials(&creds->creds)) < 0)
+  if ((err = gnutls_certificate_allocate_credentials(&hcreds->creds)) < 0)
   {
     DEBUG_printf("1_httpCreateCredentials: allocate_credentials error: %s", gnutls_strerror(err));
     free(creds);
     return (NULL);
   }
 
-  creds->use  = 1;
+  hcreds->use  = 1;
 
   cdatum.data = (void *)credentials;
   cdatum.size = strlen(credentials);
   kdatum.data = (void *)key;
   kdatum.size = strlen(key);
 
-  if ((err = gnutls_certificate_set_x509_key_mem(creds->creds, &cdatum, &kdatum, GNUTLS_X509_FMT_PEM)) < 0)
+  if ((err = gnutls_certificate_set_x509_key_mem(hcreds->creds, &cdatum, &kdatum, GNUTLS_X509_FMT_PEM)) < 0)
   {
     DEBUG_printf("1_httpCreateCredentials: set_x509_key_mem error: %s", gnutls_strerror(err));
 
-    gnutls_certificate_free_credentials(creds->creds);
-    free(creds);
-    creds = NULL;
+    gnutls_certificate_free_credentials(hcreds->creds);
+    free(hcreds);
+    hcreds = NULL;
   }
 
-  DEBUG_printf("1_httpCreateCredentials: Returning %p.", creds);
+  DEBUG_printf("1_httpCreateCredentials: Returning %p.", hcreds);
 
-  return (creds);
+  return (hcreds);
 }
 
 
@@ -1382,268 +1382,16 @@ _httpCreateCredentials(
 
 void
 _httpFreeCredentials(
-    _http_tls_credentials_t *creds)	// I - Internal credentials
+    _http_tls_credentials_t *hcreds)	// I - Internal credentials
 {
-  if (creds->use)
-    creds->use --;
+  if (hcreds->use)
+    hcreds->use --;
 
-  if (creds->use)
+  if (hcreds->use)
     return;
 
-  gnutls_certificate_free_credentials(creds->creds);
-  free(creds);
-}
-
-
-//
-// '_httpUseCredentials()' - Increment the use count for internal credentials.
-//
-
-_http_tls_credentials_t *		// O - Internal credentials
-_httpUseCredentials(
-    _http_tls_credentials_t *creds)	// I - Internal credentials
-{
-  if (creds)
-    creds->use ++;
-
-  return (creds);
-}
-
-
-//
-// 'gnutls_create_key()' - Create a private key.
-//
-
-static gnutls_x509_privkey_t		// O - Private key
-gnutls_create_key(cups_credtype_t type)	// I - Type of key
-{
-  gnutls_x509_privkey_t	key;		// Private key
-
-
-  gnutls_x509_privkey_init(&key);
-
-  switch (type)
-  {
-    case CUPS_CREDTYPE_ECDSA_P256_SHA256 :
-	gnutls_x509_privkey_generate(key, GNUTLS_PK_ECDSA, GNUTLS_CURVE_TO_BITS(GNUTLS_ECC_CURVE_SECP256R1), 0);
-	break;
-
-    case CUPS_CREDTYPE_ECDSA_P384_SHA256 :
-	gnutls_x509_privkey_generate(key, GNUTLS_PK_ECDSA, GNUTLS_CURVE_TO_BITS(GNUTLS_ECC_CURVE_SECP384R1), 0);
-	break;
-
-    case CUPS_CREDTYPE_ECDSA_P521_SHA256 :
-	gnutls_x509_privkey_generate(key, GNUTLS_PK_ECDSA, GNUTLS_CURVE_TO_BITS(GNUTLS_ECC_CURVE_SECP521R1), 0);
-	break;
-
-    case CUPS_CREDTYPE_RSA_2048_SHA256 :
-	gnutls_x509_privkey_generate(key, GNUTLS_PK_RSA, 2048, 0);
-	break;
-
-    default :
-    case CUPS_CREDTYPE_RSA_3072_SHA256 :
-	gnutls_x509_privkey_generate(key, GNUTLS_PK_RSA, 3072, 0);
-	break;
-
-    case CUPS_CREDTYPE_RSA_4096_SHA256 :
-	gnutls_x509_privkey_generate(key, GNUTLS_PK_RSA, 4096, 0);
-	break;
-  }
-
-  return (key);
-}
-
-
-//
-// 'gnutls_free_certs()' - Free X.509 certificates.
-//
-
-static void
-gnutls_free_certs(
-    unsigned          num_certs,	// I - Number of certificates
-    gnutls_x509_crt_t *certs)		// I - Certificates
-{
-  while (num_certs > 0)
-  {
-    gnutls_x509_crt_deinit(*certs);
-    certs ++;
-    num_certs --;
-  }
-}
-
-
-//
-// 'gnutls_http_read()' - Read function for the GNU TLS library.
-//
-
-static ssize_t				// O - Number of bytes read or -1 on error
-gnutls_http_read(
-    gnutls_transport_ptr_t ptr,		// I - Connection to server
-    void                   *data,	// I - Buffer
-    size_t                 length)	// I - Number of bytes to read
-{
-  http_t	*http;			// HTTP connection
-  ssize_t	bytes;			// Bytes read
-
-
-  DEBUG_printf("5gnutls_http_read(ptr=%p, data=%p, length=%d)", ptr, data, (int)length);
-
-  http = (http_t *)ptr;
-
-  if (!http->blocking || http->timeout_value > 0.0)
-  {
-    // Make sure we have data before we read...
-    while (!_httpWait(http, http->wait_value, 0))
-    {
-      if (http->timeout_cb && (*http->timeout_cb)(http, http->timeout_data))
-	continue;
-
-      http->error = ETIMEDOUT;
-      return (-1);
-    }
-  }
-
-  bytes = recv(http->fd, data, length, 0);
-  DEBUG_printf("5gnutls_http_read: bytes=%d", (int)bytes);
-  return (bytes);
-}
-
-
-//
-// 'gnutls_http_write()' - Write function for the GNU TLS library.
-//
-
-static ssize_t				// O - Number of bytes written or -1 on error
-gnutls_http_write(
-    gnutls_transport_ptr_t ptr,		// I - Connection to server
-    const void             *data,	// I - Data buffer
-    size_t                 length)	// I - Number of bytes to write
-{
-  ssize_t bytes;			// Bytes written
-
-
-  DEBUG_printf("5gnutls_http_write(ptr=%p, data=%p, length=%d)", ptr, data, (int)length);
-  bytes = send(((http_t *)ptr)->fd, data, length, 0);
-  DEBUG_printf("5gnutls_http_write: bytes=%d", (int)bytes);
-
-  return (bytes);
-}
-
-
-//
-// 'gnutls_import_certs()' - Import X.509 certificates.
-//
-
-static gnutls_x509_crt_t		// O  - X.509 leaf certificate
-gnutls_import_certs(
-    const char        *credentials,	// I  - Credentials string
-    unsigned          *num_certs,	// IO - Number of certificates
-    gnutls_x509_crt_t *certs)		// O  - Certificates
-{
-  int			err;		// Error code, if any
-  gnutls_datum_t	datum;		// Data record
-
-
-  // Import all certificates from the string...
-  datum.data = (void *)credentials;
-  datum.size = strlen(credentials);
-
-  if ((err = gnutls_x509_crt_list_import(certs, num_certs, &datum, GNUTLS_X509_FMT_DER, 0)) < 0)
-  {
-    DEBUG_printf("4gnutls_create_cert: crt_list_import error: %s", gnutls_strerror(err));
-    return (NULL);
-  }
-
-  return (certs[0]);
-}
-
-
-//
-// 'gnutls_load_crl()' - Load the certificate revocation list, if any.
-//
-
-static void
-gnutls_load_crl(void)
-{
-  cupsMutexLock(&tls_mutex);
-
-  if (!gnutls_x509_crl_init(&tls_crl))
-  {
-    cups_file_t		*fp;		// CRL file
-    char		filename[1024],	// site.crl
-			line[256];	// Base64-encoded line
-    unsigned char	*data = NULL;	// Buffer for cert data
-    size_t		alloc_data = 0,	// Bytes allocated
-			num_data = 0;	// Bytes used
-    size_t		decoded;	// Bytes decoded
-    gnutls_datum_t	datum;		// Data record
-
-
-    http_make_path(filename, sizeof(filename), CUPS_SERVERROOT, "site", "crl");
-
-    if ((fp = cupsFileOpen(filename, "r")) != NULL)
-    {
-      while (cupsFileGets(fp, line, sizeof(line)))
-      {
-	if (!strcmp(line, "-----BEGIN X509 CRL-----"))
-	{
-	  if (num_data)
-	  {
-	    // Missing END X509 CRL...
-	    break;
-	  }
-	}
-	else if (!strcmp(line, "-----END X509 CRL-----"))
-	{
-	  if (!num_data)
-	  {
-	    // Missing data...
-	    break;
-	  }
-
-          datum.data = data;
-	  datum.size = num_data;
-
-	  gnutls_x509_crl_import(tls_crl, &datum, GNUTLS_X509_FMT_PEM);
-
-	  num_data = 0;
-	}
-	else
-	{
-	  if (alloc_data == 0)
-	  {
-	    data       = malloc(2048);
-	    alloc_data = 2048;
-
-	    if (!data)
-	      break;
-	  }
-	  else if ((num_data + strlen(line)) >= alloc_data)
-	  {
-	    unsigned char *tdata = realloc(data, alloc_data + 1024);
-					    // Expanded buffer
-
-	    if (!tdata)
-	      break;
-
-	    data       = tdata;
-	    alloc_data += 1024;
-	  }
-
-	  decoded = (size_t)(alloc_data - num_data);
-	  httpDecode64((char *)data + num_data, &decoded, line, NULL);
-	  num_data += (size_t)decoded;
-	}
-      }
-
-      cupsFileClose(fp);
-
-      if (data)
-	free(data);
-    }
-  }
-
-  cupsMutexUnlock(&tls_mutex);
+  gnutls_certificate_free_credentials(hcreds->creds);
+  free(hcreds);
 }
 
 
@@ -2093,4 +1841,256 @@ _httpTLSWrite(http_t     *http,		// I - Connection to server
   DEBUG_printf("5_httpTLSWrite: Returning %d.", (int)result);
 
   return ((int)result);
+}
+
+
+//
+// '_httpUseCredentials()' - Increment the use count for internal credentials.
+//
+
+_http_tls_credentials_t *		// O - Internal credentials
+_httpUseCredentials(
+    _http_tls_credentials_t *hcreds)	// I - Internal credentials
+{
+  if (hcreds)
+    hcreds->use ++;
+
+  return (hcreds);
+}
+
+
+//
+// 'gnutls_create_key()' - Create a private key.
+//
+
+static gnutls_x509_privkey_t		// O - Private key
+gnutls_create_key(cups_credtype_t type)	// I - Type of key
+{
+  gnutls_x509_privkey_t	key;		// Private key
+
+
+  gnutls_x509_privkey_init(&key);
+
+  switch (type)
+  {
+    case CUPS_CREDTYPE_ECDSA_P256_SHA256 :
+	gnutls_x509_privkey_generate(key, GNUTLS_PK_ECDSA, GNUTLS_CURVE_TO_BITS(GNUTLS_ECC_CURVE_SECP256R1), 0);
+	break;
+
+    case CUPS_CREDTYPE_ECDSA_P384_SHA256 :
+	gnutls_x509_privkey_generate(key, GNUTLS_PK_ECDSA, GNUTLS_CURVE_TO_BITS(GNUTLS_ECC_CURVE_SECP384R1), 0);
+	break;
+
+    case CUPS_CREDTYPE_ECDSA_P521_SHA256 :
+	gnutls_x509_privkey_generate(key, GNUTLS_PK_ECDSA, GNUTLS_CURVE_TO_BITS(GNUTLS_ECC_CURVE_SECP521R1), 0);
+	break;
+
+    case CUPS_CREDTYPE_RSA_2048_SHA256 :
+	gnutls_x509_privkey_generate(key, GNUTLS_PK_RSA, 2048, 0);
+	break;
+
+    default :
+    case CUPS_CREDTYPE_RSA_3072_SHA256 :
+	gnutls_x509_privkey_generate(key, GNUTLS_PK_RSA, 3072, 0);
+	break;
+
+    case CUPS_CREDTYPE_RSA_4096_SHA256 :
+	gnutls_x509_privkey_generate(key, GNUTLS_PK_RSA, 4096, 0);
+	break;
+  }
+
+  return (key);
+}
+
+
+//
+// 'gnutls_free_certs()' - Free X.509 certificates.
+//
+
+static void
+gnutls_free_certs(
+    unsigned          num_certs,	// I - Number of certificates
+    gnutls_x509_crt_t *certs)		// I - Certificates
+{
+  while (num_certs > 0)
+  {
+    gnutls_x509_crt_deinit(*certs);
+    certs ++;
+    num_certs --;
+  }
+}
+
+
+//
+// 'gnutls_http_read()' - Read function for the GNU TLS library.
+//
+
+static ssize_t				// O - Number of bytes read or -1 on error
+gnutls_http_read(
+    gnutls_transport_ptr_t ptr,		// I - Connection to server
+    void                   *data,	// I - Buffer
+    size_t                 length)	// I - Number of bytes to read
+{
+  http_t	*http;			// HTTP connection
+  ssize_t	bytes;			// Bytes read
+
+
+  DEBUG_printf("5gnutls_http_read(ptr=%p, data=%p, length=%d)", ptr, data, (int)length);
+
+  http = (http_t *)ptr;
+
+  if (!http->blocking || http->timeout_value > 0.0)
+  {
+    // Make sure we have data before we read...
+    while (!_httpWait(http, http->wait_value, 0))
+    {
+      if (http->timeout_cb && (*http->timeout_cb)(http, http->timeout_data))
+	continue;
+
+      http->error = ETIMEDOUT;
+      return (-1);
+    }
+  }
+
+  bytes = recv(http->fd, data, length, 0);
+  DEBUG_printf("5gnutls_http_read: bytes=%d", (int)bytes);
+  return (bytes);
+}
+
+
+//
+// 'gnutls_http_write()' - Write function for the GNU TLS library.
+//
+
+static ssize_t				// O - Number of bytes written or -1 on error
+gnutls_http_write(
+    gnutls_transport_ptr_t ptr,		// I - Connection to server
+    const void             *data,	// I - Data buffer
+    size_t                 length)	// I - Number of bytes to write
+{
+  ssize_t bytes;			// Bytes written
+
+
+  DEBUG_printf("5gnutls_http_write(ptr=%p, data=%p, length=%d)", ptr, data, (int)length);
+  bytes = send(((http_t *)ptr)->fd, data, length, 0);
+  DEBUG_printf("5gnutls_http_write: bytes=%d", (int)bytes);
+
+  return (bytes);
+}
+
+
+//
+// 'gnutls_import_certs()' - Import X.509 certificates.
+//
+
+static gnutls_x509_crt_t		// O  - X.509 leaf certificate
+gnutls_import_certs(
+    const char        *credentials,	// I  - Credentials string
+    unsigned          *num_certs,	// IO - Number of certificates
+    gnutls_x509_crt_t *certs)		// O  - Certificates
+{
+  int			err;		// Error code, if any
+  gnutls_datum_t	datum;		// Data record
+
+
+  // Import all certificates from the string...
+  datum.data = (void *)credentials;
+  datum.size = strlen(credentials);
+
+  if ((err = gnutls_x509_crt_list_import(certs, num_certs, &datum, GNUTLS_X509_FMT_DER, 0)) < 0)
+  {
+    DEBUG_printf("4gnutls_create_cert: crt_list_import error: %s", gnutls_strerror(err));
+    return (NULL);
+  }
+
+  return (certs[0]);
+}
+
+
+//
+// 'gnutls_load_crl()' - Load the certificate revocation list, if any.
+//
+
+static void
+gnutls_load_crl(void)
+{
+  cupsMutexLock(&tls_mutex);
+
+  if (!gnutls_x509_crl_init(&tls_crl))
+  {
+    cups_file_t		*fp;		// CRL file
+    char		filename[1024],	// site.crl
+			line[256];	// Base64-encoded line
+    unsigned char	*data = NULL;	// Buffer for cert data
+    size_t		alloc_data = 0,	// Bytes allocated
+			num_data = 0;	// Bytes used
+    size_t		decoded;	// Bytes decoded
+    gnutls_datum_t	datum;		// Data record
+
+
+    http_make_path(filename, sizeof(filename), CUPS_SERVERROOT, "site", "crl");
+
+    if ((fp = cupsFileOpen(filename, "r")) != NULL)
+    {
+      while (cupsFileGets(fp, line, sizeof(line)))
+      {
+	if (!strcmp(line, "-----BEGIN X509 CRL-----"))
+	{
+	  if (num_data)
+	  {
+	    // Missing END X509 CRL...
+	    break;
+	  }
+	}
+	else if (!strcmp(line, "-----END X509 CRL-----"))
+	{
+	  if (!num_data)
+	  {
+	    // Missing data...
+	    break;
+	  }
+
+          datum.data = data;
+	  datum.size = num_data;
+
+	  gnutls_x509_crl_import(tls_crl, &datum, GNUTLS_X509_FMT_PEM);
+
+	  num_data = 0;
+	}
+	else
+	{
+	  if (alloc_data == 0)
+	  {
+	    data       = malloc(2048);
+	    alloc_data = 2048;
+
+	    if (!data)
+	      break;
+	  }
+	  else if ((num_data + strlen(line)) >= alloc_data)
+	  {
+	    unsigned char *tdata = realloc(data, alloc_data + 1024);
+					    // Expanded buffer
+
+	    if (!tdata)
+	      break;
+
+	    data       = tdata;
+	    alloc_data += 1024;
+	  }
+
+	  decoded = (size_t)(alloc_data - num_data);
+	  httpDecode64((char *)data + num_data, &decoded, line, NULL);
+	  num_data += (size_t)decoded;
+	}
+      }
+
+      cupsFileClose(fp);
+
+      if (data)
+	free(data);
+    }
+  }
+
+  cupsMutexUnlock(&tls_mutex);
 }
