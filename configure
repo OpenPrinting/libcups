@@ -5389,7 +5389,7 @@ printf "%s\n" "-D__USE_MISC -D_GNU_SOURCE -Wl,-z,relro,-z,now" >&6; }
      ;; #(
   darwin*) :
 
-        # When not building for debug, target macOS 10.14 or later, "universal"
+        # When not building for debug, target macOS 11 or later, "universal"
         # binaries when possible...
         if echo "$CPPFLAGS $CFLAGS $LDFLAGS $OPTIM" | grep -q "\\-arch "
 then :
@@ -5409,16 +5409,9 @@ elif test "$host_os_version" -ge 200 -a x$enable_debug != xyes
 then :
 
 	    # macOS 11.0 and higher support the Apple Silicon (arm64) CPUs
-	    OPTIM="$OPTIM -mmacosx-version-min=10.14 -arch x86_64 -arch arm64"
-            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: -mmacosx-version-min=10.14 -arch x86_64 -arch arm64" >&5
-printf "%s\n" "-mmacosx-version-min=10.14 -arch x86_64 -arch arm64" >&6; }
-
-elif test x$enable_debug != xyes
-then :
-
-	    OPTIM="$OPTIM -mmacosx-version-min=10.14 -arch x86_64"
-            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: -mmacosx-version-min=10.14 -arch x86_64" >&5
-printf "%s\n" "-mmacosx-version-min=10.14 -arch x86_64" >&6; }
+	    OPTIM="$OPTIM -mmacosx-version-min=11.0 -arch x86_64 -arch arm64"
+            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: -mmacosx-version-min=11.0 -arch x86_64 -arch arm64" >&5
+printf "%s\n" "-mmacosx-version-min=11.0 -arch x86_64 -arch arm64" >&6; }
 
 else $as_nop
 

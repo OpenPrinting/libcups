@@ -548,7 +548,7 @@ AS_IF([test -n "$GCC"], [
 
         AC_MSG_RESULT([-D__USE_MISC -D_GNU_SOURCE -Wl,-z,relro,-z,now])
     ], [darwin*], [
-        # When not building for debug, target macOS 10.14 or later, "universal"
+        # When not building for debug, target macOS 11 or later, "universal"
         # binaries when possible...
         AS_IF([echo "$CPPFLAGS $CFLAGS $LDFLAGS $OPTIM" | grep -q "\\-arch "], [
             # Don't add architecture/min-version flags if they are already present
@@ -558,11 +558,8 @@ AS_IF([test -n "$GCC"], [
             AC_MSG_RESULT([none])
         ], [test "$host_os_version" -ge 200 -a x$enable_debug != xyes], [
 	    # macOS 11.0 and higher support the Apple Silicon (arm64) CPUs
-	    OPTIM="$OPTIM -mmacosx-version-min=10.14 -arch x86_64 -arch arm64"
-            AC_MSG_RESULT([-mmacosx-version-min=10.14 -arch x86_64 -arch arm64])
-	], [test x$enable_debug != xyes], [
-	    OPTIM="$OPTIM -mmacosx-version-min=10.14 -arch x86_64"
-            AC_MSG_RESULT([-mmacosx-version-min=10.14 -arch x86_64])
+	    OPTIM="$OPTIM -mmacosx-version-min=11.0 -arch x86_64 -arch arm64"
+            AC_MSG_RESULT([-mmacosx-version-min=11.0 -arch x86_64 -arch arm64])
 	], [
 	    # Don't add architecture/min-version flags if debug enabled
             AC_MSG_RESULT([none])
