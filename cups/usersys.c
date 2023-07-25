@@ -185,7 +185,7 @@ cupsGetServer(void)
 
 
 //
-// 'cupsSetCredentialsAndKey()' - Set the default credentials to be used for TLS connections.
+// 'cupsSetClientCredentials()' - Set the default credentials to be used for TLS connections.
 //
 // Note: The default credentials are tracked separately for each thread in a
 // program. Multi-threaded programs that override the setting need to do so in
@@ -193,7 +193,7 @@ cupsGetServer(void)
 //
 
 bool					// O - `true` on success, `false` on failure
-cupsSetCredentialsAndKey(
+cupsSetClientCredentials(
     const char *credentials,		// I - PEM-encoded X.509 credentials string
     const char *key)			// I - PEM-encoded private key
 {
