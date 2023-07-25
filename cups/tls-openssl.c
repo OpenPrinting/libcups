@@ -1433,6 +1433,9 @@ void
 _httpFreeCredentials(
     _http_tls_credentials_t *hcreds)	// I - Internal credentials
 {
+  if (!hcreds)
+    return;
+
   if (hcreds->use)
     hcreds->use --;
 
