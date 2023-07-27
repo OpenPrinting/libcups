@@ -58,6 +58,7 @@ _httpTLSStart
 _httpTLSStop
 _httpTLSWrite
 _httpUpdate
+_httpUseCredentials
 _httpWait
 _ippCheckOptions
 _ippFindOption
@@ -300,15 +301,13 @@ cupsRemoveDest
 cupsRemoveOption
 cupsSaveCredentials
 cupsSendRequest
-cupsSetClientCertCB
-cupsSetCredentials
+cupsSetClientCredentials
 cupsSetDefaultDest
 cupsSetDests
 cupsSetEncryption
 cupsSetOAuthCB
 cupsSetPasswordCB
 cupsSetServer
-cupsSetServerCertCB
 cupsSetServerCredentials
 cupsSetUser
 cupsSetUserAgent
@@ -391,7 +390,6 @@ httpSeparateURI
 httpSetAuthString
 httpSetBlocking
 httpSetCookie
-httpSetCredentials
 httpSetDefaultField
 httpSetEncryption
 httpSetExpect

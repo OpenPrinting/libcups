@@ -376,7 +376,8 @@ ippAddCredentialsString(
     if (*cptr && *cptr != '\r' && *cptr != '\n')
       num_values ++;
 
-    if ((cptr = strchr(cptr, '\r')) != NULL)
+    cstart = cptr;
+    if ((cptr = strchr(cstart, '\r')) != NULL)
     {
       // Skip CR or CR LF
       if (cptr[1] == '\n')
@@ -384,7 +385,7 @@ ippAddCredentialsString(
       else
         cptr ++;
     }
-    else if ((cptr = strchr(cptr, '\n')) != NULL)
+    else if ((cptr = strchr(cstart, '\n')) != NULL)
     {
       // Skip LF
       cptr ++;

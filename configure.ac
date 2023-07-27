@@ -452,8 +452,8 @@ AC_SUBST([LIBCUPS_STATIC])
 dnl Extra compiler options...
 AC_ARG_ENABLE([debug], AS_HELP_STRING([--enable-debug], [turn on debugging, default=no]))
 AC_ARG_ENABLE([maintainer], AS_HELP_STRING([--enable-maintainer], [turn on maintainer mode, default=no]))
-AC_ARG_WITH([sanitizer], AS_HELP_STRING([--with-sanitizer], [build with address, leak, memory, thread, or undefined sanitizer, default=no]))
-AS_IF([test "x$with_sanitizer" = x], [
+AC_ARG_WITH([sanitizer], AS_HELP_STRING([--with-sanitizer], [build with address, leak, memory, thread, or undefined sanitizer, default=no]), [], [with_sanitizer=no])
+AS_IF([test "x$with_sanitizer" = xyes], [
     with_sanitizer="address"
 ], [test "$with_sanitizer" != address -a "$with_sanitizer" != leak -a "$with_sanitizer" != memory -a "$with_sanitizer" != no -a "$with_sanitizer" != thread -a "$with_sanitizer" != undefined], [
     AC_MSG_ERROR([Unsupported --with-sanitizer value "$with_sanitizer" specified.])
@@ -548,7 +548,7 @@ AS_IF([test -n "$GCC"], [
 
         AC_MSG_RESULT([-D__USE_MISC -D_GNU_SOURCE -Wl,-z,relro,-z,now])
     ], [darwin*], [
-        # When not building for debug, target macOS 10.14 or later, "universal"
+        # When not building for debug, target macOS 11 or later, "universal"
         # binaries when possible...
         AS_IF([echo "$CPPFLAGS $CFLAGS $LDFLAGS $OPTIM" | grep -q "\\-arch "], [
             # Don't add architecture/min-version flags if they are already present
@@ -558,11 +558,8 @@ AS_IF([test -n "$GCC"], [
             AC_MSG_RESULT([none])
         ], [test "$host_os_version" -ge 200 -a x$enable_debug != xyes], [
 	    # macOS 11.0 and higher support the Apple Silicon (arm64) CPUs
-	    OPTIM="$OPTIM -mmacosx-version-min=10.14 -arch x86_64 -arch arm64"
-            AC_MSG_RESULT([-mmacosx-version-min=10.14 -arch x86_64 -arch arm64])
-	], [test x$enable_debug != xyes], [
-	    OPTIM="$OPTIM -mmacosx-version-min=10.14 -arch x86_64"
-            AC_MSG_RESULT([-mmacosx-version-min=10.14 -arch x86_64])
+	    OPTIM="$OPTIM -mmacosx-version-min=11.0 -arch x86_64 -arch arm64"
+            AC_MSG_RESULT([-mmacosx-version-min=11.0 -arch x86_64 -arch arm64])
 	], [
 	    # Don't add architecture/min-version flags if debug enabled
             AC_MSG_RESULT([none])
