@@ -1549,7 +1549,7 @@ create_printer(
   {
     char	temp[1024];		// Temporary string
 
-    printer->hostname = strdup(cupsDNSSDGetHostName(printer->dnssd, temp, sizeof(temp)));
+    printer->hostname = strdup(cupsDNSSDCopyHostName(printer->dnssd, temp, sizeof(temp)));
   }
 
   cupsRWInit(&(printer->rwlock));

@@ -88,9 +88,9 @@ typedef void (*cups_dnssd_service_cb_t)(cups_dnssd_service_t *service, void *cb_
 // Functions...
 //
 
+extern char		*cupsDNSSDCopyHostName(cups_dnssd_t *dnssd, char *buffer, size_t bufsize) _CUPS_PUBLIC;
 extern void		cupsDNSSDDelete(cups_dnssd_t *dnssd) _CUPS_PUBLIC;
 extern size_t		cupsDNSSDGetConfigChanges(cups_dnssd_t *dnssd) _CUPS_PUBLIC;
-extern const char	*cupsDNSSDGetHostName(cups_dnssd_t *dnssd, char *buffer, size_t bufsize) _CUPS_PUBLIC;
 extern cups_dnssd_t	*cupsDNSSDNew(cups_dnssd_error_cb_t error_cb, void *cb_data) _CUPS_PUBLIC;
 
 extern void		cupsDNSSDBrowseDelete(cups_dnssd_browse_t *browser) _CUPS_PUBLIC;

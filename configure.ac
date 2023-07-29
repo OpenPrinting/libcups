@@ -156,16 +156,6 @@ AC_SEARCH_LIBS([__res_init], [resolv bind], [
 LIBS="$SAVELIBS"
 
 
-dnl macOS system configuration functions...
-SAVELIBS="$LIBS"
-LIBS="-framework SystemConfiguration $LIBS"
-AC_CHECK_FUNCS([SCDynamicStoreCopyComputerName], [
-    AC_DEFINE([HAVE_SCDYNAMICSTORECOPYCOMPUTERNAME], [1], [Have SCDynamicStoreCopyComputerName function?])
-],[
-    LIBS="$SAVELIBS"
-])
-
-
 dnl Header files...
 AC_CHECK_HEADER([CoreFoundation/CoreFoundation.h], [
     AC_DEFINE([HAVE_COREFOUNDATION_H], [1], [Have <CoreFoundation/CoreFoundation.h>?])
