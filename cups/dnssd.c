@@ -10,12 +10,6 @@
 #include "cups-private.h"
 #include "dnssd.h"
 
-#ifdef __APPLE__
-#  include <nameser.h>
-#  include <CoreFoundation/CoreFoundation.h>
-#  include <SystemConfiguration/SystemConfiguration.h>
-#endif // __APPLE__
-
 #ifdef HAVE_MDNSRESPONDER
 #  include <dns_sd.h>
 #  if _WIN32
@@ -55,12 +49,10 @@ struct _cups_dnssd_s			// DNS-SD context
 			*resolves,	// Resolve requests
 			*services;	// Registered services
 
-#ifdef __APPLE__
-  SCDynamicStoreRef	sc;		// Dyanmic store context for host info
-#endif // __APPLE__
-
 #ifdef HAVE_MDNSRESPONDER
   DNSServiceRef		ref;		// Master service reference
+  char			hostname[256];	// Current mDNS hostname
+  DNSServiceRef		hostname_ref;	// Hostname monitoring reference
   cups_thread_t		monitor;	// Monitoring thread
 
 #elif _WIN32
@@ -143,19 +135,15 @@ static void		delete_browse(cups_dnssd_browse_t *browse);
 static void		delete_query(cups_dnssd_query_t *query);
 static void		delete_resolve(cups_dnssd_resolve_t *resolve);
 static void		delete_service(cups_dnssd_service_t *service);
-static void		record_config_change(cups_dnssd_t *dnssd, cups_dnssd_flags_t flags);
 static void		report_error(cups_dnssd_t *dnssd, const char *message, ...) _CUPS_FORMAT(2,3);
-
-#ifdef __APPLE__
-static void		apple_sc_cb(SCDynamicStoreRef sc, CFArrayRef changed, cups_dnssd_t *dnssd);
-#endif // __APPLE__
 
 #ifdef HAVE_MDNSRESPONDER
 static void		*mdns_monitor(cups_dnssd_t *dnssd);
-static void		mdns_browse_cb(DNSServiceRef ref, DNSServiceFlags flags, uint32_t interfaceIndex, DNSServiceErrorType error, const char *name, const char *regtype, const char *domain, cups_dnssd_browse_t *browse);
-static void		mdns_query_cb(DNSServiceRef ref, DNSServiceFlags flags, uint32_t if_index, DNSServiceErrorType error, const char *name, uint16_t rrtype, uint16_t rrclass, uint16_t rdlen, const void *rdata, uint32_t ttl, cups_dnssd_query_t *query);
-static void		mdns_resolve_cb(DNSServiceRef ref, DNSServiceFlags flags, uint32_t if_index, DNSServiceErrorType error, const char *fullname, const char *host, uint16_t port, uint16_t txtlen, const unsigned char *txt, cups_dnssd_resolve_t *resolve);
-static void		mdns_service_cb(DNSServiceRef ref, DNSServiceFlags flags, DNSServiceErrorType error, const char *name, const char *regtype, const char *domain, cups_dnssd_service_t *service);
+static void DNSSD_API	mdns_browse_cb(DNSServiceRef ref, DNSServiceFlags flags, uint32_t interfaceIndex, DNSServiceErrorType error, const char *name, const char *regtype, const char *domain, cups_dnssd_browse_t *browse);
+static void DNSSD_API	mdns_hostname_cb(DNSServiceRef ref, DNSServiceFlags flags, uint32_t if_index, DNSServiceErrorType error, const char *fullname, uint16_t rrtype, uint16_t rrclass, uint16_t rdlen, const void *rdata, uint32_t ttl, cups_dnssd_t *dnssd);
+static void DNSSD_API	mdns_query_cb(DNSServiceRef ref, DNSServiceFlags flags, uint32_t if_index, DNSServiceErrorType error, const char *name, uint16_t rrtype, uint16_t rrclass, uint16_t rdlen, const void *rdata, uint32_t ttl, cups_dnssd_query_t *query);
+static void DNSSD_API	mdns_resolve_cb(DNSServiceRef ref, DNSServiceFlags flags, uint32_t if_index, DNSServiceErrorType error, const char *fullname, const char *host, uint16_t port, uint16_t txtlen, const unsigned char *txt, cups_dnssd_resolve_t *resolve);
+static void DNSSD_API	mdns_service_cb(DNSServiceRef ref, DNSServiceFlags flags, DNSServiceErrorType error, const char *name, const char *regtype, const char *domain, cups_dnssd_service_t *service);
 static const char	*mdns_strerror(DNSServiceErrorType errorCode);
 static cups_dnssd_flags_t mdns_to_cups(DNSServiceFlags flags, DNSServiceErrorType error);
 
@@ -205,6 +193,45 @@ cupsDNSSDAssembleFullName(
 #else // HAVE_AVAHI
   return (!avahi_service_name_join(fullname, fullsize, name, type, domain));
 #endif // HAVE_MDNSRESPONDER
+}
+
+
+//
+// 'cupsDNSSDCopyHostName()' - Copy the current mDNS hostname for the system.
+//
+// This function copies the current mDNS hostname ("hostname.local") to the
+// provided buffer.  The "dnssd" parameter is a DNS-SD context created with
+// @link cupsDNSSDNew@.  The "buffer" parameter points to a character array of
+// at least 70 bytes and the "bufsize" parameter specifies the actual size of
+// the array.
+//
+
+char *					// O - mDNS hostname or `NULL` on error
+cupsDNSSDCopyHostName(
+    cups_dnssd_t *dnssd,		// I - DNS-SD context
+    char         *buffer,		// I - Hostname buffer
+    size_t       bufsize)		// I - Size of hostname buffer (at least 70 bytes)
+{
+  // Range check input...
+  if (!dnssd || !buffer || bufsize < 70)
+  {
+    if (buffer)
+      *buffer = '\0';
+
+    return (NULL);
+  }
+
+  // Copy the current hostname...
+#ifdef HAVE_MDNSRESPONDER
+  cupsMutexLock(&dnssd->mutex);
+  cupsCopyString(buffer, dnssd->hostname, bufsize);
+  cupsMutexUnlock(&dnssd->mutex);
+
+#else // HAVE_AVAHI
+  cupsCopyString(buffer, avahi_client_get_host_name_fqdn(dnssd->client), bufsize);
+#endif // HAVE_MDNSRESPONDER
+
+  return (buffer);
 }
 
 
@@ -426,59 +453,6 @@ cupsDNSSDDelete(cups_dnssd_t *dnssd)	// I - DNS-SD context
 
 
 //
-// 'cupsDNSSDGetHostName()' - Get the current mDNS host name for the system.
-//
-// This function gets the current mDNS (".local") host name for the system.
-//
-
-const char *				// O - Local host name or `NULL` for none
-cupsDNSSDGetHostName(
-    cups_dnssd_t *dnssd,		// I - DNS-SD context
-    char         *buffer,		// I - Host name buffer
-    size_t       bufsize)		// I - Size of host name buffer
-{
-  // Range check input...
-  if (buffer)
-    *buffer = '\0';
-
-  if (!dnssd || !buffer || !bufsize)
-    return (NULL);
-
-#if _WIN32 || defined(HAVE_MDNSRESPONDER)
-  char		*bufptr;		// Pointer into buffer
-#  ifdef __APPLE__
-  CFStringRef	localname;		// Local host name as a CF string
-
-  if ((localname = SCDynamicStoreCopyLocalHostName(dnssd->sc)) != NULL)
-  {
-    CFStringGetCString(localname, buffer, (CFIndex)bufsize, kCFStringEncodingUTF8);
-    CFRelease(localname);
-  }
-  else
-#  endif // __APPLE__
-  gethostname(buffer, bufsize);
-
-  if ((bufptr = strchr(buffer, '.')) != NULL)
-  {
-    // Replace domain with .local as needed...
-    if (strcmp(bufptr, ".local"))
-      cupsCopyString(bufptr, ".local", bufsize - (size_t)(bufptr - buffer));
-  }
-  else
-  {
-    // Add .local...
-    cupsConcatString(buffer, ".local", bufsize);
-  }
-
-#else // HAVE_AVAHI
-  cupsCopyString(buffer, avahi_client_get_host_name_fqdn(dnssd->client), bufsize);
-#endif // _WIN32 || HAVE_MDNSRESPONDER
-
-  return (buffer);
-}
-
-
-//
 // 'cupsDNSSDGetConfigChanges()' - Get the number of host name/network
 //                                 configuration changes seen.
 //
@@ -531,16 +505,6 @@ cupsDNSSDNew(
   // Initialize the mutex...
   cupsMutexInit(&dnssd->mutex);
 
-#ifdef __APPLE__
-  // Use the system configuration dynamic store for host info...
-  SCDynamicStoreContext	scinfo;		// Information for callback
-
-  memset(&scinfo, 0, sizeof(scinfo));
-  scinfo.info = dnssd;
-
-  dnssd->sc = SCDynamicStoreCreate(kCFAllocatorDefault, CFSTR("libcups3"), (SCDynamicStoreCallBack)apple_sc_cb, &scinfo);
-#endif // __APPLE__
-
   // Setup the DNS-SD connection and monitor thread...
 #ifdef HAVE_MDNSRESPONDER
   DNSServiceErrorType error;		// Error code
@@ -552,6 +516,15 @@ cupsDNSSDNew(
     cupsDNSSDDelete(dnssd);
     DEBUG_puts("2cupsDNSSDNew: Unable to create DNS-SD thread - returning NULL.");
     return (NULL);
+  }
+
+  // Monitor for hostname changes...
+  httpGetHostname(NULL, dnssd->hostname, sizeof(dnssd->hostname));
+  dnssd->hostname_ref = dnssd->ref;
+  if ((error = DNSServiceQueryRecord(&dnssd->hostname_ref, kDNSServiceFlagsShareConnection, kDNSServiceInterfaceIndexLocalOnly, "1.0.0.127.in-addr.arpa.", kDNSServiceType_PTR, kDNSServiceClass_IN, (DNSServiceQueryRecordReply)mdns_hostname_cb, dnssd)) != kDNSServiceErr_NoError)
+  {
+    report_error(dnssd, "Unable to query PTR record for local hostname: %s", mdns_strerror(error));
+    dnssd->hostname_ref = NULL;
   }
 
   // Start the background monitoring thread...
@@ -1515,28 +1488,6 @@ delete_service(
 
 
 //
-// 'record_config_change()' - Record that the local hostname or network has
-//                            changed and notify any service callbacks.
-//
-
-static void
-record_config_change(cups_dnssd_t       *dnssd,	// I - DNS-SD context
-                     cups_dnssd_flags_t flags)	// I - Flags for what changed
-{
-  cups_dnssd_service_t	*service;		// Current service
-
-
-  cupsMutexLock(&dnssd->mutex);
-
-  dnssd->config_changes ++;
-
-  for (service = (cups_dnssd_service_t *)cupsArrayGetFirst(dnssd->services); service; service = (cups_dnssd_service_t *)cupsArrayGetNext(dnssd->services))
-    (service->cb)(service, service->cb_data, flags);
-
-  cupsMutexUnlock(&dnssd->mutex);
-}
-
-//
 // 'report_error()' - Report an error.
 //
 
@@ -1562,41 +1513,6 @@ report_error(cups_dnssd_t *dnssd,	// I - DNS-SD context
 }
 
 
-#ifdef __APPLE__
-//
-// 'apple_sc_cb()' - Track host name changes.
-//
-
-static void
-apple_sc_cb(SCDynamicStoreRef sc,	// I - Dynamic store context
-            CFArrayRef        changed,	// I - Changed keys
-            cups_dnssd_t      *dnssd)	// I - DNS-SD context
-{
-  cups_dnssd_flags_t	flags = CUPS_DNSSD_FLAGS_NETWORK_CHANGE;
-					// Change flags
-  CFIndex		i,		// Looping var
-			count;		// Number of values
-
-
-  (void)sc;
-
-  // See if we had a local hostname change - anything else will be a network
-  // change...
-  for (i = 0, count = CFArrayGetCount(changed); i < count; i ++)
-  {
-    if (CFArrayGetValueAtIndex(changed, i) == kSCPropNetLocalHostName)
-    {
-      flags = CUPS_DNSSD_FLAGS_HOST_CHANGE;
-      break;
-    }
-  }
-
-  // Record the change and do any callbacks as needed...
-  record_config_change(dnssd, flags);
-}
-#endif // __APPLE__
-
-
 #ifdef HAVE_MDNSRESPONDER
 //
 // 'mdns_browse_cb()' - Handle DNS-SD browse callbacks from mDNSResponder.
@@ -1619,6 +1535,85 @@ mdns_browse_cb(
     report_error(browse->dnssd, "DNS-SD browse error: %s", mdns_strerror(error));
 
   (browse->cb)(browse, browse->cb_data, mdns_to_cups(flags, error), if_index, name, regtype, domain);
+}
+
+
+//
+// 'mdns_hostname_cb()' - Track changes to the mDNS hostname...
+//
+
+static void DNSSD_API
+mdns_hostname_cb(
+    DNSServiceRef       ref,		// I - Service reference (unsued)
+    DNSServiceFlags     flags,		// I - Flags (unused)
+    uint32_t            if_index,	// I - Interface index (unused)
+    DNSServiceErrorType error,		// I - Error code, if any
+    const char          *fullname,	// I - Search name (unused)
+    uint16_t            rrtype,		// I - Record type (unused)
+    uint16_t            rrclass,	// I - Record class (unused)
+    uint16_t            rdlen,		// I - Record data length
+    const void          *rdata,		// I - Record data
+    uint32_t            ttl,		// I - Time-to-live (unused)
+    cups_dnssd_t        *dnssd)		// I - DNS-SD context
+{
+  uint8_t	*rdataptr,		// Pointer into record data
+		lablen;			// Length of current label
+  char		temp[1024],		// Temporary hostname string
+		*tempptr;		// Pointer into temporary string
+
+
+  (void)ref;
+  (void)flags;
+  (void)if_index;
+  (void)fullname;
+  (void)rrtype;
+  (void)rrclass;
+  (void)ttl;
+
+  // Check for errors...
+  if (error != kDNSServiceErr_NoError)
+    return;
+
+  // Copy the hostname from the PTR record...
+  for (rdataptr = (uint8_t *)rdata, tempptr = temp; rdlen > 0 && tempptr < (temp + sizeof(temp) - 2); rdlen -= lablen, rdataptr += lablen)
+  {
+    lablen = *rdataptr++;
+    rdlen --;
+
+    if (!rdlen || rdlen < lablen)
+      break;
+
+    if (tempptr > temp)
+      *tempptr++ = '.';
+
+    if (lablen < (sizeof(temp) - (size_t)(tempptr - temp)))
+    {
+      memcpy(tempptr, rdataptr, lablen);
+      tempptr += lablen;
+    }
+  }
+
+  *tempptr = '\0';
+
+  // Ignore localhost...
+  if (!strcmp(temp, "localhost"))
+    return;
+
+  // Look for changes to the hostname...
+  cupsMutexLock(&dnssd->mutex);
+  if (strcmp(temp, dnssd->hostname))
+  {
+    cups_dnssd_service_t *service;	// Current service
+
+    // Copy the new hostname...
+    cupsCopyString(dnssd->hostname, temp, sizeof(dnssd->hostname));
+    dnssd->config_changes ++;
+
+    // Notify services of the change...
+    for (service = (cups_dnssd_service_t *)cupsArrayGetFirst(dnssd->services); service; service = (cups_dnssd_service_t *)cupsArrayGetNext(dnssd->services))
+      (service->cb)(service, service->cb_data, CUPS_DNSSD_FLAGS_HOST_CHANGE);
+  }
+  cupsMutexUnlock(&dnssd->mutex);
 }
 
 
@@ -1954,7 +1949,17 @@ avahi_client_cb(
   }
   else if (state == AVAHI_CLIENT_S_RUNNING)
   {
-    record_config_change(dnssd, CUPS_DNSSD_FLAGS_HOST_CHANGE);
+    // Let the services know the hostname has changed...
+    cups_dnssd_service_t *service;	// Current service
+
+    cupsMutexLock(&dnssd->mutex);
+
+    dnssd->config_changes ++;
+
+    for (service = (cups_dnssd_service_t *)cupsArrayGetFirst(dnssd->services); service; service = (cups_dnssd_service_t *)cupsArrayGetNext(dnssd->services))
+      (service->cb)(service, service->cb_data, CUPS_DNSSD_FLAGS_HOST_CHANGE);
+
+    cupsMutexUnlock(&dnssd->mutex);
   }
 }
 

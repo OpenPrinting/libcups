@@ -4456,29 +4456,6 @@ fi
 LIBS="$SAVELIBS"
 
 
-SAVELIBS="$LIBS"
-LIBS="-framework SystemConfiguration $LIBS"
-
-  for ac_func in SCDynamicStoreCopyComputerName
-do :
-  ac_fn_c_check_func "$LINENO" "SCDynamicStoreCopyComputerName" "ac_cv_func_SCDynamicStoreCopyComputerName"
-if test "x$ac_cv_func_SCDynamicStoreCopyComputerName" = xyes
-then :
-  printf "%s\n" "#define HAVE_SCDYNAMICSTORECOPYCOMPUTERNAME 1" >>confdefs.h
-
-
-printf "%s\n" "#define HAVE_SCDYNAMICSTORECOPYCOMPUTERNAME 1" >>confdefs.h
-
-
-else $as_nop
-
-    LIBS="$SAVELIBS"
-
-fi
-
-done
-
-
 ac_header= ac_cache=
 for ac_item in $ac_header_c_list
 do
