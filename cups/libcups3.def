@@ -115,10 +115,10 @@ cupsDNSSDAssembleFullName
 cupsDNSSDBrowseDelete
 cupsDNSSDBrowseGetContext
 cupsDNSSDBrowseNew
+cupsDNSSDCopyHostName
 cupsDNSSDDecodeTXT
 cupsDNSSDDelete
 cupsDNSSDGetConfigChanges
-cupsDNSSDGetHostName
 cupsDNSSDNew
 cupsDNSSDQueryDelete
 cupsDNSSDQueryGetContext
