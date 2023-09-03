@@ -56,7 +56,7 @@ main(int  argc,				// I - Number of command-line arguments
   cups_page_header_t	header;		// Page header (front side)
   cups_page_header_t	back_header;	// Page header (back side)
   pwg_media_t		*pwg;		// Media size
-  cups_size_t		media;		// Media information
+  cups_media_t		media;		// Media information
   static const char * const sheet_backs[4] =
   {					// Back side values
     "normal",

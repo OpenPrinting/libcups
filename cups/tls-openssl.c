@@ -29,7 +29,7 @@ static int		http_bio_read(BIO *h, char *buf, int size);
 static int		http_bio_write(BIO *h, const char *buf, int num);
 
 static bool		openssl_add_ext(STACK_OF(X509_EXTENSION) *exts, int nid, const char *value);
-static X509_NAME	*openssl_create_name(const char *organization, const char *org_unit, const char *locality, const char *state_province, const char *country, const char *common_name);
+static X509_NAME	*openssl_create_name(const char *organization, const char *org_unit, const char *locality, const char *state_province, const char *country, const char *common_name, const char *email);
 static EVP_PKEY		*openssl_create_key(cups_credtype_t type);
 static X509_EXTENSION	*openssl_create_san(const char *common_name, size_t num_alt_names, const char * const *alt_names);
 static time_t		openssl_get_date(X509 *cert, int which);
@@ -167,6 +167,7 @@ cupsCreateCredentials(
     const char         *state_province,	// I - State/province or `NULL` for "Unknown"
     const char         *country,	// I - Country or `NULL` for locale-based default
     const char         *common_name,	// I - Common name
+    const char         *email,		// I - Email address or `NULL` for none
     size_t             num_alt_names,	// I - Number of subject alternate names
     const char * const *alt_names,	// I - Subject Alternate Names
     const char         *root_name,	// I - Root certificate/domain name or `NULL` for site/self-signed
@@ -246,7 +247,7 @@ cupsCreateCredentials(
 
   X509_set_pubkey(cert, pkey);
 
-  name = openssl_create_name(organization, org_unit, locality, state_province, country, common_name);
+  name = openssl_create_name(organization, org_unit, locality, state_province, country, common_name, email);
 
   X509_set_subject_name(cert, name);
 
@@ -476,6 +477,7 @@ cupsCreateCredentialsRequest(
     const char         *state_province,	// I - State/province or `NULL` for "Unknown"
     const char         *country,	// I - Country or `NULL` for locale-based default
     const char         *common_name,	// I - Common name
+    const char         *email,		// I - Email address or `NULL` for none
     size_t             num_alt_names,	// I - Number of subject alternate names
     const char * const *alt_names)	// I - Subject Alternate Names
 {
@@ -529,7 +531,7 @@ cupsCreateCredentialsRequest(
 
   X509_REQ_set_pubkey(csr, pkey);
 
-  if ((name = openssl_create_name(organization, org_unit, locality, state_province, country, common_name)) == NULL)
+  if ((name = openssl_create_name(organization, org_unit, locality, state_province, country, common_name, email)) == NULL)
     goto done;
 
   X509_REQ_set_subject_name(csr, name);
@@ -1644,7 +1646,7 @@ _httpTLSStart(http_t *http)		// I - Connection to server
     {
       DEBUG_printf("4_httpTLSStart: Auto-create credentials for \"%s\".", cn);
 
-      if (!cupsCreateCredentials(tls_keypath, false, CUPS_CREDPURPOSE_SERVER_AUTH, CUPS_CREDTYPE_DEFAULT, CUPS_CREDUSAGE_DEFAULT_TLS, NULL, NULL, NULL, NULL, NULL, cn, 0, NULL, NULL, time(NULL) + 3650 * 86400))
+      if (!cupsCreateCredentials(tls_keypath, false, CUPS_CREDPURPOSE_SERVER_AUTH, CUPS_CREDTYPE_DEFAULT, CUPS_CREDUSAGE_DEFAULT_TLS, NULL, NULL, NULL, NULL, NULL, cn, NULL, 0, NULL, NULL, time(NULL) + 3650 * 86400))
       {
 	DEBUG_puts("4_httpTLSStart: cupsCreateCredentials failed.");
 	http->error  = errno = EINVAL;
@@ -2084,7 +2086,8 @@ openssl_create_name(
     const char      *locality,		// I - City/town or `NULL` for "Unknown"
     const char      *state_province,	// I - State/province or `NULL` for "Unknown"
     const char      *country,		// I - Country or `NULL` for locale-based default
-    const char      *common_name)	// I - Common name
+    const char      *common_name,	// I - Common name
+    const char      *email)		// I - Email address or `NULL` for none
 {
   X509_NAME	*name;			// Subject/issuer name
   cups_lang_t	*language;		// Default language info
@@ -2105,6 +2108,8 @@ openssl_create_name(
   X509_NAME_add_entry_by_txt(name, SN_organizationalUnitName, MBSTRING_ASC, (unsigned char *)(org_unit ? org_unit : ""), -1, -1, 0);
   X509_NAME_add_entry_by_txt(name, SN_stateOrProvinceName, MBSTRING_ASC, (unsigned char *)(state_province ? state_province : "Unknown"), -1, -1, 0);
   X509_NAME_add_entry_by_txt(name, SN_localityName, MBSTRING_ASC, (unsigned char *)(locality ? locality : "Unknown"), -1, -1, 0);
+  if (email && *email)
+    X509_NAME_add_entry_by_txt(name, "emailAddress", MBSTRING_ASC, (unsigned char *)email, -1, -1, 0);
 
   return (name);
 }

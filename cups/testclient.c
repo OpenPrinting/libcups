@@ -271,7 +271,7 @@ make_raster_file(ipp_t      *response,  // I - Printer attributes
   ipp_attribute_t       *attr;          // Printer attribute
   const char            *type = NULL;   // Raster type (colorspace + bits)
   pwg_media_t           *pwg = NULL;	// Media size
-  cups_size_t		media;		// Media information
+  cups_media_t		media;		// Media information
   int                   xdpi = 0,       // Horizontal resolution
                         ydpi = 0;       // Vertical resolution
   int                   fd;             // Temporary file
@@ -473,7 +473,7 @@ make_raster_file(ipp_t      *response,  // I - Printer attributes
     return (NULL);
   }
 
-  if ((fd = cupsTempFd(NULL, ".pwg", tempname, tempsize)) < 0)
+  if ((fd = cupsCreateTempFd(NULL, ".pwg", tempname, tempsize)) < 0)
   {
     printf("Unable to create temporary print file: %s\n", strerror(errno));
     free(line);

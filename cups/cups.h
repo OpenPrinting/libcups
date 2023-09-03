@@ -40,7 +40,6 @@ extern "C" {
 #  define CUPS_LENGTH_VARIABLE		(ssize_t)0
 #  define CUPS_TIMEOUT_DEFAULT		0
 
-
 // Options and values
 #  define CUPS_COPIES			"copies"
 #  define CUPS_COPIES_SUPPORTED		"copies-supported"
@@ -243,7 +242,7 @@ typedef struct cups_option_s		// Printer Options
 typedef struct cups_dest_s		// Destination
 {
   char		*name,			// Printer or class name
-		*instance;		// Local instance name or NULL
+		*instance;		// Local instance name or `NULL`
   bool		is_default;		// Is this printer the default?
   size_t	num_options;		// Number of options
   cups_option_t	*options;		// Options
@@ -252,7 +251,7 @@ typedef struct cups_dest_s		// Destination
 typedef struct _cups_dinfo_s cups_dinfo_t;
 					// Destination capability and status information
 
-typedef struct cups_job_s		// Job
+typedef struct cups_job_s		// Job information
 {
   int		id;			// The job ID
   char		*dest;			// Printer or class name
@@ -267,7 +266,7 @@ typedef struct cups_job_s		// Job
   time_t	processing_time;	// Time the job was processed
 } cups_job_t;
 
-typedef struct cups_size_s		// Media information
+typedef struct cups_media_s		// Media information
 {
   char		media[128],		// Media name to use
 		color[128],		// Media color (blank for any/auto)
@@ -279,7 +278,7 @@ typedef struct cups_size_s		// Media information
 		left,			// Left margin in hundredths of millimeters
 		right,			// Right margin in hundredths of millimeters
 		top;			// Top margin in hundredths of millimeters
-} cups_size_t;
+} cups_media_t;
 
 typedef bool (*cups_cert_san_cb_t)(const char *common_name, const char *subject_alt_name, void *user_data);
 					// Certificate signing subjectAltName callback
@@ -299,7 +298,7 @@ typedef const char *(*cups_password_cb_t)(const char *prompt, http_t *http, cons
 //
 
 extern size_t		cupsAddDest(const char *name, const char *instance, size_t num_dests, cups_dest_t **dests) _CUPS_PUBLIC;
-extern size_t		cupsAddDestMediaOptions(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, unsigned flags, cups_size_t *size, size_t num_options, cups_option_t **options) _CUPS_PUBLIC;
+extern size_t		cupsAddDestMediaOptions(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, unsigned flags, cups_media_t *media, size_t num_options, cups_option_t **options) _CUPS_PUBLIC;
 extern size_t		cupsAddIntegerOption(const char *name, int value, size_t num_options, cups_option_t **options) _CUPS_PUBLIC;
 extern size_t		cupsAddOption(const char *name, const char *value, size_t num_options, cups_option_t **options) _CUPS_PUBLIC;
 extern bool		cupsAreCredentialsValidForName(const char *common_name, const char *credentials);
@@ -316,9 +315,11 @@ extern size_t		cupsCopyDest(cups_dest_t *dest, size_t num_dests, cups_dest_t **d
 extern cups_dinfo_t	*cupsCopyDestInfo(http_t *http, cups_dest_t *dest) _CUPS_PUBLIC;
 extern int		cupsCopyDestConflicts(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, size_t num_options, cups_option_t *options, const char *new_option, const char *new_value, size_t *num_conflicts, cups_option_t **conflicts, size_t *num_resolved, cups_option_t **resolved) _CUPS_PUBLIC;
 extern size_t		cupsCopyString(char *dst, const char *src, size_t dstsize) _CUPS_PUBLIC;
-extern bool		cupsCreateCredentials(const char *path, bool ca_cert, cups_credpurpose_t purpose, cups_credtype_t type, cups_credusage_t usage, const char *organization, const char *org_unit, const char *locality, const char *state_province, const char *country, const char *common_name, size_t num_alt_names, const char * const *alt_names, const char *root_name, time_t expiration_date) _CUPS_PUBLIC;
-extern bool		cupsCreateCredentialsRequest(const char *path, cups_credpurpose_t purpose, cups_credtype_t type, cups_credusage_t usage, const char *organization, const char *org_unit, const char *locality, const char *state_province, const char *country, const char *common_name, size_t num_alt_names, const char * const *alt_names) _CUPS_PUBLIC;
+extern bool		cupsCreateCredentials(const char *path, bool ca_cert, cups_credpurpose_t purpose, cups_credtype_t type, cups_credusage_t usage, const char *organization, const char *org_unit, const char *locality, const char *state_province, const char *country, const char *common_name, const char *email, size_t num_alt_names, const char * const *alt_names, const char *root_name, time_t expiration_date) _CUPS_PUBLIC;
+extern bool		cupsCreateCredentialsRequest(const char *path, cups_credpurpose_t purpose, cups_credtype_t type, cups_credusage_t usage, const char *organization, const char *org_unit, const char *locality, const char *state_province, const char *country, const char *common_name, const char *email, size_t num_alt_names, const char * const *alt_names) _CUPS_PUBLIC;
 extern ipp_status_t	cupsCreateDestJob(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, int *job_id, const char *title, size_t num_options, cups_option_t *options) _CUPS_PUBLIC;
+extern int		cupsCreateTempFd(const char *prefix, const char *suffix, char *filename, size_t len) _CUPS_PUBLIC;
+extern cups_file_t	*cupsCreateTempFile(const char *prefix, const char *suffix, char *filename, size_t len) _CUPS_PUBLIC;
 
 extern bool		cupsDoAuthentication(http_t *http, const char *method, const char *resource) _CUPS_PUBLIC;
 extern ipp_t		*cupsDoFileRequest(http_t *http, ipp_t *request, const char *resource, const char *filename) _CUPS_PUBLIC;
@@ -327,7 +328,7 @@ extern ipp_t		*cupsDoRequest(http_t *http, ipp_t *request, const char *resource)
 
 extern ipp_attribute_t	*cupsEncodeOption(ipp_t *ipp, ipp_tag_t group_tag, const char *name, const char *value) _CUPS_PUBLIC;
 extern void		cupsEncodeOptions(ipp_t *ipp, size_t num_options, cups_option_t *options, ipp_tag_t group_tag) _CUPS_PUBLIC;
-extern bool		cupsEnumDests(unsigned flags, int msec, int *cancel, cups_ptype_t type, cups_ptype_t mask, cups_dest_cb_t cb, void *user_data) _CUPS_PUBLIC;
+extern bool		cupsEnumDests(cups_dest_flags_t flags, int msec, int *cancel, cups_ptype_t type, cups_ptype_t mask, cups_dest_cb_t cb, void *user_data) _CUPS_PUBLIC;
 
 extern ipp_attribute_t	*cupsFindDestDefault(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, const char *option) _CUPS_PUBLIC;
 extern ipp_attribute_t	*cupsFindDestReady(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, const char *option) _CUPS_PUBLIC;
@@ -343,11 +344,11 @@ extern char		*cupsGetCredentialsInfo(const char *credentials, char *buffer, size
 extern http_trust_t	cupsGetCredentialsTrust(const char *path, const char *common_name, const char *credentials) _CUPS_PUBLIC;
 extern const char	*cupsGetDefault(http_t *http) _CUPS_PUBLIC;
 extern cups_dest_t	*cupsGetDest(const char *name, const char *instance, size_t num_dests, cups_dest_t *dests) _CUPS_PUBLIC;
-extern bool		cupsGetDestMediaByIndex(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, size_t n, unsigned flags, cups_size_t *size) _CUPS_PUBLIC;
-extern bool		cupsGetDestMediaByName(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, const char *media, unsigned flags, cups_size_t *size) _CUPS_PUBLIC;
-extern bool		cupsGetDestMediaBySize(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, int width, int length, unsigned flags, cups_size_t *size) _CUPS_PUBLIC;
+extern bool		cupsGetDestMediaByIndex(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, size_t n, unsigned flags, cups_media_t *media) _CUPS_PUBLIC;
+extern bool		cupsGetDestMediaByName(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, const char *name, unsigned flags, cups_media_t *media) _CUPS_PUBLIC;
+extern bool		cupsGetDestMediaBySize(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, int width, int length, unsigned flags, cups_media_t *media) _CUPS_PUBLIC;
 extern size_t		cupsGetDestMediaCount(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, unsigned flags) _CUPS_PUBLIC;
-extern bool		cupsGetDestMediaDefault(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, unsigned flags, cups_size_t *size) _CUPS_PUBLIC;
+extern bool		cupsGetDestMediaDefault(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, unsigned flags, cups_media_t *media) _CUPS_PUBLIC;
 extern cups_dest_t	*cupsGetDestWithURI(const char *name, const char *uri) _CUPS_PUBLIC;
 extern size_t		cupsGetDests(http_t *http, cups_dest_t **dests) _CUPS_PUBLIC;
 extern http_encryption_t cupsGetEncryption(void) _CUPS_PUBLIC;
@@ -370,7 +371,7 @@ extern ssize_t		cupsHashData(const char *algorithm, const void *data, size_t dat
 extern const char	*cupsHashString(const unsigned char *hash, size_t hashsize, char *buffer, size_t bufsize) _CUPS_PUBLIC;
 extern ssize_t		cupsHMACData(const char *algorithm, const unsigned char *key, size_t keylen, const void *data, size_t datalen, unsigned char *hash, size_t hashsize) _CUPS_PUBLIC;
 
-extern const char	*cupsLocalizeDestMedia(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, unsigned flags, cups_size_t *size) _CUPS_PUBLIC;
+extern const char	*cupsLocalizeDestMedia(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, unsigned flags, cups_media_t *media) _CUPS_PUBLIC;
 extern const char	*cupsLocalizeDestOption(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, const char *option) _CUPS_PUBLIC;
 extern const char	*cupsLocalizeDestValue(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, const char *option, const char *value) _CUPS_PUBLIC;
 extern char		*cupsLocalizeNotifySubject(cups_lang_t *lang, ipp_t *event) _CUPS_PUBLIC;
@@ -398,9 +399,6 @@ extern void		cupsSetUser(const char *user) _CUPS_PUBLIC;
 extern void		cupsSetUserAgent(const char *user_agent) _CUPS_PUBLIC;
 extern bool		cupsSignCredentialsRequest(const char *path, const char *common_name, const char *request, const char *root_name, cups_credpurpose_t allowed_purpose, cups_credusage_t allowed_usage, cups_cert_san_cb_t cb, void *cb_data, time_t expiration_date) _CUPS_PUBLIC;
 extern http_status_t	cupsStartDestDocument(http_t *http, cups_dest_t *dest, cups_dinfo_t *info, int job_id, const char *docname, const char *format, size_t num_options, cups_option_t *options, bool last_document) _CUPS_PUBLIC;
-
-extern int		cupsTempFd(const char *prefix, const char *suffix, char *filename, size_t len) _CUPS_PUBLIC;
-extern cups_file_t	*cupsTempFile(const char *prefix, const char *suffix, char *filename, size_t len) _CUPS_PUBLIC;
 
 extern http_status_t	cupsWriteRequestData(http_t *http, const char *buffer, size_t length) _CUPS_PUBLIC;
 
