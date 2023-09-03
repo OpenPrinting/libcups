@@ -494,7 +494,7 @@ show_default(http_t       *http,	// I - Connection to destination
   if (!strcmp(option, "media"))
   {
     // Show default media option...
-    cups_size_t size;                   // Media size information
+    cups_media_t size;                   // Media size information
 
     if (cupsGetDestMediaDefault(http, dest, dinfo, CUPS_MEDIA_FLAGS_DEFAULT, &size))
       printf("%s (%.2fx%.2fmm, margins=[%.2f %.2f %.2f %.2f])\n", size.media, size.width * 0.01, size.length * 0.01, size.left * 0.01, size.bottom * 0.01, size.right * 0.01, size.top * 0.01);
@@ -534,7 +534,7 @@ show_media(http_t       *http,		// I - Connection to destination
 {
   size_t	i,			// Looping var
 		count;			// Number of sizes
-  cups_size_t	size;			// Media size info
+  cups_media_t	size;			// Media size info
 
 
   if (name)

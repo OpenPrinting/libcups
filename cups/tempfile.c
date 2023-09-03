@@ -1,7 +1,7 @@
 //
 // Temp file utilities for CUPS.
 //
-// Copyright © 2021-2022 by OpenPrinting.
+// Copyright © 2021-2023 by OpenPrinting.
 // Copyright © 2007-2018 by Apple Inc.
 // Copyright © 1997-2006 by Easy Software Products.
 //
@@ -21,7 +21,7 @@
 
 
 //
-// 'cupsTempFd()' - Creates a temporary file.
+// 'cupsCreateTempFd()' - Creates a temporary file.
 //
 // This function creates a temporary file and returns a file descriptor for the
 // file.  The unique temporary filename uses the "prefix" and "suffix" arguments
@@ -30,10 +30,10 @@
 //
 
 int					// O - New file descriptor or `-1` on error
-cupsTempFd(const char *prefix,		// I - Filename prefix or `NULL` for none
-           const char *suffix, 		// I - Filename suffix or `NULL` for none
-           char       *filename,	// I - Pointer to buffer
-           size_t     len)		// I - Size of buffer
+cupsCreateTempFd(const char *prefix,	// I - Filename prefix or `NULL` for none
+                 const char *suffix, 	// I - Filename suffix or `NULL` for none
+                 char       *filename,	// I - Pointer to buffer
+                 size_t     len)	// I - Size of buffer
 {
   int		fd;			// File descriptor for temp file
   int		tries;			// Number of tries
@@ -131,7 +131,7 @@ cupsTempFd(const char *prefix,		// I - Filename prefix or `NULL` for none
 
 
 //
-// 'cupsTempFile()' - Creates a temporary CUPS file.
+// 'cupsCreateTempFile()' - Creates a temporary CUPS file.
 //
 // This function creates a temporary file and returns a file descriptor for the
 // file.  The unique temporary filename uses the "prefix" and "suffix" arguments
@@ -140,16 +140,16 @@ cupsTempFd(const char *prefix,		// I - Filename prefix or `NULL` for none
 //
 
 cups_file_t *				// O - CUPS file or `NULL` on error
-cupsTempFile(const char *prefix,	// I - Filename prefix or `NULL` for none
-             const char *suffix, 	// I - Filename suffix or `NULL` for none
-             char       *filename,	// I - Pointer to buffer
-             size_t     len)		// I - Size of buffer
+cupsCreateTempFile(const char *prefix,	// I - Filename prefix or `NULL` for none
+                   const char *suffix, 	// I - Filename suffix or `NULL` for none
+		   char       *filename,// I - Pointer to buffer
+		   size_t     len)	// I - Size of buffer
 {
   cups_file_t	*file;			// CUPS file
   int		fd;			// File descriptor
 
 
-  if ((fd = cupsTempFd(prefix, suffix, filename, len)) < 0)
+  if ((fd = cupsCreateTempFd(prefix, suffix, filename, len)) < 0)
   {
     return (NULL);
   }
@@ -160,5 +160,7 @@ cupsTempFile(const char *prefix,	// I - Filename prefix or `NULL` for none
     return (NULL);
   }
   else
+  {
     return (file);
+  }
 }

@@ -425,7 +425,7 @@ do_unit_tests(void)
   for (type = CUPS_CREDTYPE_DEFAULT; type <= CUPS_CREDTYPE_ECDSA_P521_SHA256; type ++)
   {
     testBegin("cupsCreateCredentials(_site_, %s, CA)", types[type]);
-    if (cupsCreateCredentials(TEST_CERT_PATH, true, CUPS_CREDPURPOSE_SERVER_AUTH, type, CUPS_CREDUSAGE_DEFAULT_TLS, "Organization", "Unit", "Locality", "Ontario", "CA", "_site_", 0, NULL, NULL, time(NULL) + 30 * 86400))
+    if (cupsCreateCredentials(TEST_CERT_PATH, true, CUPS_CREDPURPOSE_SERVER_AUTH, type, CUPS_CREDUSAGE_DEFAULT_TLS, "Organization", "Unit", "Locality", "Ontario", "CA", "_site_", /*email*/NULL, 0, NULL, NULL, time(NULL) + 30 * 86400))
     {
       testEnd(true);
 
@@ -445,13 +445,13 @@ do_unit_tests(void)
     }
 
     testBegin("cupsCreateCredentials(printer w/alt names, %s, signed by CA cert)", types[type]);
-    if (cupsCreateCredentials(TEST_CERT_PATH, false, CUPS_CREDPURPOSE_SERVER_AUTH, type, CUPS_CREDUSAGE_DEFAULT_TLS, "Organization", "Unit", "Locality", "Ontario", "CA", "printer", sizeof(alt_names) / sizeof(alt_names[0]), alt_names, "_site_", time(NULL) + 30 * 86400))
+    if (cupsCreateCredentials(TEST_CERT_PATH, false, CUPS_CREDPURPOSE_SERVER_AUTH, type, CUPS_CREDUSAGE_DEFAULT_TLS, "Organization", "Unit", "Locality", "Ontario", "CA", "printer", "admin@example.com", sizeof(alt_names) / sizeof(alt_names[0]), alt_names, "_site_", time(NULL) + 30 * 86400))
       testEnd(true);
     else
       testEndMessage(false, "%s", cupsGetErrorString());
 
     testBegin("cupsCreateCredentialsRequest(altprinter w/alt names, %s)", types[type]);
-    if (cupsCreateCredentialsRequest(TEST_CERT_PATH, CUPS_CREDPURPOSE_SERVER_AUTH, type, CUPS_CREDUSAGE_DEFAULT_TLS, "Organization", "Unit", "Locality", "Ontario", "CA", "altprinter", sizeof(alt_names) / sizeof(alt_names[0]), alt_names))
+    if (cupsCreateCredentialsRequest(TEST_CERT_PATH, CUPS_CREDPURPOSE_SERVER_AUTH, type, CUPS_CREDUSAGE_DEFAULT_TLS, "Organization", "Unit", "Locality", "Ontario", "CA", "altprinter", "admin@example.com", sizeof(alt_names) / sizeof(alt_names[0]), alt_names))
     {
       testEnd(true);
 
@@ -485,7 +485,7 @@ do_unit_tests(void)
     }
 
     testBegin("cupsCreateCredentialsRequest(altprinter w/o alt names, %s)", types[type]);
-    if (cupsCreateCredentialsRequest(TEST_CERT_PATH, CUPS_CREDPURPOSE_SERVER_AUTH, type, CUPS_CREDUSAGE_DEFAULT_TLS, "Organization", "Unit", "Locality", "Ontario", "CA", "altprinter", 0, NULL))
+    if (cupsCreateCredentialsRequest(TEST_CERT_PATH, CUPS_CREDPURPOSE_SERVER_AUTH, type, CUPS_CREDUSAGE_DEFAULT_TLS, "Organization", "Unit", "Locality", "Ontario", "CA", "altprinter", "admin@example.com", 0, NULL))
     {
       testEnd(true);
 
@@ -633,7 +633,7 @@ test_cert(
 	*key;				// Private key
 
 
-  if (!cupsCreateCredentials(TEST_CERT_PATH, ca_cert, purpose, type, keyusage, organization, org_unit, locality, state, country, common_name, num_alt_names, alt_names, root_name, time(NULL) + days * 86400))
+  if (!cupsCreateCredentials(TEST_CERT_PATH, ca_cert, purpose, type, keyusage, organization, org_unit, locality, state, country, common_name, /*email*/NULL, num_alt_names, alt_names, root_name, time(NULL) + days * 86400))
   {
     fprintf(stderr, "testcreds: Unable to create certificate (%s)\n", cupsGetErrorString());
     return (1);
@@ -749,7 +749,7 @@ test_csr(
   char	*csr;				// Certificate request
 
 
-  if (!cupsCreateCredentialsRequest(TEST_CERT_PATH, purpose, type, keyusage, organization, org_unit, locality, state, country, common_name, num_alt_names, alt_names))
+  if (!cupsCreateCredentialsRequest(TEST_CERT_PATH, purpose, type, keyusage, organization, org_unit, locality, state, country, common_name, /*email*/NULL, num_alt_names, alt_names))
   {
     fprintf(stderr, "testcreds: Unable to create certificate request (%s)\n", cupsGetErrorString());
     return (1);

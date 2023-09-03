@@ -32,7 +32,7 @@ cupsLocalizeDestMedia(
     cups_dest_t  *dest,			// I - Destination
     cups_dinfo_t *dinfo,		// I - Destination information
     unsigned     flags,			// I - Media flags
-    cups_size_t  *size)			// I - Media size
+    cups_media_t *media)		// I - Media info
 {
   cups_lang_t		*lang;		// Standard localizations
   pwg_media_t		*pwg;		// PWG media information
@@ -45,10 +45,10 @@ cupsLocalizeDestMedia(
 			*ltype;		// Localized media type
 
 
-  DEBUG_printf("cupsLocalizeDestMedia(http=%p, dest=%p, dinfo=%p, flags=%x, size=%p(\"%s\"))", (void *)http, (void *)dest, (void *)dinfo, flags, (void *)size, size ? size->media : "(null)");
+  DEBUG_printf("cupsLocalizeDestMedia(http=%p, dest=%p, dinfo=%p, flags=%x, media=%p(\"%s\"))", (void *)http, (void *)dest, (void *)dinfo, flags, (void *)media, media ? media->media : "(null)");
 
   // Range check input...
-  if (!http || !dest || !dinfo || !size)
+  if (!http || !dest || !dinfo || !media)
   {
     DEBUG_puts("1cupsLocalizeDestMedia: Returning NULL.");
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), 0);
@@ -61,13 +61,11 @@ cupsLocalizeDestMedia(
   else
     db = dinfo->media_db;
 
-  DEBUG_printf("1cupsLocalizeDestMedia: size->media=\"%s\"", size->media);
-
   for (mdb = (_cups_media_db_t *)cupsArrayGetFirst(db); mdb; mdb = (_cups_media_db_t *)cupsArrayGetNext(db))
   {
-    if (mdb->key && !strcmp(mdb->key, size->media))
+    if (mdb->key && !strcmp(mdb->key, media->media))
       break;
-    else if (mdb->size_name && !strcmp(mdb->size_name, size->media))
+    else if (mdb->size_name && !strcmp(mdb->size_name, media->media))
       break;
   }
 
@@ -75,7 +73,7 @@ cupsLocalizeDestMedia(
   {
     for (mdb = (_cups_media_db_t *)cupsArrayGetFirst(db); mdb; mdb = (_cups_media_db_t *)cupsArrayGetNext(db))
     {
-      if (mdb->width == size->width && mdb->length == size->length && mdb->bottom == size->bottom && mdb->left == size->left && mdb->right == size->right && mdb->top == size->top)
+      if (mdb->width == media->width && mdb->length == media->length && mdb->bottom == media->bottom && mdb->left == media->left && mdb->right == media->right && mdb->top == media->top)
 	break;
     }
   }
@@ -86,16 +84,16 @@ cupsLocalizeDestMedia(
   if (!dinfo->localizations)
     cups_load_localizations(http, dinfo);
 
-  snprintf(temp, sizeof(temp), "media.%s", size->media);
+  snprintf(temp, sizeof(temp), "media.%s", media->media);
   if ((lsize = cupsLangGetString(lang, temp)) == temp)
   {
     // Not a media name, try a media-key name...
-    snprintf(temp, sizeof(temp), "media-key.%s", size->media);
+    snprintf(temp, sizeof(temp), "media-key.%s", media->media);
     if ((lsize = cupsLangGetString(lang, temp)) == temp)
       lsize = NULL;
   }
 
-  if (!lsize && (pwg = pwgMediaForSize(size->width, size->length)) != NULL && pwg->ppd)
+  if (!lsize && (pwg = pwgMediaForSize(media->width, media->length)) != NULL && pwg->ppd)
   {
     // Get a standard localization...
     snprintf(temp, sizeof(temp), "media.%s", pwg->pwg);
@@ -106,15 +104,15 @@ cupsLocalizeDestMedia(
   if (!lsize)
   {
     // Make a dimensional localization...
-    if ((size->width % 635) == 0 && (size->length % 635) == 0)
+    if ((media->width % 635) == 0 && (media->length % 635) == 0)
     {
       // Use inches since the size is a multiple of 1/4 inch.
-      cupsLangFormatString(lang, temp, sizeof(temp), _("%g x %g \""), size->width / 2540.0, size->length / 2540.0);
+      cupsLangFormatString(lang, temp, sizeof(temp), _("%g x %g \""), media->width / 2540.0, media->length / 2540.0);
     }
     else
     {
       // Use millimeters since the size is not a multiple of 1/4 inch.
-      cupsLangFormatString(lang, temp, sizeof(temp), _("%d x %d mm"), (size->width + 50) / 100, (size->length + 50) / 100);
+      cupsLangFormatString(lang, temp, sizeof(temp), _("%d x %d mm"), (media->width + 50) / 100, (media->length + 50) / 100);
     }
 
     lsize = temp;
@@ -137,28 +135,28 @@ cupsLocalizeDestMedia(
 
   if (!lsource && !ltype)
   {
-    if (!size->bottom && !size->left && !size->right && !size->top)
+    if (!media->bottom && !media->left && !media->right && !media->top)
       cupsLangFormatString(lang, lstr, sizeof(lstr), _("%s (Borderless)"), lsize);
     else
       cupsCopyString(lstr, lsize, sizeof(lstr));
   }
   else if (!lsource)
   {
-    if (!size->bottom && !size->left && !size->right && !size->top)
+    if (!media->bottom && !media->left && !media->right && !media->top)
       cupsLangFormatString(lang, lstr, sizeof(lstr), _("%s (Borderless, %s)"), lsize, ltype);
     else
       cupsLangFormatString(lang, lstr, sizeof(lstr), _("%s (%s)"), lsize, ltype);
   }
   else if (!ltype)
   {
-    if (!size->bottom && !size->left && !size->right && !size->top)
+    if (!media->bottom && !media->left && !media->right && !media->top)
       cupsLangFormatString(lang, lstr, sizeof(lstr), _("%s (Borderless, %s)"), lsize, lsource);
     else
       cupsLangFormatString(lang, lstr, sizeof(lstr), _("%s (%s)"), lsize, lsource);
   }
   else
   {
-    if (!size->bottom && !size->left && !size->right && !size->top)
+    if (!media->bottom && !media->left && !media->right && !media->top)
       cupsLangFormatString(lang, lstr, sizeof(lstr), _("%s (Borderless, %s, %s)"), lsize, ltype, lsource);
     else
       cupsLangFormatString(lang, lstr, sizeof(lstr), _("%s (%s, %s)"), lsize, ltype, lsource);
@@ -228,20 +226,20 @@ cupsLocalizeDestValue(
 
   if (!strcmp(option, "media"))
   {
-    pwg_media_t *media = pwgMediaForPWG(value);
+    pwg_media_t *pwg = pwgMediaForPWG(value);
 					// Media dimensions
-    cups_size_t size;			// Media/size info
+    cups_media_t media;			// Media/size info
 
-    memset(&size, 0, sizeof(size));
-    cupsCopyString(size.media, value, sizeof(size.media));
-    size.width  = media ? media->width : 0;
-    size.length = media ? media->length : 0;
-    size.left   = 0;
-    size.right  = 0;
-    size.bottom = 0;
-    size.top    = 0;
+    memset(&media, 0, sizeof(media));
+    cupsCopyString(media.media, value, sizeof(media.media));
+    media.width  = pwg ? pwg->width : 0;
+    media.length = pwg ? pwg->length : 0;
+    media.left   = 0;
+    media.right  = 0;
+    media.bottom = 0;
+    media.top    = 0;
 
-    return (cupsLocalizeDestMedia(http, dest, dinfo, CUPS_MEDIA_FLAGS_DEFAULT, &size));
+    return (cupsLocalizeDestMedia(http, dest, dinfo, CUPS_MEDIA_FLAGS_DEFAULT, &media));
   }
 
   if (!dinfo->localizations)
@@ -322,7 +320,7 @@ cups_load_localizations(
   }
 
   // Get a temporary file...
-  if ((temp = cupsTempFile(NULL, ".strings", tempfile, sizeof(tempfile))) == NULL)
+  if ((temp = cupsCreateTempFile(NULL, ".strings", tempfile, sizeof(tempfile))) == NULL)
   {
     DEBUG_printf("4cups_load_localizations: Unable to create temporary file: %s", cupsGetErrorString());
     if (http2 != http)

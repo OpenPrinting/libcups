@@ -569,7 +569,7 @@ pdf_to_ps(const char    *filename,	// I - Filename
 
 
   // Create a temporary file for the PostScript version...
-  if ((tempfd = cupsTempFd(NULL, ".ps", tempfile, sizeof(tempfile))) < 0)
+  if ((tempfd = cupsCreateTempFd(NULL, ".ps", tempfile, sizeof(tempfile))) < 0)
   {
     fprintf(stderr, "ERROR: Unable to create temporary file: %s\n", strerror(errno));
     return (1);

@@ -356,7 +356,7 @@ typedef ssize_t (*cups_raster_cb_t)(void *ctx, unsigned char *buffer, size_t len
 
 extern void		cupsRasterClose(cups_raster_t *r) _CUPS_PUBLIC;
 extern const char	*cupsRasterErrorString(void) _CUPS_PUBLIC;
-extern bool		cupsRasterInitHeader(cups_page_header_t *h, cups_size_t *media, const char *optimize, ipp_quality_t quality, const char *intent, ipp_orient_t orientation, const char *sides, const char *type, int xdpi, int ydpi, const char *sheet_back) _CUPS_PUBLIC;
+extern bool		cupsRasterInitHeader(cups_page_header_t *h, cups_media_t *media, const char *optimize, ipp_quality_t quality, const char *intent, ipp_orient_t orientation, const char *sides, const char *type, int xdpi, int ydpi, const char *sheet_back) _CUPS_PUBLIC;
 extern cups_raster_t	*cupsRasterOpen(int fd, cups_raster_mode_t mode) _CUPS_PUBLIC;
 extern cups_raster_t	*cupsRasterOpenIO(cups_raster_cb_t iocb, void *ctx, cups_raster_mode_t mode) _CUPS_PUBLIC;
 extern bool		cupsRasterReadHeader(cups_raster_t *r, cups_page_header_t *h) _CUPS_PUBLIC;

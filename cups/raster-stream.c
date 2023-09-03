@@ -208,7 +208,7 @@ cupsRasterClose(cups_raster_t *r)	// I - Stream to free
 bool					// O - `true` on success, `false` on failure
 cupsRasterInitHeader(
     cups_page_header_t *h,		// I - Page header
-    cups_size_t        *media,		// I - Media information
+    cups_media_t       *media,		// I - Media information
     const char         *optimize,	// I - IPP "print-content-optimize" value
     ipp_quality_t      quality,		// I - IPP "print-quality" value
     const char         *intent,		// I - IPP "print-rendering-intent" value

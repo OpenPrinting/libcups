@@ -1052,7 +1052,7 @@ create_file(const char *filespec,	// I - Filespec string or NULL
 
   // If there is no filespec, just create a temporary file...
   if (!filespec)
-    return (cupsTempFd(NULL, NULL, filename, filenamesize));
+    return (cupsCreateTempFd(NULL, NULL, filename, filenamesize));
 
   // Convert resource path to base name...
   if ((ptr = strrchr(resource, '/')) != NULL)
@@ -2661,7 +2661,7 @@ generate_file(
   cups_page_header_t	header;		// Raster page header (front side)
   cups_page_header_t	back_header;	// Raster page header (back side)
   pwg_media_t		*pwg;		// PWG media information
-  cups_size_t		media;		// CUPS media information
+  cups_media_t		media;		// CUPS media information
 
 
   // Set the output mode...

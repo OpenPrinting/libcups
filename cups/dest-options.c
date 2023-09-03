@@ -1,7 +1,7 @@
 //
 // Destination option/media support for CUPS.
 //
-// Copyright © 2021-2022 by OpenPrinting.
+// Copyright © 2021-2023 by OpenPrinting.
 // Copyright © 2012-2019 by Apple Inc.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
@@ -33,7 +33,7 @@ static void		cups_create_constraints(cups_dinfo_t *dinfo);
 static void		cups_create_defaults(cups_dinfo_t *dinfo);
 static void		cups_create_media_db(cups_dinfo_t *dinfo, unsigned flags);
 static void		cups_free_media_db(_cups_media_db_t *mdb);
-static bool		cups_get_media_db(http_t *http, cups_dinfo_t *dinfo, pwg_media_t *pwg, unsigned flags, cups_size_t *size);
+static bool		cups_get_media_db(http_t *http, cups_dinfo_t *dinfo, pwg_media_t *pwg, unsigned flags, cups_media_t *media);
 static bool		cups_is_close_media_db(_cups_media_db_t *a, _cups_media_db_t *b);
 static cups_array_t	*cups_test_constraints(cups_dinfo_t *dinfo, const char *new_option, const char *new_value, size_t num_options, cups_option_t *options, size_t *num_conflicts, cups_option_t **conflicts);
 static void		cups_update_ready(http_t *http, cups_dinfo_t *dinfo);
@@ -49,7 +49,7 @@ cupsAddDestMediaOptions(
     cups_dest_t   *dest,		// I  - Destination
     cups_dinfo_t  *dinfo,		// I  - Destination information
     unsigned      flags,		// I  - Media matching flags
-    cups_size_t   *size,		// I  - Media size
+    cups_media_t  *media,		// I  - Media
     size_t        num_options,		// I  - Current number of options
     cups_option_t **options)		// IO - Options
 {
@@ -59,7 +59,7 @@ cupsAddDestMediaOptions(
 
 
   // Range check input...
-  if (!http || !dest || !dinfo || !size || !options)
+  if (!http || !dest || !dinfo || !media || !options)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), 0);
     return (num_options);
@@ -71,13 +71,13 @@ cupsAddDestMediaOptions(
   else
     db = dinfo->media_db;
 
-  DEBUG_printf("1cupsAddDestMediaOptions: size->media=\"%s\"", size->media);
+  DEBUG_printf("1cupsAddDestMediaOptions: media->media=\"%s\"", media->media);
 
   for (mdb = (_cups_media_db_t *)cupsArrayGetFirst(db); mdb; mdb = (_cups_media_db_t *)cupsArrayGetNext(db))
   {
-    if (mdb->key && !strcmp(mdb->key, size->media))
+    if (mdb->key && !strcmp(mdb->key, media->media))
       break;
-    else if (mdb->size_name && !strcmp(mdb->size_name, size->media))
+    else if (mdb->size_name && !strcmp(mdb->size_name, media->media))
       break;
   }
 
@@ -85,7 +85,7 @@ cupsAddDestMediaOptions(
   {
     for (mdb = (_cups_media_db_t *)cupsArrayGetFirst(db); mdb; mdb = (_cups_media_db_t *)cupsArrayGetNext(db))
     {
-      if (mdb->width == size->width && mdb->length == size->length && mdb->bottom == size->bottom && mdb->left == size->left && mdb->right == size->right && mdb->top == size->top)
+      if (mdb->width == media->width && mdb->length == media->length && mdb->bottom == media->bottom && mdb->left == media->left && mdb->right == media->right && mdb->top == media->top)
 	break;
     }
   }
@@ -94,7 +94,7 @@ cupsAddDestMediaOptions(
   {
     for (mdb = (_cups_media_db_t *)cupsArrayGetFirst(db); mdb; mdb = (_cups_media_db_t *)cupsArrayGetNext(db))
     {
-      if (mdb->width == size->width && mdb->length == size->length)
+      if (mdb->width == media->width && mdb->length == media->length)
 	break;
     }
   }
@@ -854,7 +854,7 @@ cupsGetDestMediaByIndex(
     cups_dinfo_t *dinfo,		// I - Destination information
     size_t       n,			// I - Media size number (0-based)
     unsigned     flags,			// I - Media flags
-    cups_size_t  *size)			// O - Media size information
+    cups_media_t *media)		// O - Media
 {
   _cups_media_db_t	*nsize;		// Size for N
   pwg_media_t		*pwg;		// PWG media name for size
@@ -865,10 +865,10 @@ cupsGetDestMediaByIndex(
     http = _cupsConnect();
 
   // Range check input...
-  if (size)
-    memset(size, 0, sizeof(cups_size_t));
+  if (media)
+    memset(media, 0, sizeof(cups_media_t));
 
-  if (!http || !dest || !dinfo || !size)
+  if (!http || !dest || !dinfo || !media)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), 0);
     return (false);
@@ -890,15 +890,15 @@ cupsGetDestMediaByIndex(
 
   if (nsize->key)
   {
-    cupsCopyString(size->media, nsize->key, sizeof(size->media));
+    cupsCopyString(media->media, nsize->key, sizeof(media->media));
   }
   else if (nsize->size_name)
   {
-    cupsCopyString(size->media, nsize->size_name, sizeof(size->media));
+    cupsCopyString(media->media, nsize->size_name, sizeof(media->media));
   }
   else if ((pwg = pwgMediaForSize(nsize->width, nsize->length)) != NULL)
   {
-    cupsCopyString(size->media, pwg->pwg, sizeof(size->media));
+    cupsCopyString(media->media, pwg->pwg, sizeof(media->media));
   }
   else
   {
@@ -906,12 +906,12 @@ cupsGetDestMediaByIndex(
     return (false);
   }
 
-  size->width  = nsize->width;
-  size->length = nsize->length;
-  size->bottom = nsize->bottom;
-  size->left   = nsize->left;
-  size->right  = nsize->right;
-  size->top    = nsize->top;
+  media->width  = nsize->width;
+  media->length = nsize->length;
+  media->bottom = nsize->bottom;
+  media->left   = nsize->left;
+  media->right  = nsize->right;
+  media->top    = nsize->top;
 
   return (true);
 }
@@ -940,9 +940,9 @@ cupsGetDestMediaByName(
     http_t       *http,			// I - Connection to destination
     cups_dest_t  *dest,			// I - Destination
     cups_dinfo_t *dinfo,		// I - Destination information
-    const char   *media,		// I - Media name
+    const char   *name,			// I - Media name
     unsigned     flags,			// I - Media matching flags
-    cups_size_t  *size)			// O - Media size information
+    cups_media_t *media)		// O - Media
 {
   pwg_media_t		*pwg;		// PWG media info
 
@@ -952,28 +952,28 @@ cupsGetDestMediaByName(
     http = _cupsConnect();
 
   // Range check input...
-  if (size)
-    memset(size, 0, sizeof(cups_size_t));
+  if (media)
+    memset(media, 0, sizeof(cups_media_t));
 
-  if (!http || !dest || !dinfo || !media || !size)
+  if (!http || !dest || !dinfo || !name || !media)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), 0);
     return (false);
   }
 
   // Lookup the media size name...
-  if ((pwg = pwgMediaForPWG(media)) == NULL)
+  if ((pwg = pwgMediaForPWG(name)) == NULL)
   {
-    if ((pwg = pwgMediaForLegacy(media)) == NULL)
+    if ((pwg = pwgMediaForLegacy(name)) == NULL)
     {
-      DEBUG_printf("1cupsGetDestMediaByName: Unknown size '%s'.", media);
+      DEBUG_printf("1cupsGetDestMediaByName: Unknown size '%s'.", name);
       _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unknown media size name."), 1);
       return (false);
     }
   }
 
   // Lookup the size...
-  return (cups_get_media_db(http, dinfo, pwg, flags, size));
+  return (cups_get_media_db(http, dinfo, pwg, flags, media));
 }
 
 
@@ -1003,7 +1003,7 @@ cupsGetDestMediaBySize(
     int         width,			// I - Media width in hundredths of millimeters
     int         length,			// I - Media length in hundredths of millimeters
     unsigned     flags,			// I - Media matching flags
-    cups_size_t  *size)			// O - Media size information
+    cups_media_t *media)		// O - Media
 {
   pwg_media_t		*pwg;		// PWG media info
 
@@ -1013,10 +1013,10 @@ cupsGetDestMediaBySize(
     http = _cupsConnect();
 
   // Range check input...
-  if (size)
-    memset(size, 0, sizeof(cups_size_t));
+  if (media)
+    memset(media, 0, sizeof(cups_media_t));
 
-  if (!http || !dest || !dinfo || width <= 0 || length <= 0 || !size)
+  if (!http || !dest || !dinfo || width <= 0 || length <= 0 || !media)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), 0);
     return (false);
@@ -1031,7 +1031,7 @@ cupsGetDestMediaBySize(
   }
 
   // Lookup the size...
-  return (cups_get_media_db(http, dinfo, pwg, flags, size));
+  return (cups_get_media_db(http, dinfo, pwg, flags, media));
 }
 
 
@@ -1087,9 +1087,9 @@ cupsGetDestMediaDefault(
     cups_dest_t  *dest,			// I - Destination
     cups_dinfo_t *dinfo,		// I - Destination information
     unsigned     flags,			// I - Media flags
-    cups_size_t  *size)			// O - Media size information
+    cups_media_t *media)		// O - Media
 {
-  const char	*media;			// Default media size
+  const char	*name;			// Default media size
 
 
   // Get the default connection as needed...
@@ -1097,33 +1097,33 @@ cupsGetDestMediaDefault(
     http = _cupsConnect();
 
   // Range check input...
-  if (size)
-    memset(size, 0, sizeof(cups_size_t));
+  if (media)
+    memset(media, 0, sizeof(cups_media_t));
 
-  if (!http || !dest || !dinfo || !size)
+  if (!http || !dest || !dinfo || !media)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), 0);
     return (false);
   }
 
   // Get the default media size, if any...
-  if ((media = cupsGetOption("media", dest->num_options, dest->options)) == NULL)
-    media = "na_letter_8.5x11in";
+  if ((name = cupsGetOption("media", dest->num_options, dest->options)) == NULL)
+    name = "na_letter_8.5x11in";
 
-  if (cupsGetDestMediaByName(http, dest, dinfo, media, flags, size))
+  if (cupsGetDestMediaByName(http, dest, dinfo, name, flags, media))
     return (true);
 
-  if (strcmp(media, "na_letter_8.5x11in") && cupsGetDestMediaByName(http, dest, dinfo, "iso_a4_210x297mm", flags, size))
+  if (strcmp(name, "na_letter_8.5x11in") && cupsGetDestMediaByName(http, dest, dinfo, "iso_a4_210x297mm", flags, media))
     return (true);
 
-  if (strcmp(media, "iso_a4_210x297mm") && cupsGetDestMediaByName(http, dest, dinfo, "na_letter_8.5x11in", flags, size))
+  if (strcmp(name, "iso_a4_210x297mm") && cupsGetDestMediaByName(http, dest, dinfo, "na_letter_8.5x11in", flags, media))
     return (true);
 
-  if ((flags & CUPS_MEDIA_FLAGS_BORDERLESS) && cupsGetDestMediaByName(http, dest, dinfo, "na_index_4x6in", flags, size))
+  if ((flags & CUPS_MEDIA_FLAGS_BORDERLESS) && cupsGetDestMediaByName(http, dest, dinfo, "na_index_4x6in", flags, media))
     return (true);
 
   // Fall back to the first matching media size...
-  return (cupsGetDestMediaByIndex(http, dest, dinfo, 0, flags, size));
+  return (cupsGetDestMediaByIndex(http, dest, dinfo, 0, flags, media));
 }
 
 
@@ -2009,7 +2009,7 @@ cups_get_media_db(http_t       *http,	// I - Connection to destination
                   cups_dinfo_t *dinfo,	// I - Destination information
                   pwg_media_t  *pwg,	// I - PWG media info
                   unsigned     flags,	// I - Media matching flags
-                  cups_size_t  *size)	// O - Media size/margin/name info
+                  cups_media_t *media)	// O - Media
 {
   cups_array_t		*db;		// Which media database to query
   _cups_media_db_t	*mdb,		// Current media database entry
@@ -2165,20 +2165,20 @@ cups_get_media_db(http_t       *http,	// I - Connection to destination
 
   // Return the matching size...
   if (best->key)
-    cupsCopyString(size->media, best->key, sizeof(size->media));
+    cupsCopyString(media->media, best->key, sizeof(media->media));
   else if (best->size_name)
-    cupsCopyString(size->media, best->size_name, sizeof(size->media));
+    cupsCopyString(media->media, best->size_name, sizeof(media->media));
   else if (pwg->pwg)
-    cupsCopyString(size->media, pwg->pwg, sizeof(size->media));
+    cupsCopyString(media->media, pwg->pwg, sizeof(media->media));
   else
-    cupsCopyString(size->media, "unknown", sizeof(size->media));
+    cupsCopyString(media->media, "unknown", sizeof(media->media));
 
-  size->width  = best->width;
-  size->length = best->length;
-  size->bottom = best->bottom;
-  size->left   = best->left;
-  size->right  = best->right;
-  size->top    = best->top;
+  media->width  = best->width;
+  media->length = best->length;
+  media->bottom = best->bottom;
+  media->left   = best->left;
+  media->right  = best->right;
+  media->top    = best->top;
 
   return (true);
 }
