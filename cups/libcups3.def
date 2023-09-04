@@ -111,6 +111,8 @@ cupsCopyString
 cupsCreateCredentials
 cupsCreateCredentialsRequest
 cupsCreateDestJob
+cupsCreateTempFd
+cupsCreateTempFile
 cupsDNSSDAssembleFullName
 cupsDNSSDBrowseDelete
 cupsDNSSDBrowseGetContext
@@ -313,8 +315,6 @@ cupsSetUser
 cupsSetUserAgent
 cupsSignCredentialsRequest
 cupsStartDestDocument
-cupsTempFd
-cupsTempFile
 cupsThreadCancel
 cupsThreadCreate
 cupsThreadDetach
