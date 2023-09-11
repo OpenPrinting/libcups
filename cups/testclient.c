@@ -445,7 +445,7 @@ make_raster_file(ipp_t      *response,  // I - Printer attributes
 
   if (!cupsRasterInitHeader(&header, &media, /*optimize*/NULL, IPP_QUALITY_NORMAL, /*intent*/NULL, IPP_ORIENT_PORTRAIT, "one-sided", type, xdpi, ydpi, NULL))
   {
-    printf("Unable to initialize raster context: %s\n", cupsRasterErrorString());
+    printf("Unable to initialize raster context: %s\n", cupsRasterGetErrorString());
     return (NULL);
   }
 
@@ -482,7 +482,7 @@ make_raster_file(ipp_t      *response,  // I - Printer attributes
 
   if ((ras = cupsRasterOpen(fd, mode)) == NULL)
   {
-    printf("Unable to open raster stream: %s\n", cupsRasterErrorString());
+    printf("Unable to open raster stream: %s\n", cupsRasterGetErrorString());
     close(fd);
     free(line);
     return (NULL);

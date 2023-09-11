@@ -19,27 +19,11 @@ extern "C" {
 
 
 //
-// IPP version string...
+// Constants...
 //
 
-#  define IPP_VERSION		"\002\001"
-
-
-//
-// IPP registered port number...
-//
-// Note: Applications should never use IPP_PORT, but instead use `ippPort()` to
-// allow overrides via the `IPP_PORT` environment variable and services file if
-// needed.
-//
-
-#  define IPP_PORT		631
-
-
-//
-// Common limits...
-//
-
+#  define IPP_CONST_TAG(x) (ipp_tag_t)(IPP_TAG_CUPS_CONST | (x))
+					// Flag a text string attribute as "const" (static storage) vs. allocated.
 #  define IPP_MAX_CHARSET	64	// Maximum length of charset values w/nul
 #  define IPP_MAX_KEYWORD	256	// Maximum length of keyword values w/nul
 #  define IPP_MAX_LANGUAGE	64	// Maximum length of naturalLanguage values w/nul
@@ -51,14 +35,9 @@ extern "C" {
 #  define IPP_MAX_URI		1024	// Maximum length of uri values w/nul
 #  define IPP_MAX_URISCHEME	64	// Maximum length of uriScheme values w/nul
 #  define IPP_MAX_VALUES	8	// Power-of-2 allocation increment
-
-
-/*
- * Macro to flag a text string attribute as "const" (static storage) vs.
- * allocated.
- */
-
-#  define IPP_CONST_TAG(x) (ipp_tag_t)(IPP_TAG_CUPS_CONST | (x))
+#  define IPP_PORT		631	// Registered port number; use @link ippGetPort@ instead
+#  define IPP_VERSION		"\002\001"
+					// IPP version string...
 
 
 //
@@ -532,7 +511,7 @@ typedef bool (*ipp_copy_cb_t)(void *context, ipp_t *dst, ipp_attribute_t *attr);
 
 
 //
-// Prototypes...
+// Functions...
 //
 
 extern ipp_attribute_t	*ippAddBoolean(ipp_t *ipp, ipp_tag_t group, const char *name, bool value) _CUPS_PUBLIC;

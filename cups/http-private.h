@@ -142,6 +142,8 @@ struct _http_s				// HTTP connection structure
 					// Nonce value
 			opaque[HTTP_MAX_VALUE],
 					// Opaque value from WWW-Authenticate
+			qop[HTTP_MAX_VALUE],
+					// Quality of Protection (qop) value from WWW-Authenticate
 			realm[HTTP_MAX_VALUE];
 					// Realm from WWW-Authenticate
   http_encryption_t	encryption;	// Encryption requirements

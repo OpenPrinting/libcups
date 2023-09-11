@@ -189,8 +189,9 @@ cupsDoAuthentication(
       char nonce[HTTP_MAX_VALUE];	// nonce="xyz" string
 
       cups_auth_param(schemedata, "algorithm", http->algorithm, sizeof(http->algorithm));
-      cups_auth_param(schemedata, "opaque", http->opaque, sizeof(http->opaque));
       cups_auth_param(schemedata, "nonce", nonce, sizeof(nonce));
+      cups_auth_param(schemedata, "opaque", http->opaque, sizeof(http->opaque));
+      cups_auth_param(schemedata, "qop", http->qop, sizeof(http->qop));
       cups_auth_param(schemedata, "realm", http->realm, sizeof(http->realm));
 
       if (_httpSetDigestAuthString(http, nonce, method, resource))
