@@ -298,7 +298,7 @@ main(int  argc,				// I - Number of command-line arguments
     testBegin("cupsRasterOpen");
     if ((ras = cupsRasterOpen(fd, CUPS_RASTER_WRITE_PWG)) == NULL)
     {
-      testEndMessage(false, "%s", cupsRasterErrorString());
+      testEndMessage(false, "%s", cupsRasterGetErrorString());
       close(fd);
       return (1);
     }
@@ -320,7 +320,7 @@ main(int  argc,				// I - Number of command-line arguments
       }
       else
       {
-        testEndMessage(false, "%s", cupsRasterErrorString());
+        testEndMessage(false, "%s", cupsRasterGetErrorString());
         ret = 1;
       }
 
@@ -333,7 +333,7 @@ main(int  argc,				// I - Number of command-line arguments
 	}
 	else
 	{
-	  testEndMessage(false, "%s", cupsRasterErrorString());
+	  testEndMessage(false, "%s", cupsRasterGetErrorString());
 	  ret = 1;
 	}
       }
@@ -346,7 +346,7 @@ main(int  argc,				// I - Number of command-line arguments
 	}
 	else
 	{
-	  testEndMessage(false, "%s", cupsRasterErrorString());
+	  testEndMessage(false, "%s", cupsRasterGetErrorString());
 	  ret = 1;
 	}
       }
@@ -358,7 +358,7 @@ main(int  argc,				// I - Number of command-line arguments
       }
       else
       {
-        testEndMessage(false, "%s", cupsRasterErrorString());
+        testEndMessage(false, "%s", cupsRasterGetErrorString());
         ret = 1;
       }
 
@@ -369,7 +369,7 @@ main(int  argc,				// I - Number of command-line arguments
       }
       else
       {
-	testEndMessage(false, "%s", cupsRasterErrorString());
+	testEndMessage(false, "%s", cupsRasterGetErrorString());
 	ret = 1;
       }
 
@@ -380,7 +380,7 @@ main(int  argc,				// I - Number of command-line arguments
       }
       else
       {
-        testEndMessage(false, "%s", cupsRasterErrorString());
+        testEndMessage(false, "%s", cupsRasterGetErrorString());
         ret = 1;
       }
 
@@ -391,7 +391,7 @@ main(int  argc,				// I - Number of command-line arguments
       }
       else
       {
-	testEndMessage(false, "%s", cupsRasterErrorString());
+	testEndMessage(false, "%s", cupsRasterGetErrorString());
 	ret = 1;
       }
 
@@ -402,7 +402,7 @@ main(int  argc,				// I - Number of command-line arguments
       }
       else
       {
-        testEndMessage(false, "%s", cupsRasterErrorString());
+        testEndMessage(false, "%s", cupsRasterGetErrorString());
         ret = 1;
       }
 
@@ -413,7 +413,7 @@ main(int  argc,				// I - Number of command-line arguments
       }
       else
       {
-	testEndMessage(false, "%s", cupsRasterErrorString());
+	testEndMessage(false, "%s", cupsRasterGetErrorString());
 	ret = 1;
       }
 
@@ -424,7 +424,7 @@ main(int  argc,				// I - Number of command-line arguments
       }
       else
       {
-        testEndMessage(false, "%s", cupsRasterErrorString());
+        testEndMessage(false, "%s", cupsRasterGetErrorString());
         ret = 1;
       }
 
@@ -435,7 +435,7 @@ main(int  argc,				// I - Number of command-line arguments
       }
       else
       {
-	testEndMessage(false, "%s", cupsRasterErrorString());
+	testEndMessage(false, "%s", cupsRasterGetErrorString());
 	ret = 1;
       }
 
@@ -446,7 +446,7 @@ main(int  argc,				// I - Number of command-line arguments
       }
       else
       {
-        testEndMessage(false, "%s", cupsRasterErrorString());
+        testEndMessage(false, "%s", cupsRasterGetErrorString());
         ret = 1;
       }
 
@@ -457,7 +457,7 @@ main(int  argc,				// I - Number of command-line arguments
       }
       else
       {
-	testEndMessage(false, "%s", cupsRasterErrorString());
+	testEndMessage(false, "%s", cupsRasterGetErrorString());
 	ret = 1;
       }
 
@@ -468,7 +468,7 @@ main(int  argc,				// I - Number of command-line arguments
       }
       else
       {
-        testEndMessage(false, "%s", cupsRasterErrorString());
+        testEndMessage(false, "%s", cupsRasterGetErrorString());
         ret = 1;
       }
 
@@ -479,7 +479,7 @@ main(int  argc,				// I - Number of command-line arguments
       }
       else
       {
-	testEndMessage(false, "%s", cupsRasterErrorString());
+	testEndMessage(false, "%s", cupsRasterGetErrorString());
 	ret = 1;
       }
 
@@ -490,7 +490,7 @@ main(int  argc,				// I - Number of command-line arguments
       }
       else
       {
-        testEndMessage(false, "%s", cupsRasterErrorString());
+        testEndMessage(false, "%s", cupsRasterGetErrorString());
         ret = 1;
       }
 
@@ -501,7 +501,7 @@ main(int  argc,				// I - Number of command-line arguments
       }
       else
       {
-	testEndMessage(false, "%s", cupsRasterErrorString());
+	testEndMessage(false, "%s", cupsRasterGetErrorString());
 	ret = 1;
       }
 
@@ -512,7 +512,7 @@ main(int  argc,				// I - Number of command-line arguments
       }
       else
       {
-        testEndMessage(false, "%s", cupsRasterErrorString());
+        testEndMessage(false, "%s", cupsRasterGetErrorString());
         ret = 1;
       }
 
@@ -523,7 +523,7 @@ main(int  argc,				// I - Number of command-line arguments
       }
       else
       {
-	testEndMessage(false, "%s", cupsRasterErrorString());
+	testEndMessage(false, "%s", cupsRasterGetErrorString());
 	ret = 1;
       }
     }
@@ -539,7 +539,7 @@ main(int  argc,				// I - Number of command-line arguments
 	}
 	else
 	{
-	  testEndMessage(false, "%s", cupsRasterErrorString());
+	  testEndMessage(false, "%s", cupsRasterGetErrorString());
 	  ret = 1;
 	}
 
@@ -550,7 +550,7 @@ main(int  argc,				// I - Number of command-line arguments
 	}
 	else
 	{
-	  testEndMessage(false, "%s", cupsRasterErrorString());
+	  testEndMessage(false, "%s", cupsRasterGetErrorString());
 	  ret = 1;
 	}
 
@@ -561,7 +561,7 @@ main(int  argc,				// I - Number of command-line arguments
 	}
 	else
 	{
-	  testEndMessage(false, "%s", cupsRasterErrorString());
+	  testEndMessage(false, "%s", cupsRasterGetErrorString());
 	  ret = 1;
 	}
 
@@ -572,7 +572,7 @@ main(int  argc,				// I - Number of command-line arguments
 	}
 	else
 	{
-	  testEndMessage(false, "%s", cupsRasterErrorString());
+	  testEndMessage(false, "%s", cupsRasterGetErrorString());
 	  ret = 1;
 	}
 
@@ -583,7 +583,7 @@ main(int  argc,				// I - Number of command-line arguments
 	}
 	else
 	{
-	  testEndMessage(false, "%s", cupsRasterErrorString());
+	  testEndMessage(false, "%s", cupsRasterGetErrorString());
 	  ret = 1;
 	}
 
@@ -594,7 +594,7 @@ main(int  argc,				// I - Number of command-line arguments
 	}
 	else
 	{
-	  testEndMessage(false, "%s", cupsRasterErrorString());
+	  testEndMessage(false, "%s", cupsRasterGetErrorString());
 	  ret = 1;
 	}
 
@@ -605,7 +605,7 @@ main(int  argc,				// I - Number of command-line arguments
 	}
 	else
 	{
-	  testEndMessage(false, "%s", cupsRasterErrorString());
+	  testEndMessage(false, "%s", cupsRasterGetErrorString());
 	  ret = 1;
 	}
 
@@ -616,7 +616,7 @@ main(int  argc,				// I - Number of command-line arguments
 	}
 	else
 	{
-	  testEndMessage(false, "%s", cupsRasterErrorString());
+	  testEndMessage(false, "%s", cupsRasterGetErrorString());
 	  ret = 1;
 	}
       }

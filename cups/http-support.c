@@ -1023,18 +1023,30 @@ _httpSetDigestAuthString(
   else
     return (false);
 
-  if (http->algorithm[0])
+  if (http->qop[0])
   {
     // Follow RFC 2617/7616...
     int		i;			// Looping var
     char	cnonce[65];		// cnonce value
     const char	*hashalg;		// Hashing algorithm
+    const char	*qop;			// Quality of Protection
 
     for (i = 0; i < 64; i ++)
       cnonce[i] = "0123456789ABCDEF"[cupsGetRand() & 15];
     cnonce[64] = '\0';
 
-    if (!_cups_strcasecmp(http->algorithm, "MD5"))
+    if (!_cups_strcasecmp(http->qop, "auth"))
+    {
+      // RFC 2617: "auth" | "auth-int" | token
+      qop = "auth";
+    }
+    else
+    {
+      // Some other qop we don't support, skip this one...
+      return (false);
+    }
+
+    if (!http->algorithm[0] || !_cups_strcasecmp(http->algorithm, "MD5"))
     {
       // RFC 2617 Digest with MD5
       if (cg->digestoptions == _CUPS_DIGESTOPTIONS_DENYMD5)
@@ -1069,15 +1081,15 @@ _httpSetDigestAuthString(
     cupsHashString(hash, hashsize, ha2, sizeof(ha2));
 
     // KD = H(H(A1):nonce:nc:cnonce:qop:H(A2))
-    snprintf(temp, sizeof(temp), "%s:%s:%08x:%s:%s:%s", ha1, http->nonce, http->nonce_count, cnonce, "auth", ha2);
+    snprintf(temp, sizeof(temp), "%s:%s:%08x:%s:%s:%s", ha1, http->nonce, http->nonce_count, cnonce, qop, ha2);
     hashsize = (size_t)cupsHashData(hashalg, (unsigned char *)temp, strlen(temp), hash, sizeof(hash));
     cupsHashString(hash, hashsize, kd, sizeof(kd));
 
     // Pass the RFC 2617/7616 WWW-Authenticate header...
     if (http->opaque[0])
-      snprintf(digest, sizeof(digest), "username=\"%s\", realm=\"%s\", nonce=\"%s\", algorithm=%s, qop=auth, opaque=\"%s\", cnonce=\"%s\", nc=%08x, uri=\"%s\", response=\"%s\"", cupsGetUser(), http->realm, http->nonce, http->algorithm, http->opaque, cnonce, http->nonce_count, resource, kd);
+      snprintf(digest, sizeof(digest), "username=\"%s\", realm=\"%s\", nonce=\"%s\", algorithm=%s, qop=%s, opaque=\"%s\", cnonce=\"%s\", nc=%08x, uri=\"%s\", response=\"%s\"", cupsGetUser(), http->realm, http->nonce, http->algorithm, qop, http->opaque, cnonce, http->nonce_count, resource, kd);
     else
-      snprintf(digest, sizeof(digest), "username=\"%s\", realm=\"%s\", nonce=\"%s\", algorithm=%s, qop=auth, cnonce=\"%s\", nc=%08x, uri=\"%s\", response=\"%s\"", username, http->realm, http->nonce, http->algorithm, cnonce, http->nonce_count, resource, kd);
+      snprintf(digest, sizeof(digest), "username=\"%s\", realm=\"%s\", nonce=\"%s\", algorithm=%s, qop=%s, cnonce=\"%s\", nc=%08x, uri=\"%s\", response=\"%s\"", username, http->realm, http->nonce, http->algorithm, qop, cnonce, http->nonce_count, resource, kd);
   }
   else
   {

@@ -35,7 +35,7 @@ typedef union _ipp_request_u		// Request Header
   struct				// Any Header
   {
     ipp_uchar_t	version[2];		// Protocol version number
-    int		op_status;		/* Operation ID or status code*/
+    int		op_status;		// Operation ID or status code
     int		request_id;		// Request ID
   }		any;
 
@@ -124,7 +124,6 @@ struct _ipp_s				// IPP Request/Response/Notification
   ipp_tag_t		curtag;		// Current attribute group tag
   ipp_attribute_t	*prev;		// Previous attribute (for read)
   size_t		use;		// Use count
-
   _ipp_find_t		fstack[_IPP_MAX_FIND];
 					// Find stack
   _ipp_find_t		*find;		// Current find
