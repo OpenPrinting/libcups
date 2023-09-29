@@ -12,19 +12,42 @@
 include ../Makedefs
 
 
+LIBOBJS		=	\
+			pdfio-aes.o \
+			pdfio-array.o \
+			pdfio-common.o \
+			pdfio-content.o \
+			pdfio-crypto.o \
+			pdfio-dict.o \
+			pdfio-file.o \
+			pdfio-md5.o \
+			pdfio-object.o \
+			pdfio-page.o \
+			pdfio-rc4.o \
+			pdfio-sha256.o \
+			pdfio-stream.o \
+			pdfio-string.o \
+			pdfio-token.o \
+			pdfio-value.o \
+			ttf.o
 OBJS		=	\
+			$(LIBOBJS) \
+			ipp-options.o \
 			ippevepcl.o \
 			ippeveprinter.o \
 			ippeveps.o \
 			ippfind.o \
-			ipptool.o
+			ipptool.o \
+			ipptransform.o
 IPPTOOLS	=	\
 			ippevepcl \
 			ippeveprinter \
 			ippeveps \
 			ippfind \
-			ipptool
+			ipptool \
+			ipptransform
 TARGETS		=	\
+			libpdfio.a \
 			$(IPPTOOLS)
 
 
@@ -191,6 +214,37 @@ ipptool-static:	ipptool.o ../cups/$(LIBCUPS_STATIC)
 	echo Linking $@...
 	$(CC) $(LDFLAGS) $(OPTIM) -o $@ ipptool.o ../cups/$(LIBCUPS_STATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
+
+
+#
+# ipptransform
+#
+
+ipptransform:	ipptransform.o ipp-options.o libpdfio.a ../cups/$(LIBCUPS) ipptransform-static
+	echo Linking $@...
+	$(CC) $(LDFLAGS) -o $@ ipptransform.o ipp-options.o libpdfio.a $(LINKCUPS) $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
+
+
+#
+# ipptransform-static
+#
+
+ipptransform-static:	ipptransform.o ipp-options.o libpdfio.a ../cups/$(LIBCUPS_STATIC)
+	echo Linking $@...
+	$(CC) $(LDFLAGS) -o $@ ipptransform.o ipp-options.o libpdfio.a ../cups/$(LIBCUPS_STATIC) $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
+
+
+#
+# libpdfio.a
+#
+
+libpdfio.a:		$(LIBOBJS)
+	echo Archiving $@...
+	$(RM) $@
+	$(AR) $(ARFLAGS) $@ $(LIBOBJS)
+	$(RANLIB) $@
 
 
 #

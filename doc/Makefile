@@ -19,7 +19,8 @@ DOCFILES	=	\
 			ippevepcl.html \
 			ippeveprinter.html \
 			ipptool.html \
-			ipptoolfile.html
+			ipptoolfile.html \
+			ipptransform.html
 
 
 #

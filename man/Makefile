@@ -20,7 +20,8 @@ MAN1	=	\
 		ippevepcl.1 \
 		ippeveprinter.1 \
 		ippfind.1 \
-		ipptool.1
+		ipptool.1 \
+		ipptransform.1
 MAN5	=	\
 		ipptoolfile.5
 

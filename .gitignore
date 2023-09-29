@@ -59,6 +59,9 @@
 /tools/ippfind-static
 /tools/ipptool
 /tools/ipptool-static
+/tools/ipptransform
+/tools/ipptransform-static
+/tools/libpdfio.a
 /vcnet/.vs
 /vcnet/packages
 /vcnet/x64
