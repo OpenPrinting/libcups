@@ -1,3 +1,24 @@
+pdfio-aes.o: pdfio-aes.c pdfio-private.h pdfio.h
+pdfio-array.o: pdfio-array.c pdfio-private.h pdfio.h
+pdfio-common.o: pdfio-common.c pdfio-private.h pdfio.h
+pdfio-content.o: pdfio-content.c pdfio-private.h pdfio.h pdfio-content.h \
+  ttf.h
+pdfio-crypto.o: pdfio-crypto.c pdfio-private.h pdfio.h
+pdfio-dict.o: pdfio-dict.c pdfio-private.h pdfio.h
+pdfio-file.o: pdfio-file.c pdfio-private.h pdfio.h
+pdfio-md5.o: pdfio-md5.c pdfio-private.h pdfio.h
+pdfio-object.o: pdfio-object.c pdfio-private.h pdfio.h
+pdfio-page.o: pdfio-page.c pdfio-private.h pdfio.h
+pdfio-rc4.o: pdfio-rc4.c pdfio-private.h pdfio.h
+pdfio-sha256.o: pdfio-sha256.c pdfio-private.h pdfio.h
+pdfio-stream.o: pdfio-stream.c pdfio-private.h pdfio.h
+pdfio-string.o: pdfio-string.c pdfio-private.h pdfio.h
+pdfio-token.o: pdfio-token.c pdfio-private.h pdfio.h
+pdfio-value.o: pdfio-value.c pdfio-private.h pdfio.h
+ttf.o: ttf.c ttf.h
+ipp-options.o: ipp-options.c ipp-options.h ../cups/cups.h ../cups/file.h \
+  ../cups/base.h ../cups/ipp.h ../cups/http.h ../cups/array.h \
+  ../cups/language.h ../cups/transcode.h ../cups/pwg.h
 ippevepcl.o: ippevepcl.c ippevecommon.h ../cups/cups.h ../cups/file.h \
   ../cups/base.h ../cups/ipp.h ../cups/http.h ../cups/array.h \
   ../cups/language.h ../cups/transcode.h ../cups/pwg.h ../cups/raster.h \
@@ -89,3 +110,7 @@ ipptool.o: ipptool.c ../cups/cups-private.h ../cups/string-private.h \
   \
   ../cups/pwg-private.h ../cups/thread.h ../cups/raster-testpage.h \
   ../cups/raster-private.h ../cups/raster.h
+ipptransform.o: ipptransform.c ../config.h ipp-options.h ../cups/cups.h \
+  ../cups/file.h ../cups/base.h ../cups/ipp.h ../cups/http.h \
+  ../cups/array.h ../cups/language.h ../cups/transcode.h ../cups/pwg.h \
+  ../cups/raster.h ../cups/thread.h pdfio.h pdfio-content.h dither.h

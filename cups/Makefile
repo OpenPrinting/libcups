@@ -367,7 +367,7 @@ libcups.3.dylib libcups3.3.dylib:	$(LIBOBJS)
 # libcups.a / libcups3.a
 #
 
-libcups.a / libcups3.a:	$(LIBOBJS)
+libcups.a libcups3.a:	$(LIBOBJS)
 	echo Archiving $@...
 	$(RM) $@
 	$(AR) $(ARFLAGS) $@ $(LIBOBJS)

@@ -4,6 +4,7 @@ Changes in libcups
 libcups v3.0b2 (TBD)
 --------------------
 
+- Added `ipptransform` command (Issue #65)
 - Added `cupsFormDecode` and `cupsFormEncode` APIs (Issue #49)
 - Added `cupsJWT` APIs to support JSON Web Tokens (Issue #50, Issue #52)
 - Added `ippAddCredentialsString` and `ippCopyCredentialsString` APIs
