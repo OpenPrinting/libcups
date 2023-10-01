@@ -11,7 +11,6 @@
 // information.
 //
 
-#define _CUPS_NO_DEPRECATED
 #include <cups/cups-private.h>
 #ifdef _WIN32
 #  include <process.h>
