@@ -95,9 +95,10 @@ WARNINGS	=	@WARNINGS@
 # Linker options...
 #
 
-LIBS		=	@LIBS@ -lz -lm
 DSOFLAGS	=	@DSOFLAGS@
+XFORMLIBS	=	@XFORMLIBS@
 LDFLAGS		=	@LDFLAGS@
+LIBS		=	@LIBS@ -lm
 
 
 #

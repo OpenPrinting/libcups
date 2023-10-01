@@ -124,6 +124,48 @@ AC_SUBST([PKGCONFIG_REQUIRES])
 AC_SUBST([PKGCONFIG_REQUIRES_PRIVATE])
 
 
+dnl PDF support
+AC_ARG_WITH([pdfrip], AS_HELP_STRING([--with-pdfrip=...], [set PDF RIP to use (auto, coregraphics, pdftoppm, none)]))
+
+AS_IF([test "x$with_pdfrip" = x -o "x$with_pdfrip" = xauto], [
+    AS_CASE([$host_os_name], [darwin*], [
+	use_pdfrip=coregraphics
+    ], [*], [
+	use_pdfrip=pdftoppm
+    ])
+], [
+    use_pdfrip="$with_pdfrip"
+])
+
+XFORMLIBS=""
+AC_SUBST([XFORMLIBS])
+
+AS_CASE(["$use_pdfrip"], [coregraphics], [
+    SAVELIBS="$LIBS"
+    LIBS="-framework CoreGraphics -framework ImageIO -framework CoreFoundation $LIBS"
+    AC_CHECK_HEADER([CoreGraphics/CoreGraphics.h], [
+	AC_DEFINE([HAVE_COREGRAPHICS_H], [1], [Do we have CoreGraphics support?])
+        XFORMLIBS="-framework CoreGraphics -framework ImageIO -framework CoreFoundation"
+    ], [
+	AS_IF([test "x$with_pdfrip" = xcoregraphics], [
+	    AC_MSG_ERROR([Unable to find CoreGraphics framework.])
+	])
+    ])
+    LIBS="$SAVELIBS"
+], [pdftoppm], [
+    AC_PATH_PROG([PDFTOPPM], [pdftoppm])
+
+    AS_IF([test "x$PDFTOPPM" != x], [
+	AC_DEFINE([HAVE_PDFTOPPM], [1], [Do we have pdftoppm?])
+    ], [test "x$with_pdfrip" = xpdftoppm], [
+	AC_MSG_ERROR([Unable to find pdftoppm program.])
+    ])
+], [none], [
+], [*], [
+    AC_MSG_ERROR([Unknown --with-pdfrip value.])
+])
+
+
 dnl String functions...
 AC_CHECK_FUNCS([strlcat strlcpy])
 
@@ -158,7 +200,7 @@ LIBS="$SAVELIBS"
 
 dnl Header files...
 AC_CHECK_HEADER([CoreFoundation/CoreFoundation.h], [
-    AC_DEFINE([HAVE_COREFOUNDATION_H], [1], [Have <CoreFoundation/CoreFoundation.h>?])
+    AC_DEFINE([HAVE_COREFOUNDATION_H], [1], [Do we have CoreFoundation?])
 ])
 AC_CHECK_HEADER([langinfo.h], [
     AC_DEFINE([HAVE_LANGINFO_H], [1], [Have <langinfo.h> header?])
