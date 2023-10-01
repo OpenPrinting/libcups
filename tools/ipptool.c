@@ -10,10 +10,6 @@
 // information.
 //
 
-//
-// Include necessary headers...
-//
-
 #include <cups/cups-private.h>
 #include <cups/raster-testpage.h>
 #include <regex.h>

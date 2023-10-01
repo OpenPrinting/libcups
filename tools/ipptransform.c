@@ -9,16 +9,10 @@
 // information.
 //
 
-// TODO: Add localization
-#include <config.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <errno.h>
-#include <ctype.h>
-#include "ipp-options.h"
+#include <cups/cups-private.h>
 #include <cups/raster.h>
 #include <cups/thread.h>
+#include "ipp-options.h"
 #include "pdfio.h"
 #include "pdfio-content.h"
 
@@ -141,7 +135,8 @@ struct xform_raster_s			// Raster context
 
 
 // Local globals...
-static int	Verbosity = 0;		// Log level
+static const char	*Prefix;	// Error message prefix (typically the command name or "ERROR" if running from ippeveprinter/ippserver
+static int		Verbosity = 0;	// Log level
 
 
 // Local functions...
@@ -227,6 +222,8 @@ main(int  argc,				// I - Number of command-line args
 
 
   // Process the command-line...
+  cupsLangSetLocale(argv);
+
   memset(files, 0, sizeof(files));
 
   device_uri   = getenv("DEVICE_URI");
@@ -237,10 +234,30 @@ main(int  argc,				// I - Number of command-line args
 
   if ((opt = getenv("SERVER_LOGLEVEL")) != NULL)
   {
+    // Use "ERROR" as the prefix for error messages since they will be logged...
+    Prefix = "ERROR";
+
     if (!strcmp(opt, "debug"))
       Verbosity = 2;
     else if (!strcmp(opt, "info"))
       Verbosity = 1;
+  }
+  else if ((Prefix = strrchr(argv[0], '/')) != NULL)
+  {
+    // Use the basename after the '/'...
+    Prefix ++;
+  }
+#if _WIN32
+  else if ((Prefix = strrchr(argv[0], '\\')) != NULL)
+  {
+    // Use the basename after the '\'...
+    Prefix ++;
+  }
+#endif // _WIN32
+  else
+  {
+    // Just use the program name...
+    Prefix = argv[0];
   }
 
   for (i = 1; i < argc; i ++)
@@ -257,7 +274,7 @@ main(int  argc,				// I - Number of command-line args
       }
       else
       {
-	fprintf(stderr, "ERROR: Unknown option '%s'.\n", argv[i]);
+	cupsLangPrintf(stderr, _("%s: Unknown option '%s'."), Prefix, argv[i]);
 	usage(1);
       }
     }
@@ -271,7 +288,7 @@ main(int  argc,				// I - Number of command-line args
 	      i ++;
 	      if (i >= argc)
 	      {
-	        fputs("ERROR: Missing argument after '-d'.\n", stderr);
+	        cupsLangPrintf(stderr, _("%s: Missing device URI after '-d'."), Prefix);
 	        usage(1);
 	      }
 
@@ -282,13 +299,13 @@ main(int  argc,				// I - Number of command-line args
 	      i ++;
 	      if (i >= argc)
 	      {
-	        fputs("ERROR: Missing argument after '-f'.\n", stderr);
+	        cupsLangPrintf(stderr, _("%s: Missing output filename after '-f'."), Prefix);
 	        usage(1);
 	      }
 
 	      if (!freopen(argv[i], "w", stdout))
 	      {
-	        fprintf(stderr, "ERROR: Unable to open '%s': %s\n", argv[i], strerror(errno));
+	        cupsLangPrintf(stderr, _("%s: Unable to open '%s': %s"), Prefix, argv[i], strerror(errno));
 	        return (1);
 	      }
 	      break;
@@ -297,7 +314,7 @@ main(int  argc,				// I - Number of command-line args
 	      i ++;
 	      if (i >= argc)
 	      {
-	        fputs("ERROR: Missing argument after '-i'.\n", stderr);
+	        cupsLangPrintf(stderr, _("%s: Missing input MIME media type after '-i'."), Prefix);
 	        usage(1);
 	      }
 
@@ -307,7 +324,7 @@ main(int  argc,				// I - Number of command-line args
 	      }
 	      else
 	      {
-	        fputs("ERROR: Too many files.\n", stderr);
+	        cupsLangPrintf(stderr, _("%s: Too many files."), Prefix);
 	        return (1);
 	      }
 	      break;
@@ -316,7 +333,7 @@ main(int  argc,				// I - Number of command-line args
 	      i ++;
 	      if (i >= argc)
 	      {
-	        fputs("ERROR: Missing argument after '-m'.\n", stderr);
+	        cupsLangPrintf(stderr, _("%s: Missing output MIME media type after '-m'."), Prefix);
 	        usage(1);
 	      }
 
@@ -327,7 +344,7 @@ main(int  argc,				// I - Number of command-line args
 	      i ++;
 	      if (i >= argc)
 	      {
-	        fputs("ERROR: Missing argument after '-o'.\n", stderr);
+	        cupsLangPrintf(stderr, _("%s: Missing name=value after '-o'."), Prefix);
 	        usage(1);
 	      }
 
@@ -338,7 +355,7 @@ main(int  argc,				// I - Number of command-line args
 	      i ++;
 	      if (i >= argc)
 	      {
-	        fputs("ERROR: Missing argument after '-r'.\n", stderr);
+	        cupsLangPrintf(stderr, _("%s: Missing resolution list after '-r'."), Prefix);
 	        usage(1);
 	      }
 
@@ -349,7 +366,7 @@ main(int  argc,				// I - Number of command-line args
 	      i ++;
 	      if (i >= argc)
 	      {
-	        fputs("ERROR: Missing argument after '-s'.\n", stderr);
+	        cupsLangPrintf(stderr, _("%s: Missing back sheet transform after '-s'."), Prefix);
 	        usage(1);
 	      }
 
@@ -360,7 +377,7 @@ main(int  argc,				// I - Number of command-line args
 	      i ++;
 	      if (i >= argc)
 	      {
-	        fputs("ERROR: Missing argument after '-t'.\n", stderr);
+	        cupsLangPrintf(stderr, _("%s: Missing type list after '-t'."), Prefix);
 	        usage(1);
 	      }
 
@@ -372,7 +389,7 @@ main(int  argc,				// I - Number of command-line args
 	      break;
 
 	  default :
-	      fprintf(stderr, "ERROR: Unknown option '-%c'.\n", *opt);
+	      cupsLangPrintf(stderr, _("%s: Unknown option '-%c'."), Prefix, *opt);
 	      usage(1);
 	}
       }
@@ -408,7 +425,7 @@ main(int  argc,				// I - Number of command-line args
 	    files[num_files].format = "application/vnd.hp-PCLXL";
 	  else if (!strcmp(opt, ".pwg"))
 	    files[num_files].format = "image/pwg-raster";
-	  else if (!strcmp(opt, ".txt") || !strcmp(opt, ".md"))
+	  else if (!strcmp(opt, ".c") || !strcmp(opt, ".c++") || !strcmp(opt, ".cpp") || !strcmp(opt, ".cxx") || !strcmp(opt, ".h") || !strcmp(opt, ".hpp") || !strcmp(opt, ".m") || !strcmp(opt, ".md") || !strcmp(opt, ".py") || !strcmp(opt, ".rst") || !strcmp(opt, ".swift") || !strcmp(opt, ".txt"))
 	    files[num_files].format = "text/plain";
 	  else if (!strcmp(opt, ".urf"))
 	    files[num_files].format = "image/urf";
@@ -417,12 +434,12 @@ main(int  argc,				// I - Number of command-line args
 
       if (!files[num_files].format)
       {
-	fprintf(stderr, "ERROR: Unknown format for '%s', please specify with '-i' option.\n", argv[i]);
+	cupsLangPrintf(stderr, _("%s: Unknown format for '%s', please specify with '-i' option."), Prefix, argv[i]);
 	usage(1);
       }
       else if (strcmp(files[num_files].format, "application/pdf") && strcmp(files[num_files].format, "image/jpeg") && strcmp(files[num_files].format, "image/png") && strcmp(files[num_files].format, "text/plain"))
       {
-	fprintf(stderr, "ERROR: Unsupported format '%s' for '%s'.\n", files[num_files].format, argv[i]);
+	cupsLangPrintf(stderr, _("%s: Unsupported format '%s' for '%s'."), Prefix, files[num_files].format, argv[i]);
 	usage(1);
       }
 
@@ -430,7 +447,7 @@ main(int  argc,				// I - Number of command-line args
     }
     else
     {
-      fputs("ERROR: Too many files.\n", stderr);
+      cupsLangPrintf(stderr, _("%s: Too many files."), Prefix);
       return (1);
     }
   }
@@ -441,16 +458,16 @@ main(int  argc,				// I - Number of command-line args
 
   if (!output_type)
   {
-    fputs("ERROR: Unknown output format, please specify with '-m' option.\n", stderr);
+    cupsLangPrintf(stderr, _("%s: Unknown output format, please specify with '-m' option."), Prefix);
     usage(1);
   }
   else if (strcmp(output_type, "application/pdf") && strcmp(output_type, "application/postscript") && strcmp(output_type, "application/vnd.hp-pcl") && strcmp(output_type, "image/pwg-raster") && strcmp(output_type, "image/urf"))
   {
-    fprintf(stderr, "ERROR: Unsupported output format '%s'.\n", output_type);
+    cupsLangPrintf(stderr, _("%s: Unsupported output format '%s'."), Prefix, output_type);
     usage(1);
   }
 
-  // Prepare a PDF file for printing...
+  // Prepare a (combined) PDF file from the input files for printing...
   ipp_options = ippOptionsNew(num_options, options);
 
   if (!prepare_documents(num_files, files, ipp_options, sheet_back, pdf_file, sizeof(pdf_file), output_type, &pdf_pages, !strcmp(output_type, "application/pdf")))
@@ -472,20 +489,20 @@ main(int  argc,				// I - Number of command-line args
 
     if (httpSeparateURI(HTTP_URI_CODING_ALL, device_uri, scheme, sizeof(scheme), userpass, sizeof(userpass), host, sizeof(host), &port, resource, sizeof(resource)) < HTTP_URI_STATUS_OK)
     {
-      fprintf(stderr, "ERROR: Invalid device URI '%s'.\n", device_uri);
+      cupsLangPrintf(stderr, _("%s: Invalid device URI '%s'."), Prefix, device_uri);
       usage(1);
     }
 
     if (strcmp(scheme, "socket") && strcmp(scheme, "ipp") && strcmp(scheme, "ipps"))
     {
-      fprintf(stderr, "ERROR: Unsupported device URI scheme '%s'.\n", scheme);
+      cupsLangPrintf(stderr, _("%s: Unsupported device URI scheme '%s'."), Prefix, scheme);
       usage(1);
     }
 
     snprintf(service, sizeof(service), "%d", port);
     if ((list = httpAddrGetList(host, AF_UNSPEC, service)) == NULL)
     {
-      fprintf(stderr, "ERROR: Unable to lookup device URI host '%s': %s\n", host, cupsGetErrorString());
+      cupsLangPrintf(stderr, _("%s: Unable to lookup device URI host '%s': %s"), Prefix, host, cupsGetErrorString());
       return (1);
     }
 
@@ -494,7 +511,7 @@ main(int  argc,				// I - Number of command-line args
       // AppSocket connection...
       if (!httpAddrConnect(list, &fd, 30000, NULL))
       {
-	fprintf(stderr, "ERROR: Unable to connect to '%s' on port %d: %s\n", host, port, cupsGetErrorString());
+	cupsLangPrintf(stderr, _("%s: Unable to connect to '%s' on port %d: %s"), Prefix, host, port, cupsGetErrorString());
 	return (1);
       }
     }
@@ -523,7 +540,7 @@ main(int  argc,				// I - Number of command-line args
 
       if ((http = httpConnect(host, port, list, AF_UNSPEC, encryption, 1, 30000, NULL)) == NULL)
       {
-	fprintf(stderr, "ERROR: Unable to connect to '%s' on port %d: %s\n", host, port, cupsGetErrorString());
+	cupsLangPrintf(stderr, _("%s: Unable to connect to '%s' on port %d: %s"), Prefix, host, port, cupsGetErrorString());
 	return (1);
       }
 
@@ -536,13 +553,13 @@ main(int  argc,				// I - Number of command-line args
       response = cupsDoRequest(http, request, resource);
       if (cupsGetError() > IPP_STATUS_OK_EVENTS_COMPLETE)
       {
-        fprintf(stderr, "ERROR: Unable to get printer capabilities: %s\n", cupsGetErrorString());
+        cupsLangPrintf(stderr, _("%s: Unable to get printer capabilities: %s"), Prefix, cupsGetErrorString());
 	return (1);
       }
 
       if ((attr = ippFindAttribute(response, "operations-supported", IPP_TAG_ENUM)) == NULL)
       {
-        fputs("ERROR: Unable to get list of supported operations from printer.\n", stderr);
+        cupsLangPrintf(stderr, _("%s: Unable to get list of supported operations from printer."), Prefix);
 	return (1);
       }
 
@@ -576,12 +593,12 @@ main(int  argc,				// I - Number of command-line args
 
 	if (cupsGetError() > IPP_STATUS_OK_EVENTS_COMPLETE)
 	{
-	  fprintf(stderr, "ERROR: Unable to create print job: %s\n", cupsGetErrorString());
+	  cupsLangPrintf(stderr, _("%s: Unable to create print job: %s"), Prefix, cupsGetErrorString());
 	  return (1);
 	}
 	else if (job_id <= 0)
 	{
-          fputs("ERROR: No job-id for created print job.\n", stderr);
+          cupsLangPrintf(stderr, _("%s: No job-id for created print job."), Prefix);
 	  return (1);
 	}
 
@@ -613,7 +630,7 @@ main(int  argc,				// I - Number of command-line args
 
       if (cupsSendRequest(http, request, resource, 0) != HTTP_STATUS_CONTINUE)
       {
-        fprintf(stderr, "ERROR: Unable to send print data: %s\n", cupsGetErrorString());
+        cupsLangPrintf(stderr, _("%s: Unable to send print data: %s"), Prefix, cupsGetErrorString());
 	return (1);
       }
 
@@ -653,7 +670,7 @@ main(int  argc,				// I - Number of command-line args
 
     if ((fp = cupsFileOpen(pdf_file, "r")) == NULL)
     {
-      fprintf(stderr, "ERROR: Unable to open '%s': %s\n", pdf_file, strerror(errno));
+      cupsLangPrintf(stderr, _("%s: Unable to open '%s': %s"), Prefix, pdf_file, strerror(errno));
       status = 1;
     }
     else
@@ -662,7 +679,7 @@ main(int  argc,				// I - Number of command-line args
       {
         if ((write_cb)(write_ptr, buffer, (size_t)bytes) < 0)
         {
-          fputs("ERROR: Unable to send data.\n", stderr);
+          cupsLangPrintf(stderr, _("%s: Unable to send data."), Prefix);
           status = 1;
           break;
 	}
@@ -680,7 +697,7 @@ main(int  argc,				// I - Number of command-line args
 
     if (cupsGetError() > IPP_STATUS_OK_EVENTS_COMPLETE)
     {
-      fprintf(stderr, "ERROR: Unable to send print data: %s\n", cupsGetErrorString());
+      cupsLangPrintf(stderr, _("%s: Unable to send print data: %s"), Prefix, cupsGetErrorString());
       status = 1;
     }
 
@@ -1018,7 +1035,7 @@ convert_text(
   // Open the text file...
   if ((fp = cupsFileOpen(d->filename, "r")) == NULL)
   {
-    fprintf(stderr, "ERROR: Input Document %d: %s\n", document, strerror(errno));
+    cupsLangPrintf(stderr, _("%s: Input Document %d: %s"), Prefix, document, strerror(errno));
     return (false);
   }
 
@@ -1743,7 +1760,7 @@ monitor_ipp(const char *device_uri)	// I - Device URI
 
   while ((http = httpConnect(host, port, NULL, AF_UNSPEC, encryption, 1, 30000, NULL)) == NULL)
   {
-    fprintf(stderr, "ERROR: Unable to connect to '%s' on port %d: %s\n", host, port, cupsGetErrorString());
+    cupsLangPrintf(stderr, _("%s: Unable to connect to '%s' on port %d: %s"), Prefix, host, port, cupsGetErrorString());
     sleep(30);
   }
 
@@ -2479,12 +2496,12 @@ ps_start_page(xform_raster_t   *ras,	// I - Raster information
 
   if (ras->header.cupsColorSpace != CUPS_CSPACE_W && ras->header.cupsColorSpace != CUPS_CSPACE_SW && ras->header.cupsColorSpace != CUPS_CSPACE_K && ras->header.cupsColorSpace != CUPS_CSPACE_RGB && ras->header.cupsColorSpace != CUPS_CSPACE_SRGB)
   {
-    fputs("ERROR: Unsupported color space, aborting.\n", stderr);
+    cupsLangPrintf(stderr, _("%s: Unsupported color space, aborting."), Prefix);
     return;
   }
   else if (ras->header.cupsBitsPerColor != 1 && ras->header.cupsBitsPerColor != 8)
   {
-    fputs("ERROR: Unsupported bit depth, aborting.\n", stderr);
+    cupsLangPrintf(stderr, _("%s: Unsupported bit depth, aborting."), Prefix);
     return;
   }
 
@@ -3023,7 +3040,7 @@ prepare_log(xform_prepare_t *p,		// I - Preparation data
   cupsArrayAdd(p->errors, buffer);
 
   if (error)
-    fprintf(stderr, "ERROR: %s\n", buffer + 1);
+    cupsLangPrintf(stderr, _("%s: %s"), Prefix, buffer + 1);
   else
     fprintf(stderr, "INFO: %s\n", buffer + 1);
 }
@@ -3549,27 +3566,33 @@ resource_dict_cb(
 static void
 usage(int status)			// I - Exit status
 {
-  puts("Usage: ipptransform [options] filename\n");
-  puts("Options:");
-  puts("  --help");
-  puts("  -d device-uri");
-  puts("  -f output-filename");
-  puts("  -i input/format");
-  puts("  -m output/format");
-  puts("  -o \"name=value [... name=value]\"");
-  puts("  -r resolution[,...,resolution]");
-  puts("  -s {flipped|manual-tumble|normal|rotated}");
-  puts("  -t type[,...,type]");
-  puts("  -v\n");
-  puts("Device URIs: socket://address[:port], ipp://address[:port]/resource, ipps://address[:port]/resource");
-  puts("Input Formats: application/pdf, image/jpeg, image/png, image/pwg-raster, text/plain");
-  puts("Output Formats: application/pdf, applications/postscript, application/vnd.hp-pcl, image/pwg-raster, image/urf");
-  puts("Options: copies, force-front-side, image-orientation, imposition-template, insert-sheet, job-error-sheet, job-pages-per-set, job-sheet-message, job-sheets, job-sheets-col, media, media-col, multiple-document-handling, number-up, orientation-requested, overrides, page-delivery, page-ranges, print-color-mode, print-quality, print-scaling, printer-resolution, separator-sheets, sides, x-image-position, x-image-shift, x-side1-image-shift, x-side2-image-position, y-image-position, y-image-shift, y-side1-image-shift, y-side2-image-position");
-  puts("Resolutions: NNNdpi or NNNxNNNdpi");
+  FILE	*fp = status ? stderr : stdout;	// Output file for usage...
+
+
+  cupsLangPuts(fp, _("Usage: ipptransform [options] filename"));
+  fputs("\n", fp);
+  cupsLangPuts(fp, _("Options:"));
+  cupsLangPuts(fp, _("  --help"));
+  cupsLangPuts(fp, _("  --version"));
+  cupsLangPuts(fp, _("  -d DEVICE-URI"));
+  cupsLangPuts(fp, _("  -f OUTPUT-FILENAME"));
+  cupsLangPuts(fp, _("  -i INPUT/FORMAT"));
+  cupsLangPuts(fp, _("  -m OUTPUT/FORMAT"));
+  cupsLangPuts(fp, _("  -o 'OPTION=VALUE [... OPTION=VALUE]'"));
+  cupsLangPuts(fp, _("  -r RESOLUTION[,...,RESOLUTION]"));
+  cupsLangPuts(fp, _("  -s {flipped|manual-tumble|normal|rotated}"));
+  cupsLangPuts(fp, _("  -t TYPE[,...,TYPE]"));
+  cupsLangPuts(fp, _("  -v"));
+  fputs("\n", fp);
+  cupsLangPuts(fp, _("DEVICE-URIs: socket://address[:port], ipp://address[:port]/resource, ipps://address[:port]/resource"));
+  cupsLangPuts(fp, _("INPUT-FORMATs: application/pdf, image/jpeg, image/png, image/pwg-raster, text/plain"));
+  cupsLangPuts(fp, _("OUTPUT-FORMATs: application/pdf, applications/postscript, application/vnd.hp-pcl, image/pwg-raster, image/urf"));
+  cupsLangPuts(fp, _("OPTIONs: copies, force-front-side, image-orientation, imposition-template, insert-sheet, job-error-sheet, job-pages-per-set, job-sheet-message, job-sheets, job-sheets-col, media, media-col, multiple-document-handling, number-up, orientation-requested, overrides, page-delivery, page-ranges, print-color-mode, print-quality, print-scaling, printer-resolution, separator-sheets, sides, x-image-position, x-image-shift, x-side1-image-shift, x-side2-image-position, y-image-position, y-image-shift, y-side1-image-shift, y-side2-image-position"));
+  cupsLangPuts(fp, _("RESOLUTIONs: NNNdpi or NNNxNNNdpi"));
 #ifdef HAVE_COREGRAPHICS_H
-  puts("Types: adobe-rgb_8, adobe-rgb_16, black_1, black_8, cmyk_8, sgray_1, sgray_8, srgb_8");
+  cupsLangPuts(fp, _("TYPEs: adobe-rgb_8, adobe-rgb_16, black_1, black_8, cmyk_8, sgray_1, sgray_8, srgb_8"));
 #else
-  puts("Types: black_1, black_8, sgray_1, sgray_8, srgb_8");
+  cupsLangPuts(fp, _("TYPEs: black_1, black_8, sgray_1, sgray_8, srgb_8"));
 #endif // HAVE_COREGRAPHICS_H
 
   exit(status);
@@ -3650,7 +3673,7 @@ xform_document(
   // Open the file...
   if ((url = CFURLCreateFromFileSystemRepresentation(kCFAllocatorDefault, (const UInt8 *)filename, (CFIndex)strlen(filename), false)) == NULL)
   {
-    fputs("ERROR: Unable to create CFURL for file.\n", stderr);
+    cupsLangPrintf(stderr, _("%s: Unable to create CFURL for file."), Prefix);
     return (false);
   }
 
@@ -3660,7 +3683,7 @@ xform_document(
 
   if (!document)
   {
-    fputs("ERROR: Unable to create CFPDFDocument for file.\n", stderr);
+    cupsLangPrintf(stderr, _("%s: Unable to create CFPDFDocument for file."), Prefix);
     return (false);
   }
 
@@ -3995,7 +4018,7 @@ xform_document(
     }
     else
     {
-      fprintf(stderr, "ERROR: Unable to run pdftoppm command: %s\n", strerror(errno));
+      cupsLangPrintf(stderr, _("%s: Unable to run pdftoppm command: %s"), Prefix, strerror(errno));
       return (false);
     }
 
@@ -4018,7 +4041,7 @@ xform_document(
     if ((fp = popen(command, "r")) == NULL)
 #endif // _WIN32
     {
-      fprintf(stderr, "ERROR: Unable to run pdftoppm command: %s\n", strerror(errno));
+      cupsLangPrintf(stderr, _("%s: Unable to run pdftoppm command: %s"), Prefix, strerror(errno));
       return (false);
     }
 
@@ -4075,7 +4098,7 @@ xform_document(
 
       if ((line = malloc(linesize)) == NULL)
       {
-	fprintf(stderr, "ERROR: Unable to allocate %u bytes for line.\n", (unsigned)linesize);
+	cupsLangPrintf(stderr, _("%s: Unable to allocate %u bytes for line."), Prefix, (unsigned)linesize);
 	return (false);
       }
 
@@ -4347,7 +4370,7 @@ xform_setup(xform_raster_t *ras,	// I - Raster information
       }
       else
       {
-	fprintf(stderr, "ERROR: Bad resolution value '%s'.\n", printer_resolution);
+	cupsLangPrintf(stderr, _("%s: Bad resolution value '%s'."), Prefix, printer_resolution);
 	return (false);
       }
     }
@@ -4434,7 +4457,7 @@ xform_setup(xform_raster_t *ras,	// I - Raster information
 
   if (!type)
   {
-    fputs("ERROR: No supported raster types are available.\n", stderr);
+    cupsLangPrintf(stderr, _("%s: No supported raster types are available."), Prefix);
     return (false);
   }
 
@@ -4449,7 +4472,7 @@ xform_setup(xform_raster_t *ras,	// I - Raster information
 
   if (!cupsRasterInitHeader(&ras->header, &options->media, options->print_content_optimize, options->print_quality, options->print_rendering_intent, options->orientation_requested, sides, type, options->printer_resolution[0], options->printer_resolution[1], NULL))
   {
-    fprintf(stderr, "ERROR: Unable to initialize raster context: %s\n", cupsRasterGetErrorString());
+    cupsLangPrintf(stderr, _("%s: Unable to initialize raster context: %s"), Prefix, cupsRasterGetErrorString());
     return (false);
   }
 
@@ -4457,7 +4480,7 @@ xform_setup(xform_raster_t *ras,	// I - Raster information
   {
     if (!cupsRasterInitHeader(&ras->sep_header, &options->separator_media, options->print_content_optimize, options->print_quality, options->print_rendering_intent, options->orientation_requested, sides, type, options->printer_resolution[0], options->printer_resolution[1], NULL))
     {
-      fprintf(stderr, "ERROR: Unable to initialize separator raster context: %s\n", cupsRasterGetErrorString());
+      cupsLangPrintf(stderr, _("%s: Unable to initialize separator raster context: %s"), Prefix, cupsRasterGetErrorString());
       return (false);
     }
   }
@@ -4466,7 +4489,7 @@ xform_setup(xform_raster_t *ras,	// I - Raster information
   {
     if (!cupsRasterInitHeader(&ras->back_header, &options->media, options->print_content_optimize, options->print_quality, options->print_rendering_intent, options->orientation_requested, sides, type, options->printer_resolution[0], options->printer_resolution[1], sheet_back))
     {
-      fprintf(stderr, "ERROR: Unable to initialize back side raster context: %s\n", cupsRasterGetErrorString());
+      cupsLangPrintf(stderr, _("%s: Unable to initialize back side raster context: %s"), Prefix, cupsRasterGetErrorString());
       return (false);
     }
   }
