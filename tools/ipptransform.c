@@ -2403,25 +2403,8 @@ ps_end_page(xform_raster_t   *ras,	// I - Raster information
             xform_write_cb_t cb,	// I - Write callback
             void             *ctx)	// I - Write context
 {
- /*
-  * End graphics...
-  */
-
-  (*cb)(ctx, (const unsigned char *)"\033*r0B", 5);
-
- /*
-  * Formfeed as needed...
-  */
-
-  if (!(ras->header.Duplex && (page & 1)))
-    (*cb)(ctx, (const unsigned char *)"\014", 1);
-
- /*
-  * Free the output buffer...
-  */
-
-  free(ras->out_buffer);
-  ras->out_buffer = NULL;
+  pclps_printf(cb, ctx, "grestore grestore\n");
+  pclps_printf(cb, ctx, "showpage\n");
 }
 
 
