@@ -222,7 +222,7 @@ ipptool-static:	ipptool.o ../cups/$(LIBCUPS_STATIC)
 
 ipptransform:	ipptransform.o ipp-options.o libpdfio.a ../cups/$(LIBCUPS) ipptransform-static
 	echo Linking $@...
-	$(CC) $(LDFLAGS) -o $@ ipptransform.o ipp-options.o libpdfio.a $(LINKCUPS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ ipptransform.o ipp-options.o libpdfio.a $(LINKCUPS) $(XFORMLIBS) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 
@@ -232,7 +232,7 @@ ipptransform:	ipptransform.o ipp-options.o libpdfio.a ../cups/$(LIBCUPS) ipptran
 
 ipptransform-static:	ipptransform.o ipp-options.o libpdfio.a ../cups/$(LIBCUPS_STATIC)
 	echo Linking $@...
-	$(CC) $(LDFLAGS) -o $@ ipptransform.o ipp-options.o libpdfio.a ../cups/$(LIBCUPS_STATIC) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ ipptransform.o ipp-options.o libpdfio.a ../cups/$(LIBCUPS_STATIC) $(XFORMLIBS) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 

@@ -22,12 +22,12 @@
 #include "pdfio.h"
 #include "pdfio-content.h"
 
-#ifdef HAVE_COREGRAPHICS
+#ifdef HAVE_COREGRAPHICS_H
 #  include <CoreGraphics/CoreGraphics.h>
 #  include <ImageIO/ImageIO.h>
 
 extern void CGContextSetCTM(CGContextRef c, CGAffineTransform m);
-#endif // HAVE_COREGRAPHICS
+#endif // HAVE_COREGRAPHICS_H
 
 #include "dither.h"
 
@@ -153,10 +153,10 @@ static bool	generate_job_error_sheet(xform_prepare_t *p);
 static bool	generate_job_sheets(xform_prepare_t *p);
 static void	media_to_rect(cups_media_t *size, pdfio_rect_t *media, pdfio_rect_t *crop);
 static void	*monitor_ipp(const char *device_uri);
-#ifdef HAVE_COREGRAPHICS
+#ifdef HAVE_COREGRAPHICS_H
 static void	pack_rgba(unsigned char *row, size_t num_pixels);
 static void	pack_rgba16(unsigned char *row, size_t num_pixels);
-#endif // HAVE_COREGRAPHICS
+#endif // HAVE_COREGRAPHICS_H
 static bool	page_dict_cb(pdfio_dict_t *dict, const char *key, xform_page_t *outpage);
 static void	pcl_end_job(xform_raster_t *ras, xform_write_cb_t cb, void *ctx);
 static void	pcl_end_page(xform_raster_t *ras, unsigned page, xform_write_cb_t cb, void *ctx);
@@ -374,7 +374,6 @@ main(int  argc,				// I - Number of command-line args
 	  default :
 	      fprintf(stderr, "ERROR: Unknown option '-%c'.\n", *opt);
 	      usage(1);
-	      break;
 	}
       }
     }
@@ -1815,7 +1814,7 @@ monitor_ipp(const char *device_uri)	// I - Device URI
 }
 
 
-#ifdef HAVE_COREGRAPHICS
+#ifdef HAVE_COREGRAPHICS_H
 //
 // 'pack_rgba()' - Pack RGBX scanlines into RGB scanlines.
 //
@@ -1900,7 +1899,7 @@ pack_rgba16(unsigned char *row,		// I - Row of pixels to pack
     *dest++ = *from++;
   }
 }
-#endif // HAVE_COREGRAPHICS
+#endif // HAVE_COREGRAPHICS_H
 
 
 //
@@ -3584,11 +3583,11 @@ usage(int status)			// I - Exit status
   puts("Output Formats: application/pdf, applications/postscript, application/vnd.hp-pcl, image/pwg-raster, image/urf");
   puts("Options: copies, force-front-side, image-orientation, imposition-template, insert-sheet, job-error-sheet, job-pages-per-set, job-sheet-message, job-sheets, job-sheets-col, media, media-col, multiple-document-handling, number-up, orientation-requested, overrides, page-delivery, page-ranges, print-color-mode, print-quality, print-scaling, printer-resolution, separator-sheets, sides, x-image-position, x-image-shift, x-side1-image-shift, x-side2-image-position, y-image-position, y-image-shift, y-side1-image-shift, y-side2-image-position");
   puts("Resolutions: NNNdpi or NNNxNNNdpi");
-#ifdef HAVE_COREGRAPHICS
+#ifdef HAVE_COREGRAPHICS_H
   puts("Types: adobe-rgb_8, adobe-rgb_16, black_1, black_8, cmyk_8, sgray_1, sgray_8, srgb_8");
 #else
   puts("Types: black_1, black_8, sgray_1, sgray_8, srgb_8");
-#endif // HAVE_COREGRAPHICS
+#endif // HAVE_COREGRAPHICS_H
 
   exit(status);
 }
@@ -3627,7 +3626,7 @@ write_fd(int                 *fd,	// I - File descriptor
 
 
 
-#ifdef HAVE_COREGRAPHICS
+#ifdef HAVE_COREGRAPHICS_H
 //
 // 'xform_document()' - Transform a file for printing.
 //
@@ -3659,7 +3658,7 @@ xform_document(
   CGAffineTransform 	transform;	// Transform for page
   CGRect		dest;		// Destination rectangle
   bool			color = true;	// Does the PDF have color?
-  unsigned		copy;		// Current copy
+  int			copy;		// Current copy
   unsigned		page;		// Current page
   unsigned		media_sheets = 0,
 			impressions = 0;// Page/sheet counters
@@ -3936,8 +3935,8 @@ xform_document(
     void             *ctx)		// I - Write context
 {
   xform_raster_t ras;			// Raster information
-  unsigned	copy,			// Current copy
-		page = 0,		// Current page
+  int		copy;			// Current copy
+  unsigned	page = 0,		// Current page
 		media_sheets = 0,
 		impressions = 0;	// Page/sheet counters
   char		command[1024],		// pdftoppm command
@@ -4212,7 +4211,7 @@ xform_document(
 
   return (true);
 }
-#endif // HAVE_COREGRAPHICS
+#endif // HAVE_COREGRAPHICS_H
 
 
 //
@@ -4393,12 +4392,12 @@ xform_setup(xform_raster_t *ras,	// I - Raster information
   {
     if (options->print_quality == IPP_QUALITY_HIGH)
     {
-#ifdef HAVE_COREGRAPHICS
+#ifdef HAVE_COREGRAPHICS_H
       if (cupsArrayFind(type_array, "adobe-rgb_16"))
 	type = "adobe-rgb_16";
       else if (cupsArrayFind(type_array, "adobe-rgb_8"))
 	type = "adobe-rgb_8";
-#endif // HAVE_COREGRAPHICS
+#endif // HAVE_COREGRAPHICS_H
     }
 
     if (!type && cupsArrayFind(type_array, "srgb_8"))
@@ -4438,12 +4437,12 @@ xform_setup(xform_raster_t *ras,	// I - Raster information
       type = "sgray_1";
     else if (cupsArrayFind(type_array, "srgb_8"))
       type = "srgb_8";
-#ifdef HAVE_COREGRAPHICS
+#ifdef HAVE_COREGRAPHICS_H
     else if (cupsArrayFind(type_array, "adobe-rgb_8"))
       type = "adobe-rgb_8";
     else if (cupsArrayFind(type_array, "adobe-rgb_16"))
       type = "adobe-rgb_16";
-#endif // HAVE_COREGRAPHICS
+#endif // HAVE_COREGRAPHICS_H
     else if (cupsArrayFind(type_array, "cmyk_8"))
       type = "cmyk_8";
   }
