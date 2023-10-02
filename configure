@@ -5156,7 +5156,6 @@ printf "%s\n" "#define HAVE_OPENSSL 1" >>confdefs.h
 
 	    CPPFLAGS="$CPPFLAGS $($PKGCONFIG --cflags openssl)"
 	    LIBS="$LIBS $($PKGCONFIG --libs openssl)"
-	    PKGCONFIG_LIBS_PRIVATE="$($PKGCONFIG --libs openssl) $PKGCONFIG_LIBS_PRIVATE"
 	    PKGCONFIG_REQUIRES_PRIVATE="openssl, $PKGCONFIG_REQUIRES"
 
 else $as_nop
@@ -5192,7 +5191,6 @@ printf "%s\n" "#define HAVE_GNUTLS 1" >>confdefs.h
 
 		CPPFLAGS="$CPPFLAGS `$PKGCONFIG --cflags gnutls`"
 		LIBS="$LIBS `$PKGCONFIG --libs gnutls`"
-		PKGCONFIG_LIBS_PRIVATE="$($PKGCONFIG --libs gnutls) $PKGCONFIG_LIBS_PRIVATE"
 		PKGCONFIG_REQUIRES_PRIVATE="gnutls >= 3.0, $PKGCONFIG_REQUIRES_PRIVATE"
 
 else $as_nop

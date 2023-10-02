@@ -398,7 +398,6 @@ AS_IF([test $with_tls = yes -o $with_tls = libressl -o $with_tls = openssl], [
 	    AC_DEFINE([HAVE_OPENSSL], [1], [Do we have the OpenSSL/LibreSSL library?])
 	    CPPFLAGS="$CPPFLAGS $($PKGCONFIG --cflags openssl)"
 	    LIBS="$LIBS $($PKGCONFIG --libs openssl)"
-	    PKGCONFIG_LIBS_PRIVATE="$($PKGCONFIG --libs openssl) $PKGCONFIG_LIBS_PRIVATE"
 	    PKGCONFIG_REQUIRES_PRIVATE="openssl, $PKGCONFIG_REQUIRES"
 	], [
 	    AC_MSG_RESULT([no])
@@ -416,7 +415,6 @@ AS_IF([test $have_tls = 0], [
 		AC_DEFINE([HAVE_GNUTLS], [1], [Do we have the GNU TLS library?])
 		CPPFLAGS="$CPPFLAGS `$PKGCONFIG --cflags gnutls`"
 		LIBS="$LIBS `$PKGCONFIG --libs gnutls`"
-		PKGCONFIG_LIBS_PRIVATE="$($PKGCONFIG --libs gnutls) $PKGCONFIG_LIBS_PRIVATE"
 		PKGCONFIG_REQUIRES_PRIVATE="gnutls >= 3.0, $PKGCONFIG_REQUIRES_PRIVATE"
 	    ], [
 		AC_MSG_RESULT([no])
