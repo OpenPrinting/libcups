@@ -4060,7 +4060,7 @@ xform_document(
         yend   = ystart + height;
       }
 
-      memset(line, ras->white, linesize);
+      memset(line, ras.white, linesize);
 
       // Skip max value line...
       if (!fgets(header, sizeof(header), fp))
@@ -4096,14 +4096,14 @@ xform_document(
       for (; y < yend; y ++)
       {
         // Copy lines...
-        memset(line. 255, linesize);
+        memset(line, 255, linesize);
 
         if (fread(linein, width, bpp, fp))
         {
 	  if (ras.header.cupsBitsPerPixel == 1)
 	    dither_gray(&ras, y, lineout, ras.header.cupsBytesPerLine);
 	  else if (ras.header.cupsColorSpace == CUPS_CSPACE_K)
-	    pack_black(lineptr, ras.right - ras.left);
+	    pack_black(lineout, ras.right - ras.left);
 
           (ras.write_line)(&ras, y, lineout, cb, ctx);
         }
