@@ -2307,6 +2307,8 @@ pcl_write_line(
   unsigned		count;		// Count of bytes for output
 
 
+  (void)y;
+
   if (line[0] == 255 && !memcmp(line, line + 1, ras->out_length - 1))
   {
     // Skip blank line...
@@ -3385,6 +3387,7 @@ raster_write_line(
     xform_write_cb_t    cb,		// I - Write callback
     void                *ctx)		// I - Write context
 {
+  (void)y;
   (void)cb;
   (void)ctx;
 
