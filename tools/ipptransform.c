@@ -203,7 +203,8 @@ main(int  argc,				// I - Number of command-line args
 		*resolutions,		// pwg-raster-document-resolution-supported
 		*sheet_back,		// pwg-raster-document-sheet-back
 		*types,			// pwg-raster-document-type-supported
-		*opt;			// Option character
+		*opt,			// Option character
+		*ext;			// Filename extension
   size_t	num_files = 0;		// Number of files
   xform_document_t files[1000];		// Files to convert
   size_t	num_options = 0;	// Number of options
@@ -303,6 +304,20 @@ main(int  argc,				// I - Number of command-line args
 	        cupsLangPrintf(stderr, _("%s: Missing output filename after '-f'."), Prefix);
 	        usage(1);
 	      }
+
+              if (!output_type && (ext = strrchr(argv[i], '.')) != NULL)
+              {
+                if (!strcasecmp(ext, ".pcl"))
+                  output_type = "application/vnd.hp-PCL";
+                else if (!strcasecmp(ext, ".pdf"))
+                  output_type = "application/pdf";
+                else if (!strcasecmp(ext, ".ps"))
+                  output_type = "application/postscript";
+                else if (!strcasecmp(ext, ".pwg"))
+                  output_type = "image/pwg-raster";
+                else if (!strcasecmp(ext, ".urf"))
+                  output_type = "image/urf";
+              }
 
 	      if (!freopen(argv[i], "w", stdout))
 	      {
@@ -412,23 +427,19 @@ main(int  argc,				// I - Number of command-line args
 
       if (!files[num_files].format)
       {
-	if ((opt = strrchr(argv[i], '.')) != NULL)
+	if ((ext = strrchr(argv[i], '.')) != NULL)
 	{
-	  if (!strcmp(opt, ".jpg") || !strcmp(opt, ".jpeg"))
+	  if (!strcasecmp(ext, ".jpg") || !strcasecmp(ext, ".jpeg"))
 	    files[num_files].format = "image/jpeg";
-	  else if (!strcmp(opt, ".pcl"))
-	    files[num_files].format = "application/vnd.hp-PCL";
-	  else if (!strcmp(opt, ".pdf"))
+	  else if (!strcasecmp(ext, ".pdf"))
 	    files[num_files].format = "application/pdf";
-	  else if (!strcmp(opt, ".png"))
+	  else if (!strcasecmp(ext, ".png"))
 	    files[num_files].format = "image/png";
-	  else if (!strcmp(opt, ".pxl"))
-	    files[num_files].format = "application/vnd.hp-PCLXL";
-	  else if (!strcmp(opt, ".pwg"))
+	  else if (!strcasecmp(ext, ".pwg"))
 	    files[num_files].format = "image/pwg-raster";
-	  else if (!strcmp(opt, ".c") || !strcmp(opt, ".c++") || !strcmp(opt, ".cpp") || !strcmp(opt, ".cxx") || !strcmp(opt, ".h") || !strcmp(opt, ".hpp") || !strcmp(opt, ".m") || !strcmp(opt, ".md") || !strcmp(opt, ".py") || !strcmp(opt, ".rst") || !strcmp(opt, ".swift") || !strcmp(opt, ".txt"))
+	  else if (!strcasecmp(ext, ".c") || !strcasecmp(ext, ".c++") || !strcasecmp(ext, ".cpp") || !strcasecmp(ext, ".cxx") || !strcasecmp(ext, ".h") || !strcasecmp(ext, ".hpp") || !strcasecmp(ext, ".m") || !strcasecmp(ext, ".md") || !strcasecmp(ext, ".pl") || !strcasecmp(ext, ".py") || !strcasecmp(ext, ".rst") || !strcasecmp(ext, ".swift") || !strcasecmp(ext, ".txt"))
 	    files[num_files].format = "text/plain";
-	  else if (!strcmp(opt, ".urf"))
+	  else if (!strcasecmp(ext, ".urf"))
 	    files[num_files].format = "image/urf";
 	}
       }
