@@ -4101,7 +4101,7 @@ xform_document(
         if (fread(linein, width, bpp, fp))
         {
 	  if (ras.header.cupsBitsPerPixel == 1)
-	    dither_gray(&ras, y, lineout, ras.header.cupsBytesPerLine);
+	    dither_gray(&ras, y, lineout, ras.right - ras.left);
 	  else if (ras.header.cupsColorSpace == CUPS_CSPACE_K)
 	    pack_black(lineout, ras.right - ras.left);
 
