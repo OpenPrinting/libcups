@@ -118,8 +118,7 @@ struct xform_raster_s			// Raster context
   unsigned		left, top, right, bottom;
 					// Image (print) box with origin at top left
   unsigned		out_blanks;	// Blank lines
-  size_t		out_length;	// Output buffer size
-  unsigned char		*out_buffer;	// Output (bit) buffer
+  unsigned		out_length;	// Byte width of image box
   unsigned char		*comp_buffer;	// Compression buffer
 
   unsigned char		dither[64][64];	// Dither array
@@ -144,10 +143,12 @@ static bool	convert_image(xform_prepare_t *p, xform_document_t *d, int document)
 static bool	convert_raster(xform_prepare_t *p, xform_document_t *d, int document);
 static bool	convert_text(xform_prepare_t *p, xform_document_t *d, int document);
 static void	copy_page(xform_prepare_t *p, xform_page_t *outpage, size_t layout);
+static void	dither_gray(xform_raster_t *ras, unsigned y, unsigned char *row, size_t num_pixels);
 static bool	generate_job_error_sheet(xform_prepare_t *p);
 static bool	generate_job_sheets(xform_prepare_t *p);
 static void	media_to_rect(cups_media_t *size, pdfio_rect_t *media, pdfio_rect_t *crop);
 static void	*monitor_ipp(const char *device_uri);
+static void	pack_black(unsigned char *row, size_t num_pixels);
 #ifdef HAVE_COREGRAPHICS_H
 static void	pack_rgba(unsigned char *row, size_t num_pixels);
 static void	pack_rgba16(unsigned char *row, size_t num_pixels);
@@ -461,7 +462,7 @@ main(int  argc,				// I - Number of command-line args
     cupsLangPrintf(stderr, _("%s: Unknown output format, please specify with '-m' option."), Prefix);
     usage(1);
   }
-  else if (strcmp(output_type, "application/pdf") && strcmp(output_type, "application/postscript") && strcmp(output_type, "application/vnd.hp-pcl") && strcmp(output_type, "image/pwg-raster") && strcmp(output_type, "image/urf"))
+  else if (strcasecmp(output_type, "application/pdf") && strcasecmp(output_type, "application/postscript") && strcasecmp(output_type, "application/vnd.hp-pcl") && strcasecmp(output_type, "image/pwg-raster") && strcasecmp(output_type, "image/urf"))
   {
     cupsLangPrintf(stderr, _("%s: Unsupported output format '%s'."), Prefix, output_type);
     usage(1);
@@ -470,7 +471,7 @@ main(int  argc,				// I - Number of command-line args
   // Prepare a (combined) PDF file from the input files for printing...
   ipp_options = ippOptionsNew(num_options, options);
 
-  if (!prepare_documents(num_files, files, ipp_options, sheet_back, pdf_file, sizeof(pdf_file), output_type, &pdf_pages, !strcmp(output_type, "application/pdf")))
+  if (!prepare_documents(num_files, files, ipp_options, sheet_back, pdf_file, sizeof(pdf_file), output_type, &pdf_pages, !strcasecmp(output_type, "application/pdf")))
   {
     // Unable to prepare documents, exit...
     ippOptionsDelete(ipp_options);
@@ -648,11 +649,17 @@ main(int  argc,				// I - Number of command-line args
     httpAddrFreeList(list);
   }
 
-  if (strcmp(output_type, "application/pdf"))
+  if (strcasecmp(output_type, "application/pdf"))
   {
     // Do raster transform...
     if (!resolutions)
-      resolutions = "300dpi";
+    {
+      // By default, use 200dpi for PostScript and 300dpi for others...
+      if (!strcasecmp(output_type, "application/postscript"))
+        resolutions = "200dpi";
+      else
+        resolutions = "300dpi";
+    }
     if (!sheet_back)
       sheet_back = "normal";
     if (!types)
@@ -1542,6 +1549,47 @@ copy_page(xform_prepare_t *p,		// I - Preparation data
 
 
 //
+// 'dither_gray()' - Dither grayscale pixels.
+//
+
+static void
+dither_gray(xform_raster_t *ras,	// I - Raster info
+            unsigned       y,		// I - Row number
+            unsigned char  *row,	// I - Row pointer
+            size_t         num_pixels)	// I - Number of pixels
+{
+  unsigned	x;			// Column number
+  unsigned char	bit,			// Current bit
+		byte,			// Current byte
+		*rowptr;		// Pointer into row buffer
+  const unsigned char *ditherline;	// Pointer into dither table
+
+
+  ditherline = ras->dither[y & 63];
+
+  for (x = 0, bit = 128, byte = ras->white, rowptr = row; x < num_pixels; x ++, row ++)
+  {
+    if (*row <= ditherline[x & 63])
+      byte ^= bit;
+
+    if (bit == 1)
+    {
+      *rowptr++ = byte;
+      byte      = ras->white;
+      bit       = 128;
+    }
+    else
+    {
+      bit >>= 1;
+    }
+  }
+
+  if (bit != 128)
+    *rowptr++ = byte;
+}
+
+
+//
 // 'generate_job_error_sheet()' - Generate a job error sheet.
 //
 
@@ -1831,6 +1879,23 @@ monitor_ipp(const char *device_uri)	// I - Device URI
 }
 
 
+//
+// 'pack_black()' - Pack grayscale lines into black lines.
+//
+
+static void
+pack_black(unsigned char *row,		// I - Row of pixels to pack
+           size_t        num_pixels)	// I - Number of pixels in row
+{
+  while (num_pixels > 0)
+  {
+    *row = 255 - *row;
+    row ++;
+    num_pixels --;
+  }
+}
+
+
 #ifdef HAVE_COREGRAPHICS_H
 //
 // 'pack_rgba()' - Pack RGBX scanlines into RGB scanlines.
@@ -2052,13 +2117,6 @@ pcl_end_page(xform_raster_t   *ras,	// I - Raster information
 
   if (!(ras->header.Duplex && (page & 1)))
     (*cb)(ctx, (const unsigned char *)"\014", 1);
-
- /*
-  * Free the output buffer...
-  */
-
-  free(ras->out_buffer);
-  ras->out_buffer = NULL;
 }
 
 
@@ -2226,9 +2284,7 @@ pcl_start_page(xform_raster_t   *ras,	// I - Raster information
   */
 
   ras->out_blanks  = 0;
-  ras->out_length  = (ras->right - ras->left + 7) / 8;
-  ras->out_buffer  = malloc(ras->out_length);
-  ras->comp_buffer = malloc(2 * ras->out_length + 2);
+  ras->comp_buffer = malloc((ras->right - ras->left + 7) / 4 + 3);
 }
 
 
@@ -2244,83 +2300,40 @@ pcl_write_line(
     xform_write_cb_t    cb,		// I - Write callback
     void                *ctx)		// I - Write context
 {
-  unsigned	x;			// Column number
-  unsigned char	bit,			// Current bit
-		byte,			// Current byte
-		*outptr,		// Pointer into output buffer
-		*outend,		// End of output buffer
-		*start,			// Start of sequence
-		*compptr;		// Pointer into compression buffer
-  unsigned	count;			// Count of bytes for output
-  const unsigned char	*ditherline;	// Pointer into dither table
+  const unsigned char	*outptr,	// Pointer into output buffer
+			*outend,	// End of output buffer
+			*start;		// Start of sequence
+  unsigned char		*compptr;	// Pointer into compression buffer
+  unsigned		count;		// Count of bytes for output
 
 
-  if (line[0] == 255 && !memcmp(line, line + 1, ras->right - ras->left - 1))
+  if (line[0] == 255 && !memcmp(line, line + 1, ras->out_length - 1))
   {
-   /*
-    * Skip blank line...
-    */
-
+    // Skip blank line...
     ras->out_blanks ++;
     return;
   }
 
- /*
-  * Dither the line into the output buffer...
-  */
-
-  y &= 63;
-  ditherline = ras->dither[y];
-
-  for (x = ras->left, bit = 128, byte = 0, outptr = ras->out_buffer; x < ras->right; x ++, line ++)
-  {
-    if (*line <= ditherline[x & 63])
-      byte |= bit;
-
-    if (bit == 1)
-    {
-      *outptr++ = byte;
-      byte      = 0;
-      bit       = 128;
-    }
-    else
-      bit >>= 1;
-  }
-
-  if (bit != 128)
-    *outptr++ = byte;
-
- /*
-  * Apply compression...
-  */
-
+  // Apply compression...
   compptr = ras->comp_buffer;
-  outend  = outptr;
-  outptr  = ras->out_buffer;
+  outptr  = line;
+  outend  = line + ras->out_length;
 
   while (outptr < outend)
   {
     if ((outptr + 1) >= outend)
     {
-     /*
-      * Single byte on the end...
-      */
-
+      // Single byte on the end...
       *compptr++ = 0x00;
       *compptr++ = *outptr++;
     }
     else if (outptr[0] == outptr[1])
     {
-     /*
-      * Repeated sequence...
-      */
-
+      // Repeated sequence...
       outptr ++;
       count = 2;
 
-      while (outptr < (outend - 1) &&
-	     outptr[0] == outptr[1] &&
-	     count < 127)
+      while (outptr < (outend - 1) && outptr[0] == outptr[1] && count < 127)
       {
 	outptr ++;
 	count ++;
@@ -2331,17 +2344,12 @@ pcl_write_line(
     }
     else
     {
-     /*
-      * Non-repeated sequence...
-      */
-
+      // Non-repeated sequence...
       start = outptr;
       outptr ++;
       count = 1;
 
-      while (outptr < (outend - 1) &&
-	     outptr[0] != outptr[1] &&
-	     count < 127)
+      while (outptr < (outend - 1) && outptr[0] != outptr[1] && count < 127)
       {
 	outptr ++;
 	count ++;
@@ -2354,16 +2362,10 @@ pcl_write_line(
     }
   }
 
- /*
-  * Output the line...
-  */
-
+  // Output the line...
   if (ras->out_blanks > 0)
   {
-   /*
-    * Skip blank lines first...
-    */
-
+    // Skip blank lines first...
     pclps_printf(cb, ctx, "\033*b%dY", ras->out_blanks);
     ras->out_blanks = 0;
   }
@@ -2420,6 +2422,9 @@ ps_end_page(xform_raster_t   *ras,	// I - Raster information
             xform_write_cb_t cb,	// I - Write callback
             void             *ctx)	// I - Write context
 {
+  (void)ras;
+  (void)page;
+
   pclps_printf(cb, ctx, "grestore grestore\n");
   pclps_printf(cb, ctx, "showpage\n");
 }
@@ -2494,6 +2499,11 @@ ps_start_page(xform_raster_t   *ras,	// I - Raster information
 
   fprintf(stderr, "DEBUG: Page %d: %ux%ux%u\n", page, ras->header.cupsWidth, ras->header.cupsHeight, ras->header.cupsBitsPerPixel);
 
+  ras->left   = ras->header.HWResolution[0] / 6;
+  ras->right  = ras->header.cupsWidth - ras->header.HWResolution[0] / 6;
+  ras->top    = ras->header.HWResolution[1] / 6;
+  ras->bottom = ras->header.cupsHeight - ras->header.HWResolution[1] / 6;
+
   if (ras->header.cupsColorSpace != CUPS_CSPACE_W && ras->header.cupsColorSpace != CUPS_CSPACE_SW && ras->header.cupsColorSpace != CUPS_CSPACE_K && ras->header.cupsColorSpace != CUPS_CSPACE_RGB && ras->header.cupsColorSpace != CUPS_CSPACE_SRGB)
   {
     cupsLangPrintf(stderr, _("%s: Unsupported color space, aborting."), Prefix);
@@ -2516,23 +2526,20 @@ ps_start_page(xform_raster_t   *ras,	// I - Raster information
     case CUPS_CSPACE_SW :
 	decode = "0 1";
 	pclps_printf(cb, ctx, "/DeviceGray setcolorspace\n");
-	ras->white = 255;
 	break;
 
     case CUPS_CSPACE_K :
-	decode = "0 1";
+	decode = "1 0";
 	pclps_printf(cb, ctx, "/DeviceGray setcolorspace\n");
-	ras->white = 0;
 	break;
 
     default :
 	decode = "0 1 0 1 0 1";
 	pclps_printf(cb, ctx, "/DeviceRGB setcolorspace\n");
-	ras->white = 255;
 	break;
   }
 
-  pclps_printf(cb, ctx, "gsave /L{grestore gsave 0 exch translate <</ImageType 1/Width %u/Height 1/BitsPerComponent %u/ImageMatrix[1 0 0 -1 0 1]/DataSource currentfile/ASCII85Decode filter/Decode[%s]>>image}bind def\n", ras->header.cupsWidth, ras->header.cupsBitsPerColor, decode);
+  pclps_printf(cb, ctx, "gsave /L{grestore gsave 0 exch neg %u add translate <</ImageType 1/Width %u/Height 1/BitsPerComponent %u/ImageMatrix[1 0 0 1 0 0]/DataSource currentfile/ASCII85Decode filter/Decode[%s]>>image}bind def\n", ras->header.cupsHeight - ras->top, ras->right - ras->left, ras->header.cupsBitsPerColor, decode);
 }
 
 
@@ -2548,15 +2555,14 @@ ps_write_line(
     xform_write_cb_t    cb,		// I - Write callback
     void                *ctx)		// I - Write context
 {
-  if (line[0] != ras->white || memcmp(line, line + 1, ras->header.cupsBytesPerLine - 1))
+  if (line[0] != ras->white || memcmp(line, line + 1, ras->out_length - 1))
   {
-    unsigned		length;		// Length of line
+    unsigned		length = ras->out_length;
+					// Remaining length
     unsigned		b = 0;		// Current 32-bit word
     unsigned char	c[5];		// Base-85 encoded characters
 
-    pclps_printf(cb, ctx, "%d L\n", y - 1);
-
-    length = ras->header.cupsBytesPerLine;
+    pclps_printf(cb, ctx, "%u L\n", y);
 
     while (length > 3)
     {
@@ -2901,7 +2907,7 @@ prepare_documents(
       outdir  = 1;
     }
 
-    if (p.num_layout == 1 && options->print_scaling == IPPOPT_SCALING_NONE && strcmp(outformat, "image/pwg-raster") && strcmp(outformat, "image/urf"))
+    if (p.num_layout == 1 && options->print_scaling == IPPOPT_SCALING_NONE && strcasecmp(outformat, "image/pwg-raster") && strcasecmp(outformat, "image/urf"))
     {
       // Simple path - no layout/scaling/rotation of pages so we can just copy the pages quickly.
       if (Verbosity)
@@ -3307,15 +3313,10 @@ raster_end_page(xform_raster_t   *ras,	// I - Raster information
 		xform_write_cb_t cb,	// I - Write callback
 		void             *ctx)	// I - Write context
 {
+  (void)ras;
   (void)page;
   (void)cb;
   (void)ctx;
-
-  if (ras->header.cupsBitsPerPixel == 1)
-  {
-    free(ras->out_buffer);
-    ras->out_buffer = NULL;
-  }
 }
 
 
@@ -3369,12 +3370,6 @@ raster_start_page(xform_raster_t   *ras,// I - Raster information
     cupsRasterWriteHeader(ras->ras, &ras->back_header);
   else
     cupsRasterWriteHeader(ras->ras, &ras->header);
-
-  if (ras->header.cupsBitsPerPixel == 1 || ras->header.cupsColorSpace == CUPS_CSPACE_K)
-  {
-    ras->out_length = ras->header.cupsBytesPerLine;
-    ras->out_buffer = malloc(ras->header.cupsBytesPerLine);
-  }
 }
 
 
@@ -3393,75 +3388,7 @@ raster_write_line(
   (void)cb;
   (void)ctx;
 
-  if (ras->header.cupsBitsPerPixel == 1)
-  {
-   /*
-    * Dither the line into the output buffer...
-    */
-
-    unsigned		x;		// Column number
-    unsigned char	bit,		// Current bit
-			byte,		// Current byte
-			*outptr;	// Pointer into output buffer
-    const unsigned char	*ditherline;	// Pointer into dither table
-
-    y &= 63;
-    ditherline = ras->dither[y];
-
-    if (ras->header.cupsColorSpace == CUPS_CSPACE_SW)
-    {
-      for (x = ras->left, bit = 128, byte = 0, outptr = ras->out_buffer; x < ras->right; x ++, line ++)
-      {
-	if (*line > ditherline[x & 63])
-	  byte |= bit;
-
-	if (bit == 1)
-	{
-	  *outptr++ = byte;
-	  byte      = 0;
-	  bit       = 128;
-	}
-	else
-	  bit >>= 1;
-      }
-    }
-    else
-    {
-      for (x = ras->left, bit = 128, byte = 0, outptr = ras->out_buffer; x < ras->right; x ++, line ++)
-      {
-	if (*line <= ditherline[x & 63])
-	  byte |= bit;
-
-	if (bit == 1)
-	{
-	  *outptr++ = byte;
-	  byte      = 0;
-	  bit       = 128;
-	}
-	else
-	  bit >>= 1;
-      }
-    }
-
-    if (bit != 128)
-      *outptr++ = byte;
-
-    cupsRasterWritePixels(ras->ras, ras->out_buffer, ras->header.cupsBytesPerLine);
-  }
-  else if (ras->header.cupsColorSpace == CUPS_CSPACE_K)
-  {
-    unsigned		x;		// Column number
-    unsigned char	*outptr;	// Pointer into output buffer
-
-    for (x = ras->left, outptr = ras->out_buffer; x < ras->right; x ++)
-      *outptr++ = 255 - *line++;
-
-    cupsRasterWritePixels(ras->ras, ras->out_buffer, ras->header.cupsBytesPerLine);
-  }
-  else
-  {
-    cupsRasterWritePixels(ras->ras, (unsigned char *)line, ras->header.cupsBytesPerLine);
-  }
+  cupsRasterWritePixels(ras->ras, (unsigned char *)line, ras->out_length);
 }
 
 
@@ -3813,6 +3740,8 @@ xform_document(
 
       (ras.start_page)(&ras, page, cb, ctx);
 
+      ras.out_length = ((ras.right - ras.left) * ras.header.cupsBitsPerPixel + 7) / 8;
+
       for (y = ras.top; y < ras.bottom; y ++)
       {
 	if (y >= band_endy)
@@ -3849,7 +3778,11 @@ xform_document(
 
         // Prepare and write a line...
 	lineptr = ras.band_buffer + (y - band_starty) * band_size + ras.left * ras.band_bpp;
-	if (ras.header.cupsBitsPerPixel == 24)
+	if (ras.header.cupsBitsPerPixel == 1)
+	  dither_gray(&ras, y, lineptr, ras.right - ras.left);
+	else if (ras.header.cupsColorSpace == CUPS_CSPACE_K)
+	  pack_black(lineptr, ras.right - ras.left);
+	else if (ras.header.cupsBitsPerPixel == 24)
 	  pack_rgba(lineptr, ras.right - ras.left);
 	else if (ras.header.cupsBitsPerPixel == 48)
 	  pack_rgba16(lineptr, ras.right - ras.left);
@@ -4105,12 +4038,12 @@ xform_document(
       if (width > ras.header.cupsWidth)
       {
         linein  = line;
-        lineout = line + (width - ras.header.cupsWidth) / 2 * bpp;
+        lineout = line + ((width - ras.header.cupsWidth) / 2 + ras.left) * bpp;
       }
       else
       {
         linein  = line + (ras.header.cupsWidth - width) / 2 * bpp;
-        lineout = line;
+        lineout = line + ras.left * bpp;
       }
 
       if (height > ras.header.cupsHeight)
@@ -4124,7 +4057,7 @@ xform_document(
         yend   = ystart + height;
       }
 
-      memset(line, 255, linesize);
+      memset(line, ras->white, linesize);
 
       // Skip max value line...
       if (!fgets(header, sizeof(header), fp))
@@ -4142,6 +4075,8 @@ xform_document(
 
       (ras.start_page)(&ras, page, cb, ctx);
 
+      ras.out_length = ((ras.right - ras.left) * ras.header.cupsBitsPerPixel + 7) / 8;
+
       if (height > ras.header.cupsHeight)
       {
         // Skip leading lines...
@@ -4158,8 +4093,17 @@ xform_document(
       for (; y < yend; y ++)
       {
         // Copy lines...
+        memset(line. 255, linesize);
+
         if (fread(linein, width, bpp, fp))
+        {
+	  if (ras.header.cupsBitsPerPixel == 1)
+	    dither_gray(&ras, y, lineout, ras.header.cupsBytesPerLine);
+	  else if (ras.header.cupsColorSpace == CUPS_CSPACE_K)
+	    pack_black(lineptr, ras.right - ras.left);
+
           (ras.write_line)(&ras, y, lineout, cb, ctx);
+        }
       }
 
       if (height > ras.header.cupsHeight)
@@ -4171,7 +4115,7 @@ xform_document(
       else
       {
         // Write trailing blank lines...
-        memset(line, 255, linesize);
+        memset(line, ras.white, linesize);
 
         for (; y < ras.header.cupsHeight; y ++)
           (ras.write_line)(&ras, y, lineout, cb, ctx);
@@ -4498,6 +4442,11 @@ xform_setup(xform_raster_t *ras,	// I - Raster information
     memset(ras->dither, 127, sizeof(ras->dither));
   else
     memcpy(ras->dither, threshold, sizeof(ras->dither));
+
+  if (ras->header.cupsColorSpace == CUPS_CSPACE_K || ras->header.cupsColorSpace == CUPS_CSPACE_CMYK)
+    ras->white = 0;
+  else
+    ras->white = 255;
 
   ras->header.cupsInteger[CUPS_RASTER_PWG_TotalPageCount]      = (unsigned)options->copies * pages;
   ras->back_header.cupsInteger[CUPS_RASTER_PWG_TotalPageCount] = (unsigned)options->copies * pages;
