@@ -14,7 +14,7 @@ include Makedefs
 # Directories to make...
 #
 
-DIRS	=	cups tools
+DIRS	=	doc cups examples man tools
 
 
 #
