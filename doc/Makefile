@@ -16,7 +16,7 @@ include ../Makedefs
 DOCFILES	=	\
 			cupspm.epub \
 			cupspm.html \
-			ippevepcl.html \
+			index.html \
 			ippeveprinter.html \
 			ipptool.html \
 			ipptoolfile.html \
