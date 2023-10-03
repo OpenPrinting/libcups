@@ -470,6 +470,24 @@ main(int  argc,				// I - Number of command-line args
 
   if (!output_type)
   {
+    // See if we can default the output type from the (legacy) program name...
+    if ((opt = strrchr(argv[0], '/')) != NULL)
+      opt ++;
+#if _WIN32
+    else if ((opt = strrchr(argv[0], '\\')) != NULL)
+      opt ++;
+#endif // _WIN32
+    else
+      opt = argv[0];
+
+    if (!strcmp(opt, "ippevepcl"))
+      output_type = "application/vnd.hp-PCL";
+    else if (!strcmp(opt, "ippeveps"))
+      output_type = "application/postscript";
+  }
+
+  if (!output_type)
+  {
     cupsLangPrintf(stderr, _("%s: Unknown output format, please specify with '-m' option."), Prefix);
     usage(1);
   }

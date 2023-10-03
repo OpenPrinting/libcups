@@ -17,7 +17,6 @@ include ../Makedefs
 #
 
 MAN1	=	\
-		ippevepcl.1 \
 		ippeveprinter.1 \
 		ippfind.1 \
 		ipptool.1 \
@@ -64,8 +63,10 @@ install:
 	for file in $(MAN1); do \
 		$(INSTALL_MAN) $$file $(BUILDROOT)$(mandir)/man1; \
 	done
+	$(RM) $(BUILDROOT)$(mandir)/man1/ippevepcl.1
+	$(LN) ipptransform.1 $(BUILDROOT)$(mandir)/man1/ippevepcl.1
 	$(RM) $(BUILDROOT)$(mandir)/man1/ippeveps.1
-	$(LN) ippevepcl.1 $(BUILDROOT)$(mandir)/man1/ippeveps.1
+	$(LN) ipptransform.1 $(BUILDROOT)$(mandir)/man1/ippeveps.1
 	echo "Installing man pages in $(BUILDROOT)$(mandir)/man5..."
 	$(INSTALL_DIR) -m 755 $(BUILDROOT)$(mandir)/man5
 	for file in $(MAN5); do \
@@ -79,10 +80,15 @@ install:
 
 uninstall:
 	echo "Uninstalling man pages from $(BUILDROOT)$(mandir)/man1..."
-	for file in $(MAN1) ippeveps.1; do \
+	for file in $(MAN1) ippevepcl.1 ippeveps.1; do \
 		$(RM) $(BUILDROOT)$(mandir)/man1/$$file; \
 	done
 	-$(RMDIR) $(BUILDROOT)$(mandir)/man1
+	echo "Uninstalling man pages from $(BUILDROOT)$(mandir)/man5..."
+	for file in $(MAN5); do \
+		$(RM) $(BUILDROOT)$(mandir)/man5/$$file; \
+	done
+	-$(RMDIR) $(BUILDROOT)$(mandir)/man5
 
 
 #
