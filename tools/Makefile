@@ -33,16 +33,12 @@ LIBOBJS		=	\
 OBJS		=	\
 			$(LIBOBJS) \
 			ipp-options.o \
-			ippevepcl.o \
 			ippeveprinter.o \
-			ippeveps.o \
 			ippfind.o \
 			ipptool.o \
 			ipptransform.o
 IPPTOOLS	=	\
-			ippevepcl \
 			ippeveprinter \
-			ippeveps \
 			ippfind \
 			ipptool \
 			ipptransform
@@ -99,6 +95,10 @@ install:	all
 	for file in $(IPPTOOLS); do \
 		$(INSTALL_BIN) $$file $(BUILDROOT)$(bindir); \
 	done
+	for file in ippevepcl ippeveps; do \
+		$(RM) $(BUILDROOT)$(bindir)/$$file; \
+		$(LN) ipptransform $(BUILDROOT)$(bindir)/$$file; \
+	done
 	if test "x$(SYMROOT)" != "x"; then \
 		echo "Copying debug symbols to $(SYMROOT)..."; \
 		$(INSTALL_DIR) $(SYMROOT); \
@@ -115,7 +115,7 @@ install:	all
 
 uninstall:
 	echo "Uninstalling IPP tools from $(BUILDROOT)$(bindir)..."
-	for file in $(IPPTOOLS); do \
+	for file in $(IPPTOOLS) ippevepcl ippeveps; do \
 		$(RM) $(BUILDROOT)$(bindir)/$$file; \
 	done
 	-$(RMDIR) $(BUILDROOT)$(bindir)
@@ -153,26 +153,6 @@ ippeveprinter:	ippeveprinter.o ../cups/$(LIBCUPS) ippeveprinter-static
 ippeveprinter-static:	ippeveprinter.o ../cups/$(LIBCUPS_STATIC)
 	echo Linking $@...
 	$(CC) $(LDFLAGS) $(OPTIM) -o $@ ippeveprinter.o $(PAMLIBS) ../cups/$(LIBCUPS_STATIC) $(LIBS)
-	$(CODE_SIGN) $(CSFLAGS) $@
-
-
-#
-# ippevepcl
-#
-
-ippevepcl:	ippevepcl.o ../cups/$(LIBCUPS)
-	echo Linking $@...
-	$(CC) $(LDFLAGS) $(OPTIM) -o $@ ippevepcl.o $(LINKCUPS) $(LIBS)
-	$(CODE_SIGN) $(CSFLAGS) $@
-
-
-#
-# ippeveps
-#
-
-ippeveps:	ippeveps.o ../cups/$(LIBCUPS)
-	echo Linking $@...
-	$(CC) $(LDFLAGS) $(OPTIM) -o $@ ippeveps.o $(LINKCUPS) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 
