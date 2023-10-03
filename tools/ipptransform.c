@@ -25,6 +25,18 @@ extern void CGContextSetCTM(CGContextRef c, CGAffineTransform m);
 
 #include "dither.h"
 
+#if _WIN32
+#  include <fcntl.h>
+#  include <io.h>
+#  include <process.h>
+#  define WEXITSTATUS(s) (s)
+#else
+extern char **environ;
+#  include <spawn.h>
+#  include <sys/fcntl.h>
+#  include <sys/wait.h>
+#endif // _WIN32
+
 
 // Macros...
 #define XFORM_MATCH(a,b)	(abs(a-b) <= 100)
@@ -134,6 +146,8 @@ struct xform_raster_s			// Raster context
 
 
 // Local globals...
+static char		PdftopsCommand[1024] = "";
+					// "pdftops" command path, if any
 static const char	*Prefix;	// Error message prefix (typically the command name or "ERROR" if running from ippeveprinter/ippserver
 static int		Verbosity = 0;	// Log level
 
@@ -161,6 +175,7 @@ static void	pcl_start_job(xform_raster_t *ras, xform_write_cb_t cb, void *ctx);
 static void	pcl_start_page(xform_raster_t *ras, unsigned page, xform_write_cb_t cb, void *ctx);
 static void	pcl_write_line(xform_raster_t *ras, unsigned y, const unsigned char *line, xform_write_cb_t cb, void *ctx);
 static void	pclps_printf(xform_write_cb_t cb, void *ctx, const char *format, ...) _CUPS_FORMAT(3, 4);
+static int	ps_convert_pdf(const char *filename, xform_write_cb_t cb, void *ctx);
 static void	ps_end_job(xform_raster_t *ras, xform_write_cb_t cb, void *ctx);
 static void	ps_end_page(xform_raster_t *ras, unsigned page, xform_write_cb_t cb, void *ctx);
 static void	ps_init(xform_raster_t *ras);
@@ -678,7 +693,12 @@ main(int  argc,				// I - Number of command-line args
     httpAddrFreeList(list);
   }
 
-  if (strcasecmp(output_type, "application/pdf"))
+  if (!strcasecmp(output_type, "application/postscript") && cupsFileFind("pdftops", getenv("PATH"), true, PdftopsCommand, sizeof(PdftopsCommand)))
+  {
+    // Do PostScript transform...
+    status = ps_convert_pdf(pdf_file, write_cb, write_ptr);
+  }
+  else if (strcasecmp(output_type, "application/pdf"))
   {
     // Do raster transform...
     if (!resolutions)
@@ -2425,6 +2445,105 @@ pclps_printf(xform_write_cb_t cb,	// I - Write callback
   va_end(ap);
 
   (*cb)(ctx, (const unsigned char *)buffer, strlen(buffer));
+}
+
+
+//
+// 'ps_convert_pdf()' - Convert a PDF file to PostScript.
+//
+
+static int				// O - Exit status
+ps_convert_pdf(
+    const char       *filename,		// I - Filename
+    xform_write_cb_t cb,		// I - Write callback
+    void             *ctx)		// I - Write context
+{
+  int 		pdftops_pid,		// Process ID
+		pdftops_status;		// Exit status
+  const char	*pdftops_argv[4];	// Command-line arguments
+#if _WIN32
+#else
+  int		stdout_pipe[2];		// Pipe for stdout
+  char		stdout_buffer[65536];	// Read buffer
+  ssize_t	stdout_bytes;		// Bytes read from pipe
+#endif // _WIN32
+
+
+  // Run pdftops...
+  pdftops_argv[0] = PdftopsCommand;
+  pdftops_argv[1] = filename;
+  pdftops_argv[2] = "-";
+  pdftops_argv[3] = NULL;
+
+#if _WIN32
+  pdftops_status = _spawnvpe(_P_WAIT, pdftops_argv[0], pdftops_argv, environ);
+
+#else
+  if (pipe(stdout_pipe))
+  {
+    cupsLangPrintf(stderr, _("%s: Unable to create pipe for stdout: %s"), Prefix, strerror(errno));
+    stdout_pipe[0] = stdout_pipe[1] = -1;
+  }
+
+  if ((pdftops_pid = fork()) == 0)
+  {
+    // Child comes here...
+    close(1);
+    dup2(stdout_pipe[1], 1);
+    close(stdout_pipe[0]);
+    close(stdout_pipe[1]);
+
+    execvp(pdftops_argv[0], (char * const *)pdftops_argv);
+    exit(errno);
+  }
+  else if (pdftops_pid < 0)
+  {
+    // Unable to fork process...
+    cupsLangPrintf(stderr, _("%s: Unable to start pdftops filter: %s"), Prefix, strerror(errno));
+    close(stdout_pipe[0]);
+    close(stdout_pipe[1]);
+
+    return (1);
+  }
+  else
+  {
+    // Copy output and wait for the filter to complete...
+    close(stdout_pipe[1]);
+
+    if (Verbosity)
+      cupsLangPuts(stderr, _("DEBUG: Converting PDF to PostScript with pdftops."));
+
+    while ((stdout_bytes = read(stdout_pipe[0], stdout_buffer, sizeof(stdout_buffer))) > 0)
+      (cb)(ctx, stdout_buffer, (size_t)stdout_bytes);
+
+    close(stdout_pipe[0]);
+
+    while (waitpid(pdftops_pid, &pdftops_status, 0) < 0)
+    {
+      if (errno != EINTR && errno != EAGAIN)
+      {
+        pdftops_status = errno << 8;
+        break;
+      }
+    }
+
+    if (pdftops_status)
+    {
+      if (WIFEXITED(pdftops_status))
+	cupsLangPrintf(stderr, _("%s: pdftops exited with status %d."), Prefix, WEXITSTATUS(pdftops_status));
+      else
+	cupsLangPrintf(stderr, _("%s: pdftops terminated with signal %d."), Prefix, WTERMSIG(pdftops_status));
+
+      return (1);
+    }
+    else if (Verbosity)
+    {
+      cupsLangPuts(stderr, _("DEBUG: pdftops completed successfully."));
+    }
+  }
+#endif // _WIN32
+
+  return (pdftops_status);
 }
 
 
