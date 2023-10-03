@@ -51,10 +51,8 @@
 /cups/tlscheck
 /packaging/libcups3.list
 /scratch
-/tools/ippevepcl
 /tools/ippeveprinter
 /tools/ippeveprinter-static
-/tools/ippeveps
 /tools/ippfind
 /tools/ippfind-static
 /tools/ipptool
