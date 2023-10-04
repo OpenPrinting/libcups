@@ -10,7 +10,7 @@
 //
 
 #include "cups-private.h"
-#include <sys/stat.h>
+#include "dir.h"
 
 #ifdef __APPLE__
 #  include <notify.h>
@@ -2634,6 +2634,7 @@ cups_enum_dests(
   _cups_dnssd_device_t *device;         // Current device
   cups_dnssd_t	*dnssd = NULL;		// DNS-SD context
   char		filename[1024];		// Local lpoptions file
+  _cups_profile_t profile;		// Profiles
   _cups_globals_t *cg = _cupsGlobals();	// Pointer to library globals
 
 
@@ -3377,6 +3378,30 @@ cups_scan_profiles(
     const char   *path,			// I  - Profile directory
     time_t       *mtime)		// IO - Newest modification time
 {
+  cups_dir_t	*dir;			// Directory
+  cups_dentry_t	*dent;			// Directory entry
+  char		filename[1024];		// Profile filename
+
+
+  // Find all of the files in the specified directory...
+  if ((dir = cupsDirOpen(path)) != NULL)
+  {
+    while ((dent = cupsDirRead(dir)) != NULL)
+    {
+      // Ignore anything other than plain files...
+      if (!S_ISREG(dent->fileinfo.st_mode))
+        continue;
+
+      // Add this file and update the mtime value as needed...
+      snprintf(filename, sizeof(filename), "%s/%s", path, dent->filename);
+      cupsArrayAdd(profiles, filename);
+
+      if (dent->fileinfo.st_mtime > *mtime)
+        *mtime = dent->fileinfo.st_mtime;
+    }
+
+    cupsDirClose(dir);
+  }
 }
 
 
