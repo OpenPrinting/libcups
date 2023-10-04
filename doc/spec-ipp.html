@@ -17,6 +17,9 @@ body {
   font-size: 16pt;
   margin: 54pt 36pt;
 }
+.center {
+  text-align: center;
+}
 code, kbd, pre, tt {
   font-family: monospace;
 }
@@ -67,7 +70,9 @@ table tbody td {
     <meta name='keywords' content='Programming, Internet Printing Protocol'>
   </head>
   <body>
-    <h1>CUPS Implementation of IPP</h1>
+    <h1 class="center"><img src="cups.png" width="64" height="64" alt="CUPS"><br>
+    CUPS Implementation of IPP</h1>
+    <p class="center">Last Updated October 4, 2023</p>
 
 
     <h2 id='INTRODUCTION'>Introduction</h2>
@@ -113,13 +118,13 @@ table tbody td {
       <dt><tt>SCHEME://HOSTNAME:PORT/admin</tt></dt>
       <dd>Used for all administrative operations (deprecated).</dd>
 
-      <dt><tt>SCHEME://HOSTNAME:PORT/classes/NAME</tt></dt>
+      <dt><tt>SCHEME://HOSTNAME:PORT/classes/PRINTER-NAME</tt></dt>
       <dd>Specifies a printer class (deprecated).</dd>
 
-      <dt><tt>SCHEME://HOSTNAME:PORT/ipp/print/NAME</tt></dt>
+      <dt><tt>SCHEME://HOSTNAME:PORT/ipp/print/PRINTER-NAME</tt></dt>
       <dd>Specifies a printer (deprecated).</dd>
 
-      <dt><tt>SCHEME://HOSTNAME:PORT/ipp/print/NAME/JOB-ID</tt></dt>
+      <dt><tt>SCHEME://HOSTNAME:PORT/ipp/print/PRINTER-NAME/JOB-ID</tt></dt>
       <dd>Specifies a job (deprecated).</dd>
 
       <dt><tt>SCHEME://HOSTNAME:PORT/ipp/system</tt></dt>
@@ -128,7 +133,7 @@ table tbody td {
       <dt><tt>SCHEME://HOSTNAME:PORT/jobs/JOB-ID</tt></dt>
       <dd>Specifies a job (deprecated).</dd>
 
-      <dt><tt>SCHEME://HOSTNAME:PORT/printers/NAME</tt></dt>
+      <dt><tt>SCHEME://HOSTNAME:PORT/printers/PRINTER-NAME</tt></dt>
       <dd>Specifies a printer (deprecated).</dd>
     </dl>
     <p>So a typical printer URI would be "ipp://foo.example.com/ipp/print/LaserJet".</p>

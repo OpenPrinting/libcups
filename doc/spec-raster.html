@@ -17,6 +17,9 @@ body {
   font-size: 16pt;
   margin: 54pt 36pt;
 }
+.center {
+  text-align: center;
+}
 code, kbd, pre, tt {
   font-family: monospace;
 }
@@ -71,14 +74,17 @@ table.figure tbody td {
 }
 --></style>
     <title>CUPS Raster Format</title>
+    <meta name='keywords' content='Programming, File Formats'>
   </head>
   <body>
-    <h1>CUPS Raster Format</h1>
+    <h1 class="center"><img src="cups.png" width="64" height="64" alt="CUPS"><br>
+    CUPS Raster Format</h1>
+    <p class="center">Last Updated October 4, 2023</p>
 
+
+    <h2 id='INTRODUCTION'>Introduction</h2>
     <p>CUPS Raster files are device-dependent raster image files that contain a PostScript page device dictionary and device-dependent raster imagery for each page in the document. These files are used to transfer raster data from the PostScript and image file RIPs to device-dependent filters that convert the raster data to a printable format.</p>
-
     <p>CUPS 1.0 and 1.1 used version 1 of the raster format. CUPS 1.2 and later use version 2 (compressed) and version 3 (uncompressed) that are a superset of the version 1 raster format. All three versions of CUPS Raster are streamable formats, and applications using the CUPS Imaging API (the cupsRaster* functions) can read all formats without code changes.</p>
-
     <p>The registered MIME media type for CUPS Raster files is <code>application/vnd.cups-raster</code>.</p>
 
 
