@@ -3,6 +3,9 @@ body {
   font-size: 16pt;
   margin: 54pt 36pt;
 }
+.center {
+  text-align: center;
+}
 code, kbd, pre, tt {
   font-family: monospace;
 }
