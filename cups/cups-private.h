@@ -72,6 +72,18 @@ typedef enum _cups_uatokens_e		// UserAgentTokens values
   _CUPS_UATOKENS_FULL			// CUPS/major.minor.patch (osname osversion; architecture) IPP/2.1
 } _cups_uatokens_t;
 
+typedef struct _cups_profile_s		// CUPS profile
+{
+  time_t		prof_mtime;	// Newest modification date of profiles
+  float			prof_geolimit;	// FilterGeoLocation value (negative = all, 0 = none, >0 = limit)
+  cups_array_t		*prof_locations;// FilterLocation value(s)
+  cups_ptype_t		prof_ptype,	// printer-type value(s)
+			prof_pmask;	// printer-type mask
+  cups_array_t		*prof_printers;	// IPP printers
+  cups_array_t		*prof_servers;	// CUPS servers
+  cups_array_t		*prof_systems;	// IPP system services
+} _cups_profile_t;
+
 typedef struct _cups_globals_s		// CUPS global state data
 {
   // Multiple places...
@@ -88,6 +100,9 @@ typedef struct _cups_globals_s		// CUPS global state data
 #  ifdef DEBUG
   int			thread_id;	// Friendly thread ID
 #  endif // DEBUG
+
+  // dest.c
+  _cups_profile_t	profiles;	// Combined profiles
 
   // file.c
   cups_file_t		*stdio_files[3];// stdin, stdout, stderr

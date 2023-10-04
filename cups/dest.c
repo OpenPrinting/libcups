@@ -1,7 +1,7 @@
 //
 // User-defined destination (and option) support for CUPS.
 //
-// Copyright © 2021-2022 by OpenPrinting.
+// Copyright © 2021-2023 by OpenPrinting.
 // Copyright © 2007-2019 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products.
 //
@@ -135,9 +135,11 @@ static size_t		cups_find_dest(const char *name, const char *instance, size_t num
 static bool		cups_get_cb(_cups_getdata_t *data, unsigned flags, cups_dest_t *dest);
 static char		*cups_get_default(const char *filename, char *namebuf, size_t namesize, const char **instance);
 static size_t		cups_get_dests(const char *filename, const char *match_name, const char *match_inst, bool load_all, bool user_default_set, size_t num_dests, cups_dest_t **dests);
+static void		cups_load_profiles(const char *filename, _cups_profile_t *prof);
 static char		*cups_make_string(ipp_attribute_t *attr, char *buffer, size_t bufsize);
 static bool		cups_name_cb(_cups_namedata_t *data, unsigned flags, cups_dest_t *dest);
 static void		cups_queue_name(char *name, const char *serviceName, size_t namesize);
+static void		cups_scan_profiles(cups_array_t *profiles, const char *path, time_t *mtime);
 static void		dnssd_error_cb(void *cb_data, const char *message);
 
 
@@ -3220,6 +3222,19 @@ cups_get_dests(
 
 
 //
+// 'cups_load_profile()' - Load printers and servers from a profile.
+//
+
+static void
+cups_load_profile(
+    const char      *filename,		// I - Profile filename
+    _cups_profile_t *prof)		// I - Profile data
+{
+
+}
+
+
+//
 // 'cups_make_string()' - Make a comma-separated string of values from an IPP
 //                        attribute.
 //
@@ -3349,6 +3364,19 @@ cups_queue_name(
     nameptr --;
 
   *nameptr = '\0';
+}
+
+
+//
+// 'cups_scan_profiles()' - Scan for profile files.
+//
+
+static void
+cups_scan_profiles(
+    cups_array_t *profiles,		// I  - Profile array
+    const char   *path,			// I  - Profile directory
+    time_t       *mtime)		// IO - Newest modification time
+{
 }
 
 
