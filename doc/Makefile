@@ -14,13 +14,17 @@ include ../Makedefs
 #
 
 DOCFILES	=	\
+			cups.png \
 			cupspm.epub \
 			cupspm.html \
 			index.html \
 			ippeveprinter.html \
 			ipptool.html \
 			ipptoolfile.html \
-			ipptransform.html
+			ipptransform.html \
+			raster.png \
+			raster-organization.png \
+			sample-image.png
 
 
 #
