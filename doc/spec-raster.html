@@ -1,720 +1,793 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<HTML>
-<!-- SECTION: Specifications -->
-<HEAD>
-	<TITLE>CUPS Raster Format</TITLE>
-	<LINK REL="STYLESHEET" TYPE="text/css" HREF="../cups-printable.css">
-</HEAD>
-<BODY>
-
-<H1 CLASS="title">CUPS Raster Format</H1>
-
-<P>CUPS Raster files are device-dependent raster image files that contain a PostScript page device dictionary and device-dependent raster imagery for each page in the document. These files are used to transfer raster data from the PostScript and image file RIPs to device-dependent filters that convert the raster data to a printable format.</P>
-
-<P>CUPS 1.0 and 1.1 used version 1 of the raster format. CUPS 1.2 and later use version 2 (compressed) and version 3 (uncompressed) that are a superset of the version 1 raster format. All three versions of CUPS Raster are streamable formats, and applications using the CUPS Imaging API (the cupsRaster* functions) can read all formats without code changes.</P>
-
-<P>The registered MIME media type for CUPS Raster files is <CODE>application/vnd.cups-raster</CODE>.</P>
-
-
-<H2 CLASS="title"><A NAME="ORGANIZATION">Organization of a CUPS Raster File</A></H2>
-
-<P><A HREF="FILEFORMAT">Figure 1, "Raster Organization"</A>, shows the general organization of all CUPS Raster files. Each file begins with a 32-bit synchronization word followed by zero or more pages. Each page consists of a  header (the PostScript page device dictionary and raster-specific values) followed by the bitmap image for the page.</P>
-
-<DIV CLASS="figure"><TABLE SUMMARY="Raster Organization">
-<CAPTION><A NAME="FILEFORMAT">Figure 1: Raster Organization</A></CAPTION>
-<TR><TD><IMG SRC="../images/raster-organization.png" WIDTH="446" HEIGHT="1056" ALT="Raster Organization"></TD></TR>
-</TABLE></DIV>
-
-<P>Each page bitmap is stored as described by the <CODE>cupsBitsPerColor</CODE>, <CODE>cupsBytesPerLine</CODE>, <CODE>cupsColorOrder</CODE>, <CODE>cupsColorSpace</CODE>, <CODE>cupsHeight</CODE>, and <CODE>cupsWidth</CODE> values in the page header. Pixels for the front side of a sheet are always stored left-to-right, top-to-bottom. When doing duplex printing, pixels for the back side of a sheet may be stored differently depending on the value of the <CODE>cupsBackSide</CODE> keyword ("Normal", "ManualTumble", "Rotated", or "Flipped") in the PPD file and the <CODE>Tumble</CODE> value ("true" or "false") in the page header. <A HREF="#PAGEBITMAPS">Figure 2, "Page Bitmaps"</A>, shows the pixel order for each combination.</P>
-
-<DIV CLASS="figure"><TABLE SUMMARY="Page Bitmaps">
-<CAPTION><A NAME="PAGEBITMAPS">Figure 2: Page Bitmaps</A></CAPTION>
-<TR><TD><IMG SRC="../images/raster.png" WIDTH="624" HEIGHT="448" ALT="Page Bitmaps"></TD></TR>
-</TABLE></DIV>
-
-
-<H2 CLASS="title"><A NAME="V1">Version 1 Raster File Format</A></H2>
-
-<P>A version 1 raster file begins with a 32-bit synchronization word: 0x52615374 ("RaSt") for big-endian architectures or 0x74536152 ("tSaR") for little-endian architectures. The writer of the raster file will use the native word order, and the reader is responsible for detecting a reversed word order file and swapping bytes as needed. The CUPS Imaging API raster functions perform this function automatically.</P>
-
-<P>Following the synchronization word are a series of raster pages. Each page starts with a page device dictionary header and is followed immediately by the (uncompressed/raw) raster data for that page.</P>
-
-<DIV CLASS="table"><TABLE SUMMARY="CUPS Version 1 Raster Page Device Dictionary">
-<CAPTION><A NAME="TABLE1">Table 1: CUPS Version 1 Raster Page Device Dictionary</A></CAPTION>
-<THEAD>
-<TR>
-	<TH>Bytes</TH>
-	<TH>Type</TH>
-	<TH>Description</TH>
-	<TH>Values</TH>
-</TR>
-</THEAD>
-<TBODY>
-<TR>
-	<TD>0-63</TD>
-	<TD>C String</TD>
-	<TD>MediaClass</TD>
-	<TD>Media class string</TD>
-</TR>
-<TR>
-	<TD>64-127</TD>
-	<TD>C String</TD>
-	<TD>MediaColor</TD>
-	<TD>Media color string</TD>
-</TR>
-<TR>
-	<TD>128-191</TD>
-	<TD>C String</TD>
-	<TD>MediaType</TD>
-	<TD>Media type string</TD>
-</TR>
-<TR>
-	<TD>192-255</TD>
-	<TD>C String</TD>
-	<TD>OutputType</TD>
-	<TD>Output type string</TD>
-</TR>
-<TR>
-	<TD>256-259</TD>
-	<TD>Unsigned Integer</TD>
-	<TD>AdvanceDistance</TD>
-	<TD>0 to 2<SUP>32</SUP> - 1 points</TD>
-</TR>
-<TR>
-	<TD>260-263</TD>
-	<TD>Unsigned Integer</TD>
-	<TD>AdvanceMedia</TD>
-	<TD>0 = Never advance roll<BR>
-	1 = Advance roll after file<BR>
-	2 = Advance roll after job<BR>
-	3 = Advance roll after set<BR>
-	4 = Advance roll after page</TD>
-</TR>
-<TR>
-	<TD>264-267</TD>
-	<TD>Unsigned Integer</TD>
-	<TD>Collate</TD>
-	<TD>0 = do not collate copies<BR>
-	1 = collate copies</TD>
-</TR>
-<TR>
-	<TD>268-271</TD>
-	<TD>Unsigned Integer</TD>
-	<TD>CutMedia</TD>
-	<TD>0 = Never cut media<BR>
-	1 = Cut roll after file<BR>
-	2 = Cut roll after job<BR>
-	3 = Cut roll after set<BR>
-	4 = Cut roll after page</TD>
-</TR>
-<TR>
-	<TD>272-275</TD>
-	<TD>Unsigned Integer</TD>
-	<TD>Duplex</TD>
-	<TD>0 = Print single-sided<BR>
-	1 = Print double-sided</TD>
-</TR>
-<TR>
-	<TD>276-283</TD>
-	<TD>Unsigned Integers (2)</TD>
-	<TD>HWResolution</TD>
-	<TD>Horizontal and vertical resolution in dots-per-inch.</TD>
-</TR>
-<TR>
-	<TD>284-299</TD>
-	<TD>Unsigned Integers (4)</TD>
-	<TD>ImagingBoundingBox</TD>
-	<TD>Four integers giving the left, bottom, right, and top positions
-	of the page bounding box in points</TD>
-</TR>
-<TR>
-	<TD>300-303</TD>
-	<TD>Unsigned Integer</TD>
-	<TD>InsertSheet</TD>
-	<TD>0 = Do not insert separator sheets<BR>
-	1 = Insert separator sheets</TD>
-</TR>
-<TR>
-	<TD>304-307</TD>
-	<TD>Unsigned Integer</TD>
-	<TD>Jog</TD>
-	<TD>0 = Do no jog pages<BR>
-	1 = Jog pages after file<BR>
-	2 = Jog pages after job<BR>
-	3 = Jog pages after set</TD>
-</TR>
-<TR>
-	<TD>308-311</TD>
-	<TD>Unsigned Integer</TD>
-	<TD>LeadingEdge</TD>
-	<TD>0 = Top edge is first<BR>
-	1 = Right edge is first<BR>
-	2 = Bottom edge is first<BR>
-	3 = Left edge is first</TD>
-</TR>
-<TR>
-	<TD>312-319</TD>
-	<TD>Unsigned Integers (2)</TD>
-	<TD>Margins</TD>
-	<TD>Left and bottom origin of image in points</TD>
-</TR>
-<TR>
-	<TD>320-323</TD>
-	<TD>Unsigned Integer</TD>
-	<TD>ManualFeed</TD>
-	<TD>0 = Do not manually feed media<BR>
-	1 = Manually feed media</TD>
-</TR>
-<TR>
-	<TD>324-327</TD>
-	<TD>Unsigned Integer</TD>
-	<TD>MediaPosition</TD>
-	<TD>Input slot position from 0 to N</TD>
-</TR>
-<TR>
-	<TD>328-331</TD>
-	<TD>Unsigned Integer</TD>
-	<TD>MediaWeight</TD>
-	<TD>Media weight in grams per meter squared, 0 = printer default</TD>
-</TR>
-<TR>
-	<TD>332-335</TD>
-	<TD>Unsigned Integer</TD>
-	<TD>MirrorPrint</TD>
-	<TD>0 = Do not mirror prints<BR>
-	1 = Mirror prints</TD>
-</TR>
-<TR>
-	<TD>336-339</TD>
-	<TD>Unsigned Integer</TD>
-	<TD>NegativePrint</TD>
-	<TD>0 = Do not invert prints<BR>
-	1 = Invert prints</TD>
-</TR>
-<TR>
-	<TD>340-343</TD>
-	<TD>Unsigned Integer</TD>
-	<TD>NumCopies</TD>
-	<TD>0 to 2<SUP>32</SUP> - 1, 0 = printer default</TD>
-</TR>
-<TR>
-	<TD>344-347</TD>
-	<TD>Unsigned Integer</TD>
-	<TD>Orientation</TD>
-	<TD>0 = Do not rotate page<BR>
-	1 = Rotate page counter-clockwise<BR>
-	2 = Turn page upside down<BR>
-	3 = Rotate page clockwise</TD>
-</TR>
-<TR>
-	<TD>348-351</TD>
-	<TD>Unsigned Integer</TD>
-	<TD>OutputFaceUp</TD>
-	<TD>0 = Output face down<BR>
-	1 = Output face up</TD>
-</TR>
-<TR>
-	<TD>352-359</TD>
-	<TD>Unsigned Integers (2)</TD>
-	<TD>PageSize</TD>
-	<TD>Width and length in points</TD>
-</TR>
-<TR>
-	<TD>360-363</TD>
-	<TD>Unsigned Integer</TD>
-	<TD>Separations</TD>
-	<TD>0 = Print composite image<BR>
-	1 = Print color separations</TD>
-</TR>
-<TR>
-	<TD>364-367</TD>
-	<TD>Unsigned Integer</TD>
-	<TD>TraySwitch</TD>
-	<TD>0 = Do not change trays if selected tray is empty<BR>
-	1 = Change trays if selected tray is empty</TD>
-</TR>
-<TR>
-	<TD>368-371</TD>
-	<TD>Unsigned Integer</TD>
-	<TD>Tumble</TD>
-	<TD>0 = Do not rotate even pages when duplexing<BR>
-	1 = Rotate even pages when duplexing</TD>
-</TR>
-<TR>
-	<TD>372-375</TD>
-	<TD>Unsigned Integer</TD>
-	<TD>cupsWidth</TD>
-	<TD>Width of page image in pixels</TD>
-</TR>
-<TR>
-	<TD>376-379</TD>
-	<TD>Unsigned Integer</TD>
-	<TD>cupsHeight</TD>
-	<TD>Height of page image in pixels</TD>
-</TR>
-<TR>
-	<TD>380-383</TD>
-	<TD>Unsigned Integer</TD>
-	<TD>cupsMediaType</TD>
-	<TD>Driver-specific 0 to 2<SUP>32</SUP> - 1</TD>
-</TR>
-<TR>
-	<TD>384-387</TD>
-	<TD>Unsigned Integer</TD>
-	<TD>cupsBitsPerColor</TD>
-	<TD>1, 2, 4, 8 bits for version 1 raster files<BR>
-	1, 2, 4, 8, and 16 bits for version 2/3 raster files</TD>
-</TR>
-<TR>
-	<TD>388-391</TD>
-	<TD>Unsigned Integer</TD>
-	<TD>cupsBitsPerPixel</TD>
-	<TD>1 to 32 bits for version 1 raster files<BR>
-	1 to 240 bits for version 2/3 raster files</TD>
-</TR>
-<TR>
-	<TD>392-395</TD>
-	<TD>Unsigned Integer</TD>
-	<TD>cupsBytesPerLine</TD>
-	<TD>1 to 2<SUP>32</SUP> - 1 bytes</TD>
-</TR>
-<TR>
-	<TD>396-399</TD>
-	<TD>Unsigned Integer</TD>
-	<TD>cupsColorOrder</TD>
-	<TD>0 = chunky pixels (CMYK CMYK CMYK)<BR>
-	1 = banded pixels (CCC MMM YYY KKK)<BR>
-	2 = planar pixels (CCC... MMM... YYY... KKK...)</TD>
-</TR>
-<TR>
-	<TD>400-403</TD>
-	<TD>Unsigned Integer</TD>
-	<TD>cupsColorSpace</TD>
-	<TD>0 = gray (device, typically sRGB-based)<BR>
-	1 = RGB (device, typically sRGB)<BR>
-	2 = RGBA (device, typically sRGB)<BR>
-	3 = black<BR>
-	4 = CMY<BR>
-	5 = YMC<BR>
-	6 = CMYK<BR>
-	7 = YMCK<BR>
-	8 = KCMY<BR>
-	9 = KCMYcm<BR>
-	10 = GMCK<BR>
-	11 = GMCS<BR>
-	12 = WHITE<BR>
-	13 = GOLD<BR>
-	14 = SILVER<BR>
-	15 = CIE XYZ<BR>
-	16 = CIE Lab<BR>
-	17 = RGBW (sRGB)<BR>
-	18 = sGray (gray using sRGB gamma/white point)<BR>
-	19 = sRGB<BR>
-	20 = AdobeRGB<BR>
-	32 = ICC1 (CIE Lab with hint for 1 color)<BR>
-	33 = ICC2 (CIE Lab with hint for 2 colors)<BR>
-	34 = ICC3 (CIE Lab with hint for 3 colors)<BR>
-	35 = ICC4 (CIE Lab with hint for 4 colors)<BR>
-	36 = ICC5 (CIE Lab with hint for 5 colors)<BR>
-	37 = ICC6 (CIE Lab with hint for 6 colors)<BR>
-	38 = ICC7 (CIE Lab with hint for 7 colors)<BR>
-	39 = ICC8 (CIE Lab with hint for 8 colors)<BR>
-	40 = ICC9 (CIE Lab with hint for 9 colors)<BR>
-	41 = ICCA (CIE Lab with hint for 10 colors)<BR>
-	42 = ICCB (CIE Lab with hint for 11 colors)<BR>
-	43 = ICCC (CIE Lab with hint for 12 colors)<BR>
-	44 = ICCD (CIE Lab with hint for 13 colors)<BR>
-	45 = ICCE (CIE Lab with hint for 14 colors)<BR>
-	46 = ICCF (CIE Lab with hint for 15 colors)<BR>
-	48 = Device1 (DeviceN for 1 color)<BR>
-	49 = Device2 (DeviceN for 2 colors)<BR>
-	50 = Device3 (DeviceN for 3 colors)<BR>
-	51 = Device4 (DeviceN for 4 colors)<BR>
-	52 = Device5 (DeviceN for 5 colors)<BR>
-	53 = Device6 (DeviceN for 6 colors)<BR>
-	54 = Device7 (DeviceN for 7 colors)<BR>
-	55 = Device8 (DeviceN for 8 colors)<BR>
-	56 = Device9 (DeviceN for 9 colors)<BR>
-	57 = DeviceA (DeviceN for 10 colors)<BR>
-	58 = DeviceB (DeviceN for 11 colors)<BR>
-	59 = DeviceC (DeviceN for 12 colors)<BR>
-	60 = DeviceD (DeviceN for 13 colors)<BR>
-	61 = DeviceE (DeviceN for 14 colors)<BR>
-	62 = DeviceF (DeviceN for 15 colors)
-	</TD>
-</TR>
-<TR>
-	<TD>404-407</TD>
-	<TD>Unsigned Integer</TD>
-	<TD>cupsCompression</TD>
-	<TD>Driver-specific 0 to 2<SUP>32</SUP> - 1</TD>
-</TR>
-<TR>
-	<TD>408-411</TD>
-	<TD>Unsigned Integer</TD>
-	<TD>cupsRowCount</TD>
-	<TD>Driver-specific 0 to 2<SUP>32</SUP> - 1</TD>
-</TR>
-<TR>
-	<TD>412-415</TD>
-	<TD>Unsigned Integer</TD>
-	<TD>cupsRowFeed</TD>
-	<TD>Driver-specific 0 to 2<SUP>32</SUP> - 1</TD>
-</TR>
-<TR>
-	<TD>416-419</TD>
-	<TD>Unsigned Integer</TD>
-	<TD>cupsRowStep</TD>
-	<TD>Driver-specific 0 to 2<SUP>32</SUP> - 1</TD>
-</TR>
-</TBODY>
-</TABLE></DIV>
-
-
-<H2 CLASS="title"><A NAME="V2">Version 2 Raster File Format</A></H2>
-
-<P>A version 2 raster file begins with a 32-bit synchronization word: 0x52615332 ("RaS2") for big-endian architectures or 0x32536152 ("2SaR") for little-endian architectures. The writer of the raster file will use the native word order, and the reader is responsible for detecting a reversed word order file and swapping bytes as needed. The CUPS Imaging API raster functions perform this function automatically.</P>
-
-<P>Following the synchronization word are a series of raster pages. Each page starts with a version 2 page device dictionary header and is followed immediately by the compressed raster data for that page.</P>
-
-<DIV CLASS="table"><TABLE SUMMARY="CUPS Version 2 Raster Page Device Dictionary">
-<CAPTION><A NAME="TABLE2">Table 2: CUPS Version 2 Raster Page Device Dictionary</A></CAPTION>
-<THEAD>
-<TR>
-	<TH>Bytes</TH>
-	<TH>Type</TH>
-	<TH>Description</TH>
-	<TH>Values</TH>
-</TR>
-</THEAD>
-<TBODY>
-<TR>
-	<TD>0-419</TD>
-	<TD>Version 1 header data</TD>
-	<TD>See Table 1</TD>
-</TR>
-<TR>
-	<TD>420-423</TD>
-	<TD>Unsigned Integer</TD>
-	<TD>cupsNumColors</TD>
-	<TD>1 to 15 colors</TD>
-</TR>
-<TR>
-	<TD>424-427</TD>
-	<TD>IEEE Single Precision</TD>
-	<TD>cupsBorderlessScalingFactor</TD>
-	<TD>0.0 or 1.0 or greater</TD>
-</TR>
-<TR>
-	<TD>428-435</TD>
-	<TD>IEEE Single Precision (2)</TD>
-	<TD>cupsPageSize</TD>
-	<TD>Width and length in points</TD>
-</TR>
-<TR>
-	<TD>436-451</TD>
-	<TD>IEEE Single Precision (4)</TD>
-	<TD>cupsImagingBBox</TD>
-	<TD>Four floating point numbers giving the left, bottom, right, and top positions of the page bounding box in points</TD>
-</TR>
-<TR>
-	<TD>452-515</TD>
-	<TD>Unsigned Integers (16)</TD>
-	<TD>cupsInteger</TD>
-	<TD>16 driver-defined integer values</TD>
-</TR>
-<TR>
-	<TD>516-579</TD>
-	<TD>IEEE Single Precision (16)</TD>
-	<TD>cupsReal</TD>
-	<TD>16 driver-defined floating point values</TD>
-</TR>
-<TR>
-	<TD>580-1603</TD>
-	<TD>C Strings (16x64)</TD>
-	<TD>cupsString</TD>
-	<TD>16 driver-defined strings</TD>
-</TR>
-<TR>
-	<TD>1604-1667</TD>
-	<TD>C String</TD>
-	<TD>cupsMarkerType</TD>
-	<TD>Ink/toner type string</TD>
-</TR>
-<TR>
-	<TD>1668-1731</TD>
-	<TD>C String</TD>
-	<TD>cupsRenderingIntent</TD>
-	<TD>Color rendering intent string</TD>
-</TR>
-<TR>
-	<TD>1732-1795</TD>
-	<TD>C String</TD>
-	<TD>cupsPageSizeName</TD>
-	<TD>Page size name/keyword string from PPD</TD>
-</TR>
-</TBODY>
-</TABLE></DIV>
-
-<H3><A NAME="COMPRESSION">Compressed Raster Data Format</A></H3>
-
-<P>The version 2 raster data is compressed using a PackBits-like algorithm. Lines are grouped into an integral number of color values based upon the <CODE>cupsColorOrder</CODE> setting:</P>
-
-<DIV CLASS="table"><TABLE SUMMARY="Color Value Sizes">
-<CAPTION><A NAME="TABLE3">Table 3: Color Value Sizes</A></CAPTION>
-<TR>
-	<TH>cupsColorOrder</TH>
-	<TH>Bytes per color value</TH>
-</TR>
-<TR>
-	<TD>0 (chunky)</TD>
-	<TD>(<CODE>cupsBitsPerPixel</CODE> + 7) / 8</TD>
-</TR>
-<TR>
-	<TD>1 (banded)</TD>
-	<TD>(<CODE>cupsBitsPerColor</CODE> + 7) / 8</TD>
-</TR>
-<TR>
-	<TD>2 (planar)</TD>
-	<TD>(<CODE>cupsBitsPerColor</CODE> + 7) / 8</TD>
-</TR>
-</TABLE></DIV>
-
-<P>Each line of raster data begins with a repetition count from 1 to 256 that is encoded using a single byte of "count - 1".</P>
-
-<P>After the repetition count, whole color values for that line are run-length encoded using a PackBits-like run-length encoding algorithm: 1 to 128 repeated colors are encoded using an initial byte of "count - 1" followed by the color value byte(s) while 2 to 128 non-repeating colors are encoded using an initial byte of "257 - count" followed by the color value bytes.</P>
-
-<P>For example, the 8x8 24-bit sRGB image shown in <a href="#SAMPLEIMAGE">Figure 3, "Sample Image"</a>, would be encoded as the following 89 octets:</p>
-
-<PRE CLASS="example">
-%x00 %x00.FF.FF.FF %x02.FF.FF.00 %x03.FF.FF.FF
-%x00 %xFE.FF.FF.00.00.00.FF.FF.FF.00 %x02.FF.FF.FF %x00.00.FF.00 %x00.FF.FF.FF
-%x00 %x01.FF.FF.00 %x02.FF.FF.FF %x02.00.FF.00
-%x00 %x02.FF.FF.00 %x02.FF.FF.FF %x00.00.FF.00 %x00.FF.FF.FF
-%x00 %x00.FF.FF.FF %x02.FF.FF.00 %x03.FF.FF.FF
-%x00 %x07.FF.FF.FF
-%x01 %x07.FF.00.00
-</PRE>
-
-<P>The first line (%x00) contains 1 white pixel (%x00.FF.FF.FF), 3 yellow pixels (%x02.FF.FF.00), and 4 white pixels (%x03.FF.FF.FF).</P>
-
-<P>The second line (%x00) contains a sequence of yellow + blue + yellow pixels (%xFE.FF.FF.00.00.00.FF.FF.FF.00), 3 white pixels (%x02.FF.FF.FF), 1 green pixel (%x00.00.FF.00), and 1 white pixel (%x00.FF.FF.FF).</P>
-
-<P>The third line (%x00) contains 2 yellow pixels (%x01.FF.FF.00), 3 white pixels (%x02.FF.FF.FF), and 3 green pixels (%x02.00.FF.00)</P>
-
-<P>The fourth line (%x00) contains 3 yellow pixels (%x02.FF.FF.00), 3 white pixels (%x02.FF.FF.FF), 1 green pixel (%x00.00.FF.00), and 1 white pixel (%x00.FF.FF.FF).</P>
-
-<P>The fifth line (%x00) contains 1 white pixel (%x00.FF.FF.FF), 3 yellow pixels (%x02.FF.FF.00), and 4 white pixels (%x03.FF.FF.FF).</P>
-
-<P>The sixth line (%x00) contains 8 white pixels (%x07.FF.FF.FF).</P>
-
-<P>The seventh and eighth lines (%x01) contain 8 red pixels (%x07.FF.00.00).</P>
-
-<DIV CLASS="figure"><TABLE SUMMARY="Sample Image">
-<CAPTION><A NAME="SAMPLEIMAGE">Figure 3: Sample Image</A></CAPTION>
-<TR><TD><IMG SRC="../images/sample-image.png" WIDTH="257" HEIGHT="257" ALT="Sample Image"></TD></TR>
-</TABLE></DIV>
-
-
-<H2 CLASS="title"><A NAME="V3">Version 3 Raster File Format</A></H2>
-
-<P>A version 3 raster file begins with a 32-bit synchronization word: 0x52615333 ("RaS3") for big-endian architectures and 0x33536152 ("3SaR") for little-endian architectures. The writer of the raster file will use the native word order, and the reader is responsible for detecting a reversed word order file and swapping bytes as needed. The CUPS Imaging API raster functions perform this function automatically.</P>
-
-<P>Following the synchronization word are a series of raster pages. Each page starts with a version 2 page device dictionary header and is followed immediately by the uncompressed/raw raster data for that page.</P>
-
-
-<H2 CLASS="title"><A NAME="ENCODING">Pixel Value Coding</A></H2>
-
-<P>The following sections describe the encoding and decoding of the color values in a CUPS Raster file. In general, colors are packed into the minimum number of bytes, with special consideration provided for efficiency of encoding and access. Multi-byte values are stored in the native byte order and automatically swapped as needed when reading them using the CUPS imaging API.</P>
-
-<H3>CUPS_ORDER_CHUNKED</H3>
-
-<P>The chunked order provides the pixel value packed in a single place. Pixel values with 8 or more bits per color are stored as an array of colors in order, e.g. for <CODE>CUPS_CSPACE_RGB</CODE> you will see 8/16-bits of red, then blue, then green, then red, green, blue, etc. Pixel values with less than 8 bits per color are packed together as shown in Table 4. <I>Multi-byte pixel values are stored in the native word order, just as for 16-bit color values.</I></P>
-
-<DIV CLASS="table"><TABLE SUMMARY="Chunked Color Values">
-<CAPTION><A NAME="TABLE4">Table 4: Chunked Color Values</A></CAPTION>
-<THEAD>
-<TR>
-	<TH>Bits</TH>
-	<TH>1-color</TH>
-	<TH>3-color</TH>
-	<TH>4-color</TH>
-	<TH>6-color</TH>
-</TR>
-</THEAD>
-<TBODY>
-<TR>
-	<TD>1</TD>
-	<TD>W/W/W/W/W/W/W/W</TD>
-	<TD>0RGB/0RGB</TD>
-	<TD>CMYK/CMYK</TD>
-	<TD>00KCMYcm</TD>
-</TR>
-<TR>
-	<TD>2</TD>
-	<TD>WW/WW/WW/WW</TD>
-	<TD>00RRGGBB</TD>
-	<TD>CCMMYYKK</TD>
-	<TD>N/A</TD>
-</TR>
-<TR>
-	<TD>4</TD>
-	<TD>WWWW/WWWW</TD>
-	<TD>0000RRRRGGGGBBBB<BR>
-	<I>(multi-byte)</I></TD>
-	<TD>CCCCMMMMYYYYKKKK<BR>
-	<I>(multi-byte)</I></TD>
-	<TD>N/A</TD>
-</TR>
-</TBODY>
-</TABLE></DIV>
-
-<H3>CUPS_ORDER_BANDED</H3>
-
-<P>The banded order provides each color as a separate line of data. Each color plane for a line is written in sequence, e.g. for the <CODE>CUPS_CSPACE_CMYK</CODE> color space you would see all of the cyan pixels for a line followed by the magenta, yellow, and black pixels for that line. This is repeated for all of the lines on the page. Color values are packed starting with the most-significant bit (MSB) first.</P>
-
-<H3>CUPS_ORDER_PLANAR</H3>
-
-<P>The planar order provides each color as a separate page of data using a shared page header. Each color plane for a page is written in sequence, e.g. for the <CODE>CUPS_CSPACE_CMYK</CODE> color space you would see all of the cyan pixels for a page followed by the magenta, yellow, and black pixels for that page. Color values are packed starting with the most-significant bit (MSB) first. Each line starts on an 8-bit boundary.</P>
-
-<H3>CUPS_CSPACE_RGBW</H3>
-
-<P>This color space provides a dedicated black text channel and uses the sRGB color space definition and white point for the RGB color channels. The white channel is 0 for text (or "true") black, otherwise it must contain the maximum color value: 1 for 1-bit, 3 for 2-bit, 15 for 4-bit, 255 for 8-bit, or 65535 for 16-bit.</P>
-
-<H3>CUPS_CSPACE_KCMYcm</H3>
-
-<P>When <CODE>cupsBitsPerColor</CODE> is 1, 6 color planes are provided - black, cyan, magenta, yellow, light cyan, and light magenta. When <CODE>cupsBitsPerColor</CODE> is greater than 1, 4 color planes are provided using the <CODE>CUPS_CSPACE_KCMY</CODE> color space instead.</P>
-
-<P>When <CODE>cupsColorOrder</CODE> is <CODE>CUPS_ORDER_CHUNKED</CODE>, bit 5 corresponds to black and bit 0 corresponds to light magenta. For <CODE>CUPS_ORDER_BANDED</CODE> and <CODE>CUPS_ORDER_PLANAR</CODE>, each color plane is encoded separately.</P>
-
-<H3>CUPS_CSPACE_CIELab and CUPS_CSPACE_ICCn</H3>
-
-<P>These color spaces map a CIE Lab color value with a D65 white point to either a 8- or 16-bit per color chunked (<CODE>CUPS_ORDER_CHUNKED</CODE>) format; the banded (<CODE>CUPS_ORDER_BANDED</CODE>) and planar (<CODE>CUPS_ORDER_PLANAR</CODE>) color orders are not supported.</P>
-
-<P>The values are encoded and decoded using the following formulas:</P>
-
-<UL>
-
-	<LI>8-bit Encoding:<BR>
-	<I>L8 = 2.55 * L + 0.5<BR>
-	a8 = a + 128.5<BR>
-	b8 = b + 128.5<BR>
-	&nbsp;</I></LI>
-
-	<LI>8-bit Decoding:<BR>
-	<I>L = L8 / 2.55<BR>
-	a = a8 - 128<BR>
-	b = b8 - 128<BR>
-	&nbsp;</I></LI>
-
-	<LI>16-bit Encoding:<BR>
-	<I>L16 = 655.35 * L + 0.5<BR>
-	a16 = 256 * (a + 128) + 0.5<BR>
-	b16 = 256 * (b + 128) + 0.5<BR>
-	&nbsp;</I></LI>
-
-	<LI>16-bit Decoding:<BR>
-	<I>L = L16 / 655.35<BR>
-	a = a16 / 256 - 128<BR>
-	b = b16 / 256 - 128<BR>
-	&nbsp;</I></LI>
-
-</UL>
-
-<H3>CUPS_CSPACE_CIEXYZ</H3>
-
-<P>These color spaces map a CIE XYZ color value with a D65 white point to either a 8- or 16-bit per color chunked (<CODE>CUPS_ORDER_CHUNKED</CODE>) format; the banded (<CODE>CUPS_ORDER_BANDED</CODE>) and planar (<CODE>CUPS_ORDER_PLANAR</CODE>) color orders are not supported.</P>
-
-<P>The values are encoded and decoded using the following formulas:</P>
-
-<UL>
-
-	<LI>8-bit Encoding:<BR>
-	<I>X8 = 231.8181 * X + 0.5<BR>
-	Y8 = 231.8181 * Y + 0.5<BR>
-	Z8 = 231.8181 * Z + 0.5<BR>
-	&nbsp;</I></LI>
-
-	<LI>8-bit Decoding:<BR>
-	<I>X = X8 / 231.8181<BR>
-	Y = Y8 / 231.8181<BR>
-	Z = Z8 / 231.8181<BR>
-	&nbsp;</I></LI>
-
-	<LI>16-bit Encoding:<BR>
-	<I>X16 = 59577.2727 * X + 0.5<BR>
-	Y16 = 59577.2727 * Y + 0.5<BR>
-	Z16 = 59577.2727 * Z + 0.5<BR>
-	&nbsp;</I></LI>
-
-	<LI>16-bit Decoding:<BR>
-	<I>X = X16 / 59577.2727<BR>
-	Y = Y16 / 59577.2727<BR>
-	Z = Z16 / 59577.2727<BR>
-	&nbsp;</I></LI>
-
-</UL>
-
-<P>The scaling factor for XYZ values is 1/1.1, or 231.8181 for 8-bit values and 59577.2727 for 16-bit values. This allows for a slight overflow of XYZ values when converting from RGB, improving accuracy.</P>
-
-
-<H2 CLASS="title"><A NAME="HISTORY">Change History</A></H2>
-
-<H3>Changes in CUPS 1.4.7</H3>
-
-<ul>
-
-	<li>Greatly improved the detail and now include an example of the bitmap compression.</li>
-	<li>Added all missing cupsColorSpace values and a separate description of CUPS_CSPACE_RGBW.</li>
-
-</ul>
-
-
-<H3>Changes in CUPS 1.2.2</H3>
-
-<ul>
-
-	<li>Added version 3 (uncompressed) format.</li>
-
-</ul>
-
-
-<H3>Changes in CUPS 1.2.1</H3>
-
-<ul>
-
-	<li>Added new sections on coding pixel values.</li>
-
-	<li>Clarified definitions of color spaces.</li>
-
-</ul>
-
-
-<H3>Changes in CUPS 1.2</H3>
-
-<ul>
-
-	<li>Bumped raster version to 2</li>
-
-	<li>Added RGBW color space</li>
-
-	<li>Added 16 bit per color support</li>
-
-	<li>Added cupsNumColors, cupsBorderlessScalingFactor, cupsPageSize, cupsImagingBBox, cupsInteger, cupsReal, cupsString, cupsMarkerType, cupsRenderingIntent, and cupsPageSizeName attributes to the page device dictionary</li>
-
-	<li>Added raster data compression</li>
-
-	<li>Added data type column to device dictionary documentation.</li>
-
-</ul>
-
-<h3>Changes in CUPS 1.1.19</h3>
-
-<ul>
-
-	<li>Added ICC and CIE color spaces.</li>
-
-</ul>
-
-</BODY>
-</HTML>
+<!DOCTYPE html>
+<html>
+  <!--
+  IPP specification for CUPS.
+
+  Copyright © 2023 by OpenPrinting.
+  Copyright © 2007-2016 by Apple Inc.
+  Copyright © 1997-2007 by Easy Software Products.
+
+  Licensed under Apache License v2.0.  See the file "LICENSE" for more
+  information.
+  -->
+  <head>
+    <style><!--
+body {
+  font-family: sans-serif;
+  font-size: 16pt;
+  margin: 54pt 36pt;
+}
+code, kbd, pre, tt {
+  font-family: monospace;
+}
+dl {
+  margin-left: 2em;
+}
+h2, h3 {
+  border-bottom: solid 2px black;
+}
+h4 {
+  border-bottom: solid 1px black;
+}
+p {
+  text-align: justify;
+}
+span.info {
+  background: rgba(127,127,127,0.5);
+  border-radius: 5px;
+  float: right;
+  font-size: 80%;
+  padding: 4px 10px;
+}
+h4 span.info {
+  padding: 2px 8px;
+}
+table {
+  border-collapse: collapse;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 90%;
+}
+table caption {
+  font-style: italic;
+  margin-bottom: 1em;
+}
+table thead th {
+  border-bottom: solid 2px black;
+  padding: 0 10px;
+  text-align: left;
+  vertical-align: bottom;
+}
+table tbody tr:nth-child(even) {
+  background: rgba(127,127,127,0.125);
+}
+table tbody td {
+  border-bottom: solid 1px black;
+  padding: 4px 10px;
+  vertical-align: top;
+}
+table.figure tbody td {
+  border-bottom: none;
+}
+--></style>
+    <title>CUPS Raster Format</title>
+  </head>
+  <body>
+    <h1>CUPS Raster Format</h1>
+
+    <p>CUPS Raster files are device-dependent raster image files that contain a PostScript page device dictionary and device-dependent raster imagery for each page in the document. These files are used to transfer raster data from the PostScript and image file RIPs to device-dependent filters that convert the raster data to a printable format.</p>
+
+    <p>CUPS 1.0 and 1.1 used version 1 of the raster format. CUPS 1.2 and later use version 2 (compressed) and version 3 (uncompressed) that are a superset of the version 1 raster format. All three versions of CUPS Raster are streamable formats, and applications using the CUPS Imaging API (the cupsRaster* functions) can read all formats without code changes.</p>
+
+    <p>The registered MIME media type for CUPS Raster files is <code>application/vnd.cups-raster</code>.</p>
+
+
+    <h2 id='ORGANIZATION'>Organization of a CUPS Raster File</h2>
+
+    <p><a href="FILEFORMAT">Figure 1, "Raster Organization"</a>, shows the general organization of all CUPS Raster files. Each file begins with a 32-bit synchronization word followed by zero or more pages. Each page consists of a  header (the PostScript page device dictionary and raster-specific values) followed by the bitmap image for the page.</p>
+
+    <table class="figure" id="FILEFORMAT" summary="Raster Organization">
+      <caption>Figure 1 - Raster Organization</caption>
+      <tbody>
+	<tr>
+	  <td><img src="raster-organization.png" width="446" height="1056" alt="Raster Organization"></td>
+	</tr>
+      </tbody>
+    </table>
+
+    <p>Each page bitmap is stored as described by the <code>cupsBitsPerColor</code>, <code>cupsBytesPerLine</code>, <code>cupsColorOrder</code>, <code>cupsColorSpace</code>, <code>cupsHeight</code>, and <code>cupsWidth</code> values in the page header. Pixels for the front side of a sheet are always stored left-to-right, top-to-bottom. When doing duplex printing, pixels for the back side of a sheet may be stored differently depending on the value of the <code>cupsBackSide</code> keyword ("Normal", "ManualTumble", "Rotated", or "Flipped") in the PPD file and the <code>Tumble</code> value ("true" or "false") in the page header. <a href="#PAGEBITMAPS">Figure 2, "Page Bitmaps"</a>, shows the pixel order for each combination.</p>
+
+    <table class="figure" id="PAGEBITMAPS" summary="Page Bitmaps">
+      <caption>Figure 2 - Page Bitmaps</caption>
+      <tbody>
+	<tr>
+	  <td><img src="raster.png" width="624" height="448" alt="Page Bitmaps"></td>
+	</tr>
+      </tbody>
+    </table>
+
+
+    <h2 id='V1'>Version 1 Raster File Format</h2>
+
+    <p>A version 1 raster file begins with a 32-bit synchronization word: 0x52615374 ("RaSt") for big-endian architectures or 0x74536152 ("tSaR") for little-endian architectures. The writer of the raster file will use the native word order, and the reader is responsible for detecting a reversed word order file and swapping bytes as needed. The CUPS Imaging API raster functions perform this function automatically.</p>
+
+    <p>Following the synchronization word are a series of raster pages. Each page starts with a page device dictionary header and is followed immediately by the (uncompressed/raw) raster data for that page.</p>
+
+    <table id="table1" summary="CUPS Version 1 Raster Page Device Dictionary">
+      <caption>Table 1 - CUPS Version 1 Raster Page Device Dictionary</caption>
+      <thead>
+	<tr>
+	  <th>Bytes</th>
+	  <th>Type</th>
+	  <th>Description</th>
+	  <th>Values</th>
+	</tr>
+      </thead>
+      <tbody>
+	<tr>
+	  <td>0-63</td>
+	  <td>C String</td>
+	  <td>MediaClass</td>
+	  <td>Media class string</td>
+	</tr>
+	<tr>
+	  <td>64-127</td>
+	  <td>C String</td>
+	  <td>MediaColor</td>
+	  <td>Media color string</td>
+	</tr>
+	<tr>
+	  <td>128-191</td>
+	  <td>C String</td>
+	  <td>MediaType</td>
+	  <td>Media type string</td>
+	</tr>
+	<tr>
+	  <td>192-255</td>
+	  <td>C String</td>
+	  <td>OutputType</td>
+	  <td>Output type string</td>
+	</tr>
+	<tr>
+	  <td>256-259</td>
+	  <td>Unsigned Integer</td>
+	  <td>AdvanceDistance</td>
+	  <td>0 to 2<SUp>32</SUp> - 1 points</td>
+	</tr>
+	<tr>
+	  <td>260-263</td>
+	  <td>Unsigned Integer</td>
+	  <td>AdvanceMedia</td>
+	  <td>0 = Never advance roll<br>
+	  1 = Advance roll after file<br>
+	  2 = Advance roll after job<br>
+	  3 = Advance roll after set<br>
+	  4 = Advance roll after page</td>
+	</tr>
+	<tr>
+	  <td>264-267</td>
+	  <td>Unsigned Integer</td>
+	  <td>Collate</td>
+	  <td>0 = do not collate copies<br>
+	  1 = collate copies</td>
+	</tr>
+	<tr>
+	  <td>268-271</td>
+	  <td>Unsigned Integer</td>
+	  <td>CutMedia</td>
+	  <td>0 = Never cut media<br>
+	  1 = Cut roll after file<br>
+	  2 = Cut roll after job<br>
+	  3 = Cut roll after set<br>
+	  4 = Cut roll after page</td>
+	</tr>
+	<tr>
+	  <td>272-275</td>
+	  <td>Unsigned Integer</td>
+	  <td>Duplex</td>
+	  <td>0 = Print single-sided<br>
+	  1 = Print double-sided</td>
+	</tr>
+	<tr>
+	  <td>276-283</td>
+	  <td>Unsigned Integers (2)</td>
+	  <td>HWResolution</td>
+	  <td>Horizontal and vertical resolution in dots-per-inch.</td>
+	</tr>
+	<tr>
+	  <td>284-299</td>
+	  <td>Unsigned Integers (4)</td>
+	  <td>ImagingBoundingBox</td>
+	  <td>Four integers giving the left, bottom, right, and top positions of the page bounding box in points</td>
+	</tr>
+	<tr>
+	  <td>300-303</td>
+	  <td>Unsigned Integer</td>
+	  <td>InsertSheet</td>
+	  <td>0 = Do not insert separator sheets<br>
+	  1 = Insert separator sheets</td>
+	</tr>
+	<tr>
+	  <td>304-307</td>
+	  <td>Unsigned Integer</td>
+	  <td>Jog</td>
+	  <td>0 = Do no jog pages<br>
+	  1 = Jog pages after file<br>
+	  2 = Jog pages after job<br>
+	  3 = Jog pages after set</td>
+	</tr>
+	<tr>
+	  <td>308-311</td>
+	  <td>Unsigned Integer</td>
+	  <td>LeadingEdge</td>
+	  <td>0 = Top edge is first<br>
+	  1 = Right edge is first<br>
+	  2 = Bottom edge is first<br>
+	  3 = Left edge is first</td>
+	</tr>
+	<tr>
+	  <td>312-319</td>
+	  <td>Unsigned Integers (2)</td>
+	  <td>Margins</td>
+	  <td>Left and bottom origin of image in points</td>
+	</tr>
+	<tr>
+	  <td>320-323</td>
+	  <td>Unsigned Integer</td>
+	  <td>ManualFeed</td>
+	  <td>0 = Do not manually feed media<br>
+	  1 = Manually feed media</td>
+	</tr>
+	<tr>
+	  <td>324-327</td>
+	  <td>Unsigned Integer</td>
+	  <td>MediaPosition</td>
+	  <td>Input slot position from 0 to N</td>
+	</tr>
+	<tr>
+	  <td>328-331</td>
+	  <td>Unsigned Integer</td>
+	  <td>MediaWeight</td>
+	  <td>Media weight in grams per meter squared, 0 = printer default</td>
+	</tr>
+	<tr>
+	  <td>332-335</td>
+	  <td>Unsigned Integer</td>
+	  <td>MirrorPrint</td>
+	  <td>0 = Do not mirror prints<br>
+	  1 = Mirror prints</td>
+	</tr>
+	<tr>
+	  <td>336-339</td>
+	  <td>Unsigned Integer</td>
+	  <td>NegativePrint</td>
+	  <td>0 = Do not invert prints<br>
+	  1 = Invert prints</td>
+	</tr>
+	<tr>
+	  <td>340-343</td>
+	  <td>Unsigned Integer</td>
+	  <td>NumCopies</td>
+	  <td>0 to 2<SUp>32</SUp> - 1, 0 = printer default</td>
+	</tr>
+	<tr>
+	  <td>344-347</td>
+	  <td>Unsigned Integer</td>
+	  <td>Orientation</td>
+	  <td>0 = Do not rotate page<br>
+	  1 = Rotate page counter-clockwise<br>
+	  2 = Turn page upside down<br>
+	  3 = Rotate page clockwise</td>
+	</tr>
+	<tr>
+	  <td>348-351</td>
+	  <td>Unsigned Integer</td>
+	  <td>OutputFaceUp</td>
+	  <td>0 = Output face down<br>
+	  1 = Output face up</td>
+	</tr>
+	<tr>
+	  <td>352-359</td>
+	  <td>Unsigned Integers (2)</td>
+	  <td>PageSize</td>
+	  <td>Width and length in points</td>
+	</tr>
+	<tr>
+	  <td>360-363</td>
+	  <td>Unsigned Integer</td>
+	  <td>Separations</td>
+	  <td>0 = Print composite image<br>
+	  1 = Print color separations</td>
+	</tr>
+	<tr>
+	  <td>364-367</td>
+	  <td>Unsigned Integer</td>
+	  <td>TraySwitch</td>
+	  <td>0 = Do not change trays if selected tray is empty<br>
+	  1 = Change trays if selected tray is empty</td>
+	</tr>
+	<tr>
+	  <td>368-371</td>
+	  <td>Unsigned Integer</td>
+	  <td>Tumble</td>
+	  <td>0 = Do not rotate even pages when duplexing<br>
+	  1 = Rotate even pages when duplexing</td>
+	</tr>
+	<tr>
+	  <td>372-375</td>
+	  <td>Unsigned Integer</td>
+	  <td>cupsWidth</td>
+	  <td>Width of page image in pixels</td>
+	</tr>
+	<tr>
+	  <td>376-379</td>
+	  <td>Unsigned Integer</td>
+	  <td>cupsHeight</td>
+	  <td>Height of page image in pixels</td>
+	</tr>
+	<tr>
+	  <td>380-383</td>
+	  <td>Unsigned Integer</td>
+	  <td>cupsMediaType</td>
+	  <td>Driver-specific 0 to 2<SUp>32</SUp> - 1</td>
+	</tr>
+	<tr>
+	  <td>384-387</td>
+	  <td>Unsigned Integer</td>
+	  <td>cupsBitsPerColor</td>
+	  <td>1, 2, 4, 8 bits for version 1 raster files<br>
+	  1, 2, 4, 8, and 16 bits for version 2/3 raster files</td>
+	</tr>
+	<tr>
+	  <td>388-391</td>
+	  <td>Unsigned Integer</td>
+	  <td>cupsBitsPerPixel</td>
+	  <td>1 to 32 bits for version 1 raster files<br>
+	  1 to 240 bits for version 2/3 raster files</td>
+	</tr>
+	<tr>
+	  <td>392-395</td>
+	  <td>Unsigned Integer</td>
+	  <td>cupsBytesPerLine</td>
+	  <td>1 to 2<SUp>32</SUp> - 1 bytes</td>
+	</tr>
+	<tr>
+	  <td>396-399</td>
+	  <td>Unsigned Integer</td>
+	  <td>cupsColorOrder</td>
+	  <td>0 = chunky pixels (CMYK CMYK CMYK)<br>
+	  1 = banded pixels (CCC MMM YYY KKK)<br>
+	  2 = planar pixels (CCC... MMM... YYY... KKK...)</td>
+	</tr>
+	<tr>
+	  <td>400-403</td>
+	  <td>Unsigned Integer</td>
+	  <td>cupsColorSpace</td>
+	  <td>0 = gray (device, typically sRGB-based)<br>
+	  1 = RGB (device, typically sRGB)<br>
+	  2 = RGBA (device, typically sRGB)<br>
+	  3 = black<br>
+	  4 = CMY<br>
+	  5 = YMC<br>
+	  6 = CMYK<br>
+	  7 = YMCK<br>
+	  8 = KCMY<br>
+	  9 = KCMYcm<br>
+	  10 = GMCK<br>
+	  11 = GMCS<br>
+	  12 = WHITE<br>
+	  13 = GOLD<br>
+	  14 = SILVER<br>
+	  15 = CIE XYZ<br>
+	  16 = CIE Lab<br>
+	  17 = RGBW (sRGB)<br>
+	  18 = sGray (gray using sRGB gamma/white point)<br>
+	  19 = sRGB<br>
+	  20 = AdobeRGB<br>
+	  32 = ICC1 (CIE Lab with hint for 1 color)<br>
+	  33 = ICC2 (CIE Lab with hint for 2 colors)<br>
+	  34 = ICC3 (CIE Lab with hint for 3 colors)<br>
+	  35 = ICC4 (CIE Lab with hint for 4 colors)<br>
+	  36 = ICC5 (CIE Lab with hint for 5 colors)<br>
+	  37 = ICC6 (CIE Lab with hint for 6 colors)<br>
+	  38 = ICC7 (CIE Lab with hint for 7 colors)<br>
+	  39 = ICC8 (CIE Lab with hint for 8 colors)<br>
+	  40 = ICC9 (CIE Lab with hint for 9 colors)<br>
+	  41 = ICCA (CIE Lab with hint for 10 colors)<br>
+	  42 = ICCB (CIE Lab with hint for 11 colors)<br>
+	  43 = ICCC (CIE Lab with hint for 12 colors)<br>
+	  44 = ICCD (CIE Lab with hint for 13 colors)<br>
+	  45 = ICCE (CIE Lab with hint for 14 colors)<br>
+	  46 = ICCF (CIE Lab with hint for 15 colors)<br>
+	  48 = Device1 (DeviceN for 1 color)<br>
+	  49 = Device2 (DeviceN for 2 colors)<br>
+	  50 = Device3 (DeviceN for 3 colors)<br>
+	  51 = Device4 (DeviceN for 4 colors)<br>
+	  52 = Device5 (DeviceN for 5 colors)<br>
+	  53 = Device6 (DeviceN for 6 colors)<br>
+	  54 = Device7 (DeviceN for 7 colors)<br>
+	  55 = Device8 (DeviceN for 8 colors)<br>
+	  56 = Device9 (DeviceN for 9 colors)<br>
+	  57 = DeviceA (DeviceN for 10 colors)<br>
+	  58 = DeviceB (DeviceN for 11 colors)<br>
+	  59 = DeviceC (DeviceN for 12 colors)<br>
+	  60 = DeviceD (DeviceN for 13 colors)<br>
+	  61 = DeviceE (DeviceN for 14 colors)<br>
+	  62 = DeviceF (DeviceN for 15 colors)
+	  </td>
+	</tr>
+	<tr>
+	  <td>404-407</td>
+	  <td>Unsigned Integer</td>
+	  <td>cupsCompression</td>
+	  <td>Driver-specific 0 to 2<SUp>32</SUp> - 1</td>
+	</tr>
+	<tr>
+	  <td>408-411</td>
+	  <td>Unsigned Integer</td>
+	  <td>cupsRowCount</td>
+	  <td>Driver-specific 0 to 2<SUp>32</SUp> - 1</td>
+	</tr>
+	<tr>
+	  <td>412-415</td>
+	  <td>Unsigned Integer</td>
+	  <td>cupsRowFeed</td>
+	  <td>Driver-specific 0 to 2<SUp>32</SUp> - 1</td>
+	</tr>
+	<tr>
+	  <td>416-419</td>
+	  <td>Unsigned Integer</td>
+	  <td>cupsRowStep</td>
+	  <td>Driver-specific 0 to 2<SUp>32</SUp> - 1</td>
+	</tr>
+      </tbody>
+    </table>
+
+
+    <h2 id='V2'>Version 2 Raster File Format</h2>
+
+    <p>A version 2 raster file begins with a 32-bit synchronization word: 0x52615332 ("RaS2") for big-endian architectures or 0x32536152 ("2SaR") for little-endian architectures. The writer of the raster file will use the native word order, and the reader is responsible for detecting a reversed word order file and swapping bytes as needed. The CUPS Imaging API raster functions perform this function automatically.</p>
+
+    <p>Following the synchronization word are a series of raster pages. Each page starts with a version 2 page device dictionary header and is followed immediately by the compressed raster data for that page.</p>
+
+    <table id="TABLE2" summary="CUPS Version 2 Raster Page Device Dictionary">
+      <caption>Table 2 - CUPS Version 2 Raster Page Device Dictionary</caption>
+      <thead>
+	<tr>
+	  <th>Bytes</th>
+	  <th>Type</th>
+	  <th>Description</th>
+	  <th>Values</th>
+	</tr>
+      </thead>
+      <tbody>
+	<tr>
+	  <td>0-419</td>
+	  <td>Version 1 header data</td>
+	  <td>See Table 1</td>
+	</tr>
+	<tr>
+	  <td>420-423</td>
+	  <td>Unsigned Integer</td>
+	  <td>cupsNumColors</td>
+	  <td>1 to 15 colors</td>
+	</tr>
+	<tr>
+	  <td>424-427</td>
+	  <td>IEEE Single Precision</td>
+	  <td>cupsBorderlessScalingFactor</td>
+	  <td>0.0 or 1.0 or greater</td>
+	</tr>
+	<tr>
+	  <td>428-435</td>
+	  <td>IEEE Single Precision (2)</td>
+	  <td>cupsPageSize</td>
+	  <td>Width and length in points</td>
+	</tr>
+	<tr>
+	  <td>436-451</td>
+	  <td>IEEE Single Precision (4)</td>
+	  <td>cupsImagingBBox</td>
+	  <td>Four floating point numbers giving the left, bottom, right, and top positions of the page bounding box in points</td>
+	</tr>
+	<tr>
+	  <td>452-515</td>
+	  <td>Unsigned Integers (16)</td>
+	  <td>cupsInteger</td>
+	  <td>16 driver-defined integer values</td>
+	</tr>
+	<tr>
+	  <td>516-579</td>
+	  <td>IEEE Single Precision (16)</td>
+	  <td>cupsReal</td>
+	  <td>16 driver-defined floating point values</td>
+	</tr>
+	<tr>
+	  <td>580-1603</td>
+	  <td>C Strings (16x64)</td>
+	  <td>cupsString</td>
+	  <td>16 driver-defined strings</td>
+	</tr>
+	<tr>
+	  <td>1604-1667</td>
+	  <td>C String</td>
+	  <td>cupsMarkerType</td>
+	  <td>Ink/toner type string</td>
+	</tr>
+	<tr>
+	  <td>1668-1731</td>
+	  <td>C String</td>
+	  <td>cupsRenderingIntent</td>
+	  <td>Color rendering intent string</td>
+	</tr>
+	<tr>
+	  <td>1732-1795</td>
+	  <td>C String</td>
+	  <td>cupsPageSizeName</td>
+	  <td>Page size name/keyword string from PPD</td>
+	</tr>
+      </tbody>
+    </table>
+
+
+    <h3 id='COMPRESSION'>Compressed Raster Data Format</h3>
+
+    <p>The version 2 raster data is compressed using a PackBits-like algorithm. Lines are grouped into an integral number of color values based upon the <code>cupsColorOrder</code> setting:</p>
+
+    <table id="TABLE3" summary="Color Value Sizes">
+      <caption>Table 3 - Color Value Sizes</caption>
+      <thead>
+	<tr>
+	  <th>cupsColorOrder</th>
+	  <th>Bytes per color value</th>
+	</tr>
+      </thead>
+      <tbody>
+	<tr>
+	  <td>0 (chunky)</td>
+	  <td>(<code>cupsBitsPerPixel</code> + 7) / 8</td>
+	</tr>
+	<tr>
+	  <td>1 (banded)</td>
+	  <td>(<code>cupsBitsPerColor</code> + 7) / 8</td>
+	</tr>
+	<tr>
+	  <td>2 (planar)</td>
+	  <td>(<code>cupsBitsPerColor</code> + 7) / 8</td>
+	</tr>
+      </tbody>
+    </table>
+
+    <p>Each line of raster data begins with a repetition count from 1 to 256 that is encoded using a single byte of "count - 1".</p>
+
+    <p>After the repetition count, whole color values for that line are run-length encoded using a PackBits-like run-length encoding algorithm: 1 to 128 repeated colors are encoded using an initial byte of "count - 1" followed by the color value byte(s) while 2 to 128 non-repeating colors are encoded using an initial byte of "257 - count" followed by the color value bytes.</p>
+
+    <p>For example, the 8x8 24-bit sRGB image shown in <a href="#SAMPLEIMAGE">Figure 3, "Sample Image"</a>, would be encoded as the following 89 octets:</p>
+
+    <PRE CLASS="example">
+    %x00 %x00.FF.FF.FF %x02.FF.FF.00 %x03.FF.FF.FF
+    %x00 %xFE.FF.FF.00.00.00.FF.FF.FF.00 %x02.FF.FF.FF %x00.00.FF.00 %x00.FF.FF.FF
+    %x00 %x01.FF.FF.00 %x02.FF.FF.FF %x02.00.FF.00
+    %x00 %x02.FF.FF.00 %x02.FF.FF.FF %x00.00.FF.00 %x00.FF.FF.FF
+    %x00 %x00.FF.FF.FF %x02.FF.FF.00 %x03.FF.FF.FF
+    %x00 %x07.FF.FF.FF
+    %x01 %x07.FF.00.00
+    </PRE>
+
+    <p>The first line (%x00) contains 1 white pixel (%x00.FF.FF.FF), 3 yellow pixels (%x02.FF.FF.00), and 4 white pixels (%x03.FF.FF.FF).</p>
+
+    <p>The second line (%x00) contains a sequence of yellow + blue + yellow pixels (%xFE.FF.FF.00.00.00.FF.FF.FF.00), 3 white pixels (%x02.FF.FF.FF), 1 green pixel (%x00.00.FF.00), and 1 white pixel (%x00.FF.FF.FF).</p>
+
+    <p>The third line (%x00) contains 2 yellow pixels (%x01.FF.FF.00), 3 white pixels (%x02.FF.FF.FF), and 3 green pixels (%x02.00.FF.00)</p>
+
+    <p>The fourth line (%x00) contains 3 yellow pixels (%x02.FF.FF.00), 3 white pixels (%x02.FF.FF.FF), 1 green pixel (%x00.00.FF.00), and 1 white pixel (%x00.FF.FF.FF).</p>
+
+    <p>The fifth line (%x00) contains 1 white pixel (%x00.FF.FF.FF), 3 yellow pixels (%x02.FF.FF.00), and 4 white pixels (%x03.FF.FF.FF).</p>
+
+    <p>The sixth line (%x00) contains 8 white pixels (%x07.FF.FF.FF).</p>
+
+    <p>The seventh and eighth lines (%x01) contain 8 red pixels (%x07.FF.00.00).</p>
+
+    <table class="figure" id="SAMPLEIMAGE" summary="Sample Image">
+      <caption>Figure 3 - Sample Image</caption>
+      <tbody>
+	<tr>
+	  <td><img src="sample-image.png" width="257" height="257" alt="Sample Image"></td>
+	</tr>
+      </tbody>
+    </table>
+
+
+    <h2 id='V3'>Version 3 Raster File Format</h2>
+
+    <p>A version 3 raster file begins with a 32-bit synchronization word: 0x52615333 ("RaS3") for big-endian architectures and 0x33536152 ("3SaR") for little-endian architectures. The writer of the raster file will use the native word order, and the reader is responsible for detecting a reversed word order file and swapping bytes as needed. The CUPS Imaging API raster functions perform this function automatically.</p>
+
+    <p>Following the synchronization word are a series of raster pages. Each page starts with a version 2 page device dictionary header and is followed immediately by the uncompressed/raw raster data for that page.</p>
+
+
+    <h2 id='ENCODING'>Pixel Value Coding</h2>
+
+    <p>The following sections describe the encoding and decoding of the color values in a CUPS Raster file. In general, colors are packed into the minimum number of bytes, with special consideration provided for efficiency of encoding and access. Multi-byte values are stored in the native byte order and automatically swapped as needed when reading them using the CUPS imaging API.</p>
+
+    <h3>CUPS_ORDER_CHUNKED</h3>
+
+    <p>The chunked order provides the pixel value packed in a single place. Pixel values with 8 or more bits per color are stored as an array of colors in order, e.g. for <code>CUPS_CSPACE_RGB</code> you will see 8/16-bits of red, then blue, then green, then red, green, blue, etc. Pixel values with less than 8 bits per color are packed together as shown in Table 4. <i>Multi-byte pixel values are stored in the native word order, just as for 16-bit color values.</i></p>
+
+    <table id="TABLE4" summary="Chunked Color Values">
+      <caption>Table 4 - Chunked Color Values</caption>
+      <thead>
+	<tr>
+	  <th>Bits</th>
+	  <th>1-color</th>
+	  <th>3-color</th>
+	  <th>4-color</th>
+	  <th>6-color</th>
+	</tr>
+      </thead>
+      <tbody>
+	<tr>
+	  <td>1</td>
+	  <td>W/W/W/W/W/W/W/W</td>
+	  <td>0RGB/0RGB</td>
+	  <td>CMYK/CMYK</td>
+	  <td>00KCMYcm</td>
+	</tr>
+	<tr>
+	  <td>2</td>
+	  <td>WW/WW/WW/WW</td>
+	  <td>00RRGGBB</td>
+	  <td>CCMMYYKK</td>
+	  <td>N/A</td>
+	</tr>
+	<tr>
+	  <td>4</td>
+	  <td>WWWW/WWWW</td>
+	  <td>0000RRRRGGGGBBBB<br>
+	  <i>(multi-byte)</i></td>
+	  <td>CCCCMMMMYYYYKKKK<br>
+	  <i>(multi-byte)</i></td>
+	  <td>N/A</td>
+	</tr>
+      </tbody>
+    </table>
+
+
+    <h3>CUPS_ORDER_BANDED</h3>
+
+    <p>The banded order provides each color as a separate line of data. Each color plane for a line is written in sequence, e.g. for the <code>CUPS_CSPACE_CMYK</code> color space you would see all of the cyan pixels for a line followed by the magenta, yellow, and black pixels for that line. This is repeated for all of the lines on the page. Color values are packed starting with the most-significant bit (MSB) first.</p>
+
+
+    <h3>CUPS_ORDER_PLANAR</h3>
+
+    <p>The planar order provides each color as a separate page of data using a shared page header. Each color plane for a page is written in sequence, e.g. for the <code>CUPS_CSPACE_CMYK</code> color space you would see all of the cyan pixels for a page followed by the magenta, yellow, and black pixels for that page. Color values are packed starting with the most-significant bit (MSB) first. Each line starts on an 8-bit boundary.</p>
+
+
+    <h3>CUPS_CSPACE_RGBW</h3>
+
+    <p>This color space provides a dedicated black text channel and uses the sRGB color space definition and white point for the RGB color channels. The white channel is 0 for text (or "true") black, otherwise it must contain the maximum color value: 1 for 1-bit, 3 for 2-bit, 15 for 4-bit, 255 for 8-bit, or 65535 for 16-bit.</p>
+
+
+    <h3>CUPS_CSPACE_KCMYcm</h3>
+
+    <p>When <code>cupsBitsPerColor</code> is 1, 6 color planes are provided - black, cyan, magenta, yellow, light cyan, and light magenta. When <code>cupsBitsPerColor</code> is greater than 1, 4 color planes are provided using the <code>CUPS_CSPACE_KCMY</code> color space instead.</p>
+
+    <p>When <code>cupsColorOrder</code> is <code>CUPS_ORDER_CHUNKED</code>, bit 5 corresponds to black and bit 0 corresponds to light magenta. For <code>CUPS_ORDER_BANDED</code> and <code>CUPS_ORDER_PLANAR</code>, each color plane is encoded separately.</p>
+
+
+    <h3>CUPS_CSPACE_CIELab and CUPS_CSPACE_ICCn</h3>
+
+    <p>These color spaces map a CIE Lab color value with a D65 white point to either a 8- or 16-bit per color chunked (<code>CUPS_ORDER_CHUNKED</code>) format; the banded (<code>CUPS_ORDER_BANDED</code>) and planar (<code>CUPS_ORDER_PLANAR</code>) color orders are not supported.</p>
+
+    <p>The values are encoded and decoded using the following formulas:</p>
+
+    <ul>
+      <li>8-bit Encoding:<br>
+      <i>L8 = 2.55 * L + 0.5<br>
+      a8 = a + 128.5<br>
+      b8 = b + 128.5<br>
+      &nbsp;</i></li>
+
+      <li>8-bit Decoding:<br>
+      <i>L = L8 / 2.55<br>
+      a = a8 - 128<br>
+      b = b8 - 128<br>
+      &nbsp;</i></li>
+
+      <li>16-bit Encoding:<br>
+      <i>L16 = 655.35 * L + 0.5<br>
+      a16 = 256 * (a + 128) + 0.5<br>
+      b16 = 256 * (b + 128) + 0.5<br>
+      &nbsp;</i></li>
+
+      <li>16-bit Decoding:<br>
+      <i>L = L16 / 655.35<br>
+      a = a16 / 256 - 128<br>
+      b = b16 / 256 - 128<br>
+      &nbsp;</i></li>
+    </ul>
+
+
+    <h3>CUPS_CSPACE_CIEXYZ</h3>
+
+    <p>These color spaces map a CIE XYZ color value with a D65 white point to either a 8- or 16-bit per color chunked (<code>CUPS_ORDER_CHUNKED</code>) format; the banded (<code>CUPS_ORDER_BANDED</code>) and planar (<code>CUPS_ORDER_PLANAR</code>) color orders are not supported.</p>
+
+    <p>The values are encoded and decoded using the following formulas:</p>
+
+    <ul>
+      <li>8-bit Encoding:<br>
+      <i>X8 = 231.8181 * X + 0.5<br>
+      Y8 = 231.8181 * Y + 0.5<br>
+      Z8 = 231.8181 * Z + 0.5<br>
+      &nbsp;</i></li>
+
+      <li>8-bit Decoding:<br>
+      <i>X = X8 / 231.8181<br>
+      Y = Y8 / 231.8181<br>
+      Z = Z8 / 231.8181<br>
+      &nbsp;</i></li>
+
+      <li>16-bit Encoding:<br>
+      <i>X16 = 59577.2727 * X + 0.5<br>
+      Y16 = 59577.2727 * Y + 0.5<br>
+      Z16 = 59577.2727 * Z + 0.5<br>
+      &nbsp;</i></li>
+
+      <li>16-bit Decoding:<br>
+      <i>X = X16 / 59577.2727<br>
+      Y = Y16 / 59577.2727<br>
+      Z = Z16 / 59577.2727<br>
+      &nbsp;</i></li>
+    </ul>
+
+    <p>The scaling factor for XYZ values is 1/1.1, or 231.8181 for 8-bit values and 59577.2727 for 16-bit values. This allows for a slight overflow of XYZ values when converting from RGB, improving accuracy.</p>
+
+
+    <h2 id='HISTORY'>Change History</h2>
+
+    <h3>Changes in CUPS 1.4.7</h3>
+
+    <ul>
+      <li>Greatly improved the detail and now include an example of the bitmap compression.</li>
+      <li>Added all missing cupsColorSpace values and a separate description of CUPS_CSPACE_RGBW.</li>
+    </ul>
+
+
+    <h3>Changes in CUPS 1.2.2</h3>
+
+    <ul>
+      <li>Added version 3 (uncompressed) format.</li>
+    </ul>
+
+
+    <h3>Changes in CUPS 1.2.1</h3>
+
+    <ul>
+      <li>Added new sections on coding pixel values.</li>
+      <li>Clarified definitions of color spaces.</li>
+    </ul>
+
+
+    <h3>Changes in CUPS 1.2</h3>
+
+    <ul>
+      <li>Bumped raster version to 2</li>
+
+      <li>Added RGBW color space</li>
+
+      <li>Added 16 bit per color support</li>
+
+      <li>Added cupsNumColors, cupsBorderlessScalingFactor, cupsPageSize, cupsImagingBBox, cupsInteger, cupsReal, cupsString, cupsMarkerType, cupsRenderingIntent, and cupsPageSizeName attributes to the page device dictionary</li>
+
+      <li>Added raster data compression</li>
+
+      <li>Added data type column to device dictionary documentation.</li>
+    </ul>
+
+
+    <h3>Changes in CUPS 1.1.19</h3>
+
+    <ul>
+      <li>Added ICC and CIE color spaces.</li>
+    </ul>
+  </body>
+</html>
