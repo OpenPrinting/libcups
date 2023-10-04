@@ -1171,13 +1171,19 @@ cupsJWTSign(cups_jwt_t  *jwt,		// I - JWT object
 
   // Create new signature...
   if (!make_signature(jwt, alg, jwk, signature, &sigsize, &sigkid))
+  {
+    DEBUG_puts("2cupsJWTSign: Unable to create signature.");
     return (false);
+  }
 
   if (sigkid)
     jwt->sigkid = strdup(sigkid);
 
   if ((jwt->signature = malloc(sigsize)) == NULL)
+  {
+    DEBUG_printf("2cupsJWTSign: Unable to allocate %d bytes for signature.", (int)sigsize);
     return (false);
+  }
 
   memcpy(jwt->signature, signature, sigsize);
   jwt->sigalg  = alg;
@@ -1627,7 +1633,7 @@ make_signature(cups_jwt_t    *jwt,	// I  - JWT
   gnutls_privkey_t	key;		// Private key
   gnutls_datum_t	text_datum,	// Text datum
 			sig_datum;	// Signature datum
-  static int algs[] = { GNUTLS_DIG_SHA256, GNUTLS_DIG_SHA384, GNUTLS_DIG_SHA512, GNUTLS_SIGN_ECDSA_SHA256, GNUTLS_SIGN_ECDSA_SHA384, GNUTLS_SIGN_ECDSA_SHA512 };
+  static int algs[] = { GNUTLS_DIG_SHA256, GNUTLS_DIG_SHA384, GNUTLS_DIG_SHA512, GNUTLS_DIG_SHA256, GNUTLS_DIG_SHA384, GNUTLS_DIG_SHA512 };
 					// Hash algorithms
 #endif // HAVE_OPENSSL
 
@@ -1809,7 +1815,10 @@ make_signature(cups_jwt_t    *jwt,	// I  - JWT
 	gnutls_free(r.data);
 	gnutls_free(s.data);
       }
-
+      else
+      {
+	DEBUG_printf("4make_signature: EC signing failed, sig_datum=%d bytes.", (int)sig_datum.size);
+      }
       gnutls_free(sig_datum.data);
       gnutls_privkey_deinit(key);
     }
