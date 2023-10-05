@@ -103,6 +103,9 @@ typedef struct _cups_globals_s		// CUPS global state data
 
   // dest.c
   _cups_profiles_t	profiles;	// Combined profiles
+  time_t		time_profdests;	// When profile destinations array built
+  size_t		num_profdests;	// Number of profile destinations
+  cups_dest_t		*profdests;	// Profile destinations
 
   // file.c
   cups_file_t		*stdio_files[3];// stdin, stdout, stderr

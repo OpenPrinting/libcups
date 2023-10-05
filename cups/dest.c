@@ -141,6 +141,7 @@ static char		*cups_make_string(ipp_attribute_t *attr, char *buffer, size_t bufsi
 static bool		cups_name_cb(_cups_namedata_t *data, unsigned flags, cups_dest_t *dest);
 static void		cups_queue_name(char *name, const char *serviceName, size_t namesize);
 static void		cups_scan_profiles(cups_array_t *proflist, const char *path, time_t *mtime);
+static void		cups_update_profiles(_cups_globals_t *cg, int *cancel);
 static void		dnssd_error_cb(void *cb_data, const char *message);
 
 
@@ -2654,6 +2655,7 @@ cups_enum_dests(
   const char	*profname;		// Profile filename
   char		profpath[1024];		// Profiles path
   _cups_profiles_t profiles;		// Profiles
+  const char	*profile;		// Profile URI/hostname
   _cups_globals_t *cg = _cupsGlobals();	// Pointer to library globals
 
 
@@ -2725,13 +2727,16 @@ cups_enum_dests(
       cups_load_profile(&profiles, profname);
 
     _cupsFreeProfiles(&cg->profiles);
-    cg->profiles = profiles;
+    cg->profiles       = profiles;
+    cg->time_profdests = 0;
   }
   else
   {
     // Free old prof
     _cupsFreeProfiles(&profiles);
   }
+
+  cupsArrayDelete(proflist);
 
   // Get ready to enumerate...
   cupsRWInit(&data.rwlock);
@@ -2753,7 +2758,7 @@ cups_enum_dests(
       if ((dest = cupsGetDest(data.def_name, data.def_instance, num_dests, dests)) != NULL)
       {
 	DEBUG_printf("1cups_enum_dests: Setting is_default on \"%s/%s\".", dest->name, dest->instance);
-        dest->is_default = 1;
+        dest->is_default = true;
       }
     }
 
@@ -2825,6 +2830,40 @@ cups_enum_dests(
   // Return early if the caller doesn't want to do discovery...
   if ((mask & CUPS_PRINTER_DISCOVERED) && !(type & CUPS_PRINTER_DISCOVERED))
     goto enum_finished;
+
+  // Get profile printers...
+  if ((time(NULL) - cg->time_profdests) >= 60)
+    cups_update_profiles(cg, cancel);
+
+  for (i = cg->num_profdests, dest = cg->profdests; i > 0 && (!cancel || !*cancel); i --, dest ++)
+  {
+    cups_dest_t	*user_dest;	// Destination from lpoptions
+    const char	*device_uri;	// Device URI
+
+    if ((user_dest = cupsGetDest(dest->name, NULL, data.num_dests, data.dests)) != NULL)
+    {
+      // Apply user defaults to this destination for all instances...
+      for (j = (size_t)(user_dest - data.dests); j < data.num_dests; j ++, user_dest ++)
+      {
+	if (_cups_strcasecmp(user_dest->name, dest->name))
+	{
+	  j = data.num_dests;
+	  break;
+	}
+
+	for (k = dest->num_options, option = dest->options; k > 0; k --, option ++)
+	  user_dest->num_options = cupsAddOption(option->name, option->value, user_dest->num_options, &user_dest->options);
+
+	if (!(*cb)(user_data, i > 1 ? CUPS_DEST_FLAGS_MORE : CUPS_DEST_FLAGS_NONE, user_dest))
+	  break;
+      }
+
+      if (j < data.num_dests)
+	break;
+    }
+    else if (!(*cb)(user_data, i > 1 ? CUPS_DEST_FLAGS_MORE : CUPS_DEST_FLAGS_NONE, dest))
+      break;
+  }
 
   // Get DNS-SD printers...
   gettimeofday(&curtime, NULL);
@@ -3597,6 +3636,58 @@ cups_scan_profiles(
 
     cupsDirClose(dir);
   }
+}
+
+
+//
+// 'cups_update_profiles()' - Update the list of available profile printers.
+//
+
+static void
+cups_update_profiles(
+    _cups_globals_t *cg,		// Global data
+    int             *cancel)		// I - Cancel variable
+{
+  const char	*profile;		// Current profile URI/server
+
+
+  // Clear existing (cached) printers...
+  cupsFreeDests(cg->num_profdests, cg->profdests);
+  cg->time_profdests = 0;
+  cg->num_profdests  = 0;
+  cg->profdests      = NULL;
+
+  // Loop through all of the printers...
+  for (profile = (const char *)cupsArrayGetFirst(cg->profiles.prof_printers); (!cancel || !*cancel) && profile; profile = (const char *)cupsArrayGetNext(cg->profiles.prof_printers))
+  {
+    char		scheme[32],	// URI scheme
+			userpass[256],	// URI username:password (ignored)
+			host[256],	// URI hostname
+			resource[256];	// URI resource
+    int			port;		// URI port
+    http_encryption_t	encryption;	// Encryption to use
+    http_t		*prof_http;	// Connection to host
+
+    if (httpSeparateURI(HTTP_URI_CODING_ALL, profile, scheme, sizeof(scheme), userpass, sizeof(userpass), host, sizeof(host), &port, resource, sizeof(resource)) < HTTP_URI_STATUS_OK)
+      continue;
+
+    if (port == 443 || !strcmp(scheme, "ipps"))
+      encryption = HTTP_ENCRYPTION_ALWAYS;
+    else
+      encryption = HTTP_ENCRYPTION_IF_REQUESTED;
+
+    if ((prof_http = httpConnect(host, port, /*addrlist*/NULL, AF_UNSPEC, encryption, /*blocking*/true, /*msec*/1000, /*cancel*/cancel)) != NULL)
+    {
+      // TODO: Add dest
+      httpClose(prof_http);
+    }
+  }
+
+  if (cancel && *cancel)
+    return;
+
+  // If we got this far, update the cache time and return...
+  cg->time_profdests = time(NULL);
 }
 
 
