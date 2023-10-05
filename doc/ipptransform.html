@@ -7,6 +7,9 @@ body {
   font-size: 16pt;
   margin: 54pt 36pt;
 }
+.center {
+  text-align: center;
+}
 code, kbd, pre, tt {
   font-family: monospace;
 }
@@ -60,8 +63,8 @@ table.figure tbody td {
   border-bottom: none;
 }
 --></style>
-    <meta name="creator" content="mantohtml v2022.1005">
-    <title>Documentation</title>
+    <meta name="creator" content="mantohtml v2.0.2">
+    <title>ipptransform(1)</title>
   </head>
   <body>
     <h1 id="ipptransform-1">ipptransform(1)</h1>
@@ -90,7 +93,7 @@ ippeveps - convert document data to postscript
 <em>output/format</em>
 ] [
 <strong>-o</strong>
-<em>"name=value [... name=value]"</em>
+<em>&quot;name=value [... name=value]&quot;</em>
 ] [
 <strong>-r</strong>
 <em>resolution[,...,resolution]</em>
@@ -119,29 +122,29 @@ Shows program help.
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-d</strong><em> device-uri</em>
 <br>
 Specifies an output device as a URI.
-Currently only the "ipp", "ipps", and "socket" URI schemes are supported, for example "socket://10.0.1.42" to send print data to an AppSocket printer at IP address 10.0.1.42.
+Currently only the &quot;ipp&quot;, &quot;ipps&quot;, and &quot;socket&quot; URI schemes are supported, for example &quot;socket://10.0.1.42&quot; to send print data to an AppSocket printer at IP address 10.0.1.42.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-i</strong><em> input/format</em>
 <br>
 Specifies the MIME media type of the input file.
-Currently the "application/pdf" (PDF) and "image/jpeg" (JPEG) MIME media types are supported.
+Currently the &quot;application/pdf&quot; (PDF) and &quot;image/jpeg&quot; (JPEG) MIME media types are supported.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-m</strong><em> output/format</em>
 <br>
 Specifies the MIME media type of the output file.
-Current the "application/vnd.hp-pcl" (HP PCL) and "image/pwg-raster" (PWG Raster) MIME media types are supported.
+Current the &quot;application/vnd.hp-pcl&quot; (HP PCL) and &quot;image/pwg-raster&quot; (PWG Raster) MIME media types are supported.
 </p>
-    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-o</strong><em> "name=value</em><strong>[...</strong><em>name=value]"</em>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-o</strong><em> &quot;name=value</em><strong>[...</strong><em>name=value]&quot;</em>
 <br>
 Specifies one or more named options for the conversion.
-Currently the "copies", "media", "media-col", "page-ranges", "print-color-mode", "print-quality", "printer-resolution", and "sides" options are supported.
+Currently the &quot;copies&quot;, &quot;media&quot;, &quot;media-col&quot;, &quot;page-ranges&quot;, &quot;print-color-mode&quot;, &quot;print-quality&quot;, &quot;printer-resolution&quot;, and &quot;sides&quot; options are supported.
 See the NAMED OPTIONS section for more information.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-r</strong><em> resolution[,...,resolution]</em>
 <br>
 Specifies the supported resolutions.
-Resolutions are of the form "NNNdpi" or "NNNxNNNdpi", for example "300dpi" or "600x300dpi".
-HP PCL output only supports resolutions of "300dpi" and "600dpi".
+Resolutions are of the form &quot;NNNdpi&quot; or &quot;NNNxNNNdpi&quot;, for example &quot;300dpi&quot; or &quot;600x300dpi&quot;.
+HP PCL output only supports resolutions of &quot;300dpi&quot; and &quot;600dpi&quot;.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-s</strong> {flipped|manual-tumble|normal|rotated}
 <br>
@@ -150,7 +153,7 @@ Specifies the coordinate system for the back side of duplex sheets.
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-t</strong> type[,...,type]
 <br>
 Specifies the output color spaces and bit depths, separated by commas.
-Types include "adobe-rgb_8" and "adobe-rgb_16" for 8-bit and 16-bit AdobeRGB, "black_1" and "black_8" for 1-bit and 8-bit black, "cmyk_8" for 8-bit CMYK, "sgray_1" and "sgray_8" for 1-bit and 8-bit grayscale with a 2.2 gamma correction, and "srgb_8" for 8-bit sRGB color.
+Types include &quot;adobe-rgb_8&quot; and &quot;adobe-rgb_16&quot; for 8-bit and 16-bit AdobeRGB, &quot;black_1&quot; and &quot;black_8&quot; for 1-bit and 8-bit black, &quot;cmyk_8&quot; for 8-bit CMYK, &quot;sgray_1&quot; and &quot;sgray_8&quot; for 1-bit and 8-bit grayscale with a 2.2 gamma correction, and &quot;srgb_8&quot; for 8-bit sRGB color.
 Run
 <strong>ipptransform</strong>
 with the
@@ -168,37 +171,37 @@ Specifies the number of copies to produce.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>media</strong><br>
 Specifies the media size as a PWG standardized media size name.
-For example, US Letter (8.5x11in) is "na_letter_8.5x11in" and ISO A4 is "iso_a4_210x297mm".
+For example, US Letter (8.5x11in) is &quot;na_letter_8.5x11in&quot; and ISO A4 is &quot;iso_a4_210x297mm&quot;.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>media-col</strong><br>
 Specifies the media size as a collection.
-Both the "media-size" and "media-size-name" members can be used to specify the size.
-For example, both "media-col={media-size={x-dimension=21000 y-dimension=29700}}" and "media-col={media-size-name=iso_a4_210x297mm}" specify ISO A4 media.
+Both the &quot;media-size&quot; and &quot;media-size-name&quot; members can be used to specify the size.
+For example, both &quot;media-col={media-size={x-dimension=21000 y-dimension=29700}}&quot; and &quot;media-col={media-size-name=iso_a4_210x297mm}&quot; specify ISO A4 media.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>page-ranges</strong><br>
 Selects a single range of pages to print.
-For example, the value "5-12" selects pages 5 through 12.
+For example, the value &quot;5-12&quot; selects pages 5 through 12.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>print-color-mode</strong><br>
-Specifies the color mode as "auto" (automatic), "monochrome" (grayscale), or "color".
+Specifies the color mode as &quot;auto&quot; (automatic), &quot;monochrome&quot; (grayscale), or &quot;color&quot;.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>print-quality</strong><br>
 Specifies the print quality with value 3 (draft), 4 (normal), or 5 (high/best).
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>print-scaling</strong><br>
 Specifies the scaling to use when converting image files.
-The values "auto", "fit", and "fill" are supported.
+The values &quot;auto&quot;, &quot;fit&quot;, and &quot;fill&quot; are supported.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>printer-resolution</strong><br>
 Specifies the print resolution using one of the supported print resolutions.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>sides</strong><br>
-Specifies whether to do 1-sided printing ("one-sided") or 2-sided printing ("two-sided-long-edge" for portrait and "two-sided-short-edge" for landscape).
+Specifies whether to do 1-sided printing (&quot;one-sided&quot;) or 2-sided printing (&quot;two-sided-long-edge&quot; for portrait and &quot;two-sided-short-edge&quot; for landscape).
 </p>
     <h2 id="ipptransform-1.diagnostics">Diagnostics</h2>
 <p><strong>ipptransform</strong>
 sends all messages to the standard error.
-Each message is prefixed with "ERROR", "INFO", or "DEBUG" depending on the level of verbosity.
+Each message is prefixed with &quot;ERROR&quot;, &quot;INFO&quot;, or &quot;DEBUG&quot; depending on the level of verbosity.
 </p>
     <h2 id="ipptransform-1.exit-status">Exit Status</h2>
 <p>The
@@ -219,12 +222,12 @@ Specifies the output device as a URI.
 Specifies the title of the input file.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>IPP_xxx</strong><br>
-Specifies the value of the "xxx" Job Template attribute, where "xxx" is converted to uppercase.
-For example, the "media" Job Template attribute is stored as the "IPP_MEDIA" environment variable.
+Specifies the value of the &quot;xxx&quot; Job Template attribute, where &quot;xxx&quot; is converted to uppercase.
+For example, the &quot;media&quot; Job Template attribute is stored as the &quot;IPP_MEDIA&quot; environment variable.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>IPP_xxx_DEFAULT</strong><br>
-Specifies the default value of the corresponding "xxx-default" Printer Description attribute, where "xxx" is converted to uppercase.
-For example, the "media-default" Printer Description attribute is stored as the "IPP_MEDIA_DEFAULT" environment variable.
+Specifies the default value of the corresponding &quot;xxx-default&quot; Printer Description attribute, where &quot;xxx&quot; is converted to uppercase.
+For example, the &quot;media-default&quot; Printer Description attribute is stored as the &quot;IPP_MEDIA_DEFAULT&quot; environment variable.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>IPP_PWG_RASTER_DOCUMENT_RESOLUTION_SUPPORTED</strong><br>
 Lists the supported output resolutions.
@@ -243,7 +246,7 @@ The default is 16MB.
 Specifies the MIME media type of the output file.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>SERVER_LOGLEVEL</strong><br>
-Specifies the log level (verbosity) as "error", "info", or "debug".
+Specifies the log level (verbosity) as &quot;error&quot;, &quot;info&quot;, or &quot;debug&quot;.
 </p>
     <h2 id="ipptransform-1.examples">Examples</h2>
 <p>Print a PDF file to a PCL printer at 10.0.1.42:
@@ -265,7 +268,7 @@ Specifies the log level (verbosity) as "error", "info", or "debug".
         filename.jpg >filename.ras
 </pre>
     <h2 id="ipptransform-1.see-also">See Also</h2>
-<p><strong>ipptool</strong>(1),
+<a href="ipptool.html"><p><strong>ipptool</strong>(1),</a>
 
 </p>
     <h2 id="ipptransform-1.copyright">Copyright</h2>

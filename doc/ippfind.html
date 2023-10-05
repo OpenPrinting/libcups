@@ -7,6 +7,9 @@ body {
   font-size: 16pt;
   margin: 54pt 36pt;
 }
+.center {
+  text-align: center;
+}
 code, kbd, pre, tt {
   font-family: monospace;
 }
@@ -60,8 +63,8 @@ table.figure tbody td {
   border-bottom: none;
 }
 --></style>
-    <meta name="creator" content="mantohtml v2022.1005">
-    <title>Documentation</title>
+    <meta name="creator" content="mantohtml v2.0.2">
+    <title>ippfind(1)</title>
   </head>
   <body>
     <h1 id="ippfind-1">ippfind(1)</h1>
@@ -139,7 +142,7 @@ True is the hostname matches the given regular expression.
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-l</strong><br>
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>--ls</strong><br>
-Lists attributes returned by Get-Printer-Attributes for IPP printers and traditional <em>find</em> "-ls" output for HTTP URLs.
+Lists attributes returned by Get-Printer-Attributes for IPP printers and traditional <em>find</em> &quot;-ls&quot; output for HTTP URLs.
 The result is true if the URI is accessible, false otherwise.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>--local</strong><br>
@@ -205,7 +208,7 @@ True if the URI matches the given regular expression.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>--exec </strong><em>utility </em>[ <em>argument </em>... ] <strong>;</strong><br>
 Executes the specified program if the current result is true.
-"{foo}" arguments are replaced with the corresponding value - see SUBSTITUTIONS below.
+&quot;{foo}&quot; arguments are replaced with the corresponding value - see SUBSTITUTIONS below.
 </p>
     <p>Expressions may also contain modifiers:
 </p>
@@ -226,30 +229,30 @@ Logical AND of expressions.
 Logical OR of expressions.
 </p>
     <h3 id="ippfind-1.description.substitutions">Substitutions</h3>
-<p>The substitutions for "{foo}" in <em>-e</em> and <em>--exec</em> are:
+<p>The substitutions for &quot;{foo}&quot; in <em>-e</em> and <em>--exec</em> are:
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>{service_domain}</strong><br>
-Domain name, e.g., "example.com.", "local.", etc.
+Domain name, e.g., &quot;example.com.&quot;, &quot;local.&quot;, etc.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>{service_hostname}</strong><br>
-Fully-qualified domain name, e.g., "printer.example.com.", "printer.local.", etc.
+Fully-qualified domain name, e.g., &quot;printer.example.com.&quot;, &quot;printer.local.&quot;, etc.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>{service_name}</strong><br>
-Service instance name, e.g., "My Fine Printer".
+Service instance name, e.g., &quot;My Fine Printer&quot;.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>{service_port}</strong><br>
 Port number for server, typically 631 for IPP and 80 for HTTP.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>{service_regtype}</strong><br>
-DNS-SD registration type, e.g., "_ipp._tcp", "_http._tcp", etc.
+DNS-SD registration type, e.g., &quot;_ipp._tcp&quot;, &quot;_http._tcp&quot;, etc.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>{service_scheme}</strong><br>
-URI scheme for DNS-SD registration type, e.g., "ipp", "http", etc.
+URI scheme for DNS-SD registration type, e.g., &quot;ipp&quot;, &quot;http&quot;, etc.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>{}</strong><br>
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>{service_uri}</strong><br>
-URI for service, e.g., "ipp://printer.local./ipp/print", "<a href="http://printer.local./&quot;">http://printer.local./&quot;</a>, etc.
+URI for service, e.g., &quot;ipp://printer.local./ipp/print&quot;, &quot;<a href="http://printer.local./&quot;">http://printer.local./&quot;</a>, etc.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>{txt_</strong><em>key</em><strong>}</strong><br>
 Value of TXT record <em>key</em> (lowercase).
@@ -276,7 +279,7 @@ The default timeout is 1 second.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-V </strong><em>version</em><br>
 Specifies the IPP version when listing.
-Supported values are "1.1", "2.0", "2.1", and "2.2".
+Supported values are &quot;1.1&quot;, &quot;2.0&quot;, &quot;2.1&quot;, and &quot;2.2&quot;.
 </p>
     <h2 id="ippfind-1.exit-status">Exit Status</h2>
 <p><strong>ippfind</strong> returns 0 if the result for all processed expressions is true, 1 if the result of any processed expression is false, 2 if browsing or any query or resolution failed, 3 if an undefined option or invalid expression was specified, and 4 if it ran out of memory.
@@ -285,25 +288,25 @@ Supported values are "1.1", "2.0", "2.1", and "2.2".
 <p>When executing a program, <strong>ippfind</strong> sets the following environment variables for the matching service registration:
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>IPPFIND_SERVICE_DOMAIN</strong><br>
-Domain name, e.g., "example.com.", "local.", etc.
+Domain name, e.g., &quot;example.com.&quot;, &quot;local.&quot;, etc.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>IPPFIND_SERVICE_HOSTNAME</strong><br>
-Fully-qualified domain name, e.g., "printer.example.com.", "printer.local.", etc.
+Fully-qualified domain name, e.g., &quot;printer.example.com.&quot;, &quot;printer.local.&quot;, etc.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>IPPFIND_SERVICE_NAME</strong><br>
-Service instance name, e.g., "My Fine Printer".
+Service instance name, e.g., &quot;My Fine Printer&quot;.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>IPPFIND_SERVICE_PORT</strong><br>
 Port number for server, typically 631 for IPP and 80 for HTTP.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>IPPFIND_SERVICE_REGTYPE</strong><br>
-DNS-SD registration type, e.g., "_ipp._tcp", "_http._tcp", etc.
+DNS-SD registration type, e.g., &quot;_ipp._tcp&quot;, &quot;_http._tcp&quot;, etc.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>IPPFIND_SERVICE_SCHEME</strong><br>
-URI scheme for DNS-SD registration type, e.g., "ipp", "http", etc.
+URI scheme for DNS-SD registration type, e.g., &quot;ipp&quot;, &quot;http&quot;, etc.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>IPPFIND_SERVICE_URI</strong><br>
-URI for service, e.g., "ipp://printer.local./ipp/print", "<a href="http://printer.local./&quot;">http://printer.local./&quot;</a>, etc.
+URI for service, e.g., &quot;ipp://printer.local./ipp/print&quot;, &quot;<a href="http://printer.local./&quot;">http://printer.local./&quot;</a>, etc.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>IPPFIND_TXT_</strong><em>KEY</em><br>
 Values of TXT record <em>KEY</em> (uppercase).
@@ -322,7 +325,7 @@ Values of TXT record <em>KEY</em> (uppercase).
       -f onepage-letter.ps '{}' print-job.test \;
 </pre>
     <h2 id="ippfind-1.see-also">See Also</h2>
-<p><strong>ipptool</strong>(1)
+<a href="ipptool.html"><p><strong>ipptool</strong>(1)</a>
 
 </p>
     <h2 id="ippfind-1.copyright">Copyright</h2>
