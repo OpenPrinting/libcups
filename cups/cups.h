@@ -196,33 +196,34 @@ typedef unsigned cups_media_flags_t;	// Combined flags for @link cupsGetDestMedi
 
 enum cups_ptype_e			// Printer type/capability flags
 {
-  CUPS_PRINTER_LOCAL = 0x0000,			// Local printer or class
-  CUPS_PRINTER_CLASS = 0x0001,			// Printer class
-  CUPS_PRINTER_REMOTE = 0x0002,			// Remote printer or class
-  CUPS_PRINTER_BW = 0x0004,			// Can do B&W printing
-  CUPS_PRINTER_COLOR = 0x0008,			// Can do color printing
-  CUPS_PRINTER_DUPLEX = 0x0010,			// Can do two-sided printing
-  CUPS_PRINTER_STAPLE = 0x0020,			// Can staple output
-  CUPS_PRINTER_COPIES = 0x0040,			// Can do copies in hardware
-  CUPS_PRINTER_COLLATE = 0x0080,		// Can quickly collate copies
-  CUPS_PRINTER_PUNCH = 0x0100,			// Can punch output
-  CUPS_PRINTER_COVER = 0x0200,			// Can cover output
-  CUPS_PRINTER_BIND = 0x0400,			// Can bind output
-  CUPS_PRINTER_SORT = 0x0800,			// Can sort output
-  CUPS_PRINTER_SMALL = 0x1000,			// Can print on Letter/Legal/A4-size media
-  CUPS_PRINTER_MEDIUM = 0x2000,			// Can print on Tabloid/B/C/A3/A2-size media
-  CUPS_PRINTER_LARGE = 0x4000,			// Can print on D/E/A1/A0-size media
-  CUPS_PRINTER_VARIABLE = 0x8000,		// Can print on rolls and custom-size media
-  CUPS_PRINTER_DEFAULT = 0x20000,		// Default printer on network
-  CUPS_PRINTER_FAX = 0x40000,			// Fax queue
-  CUPS_PRINTER_REJECTING = 0x80000,		// Printer is rejecting jobs
-  CUPS_PRINTER_NOT_SHARED = 0x200000,		// Printer is not shared
-  CUPS_PRINTER_AUTHENTICATED = 0x400000,	// Printer requires authentication
-  CUPS_PRINTER_COMMANDS = 0x800000,		// Printer supports maintenance commands
-  CUPS_PRINTER_DISCOVERED = 0x1000000,		// Printer was discovered
-  CUPS_PRINTER_SCANNER = 0x2000000,		// Scanner-only device
-  CUPS_PRINTER_MFP = 0x4000000,			// Printer with scanning capabilities
-  CUPS_PRINTER_OPTIONS = 0x6fffc		// ~(CLASS | REMOTE | IMPLICIT | DEFAULT | FAX | REJECTING | DELETE | NOT_SHARED | AUTHENTICATED | COMMANDS | DISCOVERED) @private@
+  CUPS_PTYPE_LOCAL = 0x0000,			// Local printer or class
+  CUPS_PTYPE_CLASS = 0x0001,			// Printer class
+  CUPS_PTYPE_REMOTE = 0x0002,			// Remote printer or class
+  CUPS_PTYPE_BW = 0x0004,			// Can do B&W printing
+  CUPS_PTYPE_COLOR = 0x0008,			// Can do color printing
+  CUPS_PTYPE_DUPLEX = 0x0010,			// Can do two-sided printing
+  CUPS_PTYPE_STAPLE = 0x0020,			// Can staple output
+  CUPS_PTYPE_COPIES = 0x0040,			// Can do copies in hardware
+  CUPS_PTYPE_COLLATE = 0x0080,			// Can quickly collate copies
+  CUPS_PTYPE_PUNCH = 0x0100,			// Can punch output
+  CUPS_PTYPE_COVER = 0x0200,			// Can cover output
+  CUPS_PTYPE_BIND = 0x0400,			// Can bind output
+  CUPS_PTYPE_SORT = 0x0800,			// Can sort output
+  CUPS_PTYPE_SMALL = 0x1000,			// Can print on Letter/Legal/A4-size media
+  CUPS_PTYPE_MEDIUM = 0x2000,			// Can print on Tabloid/B/C/A3/A2-size media
+  CUPS_PTYPE_LARGE = 0x4000,			// Can print on D/E/A1/A0-size media
+  CUPS_PTYPE_VARIABLE = 0x8000,			// Can print on rolls and custom-size media
+  CUPS_PTYPE_DEFAULT = 0x20000,			// Default printer on network
+  CUPS_PTYPE_FAX = 0x40000,			// Fax queue
+  CUPS_PTYPE_REJECTING = 0x80000,		// Printer is rejecting jobs
+  CUPS_PTYPE_NOT_SHARED = 0x200000,		// Printer is not shared
+  CUPS_PTYPE_AUTHENTICATED = 0x400000,		// Printer requires authentication
+  CUPS_PTYPE_COMMANDS = 0x800000,		// Printer supports maintenance commands
+  CUPS_PTYPE_DISCOVERED = 0x1000000,		// Printer was discovered
+  CUPS_PTYPE_SCANNER = 0x2000000,		// Scanner-only device
+  CUPS_PTYPE_MFP = 0x4000000,			// Printer with scanning capabilities
+  CUPS_PTYPE_FOLD = 0x10000000,			// Can fold output
+  CUPS_PTYPE_OPTIONS = 0x6fffc			// ~(CLASS | REMOTE | IMPLICIT | DEFAULT | FAX | REJECTING | DELETE | NOT_SHARED | AUTHENTICATED | COMMANDS | DISCOVERED) @private@
 };
 typedef unsigned cups_ptype_t;		// Combined printer type/capability flags
 
