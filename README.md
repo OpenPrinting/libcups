@@ -17,8 +17,8 @@ a 100% driverless printing system for Unix®-life operating systems.
 
 This version of the CUPS library removes all of the deprecated and obsolete APIs
 from CUPS 2.x and earlier and is *not* binary compatible with older releases.
-See the file `MIGRATING.md` for a description of the changes and how to migrate
-your code to the new library.
+See the file `doc/cupspm.html` for a description of the changes and how to
+migrate your code to the new library.
 
 The CUPS library is licensed under the Apache License Version 2.0 with an
 exception to allow linking against GNU GPL2-only software.  See the files
@@ -37,8 +37,6 @@ the CUPS sources:
 - `DEVELOPING.md`: Guidelines for developing code for the CUPS project.
 - `INSTALL.md`: Instructions for building and installing the CUPS library.
 - `LICENSE`: The CUPS license agreement (Apache 2.0).
-- `MIGRATING.md`: Guidance on migrating CUPS 2.x and earlier code to the new
-  CUPS library.
 - `NOTICE`: Copyright notices and exceptions to the CUPS license agreement.
 - `README.md`: This file.
 

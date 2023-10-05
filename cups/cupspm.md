@@ -155,31 +155,32 @@ The "type" and "mask" arguments are bitfields that allow the caller to filter
 the destinations based on categories and/or capabilities.  The destination's
 "printer-type" value is masked by the "mask" value and compared to the "type"
 value when filtering.  For example, to only enumerate destinations that are
-hosted on the local system, pass `CUPS_PRINTER_LOCAL` for the "type" argument
-and `CUPS_PRINTER_DISCOVERED` for the "mask" argument.  The following constants
+hosted on the local system, pass `CUPS_PTYPE_LOCAL` for the "type" argument
+and `CUPS_PTYPE_DISCOVERED` for the "mask" argument.  The following constants
 can be used for filtering:
 
-- `CUPS_PRINTER_CLASS`: A collection of destinations.
-- `CUPS_PRINTER_FAX`: A facsimile device.
-- `CUPS_PRINTER_LOCAL`: A local printer or class.  This constant has the value 0
+- `CUPS_PTYPE_CLASS`: A collection of destinations.
+- `CUPS_PTYPE_FAX`: A facsimile device.
+- `CUPS_PTYPE_LOCAL`: A local printer or class.  This constant has the value 0
   (no bits set) and is only used for the "type" argument and is paired with the
-  `CUPS_PRINTER_REMOTE` or `CUPS_PRINTER_DISCOVERED` constant passed in the
+  `CUPS_PTYPE_REMOTE` or `CUPS_PTYPE_DISCOVERED` constant passed in the
   "mask" argument.
-- `CUPS_PRINTER_REMOTE`: A remote (shared) printer or class.
-- `CUPS_PRINTER_DISCOVERED`: An available network printer or class.
-- `CUPS_PRINTER_BW`: Can do B&W printing.
-- `CUPS_PRINTER_COLOR`: Can do color printing.
-- `CUPS_PRINTER_DUPLEX`: Can do two-sided printing.
-- `CUPS_PRINTER_STAPLE`: Can staple output.
-- `CUPS_PRINTER_COLLATE`: Can quickly collate copies.
-- `CUPS_PRINTER_PUNCH`: Can punch output.
-- `CUPS_PRINTER_COVER`: Can cover output.
-- `CUPS_PRINTER_BIND`: Can bind output.
-- `CUPS_PRINTER_SORT`: Can sort output (mailboxes, etc.)
-- `CUPS_PRINTER_SMALL`: Can print on Letter/Legal/A4-size media.
-- `CUPS_PRINTER_MEDIUM`: Can print on Tabloid/B/C/A3/A2-size media.
-- `CUPS_PRINTER_LARGE`: Can print on D/E/A1/A0-size media.
-- `CUPS_PRINTER_VARIABLE`: Can print on rolls and custom-size media.
+- `CUPS_PTYPE_REMOTE`: A remote (shared) printer or class.
+- `CUPS_PTYPE_DISCOVERED`: An available network printer or class.
+- `CUPS_PTYPE_BW`: Can do B&W printing.
+- `CUPS_PTYPE_COLOR`: Can do color printing.
+- `CUPS_PTYPE_DUPLEX`: Can do two-sided printing.
+- `CUPS_PTYPE_STAPLE`: Can staple output.
+- `CUPS_PTYPE_COLLATE`: Can quickly collate copies.
+- `CUPS_PTYPE_PUNCH`: Can punch output.
+- `CUPS_PTYPE_COVER`: Can cover output.
+- `CUPS_PTYPE_BIND`: Can bind output.
+- `CUPS_PTYPE_FOLD`: Can fold output.
+- `CUPS_PTYPE_SORT`: Can sort output (mailboxes, etc.)
+- `CUPS_PTYPE_SMALL`: Can print on Letter/Legal/A4-size media.
+- `CUPS_PTYPE_MEDIUM`: Can print on Tabloid/B/C/A3/A2-size media.
+- `CUPS_PTYPE_LARGE`: Can print on D/E/A1/A0-size media.
+- `CUPS_PTYPE_VARIABLE`: Can print on rolls and custom-size media.
 
 The "cb" argument specifies a function to call for every destination that is
 found:
@@ -198,7 +199,7 @@ can have any of the following constant (bit) values set:
 - `CUPS_DEST_FLAGS_REMOVED`: The destination has gone away and should be removed
   from the list of destinations a user can select.
 - `CUPS_DEST_FLAGS_ERROR`: An error occurred.  The reason for the error can be
-  found by calling the [`cupsLastError`](@@) and/or [`cupsLastErrorString`](@@)
+  found by calling the [`cupsGetError`](@@) and/or [`cupsGetErrorString`](@@)
   functions.
 
 The callback function returns `false` to stop enumeration or `true` to continue.
@@ -280,7 +281,7 @@ destination attributes:
 
 - "auth-info-required": The type of authentication required for printing to this
   destination: "none", "username,password", "domain,username,password", or
-  "negotiate" (Kerberos).
+  "oauth".
 - "printer-info": The human-readable description of the destination such as "My
   Laser Printer".
 - "printer-is-accepting-jobs": "true" if the destination is accepting new jobs,
@@ -518,10 +519,10 @@ else
 
 CUPS provides functions for querying the dimensions, margins, color, source
 (tray/roll), and type for each of the supported media size options.  The
-`cups_size_t` structure is used to describe media:
+`cups_media_t` structure is used to describe media:
 
 ```c
-typedef struct cups_size_s
+typedef struct cups_media_s
 {
   char media[128];
   char color[128];
@@ -529,7 +530,7 @@ typedef struct cups_size_s
   char type[128];
   int width, length;
   int bottom, left, right, top;
-} cups_size_t;
+} cups_media_t;
 ```
 
 The "media" member specifies a PWG self-describing media size name such as
@@ -554,13 +555,13 @@ bool
 cupsGetDestMediaByName(http_t *http, cups_dest_t *dest,
                        cups_dinfo_t *dinfo,
                        const char *media,
-                       unsigned flags, cups_size_t *size);
+                       unsigned flags, cups_media_t *size);
 
 bool
 cupsGetDestMediaBySize(http_t *http, cups_dest_t *dest,
                        cups_dinfo_t *dinfo,
                        int width, int length,
-                       unsigned flags, cups_size_t *size);
+                       unsigned flags, cups_media_t *size);
 ```
 
 The "media", "width", and "length" arguments specify the size to lookup.  The
@@ -582,7 +583,7 @@ For example, the following code prints the margins for two-sided printing on US
 Letter media:
 
 ```c
-cups_size_t size;
+cups_media_t size;
 
 if (cupsGetDestMediaByName(CUPS_HTTP_DEFAULT, dest, info,
                            CUPS_MEDIA_LETTER,
@@ -604,8 +605,8 @@ the [`cupsGetDestMediaByIndex`](@@) and [`cupsGetDestMediaCount`](@@) functions:
 ```c
 bool
 cupsGetDestMediaByIndex(http_t *http, cups_dest_t *dest,
-                        cups_dinfo_t *dinfo, int n,
-                        unsigned flags, cups_size_t *size);
+                        cups_dinfo_t *dinfo, size_t n,
+                        unsigned flags, cups_media_t *size);
 
 size_t
 cupsGetDestMediaCount(http_t *http, cups_dest_t *dest,
@@ -616,7 +617,7 @@ For example, the following code prints the list of ready media and corresponding
 margins:
 
 ```c
-cups_size_t size;
+cups_media_t media;
 size_t i;
 size_t count = cupsGetDestMediaCount(CUPS_HTTP_DEFAULT,
                                      dest, info,
@@ -628,13 +629,16 @@ for (i = 0; i < count; i ++)
                               i, CUPS_MEDIA_FLAGS_READY,
                               &size))
   {
-    printf("%s:\n", size.name);
-    printf("   Width: %.2fin\n", size.width / 2540.0);
-    printf("  Length: %.2fin\n", size.length / 2540.0);
-    printf("  Bottom: %.2fin\n", size.bottom / 2540.0);
-    printf("    Left: %.2fin\n", size.left / 2540.0);
-    printf("   Right: %.2fin\n", size.right / 2540.0);
-    printf("     Top: %.2fin\n", size.top / 2540.0);
+    printf("%s:\n", media.name);
+    printf("    Width: %.2fin\n", media.width / 2540.0);
+    printf("   Length: %.2fin\n", media.length / 2540.0);
+    printf("   Bottom: %.2fin\n", media.bottom / 2540.0);
+    printf("     Left: %.2fin\n", media.left / 2540.0);
+    printf("    Right: %.2fin\n", media.right / 2540.0);
+    printf("      Top: %.2fin\n", media.top / 2540.0);
+    printf("Tray/Roll: %s\n", media.source);
+    printf("    Color: %s\n", media.color);
+    printf("     Type: %s\n", media.type);
   }
 }
 ```
@@ -646,7 +650,7 @@ size:
 bool
 cupsGetDestMediaDefault(http_t *http, cups_dest_t *dest,
                         cups_dinfo_t *dinfo, unsigned flags,
-                        cups_size_t *size);
+                        cups_media_t *size);
 ```
 
 
@@ -660,7 +664,7 @@ user's current locale for options and values: [`cupsLocalizeDestMedia`](@@),
 const char *
 cupsLocalizeDestMedia(http_t *http, cups_dest_t *dest,
                       cups_dinfo_t *info, unsigned flags,
-                      cups_size_t *size);
+                      cups_media_t *size);
 
 const char *
 cupsLocalizeDestOption(http_t *http, cups_dest_t *dest,
@@ -717,7 +721,7 @@ if (cupsCreateDestJob(CUPS_HTTP_DEFAULT, dest, info,
   printf("Created job: %d\n", job_id);
 else
   printf("Unable to create job: %s\n",
-         cupsLastErrorString());
+         cupsGetErrorString());
 ```
 
 Once the job is created, you submit documents for the job using the
@@ -778,7 +782,7 @@ if (cupsStartDestDocument(CUPS_HTTP_DEFAULT, dest, info,
     puts("Document send succeeded.");
   else
     printf("Document send failed: %s\n",
-           cupsLastErrorString());
+           cupsGetErrorString());
 }
 
 fclose(fp);
@@ -974,23 +978,23 @@ If a valid IPP response is received, it is stored in a new IPP message (`ipp_t`)
 and returned to the caller.  Otherwise `NULL` is returned.
 
 The status from the most recent request can be queried using the
-[`cupsLastError`](@@) function, for example:
+[`cupsGetError`](@@) function, for example:
 
 ```c
-if (cupsLastError() >= IPP_STATUS_ERROR_BAD_REQUEST)
+if (cupsGetError() >= IPP_STATUS_ERROR_BAD_REQUEST)
 {
   /* request failed */
 }
 ```
 
 A human-readable error message is also available using the
-[`cupsLastErrorString`](@@) function:
+[`cupsGetErrorString`](@@) function:
 
 ```c
-if (cupsLastError() >= IPP_STATUS_ERROR_BAD_REQUEST)
+if (cupsGetError() >= IPP_STATUS_ERROR_BAD_REQUEST)
 {
   /* request failed */
-  printf("Request failed: %s\n", cupsLastErrorString());
+  printf("Request failed: %s\n", cupsGetErrorString());
 }
 ```
 
@@ -1105,6 +1109,116 @@ The "cb_data" argument provides the user data pointer from the
 [`cupsSetPasswordCB`](@@) call.
 
 
+# IPP Data File API
+
+The IPP data file API provides functions to read and write IPP attributes and
+other commands or data using a common base format that supports tools such as
+`ipptool` and `ippeveprinter`.
+
+
+## Creating an IPP Data File
+
+The [`ippFileNew`](@@) function creates a new IPP data file (`ipp_file_t`)
+object:
+
+```c
+ipp_file_t *parent = NULL;
+void *data;
+ipp_file_t *file = ippFileNew(parent, attr_cb, error_cb, data);
+```
+
+The "parent" IPP data file pointer is typically used to support nested files and
+is normally `NULL` for a new file.  The "data" argument supplies your
+application data to the callbacks.  The "attr_cb" callback function is used to
+filter IPP attributes; return `true` to include the attribute and `false` to ignore it:
+
+```c
+bool
+attr_cb(ipp_file_t *file, void *cb_data, const char *name)
+{
+  ... determine whether to use an attribute named "name" ...
+}
+```
+
+The "error_cb" callback function is used to record/report errors when reading
+the file:
+
+```c
+bool
+error_cb(ipp_file_t *file, void *cb_data, const char *error)
+{
+  ... display/record error and return `true` to continue or `false` to stop ...
+}
+```
+
+
+## Reading a Data File
+
+The [`ippFileOpen`](@@) function opens the specified data file and
+[`ippFileRead`](@@) reads from it:
+
+```c
+if (ippFileOpen(file, "somefile", "r"))
+{
+  // Opened successfully, now read it...
+  ippFileRead(file, token_cb, /*with_groups*/false);
+  ippFileClose(file);
+}
+```
+
+The token callback function passed to `ippFileRead` handles custom directives in
+your data file:
+
+```c
+bool
+token_cb(ipp_file_t *file, void *cb_data, const char *token)
+{
+  ... handle token, return `true` to continue or `false` to stop ...
+}
+```
+
+The "token" parameter contains the token to be processed.  The callback can use the [`ippFileReadToken`](@@) function to read additional tokens from the file
+and the [`ippFileExpandToken`](@@) function to expand any variables in the token
+string.  Return `false` to stop reading the file and `true` to continue.  The
+default `NULL` callback reports an unknown token error through the error
+callback end returns `false`.
+
+Once read, you call the [`ippFileGetAttributes`](@@) function to get the IPP
+attributes from the file.
+
+
+## Variables
+
+Each IPP data file object has associated variables that can be used when reading
+the file.  The default set of variables is:
+
+- "date-current": Current date in ISO-8601 format
+- "date-start": Start date (when file opened) in ISO-8601 format
+- "filename": Associated data/document filename, if any
+- "filetype": MIME media type of associated data/document filename, if any
+- "hostname": Hostname or IP address from the "uri" value, if any
+- "port": Port number from the "uri" value, if any
+- "resource": Resource path from the "uri" value, if any
+- "scheme": URI scheme from the "uri" value, if any
+- "uri": URI, if any
+- "uriuser": Username from the "uri" value, if any
+- "uripassword": Password from the "uri" value, if any
+- "user": Current login user
+
+The [`ippFileGetVar`](@@), [`ippFileSetVar`](@@), and [`ippFileSetVarf`](@@)
+functions get and set file variables, respectively.
+
+
+## Writing IPP Data Files
+
+As when reading an IPP data file, the [`ippFileNew`](@@) function creates a new
+file object, [`ippFileOpen`](@@) opens the file, and [`ippFileClose`](@@) closes
+the file.  However, you call [`ippFileWriteAttributes`](@@) to write the
+attributes in an IPP message (`ipp_t`), [`ippFileWriteComment`](@@) to write a
+comment in the file, and [`ippWriteToken`](@@) or [`ippWriteTokenf`](@@) to
+write a token or value to the file.
+
+
 # Migrating Code from CUPS 2.x and Earlier
 
 The CUPS 3.x library removes all of the deprecated and obsolete APIs from CUPS
@@ -1140,14 +1254,30 @@ The following general changes have been made to the CUPS API:
   data instead of a `cups_array_t *` of raw data.
 
 
-## Removed Functions
+## Removed Functions and Types
 
 The following CUPS 2.x API functions have been removed from the CUPS library:
 
 - Old class/printer functions: `cupsGetClasses` and `cupsGetPrinters`.
-- HTTP functions: `httpAddCredential`, `httpCheck`, `httpCompareCredentials`,
-  `httpConnect2`, `httpConnectEncrypt`, `httpCreateCredentials`,
-  `httpDecode64_2`, `httpEncode64_2`, and `httpFreeCredentials`.
+- Accessor functions: `cupsEncryption`, `cupsLastError`, `cupsLastErrorString`,
+  `cupsServer`, `cupsUser`, and `cupsUserAgent`.
+- Array functions: `cupsArrayCount`, `cupsArrayFirst`, `cupsArrayIndex`,
+  `cupsArrayLast`, `cupsArrayNew2`, `cupsArrayNew3`, `cupsArrayNext`, and
+  `cupsArrayPrev`.
+- File functions: `cupsFileCompression`, `cupsTempFd`, `cupsTempFile`, and
+  `cupsTempFile2`.
+- HTTP functions: `httpAddCredential`, `httpAddrAny`, `httpAddrEqual`,
+  `httpAddrFamily`, `httpAddrLength`, `httpAddrLocalhost`, `httpAddrPort`,
+  `httpAddrString`, `httpBlocking`, `httpCheck`, `httpCompareCredentials`,
+  `httpConnectEncrypt`, `httpCopyCredentials`, `httpCreateCredentials`,
+  `httpCredentialsAreValidForName`, `httpCredentialsGetExpiration`,
+  `httpCredentialsGetTrust`, `httpCredentialsString`,  `httpDecode64_2`,
+  `httpDelete`, `httpEncode64_2`, `httpEncryption`, `httpError`,
+  `httpFreeCredentials`, `httpGet`, `httpLoadCredentials`, `httpOptions`,
+  `httpPost`, `httpPut`, `httpSaveCredentials`, `httpStatus`, and `httpTrace`.
+- IPP functions: `ippFirstAttribute`, `ippLength`, `ippNextAttribute`, and
+  `ippPort`.
+- Localization functions: `cupsNotifySubject` and `cupsNotifyText`.
 - PPD file functions: `ppdClose`, `ppdCollect`, `ppdCollect2`, `ppdConflicts`,
   `ppdEmit`, `ppdEmitAfterOrder`, `ppdEmitFd`, `ppdEmitJCL`, `ppdEmitJCLEnd`,
   `ppdEmitString`, `ppdErrorString`, `ppdFindAttr`, `ppdFindChoice`,
@@ -1161,13 +1291,19 @@ The following CUPS 2.x API functions have been removed from the CUPS library:
 - PPD helper functions: `cupsGetConflicts`, `cupsGetPPD`, `cupsGetPPD2`,
   `cupsGetPPD3`, `cupsGetServerPPD`, `cupsMarkOptions`,
   `cupsRasterInterpretPPD`, and `cupsResolveConflicts`.
-- Deprecated functions: `cupsTempFile`.
 - Non-destination print functions: `cupsCancelJob`, `cupsCancelJob2`,
   `cupsCreateJob`, `cupsCloseJob`, `cupsFinishDocument`, `cupsGetDefault`,
   `cupsGetDefault2`, `cupsPrintFile`, `cupsPrintFile2`, `cupsPrintFiles`,
   `cupsPrintFiles2`, and `cupsSendDocument`.
-- Array functions: `cupsArrayNew2` and `cupsArrayNew3`.
-- Raster functions: `cupsRasterReadHeader2` and `cupsRasterWriteHeader2`.
+- Raster functions: `cupsRasterInitPWGHeader`.
+
+Similarly, the following types have been removed from CUPS 3.0:
+
+- Array types: `cups_acopy_func_t`, `cups_afree_func_t`, and
+  `cups_array_func_t`.
+- IPP types: `ipp_copycb_t` and `ipp_iocb_t`.
+- Media types: `cups_size_t`.
+- Raster types: `cups_mode_t` and `cups_raster_iocb_t`.
 
 
 ## Renamed Functions and Types
@@ -1176,77 +1312,38 @@ The following functions have been renamed in CUPS 3.0:
 
 | Old CUPS 2.x Name                | New CUPS 3.0 Name                |
 |----------------------------------|----------------------------------|
-| `cupsArrayCount`                 | `cupsArrayGetCount`              |
-| `cupsArrayFirst`                 | `cupsArrayGetFirst`              |
-| `cupsArrayIndex`                 | `cupsArrayGetElement`            |
-| `cupsArrayLast`                  | `cupsArrayGetLast`               |
 | `cupsArrayNew3`                  | `cupsArrayNew`                   |
-| `cupsArrayNext`                  | `cupsArrayGetNext`               |
-| `cupsArrayPrev`                  | `cupsArrayGetPrev`               |
-| `cupsEncryption`                 | `cupsGetEncryption`              |
-| `cupsFileCompression`            | `cupsFileIsCompressed`           |
+| `cupsAddDestMediaOptions2`       | `cupsAddDestMediaOptions`        |
+| `cupsEncodeOptions2`             | `cupsEncodeOptions`              |
+| `cupsGetDefault2`                | `cupsGetDefault`                 |
+| `cupsGetDestMediaByIndex2`       | `cupsGetDestMediaByIndex`        |
+| `cupsGetDestMediaByName2`        | `cupsGetDestMediaByName`         |
+| `cupsGetDestMediaBySize2`        | `cupsGetDestMediaBySize`         |
+| `cupsGetDestMediaDefault2`       | `cupsGetDestMediaDefault`        |
 | `cupsGetDests2`                  | `cupsGetDests`                   |
+| `cupsGetJobs2`                   | `cupsGetJobs`                    |
 | `cupsGetPassword2`               | `cupsGetPassword`                |
 | `cupsLangGet`                    | `cupsLangFind`                   |
-| `cupsLastError`                  | `cupsGetError`                   |
-| `cupsLastErrorString`            | `cupsGetErrorString`             |
-| `cupsNotifySubject`              | `cupsLocalizeNotifySubject`      |
-| `cupsNotifyText`                 | `cupsLocalizeNotifyText`         |
-| `cupsRasterInitPWGHeader`        | `cupsRasterInitHeader`           |
+| `cupsLocalizeDestMedia2`         | `cupsLocalizeDestMedia`          |
 | `cupsRasterReadHeader2`          | `cupsRasterReadHeader`           |
 | `cupsRasterWriteHeader2`         | `cupsRasterWriteHeader`          |
-| `cupsServer`                     | `cupsGetServer`                  |
+| `cupsSetDests2`                  | `cupsSetDests`                   |
 | `cupsSetPasswordCB2`             | `cupsSetPasswordCB`              |
-| `cupsTempFile2`                  | `cupsTempFile`                   |
-| `cupsUser`                       | `cupsGetUser`                    |
-| `cupsUserAgent`                  | `cupsGetUserAgent`               |
-| `httpAddrAny`                    | `httpAddrIsAny`                  |
-| `httpAddrEqual`                  | `httpAddrIsEqual`                |
-| `httpAddrFamily`                 | `httpAddrGetFamily`              |
-| `httpAddrLength`                 | `httpAddrGetLength`              |
-| `httpAddrLocalhost`              | `httpAddrIsLocalhost`            |
-| `httpAddrPort`                   | `httpAddrGetPort`                |
-| `httpAddrString`                 | `httpAddrGetString`              |
-| `httpBlocking`                   | `httpSetBlocking`                |
+| `httpAddrConnect2`               | `httpAddrConnect2`               |
 | `httpConnect2`                   | `httpConnect`                    |
-| `httpCopyCredentials`            | `httpCopyPeerCredentials`        |
-| `httpCredentialsAreValidForName` | `cupsAreCredentialsValidForName` |
-| `httpCredentialsGetExpiration`   | `cupsGetCredentialsExpiration`   |
-| `httpCredentialsGetTrust`        | `cupsGetCredentialsTrust`        |
-| `httpCredentialsString`          | `cupsGetCredentialsInfo`         |
-| `httpDecode64_2`                 | `httpDecode64`                   |
-| `httpDelete`                     | `httpWriteRequest`               |
-| `httpEncode64_2`                 | `httpEncode64`                   |
-| `httpEncryption`                 | `httpSetEncryption`              |
-| `httpError`                      | `httpGetError`                   |
-| `httpGet`                        | `httpWriteRequest`               |
+| `httpDecode64_3`                 | `httpDecode64`                   |
+| `httpEncode64_3`                 | `httpEncode64`                   |
 | `httpGetDateString2`             | `httpGetDateString`              |
 | `httpGetLength2`                 | `httpGetLength`                  |
-| `httpLoadCredentials`            | `cupsLoadCredentials`            |
-| `httpOptions`                    | `httpWriteRequest`               |
-| `httpPost`                       | `httpWriteRequest`               |
-| `httpPut`                        | `httpWriteRequest`               |
+| `httpGetSubField2`               | `httpGetSubField`                |
+| `httpGets2`                      | `httpGets`                       |
 | `httpRead2`                      | `httpRead`                       |
 | `httpReconnect2`                 | `httpReconnect`                  |
-| `httpSaveCredentials`            | `cupsSaveCredentials`            |
-| `httpStatus`                     | `httpStatusString`               |
-| `httpTrace`                      | `httpWriteRequest`               |
 | `httpWrite2`                     | `httpWrite`                      |
-| `ippFirstAttribute`              | `ippGetFirstAttribute`           |
-| `ippLength`                      | `ippGetLength`                   |
-| `ippNextAttribute`               | `ippGetNextAttribute`            |
-| `ippPort`                        | `ippGetPort`                     |
 
 Similarly, the following types have been renamed in CUPS 3.0:
 
 | Old CUPS 2.x Name     | New CUPS 3.0 Name    |
 |-----------------------|----------------------|
-| `cups_acopy_func_t`   | `cups_acopy_cb_t`    |
-| `cups_afree_func_t`   | `cups_afree_cb_t`    |
-| `cups_array_func_t`   | `cups_array_cb_t`    |
-| `cups_mode_t`         | `cups_raster_mode_t` |
-| `cups_raster_iocb_t`  | `cups_raster_cb_t`   |
 | `cups_password_cb2_t` | `cups_password_cb_t` |
 | `cups_page_header2_t` | `cups_page_header_t` |
-| `ipp_copycb_t`        | `ipp_copy_cb_t`      |
-| `ipp_iocb_t`          | `ipp_io_cb_t`        |

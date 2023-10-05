@@ -271,10 +271,16 @@ span.string {
 <li><a href="#processing-the-ipp-response">Processing the IPP Response</a></li>
 <li><a href="#authentication">Authentication</a></li>
 </ul></li>
+<li><a href="#ipp-data-file-api">IPP Data File API</a><ul class="subcontents">
+<li><a href="#creating-an-ipp-data-file">Creating an IPP Data File</a></li>
+<li><a href="#reading-a-data-file">Reading a Data File</a></li>
+<li><a href="#variables">Variables</a></li>
+<li><a href="#writing-ipp-data-files">Writing IPP Data Files</a></li>
+</ul></li>
 <li><a href="#migrating-code-from-cups-2.x-and-earlier">Migrating Code from CUPS 2.x and Earlier</a><ul class="subcontents">
 <li><a href="#general-changes">General Changes</a></li>
 <li><a href="#specific-api-changes">Specific API Changes</a></li>
-<li><a href="#removed-functions">Removed Functions</a></li>
+<li><a href="#removed-functions-and-types">Removed Functions and Types</a></li>
 <li><a href="#renamed-functions-and-types">Renamed Functions and Types</a></li>
 </ul></li>
 <li><a href="#FUNCTIONS">Functions</a><ul class="subcontents">
@@ -325,14 +331,16 @@ span.string {
 <li><a href="#cupsCreateCredentials">cupsCreateCredentials</a></li>
 <li><a href="#cupsCreateCredentialsRequest">cupsCreateCredentialsRequest</a></li>
 <li><a href="#cupsCreateDestJob">cupsCreateDestJob</a></li>
+<li><a href="#cupsCreateTempFd">cupsCreateTempFd</a></li>
+<li><a href="#cupsCreateTempFile">cupsCreateTempFile</a></li>
 <li><a href="#cupsDNSSDAssembleFullName">cupsDNSSDAssembleFullName</a></li>
 <li><a href="#cupsDNSSDBrowseDelete">cupsDNSSDBrowseDelete</a></li>
 <li><a href="#cupsDNSSDBrowseGetContext">cupsDNSSDBrowseGetContext</a></li>
 <li><a href="#cupsDNSSDBrowseNew">cupsDNSSDBrowseNew</a></li>
+<li><a href="#cupsDNSSDCopyHostName">cupsDNSSDCopyHostName</a></li>
 <li><a href="#cupsDNSSDDecodeTXT">cupsDNSSDDecodeTXT</a></li>
 <li><a href="#cupsDNSSDDelete">cupsDNSSDDelete</a></li>
 <li><a href="#cupsDNSSDGetConfigChanges">cupsDNSSDGetConfigChanges</a></li>
-<li><a href="#cupsDNSSDGetHostName">cupsDNSSDGetHostName</a></li>
 <li><a href="#cupsDNSSDNew">cupsDNSSDNew</a></li>
 <li><a href="#cupsDNSSDQueryDelete">cupsDNSSDQueryDelete</a></li>
 <li><a href="#cupsDNSSDQueryGetContext">cupsDNSSDQueryGetContext</a></li>
@@ -502,7 +510,7 @@ span.string {
 <li><a href="#cupsRWLockWrite">cupsRWLockWrite</a></li>
 <li><a href="#cupsRWUnlock">cupsRWUnlock</a></li>
 <li><a href="#cupsRasterClose">cupsRasterClose</a></li>
-<li><a href="#cupsRasterErrorString">cupsRasterErrorString</a></li>
+<li><a href="#cupsRasterGetErrorString">cupsRasterGetErrorString</a></li>
 <li><a href="#cupsRasterInitHeader">cupsRasterInitHeader</a></li>
 <li><a href="#cupsRasterOpen">cupsRasterOpen</a></li>
 <li><a href="#cupsRasterOpenIO">cupsRasterOpenIO</a></li>
@@ -515,22 +523,18 @@ span.string {
 <li><a href="#cupsRemoveOption">cupsRemoveOption</a></li>
 <li><a href="#cupsSaveCredentials">cupsSaveCredentials</a></li>
 <li><a href="#cupsSendRequest">cupsSendRequest</a></li>
-<li><a href="#cupsSetClientCertCB">cupsSetClientCertCB</a></li>
-<li><a href="#cupsSetCredentials">cupsSetCredentials</a></li>
+<li><a href="#cupsSetClientCredentials">cupsSetClientCredentials</a></li>
 <li><a href="#cupsSetDefaultDest">cupsSetDefaultDest</a></li>
 <li><a href="#cupsSetDests">cupsSetDests</a></li>
 <li><a href="#cupsSetEncryption">cupsSetEncryption</a></li>
 <li><a href="#cupsSetOAuthCB">cupsSetOAuthCB</a></li>
 <li><a href="#cupsSetPasswordCB">cupsSetPasswordCB</a></li>
 <li><a href="#cupsSetServer">cupsSetServer</a></li>
-<li><a href="#cupsSetServerCertCB">cupsSetServerCertCB</a></li>
 <li><a href="#cupsSetServerCredentials">cupsSetServerCredentials</a></li>
 <li><a href="#cupsSetUser">cupsSetUser</a></li>
 <li><a href="#cupsSetUserAgent">cupsSetUserAgent</a></li>
 <li><a href="#cupsSignCredentialsRequest">cupsSignCredentialsRequest</a></li>
 <li><a href="#cupsStartDestDocument">cupsStartDestDocument</a></li>
-<li><a href="#cupsTempFd">cupsTempFd</a></li>
-<li><a href="#cupsTempFile">cupsTempFile</a></li>
 <li><a href="#cupsThreadCancel">cupsThreadCancel</a></li>
 <li><a href="#cupsThreadCreate">cupsThreadCreate</a></li>
 <li><a href="#cupsThreadDetach">cupsThreadDetach</a></li>
@@ -606,7 +610,6 @@ span.string {
 <li><a href="#httpSetAuthString">httpSetAuthString</a></li>
 <li><a href="#httpSetBlocking">httpSetBlocking</a></li>
 <li><a href="#httpSetCookie">httpSetCookie</a></li>
-<li><a href="#httpSetCredentials">httpSetCredentials</a></li>
 <li><a href="#httpSetDefaultField">httpSetDefaultField</a></li>
 <li><a href="#httpSetEncryption">httpSetEncryption</a></li>
 <li><a href="#httpSetExpect">httpSetExpect</a></li>
@@ -757,7 +760,6 @@ span.string {
 <li><a href="#cups_array_t">cups_array_t</a></li>
 <li><a href="#cups_bool_t">cups_bool_t</a></li>
 <li><a href="#cups_cert_san_cb_t">cups_cert_san_cb_t</a></li>
-<li><a href="#cups_client_cert_cb_t">cups_client_cert_cb_t</a></li>
 <li><a href="#cups_cond_t">cups_cond_t</a></li>
 <li><a href="#cups_credpurpose_t">cups_credpurpose_t</a></li>
 <li><a href="#cups_credtype_t">cups_credtype_t</a></li>
@@ -793,6 +795,7 @@ span.string {
 <li><a href="#cups_jwt_t">cups_jwt_t</a></li>
 <li><a href="#cups_lang_t">cups_lang_t</a></li>
 <li><a href="#cups_media_flags_t">cups_media_flags_t</a></li>
+<li><a href="#cups_media_t">cups_media_t</a></li>
 <li><a href="#cups_mediapos_t">cups_mediapos_t</a></li>
 <li><a href="#cups_mutex_t">cups_mutex_t</a></li>
 <li><a href="#cups_oauth_cb_t">cups_oauth_cb_t</a></li>
@@ -805,8 +808,6 @@ span.string {
 <li><a href="#cups_raster_mode_t">cups_raster_mode_t</a></li>
 <li><a href="#cups_raster_t">cups_raster_t</a></li>
 <li><a href="#cups_rwlock_t">cups_rwlock_t</a></li>
-<li><a href="#cups_server_cert_cb_t">cups_server_cert_cb_t</a></li>
-<li><a href="#cups_size_t">cups_size_t</a></li>
 <li><a href="#cups_thread_func_t">cups_thread_func_t</a></li>
 <li><a href="#cups_thread_key_t">cups_thread_key_t</a></li>
 <li><a href="#cups_thread_t">cups_thread_t</a></li>
@@ -851,9 +852,9 @@ span.string {
 <li><a href="#cups_dentry_s">cups_dentry_s</a></li>
 <li><a href="#cups_dest_s">cups_dest_s</a></li>
 <li><a href="#cups_job_s">cups_job_s</a></li>
+<li><a href="#cups_media_s">cups_media_s</a></li>
 <li><a href="#cups_option_s">cups_option_s</a></li>
 <li><a href="#cups_page_header_s">cups_page_header_s</a></li>
-<li><a href="#cups_size_s">cups_size_s</a></li>
 <li><a href="#http_addrlist_s">http_addrlist_s</a></li>
 <li><a href="#pwg_media_s">pwg_media_s</a></li>
 </ul></li>
@@ -976,43 +977,45 @@ cupsEnumDests(<span class="reserved">unsigned</span> flags, <span class="reserve
 <p>The &quot;flags&quot; argument specifies enumeration options, which at present must be <code>CUPS_DEST_FLAGS_NONE</code>.</p>
 <p>The &quot;msec&quot; argument specifies the maximum amount of time that should be used for enumeration in milliseconds - interactive applications should keep this value to 5000 or less when run on the main thread.</p>
 <p>The &quot;cancel&quot; argument points to an integer variable that, when set to a non-zero value, will cause enumeration to stop as soon as possible. It can be <code>NULL</code> if not needed.</p>
-<p>The &quot;type&quot; and &quot;mask&quot; arguments are bitfields that allow the caller to filter the destinations based on categories and/or capabilities. The destination's &quot;printer-type&quot; value is masked by the &quot;mask&quot; value and compared to the &quot;type&quot; value when filtering. For example, to only enumerate destinations that are hosted on the local system, pass <code>CUPS_PRINTER_LOCAL</code> for the &quot;type&quot; argument and <code>CUPS_PRINTER_DISCOVERED</code> for the &quot;mask&quot; argument. The following constants can be used for filtering:</p>
+<p>The &quot;type&quot; and &quot;mask&quot; arguments are bitfields that allow the caller to filter the destinations based on categories and/or capabilities. The destination's &quot;printer-type&quot; value is masked by the &quot;mask&quot; value and compared to the &quot;type&quot; value when filtering. For example, to only enumerate destinations that are hosted on the local system, pass <code>CUPS_PTYPE_LOCAL</code> for the &quot;type&quot; argument and <code>CUPS_PTYPE_DISCOVERED</code> for the &quot;mask&quot; argument. The following constants can be used for filtering:</p>
 <ul>
-<li><p><code>CUPS_PRINTER_CLASS</code>: A collection of destinations.</p>
+<li><p><code>CUPS_PTYPE_CLASS</code>: A collection of destinations.</p>
 </li>
-<li><p><code>CUPS_PRINTER_FAX</code>: A facsimile device.</p>
+<li><p><code>CUPS_PTYPE_FAX</code>: A facsimile device.</p>
 </li>
-<li><p><code>CUPS_PRINTER_LOCAL</code>: A local printer or class. This constant has the value 0 (no bits set) and is only used for the &quot;type&quot; argument and is paired with the <code>CUPS_PRINTER_REMOTE</code> or <code>CUPS_PRINTER_DISCOVERED</code> constant passed in the &quot;mask&quot; argument.</p>
+<li><p><code>CUPS_PTYPE_LOCAL</code>: A local printer or class. This constant has the value 0 (no bits set) and is only used for the &quot;type&quot; argument and is paired with the <code>CUPS_PTYPE_REMOTE</code> or <code>CUPS_PTYPE_DISCOVERED</code> constant passed in the &quot;mask&quot; argument.</p>
 </li>
-<li><p><code>CUPS_PRINTER_REMOTE</code>: A remote (shared) printer or class.</p>
+<li><p><code>CUPS_PTYPE_REMOTE</code>: A remote (shared) printer or class.</p>
 </li>
-<li><p><code>CUPS_PRINTER_DISCOVERED</code>: An available network printer or class.</p>
+<li><p><code>CUPS_PTYPE_DISCOVERED</code>: An available network printer or class.</p>
 </li>
-<li><p><code>CUPS_PRINTER_BW</code>: Can do B&amp;W printing.</p>
+<li><p><code>CUPS_PTYPE_BW</code>: Can do B&amp;W printing.</p>
 </li>
-<li><p><code>CUPS_PRINTER_COLOR</code>: Can do color printing.</p>
+<li><p><code>CUPS_PTYPE_COLOR</code>: Can do color printing.</p>
 </li>
-<li><p><code>CUPS_PRINTER_DUPLEX</code>: Can do two-sided printing.</p>
+<li><p><code>CUPS_PTYPE_DUPLEX</code>: Can do two-sided printing.</p>
 </li>
-<li><p><code>CUPS_PRINTER_STAPLE</code>: Can staple output.</p>
+<li><p><code>CUPS_PTYPE_STAPLE</code>: Can staple output.</p>
 </li>
-<li><p><code>CUPS_PRINTER_COLLATE</code>: Can quickly collate copies.</p>
+<li><p><code>CUPS_PTYPE_COLLATE</code>: Can quickly collate copies.</p>
 </li>
-<li><p><code>CUPS_PRINTER_PUNCH</code>: Can punch output.</p>
+<li><p><code>CUPS_PTYPE_PUNCH</code>: Can punch output.</p>
 </li>
-<li><p><code>CUPS_PRINTER_COVER</code>: Can cover output.</p>
+<li><p><code>CUPS_PTYPE_COVER</code>: Can cover output.</p>
 </li>
-<li><p><code>CUPS_PRINTER_BIND</code>: Can bind output.</p>
+<li><p><code>CUPS_PTYPE_BIND</code>: Can bind output.</p>
 </li>
-<li><p><code>CUPS_PRINTER_SORT</code>: Can sort output (mailboxes, etc.)</p>
+<li><p><code>CUPS_PTYPE_FOLD</code>: Can fold output.</p>
 </li>
-<li><p><code>CUPS_PRINTER_SMALL</code>: Can print on Letter/Legal/A4-size media.</p>
+<li><p><code>CUPS_PTYPE_SORT</code>: Can sort output (mailboxes, etc.)</p>
 </li>
-<li><p><code>CUPS_PRINTER_MEDIUM</code>: Can print on Tabloid/B/C/A3/A2-size media.</p>
+<li><p><code>CUPS_PTYPE_SMALL</code>: Can print on Letter/Legal/A4-size media.</p>
 </li>
-<li><p><code>CUPS_PRINTER_LARGE</code>: Can print on D/E/A1/A0-size media.</p>
+<li><p><code>CUPS_PTYPE_MEDIUM</code>: Can print on Tabloid/B/C/A3/A2-size media.</p>
 </li>
-<li><p><code>CUPS_PRINTER_VARIABLE</code>: Can print on rolls and custom-size media.</p>
+<li><p><code>CUPS_PTYPE_LARGE</code>: Can print on D/E/A1/A0-size media.</p>
+</li>
+<li><p><code>CUPS_PTYPE_VARIABLE</code>: Can print on rolls and custom-size media.</p>
 </li>
 </ul>
 <p>The &quot;cb&quot; argument specifies a function to call for every destination that is found:</p>
@@ -1026,7 +1029,7 @@ cupsEnumDests(<span class="reserved">unsigned</span> flags, <span class="reserve
 </li>
 <li><p><code>CUPS_DEST_FLAGS_REMOVED</code>: The destination has gone away and should be removed from the list of destinations a user can select.</p>
 </li>
-<li><p><code>CUPS_DEST_FLAGS_ERROR</code>: An error occurred. The reason for the error can be found by calling the <a href="#cupsLastError"><code>cupsLastError</code></a> and/or <a href="#cupsLastErrorString"><code>cupsLastErrorString</code></a> functions.</p>
+<li><p><code>CUPS_DEST_FLAGS_ERROR</code>: An error occurred. The reason for the error can be found by calling the <a href="#cupsGetError"><code>cupsGetError</code></a> and/or <a href="#cupsGetErrorString"><code>cupsGetErrorString</code></a> functions.</p>
 </li>
 </ul>
 <p>The callback function returns <code>false</code> to stop enumeration or <code>true</code> to continue.</p>
@@ -1094,7 +1097,7 @@ my_get_dests(
 <h3 class="title" id="basic-destination-information">Basic Destination Information</h3>
 <p>The &quot;num_options&quot; and &quot;options&quot; members of the <code>cups_dest_t</code> structure provide basic attributes about the destination in addition to the user default options and values for that destination. The following names are predefined for various destination attributes:</p>
 <ul>
-<li><p>&quot;auth-info-required&quot;: The type of authentication required for printing to this destination: &quot;none&quot;, &quot;username,password&quot;, &quot;domain,username,password&quot;, or &quot;negotiate&quot; (Kerberos).</p>
+<li><p>&quot;auth-info-required&quot;: The type of authentication required for printing to this destination: &quot;none&quot;, &quot;username,password&quot;, &quot;domain,username,password&quot;, or &quot;oauth&quot;.</p>
 </li>
 <li><p>&quot;printer-info&quot;: The human-readable description of the destination such as &quot;My Laser Printer&quot;.</p>
 </li>
@@ -1248,8 +1251,8 @@ cupsFindDestReady(http_t *http, cups_dest_t *dest,
   puts(<span class="string">&quot;no finishings are ready.&quot;</span>);
 </code></pre>
 <h4 id="media-options">Media Options</h4>
-<p>CUPS provides functions for querying the dimensions, margins, color, source (tray/roll), and type for each of the supported media size options. The <code>cups_size_t</code> structure is used to describe media:</p>
-<pre><code class="language-c"><span class="reserved">typedef</span> <span class="reserved">struct</span> cups_size_s
+<p>CUPS provides functions for querying the dimensions, margins, color, source (tray/roll), and type for each of the supported media size options. The <code>cups_media_t</code> structure is used to describe media:</p>
+<pre><code class="language-c"><span class="reserved">typedef</span> <span class="reserved">struct</span> cups_media_s
 {
   <span class="reserved">char</span> media[<span class="number">128</span>];
   <span class="reserved">char</span> color[<span class="number">128</span>];
@@ -1257,7 +1260,7 @@ cupsFindDestReady(http_t *http, cups_dest_t *dest,
   <span class="reserved">char</span> type[<span class="number">128</span>];
   <span class="reserved">int</span> width, length;
   <span class="reserved">int</span> bottom, left, right, top;
-} cups_size_t;
+} cups_media_t;
 </code></pre>
 <p>The &quot;media&quot; member specifies a PWG self-describing media size name such as &quot;na_letter_8.5x11in&quot;, &quot;iso_a4_210x297mm&quot;, etc. The &quot;color&quot; member specifies a PWG media color name such as &quot;white&quot;, &quot;blue&quot;, etc. The &quot;source&quot; member specifies a standard keyword for the paper tray or roll such as &quot;tray-1&quot;, &quot;manual&quot;, &quot;by-pass-tray&quot; (multi-purpose tray), etc. The &quot;type&quot; member specifies a PWG media type name such as &quot;stationery&quot;, &quot;photographic&quot;, &quot;envelope&quot;, &quot;transparency&quot;, etc.</p>
 <p>The &quot;width&quot; and &quot;length&quot; members specify the dimensions of the media in hundredths of millimeters (1/2540th of an inch). The &quot;bottom&quot;, &quot;left&quot;, &quot;right&quot;, and &quot;top&quot; members specify the margins of the printable area, also in hundredths of millimeters.</p>
@@ -1266,13 +1269,13 @@ cupsFindDestReady(http_t *http, cups_dest_t *dest,
 cupsGetDestMediaByName(http_t *http, cups_dest_t *dest,
                        cups_dinfo_t *dinfo,
                        <span class="reserved">const</span> <span class="reserved">char</span> *media,
-                       <span class="reserved">unsigned</span> flags, cups_size_t *size);
+                       <span class="reserved">unsigned</span> flags, cups_media_t *size);
 
 <span class="reserved">bool</span>
 cupsGetDestMediaBySize(http_t *http, cups_dest_t *dest,
                        cups_dinfo_t *dinfo,
                        <span class="reserved">int</span> width, <span class="reserved">int</span> length,
-                       <span class="reserved">unsigned</span> flags, cups_size_t *size);
+                       <span class="reserved">unsigned</span> flags, cups_media_t *size);
 </code></pre>
 <p>The &quot;media&quot;, &quot;width&quot;, and &quot;length&quot; arguments specify the size to lookup. The &quot;flags&quot; argument specifies a bitfield controlling various lookup options:</p>
 <ul>
@@ -1289,7 +1292,7 @@ cupsGetDestMediaBySize(http_t *http, cups_dest_t *dest,
 </ul>
 <p>If a matching size is found for the destination, the size information is stored in the structure pointed to by the &quot;size&quot; argument and <code>true</code> is returned. Otherwise <code>false</code> is returned.</p>
 <p>For example, the following code prints the margins for two-sided printing on US Letter media:</p>
-<pre><code class="language-c">cups_size_t size;
+<pre><code class="language-c">cups_media_t size;
 
 <span class="reserved">if</span> (cupsGetDestMediaByName(CUPS_HTTP_DEFAULT, dest, info,
                            CUPS_MEDIA_LETTER,
@@ -1307,15 +1310,15 @@ cupsGetDestMediaBySize(http_t *http, cups_dest_t *dest,
 <p>You can also enumerate all of the sizes that match a given &quot;flags&quot; value using the <a href="#cupsGetDestMediaByIndex"><code>cupsGetDestMediaByIndex</code></a> and <a href="#cupsGetDestMediaCount"><code>cupsGetDestMediaCount</code></a> functions:</p>
 <pre><code class="language-c"><span class="reserved">bool</span>
 cupsGetDestMediaByIndex(http_t *http, cups_dest_t *dest,
-                        cups_dinfo_t *dinfo, <span class="reserved">int</span> n,
-                        <span class="reserved">unsigned</span> flags, cups_size_t *size);
+                        cups_dinfo_t *dinfo, size_t n,
+                        <span class="reserved">unsigned</span> flags, cups_media_t *size);
 
 size_t
 cupsGetDestMediaCount(http_t *http, cups_dest_t *dest,
                       cups_dinfo_t *dinfo, <span class="reserved">unsigned</span> flags);
 </code></pre>
 <p>For example, the following code prints the list of ready media and corresponding margins:</p>
-<pre><code class="language-c">cups_size_t size;
+<pre><code class="language-c">cups_media_t media;
 size_t i;
 size_t count = cupsGetDestMediaCount(CUPS_HTTP_DEFAULT,
                                      dest, info,
@@ -1327,13 +1330,16 @@ size_t count = cupsGetDestMediaCount(CUPS_HTTP_DEFAULT,
                               i, CUPS_MEDIA_FLAGS_READY,
                               &amp;size))
   {
-    printf(<span class="string">&quot;%s:\n&quot;</span>, size.name);
-    printf(<span class="string">&quot;   Width: %.2fin\n&quot;</span>, size.width / <span class="number">2540.0</span>);
-    printf(<span class="string">&quot;  Length: %.2fin\n&quot;</span>, size.length / <span class="number">2540.0</span>);
-    printf(<span class="string">&quot;  Bottom: %.2fin\n&quot;</span>, size.bottom / <span class="number">2540.0</span>);
-    printf(<span class="string">&quot;    Left: %.2fin\n&quot;</span>, size.left / <span class="number">2540.0</span>);
-    printf(<span class="string">&quot;   Right: %.2fin\n&quot;</span>, size.right / <span class="number">2540.0</span>);
-    printf(<span class="string">&quot;     Top: %.2fin\n&quot;</span>, size.top / <span class="number">2540.0</span>);
+    printf(<span class="string">&quot;%s:\n&quot;</span>, media.name);
+    printf(<span class="string">&quot;    Width: %.2fin\n&quot;</span>, media.width / <span class="number">2540.0</span>);
+    printf(<span class="string">&quot;   Length: %.2fin\n&quot;</span>, media.length / <span class="number">2540.0</span>);
+    printf(<span class="string">&quot;   Bottom: %.2fin\n&quot;</span>, media.bottom / <span class="number">2540.0</span>);
+    printf(<span class="string">&quot;     Left: %.2fin\n&quot;</span>, media.left / <span class="number">2540.0</span>);
+    printf(<span class="string">&quot;    Right: %.2fin\n&quot;</span>, media.right / <span class="number">2540.0</span>);
+    printf(<span class="string">&quot;      Top: %.2fin\n&quot;</span>, media.top / <span class="number">2540.0</span>);
+    printf(<span class="string">&quot;Tray/Roll: %s\n&quot;</span>, media.source);
+    printf(<span class="string">&quot;    Color: %s\n&quot;</span>, media.color);
+    printf(<span class="string">&quot;     Type: %s\n&quot;</span>, media.type);
   }
 }
 </code></pre>
@@ -1341,14 +1347,14 @@ size_t count = cupsGetDestMediaCount(CUPS_HTTP_DEFAULT,
 <pre><code class="language-c"><span class="reserved">bool</span>
 cupsGetDestMediaDefault(http_t *http, cups_dest_t *dest,
                         cups_dinfo_t *dinfo, <span class="reserved">unsigned</span> flags,
-                        cups_size_t *size);
+                        cups_media_t *size);
 </code></pre>
 <h4 id="localizing-options-and-values">Localizing Options and Values</h4>
 <p>CUPS provides three functions to get localized, human-readable strings in the user's current locale for options and values: <a href="#cupsLocalizeDestMedia"><code>cupsLocalizeDestMedia</code></a>, <a href="#cupsLocalizeDestOption"><code>cupsLocalizeDestOption</code></a>, and <a href="#cupsLocalizeDestValue"><code>cupsLocalizeDestValue</code></a>:</p>
 <pre><code class="language-c"><span class="reserved">const</span> <span class="reserved">char</span> *
 cupsLocalizeDestMedia(http_t *http, cups_dest_t *dest,
                       cups_dinfo_t *info, <span class="reserved">unsigned</span> flags,
-                      cups_size_t *size);
+                      cups_media_t *size);
 
 <span class="reserved">const</span> <span class="reserved">char</span> *
 cupsLocalizeDestOption(http_t *http, cups_dest_t *dest,
@@ -1389,7 +1395,7 @@ num_options = cupsAddOption(CUPS_SIDES,
   printf(<span class="string">&quot;Created job: %d\n&quot;</span>, job_id);
 <span class="reserved">else</span>
   printf(<span class="string">&quot;Unable to create job: %s\n&quot;</span>,
-         cupsLastErrorString());
+         cupsGetErrorString());
 </code></pre>
 <p>Once the job is created, you submit documents for the job using the <a href="#cupsStartDestDocument"><code>cupsStartDestDocument</code></a>, <a href="#cupsWriteRequestData"><code>cupsWriteRequestData</code></a>, and <a href="#cupsFinishDestDocument"><code>cupsFinishDestDocument</code></a> functions:</p>
 <pre><code class="language-c">http_status_t
@@ -1440,7 +1446,7 @@ size_t bytes;
     puts(<span class="string">&quot;Document send succeeded.&quot;</span>);
   <span class="reserved">else</span>
     printf(<span class="string">&quot;Document send failed: %s\n&quot;</span>,
-           cupsLastErrorString());
+           cupsGetErrorString());
 }
 
 fclose(fp);
@@ -1542,17 +1548,17 @@ ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD,
                                     filename);
 </code></pre>
 <p>Both <a href="#cupsDoRequest"><code>cupsDoRequest</code></a> and <a href="#cupsDoFileRequest"><code>cupsDoFileRequest</code></a> free the IPP request. If a valid IPP response is received, it is stored in a new IPP message (<code>ipp_t</code>) and returned to the caller. Otherwise <code>NULL</code> is returned.</p>
-<p>The status from the most recent request can be queried using the <a href="#cupsLastError"><code>cupsLastError</code></a> function, for example:</p>
-<pre><code class="language-c"><span class="reserved">if</span> (cupsLastError() &gt;= IPP_STATUS_ERROR_BAD_REQUEST)
+<p>The status from the most recent request can be queried using the <a href="#cupsGetError"><code>cupsGetError</code></a> function, for example:</p>
+<pre><code class="language-c"><span class="reserved">if</span> (cupsGetError() &gt;= IPP_STATUS_ERROR_BAD_REQUEST)
 {
   <span class="comment">/* request failed */</span>
 }
 </code></pre>
-<p>A human-readable error message is also available using the <a href="#cupsLastErrorString"><code>cupsLastErrorString</code></a> function:</p>
-<pre><code class="language-c"><span class="reserved">if</span> (cupsLastError() &gt;= IPP_STATUS_ERROR_BAD_REQUEST)
+<p>A human-readable error message is also available using the <a href="#cupsGetErrorString"><code>cupsGetErrorString</code></a> function:</p>
+<pre><code class="language-c"><span class="reserved">if</span> (cupsGetError() &gt;= IPP_STATUS_ERROR_BAD_REQUEST)
 {
   <span class="comment">/* request failed */</span>
-  printf(<span class="string">&quot;Request failed: %s\n&quot;</span>, cupsLastErrorString());
+  printf(<span class="string">&quot;Request failed: %s\n&quot;</span>, cupsGetErrorString());
 }
 </code></pre>
 <h3 class="title" id="processing-the-ipp-response">Processing the IPP Response</h3>
@@ -1652,6 +1658,77 @@ cups_password_cb(<span class="reserved">const</span> <span class="reserved">char
 <p>The &quot;method&quot; argument specifies the HTTP method used for the request and is typically &quot;POST&quot;.</p>
 <p>The &quot;resource&quot; argument specifies the path used for the request.</p>
 <p>The &quot;cb_data&quot; argument provides the user data pointer from the <a href="#cupsSetPasswordCB"><code>cupsSetPasswordCB</code></a> call.</p>
+<h2 class="title" id="ipp-data-file-api">IPP Data File API</h2>
+<p>The IPP data file API provides functions to read and write IPP attributes and other commands or data using a common base format that supports tools such as <code>ipptool</code> and <code>ippeveprinter</code>.</p>
+<h3 class="title" id="creating-an-ipp-data-file">Creating an IPP Data File</h3>
+<p>The <a href="#ippFileNew"><code>ippFileNew</code></a> function creates a new IPP data file (<code>ipp_file_t</code>) object:</p>
+<pre><code class="language-c">ipp_file_t *parent = NULL;
+<span class="reserved">void</span> *data;
+ipp_file_t *file = ippFileNew(parent, attr_cb, error_cb, data);
+</code></pre>
+<p>The &quot;parent&quot; IPP data file pointer is typically used to support nested files and is normally <code>NULL</code> for a new file. The &quot;data&quot; argument supplies your application data to the callbacks. The &quot;attr_cb&quot; callback function is used to filter IPP attributes; return <code>true</code> to include the attribute and <code>false</code> to ignore it:</p>
+<pre><code class="language-c"><span class="reserved">bool</span>
+attr_cb(ipp_file_t *file, <span class="reserved">void</span> *cb_data, <span class="reserved">const</span> <span class="reserved">char</span> *name)
+{
+  ... determine whether to use an attribute named <span class="string">&quot;name&quot;</span> ...
+}
+</code></pre>
+<p>The &quot;error_cb&quot; callback function is used to record/report errors when reading the file:</p>
+<pre><code class="language-c"><span class="reserved">bool</span>
+error_cb(ipp_file_t *file, <span class="reserved">void</span> *cb_data, <span class="reserved">const</span> <span class="reserved">char</span> *error)
+{
+  ... display/record error <span class="reserved">and</span> <span class="reserved">return</span> `<span class="reserved">true</span>` to <span class="reserved">continue</span> <span class="reserved">or</span> `<span class="reserved">false</span>` to stop ...
+}
+</code></pre>
+<h3 class="title" id="reading-a-data-file">Reading a Data File</h3>
+<p>The <a href="#ippFileOpen"><code>ippFileOpen</code></a> function opens the specified data file and <a href="#ippFileRead"><code>ippFileRead</code></a> reads from it:</p>
+<pre><code class="language-c"><span class="reserved">if</span> (ippFileOpen(file, <span class="string">&quot;somefile&quot;</span>, <span class="string">&quot;r&quot;</span>))
+{
+  <span class="comment">// Opened successfully, now read it...</span>
+  ippFileRead(file, token_cb, <span class="comment">/*with_groups*/</span><span class="reserved">false</span>);
+  ippFileClose(file);
+}
+</code></pre>
+<p>The token callback function passed to <code>ippFileRead</code> handles custom directives in your data file:</p>
+<pre><code class="language-c"><span class="reserved">bool</span>
+token_cb(ipp_file_t *file, <span class="reserved">void</span> *cb_data, <span class="reserved">const</span> <span class="reserved">char</span> *token)
+{
+  ... handle token, <span class="reserved">return</span> `<span class="reserved">true</span>` to <span class="reserved">continue</span> <span class="reserved">or</span> `<span class="reserved">false</span>` to stop ...
+}
+</code></pre>
+<p>The &quot;token&quot; parameter contains the token to be processed. The callback can use the <a href="#ippFileReadToken"><code>ippFileReadToken</code></a> function to read additional tokens from the file and the <a href="#ippFileExpandToken"><code>ippFileExpandToken</code></a> function to expand any variables in the token string. Return <code>false</code> to stop reading the file and <code>true</code> to continue. The default <code>NULL</code> callback reports an unknown token error through the error callback end returns <code>false</code>.</p>
+<p>Once read, you call the <a href="#ippFileGetAttributes"><code>ippFileGetAttributes</code></a> function to get the IPP attributes from the file.</p>
+<h3 class="title" id="variables">Variables</h3>
+<p>Each IPP data file object has associated variables that can be used when reading the file. The default set of variables is:</p>
+<ul>
+<li><p>&quot;date-current&quot;: Current date in ISO-8601 format</p>
+</li>
+<li><p>&quot;date-start&quot;: Start date (when file opened) in ISO-8601 format</p>
+</li>
+<li><p>&quot;filename&quot;: Associated data/document filename, if any</p>
+</li>
+<li><p>&quot;filetype&quot;: MIME media type of associated data/document filename, if any</p>
+</li>
+<li><p>&quot;hostname&quot;: Hostname or IP address from the &quot;uri&quot; value, if any</p>
+</li>
+<li><p>&quot;port&quot;: Port number from the &quot;uri&quot; value, if any</p>
+</li>
+<li><p>&quot;resource&quot;: Resource path from the &quot;uri&quot; value, if any</p>
+</li>
+<li><p>&quot;scheme&quot;: URI scheme from the &quot;uri&quot; value, if any</p>
+</li>
+<li><p>&quot;uri&quot;: URI, if any</p>
+</li>
+<li><p>&quot;uriuser&quot;: Username from the &quot;uri&quot; value, if any</p>
+</li>
+<li><p>&quot;uripassword&quot;: Password from the &quot;uri&quot; value, if any</p>
+</li>
+<li><p>&quot;user&quot;: Current login user</p>
+</li>
+</ul>
+<p>The <a href="#ippFileGetVar"><code>ippFileGetVar</code></a>, <a href="#ippFileSetVar"><code>ippFileSetVar</code></a>, and <a href="#ippFileSetVarf"><code>ippFileSetVarf</code></a> functions get and set file variables, respectively.</p>
+<h3 class="title" id="writing-ipp-data-files">Writing IPP Data Files</h3>
+<p>As when reading an IPP data file, the <a href="#ippFileNew"><code>ippFileNew</code></a> function creates a new file object, <a href="#ippFileOpen"><code>ippFileOpen</code></a> opens the file, and <a href="#ippFileClose"><code>ippFileClose</code></a> closes the file. However, you call <a href="#ippFileWriteAttributes"><code>ippFileWriteAttributes</code></a> to write the attributes in an IPP message (<code>ipp_t</code>), <a href="#ippFileWriteComment"><code>ippFileWriteComment</code></a> to write a comment in the file, and <a href="#ippWriteToken"><code>ippWriteToken</code></a> or <a href="#ippWriteTokenf"><code>ippWriteTokenf</code></a> to write a token or value to the file.</p>
 <h2 class="title" id="migrating-code-from-cups-2.x-and-earlier">Migrating Code from CUPS 2.x and Earlier</h2>
 <p>The CUPS 3.x library removes all of the deprecated and obsolete APIs from CUPS 2.x and earlier and makes other naming changes for consistency. As a result, the CUPS 3.x library is no longer binary compatible with programs compiled against the CUPS 2.x library and earlier, and some source code may need minor changes to compile with the new library. This file describes the changes and how to migrate to the new library.</p>
 <h3 class="title" id="general-changes">General Changes</h3>
@@ -1677,24 +1754,41 @@ cups_password_cb(<span class="reserved">const</span> <span class="reserved">char
 <li><p>X.509 certificates are now passed as C strings containing the PEM-encoded data instead of a <code>cups_array_t *</code> of raw data.</p>
 </li>
 </ul>
-<h3 class="title" id="removed-functions">Removed Functions</h3>
+<h3 class="title" id="removed-functions-and-types">Removed Functions and Types</h3>
 <p>The following CUPS 2.x API functions have been removed from the CUPS library:</p>
 <ul>
 <li><p>Old class/printer functions: <code>cupsGetClasses</code> and <code>cupsGetPrinters</code>.</p>
 </li>
-<li><p>HTTP functions: <code>httpAddCredential</code>, <code>httpCheck</code>, <code>httpCompareCredentials</code>, <code>httpConnect2</code>, <code>httpConnectEncrypt</code>, <code>httpCreateCredentials</code>, <code>httpDecode64_2</code>, <code>httpEncode64_2</code>, and <code>httpFreeCredentials</code>.</p>
+<li><p>Accessor functions: <code>cupsEncryption</code>, <code>cupsLastError</code>, <code>cupsLastErrorString</code>, <code>cupsServer</code>, <code>cupsUser</code>, and <code>cupsUserAgent</code>.</p>
+</li>
+<li><p>Array functions: <code>cupsArrayCount</code>, <code>cupsArrayFirst</code>, <code>cupsArrayIndex</code>, <code>cupsArrayLast</code>, <code>cupsArrayNew2</code>, <code>cupsArrayNew3</code>, <code>cupsArrayNext</code>, and <code>cupsArrayPrev</code>.</p>
+</li>
+<li><p>File functions: <code>cupsFileCompression</code>, <code>cupsTempFd</code>, <code>cupsTempFile</code>, and <code>cupsTempFile2</code>.</p>
+</li>
+<li><p>HTTP functions: <code>httpAddCredential</code>, <code>httpAddrAny</code>, <code>httpAddrEqual</code>, <code>httpAddrFamily</code>, <code>httpAddrLength</code>, <code>httpAddrLocalhost</code>, <code>httpAddrPort</code>, <code>httpAddrString</code>, <code>httpBlocking</code>, <code>httpCheck</code>, <code>httpCompareCredentials</code>, <code>httpConnectEncrypt</code>, <code>httpCopyCredentials</code>, <code>httpCreateCredentials</code>, <code>httpCredentialsAreValidForName</code>, <code>httpCredentialsGetExpiration</code>, <code>httpCredentialsGetTrust</code>, <code>httpCredentialsString</code>, <code>httpDecode64_2</code>, <code>httpDelete</code>, <code>httpEncode64_2</code>, <code>httpEncryption</code>, <code>httpError</code>, <code>httpFreeCredentials</code>, <code>httpGet</code>, <code>httpLoadCredentials</code>, <code>httpOptions</code>, <code>httpPost</code>, <code>httpPut</code>, <code>httpSaveCredentials</code>, <code>httpStatus</code>, and <code>httpTrace</code>.</p>
+</li>
+<li><p>IPP functions: <code>ippFirstAttribute</code>, <code>ippLength</code>, <code>ippNextAttribute</code>, and <code>ippPort</code>.</p>
+</li>
+<li><p>Localization functions: <code>cupsNotifySubject</code> and <code>cupsNotifyText</code>.</p>
 </li>
 <li><p>PPD file functions: <code>ppdClose</code>, <code>ppdCollect</code>, <code>ppdCollect2</code>, <code>ppdConflicts</code>, <code>ppdEmit</code>, <code>ppdEmitAfterOrder</code>, <code>ppdEmitFd</code>, <code>ppdEmitJCL</code>, <code>ppdEmitJCLEnd</code>, <code>ppdEmitString</code>, <code>ppdErrorString</code>, <code>ppdFindAttr</code>, <code>ppdFindChoice</code>, <code>ppdFindCustomOption</code>, <code>ppdFindCustomParam</code>, <code>ppdFindMarkedChoice</code>, <code>ppdFindNextAttr</code>, <code>ppdFindOption</code>, <code>ppdFirstCustomParam</code>, <code>ppdFirstOption</code>, <code>ppdInstallableConflict</code>, <code>ppdIsMarked</code>, <code>ppdLastError</code>, <code>ppdLocalize</code>, <code>ppdLocalizeAttr</code>, <code>ppdLocalizeIPPReason</code>, <code>ppdLocalizeMarkerName</code>, <code>ppdMarkDefaults</code>, <code>ppdMarkOption</code>, <code>ppdNextCustomParam</code>, <code>ppdNextOption</code>, <code>ppdOpen</code>, <code>ppdOpen2</code>, <code>ppdOpenFd</code>, <code>ppdOpenFile</code>, <code>ppdPageLength</code>, <code>ppdPageSize</code>, <code>ppdPageSizeLimits</code>, <code>ppdPageWidth</code>, and <code>ppdSetConformance</code>.</p>
 </li>
 <li><p>PPD helper functions: <code>cupsGetConflicts</code>, <code>cupsGetPPD</code>, <code>cupsGetPPD2</code>, <code>cupsGetPPD3</code>, <code>cupsGetServerPPD</code>, <code>cupsMarkOptions</code>, <code>cupsRasterInterpretPPD</code>, and <code>cupsResolveConflicts</code>.</p>
 </li>
-<li><p>Deprecated functions: <code>cupsTempFile</code>.</p>
-</li>
 <li><p>Non-destination print functions: <code>cupsCancelJob</code>, <code>cupsCancelJob2</code>, <code>cupsCreateJob</code>, <code>cupsCloseJob</code>, <code>cupsFinishDocument</code>, <code>cupsGetDefault</code>, <code>cupsGetDefault2</code>, <code>cupsPrintFile</code>, <code>cupsPrintFile2</code>, <code>cupsPrintFiles</code>, <code>cupsPrintFiles2</code>, and <code>cupsSendDocument</code>.</p>
 </li>
-<li><p>Array functions: <code>cupsArrayNew2</code> and <code>cupsArrayNew3</code>.</p>
+<li><p>Raster functions: <code>cupsRasterInitPWGHeader</code>.</p>
 </li>
-<li><p>Raster functions: <code>cupsRasterReadHeader2</code> and <code>cupsRasterWriteHeader2</code>.</p>
+</ul>
+<p>Similarly, the following types have been removed from CUPS 3.0:</p>
+<ul>
+<li><p>Array types: <code>cups_acopy_func_t</code>, <code>cups_afree_func_t</code>, and <code>cups_array_func_t</code>.</p>
+</li>
+<li><p>IPP types: <code>ipp_copycb_t</code> and <code>ipp_iocb_t</code>.</p>
+</li>
+<li><p>Media types: <code>cups_size_t</code>.</p>
+</li>
+<li><p>Raster types: <code>cups_mode_t</code> and <code>cups_raster_iocb_t</code>.</p>
 </li>
 </ul>
 <h3 class="title" id="renamed-functions-and-types">Renamed Functions and Types</h3>
@@ -1703,35 +1797,35 @@ cups_password_cb(<span class="reserved">const</span> <span class="reserved">char
 <th> New CUPS 3.0 Name</th>
 </tr>
 </thead>
-<tbody><tr><td> <code>cupsArrayCount</code></td>
-<td> <code>cupsArrayGetCount</code></td>
-</tr>
-<tr><td> <code>cupsArrayFirst</code></td>
-<td> <code>cupsArrayGetFirst</code></td>
-</tr>
-<tr><td> <code>cupsArrayIndex</code></td>
-<td> <code>cupsArrayGetElement</code></td>
-</tr>
-<tr><td> <code>cupsArrayLast</code></td>
-<td> <code>cupsArrayGetLast</code></td>
-</tr>
-<tr><td> <code>cupsArrayNew3</code></td>
+<tbody><tr><td> <code>cupsArrayNew3</code></td>
 <td> <code>cupsArrayNew</code></td>
 </tr>
-<tr><td> <code>cupsArrayNext</code></td>
-<td> <code>cupsArrayGetNext</code></td>
+<tr><td> <code>cupsAddDestMediaOptions2</code></td>
+<td> <code>cupsAddDestMediaOptions</code></td>
 </tr>
-<tr><td> <code>cupsArrayPrev</code></td>
-<td> <code>cupsArrayGetPrev</code></td>
+<tr><td> <code>cupsEncodeOptions2</code></td>
+<td> <code>cupsEncodeOptions</code></td>
 </tr>
-<tr><td> <code>cupsEncryption</code></td>
-<td> <code>cupsGetEncryption</code></td>
+<tr><td> <code>cupsGetDefault2</code></td>
+<td> <code>cupsGetDefault</code></td>
 </tr>
-<tr><td> <code>cupsFileCompression</code></td>
-<td> <code>cupsFileIsCompressed</code></td>
+<tr><td> <code>cupsGetDestMediaByIndex2</code></td>
+<td> <code>cupsGetDestMediaByIndex</code></td>
+</tr>
+<tr><td> <code>cupsGetDestMediaByName2</code></td>
+<td> <code>cupsGetDestMediaByName</code></td>
+</tr>
+<tr><td> <code>cupsGetDestMediaBySize2</code></td>
+<td> <code>cupsGetDestMediaBySize</code></td>
+</tr>
+<tr><td> <code>cupsGetDestMediaDefault2</code></td>
+<td> <code>cupsGetDestMediaDefault</code></td>
 </tr>
 <tr><td> <code>cupsGetDests2</code></td>
 <td> <code>cupsGetDests</code></td>
+</tr>
+<tr><td> <code>cupsGetJobs2</code></td>
+<td> <code>cupsGetJobs</code></td>
 </tr>
 <tr><td> <code>cupsGetPassword2</code></td>
 <td> <code>cupsGetPassword</code></td>
@@ -1739,20 +1833,8 @@ cups_password_cb(<span class="reserved">const</span> <span class="reserved">char
 <tr><td> <code>cupsLangGet</code></td>
 <td> <code>cupsLangFind</code></td>
 </tr>
-<tr><td> <code>cupsLastError</code></td>
-<td> <code>cupsGetError</code></td>
-</tr>
-<tr><td> <code>cupsLastErrorString</code></td>
-<td> <code>cupsGetErrorString</code></td>
-</tr>
-<tr><td> <code>cupsNotifySubject</code></td>
-<td> <code>cupsLocalizeNotifySubject</code></td>
-</tr>
-<tr><td> <code>cupsNotifyText</code></td>
-<td> <code>cupsLocalizeNotifyText</code></td>
-</tr>
-<tr><td> <code>cupsRasterInitPWGHeader</code></td>
-<td> <code>cupsRasterInitHeader</code></td>
+<tr><td> <code>cupsLocalizeDestMedia2</code></td>
+<td> <code>cupsLocalizeDestMedia</code></td>
 </tr>
 <tr><td> <code>cupsRasterReadHeader2</code></td>
 <td> <code>cupsRasterReadHeader</code></td>
@@ -1760,80 +1842,23 @@ cups_password_cb(<span class="reserved">const</span> <span class="reserved">char
 <tr><td> <code>cupsRasterWriteHeader2</code></td>
 <td> <code>cupsRasterWriteHeader</code></td>
 </tr>
-<tr><td> <code>cupsServer</code></td>
-<td> <code>cupsGetServer</code></td>
+<tr><td> <code>cupsSetDests2</code></td>
+<td> <code>cupsSetDests</code></td>
 </tr>
 <tr><td> <code>cupsSetPasswordCB2</code></td>
 <td> <code>cupsSetPasswordCB</code></td>
 </tr>
-<tr><td> <code>cupsTempFile2</code></td>
-<td> <code>cupsTempFile</code></td>
-</tr>
-<tr><td> <code>cupsUser</code></td>
-<td> <code>cupsGetUser</code></td>
-</tr>
-<tr><td> <code>cupsUserAgent</code></td>
-<td> <code>cupsGetUserAgent</code></td>
-</tr>
-<tr><td> <code>httpAddrAny</code></td>
-<td> <code>httpAddrIsAny</code></td>
-</tr>
-<tr><td> <code>httpAddrEqual</code></td>
-<td> <code>httpAddrIsEqual</code></td>
-</tr>
-<tr><td> <code>httpAddrFamily</code></td>
-<td> <code>httpAddrGetFamily</code></td>
-</tr>
-<tr><td> <code>httpAddrLength</code></td>
-<td> <code>httpAddrGetLength</code></td>
-</tr>
-<tr><td> <code>httpAddrLocalhost</code></td>
-<td> <code>httpAddrIsLocalhost</code></td>
-</tr>
-<tr><td> <code>httpAddrPort</code></td>
-<td> <code>httpAddrGetPort</code></td>
-</tr>
-<tr><td> <code>httpAddrString</code></td>
-<td> <code>httpAddrGetString</code></td>
-</tr>
-<tr><td> <code>httpBlocking</code></td>
-<td> <code>httpSetBlocking</code></td>
+<tr><td> <code>httpAddrConnect2</code></td>
+<td> <code>httpAddrConnect2</code></td>
 </tr>
 <tr><td> <code>httpConnect2</code></td>
 <td> <code>httpConnect</code></td>
 </tr>
-<tr><td> <code>httpCopyCredentials</code></td>
-<td> <code>httpCopyPeerCredentials</code></td>
-</tr>
-<tr><td> <code>httpCredentialsAreValidForName</code></td>
-<td> <code>cupsAreCredentialsValidForName</code></td>
-</tr>
-<tr><td> <code>httpCredentialsGetExpiration</code></td>
-<td> <code>cupsGetCredentialsExpiration</code></td>
-</tr>
-<tr><td> <code>httpCredentialsGetTrust</code></td>
-<td> <code>cupsGetCredentialsTrust</code></td>
-</tr>
-<tr><td> <code>httpCredentialsString</code></td>
-<td> <code>cupsGetCredentialsInfo</code></td>
-</tr>
-<tr><td> <code>httpDecode64_2</code></td>
+<tr><td> <code>httpDecode64_3</code></td>
 <td> <code>httpDecode64</code></td>
 </tr>
-<tr><td> <code>httpDelete</code></td>
-<td> <code>httpWriteRequest</code></td>
-</tr>
-<tr><td> <code>httpEncode64_2</code></td>
+<tr><td> <code>httpEncode64_3</code></td>
 <td> <code>httpEncode64</code></td>
-</tr>
-<tr><td> <code>httpEncryption</code></td>
-<td> <code>httpSetEncryption</code></td>
-</tr>
-<tr><td> <code>httpError</code></td>
-<td> <code>httpGetError</code></td>
-</tr>
-<tr><td> <code>httpGet</code></td>
-<td> <code>httpWriteRequest</code></td>
 </tr>
 <tr><td> <code>httpGetDateString2</code></td>
 <td> <code>httpGetDateString</code></td>
@@ -1841,17 +1866,11 @@ cups_password_cb(<span class="reserved">const</span> <span class="reserved">char
 <tr><td> <code>httpGetLength2</code></td>
 <td> <code>httpGetLength</code></td>
 </tr>
-<tr><td> <code>httpLoadCredentials</code></td>
-<td> <code>cupsLoadCredentials</code></td>
+<tr><td> <code>httpGetSubField2</code></td>
+<td> <code>httpGetSubField</code></td>
 </tr>
-<tr><td> <code>httpOptions</code></td>
-<td> <code>httpWriteRequest</code></td>
-</tr>
-<tr><td> <code>httpPost</code></td>
-<td> <code>httpWriteRequest</code></td>
-</tr>
-<tr><td> <code>httpPut</code></td>
-<td> <code>httpWriteRequest</code></td>
+<tr><td> <code>httpGets2</code></td>
+<td> <code>httpGets</code></td>
 </tr>
 <tr><td> <code>httpRead2</code></td>
 <td> <code>httpRead</code></td>
@@ -1859,29 +1878,8 @@ cups_password_cb(<span class="reserved">const</span> <span class="reserved">char
 <tr><td> <code>httpReconnect2</code></td>
 <td> <code>httpReconnect</code></td>
 </tr>
-<tr><td> <code>httpSaveCredentials</code></td>
-<td> <code>cupsSaveCredentials</code></td>
-</tr>
-<tr><td> <code>httpStatus</code></td>
-<td> <code>httpStatusString</code></td>
-</tr>
-<tr><td> <code>httpTrace</code></td>
-<td> <code>httpWriteRequest</code></td>
-</tr>
 <tr><td> <code>httpWrite2</code></td>
 <td> <code>httpWrite</code></td>
-</tr>
-<tr><td> <code>ippFirstAttribute</code></td>
-<td> <code>ippGetFirstAttribute</code></td>
-</tr>
-<tr><td> <code>ippLength</code></td>
-<td> <code>ippGetLength</code></td>
-</tr>
-<tr><td> <code>ippNextAttribute</code></td>
-<td> <code>ippGetNextAttribute</code></td>
-</tr>
-<tr><td> <code>ippPort</code></td>
-<td> <code>ippGetPort</code></td>
 </tr>
 </tbody>
 </table>
@@ -1890,32 +1888,11 @@ cups_password_cb(<span class="reserved">const</span> <span class="reserved">char
 <th> New CUPS 3.0 Name</th>
 </tr>
 </thead>
-<tbody><tr><td> <code>cups_acopy_func_t</code></td>
-<td> <code>cups_acopy_cb_t</code></td>
-</tr>
-<tr><td> <code>cups_afree_func_t</code></td>
-<td> <code>cups_afree_cb_t</code></td>
-</tr>
-<tr><td> <code>cups_array_func_t</code></td>
-<td> <code>cups_array_cb_t</code></td>
-</tr>
-<tr><td> <code>cups_mode_t</code></td>
-<td> <code>cups_raster_mode_t</code></td>
-</tr>
-<tr><td> <code>cups_raster_iocb_t</code></td>
-<td> <code>cups_raster_cb_t</code></td>
-</tr>
-<tr><td> <code>cups_password_cb2_t</code></td>
+<tbody><tr><td> <code>cups_password_cb2_t</code></td>
 <td> <code>cups_password_cb_t</code></td>
 </tr>
 <tr><td> <code>cups_page_header2_t</code></td>
 <td> <code>cups_page_header_t</code></td>
-</tr>
-<tr><td> <code>ipp_copycb_t</code></td>
-<td> <code>ipp_copy_cb_t</code></td>
-</tr>
-<tr><td> <code>ipp_iocb_t</code></td>
-<td> <code>ipp_io_cb_t</code></td>
 </tr>
 </tbody>
 </table>
@@ -1951,7 +1928,7 @@ destinations to the user's lpoptions file.</p>
 <h3 class="function"><a id="cupsAddDestMediaOptions">cupsAddDestMediaOptions</a></h3>
 <p class="description">Add the option corresponding to the specified media size.</p>
 <p class="code">
-size_t cupsAddDestMediaOptions(<a href="#http_t">http_t</a> *http, <a href="#cups_dest_t">cups_dest_t</a> *dest, <a href="#cups_dinfo_t">cups_dinfo_t</a> *dinfo, unsigned flags, <a href="#cups_size_t">cups_size_t</a> *size, size_t num_options, <a href="#cups_option_t">cups_option_t</a> **options);</p>
+size_t cupsAddDestMediaOptions(<a href="#http_t">http_t</a> *http, <a href="#cups_dest_t">cups_dest_t</a> *dest, <a href="#cups_dinfo_t">cups_dinfo_t</a> *dinfo, unsigned flags, <a href="#cups_media_t">cups_media_t</a> *media, size_t num_options, <a href="#cups_option_t">cups_option_t</a> **options);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>http</th>
@@ -1962,8 +1939,8 @@ size_t cupsAddDestMediaOptions(<a href="#http_t">http_t</a> *http, <a href="#cup
 <td class="description">Destination information</td></tr>
 <tr><th>flags</th>
 <td class="description">Media matching flags</td></tr>
-<tr><th>size</th>
-<td class="description">Media size</td></tr>
+<tr><th>media</th>
+<td class="description">Media</td></tr>
 <tr><th>num_options</th>
 <td class="description">Current number of options</td></tr>
 <tr><th>options</th>
@@ -2724,7 +2701,7 @@ size_t cupsCopyString(char *dst, const char *src, size_t dstsize);</p>
 <h3 class="function"><a id="cupsCreateCredentials">cupsCreateCredentials</a></h3>
 <p class="description">Make an X.509 certificate and private key pair.</p>
 <p class="code">
-bool cupsCreateCredentials(const char *path, bool ca_cert, <a href="#cups_credpurpose_t">cups_credpurpose_t</a> purpose, <a href="#cups_credtype_t">cups_credtype_t</a> type, <a href="#cups_credusage_t">cups_credusage_t</a> usage, const char *organization, const char *org_unit, const char *locality, const char *state_province, const char *country, const char *common_name, size_t num_alt_names, const char *const *alt_names, const char *root_name, time_t expiration_date);</p>
+bool cupsCreateCredentials(const char *path, bool ca_cert, <a href="#cups_credpurpose_t">cups_credpurpose_t</a> purpose, <a href="#cups_credtype_t">cups_credtype_t</a> type, <a href="#cups_credusage_t">cups_credusage_t</a> usage, const char *organization, const char *org_unit, const char *locality, const char *state_province, const char *country, const char *common_name, const char *email, size_t num_alt_names, const char *const *alt_names, const char *root_name, time_t expiration_date);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>path</th>
@@ -2749,6 +2726,8 @@ bool cupsCreateCredentials(const char *path, bool ca_cert, <a href="#cups_credpu
 <td class="description">Country or <code>NULL</code> for locale-based default</td></tr>
 <tr><th>common_name</th>
 <td class="description">Common name</td></tr>
+<tr><th>email</th>
+<td class="description">Email address or <code>NULL</code> for none</td></tr>
 <tr><th>num_alt_names</th>
 <td class="description">Number of subject alternate names</td></tr>
 <tr><th>alt_names</th>
@@ -2847,7 +2826,7 @@ Unix <code>time_t</code> value in seconds.</p>
 <h3 class="function"><a id="cupsCreateCredentialsRequest">cupsCreateCredentialsRequest</a></h3>
 <p class="description">Make an X.509 Certificate Signing Request.</p>
 <p class="code">
-bool cupsCreateCredentialsRequest(const char *path, <a href="#cups_credpurpose_t">cups_credpurpose_t</a> purpose, <a href="#cups_credtype_t">cups_credtype_t</a> type, <a href="#cups_credusage_t">cups_credusage_t</a> usage, const char *organization, const char *org_unit, const char *locality, const char *state_province, const char *country, const char *common_name, size_t num_alt_names, const char *const *alt_names);</p>
+bool cupsCreateCredentialsRequest(const char *path, <a href="#cups_credpurpose_t">cups_credpurpose_t</a> purpose, <a href="#cups_credtype_t">cups_credtype_t</a> type, <a href="#cups_credusage_t">cups_credusage_t</a> usage, const char *organization, const char *org_unit, const char *locality, const char *state_province, const char *country, const char *common_name, const char *email, size_t num_alt_names, const char *const *alt_names);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>path</th>
@@ -2870,6 +2849,8 @@ bool cupsCreateCredentialsRequest(const char *path, <a href="#cups_credpurpose_t
 <td class="description">Country or <code>NULL</code> for locale-based default</td></tr>
 <tr><th>common_name</th>
 <td class="description">Common name</td></tr>
+<tr><th>email</th>
+<td class="description">Email address or <code>NULL</code> for none</td></tr>
 <tr><th>num_alt_names</th>
 <td class="description">Number of subject alternate names</td></tr>
 <tr><th>alt_names</th>
@@ -2987,6 +2968,50 @@ The &quot;title&quot; argument provides the title of the job.  The &quot;num_opt
 <br>
 Returns <code>IPP_STATUS_OK</code> or <code>IPP_STATUS_OK_SUBST</code> on success, saving the job ID
 in the variable pointed to by &quot;job_id&quot;.</p>
+<h3 class="function"><a id="cupsCreateTempFd">cupsCreateTempFd</a></h3>
+<p class="description">Creates a temporary file.</p>
+<p class="code">
+int cupsCreateTempFd(const char *prefix, const char *suffix, char *filename, size_t len);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>prefix</th>
+<td class="description">Filename prefix or <code>NULL</code> for none</td></tr>
+<tr><th>suffix</th>
+<td class="description">Filename suffix or <code>NULL</code> for none</td></tr>
+<tr><th>filename</th>
+<td class="description">Pointer to buffer</td></tr>
+<tr><th>len</th>
+<td class="description">Size of buffer</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">New file descriptor or <code>-1</code> on error</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function creates a temporary file and returns a file descriptor for the
+file.  The unique temporary filename uses the &quot;prefix&quot; and &quot;suffix&quot; arguments
+and is returned in the filename buffer.  The temporary file is opened for
+reading and writing.</p>
+<h3 class="function"><a id="cupsCreateTempFile">cupsCreateTempFile</a></h3>
+<p class="description">Creates a temporary CUPS file.</p>
+<p class="code">
+<a href="#cups_file_t">cups_file_t</a> *cupsCreateTempFile(const char *prefix, const char *suffix, char *filename, size_t len);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>prefix</th>
+<td class="description">Filename prefix or <code>NULL</code> for none</td></tr>
+<tr><th>suffix</th>
+<td class="description">Filename suffix or <code>NULL</code> for none</td></tr>
+<tr><th>filename</th>
+<td class="description">Pointer to buffer</td></tr>
+<tr><th>len</th>
+<td class="description">Size of buffer</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">CUPS file or <code>NULL</code> on error</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function creates a temporary file and returns a file descriptor for the
+file.  The unique temporary filename uses the &quot;prefix&quot; and &quot;suffix&quot; arguments
+and is returned in the filename buffer.  The temporary file is opened for
+writing.</p>
 <h3 class="function"><a id="cupsDNSSDAssembleFullName">cupsDNSSDAssembleFullName</a></h3>
 <p class="description">Create a full service name from the instance
                                 name, registration type, and domain.</p>
@@ -3078,6 +3103,27 @@ browse_cb(
 }
 </pre>
 </p>
+<h3 class="function"><a id="cupsDNSSDCopyHostName">cupsDNSSDCopyHostName</a></h3>
+<p class="description">Copy the current mDNS hostname for the system.</p>
+<p class="code">
+char *cupsDNSSDCopyHostName(<a href="#cups_dnssd_t">cups_dnssd_t</a> *dnssd, char *buffer, size_t bufsize);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>dnssd</th>
+<td class="description">DNS-SD context</td></tr>
+<tr><th>buffer</th>
+<td class="description">Hostname buffer</td></tr>
+<tr><th>bufsize</th>
+<td class="description">Size of hostname buffer (at least 70 bytes)</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">mDNS hostname or <code>NULL</code> on error</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function copies the current mDNS hostname (&quot;hostname.local&quot;) to the
+provided buffer.  The &quot;dnssd&quot; parameter is a DNS-SD context created with
+<a href="#cupsDNSSDNew"><code>cupsDNSSDNew</code></a>.  The &quot;buffer&quot; parameter points to a character array of
+at least 70 bytes and the &quot;bufsize&quot; parameter specifies the actual size of
+the array.</p>
 <h3 class="function"><a id="cupsDNSSDDecodeTXT">cupsDNSSDDecodeTXT</a></h3>
 <p class="description">Decode a TXT record into key/value pairs.</p>
 <p class="code">
@@ -3125,23 +3171,6 @@ used to track when local services need to be updated.  Registered services
 will also get a callback with the <code>CUPS_DNSSD_FLAGS_HOST_CHANGE</code> bit set in
 the &quot;flags&quot; argument for host name changes and/or
 <code>CUPS_DNSSD_FLAGS_NETWORK_CHANGE</code> for network changes.</p>
-<h3 class="function"><a id="cupsDNSSDGetHostName">cupsDNSSDGetHostName</a></h3>
-<p class="description">Get the current mDNS host name for the system.</p>
-<p class="code">
-const char *cupsDNSSDGetHostName(<a href="#cups_dnssd_t">cups_dnssd_t</a> *dnssd, char *buffer, size_t bufsize);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>dnssd</th>
-<td class="description">DNS-SD context</td></tr>
-<tr><th>buffer</th>
-<td class="description">Host name buffer</td></tr>
-<tr><th>bufsize</th>
-<td class="description">Size of host name buffer</td></tr>
-</tbody></table>
-<h4 class="returnvalue">Return Value</h4>
-<p class="description">Local host name or <code>NULL</code> for none</p>
-<h4 class="discussion">Discussion</h4>
-<p class="discussion">This function gets the current mDNS (&quot;.local&quot;) host name for the system.</p>
 <h3 class="function"><a id="cupsDNSSDNew">cupsDNSSDNew</a></h3>
 <p class="description">Create a new DNS-SD context.</p>
 <p class="code">
@@ -3665,7 +3694,7 @@ used as input to the <a href="#cupsCopyDest"><code>cupsCopyDest</code></a> funct
 <br>
 The &quot;type&quot; and &quot;mask&quot; arguments allow the caller to filter the destinations
 that are enumerated.  Passing <code>0</code> for both will enumerate all printers.  The
-constant <code>CUPS_PRINTER_DISCOVERED</code> is used to filter on destinations that are
+constant <code>CUPS_PTYPE_DISCOVERED</code> is used to filter on destinations that are
 available but have not yet been added locally.<br>
 <br>
 Enumeration happens on the current thread and does not return until all
@@ -4307,7 +4336,7 @@ supported destinations for the current user.</p>
 <p class="description">Get a media name, dimension, and margins for a
                               specific size.</p>
 <p class="code">
-bool cupsGetDestMediaByIndex(<a href="#http_t">http_t</a> *http, <a href="#cups_dest_t">cups_dest_t</a> *dest, <a href="#cups_dinfo_t">cups_dinfo_t</a> *dinfo, size_t n, unsigned flags, <a href="#cups_size_t">cups_size_t</a> *size);</p>
+bool cupsGetDestMediaByIndex(<a href="#http_t">http_t</a> *http, <a href="#cups_dest_t">cups_dest_t</a> *dest, <a href="#cups_dinfo_t">cups_dinfo_t</a> *dinfo, size_t n, unsigned flags, <a href="#cups_media_t">cups_media_t</a> *media);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>http</th>
@@ -4320,8 +4349,8 @@ bool cupsGetDestMediaByIndex(<a href="#http_t">http_t</a> *http, <a href="#cups_
 <td class="description">Media size number (0-based)</td></tr>
 <tr><th>flags</th>
 <td class="description">Media flags</td></tr>
-<tr><th>size</th>
-<td class="description">Media size information</td></tr>
+<tr><th>media</th>
+<td class="description">Media</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description"><code>true</code> on success, <code>false</code> on failure</p>
@@ -4332,7 +4361,7 @@ size supported by the printer.</p>
 <h3 class="function"><a id="cupsGetDestMediaByName">cupsGetDestMediaByName</a></h3>
 <p class="description">Get media names, dimensions, and margins.</p>
 <p class="code">
-bool cupsGetDestMediaByName(<a href="#http_t">http_t</a> *http, <a href="#cups_dest_t">cups_dest_t</a> *dest, <a href="#cups_dinfo_t">cups_dinfo_t</a> *dinfo, const char *media, unsigned flags, <a href="#cups_size_t">cups_size_t</a> *size);</p>
+bool cupsGetDestMediaByName(<a href="#http_t">http_t</a> *http, <a href="#cups_dest_t">cups_dest_t</a> *dest, <a href="#cups_dinfo_t">cups_dinfo_t</a> *dinfo, const char *name, unsigned flags, <a href="#cups_media_t">cups_media_t</a> *media);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>http</th>
@@ -4341,12 +4370,12 @@ bool cupsGetDestMediaByName(<a href="#http_t">http_t</a> *http, <a href="#cups_d
 <td class="description">Destination</td></tr>
 <tr><th>dinfo</th>
 <td class="description">Destination information</td></tr>
-<tr><th>media</th>
+<tr><th>name</th>
 <td class="description">Media name</td></tr>
 <tr><th>flags</th>
 <td class="description">Media matching flags</td></tr>
-<tr><th>size</th>
-<td class="description">Media size information</td></tr>
+<tr><th>media</th>
+<td class="description">Media</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description"><code>true</code> on match, <code>false</code> on failure</p>
@@ -4372,7 +4401,7 @@ Returns <code>true</code> when there is a match and <code>false</code> if there 
 <h3 class="function"><a id="cupsGetDestMediaBySize">cupsGetDestMediaBySize</a></h3>
 <p class="description">Get media names, dimensions, and margins.</p>
 <p class="code">
-bool cupsGetDestMediaBySize(<a href="#http_t">http_t</a> *http, <a href="#cups_dest_t">cups_dest_t</a> *dest, <a href="#cups_dinfo_t">cups_dinfo_t</a> *dinfo, int width, int length, unsigned flags, <a href="#cups_size_t">cups_size_t</a> *size);</p>
+bool cupsGetDestMediaBySize(<a href="#http_t">http_t</a> *http, <a href="#cups_dest_t">cups_dest_t</a> *dest, <a href="#cups_dinfo_t">cups_dinfo_t</a> *dinfo, int width, int length, unsigned flags, <a href="#cups_media_t">cups_media_t</a> *media);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>http</th>
@@ -4387,8 +4416,8 @@ bool cupsGetDestMediaBySize(<a href="#http_t">http_t</a> *http, <a href="#cups_d
 <td class="description">Media length in hundredths of millimeters</td></tr>
 <tr><th>flags</th>
 <td class="description">Media matching flags</td></tr>
-<tr><th>size</th>
-<td class="description">Media size information</td></tr>
+<tr><th>media</th>
+<td class="description">Media</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description"><code>true</code> on match, <code>false</code> on failure</p>
@@ -4436,7 +4465,7 @@ borderless sizes.</p>
 <h3 class="function"><a id="cupsGetDestMediaDefault">cupsGetDestMediaDefault</a></h3>
 <p class="description">Get the default size for a destination.</p>
 <p class="code">
-bool cupsGetDestMediaDefault(<a href="#http_t">http_t</a> *http, <a href="#cups_dest_t">cups_dest_t</a> *dest, <a href="#cups_dinfo_t">cups_dinfo_t</a> *dinfo, unsigned flags, <a href="#cups_size_t">cups_size_t</a> *size);</p>
+bool cupsGetDestMediaDefault(<a href="#http_t">http_t</a> *http, <a href="#cups_dest_t">cups_dest_t</a> *dest, <a href="#cups_dinfo_t">cups_dinfo_t</a> *dinfo, unsigned flags, <a href="#cups_media_t">cups_media_t</a> *media);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>http</th>
@@ -4447,8 +4476,8 @@ bool cupsGetDestMediaDefault(<a href="#http_t">http_t</a> *http, <a href="#cups_
 <td class="description">Destination information</td></tr>
 <tr><th>flags</th>
 <td class="description">Media flags</td></tr>
-<tr><th>size</th>
-<td class="description">Media size information</td></tr>
+<tr><th>media</th>
+<td class="description">Media</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description"><code>true</code> on match, <code>false</code> on failure</p>
@@ -5562,7 +5591,7 @@ void cupsLangSetLocale(char *argv[]);</p>
 <p class="description">Get the localized string for a destination media
                             size.</p>
 <p class="code">
-const char *cupsLocalizeDestMedia(<a href="#http_t">http_t</a> *http, <a href="#cups_dest_t">cups_dest_t</a> *dest, <a href="#cups_dinfo_t">cups_dinfo_t</a> *dinfo, unsigned flags, <a href="#cups_size_t">cups_size_t</a> *size);</p>
+const char *cupsLocalizeDestMedia(<a href="#http_t">http_t</a> *http, <a href="#cups_dest_t">cups_dest_t</a> *dest, <a href="#cups_dinfo_t">cups_dinfo_t</a> *dinfo, unsigned flags, <a href="#cups_media_t">cups_media_t</a> *media);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>http</th>
@@ -5573,8 +5602,8 @@ const char *cupsLocalizeDestMedia(<a href="#http_t">http_t</a> *http, <a href="#
 <td class="description">Destination information</td></tr>
 <tr><th>flags</th>
 <td class="description">Media flags</td></tr>
-<tr><th>size</th>
-<td class="description">Media size</td></tr>
+<tr><th>media</th>
+<td class="description">Media info</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Localized string</p>
@@ -5807,10 +5836,10 @@ void cupsRasterClose(<a href="#cups_raster_t">cups_raster_t</a> *r);</p>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">The file descriptor associated with the raster stream must be closed
 separately as needed.</p>
-<h3 class="function"><a id="cupsRasterErrorString">cupsRasterErrorString</a></h3>
+<h3 class="function"><a id="cupsRasterGetErrorString">cupsRasterGetErrorString</a></h3>
 <p class="description">Return the last error from a raster function.</p>
 <p class="code">
-const char *cupsRasterErrorString(void);</p>
+const char *cupsRasterGetErrorString(void);</p>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Last error</p>
 <h4 class="discussion">Discussion</h4>
@@ -5818,7 +5847,7 @@ const char *cupsRasterErrorString(void);</p>
 <h3 class="function"><a id="cupsRasterInitHeader">cupsRasterInitHeader</a></h3>
 <p class="description">Initialize a page header for PWG Raster output.</p>
 <p class="code">
-bool cupsRasterInitHeader(<a href="#cups_page_header_t">cups_page_header_t</a> *h, <a href="#cups_size_t">cups_size_t</a> *media, const char *optimize, <a href="#ipp_quality_t">ipp_quality_t</a> quality, const char *intent, <a href="#ipp_orient_t">ipp_orient_t</a> orientation, const char *sides, const char *type, int xdpi, int ydpi, const char *sheet_back);</p>
+bool cupsRasterInitHeader(<a href="#cups_page_header_t">cups_page_header_t</a> *h, <a href="#cups_media_t">cups_media_t</a> *media, const char *optimize, <a href="#ipp_quality_t">ipp_quality_t</a> quality, const char *intent, <a href="#ipp_orient_t">ipp_orient_t</a> orientation, const char *sides, const char *type, int xdpi, int ydpi, const char *sheet_back);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>h</th>
@@ -6107,32 +6136,16 @@ on a successful send of the request.<br>
 <br>
 Note: Unlike <a href="#cupsDoFileRequest"><code>cupsDoFileRequest</code></a>, <a href="#cupsDoIORequest"><code>cupsDoIORequest</code></a>, and
 <a href="#cupsDoRequest"><code>cupsDoRequest</code></a>, the request is NOT freed with <a href="#ippDelete"><code>ippDelete</code></a>.</p>
-<h3 class="function"><a id="cupsSetClientCertCB">cupsSetClientCertCB</a></h3>
-<p class="description">Set the client certificate callback.</p>
+<h3 class="function"><a id="cupsSetClientCredentials">cupsSetClientCredentials</a></h3>
+<p class="description">Set the default credentials to be used for TLS connections.</p>
 <p class="code">
-void cupsSetClientCertCB(<a href="#cups_client_cert_cb_t">cups_client_cert_cb_t</a> cb, void *user_data);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>cb</th>
-<td class="description">Callback function</td></tr>
-<tr><th>user_data</th>
-<td class="description">User data pointer</td></tr>
-</tbody></table>
-<h4 class="discussion">Discussion</h4>
-<p class="discussion">Pass <code>NULL</code> to restore the default callback.<br>
-<br>
-Note: The current certificate callback is tracked separately for each thread
-in a program. Multi-threaded programs that override the callback need to do
-so in each thread for the same callback to be used.</p>
-<h3 class="function"><a id="cupsSetCredentials">cupsSetCredentials</a></h3>
-<p class="description">Set the default credentials to be used for TLS
-			    connections.</p>
-<p class="code">
-bool cupsSetCredentials(const char *credentials);</p>
+bool cupsSetClientCredentials(const char *credentials, const char *key);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>credentials</th>
 <td class="description">PEM-encoded X.509 credentials string</td></tr>
+<tr><th>key</th>
+<td class="description">PEM-encoded private key</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description"><code>true</code> on success, <code>false</code> on failure</p>
@@ -6257,23 +6270,6 @@ default server name and port.<br>
 Note: The current server is tracked separately for each thread in a program.
 Multi-threaded programs that override the server need to do so in each
 thread for the same server to be used.</p>
-<h3 class="function"><a id="cupsSetServerCertCB">cupsSetServerCertCB</a></h3>
-<p class="description">Set the server certificate callback.</p>
-<p class="code">
-void cupsSetServerCertCB(<a href="#cups_server_cert_cb_t">cups_server_cert_cb_t</a> cb, void *user_data);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>cb</th>
-<td class="description">Callback function</td></tr>
-<tr><th>user_data</th>
-<td class="description">User data pointer</td></tr>
-</tbody></table>
-<h4 class="discussion">Discussion</h4>
-<p class="discussion">Pass <code>NULL</code> to restore the default callback.<br>
-<br>
-Note: The current credentials callback is tracked separately for each thread
-in a program. Multi-threaded programs that override the callback need to do
-so in each thread for the same callback to be used.</p>
 <h3 class="function"><a id="cupsSetServerCredentials">cupsSetServerCredentials</a></h3>
 <p class="description">Set the default server credentials.</p>
 <p class="code">
@@ -6464,50 +6460,6 @@ to the document.  The &quot;last_document&quot; argument specifies whether this 
 final document in the job (<code>true</code>) or not (<code>false</code>).<br>
 <br>
 Returns <code>HTTP_CONTINUE</code> on success.</p>
-<h3 class="function"><a id="cupsTempFd">cupsTempFd</a></h3>
-<p class="description">Creates a temporary file.</p>
-<p class="code">
-int cupsTempFd(const char *prefix, const char *suffix, char *filename, size_t len);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>prefix</th>
-<td class="description">Filename prefix or <code>NULL</code> for none</td></tr>
-<tr><th>suffix</th>
-<td class="description">Filename suffix or <code>NULL</code> for none</td></tr>
-<tr><th>filename</th>
-<td class="description">Pointer to buffer</td></tr>
-<tr><th>len</th>
-<td class="description">Size of buffer</td></tr>
-</tbody></table>
-<h4 class="returnvalue">Return Value</h4>
-<p class="description">New file descriptor or <code>-1</code> on error</p>
-<h4 class="discussion">Discussion</h4>
-<p class="discussion">This function creates a temporary file and returns a file descriptor for the
-file.  The unique temporary filename uses the &quot;prefix&quot; and &quot;suffix&quot; arguments
-and is returned in the filename buffer.  The temporary file is opened for
-reading and writing.</p>
-<h3 class="function"><a id="cupsTempFile">cupsTempFile</a></h3>
-<p class="description">Creates a temporary CUPS file.</p>
-<p class="code">
-<a href="#cups_file_t">cups_file_t</a> *cupsTempFile(const char *prefix, const char *suffix, char *filename, size_t len);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>prefix</th>
-<td class="description">Filename prefix or <code>NULL</code> for none</td></tr>
-<tr><th>suffix</th>
-<td class="description">Filename suffix or <code>NULL</code> for none</td></tr>
-<tr><th>filename</th>
-<td class="description">Pointer to buffer</td></tr>
-<tr><th>len</th>
-<td class="description">Size of buffer</td></tr>
-</tbody></table>
-<h4 class="returnvalue">Return Value</h4>
-<p class="description">CUPS file or <code>NULL</code> on error</p>
-<h4 class="discussion">Discussion</h4>
-<p class="discussion">This function creates a temporary file and returns a file descriptor for the
-file.  The unique temporary filename uses the &quot;prefix&quot; and &quot;suffix&quot; arguments
-and is returned in the filename buffer.  The temporary file is opened for
-writing.</p>
 <h3 class="function"><a id="cupsThreadCancel">cupsThreadCancel</a></h3>
 <p class="description">Cancel (kill) a thread.</p>
 <p class="code">
@@ -7655,19 +7607,6 @@ void httpSetCookie(<a href="#http_t">http_t</a> *http, const char *cookie);</p>
 <tr><th>cookie</th>
 <td class="description">Cookie string</td></tr>
 </tbody></table>
-<h3 class="function"><a id="httpSetCredentials">httpSetCredentials</a></h3>
-<p class="description">Set the credentials associated with an encrypted connection.</p>
-<p class="code">
-bool httpSetCredentials(<a href="#http_t">http_t</a> *http, const char *credentials);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>http</th>
-<td class="description">HTTP connection</td></tr>
-<tr><th>credentials</th>
-<td class="description">Credentials string</td></tr>
-</tbody></table>
-<h4 class="returnvalue">Return Value</h4>
-<p class="description"><code>true</code> on success, <code>false</code> on error</p>
 <h3 class="function"><a id="httpSetDefaultField">httpSetDefaultField</a></h3>
 <p class="description">Set the default value of a HTTP header.</p>
 <p class="code">
@@ -8467,7 +8406,7 @@ string values.
 
 The "format" parameter uses formatting characters compatible with the
 printf family of standard functions.  Additional arguments are passed in the
-stdarg pointer `ap`.  The formatted string is truncated as needed to the
+stdarg pointer "ap".  The formatted string is truncated as needed to the
 maximum length of the corresponding value type.</code></p>
 <h3 class="function"><a id="ippAddStrings">ippAddStrings</a></h3>
 <p class="description">Add language-encoded strings to an IPP message.</p>
@@ -10326,11 +10265,6 @@ typedef enum <a href="#cups_bool_e">cups_bool_e</a> cups_bool_t;
 <p class="code">
 typedef bool(*)(const char *common_name, const char *subject_alt_name, void *user_data)cups_cert_san_cb_t;
 </p>
-<h3 class="typedef"><a id="cups_client_cert_cb_t">cups_client_cert_cb_t</a></h3>
-<p class="description">Client credentials callback</p>
-<p class="code">
-typedef bool(*)(http_t *http, void *tls, <a href="#cups_array_t">cups_array_t</a> *distinguished_names, void *user_data)cups_client_cert_cb_t;
-</p>
 <h3 class="typedef"><a id="cups_cond_t">cups_cond_t</a></h3>
 <p class="description">Condition variable</p>
 <p class="code">
@@ -10462,7 +10396,7 @@ typedef typedef unsigned long cups_utf32_t;
 typedef struct _cups_file_s cups_file_t;
 </p>
 <h3 class="typedef"><a id="cups_job_t">cups_job_t</a></h3>
-<p class="description">Job</p>
+<p class="description">Job information</p>
 <p class="code">
 typedef struct <a href="#cups_job_s">cups_job_s</a> cups_job_t;
 </p>
@@ -10505,6 +10439,11 @@ typedef struct _cups_lang_s cups_lang_t;
 <p class="description">Combined flags for <a href="#cupsGetDestMediaByName"><code>cupsGetDestMediaByName</code></a> and <a href="#cupsGetDestMediaBySize"><code>cupsGetDestMediaBySize</code></a></p>
 <p class="code">
 typedef unsigned cups_media_flags_t;
+</p>
+<h3 class="typedef"><a id="cups_media_t">cups_media_t</a></h3>
+<p class="description">Media information</p>
+<p class="code">
+typedef struct <a href="#cups_media_s">cups_media_s</a> cups_media_t;
 </p>
 <h3 class="typedef"><a id="cups_mediapos_t">cups_mediapos_t</a></h3>
 <p class="description">MediaPosition values</p>
@@ -10565,16 +10504,6 @@ typedef struct _cups_raster_s cups_raster_t;
 <p class="description">Reader/writer lock</p>
 <p class="code">
 typedef pthread_rwlock_t cups_rwlock_t;
-</p>
-<h3 class="typedef"><a id="cups_server_cert_cb_t">cups_server_cert_cb_t</a></h3>
-<p class="description">Server credentials callback</p>
-<p class="code">
-typedef bool(*)(http_t *http, void *tls, <a href="#cups_array_t">cups_array_t</a> *certs, void *user_data)cups_server_cert_cb_t;
-</p>
-<h3 class="typedef"><a id="cups_size_t">cups_size_t</a></h3>
-<p class="description">Media information</p>
-<p class="code">
-typedef struct <a href="#cups_size_s">cups_size_s</a> cups_size_t;
 </p>
 <h3 class="typedef"><a id="cups_thread_func_t">cups_thread_func_t</a></h3>
 <p class="description">Thread function</p>
@@ -10796,7 +10725,7 @@ typedef struct <a href="#pwg_media_s">pwg_media_s</a> pwg_media_t;
 <h4 class="members">Members</h4>
 <table class="list"><tbody>
 <tr><th>instance </th>
-<td class="description">Local instance name or NULL</td></tr>
+<td class="description">Local instance name or <code>NULL</code></td></tr>
 <tr><th>is_default </th>
 <td class="description">Is this printer the default?</td></tr>
 <tr><th>num_options </th>
@@ -10805,7 +10734,7 @@ typedef struct <a href="#pwg_media_s">pwg_media_s</a> pwg_media_t;
 <td class="description">Options</td></tr>
 </tbody></table>
 <h3 class="struct"><a id="cups_job_s">cups_job_s</a></h3>
-<p class="description">Job</p>
+<p class="description">Job information</p>
 <p class="code">struct cups_job_s {<br>
 &#160;&#160;&#160;&#160;time_t completed_time;<br>
 &#160;&#160;&#160;&#160;time_t creation_time;<br>
@@ -10843,6 +10772,19 @@ typedef struct <a href="#pwg_media_s">pwg_media_s</a> pwg_media_t;
 <td class="description">Title/job name</td></tr>
 <tr><th>user </th>
 <td class="description">User that submitted the job</td></tr>
+</tbody></table>
+<h3 class="struct"><a id="cups_media_s">cups_media_s</a></h3>
+<p class="description">Media information</p>
+<p class="code">struct cups_media_s {<br>
+&#160;&#160;&#160;&#160;int width, length, bottom, left, right, top;<br>
+&#160;&#160;&#160;&#160;char media[128], color[128], source[128], type[128];<br>
+};</p>
+<h4 class="members">Members</h4>
+<table class="list"><tbody>
+<tr><th>top </th>
+<td class="description">Top margin in hundredths of millimeters</td></tr>
+<tr><th>type[128] </th>
+<td class="description">Media type (blank for any/auto)</td></tr>
 </tbody></table>
 <h3 class="struct"><a id="cups_option_s">cups_option_s</a></h3>
 <p class="description">Printer Options</p>
@@ -11013,19 +10955,6 @@ factor not applied)</td></tr>
 <td class="description">User-defined string values</td></tr>
 <tr><th>cupsWidth </th>
 <td class="description">Width of page image in pixels</td></tr>
-</tbody></table>
-<h3 class="struct"><a id="cups_size_s">cups_size_s</a></h3>
-<p class="description">Media information</p>
-<p class="code">struct cups_size_s {<br>
-&#160;&#160;&#160;&#160;int width, length, bottom, left, right, top;<br>
-&#160;&#160;&#160;&#160;char media[128], color[128], source[128], type[128];<br>
-};</p>
-<h4 class="members">Members</h4>
-<table class="list"><tbody>
-<tr><th>top </th>
-<td class="description">Top margin in hundredths of millimeters</td></tr>
-<tr><th>type[128] </th>
-<td class="description">Media type (blank for any/auto)</td></tr>
 </tbody></table>
 <h3 class="struct"><a id="http_addrlist_s">http_addrlist_s</a></h3>
 <p class="description">Socket address list, which is used to enumerate all of the addresses that are associated with a hostname.</p>
@@ -11413,32 +11342,33 @@ factor not applied)</td></tr>
 <p class="description">Printer type/capability flags</p>
 <h4 class="constants">Constants</h4>
 <table class="list"><tbody>
-<tr><th>CUPS_PRINTER_AUTHENTICATED </th><td class="description">Printer requires authentication</td></tr>
-<tr><th>CUPS_PRINTER_BIND </th><td class="description">Can bind output</td></tr>
-<tr><th>CUPS_PRINTER_BW </th><td class="description">Can do B&amp;W printing</td></tr>
-<tr><th>CUPS_PRINTER_CLASS </th><td class="description">Printer class</td></tr>
-<tr><th>CUPS_PRINTER_COLLATE </th><td class="description">Can quickly collate copies</td></tr>
-<tr><th>CUPS_PRINTER_COLOR </th><td class="description">Can do color printing</td></tr>
-<tr><th>CUPS_PRINTER_COMMANDS </th><td class="description">Printer supports maintenance commands</td></tr>
-<tr><th>CUPS_PRINTER_COPIES </th><td class="description">Can do copies in hardware</td></tr>
-<tr><th>CUPS_PRINTER_COVER </th><td class="description">Can cover output</td></tr>
-<tr><th>CUPS_PRINTER_DEFAULT </th><td class="description">Default printer on network</td></tr>
-<tr><th>CUPS_PRINTER_DISCOVERED </th><td class="description">Printer was discovered</td></tr>
-<tr><th>CUPS_PRINTER_DUPLEX </th><td class="description">Can do two-sided printing</td></tr>
-<tr><th>CUPS_PRINTER_FAX </th><td class="description">Fax queue</td></tr>
-<tr><th>CUPS_PRINTER_LARGE </th><td class="description">Can print on D/E/A1/A0-size media</td></tr>
-<tr><th>CUPS_PRINTER_LOCAL </th><td class="description">Local printer or class</td></tr>
-<tr><th>CUPS_PRINTER_MEDIUM </th><td class="description">Can print on Tabloid/B/C/A3/A2-size media</td></tr>
-<tr><th>CUPS_PRINTER_MFP </th><td class="description">Printer with scanning capabilities</td></tr>
-<tr><th>CUPS_PRINTER_NOT_SHARED </th><td class="description">Printer is not shared</td></tr>
-<tr><th>CUPS_PRINTER_PUNCH </th><td class="description">Can punch output</td></tr>
-<tr><th>CUPS_PRINTER_REJECTING </th><td class="description">Printer is rejecting jobs</td></tr>
-<tr><th>CUPS_PRINTER_REMOTE </th><td class="description">Remote printer or class</td></tr>
-<tr><th>CUPS_PRINTER_SCANNER </th><td class="description">Scanner-only device</td></tr>
-<tr><th>CUPS_PRINTER_SMALL </th><td class="description">Can print on Letter/Legal/A4-size media</td></tr>
-<tr><th>CUPS_PRINTER_SORT </th><td class="description">Can sort output</td></tr>
-<tr><th>CUPS_PRINTER_STAPLE </th><td class="description">Can staple output</td></tr>
-<tr><th>CUPS_PRINTER_VARIABLE </th><td class="description">Can print on rolls and custom-size media</td></tr>
+<tr><th>CUPS_PTYPE_AUTHENTICATED </th><td class="description">Printer requires authentication</td></tr>
+<tr><th>CUPS_PTYPE_BIND </th><td class="description">Can bind output</td></tr>
+<tr><th>CUPS_PTYPE_BW </th><td class="description">Can do B&amp;W printing</td></tr>
+<tr><th>CUPS_PTYPE_CLASS </th><td class="description">Printer class</td></tr>
+<tr><th>CUPS_PTYPE_COLLATE </th><td class="description">Can quickly collate copies</td></tr>
+<tr><th>CUPS_PTYPE_COLOR </th><td class="description">Can do color printing</td></tr>
+<tr><th>CUPS_PTYPE_COMMANDS </th><td class="description">Printer supports maintenance commands</td></tr>
+<tr><th>CUPS_PTYPE_COPIES </th><td class="description">Can do copies in hardware</td></tr>
+<tr><th>CUPS_PTYPE_COVER </th><td class="description">Can cover output</td></tr>
+<tr><th>CUPS_PTYPE_DEFAULT </th><td class="description">Default printer on network</td></tr>
+<tr><th>CUPS_PTYPE_DISCOVERED </th><td class="description">Printer was discovered</td></tr>
+<tr><th>CUPS_PTYPE_DUPLEX </th><td class="description">Can do two-sided printing</td></tr>
+<tr><th>CUPS_PTYPE_FAX </th><td class="description">Fax queue</td></tr>
+<tr><th>CUPS_PTYPE_FOLD </th><td class="description">Can fold output</td></tr>
+<tr><th>CUPS_PTYPE_LARGE </th><td class="description">Can print on D/E/A1/A0-size media</td></tr>
+<tr><th>CUPS_PTYPE_LOCAL </th><td class="description">Local printer or class</td></tr>
+<tr><th>CUPS_PTYPE_MEDIUM </th><td class="description">Can print on Tabloid/B/C/A3/A2-size media</td></tr>
+<tr><th>CUPS_PTYPE_MFP </th><td class="description">Printer with scanning capabilities</td></tr>
+<tr><th>CUPS_PTYPE_NOT_SHARED </th><td class="description">Printer is not shared</td></tr>
+<tr><th>CUPS_PTYPE_PUNCH </th><td class="description">Can punch output</td></tr>
+<tr><th>CUPS_PTYPE_REJECTING </th><td class="description">Printer is rejecting jobs</td></tr>
+<tr><th>CUPS_PTYPE_REMOTE </th><td class="description">Remote printer or class</td></tr>
+<tr><th>CUPS_PTYPE_SCANNER </th><td class="description">Scanner-only device</td></tr>
+<tr><th>CUPS_PTYPE_SMALL </th><td class="description">Can print on Letter/Legal/A4-size media</td></tr>
+<tr><th>CUPS_PTYPE_SORT </th><td class="description">Can sort output</td></tr>
+<tr><th>CUPS_PTYPE_STAPLE </th><td class="description">Can staple output</td></tr>
+<tr><th>CUPS_PTYPE_VARIABLE </th><td class="description">Can print on rolls and custom-size media</td></tr>
 </tbody></table>
 <h3 class="enumeration"><a id="cups_raster_mode_e">cups_raster_mode_e</a></h3>
 <p class="description">cupsRasterOpen modes</p>
