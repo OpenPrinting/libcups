@@ -368,6 +368,8 @@ cups_globals_free(_cups_globals_t *cg)	// I - Pointer to global data
 
   _httpFreeCredentials(cg->credentials);
 
+  _cupsFreeProfiles(&cg->profiles);
+
   cupsFileClose(cg->stdio_files[0]);
   cupsFileClose(cg->stdio_files[1]);
   cupsFileClose(cg->stdio_files[2]);

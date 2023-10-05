@@ -222,6 +222,7 @@ enum cups_ptype_e			// Printer type/capability flags
   CUPS_PRINTER_DISCOVERED = 0x1000000,		// Printer was discovered
   CUPS_PRINTER_SCANNER = 0x2000000,		// Scanner-only device
   CUPS_PRINTER_MFP = 0x4000000,			// Printer with scanning capabilities
+  CUPS_PRINTER_FOLD = 0x8000000,		// Can fold output
   CUPS_PRINTER_OPTIONS = 0x6fffc		// ~(CLASS | REMOTE | IMPLICIT | DEFAULT | FAX | REJECTING | DELETE | NOT_SHARED | AUTHENTICATED | COMMANDS | DISCOVERED) @private@
 };
 typedef unsigned cups_ptype_t;		// Combined printer type/capability flags

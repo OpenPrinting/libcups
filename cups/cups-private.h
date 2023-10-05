@@ -72,7 +72,7 @@ typedef enum _cups_uatokens_e		// UserAgentTokens values
   _CUPS_UATOKENS_FULL			// CUPS/major.minor.patch (osname osversion; architecture) IPP/2.1
 } _cups_uatokens_t;
 
-typedef struct _cups_profile_s		// CUPS profile
+typedef struct _cups_profiles_s		// CUPS profiles
 {
   time_t		prof_mtime;	// Newest modification date of profiles
   float			prof_geolimit;	// FilterGeoLocation value (negative = all, 0 = none, >0 = limit)
@@ -82,7 +82,7 @@ typedef struct _cups_profile_s		// CUPS profile
   cups_array_t		*prof_printers;	// IPP printers
   cups_array_t		*prof_servers;	// CUPS servers
   cups_array_t		*prof_systems;	// IPP system services
-} _cups_profile_t;
+} _cups_profiles_t;
 
 typedef struct _cups_globals_s		// CUPS global state data
 {
@@ -102,7 +102,7 @@ typedef struct _cups_globals_s		// CUPS global state data
 #  endif // DEBUG
 
   // dest.c
-  _cups_profile_t	profiles;	// Combined profiles
+  _cups_profiles_t	profiles;	// Combined profiles
 
   // file.c
   cups_file_t		*stdio_files[3];// stdin, stdout, stderr
@@ -241,6 +241,7 @@ extern void		_cupsBufferRelease(char *b) _CUPS_PRIVATE;
 extern http_t		*_cupsConnect(void) _CUPS_PRIVATE;
 extern char		*_cupsCreateDest(const char *name, const char *info, const char *device_id, const char *device_uri, char *uri, size_t urisize) _CUPS_PRIVATE;
 extern ipp_attribute_t	*_cupsEncodeOption(ipp_t *ipp, ipp_tag_t group_tag, _ipp_option_t *map, const char *name, const char *value) _CUPS_PRIVATE;
+extern void		_cupsFreeProfiles(_cups_profiles_t *profiles) _CUPS_PRIVATE;
 extern const char	*_cupsGetDestResource(cups_dest_t *dest, unsigned flags, char *resource, size_t resourcesize) _CUPS_PRIVATE;
 extern size_t		_cupsGetDests(http_t *http, ipp_op_t op, const char *name, cups_dest_t **dests, cups_ptype_t type, cups_ptype_t mask) _CUPS_PRIVATE;
 extern const char	*_cupsGetPassword(const char *prompt) _CUPS_PRIVATE;

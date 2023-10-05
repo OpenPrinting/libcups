@@ -135,11 +135,12 @@ static size_t		cups_find_dest(const char *name, const char *instance, size_t num
 static bool		cups_get_cb(_cups_getdata_t *data, unsigned flags, cups_dest_t *dest);
 static char		*cups_get_default(const char *filename, char *namebuf, size_t namesize, const char **instance);
 static size_t		cups_get_dests(const char *filename, const char *match_name, const char *match_inst, bool load_all, bool user_default_set, size_t num_dests, cups_dest_t **dests);
-static void		cups_load_profiles(const char *filename, _cups_profile_t *prof);
+static void		cups_init_profiles(_cups_profiles_t *profiles);
+static void		cups_load_profile(_cups_profiles_t *profiles, const char *filename);
 static char		*cups_make_string(ipp_attribute_t *attr, char *buffer, size_t bufsize);
 static bool		cups_name_cb(_cups_namedata_t *data, unsigned flags, cups_dest_t *dest);
 static void		cups_queue_name(char *name, const char *serviceName, size_t namesize);
-static void		cups_scan_profiles(cups_array_t *profiles, const char *path, time_t *mtime);
+static void		cups_scan_profiles(cups_array_t *proflist, const char *path, time_t *mtime);
 static void		dnssd_error_cb(void *cb_data, const char *message);
 
 
@@ -785,6 +786,21 @@ cupsFreeDests(size_t      num_dests,	// I - Number of destinations
   }
 
   free(dests);
+}
+
+
+//
+// '_cupsFreeProfiles()' - Free profiles.
+//
+
+void
+_cupsFreeProfiles(
+    _cups_profiles_t *profiles)		// I - Profiles
+{
+  cupsArrayDelete(profiles->prof_locations);
+  cupsArrayDelete(profiles->prof_printers);
+  cupsArrayDelete(profiles->prof_servers);
+  cupsArrayDelete(profiles->prof_systems);
 }
 
 
@@ -2634,7 +2650,10 @@ cups_enum_dests(
   _cups_dnssd_device_t *device;         // Current device
   cups_dnssd_t	*dnssd = NULL;		// DNS-SD context
   char		filename[1024];		// Local lpoptions file
-  _cups_profile_t profile;		// Profiles
+  cups_array_t	*proflist;		// Profiles list
+  const char	*profname;		// Profile filename
+  char		profpath[1024];		// Profiles path
+  _cups_profiles_t profiles;		// Profiles
   _cups_globals_t *cg = _cupsGlobals();	// Pointer to library globals
 
 
@@ -2688,6 +2707,31 @@ cups_enum_dests(
   }
 
   DEBUG_printf("1cups_enum_dests: def_name=\"%s\", def_instance=\"%s\"", data.def_name, data.def_instance);
+
+  // Get profiles...
+  proflist = cupsArrayNew(/*cb*/NULL, /*cb_data*/NULL, /*hash_cb*/NULL, /*hashsize*/0, (cups_acopy_cb_t)strdup, (cups_afree_cb_t)free);
+  cups_init_profiles(&profiles);
+
+  snprintf(profpath, sizeof(profpath), "%s/profiles", cg->sysconfig);
+  cups_scan_profiles(proflist, profpath, &profiles.prof_mtime);
+
+  snprintf(profpath, sizeof(profpath), "%s/profiles", cg->userconfig);
+  cups_scan_profiles(proflist, profpath, &profiles.prof_mtime);
+
+  if (profiles.prof_mtime > cg->profiles.prof_mtime)
+  {
+    // Save new profiles...
+    for (profname = (const char *)cupsArrayGetFirst(proflist); profname; profname = (const char *)cupsArrayGetNext(proflist))
+      cups_load_profile(&profiles, profname);
+
+    _cupsFreeProfiles(&cg->profiles);
+    cg->profiles = profiles;
+  }
+  else
+  {
+    // Free old prof
+    _cupsFreeProfiles(&profiles);
+  }
 
   // Get ready to enumerate...
   cupsRWInit(&data.rwlock);
@@ -3223,15 +3267,166 @@ cups_get_dests(
 
 
 //
+// 'cups_init_profiles()' - Initialize profiles.
+//
+
+static void
+cups_init_profiles(
+    _cups_profiles_t *profiles)		// I - Profiles
+{
+  memset(profiles, 0, sizeof(_cups_profiles_t));
+  profiles->prof_geolimit = -1.0f;
+}
+
+
+//
 // 'cups_load_profile()' - Load printers and servers from a profile.
 //
 
 static void
 cups_load_profile(
-    const char      *filename,		// I - Profile filename
-    _cups_profile_t *prof)		// I - Profile data
+    _cups_profiles_t *profiles,		// I - Profile data
+    const char      *filename)		// I - Profile filename
 {
+  cups_file_t	*fp;			// Profile file
+  int		linenum = 0;		// Line number
+  char		line[1024],		// Line
+		*value;			// Value from line
 
+
+  if ((fp = cupsFileOpen(filename, "r")) == NULL)
+    return;
+
+  while (cupsFileGetConf(fp, line, sizeof(line), &value, &linenum))
+  {
+    // Ignore lines with no value...
+    if (!value)
+      continue;
+
+    // Look for profile/filter directives...
+    if (!_cups_strcasecmp(line, "FilterGeoLocation"))
+    {
+      // FilterGeoLocation none
+      // FilterGeoLocation DISTANCE-METERS
+    }
+    else if (!_cups_strcasecmp(line, "FilterLocation"))
+    {
+      // FilterLocation none
+      // FilterLocation "LOCATION-STRING"
+      // FilterLocation /LOCATION-REGEX/
+      char	*locptr;		// Pointer into location value
+
+      if (!_cups_strcasecmp(value, "none"))
+      {
+        cupsArrayDelete(profiles->prof_locations);
+        profiles->prof_locations = NULL;
+      }
+      else if (*value == '\"' || *value == '\'' || *value == '/')
+      {
+        if ((locptr = value + strlen(value) - 1) > value && *locptr == *value)
+        {
+          *locptr = '\0';
+
+          if (!profiles->prof_locations)
+            profiles->prof_locations = cupsArrayNew(/*cb*/NULL, /*cb_data*/NULL, /*hash_cb*/NULL, /*hashsize*/0, (cups_acopy_cb_t)strdup, (cups_afree_cb_t)free);
+
+          cupsArrayAdd(profiles->prof_locations, value);
+        }
+      }
+    }
+    else if (!_cups_strcasecmp(line, "FilterType"))
+    {
+      // FilterType {any,mono,color,duplex,simplex,staple,small,mediumm,large}
+      cups_array_t	*types = cupsArrayNewStrings(value, ',');
+					// Array of type strings
+      const char	*type;		// Current type
+
+      for (type = (const char *)cupsArrayGetFirst(types); type; type = (const char *)cupsArrayGetNext(types))
+      {
+        if (!_cups_strcasecmp(type, "any"))
+        {
+          profiles->prof_ptype = 0;
+          profiles->prof_pmask = 0;
+	}
+        else if (!_cups_strcasecmp(type, "color"))
+        {
+          profiles->prof_ptype |= CUPS_PRINTER_COLOR;
+          profiles->prof_pmask |= CUPS_PRINTER_COLOR;
+	}
+        else if (!_cups_strcasecmp(type, "mono"))
+        {
+          profiles->prof_pmask |= CUPS_PRINTER_COLOR;
+	}
+        else if (!_cups_strcasecmp(type, "duplex"))
+        {
+          profiles->prof_ptype |= CUPS_PRINTER_DUPLEX;
+          profiles->prof_pmask |= CUPS_PRINTER_DUPLEX;
+	}
+        else if (!_cups_strcasecmp(type, "simplex"))
+        {
+          profiles->prof_pmask |= CUPS_PRINTER_DUPLEX;
+	}
+        else if (!_cups_strcasecmp(type, "staple"))
+        {
+          profiles->prof_ptype |= CUPS_PRINTER_STAPLE;
+          profiles->prof_pmask |= CUPS_PRINTER_STAPLE;
+	}
+        else if (!_cups_strcasecmp(type, "punch"))
+        {
+          profiles->prof_ptype |= CUPS_PRINTER_PUNCH;
+          profiles->prof_pmask |= CUPS_PRINTER_PUNCH;
+	}
+        else if (!_cups_strcasecmp(type, "fold"))
+        {
+          profiles->prof_ptype |= CUPS_PRINTER_FOLD;
+          profiles->prof_pmask |= CUPS_PRINTER_FOLD;
+	}
+        else if (!_cups_strcasecmp(type, "small"))
+        {
+          profiles->prof_ptype |= CUPS_PRINTER_SMALL;
+          profiles->prof_pmask |= CUPS_PRINTER_SMALL | CUPS_PRINTER_MEDIUM | CUPS_PRINTER_LARGE;
+	}
+        else if (!_cups_strcasecmp(type, "medium"))
+        {
+          profiles->prof_ptype |= CUPS_PRINTER_MEDIUM;
+          profiles->prof_pmask |= CUPS_PRINTER_SMALL | CUPS_PRINTER_MEDIUM | CUPS_PRINTER_LARGE;
+	}
+        else if (!_cups_strcasecmp(type, "large"))
+        {
+          profiles->prof_ptype |= CUPS_PRINTER_LARGE;
+          profiles->prof_pmask |= CUPS_PRINTER_SMALL | CUPS_PRINTER_MEDIUM | CUPS_PRINTER_LARGE;
+	}
+      }
+
+      cupsArrayDelete(types);
+    }
+    else if (!_cups_strcasecmp(line, "Printer"))
+    {
+      // Printer PRINTER-URI
+      if (!profiles->prof_printers)
+       profiles->prof_printers = cupsArrayNew(/*cb*/NULL, /*cb_data*/NULL, /*hash_cb*/NULL, /*hashsize*/0, (cups_acopy_cb_t)strdup, (cups_afree_cb_t)free);
+
+      cupsArrayAdd(profiles->prof_printers, value);
+    }
+    else if (!_cups_strcasecmp(line, "Server"))
+    {
+      // Server HOSTNAME[:PORT]
+      if (!profiles->prof_servers)
+       profiles->prof_servers = cupsArrayNew(/*cb*/NULL, /*cb_data*/NULL, /*hash_cb*/NULL, /*hashsize*/0, (cups_acopy_cb_t)strdup, (cups_afree_cb_t)free);
+
+      cupsArrayAdd(profiles->prof_servers, value);
+    }
+    else if (!_cups_strcasecmp(line, "System"))
+    {
+      // System SYSTEM-URI
+      if (!profiles->prof_systems)
+       profiles->prof_systems = cupsArrayNew(/*cb*/NULL, /*cb_data*/NULL, /*hash_cb*/NULL, /*hashsize*/0, (cups_acopy_cb_t)strdup, (cups_afree_cb_t)free);
+
+      cupsArrayAdd(profiles->prof_systems, value);
+    }
+  }
+
+  cupsFileClose(fp);
 }
 
 
