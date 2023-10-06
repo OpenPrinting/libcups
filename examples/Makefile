@@ -25,8 +25,10 @@ DATAFILES	=	\
 			document-letter.pdf \
 			document-letter.ps \
 			gray.jpg \
+			onepage-a4-300-black-1.pwg \
 			onepage-a4.pdf \
 			onepage-a4.ps \
+			onepage-letter-300-black-1.pwg \
 			onepage-letter.pdf \
 			onepage-letter.ps \
 			testfile.jpg \
@@ -70,10 +72,6 @@ TESTFILES	=	\
 			identify-printer.test \
 			ipp-1.1.test \
 			ipp-2.0.test \
-			ipp-2.1.test \
-			ipp-2.2.test \
-			ipp-backend.test \
-			ipp-everywhere.test \
 			print-job.test \
 			print-job-and-wait.test \
 			print-job-deflate.test \
