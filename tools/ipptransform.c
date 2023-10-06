@@ -148,6 +148,10 @@ struct xform_raster_s			// Raster context
 // Local globals...
 static char		PdftopsCommand[1024] = "";
 					// "pdftops" command path, if any
+#ifndef HAVE_COREGRAPHICS_H
+static char		PdftoppmCommand[1024] = "";
+					// "pdftoppm" command path, if any
+#endif // !_HAVE_COREGRAPHICS_H
 static const char	*Prefix;	// Error message prefix (typically the command name or "ERROR" if running from ippeveprinter/ippserver
 static int		Verbosity = 0;	// Log level
 
@@ -4040,6 +4044,13 @@ xform_document(
   bool		poppler = false;	// Are we using Poppler's pdftoppm?
 
 
+  // Find the pdftoppm program...
+  if (!cupsFileFind("pdftoppm", getenv("PATH"), true, PdftoppmCommand, sizeof(PdftoppmCommand)))
+  {
+    cupsLangPrintf(stderr, _("%s: Unable to find pdftoppm helper program."), Prefix);
+    return (false);
+  }
+
   // Setup the raster headers...
   if (!xform_setup(&ras, options, outformat, resolutions, sheet_back, types, true, pages))
     return (false);
@@ -4081,10 +4092,12 @@ xform_document(
     // v3.0 days.  Unfortunately, the two commands have drifted apart so we need
     // to determine *which* pdftoppm command is available...
 #if _WIN32
-    if ((fp = _popen("pdftoppm -v", "r")) != NULL)
+    snprintf(command, sizeof(command), "%s -v", PdftoppmCommand);
 #else
-    if ((fp = popen("pdftoppm -v 2>&1", "r")) != NULL)
+    snprintf(command, sizeof(command), "%s -v 2>&1", PdftoppmCommand);
 #endif // _WIN32
+
+    if ((fp = _popen(command, "r")) != NULL)
     {
       while (fgets(output, sizeof(output), fp))
       {
@@ -4114,9 +4127,9 @@ xform_document(
     //   Xpdf:
     //     pdftoppm [-gray] -aa no -r resolution filename -
     if (poppler)
-      snprintf(command, sizeof(command), "pdftoppm %s -aa no -r %u -scale-to %u '%s'", ras.header.cupsBitsPerPixel <= 8 ? "-gray" : "", ras.header.HWResolution[0], ras.header.cupsHeight, filename);
+      snprintf(command, sizeof(command), "%s %s -aa no -r %u -scale-to %u '%s'", PdftoppmCommand, ras.header.cupsBitsPerPixel <= 8 ? "-gray" : "", ras.header.HWResolution[0], ras.header.cupsHeight, filename);
     else
-      snprintf(command, sizeof(command), "pdftoppm %s -aa no -r %u '%s' -", ras.header.cupsBitsPerPixel <= 8 ? "-gray" : "", ras.header.HWResolution[0], filename);
+      snprintf(command, sizeof(command), "%s %s -aa no -r %u '%s' -", PdftoppmCommand, ras.header.cupsBitsPerPixel <= 8 ? "-gray" : "", ras.header.HWResolution[0], filename);
 
     fprintf(stderr, "DEBUG: Running \"%s\".\n", command);
 #if _WIN32
@@ -4149,7 +4162,7 @@ xform_document(
       }
       else
       {
-        fprintf(stderr, "ERROR: Bad page header - <%02X%02X%02X%02X%02X%02X%02X%02X>", header[0] & 255, header[1] & 255, header[2] & 255, header[3] & 255, header[4] & 255, header[5] & 255, header[6] & 255, header[7] & 255);
+        cupsLangPrintf(stderr, _("%s: Bad page header - <%02X%02X%02X%02X%02X%02X%02X%02X>"), Prefix, header[0] & 255, header[1] & 255, header[2] & 255, header[3] & 255, header[4] & 255, header[5] & 255, header[6] & 255, header[7] & 255);
         break;
       }
 
@@ -4171,7 +4184,7 @@ xform_document(
 
       if (sscanf(header, "%u%u", &width, &height) != 2)
       {
-        fprintf(stderr, "ERROR: Bad page dimensions - <%02X%02X%02X%02X%02X%02X%02X%02X>", header[0] & 255, header[1] & 255, header[2] & 255, header[3] & 255, header[4] & 255, header[5] & 255, header[6] & 255, header[7] & 255);
+        cupsLangPrintf(stderr, _("%s: Bad page dimensions - <%02X%02X%02X%02X%02X%02X%02X%02X>"), Prefix, header[0] & 255, header[1] & 255, header[2] & 255, header[3] & 255, header[4] & 255, header[5] & 255, header[6] & 255, header[7] & 255);
         break;
       }
 

@@ -54,6 +54,8 @@
 "%s (Borderless, %s)" = "%s (Sin bordes, %s)";
 "%s (Borderless, %s, %s)" = "%s (Sin bordes, %s, %s)";
 "%s: %s" = "%s: %s";
+"%s: Bad page dimensions - <%02X%02X%02X%02X%02X%02X%02X%02X>" = "%s: Bad page dimensions - <%02X%02X%02X%02X%02X%02X%02X%02X>";
+"%s: Bad page header - <%02X%02X%02X%02X%02X%02X%02X%02X>" = "%s: Bad page header - <%02X%02X%02X%02X%02X%02X%02X%02X>";
 "%s: Bad resolution value '%s'." = "%s: Bad resolution value '%s'.";
 "%s: Bad version %s for \"-V\"." = "%s: Versión %s incorrecta para \"-V\".";
 "%s: Input Document %d: %s" = "%s: Input Document %d: %s";
@@ -76,7 +78,9 @@
 "%s: Unable to connect to '%s' on port %d: %s" = "%s: Unable to connect to '%s' on port %d: %s";
 "%s: Unable to create CFPDFDocument for file." = "%s: Unable to create CFPDFDocument for file.";
 "%s: Unable to create CFURL for file." = "%s: Unable to create CFURL for file.";
+"%s: Unable to create pipe for stdout: %s" = "%s: Unable to create pipe for stdout: %s";
 "%s: Unable to create print job: %s" = "%s: Unable to create print job: %s";
+"%s: Unable to find pdftoppm helper program." = "%s: Unable to find pdftoppm helper program.";
 "%s: Unable to get list of supported operations from printer." = "%s: Unable to get list of supported operations from printer.";
 "%s: Unable to get printer capabilities: %s" = "%s: Unable to get printer capabilities: %s";
 "%s: Unable to initialize back side raster context: %s" = "%s: Unable to initialize back side raster context: %s";
@@ -88,6 +92,7 @@
 "%s: Unable to run pdftoppm command: %s" = "%s: Unable to run pdftoppm command: %s";
 "%s: Unable to send data." = "%s: Unable to send data.";
 "%s: Unable to send print data: %s" = "%s: Unable to send print data: %s";
+"%s: Unable to start pdftops filter: %s" = "%s: Unable to start pdftops filter: %s";
 "%s: Unknown format for '%s', please specify with '-i' option." = "%s: Unknown format for '%s', please specify with '-i' option.";
 "%s: Unknown option \"%s\"." = "%s: Opción \"%s\" desconocida.";
 "%s: Unknown option \"-%c\"." = "%s: Opción \"-%c\" desconocida.";
@@ -99,6 +104,8 @@
 "%s: Unsupported device URI scheme '%s'." = "%s: Unsupported device URI scheme '%s'.";
 "%s: Unsupported format '%s' for '%s'." = "%s: Unsupported format '%s' for '%s'.";
 "%s: Unsupported output format '%s'." = "%s: Unsupported output format '%s'.";
+"%s: pdftops exited with status %d." = "%s: pdftops exited with status %d.";
+"%s: pdftops terminated with signal %d." = "%s: pdftops terminated with signal %d.";
 "( expressions )         Group expressions" = "( expressions )         Group expressions";
 "--domain regex          Match domain to regular expression" = "--domain regex          Match domain to regular expression";
 "--exec utility [argument ...] ;\n" = "--exec utility [argument ...] ;\n";
@@ -205,6 +212,8 @@
 "Created" = "Creado";
 "Credentials do not validate against site CA certificate." = "Credentials do not validate against site CA certificate.";
 "Credentials have expired." = "Credentials have expired.";
+"DEBUG: Converting PDF to PostScript with pdftops." = "DEBUG: Converting PDF to PostScript with pdftops.";
+"DEBUG: pdftops completed successfully." = "DEBUG: pdftops completed successfully.";
 "DEVICE-URIs: socket://address[:port], ipp://address[:port]/resource, ipps://address[:port]/resource" = "DEVICE-URIs: socket://address[:port], ipp://address[:port]/resource, ipps://address[:port]/resource";
 "Encryption is not supported." = "El cifrado no está implementado.";
 "Environment Variables:" = "Variables de entorno:";
