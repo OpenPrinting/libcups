@@ -444,7 +444,7 @@ AS_IF([test x$enable_shared != xno], [
     ], [darwin*], [
 	LIBCUPS="$LIBCUPS_BASE.3.dylib"
 	DSO="\$(CC)"
-	DSOFLAGS="$DSOFLAGS -Wl,-no_warn_inits -dynamiclib -single_module -lc"
+	DSOFLAGS="$DSOFLAGS -Wl,-no_warn_inits -dynamiclib -lc"
     ], [sunos*], [
 	LIBCUPS="$LIBCUPS_BASE.so.3"
 	DSO="\$(CC)"

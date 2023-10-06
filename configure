@@ -5242,7 +5242,7 @@ then :
 
 	LIBCUPS="$LIBCUPS_BASE.3.dylib"
 	DSO="\$(CC)"
-	DSOFLAGS="$DSOFLAGS -Wl,-no_warn_inits -dynamiclib -single_module -lc"
+	DSOFLAGS="$DSOFLAGS -Wl,-no_warn_inits -dynamiclib -lc"
      ;; #(
   sunos*) :
 
