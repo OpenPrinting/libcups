@@ -33,6 +33,8 @@ _cupsStrFree
 _cupsStrRetain
 _cupsStrScand
 _cupsStrStatistics
+_cups_debug_printf
+_cups_debug_puts
 _cups_debug_set
 _cups_gettimeofday
 _cups_hstrerror
@@ -58,6 +60,7 @@ _httpTLSWrite
 _httpUpdate
 _httpUseCredentials
 _httpWait
+_ippCheckOptions
 _ippFindOption
 _pwgMediaNearSize
 _pwgMediaTable
