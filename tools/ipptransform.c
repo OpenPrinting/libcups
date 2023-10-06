@@ -4093,11 +4093,11 @@ xform_document(
     // to determine *which* pdftoppm command is available...
 #if _WIN32
     snprintf(command, sizeof(command), "%s -v", PdftoppmCommand);
+    if ((fp = _popen(command, "r")) != NULL)
 #else
     snprintf(command, sizeof(command), "%s -v 2>&1", PdftoppmCommand);
+    if ((fp = popen(command, "r")) != NULL)
 #endif // _WIN32
-
-    if ((fp = _popen(command, "r")) != NULL)
     {
       while (fgets(output, sizeof(output), fp))
       {
