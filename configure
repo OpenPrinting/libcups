@@ -5584,7 +5584,7 @@ then :
 
 else $as_nop
 
-	datarootdir="$prefix/share"
+	datarootdir="$realprefix/share"
 
 fi
 
@@ -5600,7 +5600,7 @@ then :
 
 else $as_nop
 
-	datadir="$prefix/share"
+	datadir="$realprefix/share"
 
 fi
 
@@ -5643,7 +5643,7 @@ fi
 
 else $as_nop
 
-	sysconfdir="$prefix/etc"
+	sysconfdir="$realprefix/etc"
 
 fi
 

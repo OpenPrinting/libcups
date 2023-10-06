@@ -619,7 +619,7 @@ AS_IF([test "$datarootdir" = "\${prefix}/share"], [
     AS_IF([test "$prefix" = "/"], [
 	datarootdir="/usr/share"
     ], [
-	datarootdir="$prefix/share"
+	datarootdir="$realprefix/share"
     ])
 ])
 
@@ -627,7 +627,7 @@ AS_IF([test "$datadir" = "\${prefix}/share"], [
     AS_IF([test "$prefix" = "/"], [
 	datadir="/usr/share"
     ], [
-	datadir="$prefix/share"
+	datadir="$realprefix/share"
     ])
 ], [test "$datadir" = "\${datarootdir}"], [
     datadir="$datarootdir"
@@ -648,7 +648,7 @@ AS_IF([test "$sysconfdir" = "\${prefix}/etc"], [
 	    sysconfdir="/etc"
 	])
     ], [
-	sysconfdir="$prefix/etc"
+	sysconfdir="$realprefix/etc"
     ])
 ])
 
