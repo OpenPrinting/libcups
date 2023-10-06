@@ -1,6 +1,6 @@
-README - CUPS on Windows - 2022-02-16
-=====================================
+README - CUPS on Windows
+========================
 
 This directory contains Visual Studio 2019+ project and solution files for
-building the CUPS library and ippeveprinter, ippfind, ipptool, testfile, and
-testhttp programs on Windows.
+building the CUPS library and ippeveprinter, ippfind, ipptool, ipptransform,
+testfile, and testhttp programs on Windows.

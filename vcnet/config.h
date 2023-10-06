@@ -268,13 +268,6 @@ typedef unsigned long useconds_t;
 
 
 //
-// Do we have pdftoppm?
-//
-
-#define HAVE_PDFTOPPM 1
-
-
-//
 // Do we have the SCDynamicStoreCopyComputerName function?
 //
 

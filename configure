@@ -4312,14 +4312,7 @@ fi
 
 
 
-    if test "x$PDFTOPPM" != x
-then :
-
-
-printf "%s\n" "#define HAVE_PDFTOPPM 1" >>confdefs.h
-
-
-elif test "x$with_pdfrip" = xpdftoppm
+    if test "x$PDFTOPPM" == x -a "x$with_pdfrip" = xpdftoppm
 then :
 
 	as_fn_error $? "Unable to find pdftoppm program." "$LINENO" 5

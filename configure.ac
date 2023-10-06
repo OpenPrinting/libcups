@@ -155,9 +155,7 @@ AS_CASE(["$use_pdfrip"], [coregraphics], [
 ], [pdftoppm], [
     AC_PATH_PROG([PDFTOPPM], [pdftoppm])
 
-    AS_IF([test "x$PDFTOPPM" != x], [
-	AC_DEFINE([HAVE_PDFTOPPM], [1], [Do we have pdftoppm?])
-    ], [test "x$with_pdfrip" = xpdftoppm], [
+    AS_IF([test "x$PDFTOPPM" == x -a "x$with_pdfrip" = xpdftoppm], [
 	AC_MSG_ERROR([Unable to find pdftoppm program.])
     ])
 ], [none], [
