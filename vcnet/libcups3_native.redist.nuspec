@@ -8,23 +8,23 @@
         <owners>michaelrsweet</owners>
         <projectUrl>https://github.com/OpenPrinting/cups</projectUrl>
         <license type="expression">Apache-2.0</license>
-        <icon>build/native/cups-128.png</icon>
+        <icon>build/native/cups.png</icon>
         <readme>build/native/README.md</readme>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
         <description>OpenPrinting CUPS is a standards-based, open source printing system for Linux® and other Unix®-like operating systems. This package provides the redistributable content for the CUPS library. CUPS is licensed under the Apache License Version 2.0 with an exception to allow linking against GNU GPL2-only software.</description>
-        <copyright>Copyright © 2020-2022 by OpenPrinting, Copyright © 2007-2019 by Apple Inc., Copyright © 1997-2007 by Easy Software Products.</copyright>
+        <copyright>Copyright © 2020-2023 by OpenPrinting, Copyright © 2007-2019 by Apple Inc., Copyright © 1997-2007 by Easy Software Products.</copyright>
         <tags>http ipp native</tags>
 	<dependencies>
 	    <dependency id="zlib_native.redist" version="1.2.11" />
+	    <dependency id="libressl_native.redist" version="3.7.3" />
 	</dependencies>
     </metadata>
     <files>
-        <file src="..\desktop\cups-128.png" target="build\native" />
+        <file src="..\doc\cups.png" target="build\native" />
         <file src="..\README.md" target="build\native" />
         <!--<file src="Win32\**\libcups3*.dll" target="build\native\bin\Win32" />
         <file src="Win32\**\regex*.dll" target="build\native\bin\Win32" />-->
         <file src="x64\**\libcups3*.dll" target="build\native\bin\x64" />
         <file src="x64\**\regex*.dll" target="build\native\bin\x64" />
-	<file src="packages\zeroc.openssl.v143.1.1.1.1\build\native\bin\x64\Release\*.dll" target="build\native\bin\x64" />
     </files>
 </package>
