@@ -72,7 +72,7 @@ table tbody td {
   <body>
     <h1 class="center"><img src="cups.png" width="64" height="64" alt="CUPS"><br>
     CUPS Implementation of IPP</h1>
-    <p class="center">Last Updated October 4, 2023</p>
+    <p class="center">Last Updated October 12, 2023</p>
 
 
     <h2 id='INTRODUCTION'>Introduction</h2>
@@ -248,16 +248,16 @@ table tbody td {
 	  <td>Set attributes for a pending or held job.</td>
 	</tr>
 	<tr>
-	  <td><a href='#CREATE_PRINTER_SUBSCRIPTION'>Create-Printer-Subscription</a></td>
+	  <td><a href='#CREATE_PRINTER_SUBSCRIPTIONS'>Create-Printer-Subscriptions</a></td>
 	  <td>1.2</td>
 	  <td>0x0016</td>
-	  <td>Creates a subscription associated with a printer or the server.</td>
+	  <td>Creates subscription(s) associated with a printer or the server.</td>
 	</tr>
 	<tr>
-	  <td>Create-Job-Subscription</td>
+	  <td>Create-Job-Subscriptions</td>
 	  <td>1.2</td>
 	  <td>0x0017</td>
-	  <td>Creates a subscription associated with a job.</td>
+	  <td>Creates subscriptions associated with a job.</td>
 	</tr>
 	<tr>
 	  <td>Get-Subscription-Attributes</td>
@@ -452,8 +452,8 @@ table tbody td {
     </blockquote>
 
 
-    <h3 id='CREATE_PRINTER_SUBSCRIPTION'>Create-Printer-Subscription</h3>
-    <p>The Create-Printer-Subscription operation (0x0016) creates a subscription for printer or server event notifications. CUPS provides several additional events in addition to the standard events in the IPP notifications specification. CUPS adds the following <tt>notify-events (1setOf type2 keyword)</tt> values:<p>
+    <h3 id='CREATE_PRINTER_SUBSCRIPTIONS'>Create-Printer-Subscriptions</h3>
+    <p>The Create-Printer-Subscriptions operation (0x0016) creates one or more subscriptions for printer or server event notifications. CUPS provides several additional events in addition to the standard events in the IPP notifications specification. CUPS adds the following <tt>notify-events (1setOf type2 keyword)</tt> values:<p>
     <ul>
       <li><tt>printer-added</tt> - Get notified whenever a printer or class is added</li>
       <li><tt>printer-deleted</tt> - Get notified whenever a printer or class is deleted</li>
