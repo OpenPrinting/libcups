@@ -30,14 +30,14 @@ static size_t	cups_find_option(const char *name, size_t num_options, cups_option
 size_t					// O  - Number of options
 cupsAddIntegerOption(
     const char    *name,		// I  - Name of option
-    int           value,		// I  - Value of option
+    long           value,		// I  - Value of option
     size_t        num_options,		// I  - Number of options
     cups_option_t **options)		// IO - Pointer to options
 {
   char	strvalue[32];			// String value
 
 
-  snprintf(strvalue, sizeof(strvalue), "%d", value);
+  snprintf(strvalue, sizeof(strvalue), "%ld", value);
 
   return (cupsAddOption(name, strvalue, num_options, options));
 }
@@ -139,11 +139,11 @@ cupsFreeOptions(
 //
 // 'cupsGetIntegerOption()' - Get an integer option value.
 //
-// INT_MIN is returned when the option does not exist, is not an integer, or
-// exceeds the range of values for the "int" type.
+// `LONG_MIN` is returned when the option does not exist, is not an integer, or
+// exceeds the range of values for the `long` type.
 //
 
-int					// O - Option value or `INT_MIN`
+long					// O - Option value or `LONG_MIN`
 cupsGetIntegerOption(
     const char    *name,		// I - Name of option
     size_t        num_options,		// I - Number of options
@@ -152,17 +152,18 @@ cupsGetIntegerOption(
   const char	*value = cupsGetOption(name, num_options, options);
 					// String value of option
   char		*ptr;			// Pointer into string value
-  long		intvalue;		// Integer value
+  long		lvalue;			// Integer value
 
 
   if (!value || !*value)
-    return (INT_MIN);
+    return (LONG_MIN);
 
-  intvalue = strtol(value, &ptr, 10);
-  if (intvalue < INT_MIN || intvalue > INT_MAX || *ptr)
-    return (INT_MIN);
+  lvalue = strtol(value, &ptr, 10);
 
-  return ((int)intvalue);
+  if (*ptr)
+    return (LONG_MIN);
+  else
+    return (lvalue);
 }
 
 

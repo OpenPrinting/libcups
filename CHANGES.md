@@ -5,6 +5,8 @@ libcups v3.0rc1 (TBD)
 ---------------------
 
 - Updated list of attributes included in the destination options.
+- Updated `cupsAddIntegerOption` and `cupsGetIntegerOption` to use the `long`
+  type.
 
 
 libcups v3.0b2 (October 5, 2023)

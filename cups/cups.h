@@ -300,7 +300,7 @@ typedef const char *(*cups_password_cb_t)(const char *prompt, http_t *http, cons
 
 extern size_t		cupsAddDest(const char *name, const char *instance, size_t num_dests, cups_dest_t **dests) _CUPS_PUBLIC;
 extern size_t		cupsAddDestMediaOptions(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, unsigned flags, cups_media_t *media, size_t num_options, cups_option_t **options) _CUPS_PUBLIC;
-extern size_t		cupsAddIntegerOption(const char *name, int value, size_t num_options, cups_option_t **options) _CUPS_PUBLIC;
+extern size_t		cupsAddIntegerOption(const char *name, long value, size_t num_options, cups_option_t **options) _CUPS_PUBLIC;
 extern size_t		cupsAddOption(const char *name, const char *value, size_t num_options, cups_option_t **options) _CUPS_PUBLIC;
 extern bool		cupsAreCredentialsValidForName(const char *common_name, const char *credentials);
 
@@ -357,7 +357,7 @@ extern ipp_status_t	cupsGetError(void) _CUPS_PUBLIC;
 extern const char	*cupsGetErrorString(void) _CUPS_PUBLIC;
 extern http_status_t	cupsGetFd(http_t *http, const char *resource, int fd) _CUPS_PUBLIC;
 extern http_status_t	cupsGetFile(http_t *http, const char *resource, const char *filename) _CUPS_PUBLIC;
-extern int		cupsGetIntegerOption(const char *name, size_t num_options, cups_option_t *options) _CUPS_PUBLIC;
+extern long		cupsGetIntegerOption(const char *name, size_t num_options, cups_option_t *options) _CUPS_PUBLIC;
 extern size_t		cupsGetJobs(http_t *http, cups_job_t **jobs, const char *name, bool myjobs, cups_whichjobs_t whichjobs) _CUPS_PUBLIC;
 extern cups_dest_t	*cupsGetNamedDest(http_t *http, const char *name, const char *instance) _CUPS_PUBLIC;
 extern const char	*cupsGetOption(const char *name, size_t num_options, cups_option_t *options) _CUPS_PUBLIC;
