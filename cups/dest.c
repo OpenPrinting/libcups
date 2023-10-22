@@ -1,7 +1,7 @@
 //
 // User-defined destination (and option) support for CUPS.
 //
-// Copyright © 2021-2022 by OpenPrinting.
+// Copyright © 2021-2023 by OpenPrinting.
 // Copyright © 2007-2019 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products.
 //
@@ -1106,7 +1106,9 @@ _cupsGetDests(http_t       *http,	// I  - Connection to server or `CUPS_HTTP_DEF
 		  "printer-mandatory-job-attributes",
 		  "printer-name",
 		  "printer-state",
+		  "printer-state-change-date-time",
 		  "printer-state-change-time",
+		  "printer-state-message",
 		  "printer-state-reasons",
 		  "printer-type",
 		  "printer-uri-supported"
@@ -1165,6 +1167,7 @@ _cupsGetDests(http_t       *http,	// I  - Connection to server or `CUPS_HTTP_DEF
       for (; attr && attr->group_tag == IPP_TAG_PRINTER; attr = attr->next)
       {
 	if (attr->value_tag != IPP_TAG_INTEGER &&
+	    attr->value_tag != IPP_TAG_DATE &&
 	    attr->value_tag != IPP_TAG_ENUM &&
 	    attr->value_tag != IPP_TAG_BOOLEAN &&
 	    attr->value_tag != IPP_TAG_TEXT &&
@@ -1193,11 +1196,13 @@ _cupsGetDests(http_t       *http,	// I  - Connection to server or `CUPS_HTTP_DEF
 	    !strcmp(attr->name, "printer-make-and-model") ||
 	    !strcmp(attr->name, "printer-mandatory-job-attributes") ||
 	    !strcmp(attr->name, "printer-state") ||
+	    !strcmp(attr->name, "printer-state-change-date-time") ||
 	    !strcmp(attr->name, "printer-state-change-time") ||
+            !strcmp(attr->name, "printer-state-message") ||
+            !strcmp(attr->name, "printer-state-reasons") ||
 	    !strcmp(attr->name, "printer-type") ||
             !strcmp(attr->name, "printer-is-accepting-jobs") ||
             !strcmp(attr->name, "printer-location") ||
-            !strcmp(attr->name, "printer-state-reasons") ||
 	    !strcmp(attr->name, "printer-uri-supported"))
         {
 	  // Add a printer description attribute...
@@ -3262,6 +3267,10 @@ cups_make_string(
 	  else
 	    cupsCopyString(ptr, "false", (size_t)(end - ptr + 1));
 	  break;
+
+      case IPP_TAG_DATE :
+          snprintf(ptr, (size_t)(end - ptr + 1), "%ld", (long)ippDateToTime(attr->values[i].date));
+          break;
 
       case IPP_TAG_RANGE :
 	  if (attr->values[i].range.lower == attr->values[i].range.upper)

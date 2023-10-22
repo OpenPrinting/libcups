@@ -1,8 +1,14 @@
 Changes in libcups
 ==================
 
-libcups v3.0b2 (TBD)
---------------------
+libcups v3.0rc1 (TBD)
+---------------------
+
+- Updated list of attributes included in the destination options.
+
+
+libcups v3.0b2 (October 5, 2023)
+--------------------------------
 
 - Added the `ipptransform` command to replace/upgrade the `ippevepcl` and
   `ippeveps` commands (Issue #65)
