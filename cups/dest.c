@@ -1097,6 +1097,7 @@ _cupsGetDests(http_t       *http,	// I  - Connection to server or `CUPS_HTTP_DEF
 #endif // __APPLE__
 		  "printer-commands",
 		  "printer-defaults",
+		  "printer-id",
 		  "printer-info",
 		  "printer-is-accepting-jobs",
 		  "printer-is-shared",
