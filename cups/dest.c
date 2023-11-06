@@ -3611,7 +3611,7 @@ cups_enum_dests(
   if (DNSServiceCreateConnection(&data.main_ref) != kDNSServiceErr_NoError)
   {
     DEBUG_puts("1cups_enum_dests: Unable to create service browser, returning 0.");
-
+    free(data.devices);
     cupsFreeDests(data.num_dests, data.dests);
 
     return (0);
@@ -3624,7 +3624,7 @@ cups_enum_dests(
   {
     DEBUG_puts("1cups_enum_dests: Unable to create IPP browser, returning 0.");
     DNSServiceRefDeallocate(data.main_ref);
-
+    free(data.devices);
     cupsFreeDests(data.num_dests, data.dests);
 
     return (0);
@@ -3636,7 +3636,7 @@ cups_enum_dests(
   {
     DEBUG_puts("1cups_enum_dests: Unable to create IPPS browser, returning 0.");
     DNSServiceRefDeallocate(data.main_ref);
-
+    free(data.devices);
     cupsFreeDests(data.num_dests, data.dests);
 
     return (0);
@@ -3647,7 +3647,7 @@ cups_enum_dests(
   if ((data.simple_poll = avahi_simple_poll_new()) == NULL)
   {
     DEBUG_puts("1cups_enum_dests: Unable to create Avahi poll, returning 0.");
-
+    free(data.devices);
     cupsFreeDests(data.num_dests, data.dests);
 
     return (0);
@@ -3662,7 +3662,7 @@ cups_enum_dests(
   {
     DEBUG_puts("1cups_enum_dests: Unable to create Avahi client, returning 0.");
     avahi_simple_poll_free(data.simple_poll);
-
+    free(data.devices);
     cupsFreeDests(data.num_dests, data.dests);
 
     return (0);
@@ -3675,7 +3675,7 @@ cups_enum_dests(
 
     avahi_client_free(data.client);
     avahi_simple_poll_free(data.simple_poll);
-
+    free(data.devices);
     cupsFreeDests(data.num_dests, data.dests);
 
     return (0);
@@ -3690,7 +3690,7 @@ cups_enum_dests(
     avahi_service_browser_free(ipp_ref);
     avahi_client_free(data.client);
     avahi_simple_poll_free(data.simple_poll);
-
+    free(data.devices);
     cupsFreeDests(data.num_dests, data.dests);
 
     return (0);
@@ -3856,7 +3856,7 @@ cups_enum_dests(
   */
 
   enum_finished:
-
+  free(data.devices);
   cupsFreeDests(data.num_dests, data.dests);
 
 #if defined(HAVE_DNSSD) || defined(HAVE_AVAHI)
