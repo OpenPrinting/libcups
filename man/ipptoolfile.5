@@ -7,7 +7,7 @@
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH ipptoolfile 5 "CUPS" "2023-01-28" "OpenPrinting"
+.TH ipptoolfile 5 "CUPS" "2023-11-17" "OpenPrinting"
 .SH NAME
 ipptoolfile \- ipptool file format
 .SH DESCRIPTION
@@ -164,7 +164,11 @@ The following directives are understood within a \fItest\fR:
 .TP 5
 \fBATTR \fIout-of-band-tag attribute-name\fR
 .TP 5
-\fBATTR \fItag attribute-name value(s)\fR
+\fBATTR \fItag attribute-name value[,...,value]\fR
+.TP 5
+\fBATTR \fItag attribute-name "value"[,...,"value"]\fR
+.TP 5
+\fBATTR \fItag attribute-name <hex-value>[,...,<hex-value>]\fR
 Adds an attribute to the test request.
 Out-of-band tags (admin-define, delete-attribute, no-value, not-settable, unknown, unsupported) have no value.
 Values for other tags are delimited by the comma (",") character - escape commas using the "\\" character.
@@ -878,7 +882,7 @@ IANA IPP Registry (https://www.iana.org/assignments/ipp-registrations)
 .PP
 PWG Internet Printing Protocol Workgroup (https://www.pwg.org/ipp)
 .PP
-PWG 5101.1-2013: PWG Media Standardized Names v2.0 (https://ftp.pwg.org/pub/pwg/candidates/cs-pwgmsn20-20130328-5101.1.pdf)
+PWG 5101.1-2023: PWG Media Standardized Names v2.1 (https://ftp.pwg.org/pub/pwg/candidates/cs-pwgmsn21-20230915-5101.1.pdf)
 .PP
 RFC 8011 (https://datatracker.ietf.org/doc/html/rfc8011)
 .SH COPYRIGHT
