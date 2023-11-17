@@ -228,15 +228,22 @@ libpdfio.a:		$(LIBOBJS)
 
 
 #
-# Generate the header containing the data for printer.png...
+# Generate the headers containing the data for printer*.png...
 #
 
-pngheader:
-	echo "Generating printer-png.h from printer.png..."
-	echo "static const unsigned char printer_png[] =" >printer-png.h
-	echo "{" >>printer-png.h
-	od -t x1 printer.png | cut -b12- | awk '{printf("  "); for (i = 1; i <= NF; i ++) printf("0x%s,", $$i); print "";}' >>printer-png.h
-	echo "};" >>printer-png.h
+pngheaders:
+	for file in printer-sm.png printer.png printer-lg.png; do \
+		hfile="$$(basename $$file .png)-png.h"; \
+		cdef="$$(basename $$file .png | tr '-' '_' | awk '{print toupper($$0)}')_PNG_H"; \
+		echo "Generating $$hfile from $$file..."; \
+		echo "#ifndef $$cdef" >$$hfile; \
+		echo "#  define $$cdef" >>$$hfile; \
+		echo "static const unsigned char $$(basename $$file .png | tr '-' '_')_png[] =" >>$$hfile; \
+		echo "{" >>$$hfile; \
+		od -t u1 -A n -v "$$file" | awk '{for (i = 1; i <= NF; i ++) printf("%s,", $$i); print "";}' >>$$hfile; \
+		echo "};" >>$$hfile; \
+		echo "#endif // !$$cdef" >>$$hfile; \
+	done
 
 
 #

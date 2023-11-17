@@ -19,10 +19,6 @@ ttf.o: ttf.c ttf.h
 ipp-options.o: ipp-options.c ipp-options.h ../cups/cups.h ../cups/file.h \
   ../cups/base.h ../cups/ipp.h ../cups/http.h ../cups/array.h \
   ../cups/language.h ../cups/transcode.h ../cups/pwg.h
-ippevepcl.o: ippevepcl.c ippevecommon.h ../cups/cups.h ../cups/file.h \
-  ../cups/base.h ../cups/ipp.h ../cups/http.h ../cups/array.h \
-  ../cups/language.h ../cups/transcode.h ../cups/pwg.h ../cups/raster.h \
-  ../cups/string-private.h ../config.h dither.h
 ippeveprinter.o: ippeveprinter.c ../cups/cups-private.h \
   ../cups/string-private.h ../config.h ../cups/base.h \
   ../cups/debug-internal.h ../cups/debug-private.h ../cups/array.h \
@@ -31,10 +27,6 @@ ippeveprinter.o: ippeveprinter.c ../cups/cups-private.h \
   ../cups/http-private.h \
   ../cups/pwg-private.h ../cups/thread.h ../cups/dnssd.h printer-png.h \
   printer-lg-png.h printer-sm-png.h
-ippeveps.o: ippeveps.c ippevecommon.h ../cups/cups.h ../cups/file.h \
-  ../cups/base.h ../cups/ipp.h ../cups/http.h ../cups/array.h \
-  ../cups/language.h ../cups/transcode.h ../cups/pwg.h ../cups/raster.h \
-  ../cups/string-private.h ../config.h
 ippfind.o: ippfind.c ../cups/cups-private.h ../cups/string-private.h \
   ../config.h ../cups/base.h ../cups/debug-internal.h \
   ../cups/debug-private.h ../cups/array.h ../cups/ipp-private.h \
