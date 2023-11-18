@@ -28,9 +28,9 @@ all:
 	echo "Using DSOFLAGS=\"$(DSOFLAGS)\""
 	echo "Using LDFLAGS=\"$(LDFLAGS)\""
 	echo "Using LIBS=\"$(LIBS)\""
-	for dir in $(DIRS); do\
+	for dir in $(PDFIODIR) $(DIRS); do\
 		echo "======== all in $$dir ========" ;\
-		(cd $$dir ; $(MAKE) $(MFLAGS) all) || exit 1;\
+		(cd $$dir ; $(MAKE) $(MFLAGS) COMMONFLAGS="$(OPTIM)" all) || exit 1;\
 	done
 
 
@@ -39,7 +39,7 @@ all:
 #
 
 clean:
-	for dir in $(DIRS); do\
+	for dir in $(PDFIODIR) $(DIRS); do\
 		echo "======== clean in $$dir ========" ;\
 		(cd $$dir; $(MAKE) $(MFLAGS) clean) || exit 1;\
 	done

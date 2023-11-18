@@ -13,8 +13,8 @@
 #include <cups/raster.h>
 #include <cups/thread.h>
 #include "ipp-options.h"
-#include "pdfio.h"
-#include "pdfio-content.h"
+#include <pdfio.h>
+#include <pdfio-content.h>
 
 #ifdef HAVE_COREGRAPHICS_H
 #  include <CoreGraphics/CoreGraphics.h>

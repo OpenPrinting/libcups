@@ -12,26 +12,7 @@
 include ../Makedefs
 
 
-LIBOBJS		=	\
-			pdfio-aes.o \
-			pdfio-array.o \
-			pdfio-common.o \
-			pdfio-content.o \
-			pdfio-crypto.o \
-			pdfio-dict.o \
-			pdfio-file.o \
-			pdfio-md5.o \
-			pdfio-object.o \
-			pdfio-page.o \
-			pdfio-rc4.o \
-			pdfio-sha256.o \
-			pdfio-stream.o \
-			pdfio-string.o \
-			pdfio-token.o \
-			pdfio-value.o \
-			ttf.o
 OBJS		=	\
-			$(LIBOBJS) \
 			ipp-options.o \
 			ippeveprinter.o \
 			ippfind.o \
@@ -43,7 +24,6 @@ IPPTOOLS	=	\
 			ipptool \
 			ipptransform
 TARGETS		=	\
-			libpdfio.a \
 			$(IPPTOOLS)
 
 
@@ -202,7 +182,7 @@ ipptool-static:	ipptool.o ../cups/$(LIBCUPS_STATIC)
 
 ipptransform:	ipptransform.o ipp-options.o libpdfio.a ../cups/$(LIBCUPS) ipptransform-static
 	echo Linking $@...
-	$(CC) $(LDFLAGS) -o $@ ipptransform.o ipp-options.o libpdfio.a $(LINKCUPS) $(XFORMLIBS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ ipptransform.o ipp-options.o $(LINKCUPS) $(XFORMLIBS) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 
@@ -212,19 +192,8 @@ ipptransform:	ipptransform.o ipp-options.o libpdfio.a ../cups/$(LIBCUPS) ipptran
 
 ipptransform-static:	ipptransform.o ipp-options.o libpdfio.a ../cups/$(LIBCUPS_STATIC)
 	echo Linking $@...
-	$(CC) $(LDFLAGS) -o $@ ipptransform.o ipp-options.o libpdfio.a ../cups/$(LIBCUPS_STATIC) $(XFORMLIBS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ ipptransform.o ipp-options.o ../cups/$(LIBCUPS_STATIC) $(XFORMLIBS) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
-
-
-#
-# libpdfio.a
-#
-
-libpdfio.a:		$(LIBOBJS)
-	echo Archiving $@...
-	$(RM) $@
-	$(AR) $(ARFLAGS) $@ $(LIBOBJS)
-	$(RANLIB) $@
 
 
 #

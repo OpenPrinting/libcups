@@ -659,6 +659,7 @@ LIBCUPS
 INSTALL_STATIC
 CUPS_PC
 PKGCONFIG_AVAHI
+PDFIODIR
 PDFTOPPM
 XFORMLIBS
 PKGCONFIG_REQUIRES_PRIVATE
@@ -4329,6 +4330,31 @@ fi
   *) :
      ;;
 esac
+
+
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for pdfio library" >&5
+printf %s "checking for pdfio library... " >&6; }
+if $PKGCONFIG --exists pdfio
+then :
+
+    # Use installed PDFio library...
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf "%s\n" "yes" >&6; }
+    CPPFLAGS="$CPPFLAGS $($PKGCONFIG --cflags pdfio)"
+    PDFIODIR=""
+    XFORMLIBS="$($PKGCONFIG --libs pdfio) $XFORMLIBS"
+
+else $as_nop
+
+    # Use embedded PDFio library...
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no, using embedded version" >&5
+printf "%s\n" "no, using embedded version" >&6; }
+    CPPFLAGS="$CPPFLAGS -I../pdfio"
+    PDFIODIR="pdfio"
+    XFORMLIBS="../pdfio/libpdfio.a $XFORMLIBS"
+
+fi
+
 
 
 ac_fn_c_check_func "$LINENO" "strlcat" "ac_cv_func_strlcat"

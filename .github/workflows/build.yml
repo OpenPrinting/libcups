@@ -13,7 +13,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
     - name: update build environment
       run: sudo apt-get update --fix-missing -y
     - name: install prerequisites
@@ -32,7 +34,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
     - name: update build environment
       run: sudo apt-get update --fix-missing -y
     - name: install prerequisites
@@ -51,7 +55,9 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
     - name: Install prerequisites
       run: brew install gnutls pkg-config
     - name: configure
@@ -66,7 +72,9 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
     - name: setup-msbuild
       uses: microsoft/setup-msbuild@v1.0.2
     - name: nuget restore

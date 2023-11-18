@@ -164,6 +164,24 @@ AS_CASE(["$use_pdfrip"], [coregraphics], [
 ])
 
 
+dnl PDFio library for ipptransform...
+AC_MSG_CHECKING([for pdfio library])
+AS_IF([$PKGCONFIG --exists pdfio], [
+    # Use installed PDFio library...
+    AC_MSG_RESULT([yes])
+    CPPFLAGS="$CPPFLAGS $($PKGCONFIG --cflags pdfio)"
+    PDFIODIR=""
+    XFORMLIBS="$($PKGCONFIG --libs pdfio) $XFORMLIBS"
+], [
+    # Use embedded PDFio library...
+    AC_MSG_RESULT([no, using embedded version])
+    CPPFLAGS="$CPPFLAGS -I../pdfio"
+    PDFIODIR="pdfio"
+    XFORMLIBS="../pdfio/libpdfio.a $XFORMLIBS"
+])
+AC_SUBST([PDFIODIR])
+
+
 dnl String functions...
 AC_CHECK_FUNCS([strlcat strlcpy])
 

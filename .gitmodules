@@ -1,0 +1,3 @@
+[submodule "pdfio"]
+	path = pdfio
+	url = https://github.com/michaelrsweet/pdfio.git
