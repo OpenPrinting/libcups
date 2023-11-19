@@ -49,7 +49,7 @@ extern char **environ;
 
 #define XFORM_TEXT_SIZE		10.0	// Point size of plain text output
 #define XFORM_TEXT_HEIGHT	12.0	// Point height of plain text output
-#define XFORM_TEXT_WIDTH	0.6	// Width of Courier characters
+#define XFORM_TEXT_WIDTH	0.6	// Width of monospaced characters
 
 #define XFORM_RED_MASK		0x000000ff
 #define XFORM_GREEN_MASK	0x0000ff00
@@ -1078,7 +1078,9 @@ convert_text(
 {
   pdfio_file_t	*pdf;			// Temporary PDF file
   pdfio_stream_t *st = NULL;		// Page stream
-  pdfio_obj_t	*courier;		// Courier font
+  char		fontfile[1024];		// Monospace font filename
+  pdfio_obj_t	*font;			// Monospace font
+  bool		unicode;		// Doing Unicode text?
   pdfio_dict_t	*dict;			// Page dictionary
   cups_file_t	*fp;			// File
   char		line[1024],		// Line from file
@@ -1090,6 +1092,7 @@ convert_text(
 		columns,		// Columns per line
 		linenum = 0,		// Current line
 		lines;			// Number of lines per page
+  _cups_globals_t *cg = _cupsGlobals();	// Global data
 
 
   // Open the text file...
@@ -1118,10 +1121,16 @@ convert_text(
   }
 
   // Create font and page dictionaries...
-  courier = pdfioFileCreateFontObjFromBase(pdf, "Courier");
-  dict    = pdfioDictCreate(pdf);
+  snprintf(fontfile, sizeof(fontfile), "%s/fonts/NotoSansMono-Regular.ttf", cg->datadir);
+  unicode = !access(fontfile, 0);
+  if (unicode)
+    font = pdfioFileCreateFontObjFromFile(pdf, fontfile, true);
+  else
+    font = pdfioFileCreateFontObjFromBase(pdf, "Courier");
 
-  pdfioPageDictAddFont(dict, "F1", courier);
+  dict = pdfioDictCreate(pdf);
+
+  pdfioPageDictAddFont(dict, "F1", font);
 
   // Read lines from the text file...
   while (cupsFileGets(fp, line, sizeof(line)))
@@ -1244,7 +1253,7 @@ convert_text(
         }
 
 	// Add a single line of text to the page...
-        pdfioContentTextShowf(st, false, "%s\n", outline);
+        pdfioContentTextShowf(st, unicode, "%s\n", outline);
 
 	linenum ++;
 	column = 0;

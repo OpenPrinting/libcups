@@ -79,6 +79,11 @@ install:	all
 		$(RM) $(BUILDROOT)$(bindir)/$$file; \
 		$(LN) ipptransform $(BUILDROOT)$(bindir)/$$file; \
 	done
+	echo "Installing fonts to $(BUILDROOT)$(CUPS_DATADIR)/fonts..."
+	$(INSTALL_DIR) $(BUILDROOT)$(CUPS_DATADIR)/fonts
+	for file in NotoSansMono-License.txt NotoSansMono-Regular.ttf; do \
+		$(INSTALL_DATA) $$file $(BUILDROOT)$(CUPS_DATADIR)/fonts; \
+	done
 	if test "x$(SYMROOT)" != "x"; then \
 		echo "Copying debug symbols to $(SYMROOT)..."; \
 		$(INSTALL_DIR) $(SYMROOT); \
@@ -99,6 +104,11 @@ uninstall:
 		$(RM) $(BUILDROOT)$(bindir)/$$file; \
 	done
 	-$(RMDIR) $(BUILDROOT)$(bindir)
+	echo "Uninstalling fonts from $(BUILDROOT)$(CUPS_DATADIR)/fonts..."
+	for file in NotoSansMono-License.txt NotoSansMono-Regular.ttf; do \
+		$(RM) $(BUILDROOT)$(CUPS_DATADIR)/fonts/$$file; \
+	done
+	-$(RMDIR) $(BUILDROOT)$(CUPS_DATADIR)/fonts
 
 
 #
