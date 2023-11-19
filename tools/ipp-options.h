@@ -49,7 +49,7 @@ typedef struct ippopt_insert_sheet_s	// "insert-sheet" value
 typedef enum ippopt_handling_e		// "multiple-document-handling" values
 {
   IPPOPT_HANDLING_COLLATED_COPIES,	// 'separate-documents-collated-copies'
-  IPPOPT_HANDLING_UNCOLLATED_COPIES,	// 'separate-documents-collated-copies'
+  IPPOPT_HANDLING_UNCOLLATED_COPIES,	// 'separate-documents-uncollated-copies'
   IPPOPT_HANDLING_SINGLE_DOCUMENT,	// 'single-document'
   IPPOPT_HANDLING_SINGLE_NEW_SHEET,	// 'single-document-new-sheet'
 } ippopt_handling_t;

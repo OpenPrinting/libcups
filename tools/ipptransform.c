@@ -2226,33 +2226,31 @@ pcl_start_page(xform_raster_t   *ras,	// I - Raster information
                xform_write_cb_t cb,	// I - Write callback
                void             *ctx)	// I - Write context
 {
- /*
-  * Setup margins to be 1/6" top and bottom and 1/4" or .135" on the
-  * left and right.
-  */
-
+  // Setup margins to be 1/6" top and bottom and 1/4" or .135" on the
+  // left and right.
   ras->top    = ras->header.HWResolution[1] / 6;
   ras->bottom = ras->header.cupsHeight - ras->header.HWResolution[1] / 6;
 
   if (ras->header.PageSize[1] == 842)
   {
-   // A4 gets special side margins to expose an 8" print area
+    // A4 gets special side margins to expose an 8" print area
     ras->left  = (ras->header.cupsWidth - 8 * ras->header.HWResolution[0]) / 2;
     ras->right = ras->left + 8 * ras->header.HWResolution[0];
   }
   else
   {
-   // All other sizes get 1/4" margins
+    // All other sizes get 1/4" margins
     ras->left  = ras->header.HWResolution[0] / 4;
     ras->right = ras->header.cupsWidth - ras->header.HWResolution[0] / 4;
   }
 
   if (!ras->header.Duplex || (page & 1))
   {
-   /*
-    * Set the media size...
-    */
+    // Set number of uncollated copies...
+    if (ras->header.NumCopies > 1)
+      pclps_printf(cb, ctx, "\033&l%uX", ras->header.NumCopies);
 
+    // Set the media size...
     pclps_printf(cb, ctx, "\033&l12D\033&k12H");
 					// Set 12 LPI, 10 CPI
     pclps_printf(cb, ctx, "\033&l0O");	// Set portrait orientation
@@ -2679,7 +2677,8 @@ ps_start_page(xform_raster_t   *ras,	// I - Raster information
   }
 
   pclps_printf(cb, ctx, "%%%%Page: (%d) %d\n", page, page);
-
+  if (ras->header.NumCopies > 1)
+    pclps_printf(cb, ctx, "<</NumCopies %u>>setpagedevice\n", ras->header.NumCopies);
   pclps_printf(cb, ctx, "gsave\n");
   pclps_printf(cb, ctx, "%.6f %.6f scale\n", 72.0f / ras->header.HWResolution[0], 72.0f / ras->header.HWResolution[1]);
 
@@ -3755,7 +3754,8 @@ xform_document(
   CGAffineTransform 	transform;	// Transform for page
   CGRect		dest;		// Destination rectangle
   bool			color = true;	// Does the PDF have color?
-  int			copy;		// Current copy
+  int			copy,		// Current copy
+			copies;		// Number of collated copies
   unsigned		page;		// Current page
   unsigned		media_sheets = 0,
 			impressions = 0;// Page/sheet counters
@@ -3869,7 +3869,24 @@ xform_document(
   (ras.start_job)(&ras, cb, ctx);
 
   // Render pages in the PDF...
-  for (copy = 0; copy < options->copies; copy ++)
+  if (options->multiple_document_handling == IPPOPT_HANDLING_UNCOLLATED_COPIES)
+  {
+    // Uncollated copies are handled by the printer/driver...
+    ras.header.NumCopies      = options->copies;
+    ras.back_header.NumCopies = options->copies;
+    ras.sep_header.NumCopies  = options->copies;
+    copies                    = 1;
+  }
+  else
+  {
+    // Collated copies are handled by ipptransform...
+    ras.header.NumCopies      = 1;
+    ras.back_header.NumCopies = 1;
+    ras.sep_header.NumCopies  = 1;
+    copies                    = options->copies;
+  }
+
+  for (copy = 0; copy < copies; copy ++)
   {
     // Write a separator sheet as needed...
     switch (options->separator_type)
@@ -4038,7 +4055,8 @@ xform_document(
     void             *ctx)		// I - Write context
 {
   xform_raster_t ras;			// Raster information
-  int		copy;			// Current copy
+  int		copy,			// Current copy
+		copies;			// Number of collated copies
   unsigned	page = 0,		// Current page
 		media_sheets = 0,
 		impressions = 0;	// Page/sheet counters
@@ -4077,7 +4095,24 @@ xform_document(
 
   (ras.start_job)(&ras, cb, ctx);
 
-  for (copy = 0; copy < options->copies; copy ++)
+  if (options->multiple_document_handling == IPPOPT_HANDLING_UNCOLLATED_COPIES)
+  {
+    // Uncollated copies are handled by the printer/driver...
+    ras.header.NumCopies      = options->copies;
+    ras.back_header.NumCopies = options->copies;
+    ras.sep_header.NumCopies  = options->copies;
+    copies                    = 1;
+  }
+  else
+  {
+    // Collated copies are handled by ipptransform...
+    ras.header.NumCopies      = 1;
+    ras.back_header.NumCopies = 1;
+    ras.sep_header.NumCopies  = 1;
+    copies                    = options->copies;
+  }
+
+  for (copy = 0; copy < copies; copy ++)
   {
     // Write a separator sheet as needed...
     switch (options->separator_type)
