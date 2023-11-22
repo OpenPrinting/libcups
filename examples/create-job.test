@@ -1,22 +1,20 @@
 # Print a test page using create-job + send-document
 {
 	# The name of the test...
-	NAME "Print test page using create-job"
-
-	# The resource to use for the POST
-	# RESOURCE /admin
+	NAME "Print test page using Create-Job"
 
 	# The operation to use
-	OPERATION create-job
+	OPERATION Create-Job
 
 	# Attributes, starting in the operation group...
-	GROUP operation
+	GROUP operation-attributes-test
 	ATTR charset attributes-charset utf-8
 	ATTR language attributes-natural-language en
 	ATTR uri printer-uri $uri
 	ATTR name requesting-user-name $user
+	ATTR name job-name $basename
 
-	GROUP job
+	GROUP job-attributes-tag
 	ATTR integer copies 1
 
 	# What statuses are OK?
@@ -28,13 +26,10 @@
 }
 {
 	# The name of the test...
-	NAME "... and send-document"
-
-	# The resource to use for the POST
-	# RESOURCE /admin
+	NAME "... and Send-Document"
 
 	# The operation to use
-	OPERATION send-document
+	OPERATION Send-Document
 
 	# Attributes, starting in the operation group...
 	GROUP operation

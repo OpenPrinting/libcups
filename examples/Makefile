@@ -38,37 +38,22 @@ DATAFILES	=	\
 			testfile.txt
 TESTFILES	=	\
 			cancel-current-job.test \
-			create-job-format.test \
+			create-job.test \
 			create-job-sheets.test \
 			create-job-timeout.test \
-			create-job.test \
 			create-printer-subscription.test \
 			cups-create-local-printer.test \
 			fax-job.test \
 			get-completed-jobs.test \
-			get-devices.test \
 			get-job-attributes.test \
-			get-job-attributes2.test \
 			get-job-template-attributes.test \
 			get-jobs.test \
 			get-notifications.test \
-			get-ppd-printer.test \
-			get-ppd.test \
-			get-ppds-drv-only.test \
-			get-ppds-language.test \
-			get-ppds-make-and-model.test \
-			get-ppds-make.test \
-			get-ppds-product.test \
-			get-ppds-psversion.test \
-			get-ppds.test \
 			get-printer-attributes-suite.test \
 			get-printer-attributes.test \
-			get-printer-description-attributes.test \
-			get-printers-printer-id.test \
 			get-printers.test \
 			get-subscriptions.test \
 			identify-printer-display.test \
-			identify-printer-multiple.test \
 			identify-printer.test \
 			ipp-1.1.test \
 			ipp-2.0.test \
