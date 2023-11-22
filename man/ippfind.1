@@ -7,22 +7,22 @@
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH ippfind 1 "ippsample" "2023-02-09" "OpenPrinting"
+.TH ippfind 1 "ippsample" "2023-11-22" "OpenPrinting"
 .SH NAME
 ippfind \- find internet printing protocol printers
 .SH SYNOPSIS
 .B ippfind
 [
-.I options
-] \fIregtype\fR[\fB,\fIsubtype\fR][\fB.\fIdomain\fB.\fR] ... [
-.I expression
+.I OPTIONS
+] \fIREGTYPE\fR[\fB,\fISUBTYPE\fR][\fB.\fIDOMAIN\fB.\fR] ... [
+.I EXPRESSION
  ... ]
 .br
 .B ippfind
 [
-.I options
-] \fIname\fR[\fB.\fIregtype\fR[\fB.\fIdomain\fB.\fR]] ... [
-.I expression
+.I OPTIONS
+] \fINAME\fR[\fB.\fIREGTYPE\fR[\fB.\fIDOMAIN\fB.\fR]] ... [
+.I EXPRESSION
  ... ]
 .br
 .B ippfind
@@ -37,16 +37,16 @@ Its primary purpose is to find IPP printers and show their URIs, show their curr
 \fBippfind\fR supports the following registration types:
 .TP 5
 _http._tcp
-HyperText Transport Protocol (HTTP, RFC 2616)
+HyperText Transport Protocol (HTTP, RFC 9112)
 .TP 5
 _https._tcp
 Secure HyperText Transport Protocol (HTTPS, RFC 2818)
 .TP 5
 _ipp._tcp
-Internet Printing Protocol (IPP, RFC 2911)
+Internet Printing Protocol (IPP, RFC 3510+8011)
 .TP 5
 _ipps._tcp
-Secure Internet Printing Protocol (IPPS, draft)
+Secure Internet Printing Protocol (IPPS, RFC 7472+8011)
 .TP 5
 _printer._tcp
 Line Printer Daemon (LPD, RFC 1179)
@@ -60,17 +60,17 @@ However, unlike
 If \fI\-\-exec\fR, \fI\-l\fR, \fI\-\-ls\fR, \fI\-p\fR, \fI\-\-print\fR, \fI\-\-print\-name\fR, \fI\-q\fR, \fI\-\-quiet\fR, \fI\-s\fR, or \fI\-x\fR is not specified, \fBippfind\fR adds \fI\-\-print\fR to print the service URI of anything it finds.
 The following expressions are supported:
 .TP 5
-\fB\-d \fIregex\fR
+\fB\-d \fIREGEX\fR
 .TP 5
-\fB\-\-domain \fIregex\fR
+\fB\-\-domain \fIREGEX\fR
 True if the domain matches the given regular expression.
 .TP 5
 .B \-\-false
 Always false.
 .TP 5
-\fB\-h \fIregex\fR
+\fB\-h \fIREGEX\fR
 .TP 5
-\fB\-\-host \fIregex\fR
+\fB\-\-host \fIREGEX\fR
 True is the hostname matches the given regular expression.
 .TP 5
 .B \-l
@@ -82,22 +82,22 @@ The result is true if the URI is accessible, false otherwise.
 .B \-\-local
 True if the service is local to this computer.
 .TP 5
-\fB\-N \fIname\fR
+\fB\-N \fINAME\fR
 .TP 5
-\fB\-\-literal\-name \fIname\fR
+\fB\-\-literal\-name \fINAME\fR
 True if the service instance name matches the given name.
 .TP 5
-\fB\-n \fIregex\fR
+\fB\-n \fIREGEX\fR
 .TP 5
-\fB\-\-name \fIregex\fR
+\fB\-\-name \fIREGEX\fR
 True if the service instance name matches the given regular expression.
 .TP 5
-\fB\-\-path \fIregex\fR
+\fB\-\-path \fIREGEX\fR
 True if the URI resource path matches the given regular expression.
 .TP 5
-\fB\-P \fInumber\fR[\fB-\fInumber\fR]
+\fB\-P \fINUMBER\fR[\fB-\fINUMBER\fR]
 .TP 5
-\fB\-\-port \fInumber\fR[\fB-\fInumber\fR]
+\fB\-\-port \fINUMBER\fR[\fB-\fINUMBER\fR]
 True if the port matches the given number or range.
 .TP 5
 .B \-p
@@ -125,44 +125,44 @@ The result is always true.
 .B \-\-true
 Always true.
 .TP 5
-\fB\-t \fIkey\fR
+\fB\-t \fIKEY\fR
 .TP 5
-\fB\-\-txt \fIkey\fR
+\fB\-\-txt \fIKEY\fR
 True if the TXT record contains the named key.
 .TP 5
-\fB\-\-txt\-\fIkey regex\fR
+\fB\-\-txt\-\fIKEY REGEX\fR
 True if the TXT record contains the named key and matches the given regular expression.
 .TP 5
-\fB\-u \fIregex\fR
+\fB\-u \fIREGEX\fR
 .TP 5
-\fB\-\-uri \fIregex\fR
+\fB\-\-uri \fIREGEX\fR
 True if the URI matches the given regular expression.
 .TP 5
-\fB\-x \fIutility \fR[ \fIargument \fR... ] \fB;\fR
+\fB\-x \fIUTILITY \fR[ \fIARGUMENT \fR... ] \fB';'\fR
 .TP 5
-\fB\-\-exec \fIutility \fR[ \fIargument \fR... ] \fB;\fR
+\fB\-\-exec \fIUTILITY \fR[ \fIARGUMENT \fR... ] \fB';'\fR
 Executes the specified program if the current result is true.
 "{foo}" arguments are replaced with the corresponding value - see SUBSTITUTIONS below.
 .PP
 Expressions may also contain modifiers:
 .TP 5
-\fB( \fIexpression \fB)\fR
+\fB( \fIEXPRESSION \fB)\fR
 Group the result of expressions.
 .TP 5
-\fB! \fIexpression\fR
+\fB! \fIEXPRESSION\fR
 .TP 5
-\fB\-\-not \fIexpression\fR
+\fB\-\-not \fIEXPRESSION\fR
 Unary NOT of the expression.
 .TP 5
-\fIexpression expression\fR
+\fIEXPRESSION EXPRESSION\fR
 .TP 5
-\fIexpression \fB\-\-and \fIexpression\fR
+\fIEXPRESSION \fB\-\-and \fIEXPRESSION\fR
 Logical AND of expressions.
 .TP 5
-\fIexpression \fB\-\-or \fIexpression\fR
+\fIEXPRESSION \fB\-\-or \fIEXPRESSION\fR
 Logical OR of expressions.
 .SS SUBSTITUTIONS
-The substitutions for "{foo}" in \fI\-e\fR and \fI\-\-exec\fR are:
+The substitutions for "{FOO}" in \fI\-e\fR and \fI\-\-exec\fR are:
 .TP 5
 .B {service_domain}
 Domain name, e.g., "example.com.", "local.", etc.
@@ -204,12 +204,12 @@ Use IPv4 when listing.
 .B \-6
 Use IPv6 when listing.
 .TP 5
-\fB\-T \fIseconds\fR
+\fB\-T \fISECONDS\fR
 Specify find timeout in seconds.
 If 1 or less, \fBippfind\fR stops as soon as it thinks it has found everything.
 The default timeout is 1 second.
 .TP 5
-\fB\-V \fIversion\fR
+\fB\-V \fIVERSION\fR
 Specifies the IPP version when listing.
 Supported values are "1.1", "2.0", "2.1", and "2.2".
 .SH EXIT STATUS
