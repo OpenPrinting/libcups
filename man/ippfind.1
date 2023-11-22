@@ -43,10 +43,10 @@ _https._tcp
 Secure HyperText Transport Protocol (HTTPS, RFC 2818)
 .TP 5
 _ipp._tcp
-Internet Printing Protocol (IPP, RFC 3510+8011)
+Internet Printing Protocol (IPP, RFCs 3510+8010+8011)
 .TP 5
 _ipps._tcp
-Secure Internet Printing Protocol (IPPS, RFC 7472+8011)
+Secure Internet Printing Protocol (IPPS, RFCs 7472+8010+8011)
 .TP 5
 _printer._tcp
 Line Printer Daemon (LPD, RFC 1179)
@@ -55,7 +55,7 @@ Line Printer Daemon (LPD, RFC 1179)
 .BR find (1)
 utility.
 However, unlike
-.BR find (1),
+.BR find ,
 \fBippfind\fR uses POSIX regular expressions instead of shell filename matching patterns.
 If \fI\-\-exec\fR, \fI\-l\fR, \fI\-\-ls\fR, \fI\-p\fR, \fI\-\-print\fR, \fI\-\-print\-name\fR, \fI\-q\fR, \fI\-\-quiet\fR, \fI\-s\fR, or \fI\-x\fR is not specified, \fBippfind\fR adds \fI\-\-print\fR to print the service URI of anything it finds.
 The following expressions are supported:
@@ -138,9 +138,9 @@ True if the TXT record contains the named key and matches the given regular expr
 \fB\-\-uri \fIREGEX\fR
 True if the URI matches the given regular expression.
 .TP 5
-\fB\-x \fIUTILITY \fR[ \fIARGUMENT \fR... ] \fB';'\fR
+\fB\-x \fICOMMAND \fR[ \fIARGS \fR] \fB';'\fR
 .TP 5
-\fB\-\-exec \fIUTILITY \fR[ \fIARGUMENT \fR... ] \fB';'\fR
+\fB\-\-exec \fICOMMAND \fR[ \fIARGS \fR] \fB';'\fR
 Executes the specified program if the current result is true.
 "{foo}" arguments are replaced with the corresponding value - see SUBSTITUTIONS below.
 .PP
