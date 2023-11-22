@@ -295,7 +295,7 @@ static int		show_supplies(ippeve_client_t *client);
 static void		signal_handler(int signum);
 #endif // !_WIN32
 static char		*time_string(time_t tv, char *buffer, size_t bufsize);
-static void		usage(int status) _CUPS_NORETURN;
+static int		usage(FILE *out);
 static bool		valid_doc_attributes(ippeve_client_t *client);
 static bool		valid_job_attributes(ippeve_client_t *client);
 
@@ -304,13 +304,15 @@ static bool		valid_job_attributes(ippeve_client_t *client);
 // Globals...
 //
 
-static int		KeepFiles = 0,	// Keep spooled job files?
-			MaxVersion = 20,// Maximum IPP version (20 = 2.0, 11 = 1.1, etc.)
+static bool		KeepFiles = false;
+					// Keep spooled job files?
+static int		MaxVersion = 20,// Maximum IPP version (20 = 2.0, 11 = 1.1, etc.)
 			Verbosity = 0;	// Verbosity level
 static const char	*PAMService = NULL;
 					// PAM service
 #ifndef _WIN32
-static int		StopPrinter = 0;// Stop the printer server?
+static bool		StopPrinter = false;
+					// Stop the printer server?
 #endif // !_WIN32
 
 
@@ -356,7 +358,7 @@ main(int  argc,				// I - Number of command-line args
   {
     if (!strcmp(argv[i], "--help"))
     {
-      usage(0);
+      return (usage(stdout));
     }
     else if (!strcmp(argv[i], "--no-web-forms"))
     {
@@ -366,7 +368,10 @@ main(int  argc,				// I - Number of command-line args
     {
       i ++;
       if (i >= argc)
-        usage(1);
+      {
+        cupsLangPrintf(stderr, _("%s: Missing service name after '--pam-service'."), "ippeveprinter");
+        return (usage(stderr));
+      }
 
       PAMService = argv[i];
     }
@@ -377,8 +382,8 @@ main(int  argc,				// I - Number of command-line args
     }
     else if (!strncmp(argv[i], "--", 2))
     {
-      cupsLangPrintf(stderr, _("%s: Unknown option \"%s\"."), argv[0], argv[i]);
-      usage(1);
+      cupsLangPrintf(stderr, _("%s: Unknown option '%s'."), "ippeveprinter", argv[i]);
+      return (usage(stderr));
     }
     else if (argv[i][0] == '-')
     {
@@ -391,77 +396,29 @@ main(int  argc,				// I - Number of command-line args
 	      legacy = true;
 	      break;
 
+	  case 'a' : // -a attributes-file
+	      i ++;
+	      if (i >= argc)
+	      {
+	        cupsLangPrintf(stderr, _("%s: Missing IPP file after '-a'."), "ippeveprinter");
+	        return (usage(stderr));
+	      }
+
+	      attrfile = argv[i];
+	      break;
+
           case 'A' : // -A (enable authentication)
               if (!PAMService)
                 PAMService = "cups";
 	      break;
 
-          case 'D' : // -D device-uri
-	      i ++;
-	      if (i >= argc)
-	        usage(1);
-
-	      device_uri = argv[i];
-	      break;
-
-          case 'F' : // -F output/format
-	      i ++;
-	      if (i >= argc)
-	        usage(1);
-
-	      output_format = argv[i];
-	      break;
-
-	  case 'K' : // -K keypath
-	      i ++;
-	      if (i >= argc)
-	        usage(1);
-
-	      keypath = argv[i];
-	      break;
-
-	  case 'M' : // -M manufacturer
-	      i ++;
-	      if (i >= argc)
-	        usage(1);
-
-	      make   = argv[i];
-	      legacy = true;
-	      break;
-
-	  case 'S' : // -S filename.strings
-	      i ++;
-	      if (i >= argc)
-	        usage(1);
-
-	      strings = argv[i];
-	      break;
-
-          case 'V' : // -V max-version
-	      i ++;
-	      if (i >= argc)
-	        usage(1);
-
-	      if (!strcmp(argv[i], "2.0"))
-                MaxVersion = 20;
-	      else if (!strcmp(argv[i], "1.1"))
-                MaxVersion = 11;
-	      else
-	        usage(1);
-              break;
-
-	  case 'a' : // -a attributes-file
-	      i ++;
-	      if (i >= argc)
-	        usage(1);
-
-	      attrfile = argv[i];
-	      break;
-
           case 'c' : // -c command
               i ++;
 	      if (i >= argc)
-	        usage(1);
+	      {
+	        cupsLangPrintf(stderr, _("%s: Missing command after '-c'."), "ippeveprinter");
+	        return (usage(stderr));
+	      }
 
 	      command = argv[i];
 	      break;
@@ -469,36 +426,81 @@ main(int  argc,				// I - Number of command-line args
 	  case 'd' : // -d spool-directory
 	      i ++;
 	      if (i >= argc)
-	        usage(1);
+	      {
+	        cupsLangPrintf(stderr, _("%s: Missing spool directory after '-d'."), "ippeveprinter");
+	        return (usage(stderr));
+	      }
 
 	      cupsCopyString(directory, argv[i], sizeof(directory));
+	      break;
+
+          case 'D' : // -D device-uri
+	      i ++;
+	      if (i >= argc)
+	      {
+	        cupsLangPrintf(stderr, _("%s: Missing device URI after '-D'."), "ippeveprinter");
+	        return (usage(stderr));
+	      }
+
+	      device_uri = argv[i];
 	      break;
 
 	  case 'f' : // -f type/subtype[,...]
 	      i ++;
 	      if (i >= argc)
-	        usage(1);
+	      {
+	        cupsLangPrintf(stderr, _("%s: Missing format list after '-f'."), "ippeveprinter");
+	        return (usage(stderr));
+	      }
 
 	      docformats = cupsArrayNewStrings(argv[i], ',');
 	      legacy     = true;
 	      break;
 
+          case 'F' : // -F output/format
+	      i ++;
+	      if (i >= argc)
+	      {
+	        cupsLangPrintf(stderr, _("%s: Missing output format after '-F'."), "ippeveprinter");
+	        return (usage(stderr));
+	      }
+
+	      output_format = argv[i];
+	      break;
+
 	  case 'i' : // -i icon.png
 	      i ++;
 	      if (i >= argc)
-	        usage(1);
+	      {
+	        cupsLangPrintf(stderr, _("%s: Missing icon file(s) after '-i'."), "ippeveprinter");
+	        return (usage(stderr));
+	      }
 
 	      icon = argv[i];
 	      break;
 
 	  case 'k' : // -k (keep files)
-	      KeepFiles = 1;
+	      KeepFiles = true;
+	      break;
+
+	  case 'K' : // -K keypath
+	      i ++;
+	      if (i >= argc)
+	      {
+	        cupsLangPrintf(stderr, _("%s: Missing keystore path after '-K'."), "ippeveprinter");
+	        return (usage(stderr));
+	      }
+
+	      keypath = argv[i];
 	      break;
 
 	  case 'l' : // -l location
 	      i ++;
 	      if (i >= argc)
-	        usage(1);
+	      {
+	        cupsLangPrintf(stderr, _("%s: Missing location after '-l'."), "ippeveprinter");
+	        return (usage(stderr));
+	      }
 
 	      location = argv[i];
 	      break;
@@ -506,16 +508,34 @@ main(int  argc,				// I - Number of command-line args
 	  case 'm' : // -m model
 	      i ++;
 	      if (i >= argc)
-	        usage(1);
+	      {
+	        cupsLangPrintf(stderr, _("%s: Missing model name after '-m'."), "ippeveprinter");
+	        return (usage(stderr));
+	      }
 
 	      model  = argv[i];
+	      legacy = true;
+	      break;
+
+	  case 'M' : // -M manufacturer
+	      i ++;
+	      if (i >= argc)
+	      {
+	        cupsLangPrintf(stderr, _("%s: Missing manufacturer after '-M'."), "ippeveprinter");
+	        return (usage(stderr));
+	      }
+
+	      make   = argv[i];
 	      legacy = true;
 	      break;
 
 	  case 'n' : // -n hostname
 	      i ++;
 	      if (i >= argc)
-	        usage(1);
+	      {
+	        cupsLangPrintf(stderr, _("%s: Missing server name after '-n'."), "ippeveprinter");
+	        return (usage(stderr));
+	      }
 
 	      servername = argv[i];
 	      break;
@@ -523,7 +543,10 @@ main(int  argc,				// I - Number of command-line args
 	  case 'p' : // -p port
 	      i ++;
 	      if (i >= argc || !isdigit(argv[i][0] & 255))
-	        usage(1);
+	      {
+	        cupsLangPrintf(stderr, _("%s: Missing port number after '-p'."), "ippeveprinter");
+	        return (usage(stderr));
+	      }
 
 	      serverport = atoi(argv[i]);
 	      break;
@@ -531,7 +554,10 @@ main(int  argc,				// I - Number of command-line args
 	  case 'r' : // -r subtype
 	      i ++;
 	      if (i >= argc)
-	        usage(1);
+	      {
+	        cupsLangPrintf(stderr, _("%s: Missing subtype(s) after '-r'."), "ippeveprinter");
+	        return (usage(stderr));
+	      }
 
 	      subtypes = argv[i];
 	      break;
@@ -539,21 +565,61 @@ main(int  argc,				// I - Number of command-line args
 	  case 's' : // -s speed[,color-speed]
 	      i ++;
 	      if (i >= argc)
-	        usage(1);
+	      {
+	        cupsLangPrintf(stderr, _("%s: Missing speed(s) after '-s'."), "ippeveprinter");
+	        return (usage(stderr));
+	      }
 
 	      if (sscanf(argv[i], "%d,%d", &ppm, &ppm_color) < 1)
-	        usage(1);
+	      {
+	        cupsLangPrintf(stderr, _("%s: Invalid speed(s) value \"%s\"."), "ippeveprinter", argv[i]);
+	        return (usage(stderr));
+	      }
 
 	      legacy = true;
+	      break;
+
+	  case 'S' : // -S filename.strings
+	      i ++;
+	      if (i >= argc)
+	      {
+	        cupsLangPrintf(stderr, _("%s: Missing strings filename after '-S'."), "ippeveprinter");
+	        return (usage(stderr));
+	      }
+
+	      strings = argv[i];
 	      break;
 
 	  case 'v' : // -v (be verbose)
 	      Verbosity ++;
 	      break;
 
+          case 'V' : // -V max-version
+	      i ++;
+	      if (i >= argc)
+	      {
+	        cupsLangPrintf(stderr, _("%s: Missing version number after '-V'."), "ippeveprinter");
+	        return (usage(stderr));
+	      }
+
+	      if (!strcmp(argv[i], "2.0"))
+	      {
+                MaxVersion = 20;
+	      }
+	      else if (!strcmp(argv[i], "1.1"))
+              {
+                MaxVersion = 11;
+	      }
+	      else
+	      {
+	        cupsLangPrintf(stderr, _("%s: Unsupported version number \"%s\"."), "ippeveprinter", argv[i]);
+	        return (usage(stderr));
+	      }
+              break;
+
           default : // Unknown
-	      cupsLangPrintf(stderr, _("%s: Unknown option \"-%c\"."), argv[0], *opt);
-	      usage(1);
+	      cupsLangPrintf(stderr, _("%s: Unknown option '-%c'."), "ippeveprinter", *opt);
+	      return (usage(stderr));
 	}
       }
     }
@@ -563,16 +629,22 @@ main(int  argc,				// I - Number of command-line args
     }
     else
     {
-      cupsLangPrintf(stderr, _("%s: Unknown option \"%s\"."), argv[0], argv[i]);
-      usage(1);
+      cupsLangPrintf(stderr, _("%s: Unknown option '%s'."), "ippeveprinter", argv[i]);
+      return (usage(stderr));
     }
   }
 
   if (!name)
-    usage(1);
+  {
+    cupsLangPrintf(stderr, _("%s: Missing printer name."), "ippeveprinter");
+    return (usage(stderr));
+  }
 
   if (attrfile != NULL && legacy)
-    usage(1);
+  {
+    cupsLangPrintf(stderr, _("%s: Cannot use '-a' with '-2', '-f', '-m', '-M', or '-s'."), "ippeveprinter");
+    return (usage(stderr));
+  }
 
   // Apply defaults as needed...
   if (!directory[0])
@@ -594,12 +666,12 @@ main(int  argc,				// I - Number of command-line args
 
     if (mkdir(directory, 0755) && errno != EEXIST)
     {
-      cupsLangPrintf(stderr, _("Unable to create spool directory \"%s\": %s"), directory, strerror(errno));
-      usage(1);
+      cupsLangPrintf(stderr, _("%s: Unable to create spool directory '%s': %s"), "ippeveprinter", directory, strerror(errno));
+      return (usage(stderr));
     }
 
     if (Verbosity)
-      cupsLangPrintf(stderr, _("Using spool directory \"%s\"."), directory);
+      cupsLangPrintf(stderr, _("Using spool directory '%s'."), directory);
   }
 
   // Create the printer...
@@ -6822,7 +6894,7 @@ signal_handler(int signum)		// I - Signal number (not used)
 {
   (void)signum;
 
-  StopPrinter = 1;
+  StopPrinter = true;
 }
 #endif // !_WIN32
 
@@ -6850,38 +6922,38 @@ time_string(time_t tv,			// I - Time value
 // 'usage()' - Show program usage.
 //
 
-static void
-usage(int status)			// O - Exit status
+static int				// O - Exit status
+usage(FILE *out)			// I - Output file
 {
-  cupsLangPuts(stdout, _("Usage: ippeveprinter [options] \"name\""));
-  cupsLangPuts(stdout, _("Options:"));
-  cupsLangPuts(stdout, _("--help                  Show program help"));
-  cupsLangPuts(stdout, _("--no-web-forms          Disable web forms for media and supplies"));
-  cupsLangPuts(stdout, _("--pam-service service   Use the named PAM service"));
-  cupsLangPuts(stdout, _("--version               Show program version"));
-  cupsLangPuts(stdout, _("-2                      Set 2-sided printing support (default=1-sided)"));
-  cupsLangPuts(stdout, _("-A                      Enable authentication"));
-  cupsLangPuts(stdout, _("-D device-uri           Set the device URI for the printer"));
-  cupsLangPuts(stdout, _("-F output-type/subtype  Set the output format for the printer"));
-  cupsLangPuts(stdout, _("-K keypath              Set location of server X.509 certificates and keys."));
-  cupsLangPuts(stdout, _("-M manufacturer         Set manufacturer name (default=Test)"));
-  cupsLangPuts(stdout, _("-S filename.strings     Set strings file"));
-  cupsLangPuts(stdout, _("-V version              Set default IPP version"));
-  cupsLangPuts(stdout, _("-a filename.conf        Load printer attributes from conf file"));
-  cupsLangPuts(stdout, _("-c command              Set print command"));
-  cupsLangPuts(stdout, _("-d spool-directory      Set spool directory"));
-  cupsLangPuts(stdout, _("-f type/subtype[,...]   Set supported file types"));
-  cupsLangPuts(stdout, _("-i iconfile.png[,...]   Set icon file(s)"));
-  cupsLangPuts(stdout, _("-k                      Keep job spool files"));
-  cupsLangPuts(stdout, _("-l location             Set location of printer"));
-  cupsLangPuts(stdout, _("-m model                Set model name (default=Printer)"));
-  cupsLangPuts(stdout, _("-n hostname             Set hostname for printer"));
-  cupsLangPuts(stdout, _("-p port                 Set port number for printer"));
-  cupsLangPuts(stdout, _("-r subtype,[subtype]    Set DNS-SD service subtype"));
-  cupsLangPuts(stdout, _("-s speed[,color-speed]  Set speed in pages per minute"));
-  cupsLangPuts(stdout, _("-v                      Be verbose"));
+  cupsLangPuts(out, _("Usage: ippeveprinter [OPTIONS] \"NAME\""));
+  cupsLangPuts(out, _("Options:"));
+  cupsLangPuts(out, _("--help                         Show this help"));
+  cupsLangPuts(out, _("--no-web-forms                 Disable web forms for media and supplies"));
+  cupsLangPuts(out, _("--pam-service SERVICE          Use the named PAM service"));
+  cupsLangPuts(out, _("--version                      Show the program version"));
+  cupsLangPuts(out, _("-2                             Set 2-sided printing support (default=1-sided)"));
+  cupsLangPuts(out, _("-a FILENAME                    Load printer attributes from IPP file"));
+  cupsLangPuts(out, _("-A                             Enable authentication"));
+  cupsLangPuts(out, _("-c COMMAND                     Set print command"));
+  cupsLangPuts(out, _("-d SPOOL-DIRECTORY             Set spool directory"));
+  cupsLangPuts(out, _("-D DEVICE-URI                  Set the device URI for the printer"));
+  cupsLangPuts(out, _("-f TYPE/SUBTYPE[,...]          Set supported file types"));
+  cupsLangPuts(out, _("-F TYPE/SUBTYPE                Set the output format for the printer"));
+  cupsLangPuts(out, _("-i ICONFILE.png[,...]          Set icon file(s)"));
+  cupsLangPuts(out, _("-k                             Keep job spool files"));
+  cupsLangPuts(out, _("-K KEYSTORE                    Set location of server X.509 certificates and keys."));
+  cupsLangPuts(out, _("-l LOCATION                    Set location of printer"));
+  cupsLangPuts(out, _("-m MODEL                       Set model name (default=Printer)"));
+  cupsLangPuts(out, _("-M MANUFACTURER                Set manufacturer name (default=Test)"));
+  cupsLangPuts(out, _("-n HOSTNAME                    Set hostname for printer"));
+  cupsLangPuts(out, _("-p PORT                        Set port number for printer"));
+  cupsLangPuts(out, _("-r SUBTYPE[,...]               Set DNS-SD service subtype"));
+  cupsLangPuts(out, _("-s SPEED[,COLOR-SPEED]         Set speed in pages per minute"));
+  cupsLangPuts(out, _("-S FILENAME.strings            Set strings file"));
+  cupsLangPuts(out, _("-v                             Be verbose"));
+  cupsLangPuts(out, _("-V VERSION                     Set default IPP version"));
 
-  exit(status);
+  return (out == stdout ? 0 : 1);
 }
 
 

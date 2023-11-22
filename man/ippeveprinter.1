@@ -7,7 +7,7 @@
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH ippeveprinter 1 "CUPS" "2023-10-03" "OpenPrinting"
+.TH ippeveprinter 1 "CUPS" "2023-11-22" "OpenPrinting"
 .SH NAME
 ippeveprinter \- an ipp everywhere printer application for cups
 .SH SYNOPSIS
@@ -18,67 +18,70 @@ ippeveprinter \- an ipp everywhere printer application for cups
 .B \-\-no\-web\-forms
 ] [
 .B \-\-pam\-service
-.I service
+.I SERVICE
 ] [
 .B \-\-version
 ] [
 .B \-2
 ] [
+.B \-a
+.I FILENAME
+] [
 .B \-A
 ] [
-.B \-D
-.I device-uri
-] [
-.B \-F
-.I output-type/subtype
-] [
-.B \-K
-.I keypath
-] [
-.B \-M
-.I manufacturer
-] [
-.B \-V
-.I ipp-version
-] [
-.B \-a
-.I filename.conf
-] [
 .B \-c
-.I command
+.I COMMAND
 ] [
 .B \-d
-.I spool-directory
+.I SPOOL-DIRECTORY
+] [
+.B \-D
+.I DEVICE-URI
 ] [
 .B \-f
-.I type/subtype[,...]
+.I TYPE/SUBTYPE[,...]
+] [
+.B \-F
+.I TYPE/SUBTYPE
 ] [
 .B \-i
-.I iconfile.png
+.I ICONFILE.png[,...]
 ] [
 .B \-k
 ] [
+.B \-K
+.I KEYSTORE
+] [
 .B \-l
-.I location
+.I LOCATION
 ] [
 .B \-m
-.I model
+.I MODEL
+] [
+.B \-M
+.I MANUFACTURER
 ] [
 .B \-n
-.I hostname
+.I HOSTNAME
 ] [
 .B \-p
-.I port
+.I PORT
 ] [
 .B \-r
-.I subtype[,subtype]
+.I SUBTYPE[,...]
 ] [
 .B \-s
-.I speed[,color-speed]
+.I SPEED[,COLOR-SPEED]
+] [
+.B \-S
+.I FILENAME.strings
 ] [
 .B \-v[vvv]
+] [
+.B \-V
+.I VERSION
 ]
-.I service-name
+.I SERVICE-NAME
 .SH DESCRIPTION
 .B ippeveprinter
 is a simple Internet Printing Protocol (IPP) server conforming to the IPP Everywhere (PWG 5100.14) specification. It can be used to test client software or act as a very basic print server that runs a command for every job that is printed.
@@ -102,31 +105,18 @@ Show the CUPS version.
 .B \-2
 Report support for two-sided (duplex) printing.
 .TP 5
+\fB\-a \fIFILENAME\fR
+Specifies an IPP file that defines the attributes for the printer.
+This is normally used to simulate a real printer with the output from
+.BR ipptool (1)
+using the
+.B \-\-ippfile
+option.
+.TP 5
 .B \-A
 Enable authentication for the created printer.
 .B ippeveprinter
 uses PAM to authenticate HTTP Basic credentials.
-.TP 5
-\fB\-D \fIdevice-uri\fR
-Set the device URI for print output.
-The URI can be a filename, directory, or a network socket URI of the form "socket://ADDRESS[:PORT]" (where the default port number is 9100).
-When specifying a directory,
-.B ippeveprinter
-will create an output file using the job ID and name.
-.TP 5
-\fB\-F \fIoutput-type/subtype[,...]\fR
-Specifies the output MIME media type.
-The default is "application/postscript" when the \fB\-P\fR option is specified.
-.TP 5
-\fB\-M \fImanufacturer\fR
-Set the manufacturer of the printer.
-The default is "Example".
-.TP 5
-\fB\-V 1.1\fR
-.TP 5
-\fB\-V 2.0\fR
-Specifies the maximum IPP version to report.
-2.0 is the default.
 .TP 5
 \fB\-c \fIcommand\fR
 Run the specified command for each document that is printed.
@@ -135,11 +125,22 @@ Run the specified command for each document that is printed.
 Specifies the directory that will hold the print files.
 The default is a directory under the user's current temporary directory.
 .TP 5
-\fB\-f \fItype/subtype[,...]\fR
+\fB\-D \fIDEVICE-URI\fR
+Set the device URI for print output.
+The URI can be a filename, directory, or a network socket URI of the form "socket://ADDRESS[:PORT]" (where the default port number is 9100).
+When specifying a directory,
+.B ippeveprinter
+will create an output file using the job ID and name.
+.TP 5
+\fB\-f \fITYPE/SUBTYPE[,...]\fR
 Specifies a list of MIME media types that the server will accept.
 The default depends on the type of printer created.
 .TP 5
-\fB\-i \fIiconfile.png\fR
+\fB\-F \fIoutput-type/subtype[,...]\fR
+Specifies the output MIME media type.
+The default is "application/postscript" when the \fB\-P\fR option is specified.
+.TP 5
+\fB\-i \fIICONFILE.png[,...]\fR
 Specifies the printer icon file for the server.
 The file must be a PNG format image.
 The default is an internally-provided PNG image.
@@ -147,39 +148,52 @@ The default is an internally-provided PNG image.
 .B \-k
 Keeps the print documents in the spool directory rather than deleting them.
 .TP 5
-\fB\-l \fIlocation\fR
+\fB\-l \fILOCATION\fR
 Specifies the human-readable location string that is reported by the server.
 The default is the empty string.
 .TP 5
-\fB\-m \fImodel\fR
+\fB\-m \fIMODEL\fR
 Specifies the model name of the printer.
 The default is "Printer".
 .TP 5
-\fB\-n \fIhostname\fR
+\fB\-M \fIMANUFACTURER\fR
+Set the manufacturer of the printer.
+The default is "Example".
+.TP 5
+\fB\-n \fIHOSTNAME\fR
 Specifies the hostname that is reported by the server.
 The default is the name returned by the
 .BR hostname (1)
 command.
 .TP 5
-\fB\-p \fIport\fR
+\fB\-p \fIPORt\fR
 Specifies the port number to listen on.
 The default is a user-specific number from 8000 to 8999.
 .TP 5
 .B \-r off
 Turns off DNS-SD service advertisements entirely.
 .TP 5
-\fB\-r \fIsubtype[,subtype]\fR
+\fB\-r \fISUBTYPE[,...]\fR
 Specifies the DNS-SD subtype(s) to advertise.
 Separate multiple subtypes with a comma.
 The default is "_print".
 .TP 5
-\fB\-s \fIspeed[,color-speed]\fR
+\fB\-s \fISPEED[,COLOR-SPEED]\fR
 Specifies the printer speed in pages per minute.
 If two numbers are specified and the second number is greater than zero, the server will report support for color printing.
 The default is "10,0".
 .TP 5
+\fB\-S \fIFILENAME.strings\fR
+Specifies a strings file for localization.
+.TP 5
 .B \-v[vvv]
 Be (very) verbose when logging activity to standard error.
+.TP 5
+\fB\-V 1.1\fR
+.TP 5
+\fB\-V 2.0\fR
+Specifies the maximum IPP version to report.
+2.0 is the default.
 .SH EXIT STATUS
 The
 .B ippeveprinter
@@ -248,10 +262,16 @@ command whenever a job is sent to the server:
 
     ippeveprinter \-c /usr/bin/file "My Cool Printer"
 .fi
+.LP
+Make a copy of a real printer's attributes and simulate it locally:
+.nf
+
+    ipptool \-\-ippfile myprinter.conf ipp://printer.local/ipp/print get-printer-attributes.test
+    ippeveprinter -a myprinter.conf "My Simulated Printer"
+.fi
 .SH SEE ALSO
-.BR ippevepcl (1),
-.BR ippeveps (1),
 .BR ipptransform (1),
+.BR ipptool (1),
 PWG Internet Printing Protocol Workgroup (http://www.pwg.org/ipp)
 .SH COPYRIGHT
 Copyright \[co] 2021-2023 by OpenPrinting.

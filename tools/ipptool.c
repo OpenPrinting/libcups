@@ -6453,7 +6453,7 @@ token_cb(ipp_file_t     *f,		// I - IPP file data
 static int
 usage(FILE *out)
 {
-  cupsLangPuts(out, _("Usage: ipptool [options] URI filename [ ... filenameN ]"));
+  cupsLangPuts(out, _("Usage: ipptool [OPTIONS] URI FILENAME [ ... FILENAME ]"));
   cupsLangPuts(out, _("Options:"));
   cupsLangPuts(out, _("--help                         Show this help"));
   cupsLangPuts(out, _("--ippfile FILENAME             Produce IPP attribute file"));
