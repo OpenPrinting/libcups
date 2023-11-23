@@ -1928,9 +1928,9 @@ usage(FILE *out)			// I - Output file
   cupsLangPuts(out, _("-s                             Print service name if true"));
   cupsLangPuts(out, _("-t KEY                         True if the TXT record contains the key"));
   cupsLangPuts(out, _("-u REGEX                       Match URI to regular expression"));
-  cupsLangPuts(out, _("-x UTILITY [ARGS ...] ';'      Execute program if true"));
+  cupsLangPuts(out, _("-x COMMAND [ARGS] ';'          Execute command if true"));
   cupsLangPuts(out, _("--domain REGEX                 Match domain to regular expression"));
-  cupsLangPuts(out, _("--exec UTILITY [ARGS ...] ';'  Execute program if true"));
+  cupsLangPuts(out, _("--exec COMMAND [ARGS] ';'      Execute program if true"));
   cupsLangPuts(out, _("--host REGEX                   Match hostname to regular expression"));
   cupsLangPuts(out, _("--literal-name NAME            Match service name to literal name value"));
   cupsLangPuts(out, _("--local                        True if service is local"));

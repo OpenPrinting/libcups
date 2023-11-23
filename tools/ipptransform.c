@@ -201,7 +201,7 @@ static void	raster_start_job(xform_raster_t *ras, xform_write_cb_t cb, void *ctx
 static void	raster_start_page(xform_raster_t *ras, unsigned page, xform_write_cb_t cb, void *ctx);
 static void	raster_write_line(xform_raster_t *ras, unsigned y, const unsigned char *line, xform_write_cb_t cb, void *ctx);
 static bool	resource_dict_cb(pdfio_dict_t *dict, const char *key, xform_page_t *outpage);
-static void	usage(int status) _CUPS_NORETURN;
+static int	usage(FILE *out);
 static ssize_t	write_fd(int *fd, const unsigned char *buffer, size_t bytes);
 static bool	xform_document(const char *filename, unsigned pages, ipp_options_t *options, const char *outformat, const char *resolutions, const char *sheet_back, const char *types, xform_write_cb_t cb, void *ctx);
 static bool	xform_separator(xform_raster_t *ras, xform_write_cb_t cb, void *ctx);
@@ -287,7 +287,7 @@ main(int  argc,				// I - Number of command-line args
     {
       if (!strcmp(argv[i], "--help"))
       {
-        usage(0);
+        return (usage(stdout));
       }
       else if (!strcmp(argv[i], "--version"))
       {
@@ -296,7 +296,7 @@ main(int  argc,				// I - Number of command-line args
       else
       {
 	cupsLangPrintf(stderr, _("%s: Unknown option '%s'."), Prefix, argv[i]);
-	usage(1);
+	return (usage(stderr));
       }
     }
     else if (argv[i][0] == '-')
@@ -310,7 +310,7 @@ main(int  argc,				// I - Number of command-line args
 	      if (i >= argc)
 	      {
 	        cupsLangPrintf(stderr, _("%s: Missing device URI after '-d'."), Prefix);
-	        usage(1);
+	        return (usage(stderr));
 	      }
 
 	      device_uri = argv[i];
@@ -321,7 +321,7 @@ main(int  argc,				// I - Number of command-line args
 	      if (i >= argc)
 	      {
 	        cupsLangPrintf(stderr, _("%s: Missing output filename after '-f'."), Prefix);
-	        usage(1);
+	        return (usage(stderr));
 	      }
 
               if (!output_type && (ext = strrchr(argv[i], '.')) != NULL)
@@ -350,7 +350,7 @@ main(int  argc,				// I - Number of command-line args
 	      if (i >= argc)
 	      {
 	        cupsLangPrintf(stderr, _("%s: Missing input MIME media type after '-i'."), Prefix);
-	        usage(1);
+	        return (usage(stderr));
 	      }
 
 	      if (num_files < (sizeof(files) / sizeof(files[0])))
@@ -369,7 +369,7 @@ main(int  argc,				// I - Number of command-line args
 	      if (i >= argc)
 	      {
 	        cupsLangPrintf(stderr, _("%s: Missing output MIME media type after '-m'."), Prefix);
-	        usage(1);
+	        return (usage(stderr));
 	      }
 
 	      output_type = argv[i];
@@ -380,7 +380,7 @@ main(int  argc,				// I - Number of command-line args
 	      if (i >= argc)
 	      {
 	        cupsLangPrintf(stderr, _("%s: Missing name=value after '-o'."), Prefix);
-	        usage(1);
+	        return (usage(stderr));
 	      }
 
 	      num_options = cupsParseOptions(argv[i], num_options, &options);
@@ -391,7 +391,7 @@ main(int  argc,				// I - Number of command-line args
 	      if (i >= argc)
 	      {
 	        cupsLangPrintf(stderr, _("%s: Missing resolution list after '-r'."), Prefix);
-	        usage(1);
+	        return (usage(stderr));
 	      }
 
 	      resolutions = argv[i];
@@ -402,7 +402,7 @@ main(int  argc,				// I - Number of command-line args
 	      if (i >= argc)
 	      {
 	        cupsLangPrintf(stderr, _("%s: Missing back sheet transform after '-s'."), Prefix);
-	        usage(1);
+	        return (usage(stderr));
 	      }
 
 	      sheet_back = argv[i];
@@ -413,7 +413,7 @@ main(int  argc,				// I - Number of command-line args
 	      if (i >= argc)
 	      {
 	        cupsLangPrintf(stderr, _("%s: Missing type list after '-t'."), Prefix);
-	        usage(1);
+	        return (usage(stderr));
 	      }
 
 	      types = argv[i];
@@ -425,7 +425,7 @@ main(int  argc,				// I - Number of command-line args
 
 	  default :
 	      cupsLangPrintf(stderr, _("%s: Unknown option '-%c'."), Prefix, *opt);
-	      usage(1);
+	      return (usage(stderr));
 	}
       }
     }
@@ -466,12 +466,12 @@ main(int  argc,				// I - Number of command-line args
       if (!files[num_files].format)
       {
 	cupsLangPrintf(stderr, _("%s: Unknown format for '%s', please specify with '-i' option."), Prefix, argv[i]);
-	usage(1);
+	return (usage(stderr));
       }
       else if (strcmp(files[num_files].format, "application/pdf") && strcmp(files[num_files].format, "image/jpeg") && strcmp(files[num_files].format, "image/png") && strcmp(files[num_files].format, "text/plain"))
       {
 	cupsLangPrintf(stderr, _("%s: Unsupported format '%s' for '%s'."), Prefix, files[num_files].format, argv[i]);
-	usage(1);
+	return (usage(stderr));
       }
 
       files[num_files ++].filename = argv[i];
@@ -485,7 +485,7 @@ main(int  argc,				// I - Number of command-line args
 
   // Check that we have everything we need...
   if (num_files == 0)
-    usage(1);
+    return (usage(stderr));
 
   if (!output_type)
   {
@@ -508,12 +508,12 @@ main(int  argc,				// I - Number of command-line args
   if (!output_type)
   {
     cupsLangPrintf(stderr, _("%s: Unknown output format, please specify with '-m' option."), Prefix);
-    usage(1);
+    return (usage(stderr));
   }
   else if (strcasecmp(output_type, "application/pdf") && strcasecmp(output_type, "application/postscript") && strcasecmp(output_type, "application/vnd.hp-pcl") && strcasecmp(output_type, "image/pwg-raster") && strcasecmp(output_type, "image/urf"))
   {
     cupsLangPrintf(stderr, _("%s: Unsupported output format '%s'."), Prefix, output_type);
-    usage(1);
+    return (usage(stderr));
   }
 
   // Prepare a (combined) PDF file from the input files for printing...
@@ -539,13 +539,13 @@ main(int  argc,				// I - Number of command-line args
     if (httpSeparateURI(HTTP_URI_CODING_ALL, device_uri, scheme, sizeof(scheme), userpass, sizeof(userpass), host, sizeof(host), &port, resource, sizeof(resource)) < HTTP_URI_STATUS_OK)
     {
       cupsLangPrintf(stderr, _("%s: Invalid device URI '%s'."), Prefix, device_uri);
-      usage(1);
+      return (usage(stderr));
     }
 
     if (strcmp(scheme, "socket") && strcmp(scheme, "ipp") && strcmp(scheme, "ipps"))
     {
       cupsLangPrintf(stderr, _("%s: Unsupported device URI scheme '%s'."), Prefix, scheme);
-      usage(1);
+      return (usage(stderr));
     }
 
     snprintf(service, sizeof(service), "%d", port);
@@ -3653,39 +3653,107 @@ resource_dict_cb(
 // 'usage()' - Show program usage.
 //
 
-static void
-usage(int status)			// I - Exit status
+static int				// O - Exit status
+usage(FILE *out)			// I - Output file
 {
-  FILE	*fp = status ? stderr : stdout;	// Output file for usage...
+  cupsLangPuts(out, _("Usage: ipptransform [OPTIONS] FILENAME [ ... FILENAME]"));
+  cupsLangPuts(out, _("Options:"));
+  cupsLangPuts(out, _("--help                         Show this help"));
+  cupsLangPuts(out, _("--version                      Show the program version"));
+  cupsLangPuts(out, _("-d DEVICE-URI                  Specify the output device"));
+  cupsLangPuts(out, _("-f OUTPUT-FILENAME             Specify the output file"));
+  cupsLangPuts(out, _("-i INPUT/FORMAT                Specify the input format"));
+  cupsLangPuts(out, _("-m OUTPUT/FORMAT               Specify the output format"));
+  cupsLangPuts(out, _("-o NAME=VALUE                  Specify named options"));
+  cupsLangPuts(out, _("-r RESOLUTION[,...]            Specify supported resolutions"));
+  cupsLangPuts(out, _("-s SHEET-BACK                  Specify back side transform"));
+  cupsLangPuts(out, _("-t TYPE[,...]                  Specify color spaces and bit depths"));
+  cupsLangPuts(out, _("-v                             Be verbose"));
 
+  cupsLangPuts(out, _("Device URIs:"));
+  cupsLangPuts(out, _("socket://ADDRESS[:PORT]        Use JetDirect/AppSocket protocol"));
+  cupsLangPuts(out, _("ipp://ADDRESS[:PORT]/RESOURCE  Use Internet Printing Protocol"));
+  cupsLangPuts(out, _("ipps://ADDRESS[:PORT]/RESOURCE Use Internet Printing Protocol over HTTPS"));
 
-  cupsLangPuts(fp, _("Usage: ipptransform [options] filename"));
-  fputs("\n", fp);
-  cupsLangPuts(fp, _("Options:"));
-  cupsLangPuts(fp, _("  --help"));
-  cupsLangPuts(fp, _("  --version"));
-  cupsLangPuts(fp, _("  -d DEVICE-URI"));
-  cupsLangPuts(fp, _("  -f OUTPUT-FILENAME"));
-  cupsLangPuts(fp, _("  -i INPUT/FORMAT"));
-  cupsLangPuts(fp, _("  -m OUTPUT/FORMAT"));
-  cupsLangPuts(fp, _("  -o 'OPTION=VALUE [... OPTION=VALUE]'"));
-  cupsLangPuts(fp, _("  -r RESOLUTION[,...,RESOLUTION]"));
-  cupsLangPuts(fp, _("  -s {flipped|manual-tumble|normal|rotated}"));
-  cupsLangPuts(fp, _("  -t TYPE[,...,TYPE]"));
-  cupsLangPuts(fp, _("  -v"));
-  fputs("\n", fp);
-  cupsLangPuts(fp, _("DEVICE-URIs: socket://address[:port], ipp://address[:port]/resource, ipps://address[:port]/resource"));
-  cupsLangPuts(fp, _("INPUT-FORMATs: application/pdf, image/jpeg, image/png, image/pwg-raster, text/plain"));
-  cupsLangPuts(fp, _("OUTPUT-FORMATs: application/pdf, applications/postscript, application/vnd.hp-pcl, image/pwg-raster, image/urf"));
-  cupsLangPuts(fp, _("OPTIONs: copies, force-front-side, image-orientation, imposition-template, insert-sheet, job-error-sheet, job-pages-per-set, job-sheet-message, job-sheets, job-sheets-col, media, media-col, multiple-document-handling, number-up, orientation-requested, overrides, page-delivery, page-ranges, print-color-mode, print-quality, print-scaling, printer-resolution, separator-sheets, sides, x-image-position, x-image-shift, x-side1-image-shift, x-side2-image-position, y-image-position, y-image-shift, y-side1-image-shift, y-side2-image-position"));
-  cupsLangPuts(fp, _("RESOLUTIONs: NNNdpi or NNNxNNNdpi"));
+  cupsLangPuts(out, _("Input Formats:"));
+  cupsLangPuts(out, _("application/pdf                Portable Document Format (PDF) document"));
+  cupsLangPuts(out, _("image/jpeg                     Joint Photographic Experts Group (JPEG) image"));
+  cupsLangPuts(out, _("image/png                      Portable Network Graphics (PNG) image"));
+  cupsLangPuts(out, _("image/pwg-raster               PWG Raster Format document"));
+  cupsLangPuts(out, _("text/plain                     Plain text document"));
+
+  cupsLangPuts(out, _("Output Formats:"));
+  cupsLangPuts(out, _("application/pdf                Portable Document Format (PDF) document"));
+  cupsLangPuts(out, _("applications/postscript        Adobe PostScript document"));
+  cupsLangPuts(out, _("application/vnd.hp-pcl         HP Page Control Language (PCL) document"));
+  cupsLangPuts(out, _("image/pwg-raster               PWG Raster Format document"));
+  cupsLangPuts(out, _("image/urf                      Apple raster document"));
+
+  cupsLangPuts(out, _("Name-Values:"));
+  cupsLangPuts(out, _("copies=N                       Set number of copies"));
+  cupsLangPuts(out, _("force-front-side=PAGE-LIST     Force numbered pages to begin on a front side"));
+  cupsLangPuts(out, _("image-orientation=ORIENT       Set the rotation of each page image"));
+  cupsLangPuts(out, _("imposition-template=booklet    Impose pages for a folded booklet"));
+  cupsLangPuts(out, _("job-error-sheet={SPEC}         Enable error reporting sheets"));
+  cupsLangPuts(out, _("job-pages-per-set=N            Specify the number of pages per set for raster documents"));
+  cupsLangPuts(out, _("job-sheet-message=MESSAGE      Set a message for the banner page"));
+  cupsLangPuts(out, _("job-sheets=NAME                Enable banner pages"));
+  cupsLangPuts(out, _("job-sheets-col={SPEC}          Enable banner pages"));
+  cupsLangPuts(out, _("media=SIZENAME                 Set the output media size"));
+  cupsLangPuts(out, _("media-col={SPEC}               Set the output media details"));
+  cupsLangPuts(out, _("multiple-document-handling=separate-documents-collated-copies\n"
+                      "                               Produce collated copies of each file"));
+  cupsLangPuts(out, _("multiple-document-handling=separate-documents-uncollated-copies\n"
+                      "                               Produce uncollated copies of each file"));
+  cupsLangPuts(out, _("multiple-document-handling=single-document\n"
+                      "                               Produce collated copies of all files"));
+  cupsLangPuts(out, _("multiple-document-handling=single-document-new-sheet\n"
+                      "                               Produce collated copies of all files starting on a new sheet"));
+  cupsLangPuts(out, _("number-up=N                    Set the number of input page per output page"));
+  cupsLangPuts(out, _("orientation-requested=ORIENT   Set the orientation of the output"));
+  cupsLangPuts(out, _("overrides={SPEC}               Set per-page overrides"));
+  cupsLangPuts(out, _("page-delivery=ORDER            Set output order"));
+  cupsLangPuts(out, _("page-ranges=RANGES             Set page ranges for printing"));
+  cupsLangPuts(out, _("print-color-mode=MODE          Set color mode for printing"));
+  cupsLangPuts(out, _("print-quality=QUALITY          Set print quality"));
+  cupsLangPuts(out, _("print-scaling=SCALING          Set scaling mode"));
+  cupsLangPuts(out, _("printer-resolution=RESOLUTION  Set output resolution"));
+  cupsLangPuts(out, _("separator-sheets={SPEC}        Insert blank sheets between files"));
+  cupsLangPuts(out, _("sides=SIDES                    Set simplex or duplex printing"));
+  cupsLangPuts(out, _("x-image-position=POSITION      Set relative horizontal position"));
+  cupsLangPuts(out, _("x-image-shift=OFFSET           Set relative horizontal offset"));
+  cupsLangPuts(out, _("x-side1-image-shift=OFFSET     Set relative horizontal offset for front sides"));
+  cupsLangPuts(out, _("x-side2-image-shift=OFFSET     Set relative horizontal offset for back sides"));
+  cupsLangPuts(out, _("y-image-position=POSITION      Set relative vertical position"));
+  cupsLangPuts(out, _("y-image-shift=OFFSET           Set relative vertical offset"));
+  cupsLangPuts(out, _("y-side1-image-shift=OFFSET     Set relative vertical offset for front sides"));
+  cupsLangPuts(out, _("y-side2-image-shift=OFFSET     Set relative vertical offset for back sides"));
+
+  cupsLangPuts(out, _("Resolutions:"));
+  cupsLangPuts(out, _("NNNdpi                         Symmetric resolution in dots-per-inch"));
+  cupsLangPuts(out, _("NNNxNNNdpi                     Asymmetric resolution in dots-per-inch"));
+
+  cupsLangPuts(out, _("Sheet Backs:"));
+  cupsLangPuts(out, _("flipped                        Flip back side horizontally or vertically"));
+  cupsLangPuts(out, _("manual-tumble                  Rotate back side for short-edge duplex"));
+  cupsLangPuts(out, _("normal                         Do not transform back side"));
+  cupsLangPuts(out, _("rotated                        Rotate back side for long-edge duplex"));
+
+  cupsLangPuts(out, _("Types:"));
 #ifdef HAVE_COREGRAPHICS_H
-  cupsLangPuts(fp, _("TYPEs: adobe-rgb_8, adobe-rgb_16, black_1, black_8, cmyk_8, sgray_1, sgray_8, srgb_8"));
-#else
-  cupsLangPuts(fp, _("TYPEs: black_1, black_8, sgray_1, sgray_8, srgb_8"));
+  cupsLangPuts(out, _("adobe-rgb_8                    24-bit AdobeRGB"));
+  cupsLangPuts(out, _("adobe-rgb_16                   48-bit AdobeRGB"));
 #endif // HAVE_COREGRAPHICS_H
+  cupsLangPuts(out, _("black_1                        1-bit black"));
+  cupsLangPuts(out, _("black_8                        8-bit black"));
+#ifdef HAVE_COREGRAPHICS_H
+  cupsLangPuts(out, _("cmyk_8                         32-bit CMYK"));
+#endif // HAVE_COREGRAPHICS_H
+  cupsLangPuts(out, _("sgray_1                        1-bit grayscale"));
+  cupsLangPuts(out, _("sgray_8                        8-bit grayscale"));
+  cupsLangPuts(out, _("srgb_8                         24-bit sRGB"));
 
-  exit(status);
+  return (out == stdout ? 0 : 1);
 }
 
 

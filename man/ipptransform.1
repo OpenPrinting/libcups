@@ -8,7 +8,7 @@
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH ipptransform 1 "ippsample" "2023-10-03" "OpenPrinting"
+.TH ipptransform 1 "ippsample" "2023-11-22" "OpenPrinting"
 .SH NAME
 ipptransform \- convert document data to alternate formats
 .br
@@ -20,29 +20,31 @@ ippeveps \- convert document data to postscript
 [
 .B \-\-help
 ] [
+.B \-\-version
+] [
 .B \-d
-.I device-uri
+.I DEVICE-URI
 ] [
 .B \-f
-.I output-filename
+.I OUTPUT-FILENAME
 ] [
 .B \-i
-.I input/format
+.I INPUT/FORMAT
 ] [
 .B \-m
-.I output/format
+.I OUTPUT/FORMAT
 ] [
 .B \-o
-.I "name=value [... name=value]"
+.I "NAME=VALUE [... NAME=VALUE]"
 ] [
 .B \-r
-.I resolution[,...,resolution]
+.I RESOLUTION[,...]
 ] [
 .B \-s
 .I {flipped|manual-tumble|normal|rotated}
 ] [
 .B \-t
-.I type[,...,type]
+.I TYPE[,...]
 ] [
 .B \-v
 ]
@@ -57,24 +59,27 @@ The following options are recognized by
 .B \-\-help
 Shows program help.
 .TP 5
-.BI \-d \ device-uri
+.B \-\-version
+Shows program version.
+.TP 5
+.BI \-d \ DEVICE-URI
 Specifies an output device as a URI.
 Currently only the "ipp", "ipps", and "socket" URI schemes are supported, for example "socket://10.0.1.42" to send print data to an AppSocket printer at IP address 10.0.1.42.
 .TP 5
-.BI \-i \ input/format
+.BI \-i \ INPUT/FORMAT
 Specifies the MIME media type of the input file.
 Currently the "application/pdf" (PDF) and "image/jpeg" (JPEG) MIME media types are supported.
 .TP 5
-.BI \-m \ output/format
+.BI \-m \ OUTPUT/FORMAT
 Specifies the MIME media type of the output file.
-Current the "application/vnd.hp-pcl" (HP PCL) and "image/pwg-raster" (PWG Raster) MIME media types are supported.
+Currently the "application/pdf" (PDF), "application/postscript" (PostScript), "application/vnd.hp-pcl" (HP PCL), "image/pwg-raster" (PWG Raster), and "image/urf" (Apple Raster) MIME media types are supported.
 .TP 5
-.BI \-o \ "name=value [... name=value]"
+.BI \-o \ "NAME=VALUE [... NAME=VALUE]"
 Specifies one or more named options for the conversion.
-Currently the "copies", "media", "media-col", "page-ranges", "print-color-mode", "print-quality", "printer-resolution", and "sides" options are supported.
+Currently the "copies", "force-front-side", "image-orientation", "imposition-template", "job-error-sheet", "job-pages-per-set", "job-sheet-message", "job-sheets", "job-sheets-col", "media", "media-col", "multiple-document-handling", "number-up", "orientation-requested", "overrides", "page-delivery", "page-ranges", "print-color-mode", "print-quality", "print-scaling", "printer-resolution", "separator-sheets", "sides", "x-image-position", "x-image-shift", "x-side1-image-shift", "x-side2-image-shift", "y-image-position", "y-image-shift", "y-side1-image-shift", and "y-side2-image-shift" options are supported.
 See the NAMED OPTIONS section for more information.
 .TP 5
-.BI \-r \ resolution[,...,resolution]
+.BI \-r \ RESOLUTION[,...]
 Specifies the supported resolutions.
 Resolutions are of the form "NNNdpi" or "NNNxNNNdpi", for example "300dpi" or "600x300dpi".
 HP PCL output only supports resolutions of "300dpi" and "600dpi".
@@ -82,7 +87,7 @@ HP PCL output only supports resolutions of "300dpi" and "600dpi".
 .BR \-s \ {flipped|manual-tumble|normal|rotated}
 Specifies the coordinate system for the back side of duplex sheets.
 .TP 5
-.BR \-t \ type[,...,type]
+.BR \-t \ type[,...]
 Specifies the output color spaces and bit depths, separated by commas.
 Types include "adobe-rgb_8" and "adobe-rgb_16" for 8-bit and 16-bit AdobeRGB, "black_1" and "black_8" for 1-bit and 8-bit black, "cmyk_8" for 8-bit CMYK, "sgray_1" and "sgray_8" for 1-bit and 8-bit grayscale with a 2.2 gamma correction, and "srgb_8" for 8-bit sRGB color.
 Run
@@ -99,34 +104,100 @@ The following named options are supported:
 .B copies
 Specifies the number of copies to produce.
 .TP 5
+.B force\-front\-side
+Forces the numbered pages to start on the front side of a sheet.
+Only has effect when "sides" is "two-sided-long-edge" or "two-sided-short-edge".
+.TP 5
+.B image\-orientation
+Specifies the rotation of each page image as an "orientation-requested" value.
+.TP 5
+.B imposition\-template
+Specifies an imposition template to use for the input pages.
+Currently only the "booklet" template (for printing folded booklets) is supported.
+.TP 5
+.B job\-error\-sheet
+Specifies when and where to print the job error sheet.
+.TP 5
+.B job\-pages\-per\-set
+Specifies the number of raster input pages per set for finishing operations.
+.TP 5
+.B job\-sheet\-message
+Specifies a message to show on the banner page.
+.TP 5
+.B job\-sheets
+Enables banner pages on the default job media.
+.TP 5
+.B job\-sheets\-col
+Enables banner pages on specific media.
+.TP 5
 .B media
 Specifies the media size as a PWG standardized media size name.
 For example, US Letter (8.5x11in) is "na_letter_8.5x11in" and ISO A4 is "iso_a4_210x297mm".
 .TP 5
-.B media-col
+.B media\-col
 Specifies the media size as a collection.
 Both the "media-size" and "media-size-name" members can be used to specify the size.
 For example, both "media-col={media-size={x-dimension=21000 y-dimension=29700}}" and "media-col={media-size-name=iso_a4_210x297mm}" specify ISO A4 media.
 .TP 5
-.B page-ranges
+.B multiple\-document\-handling
+Specifies whether to produce uncollated ("separate-documents-uncollated-copies") or collated ("separate-documents-collated-copies", "single-document", or "single-document-new-sheet").
+.TP 5
+.B number\-up
+Specifies the number of input pages to impose on each output page.
+The values 1, 2, 4, 6, 9, 12, and 16 are supported.
+.TP 5
+.B orientation\-requested
+Specifies the orientation of input pages, 3 for portrait, 4 for landscape, 5 for reverse landscape, and 6 for reverse portrait.
+.TP 5
+.B overrides
+Specifies per-page overrides of "media", "media-col", and/or "orientation-requested".
+.TP 5
+.B page\-delivery
+Specifies normal ("same\-order\-face\-down" or "same\-order\-face\-up") or reverse ("reverse\-order\-face\-down" or "reverse\-order\-face\-up") order output.
+.TP 5
+.B page\-ranges
 Selects a single range of pages to print.
 For example, the value "5-12" selects pages 5 through 12.
 .TP 5
-.B print-color-mode
+.B print\-color\-mode
 Specifies the color mode as "auto" (automatic), "monochrome" (grayscale), or "color".
 .TP 5
-.B print-quality
+.B print\-quality
 Specifies the print quality with value 3 (draft), 4 (normal), or 5 (high/best).
 .TP 5
-.B print-scaling
+.B print\-scaling
 Specifies the scaling to use when converting image files.
 The values "auto", "fit", and "fill" are supported.
 .TP 5
-.B printer-resolution
+.B printer\-resolution
 Specifies the print resolution using one of the supported print resolutions.
 .TP 5
 .B sides
 Specifies whether to do 1-sided printing ("one-sided") or 2-sided printing ("two-sided-long-edge" for portrait and "two-sided-short-edge" for landscape).
+.TP 5
+.B x\-image\-position
+Specifies the relative horizontal position - "center", "left", "none", or "right".
+.TP 5
+.B x\-image\-shift
+Specifies the relative horizontal offset in hundredths of millimeters.
+.TP 5
+.B x\-side1\-image\-shift
+Specifies the relative horizontal offset for front sides in hundredths of millimeters.
+.TP 5
+.B x\-side2\-image\-shift
+Specifies the relative horizontal offset for back sides in hundredths of millimeters.
+.TP 5
+.B y\-image\-position
+Specifies the relative vertical position - "bottom", "center", "none", or "top".
+.TP 5
+.B y\-image\-shift
+Specifies the relative vertical offset in hundredths of millimeters.
+.TP 5
+.B y\-side1\-image\-shift
+Specifies the relative vertical offset for front sides in hundredths of millimeters.
+.TP 5
+.B y\-side2\-image\-shift
+Specifies the relative vertical offset for back sides in hundredths of millimeters.
 .SH DIAGNOSTICS
 .B ipptransform
 sends all messages to the standard error.
