@@ -1989,19 +1989,14 @@ ippCreateRequestedArray(ipp_t *request)	// I - IPP request
   };
 
 
- /*
-  * Get the requested-attributes attribute...
-  */
-
+  // Get the requested-attributes attribute...
   op = ippGetOperation(request);
 
   if ((requested = ippFindAttribute(request, "requested-attributes", IPP_TAG_KEYWORD)) == NULL)
   {
-   /*
-    * The Get-Jobs operation defaults to "job-id" and "job-uri", all others
-    * default to "all"...
-    */
-
+    // The Get-Jobs operation defaults to "job-id" and "job-uri", and
+    // Get-Documents defaults to "document-number", while all others default to
+    // "all"...
     if (op == IPP_OP_GET_JOBS)
     {
       ra = cupsArrayNew((cups_array_cb_t)strcmp, NULL, NULL, 0, NULL, NULL);
@@ -2010,22 +2005,25 @@ ippCreateRequestedArray(ipp_t *request)	// I - IPP request
 
       return (ra);
     }
+    else if (op == IPP_OP_GET_DOCUMENTS)
+    {
+      ra = cupsArrayNew((cups_array_cb_t)strcmp, NULL, NULL, 0, NULL, NULL);
+      cupsArrayAdd(ra, "document-number");
+
+      return (ra);
+    }
     else
+    {
       return (NULL);
+    }
   }
 
- /*
-  * If the attribute contains a single "all" keyword, return NULL...
-  */
-
+  // If the attribute contains a single "all" keyword, return NULL...
   count = ippGetCount(requested);
   if (count == 1 && !strcmp(ippGetString(requested, 0, NULL), "all"))
     return (NULL);
 
- /*
-  * Create an array using "strcmp" as the comparison function...
-  */
-
+  // Create an array using "strcmp" as the comparison function...
   ra = cupsArrayNew((cups_array_cb_t)strcmp, NULL, NULL, 0, NULL, NULL);
 
   for (i = 0; i < count; i ++)

@@ -8,6 +8,7 @@ libcups v3.0rc1 (TBD)
 - Updated `cupsAddIntegerOption` and `cupsGetIntegerOption` to use the `long`
   type.
 - Updated the various tool man pages, usage output, and examples.
+- Updated `ippCreateRequestedArray` for the Get-Documents operation.
 - Now use installed PDFio library, if available.
 - Now use NotoSansMono font for `ipptransform` text conversions.
 - The `ipptransform` program now supports uncollated copies.
