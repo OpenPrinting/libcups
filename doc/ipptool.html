@@ -10,6 +10,15 @@ body {
 .center {
   text-align: center;
 }
+a:link, a:visited {
+  color: #c00;
+  text-decoration: underline;
+}
+
+a:link:hover, a:active {
+  color: #f00;
+  text-decoration: underline;
+}
 code, kbd, pre, tt {
   font-family: monospace;
 }
@@ -26,24 +35,22 @@ p {
   text-align: justify;
 }
 span.info {
-  background: rgba(127,127,127,0.5);
-  border-radius: 5px;
+  background: #ddf;
+  border: solid 1px #77c;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
   float: right;
   font-size: 80%;
-  padding: 4px 10px;
+  padding: 2px 10px;
 }
 h4 span.info {
-  padding: 2px 8px;
+  padding: 1px 8px;
 }
 table {
   border-collapse: collapse;
   margin-left: auto;
   margin-right: auto;
   max-width: 90%;
-}
-table caption {
-  font-style: italic;
-  margin-bottom: 1em;
 }
 table thead th {
   border-bottom: solid 2px black;
@@ -52,18 +59,39 @@ table thead th {
   vertical-align: bottom;
 }
 table tbody tr:nth-child(even) {
-  background: rgba(127,127,127,0.125);
+  background: #ddd;
 }
 table tbody td {
   border-bottom: solid 1px black;
   padding: 4px 10px;
   vertical-align: top;
 }
-table.figure tbody td {
-  border-bottom: none;
+blockquote {
+  background: #ddf;
+  border-left: solid 2px #77c;
+  margin-left: 0;
+  margin-right: 0;
+  padding: 10px;
+}
+/* Dark mode overrides */
+@media (prefers-color-scheme: dark) {
+  body {
+    background: black;
+    color: #ccc;
+  }
+  h2, h3, h4, table tbody td, table thead th {
+    border-color: #ccc;
+  }
+  blockquote, span.info {
+    background: #337;
+    border-color: #66f;
+  }
+  table tbody tr:nth-child(even) {
+    background: #444;
+  }
 }
 --></style>
-    <meta name="creator" content="mantohtml v2.0.1">
+    <meta name="creator" content="mantohtml v2.0.2">
     <title>ipptool(1)</title>
   </head>
   <body>
@@ -152,7 +180,7 @@ Output is either a plain text, formatted text, CSV, JSON, or XML report on the s
 The
 <em>testfile</em>
 format is described in
-<strong>ipptoolfile</strong>(5).
+<a href="ipptoolfile.html"><strong>ipptoolfile</strong>(5).</a>
 
 </p>
     <h2 id="ipptool-1.options">Options</h2>
@@ -165,7 +193,7 @@ Shows program help.
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>--ippfile </strong><em>FILENAME</em><br>
 Specifies that the test results should be written to the named IPP file.
 These files can be used with programs like
-<strong>ippeveprinter</strong>(1).
+<a href="ippeveprinter.html"><strong>ippeveprinter</strong>(1).</a>
 
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>--stop-after-include-error</strong><br>
@@ -355,7 +383,7 @@ program is unique to CUPS and conforms to the Internet Printing Protocol up to v
         ipp://localhost/printers/myprinter create-printer-subscription.test
 </pre>
     <h2 id="ipptool-1.see-also">See Also</h2>
-<p><strong>ipptoolfile</strong>(5),
+<a href="ipptoolfile.html"><p><strong>ipptoolfile</strong>(5),</a>
 
 IANA IPP Registry (<a href="https://www.iana.org/assignments/ipp-registrations">https://www.iana.org/assignments/ipp-registrations</a>),
 PWG Internet Printing Protocol Workgroup (<a href="https://www.pwg.org/ipp">https://www.pwg.org/ipp</a>),

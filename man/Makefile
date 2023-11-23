@@ -106,9 +106,9 @@ html:
 	echo Converting man pages to HTML...
 	for file in $(MAN1); do \
 		echo "    $$file..."; \
-		mantohtml --css man.css $$file >../doc/`basename $$file .1`.html; \
+		mantohtml --css ../doc/libcups.css $$file >../doc/`basename $$file .1`.html; \
 	done
 	for file in $(MAN5); do \
 		echo "    $$file..."; \
-		mantohtml --css man.css $$file >../doc/`basename $$file .5`.html; \
+		mantohtml --css ../doc/libcups.css $$file >../doc/`basename $$file .5`.html; \
 	done

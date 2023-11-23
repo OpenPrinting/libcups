@@ -10,6 +10,15 @@ body {
 .center {
   text-align: center;
 }
+a:link, a:visited {
+  color: #c00;
+  text-decoration: underline;
+}
+
+a:link:hover, a:active {
+  color: #f00;
+  text-decoration: underline;
+}
 code, kbd, pre, tt {
   font-family: monospace;
 }
@@ -26,24 +35,22 @@ p {
   text-align: justify;
 }
 span.info {
-  background: rgba(127,127,127,0.5);
-  border-radius: 5px;
+  background: #ddf;
+  border: solid 1px #77c;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
   float: right;
   font-size: 80%;
-  padding: 4px 10px;
+  padding: 2px 10px;
 }
 h4 span.info {
-  padding: 2px 8px;
+  padding: 1px 8px;
 }
 table {
   border-collapse: collapse;
   margin-left: auto;
   margin-right: auto;
   max-width: 90%;
-}
-table caption {
-  font-style: italic;
-  margin-bottom: 1em;
 }
 table thead th {
   border-bottom: solid 2px black;
@@ -52,18 +59,39 @@ table thead th {
   vertical-align: bottom;
 }
 table tbody tr:nth-child(even) {
-  background: rgba(127,127,127,0.125);
+  background: #ddd;
 }
 table tbody td {
   border-bottom: solid 1px black;
   padding: 4px 10px;
   vertical-align: top;
 }
-table.figure tbody td {
-  border-bottom: none;
+blockquote {
+  background: #ddf;
+  border-left: solid 2px #77c;
+  margin-left: 0;
+  margin-right: 0;
+  padding: 10px;
+}
+/* Dark mode overrides */
+@media (prefers-color-scheme: dark) {
+  body {
+    background: black;
+    color: #ccc;
+  }
+  h2, h3, h4, table tbody td, table thead th {
+    border-color: #ccc;
+  }
+  blockquote, span.info {
+    background: #337;
+    border-color: #66f;
+  }
+  table tbody tr:nth-child(even) {
+    background: #444;
+  }
 }
 --></style>
-    <meta name="creator" content="mantohtml v2.0.1">
+    <meta name="creator" content="mantohtml v2.0.2">
     <title>ippeveprinter(1)</title>
   </head>
   <body>
@@ -171,7 +199,7 @@ Report support for two-sided (duplex) printing.
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-a </strong><em>FILENAME</em><br>
 Specifies an IPP file that defines the attributes for the printer.
 This is normally used to simulate a real printer with the output from
-<strong>ipptool</strong>(1)
+<a href="ipptool.html"><strong>ipptool</strong>(1)</a>
 
 using the
 <strong>--ippfile</strong>
@@ -339,9 +367,9 @@ command whenever a job is sent to the server:
     ippeveprinter -a myprinter.conf &quot;My Simulated Printer&quot;
 </pre>
     <h2 id="ippeveprinter-1.see-also">See Also</h2>
-<p><strong>ipptransform</strong>(1),
+<a href="ipptransform.html"><p><strong>ipptransform</strong>(1),</a>
 
-<strong>ipptool</strong>(1),
+<a href="ipptool.html"><strong>ipptool</strong>(1),</a>
 
 PWG Internet Printing Protocol Workgroup (<a href="http://www.pwg.org/ipp">http://www.pwg.org/ipp</a>)
 </p>

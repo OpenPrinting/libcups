@@ -24,10 +24,9 @@ DOCFILES	=	\
 			ipptool.html \
 			ipptoolfile.html \
 			ipptransform.html \
+			libcups.css \
 			raster.png \
-			raster.svg \
 			raster-organization.png \
-			raster-organization.svg \
 			sample-image.png \
 			spec-ipp.html \
 			spec-raster.html

@@ -11,61 +11,7 @@
   information.
   -->
   <head>
-    <style><!--
-body {
-  font-family: sans-serif;
-  font-size: 16pt;
-  margin: 54pt 36pt;
-}
-.center {
-  text-align: center;
-}
-code, kbd, pre, tt {
-  font-family: monospace;
-}
-dl {
-  margin-left: 2em;
-}
-h2, h3 {
-  border-bottom: solid 2px black;
-}
-h4 {
-  border-bottom: solid 1px black;
-}
-p {
-  text-align: justify;
-}
-span.info {
-  background: rgba(127,127,127,0.5);
-  border-radius: 5px;
-  float: right;
-  font-size: 80%;
-  padding: 4px 10px;
-}
-h4 span.info {
-  padding: 2px 8px;
-}
-table {
-  border-collapse: collapse;
-  margin-left: auto;
-  margin-right: auto;
-  max-width: 90%;
-}
-table thead th {
-  border-bottom: solid 2px black;
-  padding: 0 10px;
-  text-align: left;
-  vertical-align: bottom;
-}
-table tbody tr:nth-child(even) {
-  background: rgba(127,127,127,0.125);
-}
-table tbody td {
-  border-bottom: solid 1px black;
-  padding: 4px 10px;
-  vertical-align: top;
-}
---></style>
+    <link rel="stylesheet" type="text/css" href="libcups.css">
     <title>CUPS Implementation of IPP</title>
     <meta name='keywords' content='Programming, Internet Printing Protocol'>
   </head>
@@ -952,10 +898,10 @@ table tbody td {
     <p>CUPS provides many extension attributes to support multiple devices, PPD files, standard job filters, printers, and printer classes.</p>
 
 
-    <h3 id='DEVICE_ATTRIBUTES'>Device Attributes<span class="info">Deprecated</span></h3>
+    <h3 id='DEVICE_ATTRIBUTES'><span class="info">Deprecated</span>Device Attributes</h3>
     <p>Device attributes are returned by the CUPS-Get-Devices operation and enumerate all of the available hardware devices and network protocols that are supported by the server. Device attributes are reported in the printer-attributes-tag group.</p>
 
-    <h4 id='device-class'>device-class (type2 keyword)<span class="info">Deprecated</span></h4>
+    <h4 id='device-class'><span class="info">Deprecated</span>device-class (type2 keyword)</h4>
     <p>The "device-class" attribute provides the class of device and can be one of the following:
     <ul>
       <li>'file': A disk file.
@@ -964,7 +910,7 @@ table tbody td {
       <li>'network': A network connection, typically via AppSocket, HTTP, IPP, LPD, or SMB/CIFS protocols.
     </ul>
 
-    <h4 id='device-id'>device-id (text(1023))<span class="info">Deprecated</span></h4>
+    <h4 id='device-id'><span class="info">Deprecated</span>device-id (text(1023))</h4>
     <p>The "device-id" attribute provides the IEEE-1284 device ID string for the device.</p>
 
     <h4 id='device-info'><span class="info">Deprecated</span>device-info (text(127))</h4>
@@ -976,7 +922,7 @@ table tbody td {
     <h4 id='device-make-and-model'><span class="info">Deprecated</span>device-make-and-model (text(127))</h4>
     <p>The "device-make-and-model" attribute specifies a device identification string provided by the printer connected to the device. If the device or printer does not support identification then this attribute contains the string 'unknown'.
 
-    <h4 id='device-uri'>device-uri (uri)<span class="info">Deprecated</span></h4>
+    <h4 id='device-uri'><span class="info">Deprecated</span>device-uri (uri)</h4>
     <p>The "device-uri" attribute specifies a unique identifier for the device. The actual format of the "device-uri" string depends on the value of the "device-class" attribute:
     <ul>
       <li>'file': The "device-uri" will be of the form 'file:///path/to/filename'.
@@ -987,6 +933,7 @@ table tbody td {
       <p>The URI returned by CUPS-Get-Devices MAY only contain the scheme name ('scheme'). It is up to the client application to add the appropriate host and other information when adding a new printer.
       <p>The URI returned by Get-Printer-Attributes and CUPS-Get-Printers has any username and password information stripped; the information is still stored and used by the server internally to perform any needed authentication.
     </ul>
+    <blockquote><b>Note:</b> This attribute has been replaced by the ["smi55357-device-uri (uri)"](https://github.com/michaelrsweet/pappl/blob/master/doc/IPP-EXTENSIONS.md#513-smi55357-device-uri-uri) attribute.</blockquote>
 
 
     <h3 id='JOB_ATTRIBUTES'>Job Attributes</h3>
