@@ -910,15 +910,15 @@ span.string {
 </div>
 <div class="body">
 <blockquote>
-<p>Please <a href="https://github.com/openprinting/cups/issues">file issues on Github</a> to provide feedback on this document.</p>
+<p>Please <a href="https://github.com/openprinting/libcups/issues">file issues on Github</a> to provide feedback on this document.</p>
 </blockquote>
 <h2 class="title" id="introduction">Introduction</h2>
 <p>CUPS provides the &quot;cups&quot; library to talk to the different parts of CUPS and with Internet Printing Protocol (IPP) printers. The &quot;cups&quot; library functions are accessed by including the <code>&lt;cups/cups.h&gt;</code> header.</p>
 <p>CUPS is based on the Internet Printing Protocol (&quot;IPP&quot;), which allows clients (applications) to communicate with a server (the scheduler, printers, etc.) to get a list of destinations, send print jobs, and so forth. You identify which server you want to communicate with using a pointer to the opaque structure <code>http_t</code>. The <code>CUPS_HTTP_DEFAULT</code> constant can be used when you want to talk to the CUPS scheduler.</p>
 <h3 class="title" id="guidelines">Guidelines</h3>
-<p>When writing software (other than printer drivers) that uses the &quot;cups&quot; library:</p>
+<p>When writing software that uses the &quot;cups&quot; library:</p>
 <ul>
-<li><p>Do not use undocumented or deprecated APIs,</p>
+<li><p>Do not use undocumented, private, or deprecated APIs,</p>
 </li>
 <li><p>Do not rely on pre-configured printers,</p>
 </li>
@@ -963,7 +963,7 @@ span.string {
 <pre><code>gcc -o simple `pkg-config --cflags cups3` simple.c `pkg-config --libs cups3`
 ./simple
 </code></pre>
-<p>The <code>pkg-config</code> command provides the compiler flags (<code>pkg-config --cflags cups</code>) and libraries (<code>pkg-config --libs cups</code>) needed for the local system.</p>
+<p>The <code>pkg-config</code> command provides the compiler flags (<code>pkg-config --cflags cups3</code>) and libraries (<code>pkg-config --libs cups3</code>) needed for the local system.</p>
 <h2 class="title" id="working-with-destinations">Working with Destinations</h2>
 <p>Destinations, which in CUPS represent individual printers or classes (collections or pools) of printers, are represented by the <code>cups_dest_t</code> structure which includes the name (&quot;name&quot;), instance (&quot;instance&quot;, saved options/settings), whether the destination is the default for the user (&quot;is_default&quot;), and the options and basic information associated with that destination (&quot;num_options&quot; and &quot;options&quot;).</p>
 <p>Historically destinations have been manually maintained by the administrator of a system or network, but CUPS also supports dynamic discovery of destinations on the current network.</p>
@@ -1097,8 +1097,6 @@ my_get_dests(
 <h3 class="title" id="basic-destination-information">Basic Destination Information</h3>
 <p>The &quot;num_options&quot; and &quot;options&quot; members of the <code>cups_dest_t</code> structure provide basic attributes about the destination in addition to the user default options and values for that destination. The following names are predefined for various destination attributes:</p>
 <ul>
-<li><p>&quot;auth-info-required&quot;: The type of authentication required for printing to this destination: &quot;none&quot;, &quot;username,password&quot;, &quot;domain,username,password&quot;, or &quot;oauth&quot;.</p>
-</li>
 <li><p>&quot;printer-info&quot;: The human-readable description of the destination such as &quot;My Laser Printer&quot;.</p>
 </li>
 <li><p>&quot;printer-is-accepting-jobs&quot;: &quot;true&quot; if the destination is accepting new jobs, &quot;false&quot; otherwise.</p>
@@ -1183,7 +1181,8 @@ cupsFindDestSupported(http_t *http, cups_dest_t *dest,
 
   puts(<span class="string">&quot;finishings supported:&quot;</span>);
   <span class="reserved">for</span> (i = <span class="number">0</span>; i &lt; count; i ++)
-    printf(<span class="string">&quot;  %d\n&quot;</span>, ippGetInteger(finishings, i));
+    printf(<span class="string">&quot;  %d (%s)\n&quot;</span>, ippGetInteger(finishings, i),
+           ippEnumString(<span class="string">&quot;finishings&quot;</span>, ippGetInteger(finishings, i)));
 }
 <span class="reserved">else</span>
   puts(<span class="string">&quot;finishings not supported.&quot;</span>);
@@ -1262,7 +1261,7 @@ cupsFindDestReady(http_t *http, cups_dest_t *dest,
   <span class="reserved">int</span> bottom, left, right, top;
 } cups_media_t;
 </code></pre>
-<p>The &quot;media&quot; member specifies a PWG self-describing media size name such as &quot;na_letter_8.5x11in&quot;, &quot;iso_a4_210x297mm&quot;, etc. The &quot;color&quot; member specifies a PWG media color name such as &quot;white&quot;, &quot;blue&quot;, etc. The &quot;source&quot; member specifies a standard keyword for the paper tray or roll such as &quot;tray-1&quot;, &quot;manual&quot;, &quot;by-pass-tray&quot; (multi-purpose tray), etc. The &quot;type&quot; member specifies a PWG media type name such as &quot;stationery&quot;, &quot;photographic&quot;, &quot;envelope&quot;, &quot;transparency&quot;, etc.</p>
+<p>The &quot;media&quot; member specifies a PWG self-describing media size name such as &quot;na_letter_8.5x11in&quot;, &quot;iso_a4_210x297mm&quot;, etc. The &quot;color&quot; member specifies a PWG media color name such as &quot;white&quot;, &quot;blue&quot;, etc. The &quot;source&quot; member specifies a standard keyword for the paper tray or roll such as &quot;tray-1&quot;, &quot;manual&quot;, &quot;by-pass-tray&quot; (multi-purpose tray), etc. The &quot;type&quot; member specifies a PWG media type name such as &quot;stationery&quot; (plain paper), &quot;photographic&quot;, &quot;envelope&quot;, &quot;transparency&quot;, etc.</p>
 <p>The &quot;width&quot; and &quot;length&quot; members specify the dimensions of the media in hundredths of millimeters (1/2540th of an inch). The &quot;bottom&quot;, &quot;left&quot;, &quot;right&quot;, and &quot;top&quot; members specify the margins of the printable area, also in hundredths of millimeters.</p>
 <p>The <a href="#cupsGetDestMediaByName"><code>cupsGetDestMediaByName</code></a> and <a href="#cupsGetDestMediaBySize"><code>cupsGetDestMediaBySize</code></a> functions lookup the media size information using a standard media size name or dimensions in hundredths of millimeters:</p>
 <pre><code class="language-c"><span class="reserved">bool</span>
@@ -1354,7 +1353,7 @@ cupsGetDestMediaDefault(http_t *http, cups_dest_t *dest,
 <pre><code class="language-c"><span class="reserved">const</span> <span class="reserved">char</span> *
 cupsLocalizeDestMedia(http_t *http, cups_dest_t *dest,
                       cups_dinfo_t *info, <span class="reserved">unsigned</span> flags,
-                      cups_media_t *size);
+                      cups_media_t *media);
 
 <span class="reserved">const</span> <span class="reserved">char</span> *
 cupsLocalizeDestOption(http_t *http, cups_dest_t *dest,
@@ -1417,11 +1416,11 @@ cupsFinishDestDocument(http_t *http, cups_dest_t *dest,
 </code></pre>
 <p>The &quot;docname&quot; argument specifies the name of the document, typically the original filename. The &quot;format&quot; argument specifies the MIME media type of the document, including the following constants:</p>
 <ul>
+<li><p><code>CUPS_FORMAT_AUTO</code>: &quot;application/octet-stream&quot;</p>
+</li>
 <li><p><code>CUPS_FORMAT_JPEG</code>: &quot;image/jpeg&quot;</p>
 </li>
 <li><p><code>CUPS_FORMAT_PDF</code>: &quot;application/pdf&quot;</p>
-</li>
-<li><p><code>CUPS_FORMAT_POSTSCRIPT</code>: &quot;application/postscript&quot;</p>
 </li>
 <li><p><code>CUPS_FORMAT_TEXT</code>: &quot;text/plain&quot;</p>
 </li>
@@ -1437,9 +1436,11 @@ size_t bytes;
                           <span class="number">1</span>) == HTTP_STATUS_CONTINUE)
 {
   <span class="reserved">while</span> ((bytes = fread(buffer, <span class="number">1</span>, <span class="reserved">sizeof</span>(buffer), fp)) &gt; <span class="number">0</span>)
+  {
     <span class="reserved">if</span> (cupsWriteRequestData(CUPS_HTTP_DEFAULT, buffer,
                              bytes) != HTTP_STATUS_CONTINUE)
       <span class="reserved">break</span>;
+  }
 
   <span class="reserved">if</span> (cupsFinishDestDocument(CUPS_HTTP_DEFAULT, dest,
                              info) == IPP_STATUS_OK)
@@ -1951,7 +1952,7 @@ size_t cupsAddDestMediaOptions(<a href="#http_t">http_t</a> *http, <a href="#cup
 <h3 class="function"><a id="cupsAddIntegerOption">cupsAddIntegerOption</a></h3>
 <p class="description">Add an integer option to an option array.</p>
 <p class="code">
-size_t cupsAddIntegerOption(const char *name, int value, size_t num_options, <a href="#cups_option_t">cups_option_t</a> **options);</p>
+size_t cupsAddIntegerOption(const char *name, long value, size_t num_options, <a href="#cups_option_t">cups_option_t</a> **options);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>name</th>
@@ -4600,7 +4601,7 @@ const char *cupsGetErrorString(void);</p>
 <h3 class="function"><a id="cupsGetIntegerOption">cupsGetIntegerOption</a></h3>
 <p class="description">Get an integer option value.</p>
 <p class="code">
-int cupsGetIntegerOption(const char *name, size_t num_options, <a href="#cups_option_t">cups_option_t</a> *options);</p>
+long cupsGetIntegerOption(const char *name, size_t num_options, <a href="#cups_option_t">cups_option_t</a> *options);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>name</th>
@@ -4611,10 +4612,10 @@ int cupsGetIntegerOption(const char *name, size_t num_options, <a href="#cups_op
 <td class="description">Options</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">Option value or <code>INT_MIN</code></p>
+<p class="description">Option value or <code>LONG_MIN</code></p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">INT_MIN is returned when the option does not exist, is not an integer, or
-exceeds the range of values for the &quot;int&quot; type.</p>
+<p class="discussion"><code>LONG_MIN</code> is returned when the option does not exist, is not an integer, or
+exceeds the range of values for the <code>long</code> type.</p>
 <h3 class="function"><a id="cupsGetJobs">cupsGetJobs</a></h3>
 <p class="description">Get the jobs from the specified server.</p>
 <p class="code">

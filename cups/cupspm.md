@@ -5,7 +5,7 @@ copyright: Copyright © 2021-2023 by OpenPrinting. All Rights Reserved.
 version: 3.0.0
 ...
 
-> Please [file issues on Github](https://github.com/openprinting/cups/issues) to
+> Please [file issues on Github](https://github.com/openprinting/libcups/issues) to
 > provide feedback on this document.
 
 
@@ -25,9 +25,9 @@ the CUPS scheduler.
 
 ## Guidelines
 
-When writing software (other than printer drivers) that uses the "cups" library:
+When writing software that uses the "cups" library:
 
-- Do not use undocumented or deprecated APIs,
+- Do not use undocumented, private, or deprecated APIs,
 - Do not rely on pre-configured printers,
 - Do not assume that printers support specific features or formats, and
 - Do not rely on implementation details.
@@ -111,8 +111,8 @@ to compile it with GCC and run it:
     ./simple
 
 The `pkg-config` command provides the compiler flags
-(`pkg-config --cflags cups`) and libraries (`pkg-config --libs cups`) needed for
-the local system.
+(`pkg-config --cflags cups3`) and libraries (`pkg-config --libs cups3`) needed
+for the local system.
 
 
 # Working with Destinations
@@ -279,9 +279,6 @@ basic attributes about the destination in addition to the user default options
 and values for that destination.  The following names are predefined for various
 destination attributes:
 
-- "auth-info-required": The type of authentication required for printing to this
-  destination: "none", "username,password", "domain,username,password", or
-  "oauth".
 - "printer-info": The human-readable description of the destination such as "My
   Laser Printer".
 - "printer-is-accepting-jobs": "true" if the destination is accepting new jobs,
@@ -411,7 +408,8 @@ if (cupsCheckDestSupported(CUPS_HTTP_DEFAULT, dest, info,
 
   puts("finishings supported:");
   for (i = 0; i < count; i ++)
-    printf("  %d\n", ippGetInteger(finishings, i));
+    printf("  %d (%s)\n", ippGetInteger(finishings, i),
+           ippEnumString("finishings", ippGetInteger(finishings, i)));
 }
 else
   puts("finishings not supported.");
@@ -538,8 +536,8 @@ The "media" member specifies a PWG self-describing media size name such as
 a PWG media color name such as "white", "blue", etc.  The "source" member
 specifies a standard keyword for the paper tray or roll such as "tray-1",
 "manual", "by-pass-tray" (multi-purpose tray), etc.  The "type" member specifies
-a PWG media type name such as "stationery", "photographic", "envelope",
-"transparency", etc.
+a PWG media type name such as "stationery" (plain paper), "photographic",
+"envelope", "transparency", etc.
 
 The "width" and "length" members specify the dimensions of the media in
 hundredths of millimeters (1/2540th of an inch).  The "bottom", "left", "right",
@@ -664,7 +662,7 @@ user's current locale for options and values: [`cupsLocalizeDestMedia`](@@),
 const char *
 cupsLocalizeDestMedia(http_t *http, cups_dest_t *dest,
                       cups_dinfo_t *info, unsigned flags,
-                      cups_media_t *size);
+                      cups_media_t *media);
 
 const char *
 cupsLocalizeDestOption(http_t *http, cups_dest_t *dest,
@@ -751,9 +749,9 @@ The "docname" argument specifies the name of the document, typically the
 original filename.  The "format" argument specifies the MIME media type of the
 document, including the following constants:
 
+- `CUPS_FORMAT_AUTO`: "application/octet-stream"
 - `CUPS_FORMAT_JPEG`: "image/jpeg"
 - `CUPS_FORMAT_PDF`: "application/pdf"
-- `CUPS_FORMAT_POSTSCRIPT`: "application/postscript"
 - `CUPS_FORMAT_TEXT`: "text/plain"
 
 The "num\_options" and "options" arguments specify per-document print options,
@@ -773,9 +771,11 @@ if (cupsStartDestDocument(CUPS_HTTP_DEFAULT, dest, info,
                           1) == HTTP_STATUS_CONTINUE)
 {
   while ((bytes = fread(buffer, 1, sizeof(buffer), fp)) > 0)
+  {
     if (cupsWriteRequestData(CUPS_HTTP_DEFAULT, buffer,
                              bytes) != HTTP_STATUS_CONTINUE)
       break;
+  }
 
   if (cupsFinishDestDocument(CUPS_HTTP_DEFAULT, dest,
                              info) == IPP_STATUS_OK)

@@ -15,16 +15,22 @@ include ../Makedefs
 
 DOCFILES	=	\
 			cups.png \
+			cups.svg \
 			cupspm.epub \
 			cupspm.html \
 			index.html \
 			ippeveprinter.html \
+			ippfind.html \
 			ipptool.html \
 			ipptoolfile.html \
 			ipptransform.html \
 			raster.png \
+			raster.svg \
 			raster-organization.png \
-			sample-image.png
+			raster-organization.svg \
+			sample-image.png \
+			spec-ipp.html \
+			spec-raster.html
 
 
 #
