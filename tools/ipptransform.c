@@ -309,7 +309,7 @@ main(int  argc,				// I - Number of command-line args
 	      i ++;
 	      if (i >= argc)
 	      {
-	        cupsLangPrintf(stderr, _("%s: Missing device URI after '-d'."), Prefix);
+	        cupsLangPrintf(stderr, _("%s: Missing device URI after '%s'."), Prefix, "-d");
 	        return (usage(stderr));
 	      }
 
@@ -379,7 +379,7 @@ main(int  argc,				// I - Number of command-line args
 	      i ++;
 	      if (i >= argc)
 	      {
-	        cupsLangPrintf(stderr, _("%s: Missing name=value after '-o'."), Prefix);
+	        cupsLangPrintf(stderr, _("%s: Missing NAME=VALUE after '%s'."), Prefix, "-o");
 	        return (usage(stderr));
 	      }
 
@@ -465,7 +465,7 @@ main(int  argc,				// I - Number of command-line args
 
       if (!files[num_files].format)
       {
-	cupsLangPrintf(stderr, _("%s: Unknown format for '%s', please specify with '-i' option."), Prefix, argv[i]);
+	cupsLangPrintf(stderr, _("%s: Unknown format for \"%s\", please specify with '-i' option."), Prefix, argv[i]);
 	return (usage(stderr));
       }
       else if (strcmp(files[num_files].format, "application/pdf") && strcmp(files[num_files].format, "image/jpeg") && strcmp(files[num_files].format, "image/png") && strcmp(files[num_files].format, "text/plain"))
@@ -544,14 +544,14 @@ main(int  argc,				// I - Number of command-line args
 
     if (strcmp(scheme, "socket") && strcmp(scheme, "ipp") && strcmp(scheme, "ipps"))
     {
-      cupsLangPrintf(stderr, _("%s: Unsupported device URI scheme '%s'."), Prefix, scheme);
+      cupsLangPrintf(stderr, _("%s: Unsupported device URI scheme \"%s\"."), Prefix, scheme);
       return (usage(stderr));
     }
 
     snprintf(service, sizeof(service), "%d", port);
     if ((list = httpAddrGetList(host, AF_UNSPEC, service)) == NULL)
     {
-      cupsLangPrintf(stderr, _("%s: Unable to lookup device URI host '%s': %s"), Prefix, host, cupsGetErrorString());
+      cupsLangPrintf(stderr, _("%s: Unable to lookup device URI host \"%s\": %s"), Prefix, host, cupsGetErrorString());
       return (1);
     }
 
@@ -560,7 +560,7 @@ main(int  argc,				// I - Number of command-line args
       // AppSocket connection...
       if (!httpAddrConnect(list, &fd, 30000, NULL))
       {
-	cupsLangPrintf(stderr, _("%s: Unable to connect to '%s' on port %d: %s"), Prefix, host, port, cupsGetErrorString());
+	cupsLangPrintf(stderr, _("%s: Unable to connect to \"%s\" on port %d: %s"), Prefix, host, port, cupsGetErrorString());
 	return (1);
       }
     }
@@ -589,7 +589,7 @@ main(int  argc,				// I - Number of command-line args
 
       if ((http = httpConnect(host, port, list, AF_UNSPEC, encryption, 1, 30000, NULL)) == NULL)
       {
-	cupsLangPrintf(stderr, _("%s: Unable to connect to '%s' on port %d: %s"), Prefix, host, port, cupsGetErrorString());
+	cupsLangPrintf(stderr, _("%s: Unable to connect to \"%s\" on port %d: %s"), Prefix, host, port, cupsGetErrorString());
 	return (1);
       }
 
@@ -1870,7 +1870,7 @@ monitor_ipp(const char *device_uri)	// I - Device URI
 
   while ((http = httpConnect(host, port, NULL, AF_UNSPEC, encryption, 1, 30000, NULL)) == NULL)
   {
-    cupsLangPrintf(stderr, _("%s: Unable to connect to '%s' on port %d: %s"), Prefix, host, port, cupsGetErrorString());
+    cupsLangPrintf(stderr, _("%s: Unable to connect to \"%s\" on port %d: %s"), Prefix, host, port, cupsGetErrorString());
     sleep(30);
   }
 
@@ -4307,7 +4307,7 @@ xform_document(
 
       if ((line = malloc(linesize)) == NULL)
       {
-	cupsLangPrintf(stderr, _("%s: Unable to allocate %u bytes for line."), Prefix, (unsigned)linesize);
+	cupsLangPrintf(stderr, _("%s: Out of memory."), Prefix);
 	return (false);
       }
 

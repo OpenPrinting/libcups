@@ -438,7 +438,7 @@ main(int  argc,				// I - Number of command-line args
 	      i ++;
 	      if (i >= argc)
 	      {
-	        cupsLangPrintf(stderr, _("%s: Missing device URI after '-D'."), "ippeveprinter");
+	        cupsLangPrintf(stderr, _("%s: Missing device URI after '%s'."), "ippeveprinter", "-D");
 	        return (usage(stderr));
 	      }
 
@@ -598,7 +598,7 @@ main(int  argc,				// I - Number of command-line args
 	      i ++;
 	      if (i >= argc)
 	      {
-	        cupsLangPrintf(stderr, _("%s: Missing version number after '-V'."), "ippeveprinter");
+	        cupsLangPrintf(stderr, _("%s: Missing version after '-V'."), "ippeveprinter");
 	        return (usage(stderr));
 	      }
 
@@ -612,7 +612,7 @@ main(int  argc,				// I - Number of command-line args
 	      }
 	      else
 	      {
-	        cupsLangPrintf(stderr, _("%s: Unsupported version number \"%s\"."), "ippeveprinter", argv[i]);
+	        cupsLangPrintf(stderr, _("%s: Unsupported version \"%s\"."), "ippeveprinter", argv[i]);
 	        return (usage(stderr));
 	      }
               break;
@@ -1560,7 +1560,7 @@ create_printer(
     else
     {
       // No command...
-      cupsLangPrintf(stderr, _("Unable to execute command \"%s\": %s"), command, strerror(errno));
+      cupsLangPrintf(stderr, _("Unable to execute \"%s\": %s"), command, strerror(errno));
       return (NULL);
     }
   }
@@ -1569,7 +1569,7 @@ create_printer(
   // Allocate memory for the printer...
   if ((printer = calloc(1, sizeof(ippeve_printer_t))) == NULL)
   {
-    cupsLangPrintf(stderr, _("Unable to allocate memory for printer: %s"), strerror(errno));
+    cupsLangPrintf(stderr, _("%s: Out of memory."), "ippeveprinter");
     return (NULL);
   }
 
@@ -2368,7 +2368,7 @@ finish_document_uri(
 
     if ((http = httpConnect(hostname, port, NULL, AF_UNSPEC, encryption, 1, 30000, NULL)) == NULL)
     {
-      respond_ipp(client, IPP_STATUS_ERROR_DOCUMENT_ACCESS, "Unable to connect to %s: %s", hostname, cupsGetErrorString());
+      respond_ipp(client, IPP_STATUS_ERROR_DOCUMENT_ACCESS, "Unable to connect to \"%s\" on port %d: %s", hostname, port, cupsGetErrorString());
 
       close(job->fd);
       job->fd = -1;
@@ -5592,7 +5592,7 @@ process_job(ippeve_job_t *job)		// I - Job
         if ((addrlist = httpAddrGetList(host, AF_UNSPEC, service)) == NULL)
           fprintf(stderr, "[Job %d] Unable to find \"%s\": %s\n", job->id, host, cupsGetErrorString());
         else if (!httpAddrConnect(addrlist, &mystdout, 30000, &(job->cancel)))
-          fprintf(stderr, "[Job %d] Unable to connect to \"%s\": %s\n", job->id, host, cupsGetErrorString());
+          fprintf(stderr, "[Job %d] Unable to connect to \"%s\" on port %d: %s\n", job->id, host, port, cupsGetErrorString());
 
         httpAddrFreeList(addrlist);
       }

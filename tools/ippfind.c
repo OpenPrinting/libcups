@@ -222,13 +222,13 @@ main(int  argc,				// I - Number of command-line args
         {
           if (logic == IPPFIND_OP_OR)
           {
-            cupsLangPrintf(stderr, _("%s: Cannot use --and after --or."), "ippfind");
+            cupsLangPrintf(stderr, _("%s: Cannot use '--and' after '--or'."), "ippfind");
             return (usage(stderr));
           }
 
           if (!current)
           {
-            cupsLangPrintf(stderr, _("%s: Missing expression before \"--and\"."), "ippfind");
+            cupsLangPrintf(stderr, _("%s: Missing expression before '--and'."), "ippfind");
             return (usage(stderr));
           }
 
@@ -562,7 +562,7 @@ main(int  argc,				// I - Number of command-line args
                 i ++;
                 if (i >= argc)
 		{
-		  cupsLangPrintf(stderr, _("%s: Missing timeout for '-T'."), "ippfind");
+		  cupsLangPrintf(stderr, _("%s: Missing timeout after '-T'."), "ippfind");
 		  return (usage(stderr));
 		}
 
@@ -573,7 +573,7 @@ main(int  argc,				// I - Number of command-line args
                 i ++;
                 if (i >= argc)
 		{
-		  cupsLangPrintf(stderr, _("%s: Missing version for '-V'."), "ippfind");
+		  cupsLangPrintf(stderr, _("%s: Missing version after '-V'."), "ippfind");
 		  return (usage(stderr));
 		}
 
@@ -595,7 +595,7 @@ main(int  argc,				// I - Number of command-line args
                 }
                 else
                 {
-                  cupsLangPrintf(stderr, _("%s: Bad version \"%s\" for '-V'."), "ippfind", argv[i]);
+                  cupsLangPrintf(stderr, _("%s: Unsupported version \"%s\"."), "ippfind", argv[i]);
                   return (usage(stderr));
                 }
                 break;
@@ -1337,7 +1337,7 @@ exec_program(ippfind_srv_t *service,	// I - Service
 	  }
 	  else
 	  {
-	    cupsLangPrintf(stderr, _("%s: Unknown variable '{%s}'."), "ippfind", keyword);
+	    cupsLangPrintf(stderr, _("%s: Unknown variable \"{%s}\"."), "ippfind", keyword);
 	    exit(IPPFIND_EXIT_SYNTAX);
 	  }
 
@@ -1389,7 +1389,7 @@ exec_program(ippfind_srv_t *service,	// I - Service
   }
   else if (!cupsFileFind(args[0], getenv("PATH"), 1, program, sizeof(program)))
   {
-    cupsLangPrintf(stderr, _("%s: Unable to execute '%s': %s"), "ippfind", args[0], strerror(ENOENT));
+    cupsLangPrintf(stderr, _("%s: Unable to execute \"%s\": %s"), "ippfind", args[0], strerror(ENOENT));
     exit(IPPFIND_EXIT_SYNTAX);
   }
 
@@ -1412,7 +1412,7 @@ exec_program(ippfind_srv_t *service,	// I - Service
   }
   else if (pid < 0)
   {
-    cupsLangPrintf(stderr, _("%s: Unable to execute '%s': %s"), "ippfind", args[0], strerror(errno));
+    cupsLangPrintf(stderr, _("%s: Unable to execute \"%s\": %s"), "ippfind", args[0], strerror(errno));
     exit(IPPFIND_EXIT_SYNTAX);
   }
   else
@@ -1913,7 +1913,7 @@ usage(FILE *out)			// I - Output file
   cupsLangPuts(out, _("--version                      Show the program version"));
   cupsLangPuts(out, _("-4                             Connect using IPv4"));
   cupsLangPuts(out, _("-6                             Connect using IPv6"));
-  cupsLangPuts(out, _("-T SECONDS                     Set the browse timeout in seconds"));
+  cupsLangPuts(out, _("-T SECONDS                     Set the timeout in seconds"));
   cupsLangPuts(out, _("-V VERSION                     Set default IPP version"));
   cupsLangPuts(out, _("Expressions:"));
   cupsLangPuts(out, _("-P NUMBER[-NUMBER]             Match port to number or range"));

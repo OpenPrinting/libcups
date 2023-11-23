@@ -387,7 +387,7 @@ main(int  argc,				// I - Number of command-line args
 
 	      if (i >= argc)
 	      {
-		cupsLangPrintf(stderr, _("%s: Missing NAME=VALUE after '-d'."), "ipptool");
+		cupsLangPrintf(stderr, _("%s: Missing NAME=VALUE after '%s'."), "ipptool", "-d");
 		return (usage(stderr));
               }
 
@@ -500,7 +500,7 @@ main(int  argc,				// I - Number of command-line args
 		interval = (int)(_cupsStrScand(argv[i], NULL, localeconv()) * 1000000.0);
 		if (interval <= 0)
 		{
-		  cupsLangPrintf(stderr, _("%s: Invalid seconds %s for '-i'."), "ipptool", argv[i]);
+		  cupsLangPrintf(stderr, _("%s: Invalid seconds \"%s\" for '-i'."), "ipptool", argv[i]);
 		  return (usage(stderr));
 		}
               }
@@ -638,7 +638,7 @@ main(int  argc,				// I - Number of command-line args
 	      }
 	      else
 	      {
-		cupsLangPrintf(stderr, _("%s: Bad version %s for '-V'."), "ipptool", argv[i]);
+		cupsLangPrintf(stderr, _("%s: Unsupported version \"%s\"."), "ipptool", argv[i]);
 		return (usage(stderr));
 	      }
 	      break;
@@ -803,7 +803,7 @@ alloc_data(void)
 
   if ((data = calloc(1, sizeof(ipptool_test_t))) == NULL)
   {
-    cupsLangPrintf(stderr, _("ipptool: Unable to allocate memory: %s"), strerror(errno));
+    cupsLangPrintf(stderr, _("%s: Out of memory."), "ipptool");
     exit(1);
   }
 
@@ -977,7 +977,7 @@ connect_printer(ipptool_test_t *data)	// I - Test data
 
   if ((http = httpConnect(hostname, atoi(port), NULL, data->family, encryption, 1, 30000, NULL)) == NULL)
   {
-    print_fatal_error(data, "Unable to connect to '%s' on port %s: %s", hostname, port, cupsGetErrorString());
+    print_fatal_error(data, "Unable to connect to \"%s\" on port %s: %s", hostname, port, cupsGetErrorString());
     return (NULL);
   }
 
@@ -1169,7 +1169,7 @@ do_monitor_printer_state(
 
   if ((http = httpConnect(host, port, NULL, data->family, encryption, 1, 30000, NULL)) == NULL)
   {
-    print_fatal_error(data, "Unable to connect to \"%s\" on port %d - %s", host, port, cupsGetErrorString());
+    print_fatal_error(data, "Unable to connect to \"%s\" on port %d: %s", host, port, cupsGetErrorString());
     return (0);
   }
 
@@ -6478,7 +6478,7 @@ usage(FILE *out)
   cupsLangPuts(out, _("-R                             Repeat tests on server-error-busy"));
   cupsLangPuts(out, _("-S                             Test with encryption using HTTPS"));
   cupsLangPuts(out, _("-t                             Produce a test report"));
-  cupsLangPuts(out, _("-T SECONDS                     Set the receive/send timeout in seconds"));
+  cupsLangPuts(out, _("-T SECONDS                     Set the timeout in seconds"));
   cupsLangPuts(out, _("-v                             Be verbose"));
   cupsLangPuts(out, _("-V VERSION                     Set default IPP version"));
   cupsLangPuts(out, _("-X                             Produce XML plist instead of plain text"));
@@ -6673,7 +6673,7 @@ with_content(
 
     if ((http = httpConnect(host, port, NULL, AF_UNSPEC, encryption, 1, 30000, NULL)) == NULL)
     {
-      add_stringf(errors, "Unable to connect to '%s' on port %d: %s", host, port, cupsGetErrorString());
+      add_stringf(errors, "Unable to connect to \"%s\" on port %d: %s", host, port, cupsGetErrorString());
       ret = false;
       continue;
     }
