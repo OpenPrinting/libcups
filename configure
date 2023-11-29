@@ -5600,9 +5600,9 @@ else $as_nop
 
 fi
 
-echo "prefix='$prefix'"
-echo "realprefix='$realprefix'"
-echo "BEFORE datarootdir='$datarootdir'"
+#echo "prefix='$prefix'"
+#echo "realprefix='$realprefix'"
+#echo "BEFORE datarootdir='$datarootdir'"
 if test "$datarootdir" = "\${prefix}/share"
 then :
 
@@ -5618,9 +5618,9 @@ else $as_nop
 fi
 
 fi
-echo "AFTER datarootdir='$datarootdir'"
+#echo "AFTER datarootdir='$datarootdir'"
 
-echo "BEFORE datadir='$datadir'"
+#echo "BEFORE datadir='$datadir'"
 if test "$datadir" = "\${prefix}/share"
 then :
 
@@ -5641,13 +5641,13 @@ then :
     datadir="$datarootdir"
 
 fi
-echo "AFTER datadir='$datadir'"
+#echo "AFTER datadir='$datadir'"
 
-echo "BEFORE includedir='$includedir'"
+#echo "BEFORE includedir='$includedir'"
 if test "$includedir" = NONE -o "$includedir" = "\${prefix}/include"
 then :
 
-    includedir="$realprefix/include$INCLUDE_PREFIX"
+    includedir="\${prefix}/include$INCLUDE_PREFIX"
 
 fi
 if test "$includedir" != "/usr/include" -a "$includedir" != "/usr/local/include"
@@ -5656,9 +5656,9 @@ then :
     PKGCONFIG_CFLAGS="-I\${includedir} $PKGCONFIG_CFLAGS"
 
 fi
-echo "AFTER includedir='$includedir'"
+#echo "AFTER includedir='$includedir'"
 
-echo "BEFORE sysconfdir='$sysconfdir'"
+#echo "BEFORE sysconfdir='$sysconfdir'"
 if test "$sysconfdir" = "\${prefix}/etc"
 then :
 
@@ -5683,7 +5683,7 @@ else $as_nop
 fi
 
 fi
-echo "AFTER sysconfdir='$sysconfdir'"
+#echo "AFTER sysconfdir='$sysconfdir'"
 
 
 CUPS_DATADIR="$datadir/libcups3"
