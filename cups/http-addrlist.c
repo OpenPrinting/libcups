@@ -238,7 +238,38 @@ httpAddrConnect(
 
       for (i = 0; i < nfds; i ++)
       {
-	DEBUG_printf("pfds[%d].revents=%x\n", i, pfds[i].revents);
+	DEBUG_printf("1httpAddrConnect: pfds[%d].revents=%x\n", i, pfds[i].revents);
+
+#  ifdef _WIN32
+	if (((WSAGetLastError() == WSAEINPROGRESS) && (pfds[i].revents & POLLIN) && (pfds[i].revents & POLLOUT)) ||
+#  else
+	if (((errno == EINPROGRESS) && (pfds[i].revents & POLLIN) && (pfds[i].revents & POLLOUT)) ||
+#  endif /* _WIN32 */
+	    ((pfds[i].revents & POLLHUP) && (pfds[i].revents & (POLLIN | POLLOUT))))
+	{
+	  // Some systems generate POLLIN or POLLOUT together with POLLHUP when
+	  // doing asynchronous connections.  The solution seems to be to use
+	  // getsockopt to check the SO_ERROR value and ignore the POLLHUP if
+	  // there is no error or the error is EINPROGRESS.
+	  int	    sres,		// Return value from getsockopt() - 0, or -1 if error
+		    serr;		// SO_ERROR value
+	  socklen_t slen = sizeof(serr);// Value size
+
+	  sres = getsockopt(fds[i], SOL_SOCKET, SO_ERROR, &serr, &slen);
+
+	  if (sres || serr)
+	  {
+	    pfds[i].revents |= POLLERR;
+#  ifdef DEBUG
+	    DEBUG_printf(("1httpAddrConnect: getsockopt returned: %d with error: %s", sres, strerror(serr)));
+#  endif
+	  }
+	  else if (pfds[i].revents && (pfds[i].revents & POLLHUP) && (pfds[i].revents & (POLLIN | POLLOUT)))
+	  {
+	    pfds[i].revents &= ~POLLHUP;
+	  }
+	}
+
 	if (pfds[i].revents && !(pfds[i].revents & (POLLERR | POLLHUP)))
 	{
 	  *sock    = fds[i];
