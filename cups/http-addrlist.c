@@ -261,7 +261,7 @@ httpAddrConnect(
 	  {
 	    pfds[i].revents |= POLLERR;
 #  ifdef DEBUG
-	    DEBUG_printf(("1httpAddrConnect: getsockopt returned: %d with error: %s", sres, strerror(serr)));
+	    DEBUG_printf("1httpAddrConnect: getsockopt returned: %d with error: %s", sres, strerror(serr));
 #  endif
 	  }
 	  else if (pfds[i].revents && (pfds[i].revents & POLLHUP) && (pfds[i].revents & (POLLIN | POLLOUT)))
