@@ -7,6 +7,8 @@ libcups v3.0rc1 (TBD)
 - Updated list of attributes included in the destination options.
 - Updated `cupsAddIntegerOption` and `cupsGetIntegerOption` to use the `long`
   type.
+- Updated `httpAddrConnect()` to handle `POLLHUP` together with `POLLIN` or
+  `POLLOUT`.
 - Updated the various tool man pages, usage output, and examples.
 - Updated `ippCreateRequestedArray` for the Get-Documents operation.
 - Now use installed PDFio library, if available.
