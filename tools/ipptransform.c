@@ -2231,7 +2231,7 @@ pcl_start_page(xform_raster_t   *ras,	// I - Raster information
   ras->top    = ras->header.HWResolution[1] / 6;
   ras->bottom = ras->header.cupsHeight - ras->header.HWResolution[1] / 6;
 
-  if (ras->header.PageSize[1] == 842)
+  if (ras->header.PageSize[1] == 841 || ras->header.PageSize[1] == 842)
   {
     // A4 gets special side margins to expose an 8" print area
     ras->left  = (ras->header.cupsWidth - 8 * ras->header.HWResolution[0]) / 2;
@@ -2289,7 +2289,8 @@ pcl_start_page(xform_raster_t   *ras,	// I - Raster information
           pclps_printf(cb, ctx, "\033&l2A");
 	  break;
 
-      case 842 : // A4
+      case 841 : // A4
+      case 842 :
           pclps_printf(cb, ctx, "\033&l26A");
 	  break;
 
@@ -2344,7 +2345,7 @@ pcl_start_page(xform_raster_t   *ras,	// I - Raster information
   */
 
   ras->out_blanks  = 0;
-  ras->comp_buffer = malloc((ras->right - ras->left + 7) / 4 + 3);
+  ras->comp_buffer = malloc((ras->right - ras->left + 7) / 8 * 2 + 2);
 }
 
 
@@ -4550,11 +4551,18 @@ xform_setup(xform_raster_t *ras,	// I - Raster information
   ras->format = format;
 
   if (!strcmp(format, "application/vnd.hp-pcl"))
+  {
+    type = "black_1";
     pcl_init(ras);
+  }
   else if (!strcmp(format, "application/postscript"))
+  {
     ps_init(ras);
+  }
   else
+  {
     raster_init(ras);
+  }
 
   // Figure out the proper resolution, etc.
   if (!options->printer_resolution[0])
@@ -4614,7 +4622,7 @@ xform_setup(xform_raster_t *ras,	// I - Raster information
 
   type_array = cupsArrayNewStrings(types, ',');
 
-  if (color)
+  if (color && !type)
   {
     if (options->print_quality == IPP_QUALITY_HIGH)
     {
