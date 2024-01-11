@@ -545,8 +545,8 @@ and "top" members specify the margins of the printable area, also in hundredths
 of millimeters.
 
 The [`cupsGetDestMediaByName`](@@) and [`cupsGetDestMediaBySize`](@@) functions
-lookup the media size information using a standard media size name or dimensions
-in hundredths of millimeters:
+lookup the media information using a standard media size name or dimensions in
+hundredths of millimeters:
 
 ```c
 bool
@@ -673,6 +673,36 @@ const char *
 cupsLocalizeDestValue(http_t *http, cups_dest_t *dest,
                       cups_dinfo_t *info,
                       const char *option, const char *value);
+```
+
+> **Note:**
+>
+> These functions require a valid `http_t` connection to work.  Use the
+> [`cupsConnectDest`](@@) function to connect to the destination for its
+> localization information.
+
+For example, the following code will list the localized media names for a
+destination:
+
+```c
+char resource[256];
+http_t *http = cupsConnectDest(dest, CUPS_DEST_FLAGS_NONE,
+                               /*msec*/30000, /*cancel*/NULL,
+                               resource, sizeof(resource),
+                               /*dest_cb*/NULL, /*user_data*/NULL);
+
+size_t i;
+size_t count = cupsGetDestMediaCount(http, dest, info,
+                                     CUPS_MEDIA_FLAGS_DEFAULT);
+cups_media_t media;
+for (i = 0; i < count; i ++)
+{
+  if (cupsGetDestMediaByIndex(http, dest, info, i,
+                              CUPS_MEDIA_FLAGS_DEFAULT, &media))
+    printf("%s: %s\n", media.name,
+           cupsLocalizeDestMedia(http, dest, info,
+                                 CUPS_MEDIA_FLAGS_DEFAULT, &media));
+}
 ```
 
 
@@ -841,8 +871,9 @@ destination with a 30 second timeout:
 ```c
 char resource[256];
 http_t *http = cupsConnectDest(dest, CUPS_DEST_FLAGS_DEVICE,
-                               30000, NULL, resource,
-                               sizeof(resource), NULL, NULL);
+                               30000, /*cancel*/NULL, resource,
+                               sizeof(resource),
+                               /*cb*/NULL, /*cb_data*/NULL);
 ```
 
 
@@ -885,7 +916,7 @@ const char *printer_uri = cupsGetOption("device-uri",
                                         dest->options);
 
 ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI,
-             "printer-uri", NULL, printer_uri);
+             "printer-uri", /*language*/NULL, printer_uri);
 ```
 
 > **Note:**
