@@ -15,6 +15,7 @@ libcups v3.0rc1 (TBD)
 - Now use NotoSansMono font for `ipptransform` text conversions.
 - The `ipptransform` program now supports uncollated copies.
 - Fixed PCL output from `ipptransform` (Issue #72)
+- Fixed JSON output from `ipptool`.
 
 
 libcups v3.0b2 (October 5, 2023)

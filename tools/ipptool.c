@@ -4575,7 +4575,7 @@ print_json_attr(
         {
 	  int upper, lower = ippGetRange(attr, 0, &upper);
 
-	  cupsFilePrintf(data->outfile, ": {\n%*s\"lower\": %d,\n%*s\"upper\":%d\n%*s}", indent + 4, "", lower, indent + 4, "", upper, indent, "");
+	  cupsFilePrintf(data->outfile, ": {\n%*s\"lower\": %d,\n%*s\"upper\": %d\n%*s}", indent + 4, "", lower, indent + 4, "", upper, indent, "");
         }
         else
         {
@@ -4584,7 +4584,7 @@ print_json_attr(
 	  {
 	    int upper, lower = ippGetRange(attr, i, &upper);
 
-	    cupsFilePrintf(data->outfile, "%*s{\n%*s\"lower\": %d,\n%*s\"upper\":%d\n%*s},\n", indent + 4, "", indent + 8, "", lower, indent + 8, "", upper, indent + 4, "");
+	    cupsFilePrintf(data->outfile, "%*s{\n%*s\"lower\": %d,\n%*s\"upper\": %d\n%*s},\n", indent + 4, "", indent + 8, "", lower, indent + 8, "", upper, indent + 4, "");
 	  }
           cupsFilePrintf(data->outfile, "%*s]", indent, "");
 	}
@@ -4596,7 +4596,7 @@ print_json_attr(
 	  ipp_res_t units;
 	  int yres, xres = ippGetResolution(attr, 0, &yres, &units);
 
-	  cupsFilePrintf(data->outfile, ": {\n%*s\"units\": \"%s\",\n%*s\"xres\": %d,\n%*s\"yres\":%d\n%*s}", indent + 4, "", units == IPP_RES_PER_INCH ? "dpi" : "dpcm", indent + 4, "", xres, indent + 4, "", yres, indent, "");
+	  cupsFilePrintf(data->outfile, ": {\n%*s\"units\": \"%s\",\n%*s\"xres\": %d,\n%*s\"yres\": %d\n%*s}", indent + 4, "", units == IPP_RES_PER_INCH ? "dpi" : "dpcm", indent + 4, "", xres, indent + 4, "", yres, indent, "");
         }
         else
         {
@@ -4606,7 +4606,7 @@ print_json_attr(
 	    ipp_res_t units;
 	    int yres, xres = ippGetResolution(attr, i, &yres, &units);
 
-	    cupsFilePrintf(data->outfile, "%*s{\n%*s\"units\": \"%s\",\n%*s\"xres\": %d,\n%*s\"yres\":%d\n%*s},\n", indent + 4, "", indent + 8, "", units == IPP_RES_PER_INCH ? "dpi" : "dpcm", indent + 8, "", xres, indent + 8, "", yres, indent + 4, "");
+	    cupsFilePrintf(data->outfile, "%*s{\n%*s\"units\": \"%s\",\n%*s\"xres\": %d,\n%*s\"yres\": %d\n%*s}%s", indent + 4, "", indent + 8, "", units == IPP_RES_PER_INCH ? "dpi" : "dpcm", indent + 8, "", xres, indent + 8, "", yres, indent + 4, "", (i + 1) < count ? ",\n" : "\n");
 	  }
           cupsFilePrintf(data->outfile, "%*s]", indent, "");
 	}
