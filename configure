@@ -657,7 +657,6 @@ CSFLAGS
 LIBCUPS_STATIC
 LIBCUPS
 INSTALL_STATIC
-CUPS_PC
 PKGCONFIG_AVAHI
 PDFIODIR
 PDFTOPPM
@@ -669,6 +668,7 @@ PKGCONFIG_LIBS
 PKGCONFIG_CFLAGS
 PKGCONFIG
 LINKCUPS
+CUPS_PC
 ARFLAGS
 LN
 RMDIR
@@ -4054,6 +4054,7 @@ fi
 
 
 
+
 if test -n "$ac_tool_prefix"; then
   # Extract the first word of "${ac_tool_prefix}pkg-config", so it can be a program name with args.
 set dummy ${ac_tool_prefix}pkg-config; ac_word=$2
@@ -5311,7 +5312,6 @@ else $as_nop
     PKGCONFIG_REQUIRES_PRIVATE=""
 
 fi
-
 
 
 

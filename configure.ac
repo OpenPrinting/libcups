@@ -106,6 +106,7 @@ AS_IF([test x$enable_libcups3_prefix != xno], [
     LIBCUPS_BASE="libcups"
     LINKCUPS="-lcups"
 ])
+AC_SUBST([CUPS_PC])
 AC_SUBST([LINKCUPS])
 
 
@@ -489,7 +490,6 @@ AS_IF([test x$enable_shared != xno], [
     PKGCONFIG_REQUIRES_PRIVATE=""
 ])
 
-AC_SUBST([CUPS_PC])
 AC_SUBST([INSTALL_STATIC])
 AC_SUBST([LIBCUPS])
 AC_SUBST([LIBCUPS_STATIC])
