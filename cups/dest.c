@@ -1,7 +1,7 @@
 //
 // User-defined destination (and option) support for CUPS.
 //
-// Copyright © 2021-2023 by OpenPrinting.
+// Copyright © 2021-2024 by OpenPrinting.
 // Copyright © 2007-2019 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products.
 //
@@ -2786,8 +2786,6 @@ cups_enum_dests(
     goto enum_finished;
 
   // Get DNS-SD printers...
-  gettimeofday(&curtime, NULL);
-
   if ((dnssd = cupsDNSSDNew(dnssd_error_cb, NULL)) == NULL)
   {
     DEBUG_puts("1cups_enum_dests: Unable to create service browser, returning 0.");
@@ -2825,14 +2823,12 @@ cups_enum_dests(
   else
     remaining = msec;
 
+  gettimeofday(&curtime, NULL);
+
   while (remaining > 0 && (!cancel || !*cancel))
   {
     // Check for input...
     DEBUG_printf("1cups_enum_dests: remaining=%d", remaining);
-
-    cups_elapsed(&curtime);
-
-    remaining -= cups_elapsed(&curtime);
 
     cupsRWLockRead(&data.rwlock);
 
@@ -2926,6 +2922,8 @@ cups_enum_dests(
       break;
 
     usleep(100000);
+
+    remaining -= cups_elapsed(&curtime);
   }
 
   // Return...
@@ -3243,7 +3241,7 @@ cups_make_string(
 
 
   // Return quickly if we have a single string value...
-  if (attr->num_values == 1 && attr->value_tag != IPP_TAG_INTEGER && attr->value_tag != IPP_TAG_ENUM && attr->value_tag != IPP_TAG_BOOLEAN && attr->value_tag != IPP_TAG_RANGE)
+  if (attr->num_values == 1 && attr->value_tag != IPP_TAG_INTEGER && attr->value_tag != IPP_TAG_ENUM && attr->value_tag != IPP_TAG_BOOLEAN && attr->value_tag != IPP_TAG_DATE && attr->value_tag != IPP_TAG_RANGE)
     return (attr->values[0].string.text);
 
   // Copy the values to the string, separating with commas and escaping strings
