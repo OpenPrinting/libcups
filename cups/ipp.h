@@ -1,7 +1,7 @@
 //
 // Internet Printing Protocol definitions for CUPS.
 //
-// Copyright © 2021-2023 by OpenPrinting.
+// Copyright © 2021-2024 by OpenPrinting.
 // Copyright © 2007-2018 by Apple Inc.
 // Copyright © 1997-2006 by Easy Software Products.
 //
@@ -128,38 +128,38 @@ typedef enum ipp_finishings_e		// "finishings" values
 
   // CUPS extensions for finishings (pre-standard versions of values above)
   IPP_FINISHINGS_CUPS_PUNCH_TOP_LEFT = 0x40000046,
-					// Punch 1 hole top left @exclude all@
-  IPP_FINISHINGS_CUPS_PUNCH_BOTTOM_LEFT,// Punch 1 hole bottom left @exclude all@
-  IPP_FINISHINGS_CUPS_PUNCH_TOP_RIGHT,	// Punch 1 hole top right @exclude all@
+					// Punch 1 hole top left
+  IPP_FINISHINGS_CUPS_PUNCH_BOTTOM_LEFT,// Punch 1 hole bottom left
+  IPP_FINISHINGS_CUPS_PUNCH_TOP_RIGHT,	// Punch 1 hole top right
   IPP_FINISHINGS_CUPS_PUNCH_BOTTOM_RIGHT,
-					// Punch 1 hole bottom right @exclude all@
-  IPP_FINISHINGS_CUPS_PUNCH_DUAL_LEFT,	// Punch 2 holes left side @exclude all@
-  IPP_FINISHINGS_CUPS_PUNCH_DUAL_TOP,	// Punch 2 holes top edge @exclude all@
-  IPP_FINISHINGS_CUPS_PUNCH_DUAL_RIGHT,	// Punch 2 holes right side @exclude all@
-  IPP_FINISHINGS_CUPS_PUNCH_DUAL_BOTTOM,// Punch 2 holes bottom edge @exclude all@
-  IPP_FINISHINGS_CUPS_PUNCH_TRIPLE_LEFT,// Punch 3 holes left side @exclude all@
-  IPP_FINISHINGS_CUPS_PUNCH_TRIPLE_TOP,	// Punch 3 holes top edge @exclude all@
+					// Punch 1 hole bottom right
+  IPP_FINISHINGS_CUPS_PUNCH_DUAL_LEFT,	// Punch 2 holes left side
+  IPP_FINISHINGS_CUPS_PUNCH_DUAL_TOP,	// Punch 2 holes top edge
+  IPP_FINISHINGS_CUPS_PUNCH_DUAL_RIGHT,	// Punch 2 holes right side
+  IPP_FINISHINGS_CUPS_PUNCH_DUAL_BOTTOM,// Punch 2 holes bottom edge
+  IPP_FINISHINGS_CUPS_PUNCH_TRIPLE_LEFT,// Punch 3 holes left side
+  IPP_FINISHINGS_CUPS_PUNCH_TRIPLE_TOP,	// Punch 3 holes top edge
   IPP_FINISHINGS_CUPS_PUNCH_TRIPLE_RIGHT,
-					// Punch 3 holes right side @exclude all@
+					// Punch 3 holes right side
   IPP_FINISHINGS_CUPS_PUNCH_TRIPLE_BOTTOM,
-					// Punch 3 holes bottom edge @exclude all@
-  IPP_FINISHINGS_CUPS_PUNCH_QUAD_LEFT,	// Punch 4 holes left side @exclude all@
-  IPP_FINISHINGS_CUPS_PUNCH_QUAD_TOP,	// Punch 4 holes top edge @exclude all@
-  IPP_FINISHINGS_CUPS_PUNCH_QUAD_RIGHT,	// Punch 4 holes right side @exclude all@
-  IPP_FINISHINGS_CUPS_PUNCH_QUAD_BOTTOM,// Punch 4 holes bottom edge @exclude all@
+					// Punch 3 holes bottom edge
+  IPP_FINISHINGS_CUPS_PUNCH_QUAD_LEFT,	// Punch 4 holes left side
+  IPP_FINISHINGS_CUPS_PUNCH_QUAD_TOP,	// Punch 4 holes top edge
+  IPP_FINISHINGS_CUPS_PUNCH_QUAD_RIGHT,	// Punch 4 holes right side
+  IPP_FINISHINGS_CUPS_PUNCH_QUAD_BOTTOM,// Punch 4 holes bottom edge
 
   IPP_FINISHINGS_CUPS_FOLD_ACCORDION = 0x4000005A,
-					// Accordion-fold the paper vertically into four sections @exclude all@
-  IPP_FINISHINGS_CUPS_FOLD_DOUBLE_GATE,	// Fold the top and bottom quarters of the paper towards the midline, then fold in half vertically @exclude all@
-  IPP_FINISHINGS_CUPS_FOLD_GATE,	// Fold the top and bottom quarters of the paper towards the midline @exclude all@
-  IPP_FINISHINGS_CUPS_FOLD_HALF,	// Fold the paper in half vertically @exclude all@
-  IPP_FINISHINGS_CUPS_FOLD_HALF_Z,	// Fold the paper in half horizontally, then Z-fold the paper vertically @exclude all@
-  IPP_FINISHINGS_CUPS_FOLD_LEFT_GATE,	// Fold the top quarter of the paper towards the midline @exclude all@
-  IPP_FINISHINGS_CUPS_FOLD_LETTER,	// Fold the paper into three sections vertically; sometimes also known as a C fold @exclude all@
-  IPP_FINISHINGS_CUPS_FOLD_PARALLEL,	// Fold the paper in half vertically two times, yielding four sections @exclude all@
-  IPP_FINISHINGS_CUPS_FOLD_POSTER,	// Fold the paper in half horizontally and vertically; sometimes also called a cross fold @exclude all@
-  IPP_FINISHINGS_CUPS_FOLD_RIGHT_GATE,	// Fold the bottom quarter of the paper towards the midline @exclude all@
-  IPP_FINISHINGS_CUPS_FOLD_Z		// Fold the paper vertically into three sections, forming a Z @exclude all@
+					// Accordion-fold the paper vertically into four sections
+  IPP_FINISHINGS_CUPS_FOLD_DOUBLE_GATE,	// Fold the top and bottom quarters of the paper towards the midline, then fold in half vertically
+  IPP_FINISHINGS_CUPS_FOLD_GATE,	// Fold the top and bottom quarters of the paper towards the midline
+  IPP_FINISHINGS_CUPS_FOLD_HALF,	// Fold the paper in half vertically
+  IPP_FINISHINGS_CUPS_FOLD_HALF_Z,	// Fold the paper in half horizontally, then Z-fold the paper vertically
+  IPP_FINISHINGS_CUPS_FOLD_LEFT_GATE,	// Fold the top quarter of the paper towards the midline
+  IPP_FINISHINGS_CUPS_FOLD_LETTER,	// Fold the paper into three sections vertically; sometimes also known as a C fold
+  IPP_FINISHINGS_CUPS_FOLD_PARALLEL,	// Fold the paper in half vertically two times, yielding four sections
+  IPP_FINISHINGS_CUPS_FOLD_POSTER,	// Fold the paper in half horizontally and vertically; sometimes also called a cross fold
+  IPP_FINISHINGS_CUPS_FOLD_RIGHT_GATE,	// Fold the bottom quarter of the paper towards the midline
+  IPP_FINISHINGS_CUPS_FOLD_Z		// Fold the paper vertically into three sections, forming a Z
 } ipp_finishings_t;
 
 typedef enum ipp_jstate_e		// "job-state" values
@@ -178,11 +178,11 @@ typedef enum ipp_op_e			// IPP operations
   IPP_OP_CUPS_INVALID = -1,		// Invalid operation name for @link ippOpValue@
   IPP_OP_CUPS_NONE = 0,			// No operation @private@
   IPP_OP_PRINT_JOB = 0x0002,		// Print-Job: Print a single file
-  IPP_OP_PRINT_URI,			// Print-URI: Print a single URL @exclude all@
+  IPP_OP_PRINT_URI,			// Print-URI: Print a single URL @deprecated@
   IPP_OP_VALIDATE_JOB,			// Validate-Job: Validate job values prior to submission
   IPP_OP_CREATE_JOB,			// Create-Job: Create an empty print job
   IPP_OP_SEND_DOCUMENT,			// Send-Document: Add a file to a job
-  IPP_OP_SEND_URI,			// Send-URI: Add a URL to a job @exclude all@
+  IPP_OP_SEND_URI,			// Send-URI: Add a URL to a job @deprecated@
   IPP_OP_CANCEL_JOB,			// Cancel-Job: Cancel a job
   IPP_OP_GET_JOB_ATTRIBUTES,		// Get-Job-Attribute: Get information about a job
   IPP_OP_GET_JOBS,			// Get-Jobs: Get a list of jobs
@@ -192,7 +192,7 @@ typedef enum ipp_op_e			// IPP operations
   IPP_OP_RESTART_JOB,			// Restart-Job: Reprint a job @deprecated@
   IPP_OP_PAUSE_PRINTER = 0x0010,	// Pause-Printer: Stop a printer
   IPP_OP_RESUME_PRINTER,		// Resume-Printer: Start a printer
-  IPP_OP_PURGE_JOBS,			// Purge-Jobs: Delete all jobs @deprecated@ @exclude all@
+  IPP_OP_PURGE_JOBS,			// Purge-Jobs: Delete all jobs @deprecated@
   IPP_OP_SET_PRINTER_ATTRIBUTES,	// Set-Printer-Attributes: Set printer values
   IPP_OP_SET_JOB_ATTRIBUTES,		// Set-Job-Attributes: Set job values
   IPP_OP_GET_PRINTER_SUPPORTED_VALUES,	// Get-Printer-Supported-Values: Get supported values
@@ -203,53 +203,53 @@ typedef enum ipp_op_e			// IPP operations
   IPP_OP_RENEW_SUBSCRIPTION,		// Renew-Subscription: Renew a printer subscription
   IPP_OP_CANCEL_SUBSCRIPTION,		// Cancel-Subscription: Cancel a subscription
   IPP_OP_GET_NOTIFICATIONS,		// Get-Notifications: Get notification events
-  IPP_OP_SEND_NOTIFICATIONS,		// Send-Notifications: Send notification events @private@
-  IPP_OP_GET_RESOURCE_ATTRIBUTES,	// Get-Resource-Attributes: Get resource information @private@
-  IPP_OP_GET_RESOURCE_DATA,		// Get-Resource-Data: Get resource data @private@ @deprecated@
-  IPP_OP_GET_RESOURCES,			// Get-Resources: Get list of resources @private@
-  IPP_OP_GET_PRINT_SUPPORT_FILES,	// Get-Printer-Support-Files: Get printer support files @private@
+  IPP_OP_SEND_NOTIFICATIONS,		// Send-Notifications: Send notification events
+  IPP_OP_GET_RESOURCE_ATTRIBUTES,	// Get-Resource-Attributes: Get resource information
+  IPP_OP_GET_RESOURCE_DATA,		// Get-Resource-Data: Get resource data @deprecated@
+  IPP_OP_GET_RESOURCES,			// Get-Resources: Get list of resources
+  IPP_OP_GET_PRINT_SUPPORT_FILES,	// Get-Printer-Support-Files: Get printer support files @deprecated@
   IPP_OP_ENABLE_PRINTER,		// Enable-Printer: Accept new jobs for a printer
   IPP_OP_DISABLE_PRINTER,		// Disable-Printer: Reject new jobs for a printer
   IPP_OP_PAUSE_PRINTER_AFTER_CURRENT_JOB,
 					// Pause-Printer-After-Current-Job: Stop printer after the current job
   IPP_OP_HOLD_NEW_JOBS,			// Hold-New-Jobs: Hold new jobs
   IPP_OP_RELEASE_HELD_NEW_JOBS,		// Release-Held-New-Jobs: Release new jobs that were previously held
-  IPP_OP_DEACTIVATE_PRINTER,		// Deactivate-Printer: Stop a printer and do not accept jobs @deprecated@ @exclude all@
-  IPP_OP_ACTIVATE_PRINTER,		// Activate-Printer: Start a printer and accept jobs @deprecated@ @exclude all@
-  IPP_OP_RESTART_PRINTER,		// Restart-Printer: Restart a printer @exclude all@
-  IPP_OP_SHUTDOWN_PRINTER,		// Shutdown-Printer: Turn a printer off @exclude all@
-  IPP_OP_STARTUP_PRINTER,		// Startup-Printer: Turn a printer on @exclude all@
-  IPP_OP_REPROCESS_JOB,			/* Reprocess-Job: Reprint a job @deprecated@ @exclude all@*/
+  IPP_OP_DEACTIVATE_PRINTER,		// Deactivate-Printer: Stop a printer and do not accept jobs @deprecated@
+  IPP_OP_ACTIVATE_PRINTER,		// Activate-Printer: Start a printer and accept jobs @deprecated@
+  IPP_OP_RESTART_PRINTER,		// Restart-Printer: Restart a printer
+  IPP_OP_SHUTDOWN_PRINTER,		// Shutdown-Printer: Turn a printer off
+  IPP_OP_STARTUP_PRINTER,		// Startup-Printer: Turn a printer on
+  IPP_OP_REPROCESS_JOB,			// Reprocess-Job: Reprint a job @deprecated@
   IPP_OP_CANCEL_CURRENT_JOB,		// Cancel-Current-Job: Cancel the current job
   IPP_OP_SUSPEND_CURRENT_JOB,		// Suspend-Current-Job: Suspend the current job
   IPP_OP_RESUME_JOB,			// Resume-Job: Resume the current job
   IPP_OP_PROMOTE_JOB,			// Promote-Job: Promote a job to print sooner
   IPP_OP_SCHEDULE_JOB_AFTER,		// Schedule-Job-After: Schedule a job to print after another
-  IPP_OP_CANCEL_DOCUMENT = 0x0033,	// Cancel-Document: Cancel a document @exclude all@
-  IPP_OP_GET_DOCUMENT_ATTRIBUTES,	// Get-Document-Attributes: Get document information @exclude all@
-  IPP_OP_GET_DOCUMENTS,			// Get-Documents: Get a list of documents in a job @exclude all@
-  IPP_OP_DELETE_DOCUMENT,		// Delete-Document: Delete a document @deprecated@  @exclude all@
-  IPP_OP_SET_DOCUMENT_ATTRIBUTES,	// Set-Document-Attributes: Set document values @exclude all@
+  IPP_OP_CANCEL_DOCUMENT = 0x0033,	// Cancel-Document: Cancel a document
+  IPP_OP_GET_DOCUMENT_ATTRIBUTES,	// Get-Document-Attributes: Get document information
+  IPP_OP_GET_DOCUMENTS,			// Get-Documents: Get a list of documents in a job
+  IPP_OP_DELETE_DOCUMENT,		// Delete-Document: Delete a document @deprecated@
+  IPP_OP_SET_DOCUMENT_ATTRIBUTES,	// Set-Document-Attributes: Set document values
   IPP_OP_CANCEL_JOBS,			// Cancel-Jobs: Cancel all jobs (administrative)
   IPP_OP_CANCEL_MY_JOBS,		// Cancel-My-Jobs: Cancel a user's jobs
-  IPP_OP_RESUBMIT_JOB,			// Resubmit-Job: Copy and reprint a job @exclude all@
+  IPP_OP_RESUBMIT_JOB,			// Resubmit-Job: Copy and reprint a job
   IPP_OP_CLOSE_JOB,			// Close-Job: Close a job and start printing
   IPP_OP_IDENTIFY_PRINTER,		// Identify-Printer: Make the printer beep, flash, or display a message for identification
-  IPP_OP_VALIDATE_DOCUMENT,		// Validate-Document: Validate document values prior to submission @exclude all@
-  IPP_OP_ADD_DOCUMENT_IMAGES,		// Add-Document-Images: Add image(s) from the specified scanner source @exclude all@
-  IPP_OP_ACKNOWLEDGE_DOCUMENT,		// Acknowledge-Document: Acknowledge processing of a document @exclude all@
-  IPP_OP_ACKNOWLEDGE_IDENTIFY_PRINTER,	// Acknowledge-Identify-Printer: Acknowledge action on an Identify-Printer request @exclude all@
-  IPP_OP_ACKNOWLEDGE_JOB,		// Acknowledge-Job: Acknowledge processing of a job @exclude all@
-  IPP_OP_FETCH_DOCUMENT,		// Fetch-Document: Fetch a document for processing @exclude all@
-  IPP_OP_FETCH_JOB,			// Fetch-Job: Fetch a job for processing @exclude all@
-  IPP_OP_GET_OUTPUT_DEVICE_ATTRIBUTES,	// Get-Output-Device-Attributes: Get printer information for a specific output device @exclude all@
-  IPP_OP_UPDATE_ACTIVE_JOBS,		// Update-Active-Jobs: Update the list of active jobs that a proxy has processed @exclude all@
-  IPP_OP_DEREGISTER_OUTPUT_DEVICE,	// Deregister-Output-Device: Remove an output device @exclude all@
-  IPP_OP_UPDATE_DOCUMENT_STATUS,	// Update-Document-Status: Update document values @exclude all@
-  IPP_OP_UPDATE_JOB_STATUS,		// Update-Job-Status: Update job values @exclude all@
+  IPP_OP_VALIDATE_DOCUMENT,		// Validate-Document: Validate document values prior to submission
+  IPP_OP_ADD_DOCUMENT_IMAGES,		// Add-Document-Images: Add image(s) from the specified scanner source
+  IPP_OP_ACKNOWLEDGE_DOCUMENT,		// Acknowledge-Document: Acknowledge processing of a document
+  IPP_OP_ACKNOWLEDGE_IDENTIFY_PRINTER,	// Acknowledge-Identify-Printer: Acknowledge action on an Identify-Printer request
+  IPP_OP_ACKNOWLEDGE_JOB,		// Acknowledge-Job: Acknowledge processing of a job
+  IPP_OP_FETCH_DOCUMENT,		// Fetch-Document: Fetch a document for processing
+  IPP_OP_FETCH_JOB,			// Fetch-Job: Fetch a job for processing
+  IPP_OP_GET_OUTPUT_DEVICE_ATTRIBUTES,	// Get-Output-Device-Attributes: Get printer information for a specific output device
+  IPP_OP_UPDATE_ACTIVE_JOBS,		// Update-Active-Jobs: Update the list of active jobs that a proxy has processed
+  IPP_OP_DEREGISTER_OUTPUT_DEVICE,	// Deregister-Output-Device: Remove an output device
+  IPP_OP_UPDATE_DOCUMENT_STATUS,	// Update-Document-Status: Update document values
+  IPP_OP_UPDATE_JOB_STATUS,		// Update-Job-Status: Update job values
   IPP_OP_UPDATE_OUTPUT_DEVICE_ATTRIBUTES,
-					// Update-Output-Device-Attributes: Update output device values @exclude all@
-  IPP_OP_GET_NEXT_DOCUMENT_DATA,	// Get-Next-Document-Data: Scan more document data @exclude all@
+					// Update-Output-Device-Attributes: Update output device values
+  IPP_OP_GET_NEXT_DOCUMENT_DATA,	// Get-Next-Document-Data: Scan more document data
   IPP_OP_ALLOCATE_PRINTER_RESOURCES,    // Allocate-Printer-Resources: Use resources for a printer.
   IPP_OP_CREATE_PRINTER,                // Create-Printer: Create a new service.
   IPP_OP_DEALLOCATE_PRINTER_RESOURCES,  // Deallocate-Printer-Resources: Stop using resources for a printer.
@@ -290,18 +290,18 @@ typedef enum ipp_op_e			// IPP operations
   IPP_OP_CUPS_GET_PRINTERS,		// CUPS-Get-Printers: Get a list of printers and/or classes
   IPP_OP_CUPS_ADD_MODIFY_PRINTER,	// CUPS-Add-Modify-Printer: Add or modify a printer
   IPP_OP_CUPS_DELETE_PRINTER,		// CUPS-Delete-Printer: Delete a printer
-  IPP_OP_CUPS_GET_CLASSES,		// CUPS-Get-Classes: Get a list of classes @deprecated@ @exclude all@
+  IPP_OP_CUPS_GET_CLASSES,		// CUPS-Get-Classes: Get a list of classes @deprecated@
   IPP_OP_CUPS_ADD_MODIFY_CLASS,		// CUPS-Add-Modify-Class: Add or modify a class
   IPP_OP_CUPS_DELETE_CLASS,		// CUPS-Delete-Class: Delete a class
-  IPP_OP_CUPS_ACCEPT_JOBS,		// CUPS-Accept-Jobs: Accept new jobs on a printer @exclude all@
-  IPP_OP_CUPS_REJECT_JOBS,		// CUPS-Reject-Jobs: Reject new jobs on a printer @exclude all@
+  IPP_OP_CUPS_ACCEPT_JOBS,		// CUPS-Accept-Jobs: Accept new jobs on a printer @deprecated@
+  IPP_OP_CUPS_REJECT_JOBS,		// CUPS-Reject-Jobs: Reject new jobs on a printer @deprecated@
   IPP_OP_CUPS_SET_DEFAULT,		// CUPS-Set-Default: Set the default printer
   IPP_OP_CUPS_GET_DEVICES,		// CUPS-Get-Devices: Get a list of supported devices @deprecated@
   IPP_OP_CUPS_GET_PPDS,			// CUPS-Get-PPDs: Get a list of supported drivers @deprecated@
   IPP_OP_CUPS_MOVE_JOB,			// CUPS-Move-Job: Move a job to a different printer
   IPP_OP_CUPS_AUTHENTICATE_JOB,		// CUPS-Authenticate-Job: Authenticate a job
   IPP_OP_CUPS_GET_PPD,			// CUPS-Get-PPD: Get a PPD file @deprecated@
-  IPP_OP_CUPS_GET_DOCUMENT = 0x4027,	// CUPS-Get-Document: Get a document file
+  IPP_OP_CUPS_GET_DOCUMENT = 0x4027,	// CUPS-Get-Document: Get a document file @deprecated@
   IPP_OP_CUPS_CREATE_LOCAL_PRINTER	// CUPS-Create-Local-Printer: Create a local (temporary) printer
 } ipp_op_t;
 
@@ -470,10 +470,10 @@ typedef enum ipp_tag_e			// Value and group tag values for attributes
   IPP_TAG_DATE,				// Date/time value
   IPP_TAG_RESOLUTION,			// Resolution value
   IPP_TAG_RANGE,			// Range value
-  IPP_TAG_BEGIN_COLLECTION,		// Beginning of collection value @exclude all@
+  IPP_TAG_BEGIN_COLLECTION,		// Beginning of collection value
   IPP_TAG_TEXTLANG,			// Text-with-language value
   IPP_TAG_NAMELANG,			// Name-with-language value
-  IPP_TAG_END_COLLECTION,		// End of collection value @exclude all@
+  IPP_TAG_END_COLLECTION,		// End of collection value
   IPP_TAG_TEXT = 0x41,			// Text value
   IPP_TAG_NAME,				// Name value
   IPP_TAG_RESERVED_STRING,		// Reserved for future string value @private@
@@ -483,11 +483,11 @@ typedef enum ipp_tag_e			// Value and group tag values for attributes
   IPP_TAG_CHARSET,			// Character set value
   IPP_TAG_LANGUAGE,			// Language value
   IPP_TAG_MIMETYPE,			// MIME media type value
-  IPP_TAG_MEMBERNAME,			// Collection member name value @exclude all@
-  IPP_TAG_EXTENSION = 0x7f,		// Extension point for 32-bit tags @exclude all@
-  IPP_TAG_CUPS_MASK = 0x7fffffff,	// Mask for copied attribute values @private@
+  IPP_TAG_MEMBERNAME,			// Collection member name value
+  IPP_TAG_EXTENSION = 0x7f,		// Extension point for 32-bit tags
+  IPP_TAG_CUPS_MASK = 0x7fffffff,	// Mask for copied attribute values
   // The following expression is used to avoid compiler warnings with +/-0x80000000
-  IPP_TAG_CUPS_CONST = -0x7fffffff-1	// Bitflag for copied/const attribute values @private@
+  IPP_TAG_CUPS_CONST = -0x7fffffff-1	// Bitflag for copied/const attribute values
 } ipp_tag_t;
 
 typedef unsigned char ipp_uchar_t;	// Unsigned 8-bit integer/character

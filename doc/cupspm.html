@@ -1263,7 +1263,7 @@ cupsFindDestReady(http_t *http, cups_dest_t *dest,
 </code></pre>
 <p>The &quot;media&quot; member specifies a PWG self-describing media size name such as &quot;na_letter_8.5x11in&quot;, &quot;iso_a4_210x297mm&quot;, etc. The &quot;color&quot; member specifies a PWG media color name such as &quot;white&quot;, &quot;blue&quot;, etc. The &quot;source&quot; member specifies a standard keyword for the paper tray or roll such as &quot;tray-1&quot;, &quot;manual&quot;, &quot;by-pass-tray&quot; (multi-purpose tray), etc. The &quot;type&quot; member specifies a PWG media type name such as &quot;stationery&quot; (plain paper), &quot;photographic&quot;, &quot;envelope&quot;, &quot;transparency&quot;, etc.</p>
 <p>The &quot;width&quot; and &quot;length&quot; members specify the dimensions of the media in hundredths of millimeters (1/2540th of an inch). The &quot;bottom&quot;, &quot;left&quot;, &quot;right&quot;, and &quot;top&quot; members specify the margins of the printable area, also in hundredths of millimeters.</p>
-<p>The <a href="#cupsGetDestMediaByName"><code>cupsGetDestMediaByName</code></a> and <a href="#cupsGetDestMediaBySize"><code>cupsGetDestMediaBySize</code></a> functions lookup the media size information using a standard media size name or dimensions in hundredths of millimeters:</p>
+<p>The <a href="#cupsGetDestMediaByName"><code>cupsGetDestMediaByName</code></a> and <a href="#cupsGetDestMediaBySize"><code>cupsGetDestMediaBySize</code></a> functions lookup the media information using a standard media size name or dimensions in hundredths of millimeters:</p>
 <pre><code class="language-c"><span class="reserved">bool</span>
 cupsGetDestMediaByName(http_t *http, cups_dest_t *dest,
                        cups_dinfo_t *dinfo,
@@ -1364,6 +1364,30 @@ cupsLocalizeDestOption(http_t *http, cups_dest_t *dest,
 cupsLocalizeDestValue(http_t *http, cups_dest_t *dest,
                       cups_dinfo_t *info,
                       <span class="reserved">const</span> <span class="reserved">char</span> *option, <span class="reserved">const</span> <span class="reserved">char</span> *value);
+</code></pre>
+<blockquote>
+<p><strong>Note:</strong></p>
+<p>These functions require a valid <code>http_t</code> connection to work. Use the <a href="#cupsConnectDest"><code>cupsConnectDest</code></a> function to connect to the destination for its localization information.</p>
+</blockquote>
+<p>For example, the following code will list the localized media names for a destination:</p>
+<pre><code class="language-c"><span class="reserved">char</span> resource[<span class="number">256</span>];
+http_t *http = cupsConnectDest(dest, CUPS_DEST_FLAGS_NONE,
+                               <span class="comment">/*msec*/</span><span class="number">30000</span>, <span class="comment">/*cancel*/</span>NULL,
+                               resource, <span class="reserved">sizeof</span>(resource),
+                               <span class="comment">/*dest_cb*/</span>NULL, <span class="comment">/*user_data*/</span>NULL);
+
+size_t i;
+size_t count = cupsGetDestMediaCount(http, dest, info,
+                                     CUPS_MEDIA_FLAGS_DEFAULT);
+cups_media_t media;
+<span class="reserved">for</span> (i = <span class="number">0</span>; i &lt; count; i ++)
+{
+  <span class="reserved">if</span> (cupsGetDestMediaByIndex(http, dest, info, i,
+                              CUPS_MEDIA_FLAGS_DEFAULT, &amp;media))
+    printf(<span class="string">&quot;%s: %s\n&quot;</span>, media.name,
+           cupsLocalizeDestMedia(http, dest, info,
+                                 CUPS_MEDIA_FLAGS_DEFAULT, &amp;media));
+}
 </code></pre>
 <h3 class="title" id="submitting-a-print-job">Submitting a Print Job</h3>
 <p>Once you are ready to submit a print job, you create a job using the <a href="#cupsCreateDestJob"><code>cupsCreateDestJob</code></a> function:</p>
@@ -1472,8 +1496,9 @@ cupsConnectDest(cups_dest_t *dest, <span class="reserved">unsigned</span> flags,
 <p>For example, the following code connects to the printer associated with a destination with a 30 second timeout:</p>
 <pre><code class="language-c"><span class="reserved">char</span> resource[<span class="number">256</span>];
 http_t *http = cupsConnectDest(dest, CUPS_DEST_FLAGS_DEVICE,
-                               <span class="number">30000</span>, NULL, resource,
-                               <span class="reserved">sizeof</span>(resource), NULL, NULL);
+                               <span class="number">30000</span>, <span class="comment">/*cancel*/</span>NULL, resource,
+                               <span class="reserved">sizeof</span>(resource),
+                               <span class="comment">/*cb*/</span>NULL, <span class="comment">/*cb_data*/</span>NULL);
 </code></pre>
 <h3 class="title" id="creating-an-ipp-request">Creating an IPP Request</h3>
 <p>IPP requests are represented by the IPP message type <code>ipp_t</code> and each IPP attribute in the request is representing using the type <code>ipp_attribute_t</code>. Each IPP request includes an operation code (<code>IPP_OP_CREATE_JOB</code>, <code>IPP_OP_GET_PRINTER_ATTRIBUTES</code>, etc.) and a 32-bit integer identifier.</p>
@@ -1491,7 +1516,7 @@ ippNewRequest(ipp_op_t op);
                                         dest-&gt;options);
 
 ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI,
-             <span class="string">&quot;printer-uri&quot;</span>, NULL, printer_uri);
+             <span class="string">&quot;printer-uri&quot;</span>, <span class="comment">/*language*/</span>NULL, printer_uri);
 </code></pre>
 <blockquote>
 <p><strong>Note:</strong></p>
@@ -6630,23 +6655,13 @@ ensures that domain sockets are removed when closed.</p>
 <h3 class="function"><a id="httpAddrCopyList">httpAddrCopyList</a></h3>
 <p class="description">Copy an address list.</p>
 <p class="code">
-<a href="#http_addrlist_t">http_addrlist_t</a> *httpAddrCopyList(<a href="#http_addrlist_t">http_addrlist_t</a> *src);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>src</th>
-<td class="description">Source address list</td></tr>
-</tbody></table>
+<a href="#http_addrlist_t">http_addrlist_t</a> *httpAddrCopyList(void);</p>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">New address list or <code>NULL</code> on error</p>
 <h3 class="function"><a id="httpAddrFreeList">httpAddrFreeList</a></h3>
 <p class="description">Free an address list.</p>
 <p class="code">
-void httpAddrFreeList(<a href="#http_addrlist_t">http_addrlist_t</a> *addrlist);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>addrlist</th>
-<td class="description">Address list to free</td></tr>
-</tbody></table>
+void httpAddrFreeList(void);</p>
 <h3 class="function"><a id="httpAddrGetFamily">httpAddrGetFamily</a></h3>
 <p class="description">Get the address family of an address.</p>
 <p class="code">
@@ -6672,16 +6687,7 @@ size_t httpAddrGetLength(const <a href="#http_addr_t">http_addr_t</a> *addr);</p
 <h3 class="function"><a id="httpAddrGetList">httpAddrGetList</a></h3>
 <p class="description">Get a list of addresses for a hostname.</p>
 <p class="code">
-<a href="#http_addrlist_t">http_addrlist_t</a> *httpAddrGetList(const char *hostname, int family, const char *service);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>hostname</th>
-<td class="description">Hostname, IP address, or NULL for passive listen address</td></tr>
-<tr><th>family</th>
-<td class="description">Address family or AF_UNSPEC</td></tr>
-<tr><th>service</th>
-<td class="description">Service name or port number</td></tr>
-</tbody></table>
+<a href="#http_addrlist_t">http_addrlist_t</a> *httpAddrGetList(void);</p>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">List of addresses or NULL</p>
 <h3 class="function"><a id="httpAddrGetPort">httpAddrGetPort</a></h3>
@@ -11684,6 +11690,33 @@ factor not applied)</td></tr>
 <tr><th>IPP_FINISHINGS_BOOKLET_MAKER </th><td class="description">Fold to make booklet</td></tr>
 <tr><th>IPP_FINISHINGS_COAT </th><td class="description">Apply protective liquid or powder coating</td></tr>
 <tr><th>IPP_FINISHINGS_COVER </th><td class="description">Add cover</td></tr>
+<tr><th>IPP_FINISHINGS_CUPS_FOLD_ACCORDION </th><td class="description">Accordion-fold the paper vertically into four sections</td></tr>
+<tr><th>IPP_FINISHINGS_CUPS_FOLD_DOUBLE_GATE </th><td class="description">Fold the top and bottom quarters of the paper towards the midline, then fold in half vertically</td></tr>
+<tr><th>IPP_FINISHINGS_CUPS_FOLD_GATE </th><td class="description">Fold the top and bottom quarters of the paper towards the midline</td></tr>
+<tr><th>IPP_FINISHINGS_CUPS_FOLD_HALF </th><td class="description">Fold the paper in half vertically</td></tr>
+<tr><th>IPP_FINISHINGS_CUPS_FOLD_HALF_Z </th><td class="description">Fold the paper in half horizontally, then Z-fold the paper vertically</td></tr>
+<tr><th>IPP_FINISHINGS_CUPS_FOLD_LEFT_GATE </th><td class="description">Fold the top quarter of the paper towards the midline</td></tr>
+<tr><th>IPP_FINISHINGS_CUPS_FOLD_LETTER </th><td class="description">Fold the paper into three sections vertically; sometimes also known as a C fold</td></tr>
+<tr><th>IPP_FINISHINGS_CUPS_FOLD_PARALLEL </th><td class="description">Fold the paper in half vertically two times, yielding four sections</td></tr>
+<tr><th>IPP_FINISHINGS_CUPS_FOLD_POSTER </th><td class="description">Fold the paper in half horizontally and vertically; sometimes also called a cross fold</td></tr>
+<tr><th>IPP_FINISHINGS_CUPS_FOLD_RIGHT_GATE </th><td class="description">Fold the bottom quarter of the paper towards the midline</td></tr>
+<tr><th>IPP_FINISHINGS_CUPS_FOLD_Z </th><td class="description">Fold the paper vertically into three sections, forming a Z</td></tr>
+<tr><th>IPP_FINISHINGS_CUPS_PUNCH_BOTTOM_LEFT </th><td class="description">Punch 1 hole bottom left</td></tr>
+<tr><th>IPP_FINISHINGS_CUPS_PUNCH_BOTTOM_RIGHT </th><td class="description">Punch 1 hole bottom right</td></tr>
+<tr><th>IPP_FINISHINGS_CUPS_PUNCH_DUAL_BOTTOM </th><td class="description">Punch 2 holes bottom edge</td></tr>
+<tr><th>IPP_FINISHINGS_CUPS_PUNCH_DUAL_LEFT </th><td class="description">Punch 2 holes left side</td></tr>
+<tr><th>IPP_FINISHINGS_CUPS_PUNCH_DUAL_RIGHT </th><td class="description">Punch 2 holes right side</td></tr>
+<tr><th>IPP_FINISHINGS_CUPS_PUNCH_DUAL_TOP </th><td class="description">Punch 2 holes top edge</td></tr>
+<tr><th>IPP_FINISHINGS_CUPS_PUNCH_QUAD_BOTTOM </th><td class="description">Punch 4 holes bottom edge</td></tr>
+<tr><th>IPP_FINISHINGS_CUPS_PUNCH_QUAD_LEFT </th><td class="description">Punch 4 holes left side</td></tr>
+<tr><th>IPP_FINISHINGS_CUPS_PUNCH_QUAD_RIGHT </th><td class="description">Punch 4 holes right side</td></tr>
+<tr><th>IPP_FINISHINGS_CUPS_PUNCH_QUAD_TOP </th><td class="description">Punch 4 holes top edge</td></tr>
+<tr><th>IPP_FINISHINGS_CUPS_PUNCH_TOP_LEFT </th><td class="description">Punch 1 hole top left</td></tr>
+<tr><th>IPP_FINISHINGS_CUPS_PUNCH_TOP_RIGHT </th><td class="description">Punch 1 hole top right</td></tr>
+<tr><th>IPP_FINISHINGS_CUPS_PUNCH_TRIPLE_BOTTOM </th><td class="description">Punch 3 holes bottom edge</td></tr>
+<tr><th>IPP_FINISHINGS_CUPS_PUNCH_TRIPLE_LEFT </th><td class="description">Punch 3 holes left side</td></tr>
+<tr><th>IPP_FINISHINGS_CUPS_PUNCH_TRIPLE_RIGHT </th><td class="description">Punch 3 holes right side</td></tr>
+<tr><th>IPP_FINISHINGS_CUPS_PUNCH_TRIPLE_TOP </th><td class="description">Punch 3 holes top edge</td></tr>
 <tr><th>IPP_FINISHINGS_EDGE_STITCH </th><td class="description">Stitch along any side</td></tr>
 <tr><th>IPP_FINISHINGS_EDGE_STITCH_BOTTOM </th><td class="description">Stitch along bottom edge</td></tr>
 <tr><th>IPP_FINISHINGS_EDGE_STITCH_LEFT </th><td class="description">Stitch along left side</td></tr>
@@ -11762,9 +11795,15 @@ factor not applied)</td></tr>
 <p class="description">IPP operations</p>
 <h4 class="constants">Constants</h4>
 <table class="list"><tbody>
+<tr><th>IPP_OP_ACKNOWLEDGE_DOCUMENT </th><td class="description">Acknowledge-Document: Acknowledge processing of a document</td></tr>
 <tr><th>IPP_OP_ACKNOWLEDGE_ENCRYPTED_JOB_ATTRIBUTES </th><td class="description">Acknowledge-Encrypted-Job-Attributes: Acknowledge receipt of encrypted job attributes</td></tr>
+<tr><th>IPP_OP_ACKNOWLEDGE_IDENTIFY_PRINTER </th><td class="description">Acknowledge-Identify-Printer: Acknowledge action on an Identify-Printer request</td></tr>
+<tr><th>IPP_OP_ACKNOWLEDGE_JOB </th><td class="description">Acknowledge-Job: Acknowledge processing of a job</td></tr>
+<tr><th>IPP_OP_ACTIVATE_PRINTER <span class="info">&#160;DEPRECATED&#160;</span></th><td class="description">Activate-Printer: Start a printer and accept jobs </td></tr>
+<tr><th>IPP_OP_ADD_DOCUMENT_IMAGES </th><td class="description">Add-Document-Images: Add image(s) from the specified scanner source</td></tr>
 <tr><th>IPP_OP_ALLOCATE_PRINTER_RESOURCES </th><td class="description">Allocate-Printer-Resources: Use resources for a printer.</td></tr>
 <tr><th>IPP_OP_CANCEL_CURRENT_JOB </th><td class="description">Cancel-Current-Job: Cancel the current job</td></tr>
+<tr><th>IPP_OP_CANCEL_DOCUMENT </th><td class="description">Cancel-Document: Cancel a document</td></tr>
 <tr><th>IPP_OP_CANCEL_JOB </th><td class="description">Cancel-Job: Cancel a job</td></tr>
 <tr><th>IPP_OP_CANCEL_JOBS </th><td class="description">Cancel-Jobs: Cancel all jobs (administrative)</td></tr>
 <tr><th>IPP_OP_CANCEL_MY_JOBS </th><td class="description">Cancel-My-Jobs: Cancel a user's jobs</td></tr>
@@ -11778,36 +11817,52 @@ factor not applied)</td></tr>
 <tr><th>IPP_OP_CREATE_RESOURCE </th><td class="description">Create-Resource: Create a new (empty) resource.</td></tr>
 <tr><th>IPP_OP_CREATE_RESOURCE_SUBSCRIPTIONS </th><td class="description">Create-Resource-Subscriptions: Create event subscriptions for a resource.</td></tr>
 <tr><th>IPP_OP_CREATE_SYSTEM_SUBSCRIPTIONS </th><td class="description">Create-System-Subscriptions: Create event subscriptions for a system.</td></tr>
+<tr><th>IPP_OP_CUPS_ACCEPT_JOBS <span class="info">&#160;DEPRECATED&#160;</span></th><td class="description">CUPS-Accept-Jobs: Accept new jobs on a printer </td></tr>
 <tr><th>IPP_OP_CUPS_ADD_MODIFY_CLASS </th><td class="description">CUPS-Add-Modify-Class: Add or modify a class</td></tr>
 <tr><th>IPP_OP_CUPS_ADD_MODIFY_PRINTER </th><td class="description">CUPS-Add-Modify-Printer: Add or modify a printer</td></tr>
 <tr><th>IPP_OP_CUPS_AUTHENTICATE_JOB </th><td class="description">CUPS-Authenticate-Job: Authenticate a job</td></tr>
 <tr><th>IPP_OP_CUPS_CREATE_LOCAL_PRINTER </th><td class="description">CUPS-Create-Local-Printer: Create a local (temporary) printer</td></tr>
 <tr><th>IPP_OP_CUPS_DELETE_CLASS </th><td class="description">CUPS-Delete-Class: Delete a class</td></tr>
 <tr><th>IPP_OP_CUPS_DELETE_PRINTER </th><td class="description">CUPS-Delete-Printer: Delete a printer</td></tr>
+<tr><th>IPP_OP_CUPS_GET_CLASSES <span class="info">&#160;DEPRECATED&#160;</span></th><td class="description">CUPS-Get-Classes: Get a list of classes </td></tr>
 <tr><th>IPP_OP_CUPS_GET_DEFAULT </th><td class="description">CUPS-Get-Default: Get the default printer</td></tr>
 <tr><th>IPP_OP_CUPS_GET_DEVICES <span class="info">&#160;DEPRECATED&#160;</span></th><td class="description">CUPS-Get-Devices: Get a list of supported devices </td></tr>
-<tr><th>IPP_OP_CUPS_GET_DOCUMENT </th><td class="description">CUPS-Get-Document: Get a document file</td></tr>
+<tr><th>IPP_OP_CUPS_GET_DOCUMENT <span class="info">&#160;DEPRECATED&#160;</span></th><td class="description">CUPS-Get-Document: Get a document file </td></tr>
 <tr><th>IPP_OP_CUPS_GET_PPD <span class="info">&#160;DEPRECATED&#160;</span></th><td class="description">CUPS-Get-PPD: Get a PPD file </td></tr>
 <tr><th>IPP_OP_CUPS_GET_PPDS <span class="info">&#160;DEPRECATED&#160;</span></th><td class="description">CUPS-Get-PPDs: Get a list of supported drivers </td></tr>
 <tr><th>IPP_OP_CUPS_GET_PRINTERS </th><td class="description">CUPS-Get-Printers: Get a list of printers and/or classes</td></tr>
 <tr><th>IPP_OP_CUPS_INVALID </th><td class="description">Invalid operation name for <a href="#ippOpValue"><code>ippOpValue</code></a></td></tr>
 <tr><th>IPP_OP_CUPS_MOVE_JOB </th><td class="description">CUPS-Move-Job: Move a job to a different printer</td></tr>
+<tr><th>IPP_OP_CUPS_REJECT_JOBS <span class="info">&#160;DEPRECATED&#160;</span></th><td class="description">CUPS-Reject-Jobs: Reject new jobs on a printer </td></tr>
 <tr><th>IPP_OP_CUPS_SET_DEFAULT </th><td class="description">CUPS-Set-Default: Set the default printer</td></tr>
+<tr><th>IPP_OP_DEACTIVATE_PRINTER <span class="info">&#160;DEPRECATED&#160;</span></th><td class="description">Deactivate-Printer: Stop a printer and do not accept jobs </td></tr>
 <tr><th>IPP_OP_DEALLOCATE_PRINTER_RESOURCES </th><td class="description">Deallocate-Printer-Resources: Stop using resources for a printer.</td></tr>
+<tr><th>IPP_OP_DELETE_DOCUMENT <span class="info">&#160;DEPRECATED&#160;</span></th><td class="description">Delete-Document: Delete a document </td></tr>
 <tr><th>IPP_OP_DELETE_PRINTER </th><td class="description">Delete-Printer: Delete an existing service.</td></tr>
+<tr><th>IPP_OP_DEREGISTER_OUTPUT_DEVICE </th><td class="description">Deregister-Output-Device: Remove an output device</td></tr>
 <tr><th>IPP_OP_DISABLE_ALL_PRINTERS </th><td class="description">Disable-All-Printers: Stop accepting new jobs on all services.</td></tr>
 <tr><th>IPP_OP_DISABLE_PRINTER </th><td class="description">Disable-Printer: Reject new jobs for a printer</td></tr>
 <tr><th>IPP_OP_ENABLE_ALL_PRINTERS </th><td class="description">Enable-All-Printers: Start accepting new jobs on all services.</td></tr>
 <tr><th>IPP_OP_ENABLE_PRINTER </th><td class="description">Enable-Printer: Accept new jobs for a printer</td></tr>
+<tr><th>IPP_OP_FETCH_DOCUMENT </th><td class="description">Fetch-Document: Fetch a document for processing</td></tr>
 <tr><th>IPP_OP_FETCH_ENCRYPTED_JOB_ATTRIBUTES </th><td class="description">Fetch-Encrypted-Job-Attributes: Download encrypted job attributes</td></tr>
+<tr><th>IPP_OP_FETCH_JOB </th><td class="description">Fetch-Job: Fetch a job for processing</td></tr>
+<tr><th>IPP_OP_GET_DOCUMENTS </th><td class="description">Get-Documents: Get a list of documents in a job</td></tr>
+<tr><th>IPP_OP_GET_DOCUMENT_ATTRIBUTES </th><td class="description">Get-Document-Attributes: Get document information</td></tr>
 <tr><th>IPP_OP_GET_ENCRYPTED_JOB_ATTRIBUTES </th><td class="description">Get-Encrypted-Job-Attributes: Query job attributes and return in an encrypted form</td></tr>
 <tr><th>IPP_OP_GET_JOBS </th><td class="description">Get-Jobs: Get a list of jobs</td></tr>
 <tr><th>IPP_OP_GET_JOB_ATTRIBUTES </th><td class="description">Get-Job-Attribute: Get information about a job</td></tr>
+<tr><th>IPP_OP_GET_NEXT_DOCUMENT_DATA </th><td class="description">Get-Next-Document-Data: Scan more document data</td></tr>
 <tr><th>IPP_OP_GET_NOTIFICATIONS </th><td class="description">Get-Notifications: Get notification events</td></tr>
+<tr><th>IPP_OP_GET_OUTPUT_DEVICE_ATTRIBUTES </th><td class="description">Get-Output-Device-Attributes: Get printer information for a specific output device</td></tr>
 <tr><th>IPP_OP_GET_PRINTERS </th><td class="description">Get-Printers: Get a list of services.</td></tr>
 <tr><th>IPP_OP_GET_PRINTER_ATTRIBUTES </th><td class="description">Get-Printer-Attributes: Get information about a printer</td></tr>
 <tr><th>IPP_OP_GET_PRINTER_RESOURCES </th><td class="description">Get-Printer-Resources: Get a list of resources for a printer</td></tr>
 <tr><th>IPP_OP_GET_PRINTER_SUPPORTED_VALUES </th><td class="description">Get-Printer-Supported-Values: Get supported values</td></tr>
+<tr><th>IPP_OP_GET_PRINT_SUPPORT_FILES <span class="info">&#160;DEPRECATED&#160;</span></th><td class="description">Get-Printer-Support-Files: Get printer support files </td></tr>
+<tr><th>IPP_OP_GET_RESOURCES </th><td class="description">Get-Resources: Get list of resources</td></tr>
+<tr><th>IPP_OP_GET_RESOURCE_ATTRIBUTES </th><td class="description">Get-Resource-Attributes: Get resource information</td></tr>
+<tr><th>IPP_OP_GET_RESOURCE_DATA <span class="info">&#160;DEPRECATED&#160;</span></th><td class="description">Get-Resource-Data: Get resource data </td></tr>
 <tr><th>IPP_OP_GET_SUBSCRIPTIONS </th><td class="description">Get-Subscriptions: Get list of subscriptions</td></tr>
 <tr><th>IPP_OP_GET_SUBSCRIPTION_ATTRIBUTES </th><td class="description">Get-Subscription-Attributes: Get subscription information</td></tr>
 <tr><th>IPP_OP_GET_SYSTEM_ATTRIBUTES </th><td class="description">Get-System-Attributes: Get system object attributes.</td></tr>
@@ -11822,29 +11877,44 @@ factor not applied)</td></tr>
 <tr><th>IPP_OP_PAUSE_PRINTER </th><td class="description">Pause-Printer: Stop a printer</td></tr>
 <tr><th>IPP_OP_PAUSE_PRINTER_AFTER_CURRENT_JOB </th><td class="description">Pause-Printer-After-Current-Job: Stop printer after the current job</td></tr>
 <tr><th>IPP_OP_PRINT_JOB </th><td class="description">Print-Job: Print a single file</td></tr>
+<tr><th>IPP_OP_PRINT_URI <span class="info">&#160;DEPRECATED&#160;</span></th><td class="description">Print-URI: Print a single URL </td></tr>
 <tr><th>IPP_OP_PROMOTE_JOB </th><td class="description">Promote-Job: Promote a job to print sooner</td></tr>
+<tr><th>IPP_OP_PURGE_JOBS <span class="info">&#160;DEPRECATED&#160;</span></th><td class="description">Purge-Jobs: Delete all jobs </td></tr>
 <tr><th>IPP_OP_REGISTER_OUTPUT_DEVICE </th><td class="description">Register-Output-Device: Register a remote service.</td></tr>
 <tr><th>IPP_OP_RELEASE_HELD_NEW_JOBS </th><td class="description">Release-Held-New-Jobs: Release new jobs that were previously held</td></tr>
 <tr><th>IPP_OP_RELEASE_JOB </th><td class="description">Release-Job: Release a job for printing</td></tr>
 <tr><th>IPP_OP_RENEW_SUBSCRIPTION </th><td class="description">Renew-Subscription: Renew a printer subscription</td></tr>
+<tr><th>IPP_OP_REPROCESS_JOB <span class="info">&#160;DEPRECATED&#160;</span></th><td class="description">Reprocess-Job: Reprint a job </td></tr>
 <tr><th>IPP_OP_RESTART_JOB <span class="info">&#160;DEPRECATED&#160;</span></th><td class="description">Restart-Job: Reprint a job </td></tr>
 <tr><th>IPP_OP_RESTART_ONE_PRINTER </th><td class="description">Restart-One-Printer: Restart a single printer/service</td></tr>
+<tr><th>IPP_OP_RESTART_PRINTER </th><td class="description">Restart-Printer: Restart a printer</td></tr>
 <tr><th>IPP_OP_RESTART_SYSTEM </th><td class="description">Restart-System: Restart all services.</td></tr>
+<tr><th>IPP_OP_RESUBMIT_JOB </th><td class="description">Resubmit-Job: Copy and reprint a job</td></tr>
 <tr><th>IPP_OP_RESUME_ALL_PRINTERS </th><td class="description">Resume-All-Printers: Start job processing on all services.</td></tr>
 <tr><th>IPP_OP_RESUME_JOB </th><td class="description">Resume-Job: Resume the current job</td></tr>
 <tr><th>IPP_OP_RESUME_PRINTER </th><td class="description">Resume-Printer: Start a printer</td></tr>
 <tr><th>IPP_OP_SCHEDULE_JOB_AFTER </th><td class="description">Schedule-Job-After: Schedule a job to print after another</td></tr>
 <tr><th>IPP_OP_SEND_DOCUMENT </th><td class="description">Send-Document: Add a file to a job</td></tr>
+<tr><th>IPP_OP_SEND_NOTIFICATIONS </th><td class="description">Send-Notifications: Send notification events</td></tr>
 <tr><th>IPP_OP_SEND_RESOURCE_DATA </th><td class="description">Send-Resource-Data: Upload the data for a resource.</td></tr>
+<tr><th>IPP_OP_SEND_URI <span class="info">&#160;DEPRECATED&#160;</span></th><td class="description">Send-URI: Add a URL to a job </td></tr>
+<tr><th>IPP_OP_SET_DOCUMENT_ATTRIBUTES </th><td class="description">Set-Document-Attributes: Set document values</td></tr>
 <tr><th>IPP_OP_SET_JOB_ATTRIBUTES </th><td class="description">Set-Job-Attributes: Set job values</td></tr>
 <tr><th>IPP_OP_SET_PRINTER_ATTRIBUTES </th><td class="description">Set-Printer-Attributes: Set printer values</td></tr>
 <tr><th>IPP_OP_SET_RESOURCE_ATTRIBUTES </th><td class="description">Set-Resource-Attributes: Set resource object  attributes.</td></tr>
 <tr><th>IPP_OP_SET_SYSTEM_ATTRIBUTES </th><td class="description">Set-System-Attributes: Set system object attributes.</td></tr>
 <tr><th>IPP_OP_SHUTDOWN_ALL_PRINTERS </th><td class="description">Shutdown-All-Printers: Shutdown all services.</td></tr>
 <tr><th>IPP_OP_SHUTDOWN_ONE_PRINTER </th><td class="description">Shutdown-One-Printer: Shutdown a service.</td></tr>
+<tr><th>IPP_OP_SHUTDOWN_PRINTER </th><td class="description">Shutdown-Printer: Turn a printer off</td></tr>
 <tr><th>IPP_OP_STARTUP_ALL_PRINTERS </th><td class="description">Startup-All-Printers: Startup all services.</td></tr>
 <tr><th>IPP_OP_STARTUP_ONE_PRINTER </th><td class="description">Startup-One-Printer: Start a service.</td></tr>
+<tr><th>IPP_OP_STARTUP_PRINTER </th><td class="description">Startup-Printer: Turn a printer on</td></tr>
 <tr><th>IPP_OP_SUSPEND_CURRENT_JOB </th><td class="description">Suspend-Current-Job: Suspend the current job</td></tr>
+<tr><th>IPP_OP_UPDATE_ACTIVE_JOBS </th><td class="description">Update-Active-Jobs: Update the list of active jobs that a proxy has processed</td></tr>
+<tr><th>IPP_OP_UPDATE_DOCUMENT_STATUS </th><td class="description">Update-Document-Status: Update document values</td></tr>
+<tr><th>IPP_OP_UPDATE_JOB_STATUS </th><td class="description">Update-Job-Status: Update job values</td></tr>
+<tr><th>IPP_OP_UPDATE_OUTPUT_DEVICE_ATTRIBUTES </th><td class="description">Update-Output-Device-Attributes: Update output device values</td></tr>
+<tr><th>IPP_OP_VALIDATE_DOCUMENT </th><td class="description">Validate-Document: Validate document values prior to submission</td></tr>
 <tr><th>IPP_OP_VALIDATE_JOB </th><td class="description">Validate-Job: Validate job values prior to submission</td></tr>
 </tbody></table>
 <h3 class="enumeration"><a id="ipp_orient_e">ipp_orient_e</a></h3>
@@ -11972,20 +12042,26 @@ factor not applied)</td></tr>
 <h4 class="constants">Constants</h4>
 <table class="list"><tbody>
 <tr><th>IPP_TAG_ADMINDEFINE </th><td class="description">Admin-defined value</td></tr>
+<tr><th>IPP_TAG_BEGIN_COLLECTION </th><td class="description">Beginning of collection value</td></tr>
 <tr><th>IPP_TAG_BOOLEAN </th><td class="description">Boolean value</td></tr>
 <tr><th>IPP_TAG_CHARSET </th><td class="description">Character set value</td></tr>
+<tr><th>IPP_TAG_CUPS_CONST </th><td class="description">Bitflag for copied/const attribute values</td></tr>
 <tr><th>IPP_TAG_CUPS_INVALID </th><td class="description">Invalid tag name for <a href="#ippTagValue"><code>ippTagValue</code></a></td></tr>
+<tr><th>IPP_TAG_CUPS_MASK </th><td class="description">Mask for copied attribute values</td></tr>
 <tr><th>IPP_TAG_DATE </th><td class="description">Date/time value</td></tr>
 <tr><th>IPP_TAG_DEFAULT </th><td class="description">Default value</td></tr>
 <tr><th>IPP_TAG_DELETEATTR </th><td class="description">Delete-attribute value</td></tr>
 <tr><th>IPP_TAG_DOCUMENT </th><td class="description">Document group</td></tr>
 <tr><th>IPP_TAG_END </th><td class="description">End-of-attributes</td></tr>
+<tr><th>IPP_TAG_END_COLLECTION </th><td class="description">End of collection value</td></tr>
 <tr><th>IPP_TAG_ENUM </th><td class="description">Enumeration value</td></tr>
 <tr><th>IPP_TAG_EVENT_NOTIFICATION </th><td class="description">Event group</td></tr>
+<tr><th>IPP_TAG_EXTENSION </th><td class="description">Extension point for 32-bit tags</td></tr>
 <tr><th>IPP_TAG_INTEGER </th><td class="description">Integer value</td></tr>
 <tr><th>IPP_TAG_JOB </th><td class="description">Job group</td></tr>
 <tr><th>IPP_TAG_KEYWORD </th><td class="description">Keyword value</td></tr>
 <tr><th>IPP_TAG_LANGUAGE </th><td class="description">Language value</td></tr>
+<tr><th>IPP_TAG_MEMBERNAME </th><td class="description">Collection member name value</td></tr>
 <tr><th>IPP_TAG_MIMETYPE </th><td class="description">MIME media type value</td></tr>
 <tr><th>IPP_TAG_NAME </th><td class="description">Name value</td></tr>
 <tr><th>IPP_TAG_NAMELANG </th><td class="description">Name-with-language value</td></tr>
