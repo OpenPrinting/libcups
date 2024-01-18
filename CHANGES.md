@@ -14,6 +14,7 @@ libcups v3.0rc1 (TBD)
 - Now use installed PDFio library, if available.
 - Now use NotoSansMono font for `ipptransform` text conversions.
 - The `ipptransform` program now supports uncollated copies.
+- Fixed GNU TLS crash.
 - Fixed PCL output from `ipptransform` (Issue #72)
 - Fixed JSON output from `ipptool`.
 - Fixed hang/crash in `cupsEnumDests`/`cupsGetDests` (Issue #74)
