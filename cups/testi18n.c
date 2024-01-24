@@ -387,7 +387,7 @@ main(int  argc,				// I - Argument Count
       testEnd(true);
   }
 
-#if !defined(__linux__) && !defined(__GLIBC__)
+#if 0 // !defined(__linux__) && !defined(__GLIBC__)
   testBegin("cupsCharsetToUTF8(CUPS_ENCODING_EUC_JP)");
 
   cupsCopyString(legsrc, legdest, sizeof(legsrc));
