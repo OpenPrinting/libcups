@@ -1,7 +1,7 @@
 //
 // API definitions for CUPS.
 //
-// Copyright © 2021-2023 by OpenPrinting.
+// Copyright © 2021-2024 by OpenPrinting.
 // Copyright © 2007-2020 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products.
 //
@@ -15,6 +15,7 @@
 #  include "ipp.h"
 #  include "language.h"
 #  include "pwg.h"
+#  include <stdarg.h>
 #  ifdef __cplusplus
 extern "C" {
 #  endif // __cplusplus
@@ -335,6 +336,8 @@ extern ipp_attribute_t	*cupsFindDestDefault(http_t *http, cups_dest_t *dest, cup
 extern ipp_attribute_t	*cupsFindDestReady(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, const char *option) _CUPS_PUBLIC;
 extern ipp_attribute_t	*cupsFindDestSupported(http_t *http, cups_dest_t *dest, cups_dinfo_t *dinfo, const char *option) _CUPS_PUBLIC;
 extern ipp_status_t	cupsFinishDestDocument(http_t *http, cups_dest_t *dest, cups_dinfo_t *info) _CUPS_PUBLIC;
+extern ssize_t		cupsFormatString(char *buffer, size_t bufsize, const char *format, ...) _CUPS_FORMAT(3,4) _CUPS_PUBLIC;
+extern ssize_t		cupsFormatStringv(char *buffer, size_t bufsize, const char *format, va_list ap) _CUPS_PUBLIC;
 extern void		cupsFreeDestInfo(cups_dinfo_t *dinfo) _CUPS_PUBLIC;
 extern void		cupsFreeDests(size_t num_dests, cups_dest_t *dests) _CUPS_PUBLIC;
 extern void		cupsFreeJobs(size_t num_jobs, cups_job_t *jobs) _CUPS_PUBLIC;

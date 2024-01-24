@@ -4,6 +4,10 @@ Changes in libcups
 libcups v3.0rc1 (TBD)
 ---------------------
 
+- Added `cupsFormatString` and `cupsFormatStringv` APIs to safely format UTF-8
+  strings.
+- Updated `cupsCopyString` and `cupsConcatString` APIs to safely terminate UTF-8
+  strings.
 - Updated list of attributes included in the destination options.
 - Updated `cupsAddIntegerOption` and `cupsGetIntegerOption` to use the `long`
   type.
