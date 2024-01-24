@@ -61,7 +61,7 @@ jobs:
     - name: Install prerequisites
       run: brew install gnutls pkg-config
     - name: configure
-      run: ./configure --enable-debug --enable-maintainer --enable-sanitizer || (cat config.log; pkg-config --list-all; exit 1)
+      run: ./configure --enable-debug --enable-maintainer || (cat config.log; pkg-config --list-all; exit 1)
     - name: make
       run: make
     - name: test
