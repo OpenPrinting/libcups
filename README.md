@@ -49,7 +49,7 @@ pages in the `doc` directory.
 Legal Stuff
 -----------
 
-Copyright © 2020-2023 by OpenPrinting.
+Copyright © 2020-2024 by OpenPrinting.
 
 Copyright © 2007-2020 by Apple Inc.
 

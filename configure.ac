@@ -1,7 +1,7 @@
 dnl
 dnl Configuration script for libcups.
 dnl
-dnl Copyright © 2020-2023 by OpenPrinting
+dnl Copyright © 2020-2024 by OpenPrinting
 dnl Copyright © 2007-2020 by Apple Inc.
 dnl Copyright © 1997-2007 by Easy Software Products, all rights reserved.
 dnl
@@ -15,6 +15,7 @@ AC_PREREQ([2.71])
 dnl Package name and version...
 AC_INIT([libcups],[3.0rc1],[https://github.com/OpenPrinting/libcups/issues],[cups],[https://openprinting.github.io/cups])
 AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_SUBDIRS([pdfio])
 
 LIBCUPS_VERSION="AC_PACKAGE_VERSION"
 LIBCUPS_VERSION_MAJOR="`echo AC_PACKAGE_VERSION | awk -F. '{print $1}'`"
