@@ -184,10 +184,6 @@ AS_IF([$PKGCONFIG --exists pdfio], [
 AC_SUBST([PDFIODIR])
 
 
-dnl String functions...
-AC_CHECK_FUNCS([strlcat strlcpy])
-
-
 dnl DNS resolver functions...
 SAVELIBS="$LIBS"
 LIBS=""

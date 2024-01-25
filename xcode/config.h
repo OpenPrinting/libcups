@@ -1,7 +1,7 @@
 //
 // Configuration file for libcups with Xcode.
 //
-// Copyright © 2020-2023 by OpenPrinting
+// Copyright © 2020-2024 by OpenPrinting
 // Copyright © 2007-2019 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products.
 //
@@ -71,14 +71,6 @@
 #ifndef HAVE_STRTOLL
 #  define strtoll(nptr,endptr,base) strtol((nptr), (endptr), (base))
 #endif // !HAVE_STRTOLL
-
-
-//
-// Do we have the strlcat() or strlcpy() functions?
-//
-
-#define HAVE_STRLCAT 1
-#define HAVE_STRLCPY 1
 
 
 //

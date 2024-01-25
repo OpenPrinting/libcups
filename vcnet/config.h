@@ -1,7 +1,7 @@
 //
 // Configuration file for libcups with Visual Studio on Windows.
 //
-// Copyright © 2021-2023 by OpenPrinting
+// Copyright © 2021-2024 by OpenPrinting
 // Copyright © 2007-2019 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products.
 //
@@ -151,14 +151,6 @@ typedef unsigned long useconds_t;
 #ifndef HAVE_STRTOLL
 #  define strtoll(nptr,endptr,base) strtol((nptr), (endptr), (base))
 #endif // !HAVE_STRTOLL
-
-
-//
-// Do we have the strlcat() or strlcpy() functions?
-//
-
-// #undef HAVE_STRLCAT
-// #undef HAVE_STRLCPY
 
 
 //

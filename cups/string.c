@@ -393,53 +393,59 @@ cupsFormatStringv(
 	      s = "(null)";
 
             // Copy the C string, replacing control chars and \ with C character escapes...
-            for (bufend --; *s && bufptr < bufend; s ++)
+            for (; *s && bufptr < bufend; s ++)
 	    {
 	      if (*s == '\n')
 	      {
 	        *bufptr++ = '\\';
-		*bufptr++ = 'n';
+	        if (bufptr < bufend)
+		  *bufptr++ = 'n';
 		bytes += 2;
 	      }
 	      else if (*s == '\r')
 	      {
 	        *bufptr++ = '\\';
-		*bufptr++ = 'r';
+	        if (bufptr < bufend)
+		  *bufptr++ = 'r';
 		bytes += 2;
 	      }
 	      else if (*s == '\t')
 	      {
 	        *bufptr++ = '\\';
-		*bufptr++ = 't';
+	        if (bufptr < bufend)
+		  *bufptr++ = 't';
 		bytes += 2;
 	      }
 	      else if (*s == '\\')
 	      {
 	        *bufptr++ = '\\';
-		*bufptr++ = '\\';
+	        if (bufptr < bufend)
+		  *bufptr++ = '\\';
 		bytes += 2;
 	      }
 	      else if (*s == '\'')
 	      {
 	        *bufptr++ = '\\';
-		*bufptr++ = '\'';
+	        if (bufptr < bufend)
+		  *bufptr++ = '\'';
 		bytes += 2;
 	      }
 	      else if (*s == '\"')
 	      {
 	        *bufptr++ = '\\';
-		*bufptr++ = '\"';
+	        if (bufptr < bufend)
+		  *bufptr++ = '\"';
 		bytes += 2;
 	      }
 	      else if ((*s & 255) < ' ')
 	      {
-	        if ((bufptr + 2) >= bufend)
-	          break;
-
 	        *bufptr++ = '\\';
-		*bufptr++ = '0';
-		*bufptr++ = '0' + *s / 8;
-		*bufptr++ = '0' + (*s & 7);
+	        if (bufptr < bufend)
+		  *bufptr++ = '0';
+	        if (bufptr < bufend)
+		  *bufptr++ = '0' + *s / 8;
+	        if (bufptr < bufend)
+		  *bufptr++ = '0' + (*s & 7);
 		bytes += 4;
 	      }
 	      else
@@ -451,8 +457,6 @@ cupsFormatStringv(
 
             if (bufptr >= bufend)
 	      bytes += 2 * strlen(s);
-
-            bufend ++;
 	    break;
 
 	case 'n' : // Output number of chars so far
@@ -466,9 +470,7 @@ cupsFormatStringv(
       bytes ++;
 
       if (bufptr < bufend)
-        *bufptr++ = *format;
-
-      format ++;
+        *bufptr++ = *format++;
     }
   }
 
