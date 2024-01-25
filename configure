@@ -615,7 +615,6 @@ PACKAGE_STRING='libcups 3.0rc1'
 PACKAGE_BUGREPORT='https://github.com/OpenPrinting/libcups/issues'
 PACKAGE_URL='https://openprinting.github.io/cups'
 
-enable_option_checking=no
 # Factoring default headers for most tests.
 ac_includes_default="\
 #include <stddef.h>
@@ -648,6 +647,7 @@ ac_includes_default="\
 #endif"
 
 ac_header_c_list=
+enable_option_checking=no
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
 CUPS_SERVERROOT
@@ -660,6 +660,7 @@ LIBCUPS
 INSTALL_STATIC
 PKGCONFIG_AVAHI
 PDFIODIR
+subdirs
 PDFTOPPM
 XFORMLIBS
 PKGCONFIG_REQUIRES_PRIVATE
@@ -699,7 +700,6 @@ build
 LIBCUPS_VERSION_MINOR
 LIBCUPS_VERSION_MAJOR
 LIBCUPS_VERSION
-subdirs
 target_alias
 host_alias
 build_alias
@@ -2456,10 +2456,6 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 ac_config_headers="$ac_config_headers config.h"
-
-
-
-subdirs="$subdirs pdfio"
 
 
 LIBCUPS_VERSION="3.0rc1"
@@ -4341,6 +4337,8 @@ esac
 
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for pdfio library" >&5
 printf %s "checking for pdfio library... " >&6; }
+
+
 if $PKGCONFIG --exists pdfio
 then :
 
@@ -4359,6 +4357,8 @@ printf "%s\n" "no, using embedded version" >&6; }
     CPPFLAGS="$CPPFLAGS -I../pdfio"
     PDFIODIR="pdfio"
     XFORMLIBS="../pdfio/libpdfio.a $XFORMLIBS"
+    subdirs="$subdirs pdfio"
+
 
 fi
 

@@ -15,7 +15,6 @@ AC_PREREQ([2.71])
 dnl Package name and version...
 AC_INIT([libcups],[3.0rc1],[https://github.com/OpenPrinting/libcups/issues],[cups],[https://openprinting.github.io/cups])
 AC_CONFIG_HEADERS([config.h])
-AC_CONFIG_SUBDIRS([pdfio])
 
 LIBCUPS_VERSION="AC_PACKAGE_VERSION"
 LIBCUPS_VERSION_MAJOR="`echo AC_PACKAGE_VERSION | awk -F. '{print $1}'`"
@@ -180,6 +179,7 @@ AS_IF([$PKGCONFIG --exists pdfio], [
     CPPFLAGS="$CPPFLAGS -I../pdfio"
     PDFIODIR="pdfio"
     XFORMLIBS="../pdfio/libpdfio.a $XFORMLIBS"
+    AC_CONFIG_SUBDIRS([pdfio])
 ])
 AC_SUBST([PDFIODIR])
 
