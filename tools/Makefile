@@ -192,7 +192,7 @@ ipptool-static:	ipptool.o ../cups/$(LIBCUPS_STATIC)
 
 ipptransform:	ipptransform.o ipp-options.o ../cups/$(LIBCUPS) ipptransform-static
 	echo Linking $@...
-	$(CC) $(LDFLAGS) -o $@ ipptransform.o ipp-options.o $(LINKCUPS) $(XFORMLIBS) $(LIBS)
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ ipptransform.o ipp-options.o $(LINKCUPS) $(XFORMLIBS) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 
@@ -202,7 +202,7 @@ ipptransform:	ipptransform.o ipp-options.o ../cups/$(LIBCUPS) ipptransform-stati
 
 ipptransform-static:	ipptransform.o ipp-options.o ../cups/$(LIBCUPS_STATIC)
 	echo Linking $@...
-	$(CC) $(LDFLAGS) -o $@ ipptransform.o ipp-options.o ../cups/$(LIBCUPS_STATIC) $(XFORMLIBS) $(LIBS)
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ ipptransform.o ipp-options.o ../cups/$(LIBCUPS_STATIC) $(XFORMLIBS) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 
