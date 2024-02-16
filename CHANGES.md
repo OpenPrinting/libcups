@@ -14,7 +14,8 @@ libcups v3.0rc1 (TBD)
 - Updated `httpAddrConnect()` to handle `POLLHUP` together with `POLLIN` or
   `POLLOUT`.
 - Updated the various tool man pages, usage output, and examples.
-- Updated `ippCreateRequestedArray` for the Get-Documents operation.
+- Updated `ippCreateRequestedArray` for the Get-Documents and
+  Get-Output-Device-Attributes operations.
 - Now use installed PDFio library, if available.
 - Now use NotoSansMono font for `ipptransform` text conversions.
 - The `ipptransform` program now supports uncollated copies.

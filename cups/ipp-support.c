@@ -1,7 +1,7 @@
 //
 // Internet Printing Protocol support functions for CUPS.
 //
-// Copyright © 2022-2023 by OpenPrinting.
+// Copyright © 2022-2024 by OpenPrinting.
 // Copyright © 2007-2018 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products, all rights reserved.
 //
@@ -2055,7 +2055,7 @@ ippCreateRequestedArray(ipp_t *request)	// I - IPP request
       added = true;
     }
 
-    if (!strcmp(value, "job-template") || (!strcmp(value, "all") && (op == IPP_OP_GET_JOB_ATTRIBUTES || op == IPP_OP_GET_JOBS || op == IPP_OP_GET_PRINTER_ATTRIBUTES)))
+    if (!strcmp(value, "job-template") || (!strcmp(value, "all") && (op == IPP_OP_GET_JOB_ATTRIBUTES || op == IPP_OP_GET_JOBS || op == IPP_OP_GET_PRINTER_ATTRIBUTES || op == IPP_OP_GET_OUTPUT_DEVICE_ATTRIBUTES)))
     {
       for (j = 0; j < (sizeof(job_template) / sizeof(job_template[0])); j ++)
         cupsArrayAdd(ra, (void *)job_template[j]);
@@ -2063,7 +2063,7 @@ ippCreateRequestedArray(ipp_t *request)	// I - IPP request
       added = true;
     }
 
-    if (!strcmp(value, "printer-description") || (!strcmp(value, "all") && (op == IPP_OP_GET_PRINTER_ATTRIBUTES || op == IPP_OP_GET_PRINTERS || op == IPP_OP_CUPS_GET_DEFAULT || op == IPP_OP_CUPS_GET_PRINTERS || op == IPP_OP_CUPS_GET_CLASSES)))
+    if (!strcmp(value, "printer-description") || (!strcmp(value, "all") && (op == IPP_OP_GET_PRINTER_ATTRIBUTES || op == IPP_OP_GET_OUTPUT_DEVICE_ATTRIBUTES || op == IPP_OP_GET_PRINTERS || op == IPP_OP_CUPS_GET_DEFAULT || op == IPP_OP_CUPS_GET_PRINTERS || op == IPP_OP_CUPS_GET_CLASSES)))
     {
       for (j = 0; j < (sizeof(printer_description) / sizeof(printer_description[0])); j ++)
         cupsArrayAdd(ra, (void *)printer_description[j]);
