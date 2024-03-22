@@ -1,7 +1,7 @@
 //
 // Internet Printing Protocol functions for CUPS.
 //
-// Copyright © 2021-2023 by OpenPrinting.
+// Copyright © 2021-2024 by OpenPrinting.
 // Copyright © 2007-2021 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products, all rights reserved.
 //
@@ -1857,7 +1857,7 @@ ippFindNextAttribute(ipp_t      *ipp,	// I - IPP message
 
     value_tag = (ipp_tag_t)(attr->value_tag & IPP_TAG_CUPS_MASK);
 
-    if (attr->name != NULL && _cups_strcasecmp(attr->name, name) == 0 && (value_tag == type || type == IPP_TAG_ZERO || name == parent || (value_tag == IPP_TAG_TEXTLANG && type == IPP_TAG_TEXT) || (value_tag == IPP_TAG_NAMELANG && type == IPP_TAG_NAME)))
+    if (attr->name != NULL && strcmp(attr->name, name) == 0 && (value_tag == type || type == IPP_TAG_ZERO || name == parent || (value_tag == IPP_TAG_TEXTLANG && type == IPP_TAG_TEXT) || (value_tag == IPP_TAG_NAMELANG && type == IPP_TAG_NAME)))
     {
       ipp->find->attr = attr;
 
