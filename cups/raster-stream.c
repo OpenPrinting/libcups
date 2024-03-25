@@ -1,7 +1,7 @@
 //
 // Raster file routines for CUPS.
 //
-// Copyright © 2022 by OpenPrinting.
+// Copyright © 2022-2024 by OpenPrinting.
 // Copyright © 2007-2019 by Apple Inc.
 // Copyright © 1997-2006 by Easy Software Products.
 //
@@ -851,7 +851,7 @@ cupsRasterReadPixels(
 
   DEBUG_printf("cupsRasterReadPixels(r=%p, p=%p, len=%u)", (void *)r, (void *)p, len);
 
-  if (r == NULL || r->mode != CUPS_RASTER_READ || r->remaining == 0 ||
+  if (r == NULL || r->mode != CUPS_RASTER_READ || r->remaining == 0 || len == 0 ||
       r->header.cupsBytesPerLine == 0)
   {
     DEBUG_puts("1cupsRasterReadPixels: Returning 0.");
