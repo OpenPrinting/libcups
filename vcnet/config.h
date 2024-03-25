@@ -284,4 +284,12 @@ typedef unsigned long useconds_t;
 // #undef HAVE_SYS_STATVFS_H
 // #undef HAVE_SYS_VFS_H
 
+
+//
+// Have dbus library?
+//
+
+// #undef HAVE_DBUS
+
+
 #endif // !CUPS_CONFIG_H

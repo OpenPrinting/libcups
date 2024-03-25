@@ -205,4 +205,11 @@
 // #undef HAVE_SYS_VFS_H
 
 
+//
+// Have dbus library?
+//
+
+// #undef HAVE_DBUS
+
+
 #endif // !CUPS_CONFIG_H

@@ -714,6 +714,26 @@ AS_IF([test x$default_domainsocket != xno], [
 ])
 
 
+dnl Check for DBUS support
+AC_ARG_ENABLE([dbus], AS_HELP_STRING([--disable-dbus], [build without D-Bus support]))
+
+AS_IF([test "x$enable_dbus" != xno], [
+    AC_MSG_CHECKING([for D-Bus])
+    AS_IF([$PKGCONFIG --exists dbus-1], [
+	AC_MSG_RESULT([yes])
+
+	AC_DEFINE([HAVE_DBUS], [1], [Have dbus library?])
+	CPPFLAGS="$CPPFLAGS $($PKGCONFIG --cflags dbus-1) -DDBUS_API_SUBJECT_TO_CHANGE"
+	LIBS="$($PKGCONFIG --libs dbus-1) $LIBS"
+    ], [
+	AC_MSG_RESULT([no])
+
+	AS_IF([test "$xenable_dbus" = xyes], [
+	    AC_MSG_ERROR([Required D-Bus library and systemd are missing.])
+	])
+    ])
+])
+
 dnl Clean up pkg-config "requires" content...
 [PKGCONFIG_REQUIRES="$(echo $PKGCONFIG_REQUIRES | sed -e '1,$s/,$//')"]
 [PKGCONFIG_REQUIRES_PRIVATE="$(echo $PKGCONFIG_REQUIRES_PRIVATE | sed -e '1,$s/,$//')"]

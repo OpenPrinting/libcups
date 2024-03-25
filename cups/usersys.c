@@ -1,7 +1,7 @@
 //
 // User, system, and password routines for CUPS.
 //
-// Copyright © 2021-2023 by OpenPrinting.
+// Copyright © 2021-2024 by OpenPrinting.
 // Copyright © 2007-2019 by Apple Inc.
 // Copyright © 1997-2006 by Easy Software Products.
 //
@@ -22,6 +22,9 @@
 #ifdef __APPLE__
 #  include <sys/sysctl.h>
 #endif // __APPLE__
+#ifdef HAVE_DBUS
+#  include <dbus/dbus.h>
+#endif // HAVE_DBUS
 
 
 //
@@ -989,6 +992,63 @@ cups_finalize_client_conf(
   if (cc->expired_certs < 0)
     cc->expired_certs = 0;
 
+#ifdef HAVE_DBUS
+  if (!cc->server_name[0])
+  {
+    DBusConnection *dbus;		// D-Bus connection
+    DBusError	error;			// Last error
+    DBusMessage	*request = NULL,	// D-Bus request message
+		*response = NULL;	// D-Bus response message
+
+    // Connect to the session bus...
+    dbus_error_init(&error);
+
+    if ((dbus = dbus_bus_get(DBUS_BUS_SESSION, &error)) == NULL)
+    {
+      // Error
+      DEBUG_printf("4cups_finalize_client_conf: Unable to get session bus for cups-locald (%s %s)", error.name, error.message);
+      dbus_error_free(&error);
+    }
+    else
+    {
+      // Try sending a GetSocket method call...
+      if ((request = dbus_message_new_method_call("org.openprinting.cups-locald", "/", "org.openprinting.cups-locald", "GetSocket")) == NULL)
+      {
+	DEBUG_printf("4cups_finalize_client_conf: Unable to create D-Bus method call: %s", strerror(errno));
+      }
+      else if ((response = dbus_connection_send_with_reply_and_block(dbus, request, 2000, &error)) == NULL)
+      {
+	DEBUG_printf("4cups_finalize_client_conf: Unable to get response from cups-locald (%s %s)", error.name, error.message);
+	dbus_error_free(&error);
+      }
+      else
+      {
+	DBusMessageIter iter;		// Iterator
+
+	dbus_message_iter_init(response, &iter);
+
+	if (dbus_message_iter_get_arg_type(&iter) == DBUS_TYPE_STRING)
+	{
+	  // Copy socket path to server name field...
+	  const char *path = NULL;	// Socket path
+
+	  dbus_message_iter_get_basic(&iter, &path);
+
+	  if (path)
+	    cups_set_server_name(cc, path);
+	}
+      }
+
+      // Free D-Bus messages as needed...
+      if (request)
+	dbus_message_unref(request);
+
+      if (response)
+	dbus_message_unref(response);
+    }
+  }
+#endif // HAVE_DBUS
+
   if (!cc->server_name[0])
   {
     // If we are compiled with domain socket support, only use the
@@ -996,12 +1056,13 @@ cups_finalize_client_conf(
 #if defined(__APPLE__) && !TARGET_OS_OSX
     cups_set_server_name(cc, "/private/var/run/printd");
 
-#else
-#  ifdef CUPS_DEFAULT_DOMAINSOCKET
+#elif defined(CUPS_DEFAULT_DOMAINSOCKET)
     if (!access(CUPS_DEFAULT_DOMAINSOCKET, R_OK))
       cups_set_server_name(cc, CUPS_DEFAULT_DOMAINSOCKET);
     else
-#  endif // CUPS_DEFAULT_DOMAINSOCKET
+      cups_set_server_name(cc, "localhost");
+
+#else
     cups_set_server_name(cc, "localhost");
 #endif // __APPLE__ && !TARGET_OS_OSX
   }
@@ -1035,7 +1096,9 @@ cups_finalize_client_conf(
       getpwuid_r(getuid(), &pw, cg->pw_buf, PW_BUF_SIZE, &result);
 
     if (result)
+    {
       cupsCopyString(cc->user, pw.pw_name, sizeof(cc->user));
+    }
     else
 #endif // _WIN32
     {

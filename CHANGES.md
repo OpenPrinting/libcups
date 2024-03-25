@@ -6,6 +6,7 @@ libcups v3.0rc1 (TBD)
 
 - Added `cupsFormatString` and `cupsFormatStringv` APIs to safely format UTF-8
   strings.
+- Added support for per-user instances of `cups-locald` (Issue #69)
 - Updated `cupsCopyString` and `cupsConcatString` APIs to safely terminate UTF-8
   strings.
 - Updated list of attributes included in the destination options.
