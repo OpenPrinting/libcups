@@ -1012,7 +1012,7 @@ cups_finalize_client_conf(
     else
     {
       // Try sending a GetSocket method call...
-      if ((request = dbus_message_new_method_call("org.openprinting.cups-locald", "/", "org.openprinting.cups-locald", "GetSocket")) == NULL)
+      if ((request = dbus_message_new_method_call(NULL, "/org/openprinting/cupslocald", "org.openprinting.cupslocald", "GetSocket")) == NULL)
       {
 	DEBUG_printf("4cups_finalize_client_conf: Unable to create D-Bus method call: %s", strerror(errno));
       }
