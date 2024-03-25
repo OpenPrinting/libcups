@@ -68,6 +68,7 @@ TESTOBJS	= \
 		testfile.o \
 		testform.o \
 		testgetdests.o \
+		testhash.o \
 		testhttp.o \
 		testi18n.o \
 		testipp.o \
