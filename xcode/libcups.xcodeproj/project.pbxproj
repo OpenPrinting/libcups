@@ -1183,9 +1183,7 @@
 		27312F302AC9C30A000F6392 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		27312F372AC9C4A1000F6392 /* pdfio-aes.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "pdfio-aes.c"; path = "../pdfio/pdfio-aes.c"; sourceTree = "<group>"; };
 		27312F382AC9C4A1000F6392 /* pdfio-array.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "pdfio-array.c"; path = "../pdfio/pdfio-array.c"; sourceTree = "<group>"; };
-		273B1EBC226B3EE300428143 /* ippeveps.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = ippeveps.c; path = ../tools/ippeveps.c; sourceTree = "<group>"; };
 		273B1EBD226B3EE300428143 /* ippevecommon.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ippevecommon.h; path = ../tools/ippevecommon.h; sourceTree = "<group>"; };
-		273B1EBE226B3EE300428143 /* ippevepcl.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = ippevepcl.c; path = ../tools/ippevepcl.c; sourceTree = "<group>"; };
 		273BF6BD1333B5000022CAAB /* testcups */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = testcups; sourceTree = BUILT_PRODUCTS_DIR; };
 		273BF6C61333B5370022CAAB /* testcups.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = testcups.c; path = ../cups/testcups.c; sourceTree = "<group>"; };
 		274561471F545B2E000378E4 /* cupspm.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = cupspm.md; path = ../cups/cupspm.md; sourceTree = "<group>"; };
@@ -1837,9 +1835,7 @@
 				27312F292AC9C2DD000F6392 /* ipp-options.c */,
 				27312F2B2AC9C2DD000F6392 /* ipp-options.h */,
 				273B1EBD226B3EE300428143 /* ippevecommon.h */,
-				273B1EBE226B3EE300428143 /* ippevepcl.c */,
 				726AD701135E8A90002C930D /* ippeveprinter.c */,
-				273B1EBC226B3EE300428143 /* ippeveps.c */,
 				72CF95F218A19165000FCAE4 /* ippfind.c */,
 				276683F91337F7A9000D33D0 /* ipptool.c */,
 				27312F2A2AC9C2DD000F6392 /* ipptransform.c */,
