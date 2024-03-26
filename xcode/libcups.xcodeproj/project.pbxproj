@@ -1157,32 +1157,32 @@
 		271286681CC130BD00E517C7 /* tlscheck.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = tlscheck.c; path = ../cups/tlscheck.c; sourceTree = "<group>"; };
 		2712866A1CC130FF00E517C7 /* rasterbench.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = rasterbench.c; path = ../cups/rasterbench.c; sourceTree = "<group>"; };
 		27312EF62AC9C219000F6392 /* libpdfio_static.a */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libpdfio_static.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		27312EF72AC9C299000F6392 /* pdfio-sha256.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "pdfio-sha256.c"; path = "../tools/pdfio-sha256.c"; sourceTree = "<group>"; };
-		27312EF82AC9C299000F6392 /* pdfio-crypto.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "pdfio-crypto.c"; path = "../tools/pdfio-crypto.c"; sourceTree = "<group>"; };
-		27312EF92AC9C299000F6392 /* pdfio-private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "pdfio-private.h"; path = "../tools/pdfio-private.h"; sourceTree = "<group>"; };
-		27312EFA2AC9C299000F6392 /* pdfio-object.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "pdfio-object.c"; path = "../tools/pdfio-object.c"; sourceTree = "<group>"; };
-		27312EFB2AC9C299000F6392 /* pdfio-rc4.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "pdfio-rc4.c"; path = "../tools/pdfio-rc4.c"; sourceTree = "<group>"; };
-		27312EFC2AC9C299000F6392 /* ttf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ttf.c; path = ../tools/ttf.c; sourceTree = "<group>"; };
-		27312EFD2AC9C299000F6392 /* pdfio-page.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "pdfio-page.c"; path = "../tools/pdfio-page.c"; sourceTree = "<group>"; };
-		27312EFE2AC9C299000F6392 /* pdfio-value.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "pdfio-value.c"; path = "../tools/pdfio-value.c"; sourceTree = "<group>"; };
-		27312EFF2AC9C299000F6392 /* pdfio-common.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "pdfio-common.c"; path = "../tools/pdfio-common.c"; sourceTree = "<group>"; };
-		27312F002AC9C299000F6392 /* pdfio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pdfio.h; path = ../tools/pdfio.h; sourceTree = "<group>"; };
-		27312F012AC9C299000F6392 /* ttf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ttf.h; path = ../tools/ttf.h; sourceTree = "<group>"; };
-		27312F022AC9C299000F6392 /* pdfio-md5.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "pdfio-md5.c"; path = "../tools/pdfio-md5.c"; sourceTree = "<group>"; };
-		27312F032AC9C299000F6392 /* pdfio-content.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "pdfio-content.h"; path = "../tools/pdfio-content.h"; sourceTree = "<group>"; };
-		27312F042AC9C299000F6392 /* pdfio-content.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "pdfio-content.c"; path = "../tools/pdfio-content.c"; sourceTree = "<group>"; };
-		27312F052AC9C299000F6392 /* pdfio-token.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "pdfio-token.c"; path = "../tools/pdfio-token.c"; sourceTree = "<group>"; };
-		27312F062AC9C299000F6392 /* pdfio-file.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "pdfio-file.c"; path = "../tools/pdfio-file.c"; sourceTree = "<group>"; };
-		27312F072AC9C299000F6392 /* pdfio-stream.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "pdfio-stream.c"; path = "../tools/pdfio-stream.c"; sourceTree = "<group>"; };
-		27312F082AC9C299000F6392 /* pdfio-dict.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "pdfio-dict.c"; path = "../tools/pdfio-dict.c"; sourceTree = "<group>"; };
-		27312F092AC9C299000F6392 /* pdfio-string.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "pdfio-string.c"; path = "../tools/pdfio-string.c"; sourceTree = "<group>"; };
+		27312EF72AC9C299000F6392 /* pdfio-sha256.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "pdfio-sha256.c"; path = "../pdfio/pdfio-sha256.c"; sourceTree = "<group>"; };
+		27312EF82AC9C299000F6392 /* pdfio-crypto.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "pdfio-crypto.c"; path = "../pdfio/pdfio-crypto.c"; sourceTree = "<group>"; };
+		27312EF92AC9C299000F6392 /* pdfio-private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "pdfio-private.h"; path = "../pdfio/pdfio-private.h"; sourceTree = "<group>"; };
+		27312EFA2AC9C299000F6392 /* pdfio-object.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "pdfio-object.c"; path = "../pdfio/pdfio-object.c"; sourceTree = "<group>"; };
+		27312EFB2AC9C299000F6392 /* pdfio-rc4.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "pdfio-rc4.c"; path = "../pdfio/pdfio-rc4.c"; sourceTree = "<group>"; };
+		27312EFC2AC9C299000F6392 /* ttf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ttf.c; path = ../pdfio/ttf.c; sourceTree = "<group>"; };
+		27312EFD2AC9C299000F6392 /* pdfio-page.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "pdfio-page.c"; path = "../pdfio/pdfio-page.c"; sourceTree = "<group>"; };
+		27312EFE2AC9C299000F6392 /* pdfio-value.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "pdfio-value.c"; path = "../pdfio/pdfio-value.c"; sourceTree = "<group>"; };
+		27312EFF2AC9C299000F6392 /* pdfio-common.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "pdfio-common.c"; path = "../pdfio/pdfio-common.c"; sourceTree = "<group>"; };
+		27312F002AC9C299000F6392 /* pdfio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pdfio.h; path = ../pdfio/pdfio.h; sourceTree = "<group>"; };
+		27312F012AC9C299000F6392 /* ttf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ttf.h; path = ../pdfio/ttf.h; sourceTree = "<group>"; };
+		27312F022AC9C299000F6392 /* pdfio-md5.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "pdfio-md5.c"; path = "../pdfio/pdfio-md5.c"; sourceTree = "<group>"; };
+		27312F032AC9C299000F6392 /* pdfio-content.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "pdfio-content.h"; path = "../pdfio/pdfio-content.h"; sourceTree = "<group>"; };
+		27312F042AC9C299000F6392 /* pdfio-content.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "pdfio-content.c"; path = "../pdfio/pdfio-content.c"; sourceTree = "<group>"; };
+		27312F052AC9C299000F6392 /* pdfio-token.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "pdfio-token.c"; path = "../pdfio/pdfio-token.c"; sourceTree = "<group>"; };
+		27312F062AC9C299000F6392 /* pdfio-file.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "pdfio-file.c"; path = "../pdfio/pdfio-file.c"; sourceTree = "<group>"; };
+		27312F072AC9C299000F6392 /* pdfio-stream.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "pdfio-stream.c"; path = "../pdfio/pdfio-stream.c"; sourceTree = "<group>"; };
+		27312F082AC9C299000F6392 /* pdfio-dict.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "pdfio-dict.c"; path = "../pdfio/pdfio-dict.c"; sourceTree = "<group>"; };
+		27312F092AC9C299000F6392 /* pdfio-string.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "pdfio-string.c"; path = "../pdfio/pdfio-string.c"; sourceTree = "<group>"; };
 		27312F282AC9C2B3000F6392 /* ipptransform */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ipptransform; sourceTree = BUILT_PRODUCTS_DIR; };
 		27312F292AC9C2DD000F6392 /* ipp-options.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "ipp-options.c"; path = "../tools/ipp-options.c"; sourceTree = "<group>"; };
 		27312F2A2AC9C2DD000F6392 /* ipptransform.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ipptransform.c; path = ../tools/ipptransform.c; sourceTree = "<group>"; };
 		27312F2B2AC9C2DD000F6392 /* ipp-options.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "ipp-options.h"; path = "../tools/ipp-options.h"; sourceTree = "<group>"; };
 		27312F302AC9C30A000F6392 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
-		27312F372AC9C4A1000F6392 /* pdfio-aes.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "pdfio-aes.c"; path = "../tools/pdfio-aes.c"; sourceTree = "<group>"; };
-		27312F382AC9C4A1000F6392 /* pdfio-array.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "pdfio-array.c"; path = "../tools/pdfio-array.c"; sourceTree = "<group>"; };
+		27312F372AC9C4A1000F6392 /* pdfio-aes.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "pdfio-aes.c"; path = "../pdfio/pdfio-aes.c"; sourceTree = "<group>"; };
+		27312F382AC9C4A1000F6392 /* pdfio-array.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "pdfio-array.c"; path = "../pdfio/pdfio-array.c"; sourceTree = "<group>"; };
 		273B1EBC226B3EE300428143 /* ippeveps.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = ippeveps.c; path = ../tools/ippeveps.c; sourceTree = "<group>"; };
 		273B1EBD226B3EE300428143 /* ippevecommon.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ippevecommon.h; path = ../tools/ippevecommon.h; sourceTree = "<group>"; };
 		273B1EBE226B3EE300428143 /* ippevepcl.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = ippevepcl.c; path = ../tools/ippevepcl.c; sourceTree = "<group>"; };
@@ -2708,7 +2708,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1500;
+				LastUpgradeCheck = 1530;
 				ORGANIZATIONNAME = "Apple Inc.";
 				TargetAttributes = {
 					270695FD1CADF3E200FFE5FB = {
@@ -4208,6 +4208,7 @@
 		72BF963C1333042100B1EAD7 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				ASSETCATALOG_COMPRESSION = lossless;
 				CLANG_ANALYZER_GCD_PERFORMANCE = YES;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
@@ -4279,6 +4280,7 @@
 		72BF963D1333042100B1EAD7 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				ASSETCATALOG_COMPRESSION = "respect-asset-catalog";
 				CLANG_ANALYZER_GCD_PERFORMANCE = YES;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
