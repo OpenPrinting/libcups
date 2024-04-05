@@ -562,11 +562,11 @@ cupsCopyDestConflicts(
 
 cups_dinfo_t *				// O - Destination information
 cupsCopyDestInfo(
-    http_t      *http,			// I - Connection to destination
-    cups_dest_t *dest)			// I - Destination
+    http_t            *http,		// I - Connection to destination
+    cups_dest_t       *dest,		// I - Destination
+    cups_dest_flags_t dflags)		// I - Destination flags
 {
   cups_dinfo_t	*dinfo;			// Destination information
-  unsigned	dflags;			// Destination flags
   ipp_t		*request,		// Get-Printer-Attributes request
 		*response;		// Supported attributes
   int		tries;			// Number of tries so far
@@ -575,7 +575,6 @@ cupsCopyDestInfo(
   char		resource[1024];		// Resource path
   int		version;		// IPP version
   ipp_status_t	status;			// Status of request
-  _cups_globals_t *cg = _cupsGlobals();	// Pointer to library globals
   static const char * const requested_attrs[] =
   {					// Requested attributes
     "job-template",
@@ -586,34 +585,19 @@ cupsCopyDestInfo(
 
   DEBUG_printf("cupsCopyDestInfo(http=%p, dest=%p(%s))", (void *)http, (void *)dest, dest ? dest->name : "");
 
+  // Range check input...
+  if (!dest)
+    return (NULL);
+
   // Get the default connection as needed...
   if (!http)
   {
     DEBUG_puts("1cupsCopyDestInfo: Default server connection.");
-    http   = _cupsConnect();
-    dflags = CUPS_DEST_FLAGS_NONE;
-  }
-#ifdef AF_LOCAL
-  else if (httpAddrGetFamily(http->hostaddr) == AF_LOCAL)
-  {
-    DEBUG_puts("1cupsCopyDestInfo: Connection to server (domain socket).");
-    dflags = CUPS_DEST_FLAGS_NONE;
-  }
-#endif // AF_LOCAL
-  else if ((strcmp(http->hostname, cg->server) && cg->server[0] != '/') || cg->ipp_port != httpAddrGetPort(http->hostaddr))
-  {
-    DEBUG_printf("1cupsCopyDestInfo: Connection to device (%s).", http->hostname);
-    dflags = CUPS_DEST_FLAGS_DEVICE;
-  }
-  else
-  {
-    DEBUG_printf("1cupsCopyDestInfo: Connection to server (%s).", http->hostname);
-    dflags = CUPS_DEST_FLAGS_NONE;
-  }
+    if ((http = _cupsConnect()) == NULL)
+      return (NULL);
 
-  // Range check input...
-  if (!http || !dest)
-    return (NULL);
+    dflags = CUPS_DEST_FLAGS_NONE;
+  }
 
   // Get the printer URI and resource path...
   if ((uri = _cupsGetDestResource(dest, dflags, resource, sizeof(resource))) == NULL)

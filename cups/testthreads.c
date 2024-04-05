@@ -1,7 +1,7 @@
 //
 // Threaded test program for CUPS.
 //
-// Copyright © 2022 by OpenPrinting.
+// Copyright © 2022-2024 by OpenPrinting.
 // Copyright © 2012-2019 by Apple Inc.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
@@ -90,7 +90,7 @@ run_query(cups_dest_t *dest)		// I - Destination to query
     return (NULL);
   }
 
-  if ((dinfo = cupsCopyDestInfo(http, dest)) == NULL)
+  if ((dinfo = cupsCopyDestInfo(http, dest, CUPS_DEST_FLAGS_NONE)) == NULL)
   {
     printf("testdest: Unable to get information for destination \"%s\": %s\n", dest->name, cupsGetErrorString());
     return (NULL);

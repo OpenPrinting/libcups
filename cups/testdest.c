@@ -1,10 +1,11 @@
 //
 // CUPS destination API test program for CUPS.
 //
-// Copyright © 2020-2023 by OpenPrinting.
+// Copyright © 2020-2024 by OpenPrinting.
 // Copyright © 2012-2018 by Apple Inc.
 //
-// Licensed under Apache License v2.0.  See the file "LICENSE" for more information.
+// Licensed under Apache License v2.0.  See the file "LICENSE" for more
+// information.
 //
 
 #include <stdio.h>
@@ -146,7 +147,7 @@ main(int  argc,				// I - Number of command-line arguments
     return (1);
   }
 
-  if ((dinfo = cupsCopyDestInfo(http, dest)) == NULL)
+  if ((dinfo = cupsCopyDestInfo(http, dest, CUPS_DEST_FLAGS_NONE)) == NULL)
   {
     printf("testdest: Unable to get information for destination \"%s\": %s\n", dest->name, cupsGetErrorString());
     return (1);

@@ -31,7 +31,7 @@ cupsCancelDestJob(http_t      *http,	// I - Connection to destination
   cups_dinfo_t	*info;			// Destination information
 
 
-  if ((info = cupsCopyDestInfo(http, dest)) != NULL)
+  if ((info = cupsCopyDestInfo(http, dest, CUPS_DEST_FLAGS_NONE)) != NULL)
   {
     ipp_t	*request;		// Cancel-Job request
 

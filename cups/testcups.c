@@ -1,10 +1,12 @@
 //
 // CUPS API test program for CUPS.
 //
+// Copyright © 2024 by OpenPrinting.
 // Copyright © 2007-2018 by Apple Inc.
 // Copyright © 2007 by Easy Software Products.
 //
-// Licensed under Apache License v2.0.  See the file "LICENSE" for more information.
+// Licensed under Apache License v2.0.  See the file "LICENSE" for more
+// information.
 //
 
 #undef _CUPS_NO_DEPRECATED
@@ -182,7 +184,7 @@ main(int  argc,				// I - Number of command-line arguments
         return (1);
       }
 
-      if ((dinfo = cupsCopyDestInfo(CUPS_HTTP_DEFAULT, dest)) == NULL)
+      if ((dinfo = cupsCopyDestInfo(CUPS_HTTP_DEFAULT, dest, CUPS_DEST_FLAGS_NONE)) == NULL)
       {
         printf("Unable to get information about printer '%s': %s\n", argv[2], cupsGetErrorString());
         return (1);
