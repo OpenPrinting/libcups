@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="packages\pdfio_native.1.2.0\build\native\pdfio_native.props" Condition="Exists('packages\pdfio_native.1.2.0\build\native\pdfio_native.props')" />
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
       <Configuration>Debug</Configuration>
@@ -99,30 +100,9 @@
   <ItemGroup>
     <ClCompile Include="..\tools\ipptransform.c" />
     <ClCompile Include="..\tools\ipp-options.c" />
-    <ClCompile Include="..\tools\pdfio-aes.c" />
-    <ClCompile Include="..\tools\pdfio-array.c" />
-    <ClCompile Include="..\tools\pdfio-common.c" />
-    <ClCompile Include="..\tools\pdfio-content.c" />
-    <ClCompile Include="..\tools\pdfio-crypto.c" />
-    <ClCompile Include="..\tools\pdfio-dict.c" />
-    <ClCompile Include="..\tools\pdfio-file.c" />
-    <ClCompile Include="..\tools\pdfio-md5.c" />
-    <ClCompile Include="..\tools\pdfio-object.c" />
-    <ClCompile Include="..\tools\pdfio-page.c" />
-    <ClCompile Include="..\tools\pdfio-rc4.c" />
-    <ClCompile Include="..\tools\pdfio-sha256.c" />
-    <ClCompile Include="..\tools\pdfio-stream.c" />
-    <ClCompile Include="..\tools\pdfio-string.c" />
-    <ClCompile Include="..\tools\pdfio-token.c" />
-    <ClCompile Include="..\tools\pdfio-value.c" />
-    <ClCompile Include="..\tools\ttf.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\tools\ipp-options.h" />
-    <ClInclude Include="..\tools\pdfio.h" />
-    <ClInclude Include="..\tools\pdfio-content.h" />
-    <ClInclude Include="..\tools\pdfio-private.h" />
-    <ClInclude Include="..\tools\ttf.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="libcups3.vcxproj">
@@ -133,9 +113,18 @@
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="packages\zlib_native.redist.1.2.11\build\native\zlib_native.redist.targets" Condition="Exists('packages\zlib_native.redist.1.2.11\build\native\zlib_native.redist.targets')" />
     <Import Project="packages\zlib_native.1.2.11\build\native\zlib_native.targets" Condition="Exists('packages\zlib_native.1.2.11\build\native\zlib_native.targets')" />
   </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('packages\pdfio_native.1.2.0\build\native\pdfio_native.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\pdfio_native.1.2.0\build\native\pdfio_native.props'))" />
+  </Target>
 </Project>
