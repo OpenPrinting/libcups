@@ -607,7 +607,7 @@ cupsDNSSDNew(
   // Monitor for hostname changes...
   httpGetHostname(NULL, dnssd->hostname, sizeof(dnssd->hostname));
   dnssd->hostname_ref = dnssd->ref;
-  if ((error = DNSServiceresolverecord(&dnssd->hostname_ref, kDNSServiceFlagsShareConnection, kDNSServiceInterfaceIndexLocalOnly, "1.0.0.127.in-addr.arpa.", kDNSServiceType_PTR, kDNSServiceClass_IN, (DNSServiceresolverecordReply)mdns_hostname_cb, dnssd)) != kDNSServiceErr_NoError)
+  if ((error = DNSServiceQueryRecord(&dnssd->hostname_ref, kDNSServiceFlagsShareConnection, kDNSServiceInterfaceIndexLocalOnly, "1.0.0.127.in-addr.arpa.", kDNSServiceType_PTR, kDNSServiceClass_IN, (DNSServiceQueryRecordReply)mdns_hostname_cb, dnssd)) != kDNSServiceErr_NoError)
   {
     report_error(dnssd, "Unable to query PTR record for local hostname: %s", mdns_strerror(error));
     dnssd->hostname_ref = NULL;
@@ -939,7 +939,7 @@ cupsDNSSDQueryNew(
   DNSServiceErrorType error;		// Error, if any
 
   query->ref = dnssd->ref;
-  if ((error = DNSServiceresolverecord(&query->ref, kDNSServiceFlagsShareConnection, if_index, fullname, rrtype, kDNSServiceClass_IN, (DNSServiceresolverecordReply)mdns_query_cb, query)) != kDNSServiceErr_NoError)
+  if ((error = DNSServiceQueryRecord(&query->ref, kDNSServiceFlagsShareConnection, if_index, fullname, rrtype, kDNSServiceClass_IN, (DNSServiceQueryRecordReply)mdns_query_cb, query)) != kDNSServiceErr_NoError)
   {
     report_error(dnssd, "Unable to create DNS-SD query request: %s", mdns_strerror(error));
     free(query);
