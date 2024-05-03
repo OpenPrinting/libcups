@@ -27,6 +27,7 @@ libcups v3.0rc1 (TBD)
 - Fixed hang/crash in `cupsEnumDests`/`cupsGetDests` (Issue #74)
 - Fixed encoding of IPv6 addresses in HTTP requests (Issue #78)
 - Fixed encoding of `IPP_TAG_EXTENSION` values in IPP messages (Issue #80)
+- Fixed non-quick copy of collection values.
 
 
 libcups v3.0b2 (October 5, 2023)
