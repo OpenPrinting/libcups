@@ -821,7 +821,7 @@ cupsDNSSDBrowseNew(
   avahi_simple_poll_wakeup(dnssd->poll);
 #endif // HAVE_MDNSRESPONDER
 
-  DEBUG_printf("2cupsDNSSDBrowseNew: Adding browse=%p", browse);
+  DEBUG_printf("2cupsDNSSDBrowseNew: Adding browse=%p", (void *)browse);
   cupsArrayAdd(dnssd->browses, browse);
 
   done:
@@ -962,7 +962,7 @@ cupsDNSSDQueryNew(
   }
 #endif // HAVE_MDNSRESPONDER
 
-  DEBUG_printf("2cupsDNSSDQueryNew: Adding query=%p", query);
+  DEBUG_printf("2cupsDNSSDQueryNew: Adding query=%p", (void *)query);
   cupsArrayAdd(dnssd->queries, query);
 
   done:
@@ -1114,7 +1114,7 @@ cupsDNSSDResolveNew(
   }
 #endif // HAVE_MDNSRESPONDER
 
-  DEBUG_printf("2cupsDNSSDResolveNew: Adding resolver %p.", resolve);
+  DEBUG_printf("2cupsDNSSDResolveNew: Adding resolver %p.", (void *)resolve);
   cupsArrayAdd(dnssd->resolves, resolve);
 
   done:
@@ -1401,7 +1401,7 @@ cupsDNSSDServiceNew(
     }
   }
 
-  DEBUG_printf("2cupsDNSSDServiceNew: Adding service %p.", service);
+  DEBUG_printf("2cupsDNSSDServiceNew: Adding service %p.", (void *)service);
   cupsArrayAdd(dnssd->services, service);
 
   done:
@@ -2136,8 +2136,8 @@ avahi_client_cb(
     // Let the services know the hostname has changed...
     cups_dnssd_service_t *service;	// Current service
 
-    DEBUG_puts("4avahi_client_cb: Read locking rwlock.");
-    cupsRWLockRead(&dnssd->rwlock);
+    DEBUG_puts("4avahi_client_cb: Write locking rwlock.");
+    cupsRWLockWrite(&dnssd->rwlock);
 
     dnssd->config_changes ++;
 
