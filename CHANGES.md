@@ -29,6 +29,8 @@ libcups v3.0rc1 (TBD)
 - Fixed encoding of `IPP_TAG_EXTENSION` values in IPP messages (Issue #80)
 - Fixed non-quick copy of collection values.
 - Fixed error handling in `cupsConnectDest`.
+- Fixed TLS negotiation using OpenSSL with servers that require the TLS SNI
+  extension.
 
 
 libcups v3.0b2 (October 5, 2023)
