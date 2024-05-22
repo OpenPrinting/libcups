@@ -730,6 +730,8 @@ _cupsStrRetain(const char *s)		// I - String to retain
   {
     item = (_cups_sp_item_t *)(s - offsetof(_cups_sp_item_t, str));
 
+    cupsMutexLock(&sp_mutex);
+
 #ifdef DEBUG_GUARDS
     if (item->guard != _CUPS_STR_GUARD)
     {
@@ -737,8 +739,6 @@ _cupsStrRetain(const char *s)		// I - String to retain
       abort();
     }
 #endif // DEBUG_GUARDS
-
-    cupsMutexLock(&sp_mutex);
 
     item->ref_count ++;
 

@@ -1714,9 +1714,10 @@ _httpTLSStart(http_t *http)		// I - Connection to server
     BIO_meth_set_puts(tls_bio_method, http_bio_puts);
     BIO_meth_set_write(tls_bio_method, http_bio_write);
   }
-  cupsMutexUnlock(&tls_mutex);
 
   bio = BIO_new(tls_bio_method);
+  cupsMutexUnlock(&tls_mutex);
+
   BIO_ctrl(bio, BIO_C_SET_FILE_PTR, 0, (char *)http);
 
   http->tls = SSL_new(context);
