@@ -681,24 +681,12 @@ _cupsStrFree(const char *s)		// I - String to free
   if (!s)
     return;
 
-  //
-  // Check the string pool...
-  //
-  // We don't need to lock the mutex yet, as we only want to know if
-  // the stringpool is initialized.  The rest of the code will still
-  // work if it is initialized before we lock...
-  //
-
-  if (!stringpool)
-    return;
-
   // See if the string is already in the pool...
   cupsMutexLock(&sp_mutex);
 
   key = (_cups_sp_item_t *)(s - offsetof(_cups_sp_item_t, str));
 
-  if ((item = (_cups_sp_item_t *)cupsArrayFind(stringpool, key)) != NULL &&
-      item == key)
+  if ((item = (_cups_sp_item_t *)cupsArrayFind(stringpool, key)) != NULL && item == key)
   {
     // Found it, dereference...
 #ifdef DEBUG_GUARDS

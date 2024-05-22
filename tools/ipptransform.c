@@ -3941,9 +3941,9 @@ xform_document(
   if (options->multiple_document_handling == IPPOPT_HANDLING_UNCOLLATED_COPIES)
   {
     // Uncollated copies are handled by the printer/driver...
-    ras.header.NumCopies      = options->copies;
-    ras.back_header.NumCopies = options->copies;
-    ras.sep_header.NumCopies  = options->copies;
+    ras.header.NumCopies      = (unsigned)options->copies;
+    ras.back_header.NumCopies = (unsigned)options->copies;
+    ras.sep_header.NumCopies  = (unsigned)options->copies;
     copies                    = 1;
   }
   else
@@ -4133,7 +4133,7 @@ xform_document(
 		output[1024];		// Ouptut from pdftoppm
   FILE		*fp;			// Pipe for output
   char		header[256];		// Header from file
-  unsigned char	*line,			// Pixel line from file
+  unsigned char	*line = NULL,		// Pixel line from file
 		*linein,		// Pointer to input pixels
 		*lineout;		// Pointer to output pixels
   size_t	linesize;		// Size of a line...
@@ -4295,7 +4295,7 @@ xform_document(
         fprintf(stderr, "DEBUG: '%s'\n", header);
       }
 
-      if (sscanf(header, "%u%u", &width, &height) != 2)
+      if (sscanf(header, "%u%u", &width, &height) != 2 || width > 0x10000000 || height > 0x40000000)
       {
         cupsLangPrintf(stderr, _("%s: Bad page dimensions - <%02X%02X%02X%02X%02X%02X%02X%02X>"), Prefix, header[0] & 255, header[1] & 255, header[2] & 255, header[3] & 255, header[4] & 255, header[5] & 255, header[6] & 255, header[7] & 255);
         break;
@@ -4309,6 +4309,11 @@ xform_document(
       if ((line = malloc(linesize)) == NULL)
       {
 	cupsLangPrintf(stderr, _("%s: Out of memory."), Prefix);
+#if _WIN32
+        _pclose(fp);
+#else
+        pclose(fp);
+#endif // _WIN32
 	return (false);
       }
 
@@ -4401,6 +4406,7 @@ xform_document(
       (ras.end_page)(&ras, page, cb, ctx);
 
       free(line);
+      line = NULL;
 
       // Log progress...
       impressions ++;
@@ -4433,6 +4439,8 @@ xform_document(
           break;
     }
   }
+
+  free(line);
 
   (ras.end_job)(&ras, cb, ctx);
 
@@ -4599,6 +4607,7 @@ xform_setup(xform_raster_t *ras,	// I - Raster information
       else
       {
 	cupsLangPrintf(stderr, _("%s: Bad resolution value '%s'."), Prefix, printer_resolution);
+	cupsArrayDelete(res_array);
 	return (false);
       }
     }

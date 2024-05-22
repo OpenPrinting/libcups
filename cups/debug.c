@@ -79,6 +79,7 @@ void
 _cups_debug_printf(const char *format,	// I - Printf-style format string
                    ...)			// I - Additional arguments as needed
 {
+  int			result = 0;	// Filter result
   va_list		ap;		// Pointer to arguments
   struct timeval	curtime;	// Current time
   char			buffer[2048];	// Output buffer
@@ -102,17 +103,13 @@ _cups_debug_printf(const char *format,	// I - Printf-style format string
   if (level > _cups_debug_level)
     return;
 
+  cupsMutexLock(&debug_init_mutex);
   if (debug_filter)
-  {
-    int	result;				// Filter result
-
-    cupsMutexLock(&debug_init_mutex);
     result = regexec(debug_filter, format, 0, NULL, 0);
-    cupsMutexUnlock(&debug_init_mutex);
+  cupsMutexUnlock(&debug_init_mutex);
 
-    if (result)
-      return;
-  }
+  if (result)
+    return;
 
   // Format the message...
   gettimeofday(&curtime, NULL);
@@ -146,6 +143,7 @@ _cups_debug_printf(const char *format,	// I - Printf-style format string
 void
 _cups_debug_puts(const char *s)		// I - String to output
 {
+  int			result = 0;	// Filter result
   struct timeval	curtime;	// Current time
   char			buffer[2048];	// Output buffer
   ssize_t		bytes;		// Number of bytes in buffer
@@ -168,17 +166,13 @@ _cups_debug_puts(const char *s)		// I - String to output
   if (level > _cups_debug_level)
     return;
 
+  cupsMutexLock(&debug_init_mutex);
   if (debug_filter)
-  {
-    int	result;				// Filter result
-
-    cupsMutexLock(&debug_init_mutex);
     result = regexec(debug_filter, s, 0, NULL, 0);
-    cupsMutexUnlock(&debug_init_mutex);
+  cupsMutexUnlock(&debug_init_mutex);
 
-    if (result)
-      return;
-  }
+  if (result)
+    return;
 
   // Format the message...
   gettimeofday(&curtime, NULL);

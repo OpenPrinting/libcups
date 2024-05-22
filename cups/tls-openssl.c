@@ -1496,6 +1496,7 @@ _httpTLSRead(http_t *http,		// I - Connection to server
 bool					// O - `true` on success, `false` on failure
 _httpTLSStart(http_t *http)		// I - Connection to server
 {
+  const char	*keypath;		// Certificate store path
   BIO		*bio;			// Basic input/output context
   SSL_CTX	*context;		// Encryption context
   char		hostname[256],		// Hostname
@@ -1526,7 +1527,11 @@ _httpTLSStart(http_t *http)		// I - Connection to server
     DEBUG_printf("4_httpTLSStart: tls_options=%x", tls_options);
   }
 
-  if (http->mode == _HTTP_MODE_SERVER && !tls_keypath)
+  cupsMutexLock(&tls_mutex);
+  keypath = tls_keypath;
+  cupsMutexUnlock(&tls_mutex);
+
+  if (http->mode == _HTTP_MODE_SERVER && !keypath)
   {
     DEBUG_puts("4_httpTLSStart: cupsSetServerCredentials not called.");
     http->error  = errno = EINVAL;
@@ -1600,12 +1605,12 @@ _httpTLSStart(http_t *http)		// I - Connection to server
     if (isdigit(hostname[0] & 255) || hostname[0] == '[')
       hostname[0] = '\0';		// Don't allow numeric addresses
 
+    cupsMutexLock(&tls_mutex);
+
     if (hostname[0])
       cn = hostname;
     else
       cn = tls_common_name;
-
-    cupsMutexLock(&tls_mutex);
 
     if (cn)
     {
