@@ -367,9 +367,9 @@ main(int  argc,				// I - Number of command-line arguments
 
       httpAddrFreeList(addrlist);
     }
-    else if (isdigit(hostname[0] & 255))
+    else if (!strncmp(hostname, "mac-", 4) && isdigit(hostname[4] & 255))
     {
-      testEndMessage(false, "ignored because hostname is numeric");
+      testEndMessage(true, "ignored because hostname is numeric");
     }
     else
     {
