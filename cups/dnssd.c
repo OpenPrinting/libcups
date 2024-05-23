@@ -2145,8 +2145,13 @@ avahi_browse_cb(
   cups_dnssd_flags_t	cups_flags;	// CUPS DNS-SD flags
 
 
+  DEBUG_printf("3avahi_browse_cb(browser=%p, if_index=%u, protocol=%u, event=%d, name=\"%s\", type=\"%s\", domain=\"%s\", flags=%u, browse=%p)", (void *)browser, (unsigned)if_index, (unsigned)protocol, event, name, type, domain, (unsigned)flags, (void *)browse);
+
   (void)protocol;
   (void)flags;
+
+  if (!name)
+    return;
 
   switch (event)
   {
