@@ -1,7 +1,7 @@
 #
 # Library Makefile for libcups.
 #
-# Copyright © 2021-2023 by OpenPrinting.
+# Copyright © 2021-2024 by OpenPrinting.
 #
 # Licensed under Apache License v2.0.  See the file "LICENSE" for more
 # information.
@@ -192,6 +192,9 @@ test:		$(UNITTARGETS)
 	echo ""
 	echo Running credentials API tests...
 	./testcreds 2>>test.log
+	echo ""
+	echo Running DNS-SD API tests...
+	./testdnssd 2>>test.log
 	echo ""
 	echo Running file API tests...
 	./testfile 2>>test.log
