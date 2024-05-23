@@ -194,7 +194,7 @@ test:		$(UNITTARGETS)
 	./testcreds 2>>test.log
 	echo ""
 	echo Running DNS-SD API tests...
-	CUPS_DEBUG_LOG=- CUPS_DEBUG_LEVEL=9 ./testdnssd 2>>test.log
+	./testdnssd 2>>test.log
 	echo ""
 	echo Running file API tests...
 	./testfile 2>>test.log
