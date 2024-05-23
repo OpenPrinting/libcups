@@ -7,12 +7,13 @@ jobs:
     runs-on: ubuntu-latest
     environment: Coverity
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout libcups
+        uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: update build environment
+      - name: Update Build Environment
         run: sudo apt-get update --fix-missing -y
-      - name: install prerequisites
+      - name: Install Prerequisites
         run: sudo apt-get install -y avahi-daemon cppcheck libavahi-client-dev libcups2-dev libcupsimage2-dev libgnutls28-dev libjpeg-dev libpam-dev libpng-dev libusb-1.0-0-dev zlib1g-dev
       - name: Download Coverity Build Tool
         run: |
@@ -22,7 +23,7 @@ jobs:
         env:
           TOKEN: ${{ secrets.COVERITY_SCAN_TOKEN }}
 
-      - name: configure
+      - name: Configure libcups
         run: ./configure --enable-debug --enable-maintainer
 
       - name: Build with cov-build

@@ -13,20 +13,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout libcups
+      uses: actions/checkout@v4
       with:
         submodules: recursive
-    - name: update build environment
+    - name: Update Build Environment
       run: sudo apt-get update --fix-missing -y
-    - name: install prerequisites
+    - name: Install Prerequisites
       run: sudo apt-get install -y avahi-daemon libavahi-client-dev libssl-dev libpam-dev libusb-1.0-0-dev zlib1g-dev
-    - name: configure
+    - name: Start Avahi
+      run: sudo systemctl start avahi-daemon
+    - name: Configure libcups
       env:
         CC: /usr/bin/gcc
       run: ./configure --enable-debug --enable-maintainer --with-tls=openssl || (cat config.log; pkg-config --list-all; exit 1)
-    - name: make
+    - name: Make libcups
       run: make
-    - name: test
+    - name: Test libcups
       run: make test || cat cups/test.log
 
   build-linux-gnutls:
@@ -34,20 +37,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout libcups
+      uses: actions/checkout@v4
       with:
         submodules: recursive
-    - name: update build environment
+    - name: Update Build Environment
       run: sudo apt-get update --fix-missing -y
-    - name: install prerequisites
+    - name: Install Prerequisites
       run: sudo apt-get install -y avahi-daemon libavahi-client-dev libgnutls28-dev libpam-dev libusb-1.0-0-dev zlib1g-dev
-    - name: configure
+    - name: Start Avahi
+      run: sudo systemctl start avahi-daemon
+    - name: Configure libcups
       env:
         CC: /usr/bin/gcc
       run: ./configure --enable-debug --enable-maintainer --with-tls=gnutls || (cat config.log; pkg-config --list-all; exit 1)
-    - name: make
+    - name: Make libcups
       run: make
-    - name: test
+    - name: Test libcups
       run: make test || cat cups/test.log
 
   build-macos:
@@ -55,16 +61,17 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout libcups
+      uses: actions/checkout@v4
       with:
         submodules: recursive
     - name: Install prerequisites
       run: brew install gnutls pkg-config
-    - name: configure
+    - name: Configure libcups
       run: ./configure --enable-debug --enable-maintainer || (cat config.log; pkg-config --list-all; exit 1)
-    - name: make
+    - name: Make libcups
       run: make
-    - name: test
+    - name: Test libcups
       run: make test || cat cups/test.log
 
   build-windows:
@@ -72,12 +79,13 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout libcups
+      uses: actions/checkout@v4
       with:
         submodules: recursive
-    - name: setup-msbuild
-      uses: microsoft/setup-msbuild@v1.0.2
-    - name: nuget restore
+    - name: Setup msbuild
+      uses: microsoft/setup-msbuild@v2.0.0
+    - name: Install Prerequisites
       run: cd vcnet; nuget restore libcups.sln; cd ../pdfio; nuget restore
-    - name: msbuild
+    - name: Build libcups
       run: cd vcnet; msbuild libcups.sln
