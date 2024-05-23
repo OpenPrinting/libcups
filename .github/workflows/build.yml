@@ -26,7 +26,7 @@ jobs:
     - name: Configure libcups
       env:
         CC: /usr/bin/gcc
-      run: ./configure --enable-debug --enable-maintainer --with-tls=openssl || (cat config.log; pkg-config --list-all; exit 1)
+      run: ./configure --enable-debug --enable-debug-printfs --enable-maintainer --with-tls=openssl || (cat config.log; pkg-config --list-all; exit 1)
     - name: Make libcups
       run: make
     - name: Test libcups
@@ -50,7 +50,7 @@ jobs:
     - name: Configure libcups
       env:
         CC: /usr/bin/gcc
-      run: ./configure --enable-debug --enable-maintainer --with-tls=gnutls || (cat config.log; pkg-config --list-all; exit 1)
+      run: ./configure --enable-debug --enable-debug-printfs --enable-maintainer --with-tls=gnutls || (cat config.log; pkg-config --list-all; exit 1)
     - name: Make libcups
       run: make
     - name: Test libcups
@@ -68,7 +68,7 @@ jobs:
     - name: Install prerequisites
       run: brew install gnutls pkg-config
     - name: Configure libcups
-      run: ./configure --enable-debug --enable-maintainer || (cat config.log; pkg-config --list-all; exit 1)
+      run: ./configure --enable-debug --enable-debug-printfs --enable-maintainer || (cat config.log; pkg-config --list-all; exit 1)
     - name: Make libcups
       run: make
     - name: Test libcups
