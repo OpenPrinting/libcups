@@ -1,7 +1,7 @@
 //
 // Private JSON API definitions for CUPS.
 //
-// Copyright © 2023 by OpenPrinting.
+// Copyright © 2023-2024 by OpenPrinting.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
 // information.
@@ -19,7 +19,6 @@ extern "C" {
 // Functions...
 //
 
-extern void	_cupsJSONAdd(cups_json_t *parent, cups_json_t *after, cups_json_t *node) _CUPS_PRIVATE;
 extern void	_cupsJSONDelete(cups_json_t *json, const char *key) _CUPS_PRIVATE;
 
 

@@ -1,7 +1,7 @@
 //
 // JSON Web Token API implementation for CUPS.
 //
-// Copyright © 2023 by OpenPrinting.
+// Copyright © 2023-2024 by OpenPrinting.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
 // information.
@@ -1049,7 +1049,7 @@ cupsJWTSetClaimValue(
   _cupsJSONDelete(jwt->claims, claim);
 
   // Add claim...
-  _cupsJSONAdd(jwt->claims, cupsJSONNewKey(jwt->claims, NULL, claim), value);
+  cupsJSONAdd(jwt->claims, cupsJSONNewKey(jwt->claims, NULL, claim), value);
 }
 
 
@@ -1127,7 +1127,7 @@ cupsJWTSetHeaderValue(
   _cupsJSONDelete(jwt->jose, header);
 
   // Add claim...
-  _cupsJSONAdd(jwt->jose, cupsJSONNewKey(jwt->jose, NULL, header), value);
+  cupsJSONAdd(jwt->jose, cupsJSONNewKey(jwt->jose, NULL, header), value);
 }
 
 

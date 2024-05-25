@@ -14,7 +14,6 @@ _cupsGetUserDefault
 _cupsGlobalLock
 _cupsGlobalUnlock
 _cupsGlobals
-_cupsJSONAdd
 _cupsJSONDelete
 _cupsMD5Append
 _cupsMD5Finish
@@ -214,6 +213,7 @@ cupsGetUserAgent
 cupsHMACData
 cupsHashData
 cupsHashString
+cupsJSONAdd
 cupsJSONDelete
 cupsJSONExportFile
 cupsJSONExportString

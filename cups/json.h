@@ -1,7 +1,7 @@
 //
 // JSON API definitions for CUPS.
 //
-// Copyright © 2022-2023 by OpenPrinting.
+// Copyright © 2022-2024 by OpenPrinting.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
 // information.
@@ -37,6 +37,8 @@ typedef struct _cups_json_s cups_json_t;// JSON node
 //
 // Functions...
 //
+
+extern void		cupsJSONAdd(cups_json_t *parent, cups_json_t *after, cups_json_t *node) _CUPS_PUBLIC;
 
 extern void		cupsJSONDelete(cups_json_t *json) _CUPS_PUBLIC;
 
