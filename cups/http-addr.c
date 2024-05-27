@@ -1,7 +1,7 @@
 //
 // HTTP address routines for CUPS.
 //
-// Copyright © 2021-2022 by OpenPrinting.
+// Copyright © 2021-2024 by OpenPrinting.
 // Copyright © 2007-2021 by Apple Inc.
 // Copyright © 1997-2006 by Easy Software Products, all rights reserved.
 //
@@ -199,7 +199,7 @@ httpAddrGetString(
     cupsCopyString(s, "UNKNOWN", (size_t)slen);
   }
 
-  DEBUG_printf("1httpAddrGetString: returning \"%s\"...", s);
+  DEBUG_printf("2httpAddrGetString: returning \"%s\"...", s);
 
   return (s);
 }
@@ -316,13 +316,13 @@ httpAddrListen(http_addr_t *addr,	// I - Address to bind to
 
   val = 1;
   if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, CUPS_SOCAST &val, sizeof(val)))
-    DEBUG_printf("httpAddrListen: setsockopt(SO_REUSEADDR) failed - %s", strerror(errno));
+    DEBUG_printf("2httpAddrListen: setsockopt(SO_REUSEADDR) failed: %s", strerror(errno));
 
 #ifdef IPV6_V6ONLY
   if (addr->addr.sa_family == AF_INET6)
   {
     if (setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, CUPS_SOCAST &val, sizeof(val)))
-      DEBUG_printf("httpAddrListen: setsockopt(IPv6_V6ONLY) failed - %s", strerror(errno));
+      DEBUG_printf("2httpAddrListen: setsockopt(IPv6_V6ONLY) failed: %s", strerror(errno));
   }
 #endif // IPV6_V6ONLY
 
@@ -333,19 +333,27 @@ httpAddrListen(http_addr_t *addr,	// I - Address to bind to
     mode_t	mask;			// Umask setting
 
     // Remove any existing domain socket file...
-    unlink(addr->un.sun_path);
+    if ((status = unlink(addr->un.sun_path)) < 0)
+    {
+      if (errno == ENOENT)
+        status = 0;
+      else
+        DEBUG_printf("2httpAddrListen: Unable to unlink '%s': %s",
+addr->un.sun_path, strerror(errno));
+    }
 
-    // Save the current umask and set it to 0 so that all users can access
-    // the domain socket...
-    mask = umask(0);
+    if (!status)
+    {
+      // Save the current umask and set it to 0 so that all users can access
+      // the domain socket...
+      mask = umask(0);
 
-    // Bind the domain socket...
-    status = bind(fd, (struct sockaddr *)addr, (socklen_t)httpAddrGetLength(addr));
+      // Bind the domain socket...
+      status = bind(fd, (struct sockaddr *)addr, (socklen_t)httpAddrGetLength(addr));
 
-    // Restore the umask and fix permissions...
-    umask(mask);
-    if (chmod(addr->un.sun_path, 0140777))
-      DEBUG_printf("httpAddrListen: chmod of '%s' failed - %s", addr->un.sun_path, strerror(errno));
+      // Restore the umask and fix permissions...
+      umask(mask);
+    }
   }
   else
 #endif // AF_LOCAL
@@ -377,14 +385,14 @@ httpAddrListen(http_addr_t *addr,	// I - Address to bind to
   // Close on exec...
 #ifndef _WIN32
   if (fcntl(fd, F_SETFD, fcntl(fd, F_GETFD) | FD_CLOEXEC))
-    DEBUG_printf("httpAddrListen: fcntl(F_SETFD, FD_CLOEXEC) failed - %s", strerror(errno));
+    DEBUG_printf("2httpAddrListen: fcntl(F_SETFD, FD_CLOEXEC) failed: %s", strerror(errno));
 #endif // !_WIN32
 
 #ifdef SO_NOSIGPIPE
   // Disable SIGPIPE for this socket.
   val = 1;
   if (setsockopt(fd, SOL_SOCKET, SO_NOSIGPIPE, CUPS_SOCAST &val, sizeof(val)))
-    DEBUG_printf("httpAddrListen: setsockopt(SO_NOSIGPIPE) failed - %s", strerror(errno));
+    DEBUG_printf("2httpAddrListen: setsockopt(SO_NOSIGPIPE) failed: %s", strerror(errno));
 #endif // SO_NOSIGPIPE
 
   return (fd);
@@ -458,7 +466,7 @@ httpAddrLookup(
     return (httpAddrGetString(addr, name, namelen));
   }
 
-  DEBUG_printf("1httpAddrLookup: returning \"%s\"...", name);
+  DEBUG_printf("2httpAddrLookup: returning \"%s\"...", name);
 
   return (name);
 }
