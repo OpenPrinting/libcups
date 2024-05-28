@@ -471,6 +471,8 @@ cupsFormatStringv(
 
       if (bufptr < bufend)
         *bufptr++ = *format++;
+      else
+        format ++;
     }
   }
 
