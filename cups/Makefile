@@ -43,6 +43,7 @@ LIBOBJS		= \
 		language.o \
 		md5.o \
 		notify.o \
+		oauth.o \
 		options.o \
 		pwg-media.o \
 		rand.o \

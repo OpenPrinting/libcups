@@ -174,6 +174,12 @@
 		27312F3A2AC9C4A1000F6392 /* pdfio-array.c in Sources */ = {isa = PBXBuildFile; fileRef = 27312F382AC9C4A1000F6392 /* pdfio-array.c */; };
 		273B1ECA226B420C00428143 /* libcups3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 72220EAE1333047D00FCA411 /* libcups3.dylib */; };
 		273BF6C71333B5370022CAAB /* testcups.c in Sources */ = {isa = PBXBuildFile; fileRef = 273BF6C61333B5370022CAAB /* testcups.c */; };
+		274265BE2C08EC5200510CD4 /* oauth.c in Sources */ = {isa = PBXBuildFile; fileRef = 274265BC2C08EC5200510CD4 /* oauth.c */; };
+		274265BF2C08EC5200510CD4 /* oauth.c in Sources */ = {isa = PBXBuildFile; fileRef = 274265BC2C08EC5200510CD4 /* oauth.c */; };
+		274265C02C08EC5200510CD4 /* oauth.c in Sources */ = {isa = PBXBuildFile; fileRef = 274265BC2C08EC5200510CD4 /* oauth.c */; };
+		274265C12C08EC5200510CD4 /* oauth.h in Headers */ = {isa = PBXBuildFile; fileRef = 274265BD2C08EC5200510CD4 /* oauth.h */; };
+		274265C22C08EC5200510CD4 /* oauth.h in Headers */ = {isa = PBXBuildFile; fileRef = 274265BD2C08EC5200510CD4 /* oauth.h */; };
+		274265C32C08EC5200510CD4 /* oauth.h in Headers */ = {isa = PBXBuildFile; fileRef = 274265BD2C08EC5200510CD4 /* oauth.h */; };
 		2746EBC829DCD74E006A82B1 /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC60282C895700FE02FC /* libcrypto.a */; };
 		2746EBC929DCD74E006A82B1 /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC5F282C895700FE02FC /* libssl.a */; };
 		2746EBCA29DCD74E006A82B1 /* libresolv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D3968227BB390D003D3D8E /* libresolv.tbd */; };
@@ -1186,6 +1192,8 @@
 		273B1EBD226B3EE300428143 /* ippevecommon.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ippevecommon.h; path = ../tools/ippevecommon.h; sourceTree = "<group>"; };
 		273BF6BD1333B5000022CAAB /* testcups */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = testcups; sourceTree = BUILT_PRODUCTS_DIR; };
 		273BF6C61333B5370022CAAB /* testcups.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = testcups.c; path = ../cups/testcups.c; sourceTree = "<group>"; };
+		274265BC2C08EC5200510CD4 /* oauth.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = oauth.c; path = ../cups/oauth.c; sourceTree = "<group>"; };
+		274265BD2C08EC5200510CD4 /* oauth.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = oauth.h; path = ../cups/oauth.h; sourceTree = "<group>"; };
 		274561471F545B2E000378E4 /* cupspm.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = cupspm.md; path = ../cups/cupspm.md; sourceTree = "<group>"; };
 		2746EBD429DCD74E006A82B1 /* testhash */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = testhash; sourceTree = BUILT_PRODUCTS_DIR; };
 		2746EBD729DCD79A006A82B1 /* testhash.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = testhash.c; path = ../cups/testhash.c; sourceTree = "<group>"; };
@@ -1932,6 +1940,8 @@
 				72220EEF133305BB00FCA411 /* md5.c */,
 				72220EEE133305BB00FCA411 /* md5-internal.h */,
 				72220EF1133305BB00FCA411 /* notify.c */,
+				274265BD2C08EC5200510CD4 /* oauth.h */,
+				274265BC2C08EC5200510CD4 /* oauth.c */,
 				72220EF2133305BB00FCA411 /* options.c */,
 				2767FC7519269687000F61D3 /* pwg.h */,
 				72220EF9133305BB00FCA411 /* pwg-private.h */,
@@ -2045,6 +2055,7 @@
 			files = (
 				2797D71D28E5D1F90056D546 /* json.h in Headers */,
 				2706963E1CADF3E200FFE5FB /* array.h in Headers */,
+				274265C22C08EC5200510CD4 /* oauth.h in Headers */,
 				7253C469216ED5D400494ADD /* raster.h in Headers */,
 				722A24F42178D091000CAB20 /* debug-private.h in Headers */,
 				270696401CADF3E200FFE5FB /* cups-private.h in Headers */,
@@ -2101,6 +2112,7 @@
 				274FF6C61333B1C400317ECB /* dir.h in Headers */,
 				27D3966727BA81C6003D3D8E /* raster-testpage.h in Headers */,
 				2794DA7529DCB7A300B71A3F /* jwt.h in Headers */,
+				274265C32C08EC5200510CD4 /* oauth.h in Headers */,
 				722A24F12178D00D000CAB20 /* debug-internal.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2111,6 +2123,7 @@
 			files = (
 				2797D71C28E5D1F90056D546 /* json.h in Headers */,
 				72220EC61333056300FCA411 /* array.h in Headers */,
+				274265C12C08EC5200510CD4 /* oauth.h in Headers */,
 				72220ECE1333056300FCA411 /* cups.h in Headers */,
 				7253C46B216ED5E400494ADD /* raster-private.h in Headers */,
 				72220F0E133305BB00FCA411 /* dir.h in Headers */,
@@ -2794,6 +2807,7 @@
 				270696161CADF3E200FFE5FB /* dest-options.c in Sources */,
 				270696171CADF3E200FFE5FB /* ipp-support.c in Sources */,
 				270696181CADF3E200FFE5FB /* ipp.c in Sources */,
+				274265BF2C08EC5200510CD4 /* oauth.c in Sources */,
 				2794DA7129DCB7A300B71A3F /* jwt.c in Sources */,
 				270696191CADF3E200FFE5FB /* langprintf.c in Sources */,
 				2706961A1CADF3E200FFE5FB /* language.c in Sources */,
@@ -2910,6 +2924,7 @@
 				274FF69E1333B1C400317ECB /* http-addrlist.c in Sources */,
 				278CA9072884D9B100367E41 /* rand.c in Sources */,
 				274FF69F1333B1C400317ECB /* http-support.c in Sources */,
+				274265C02C08EC5200510CD4 /* oauth.c in Sources */,
 				274FF6A01333B1C400317ECB /* http.c in Sources */,
 				2767FC7419268F0C000F61D3 /* dest-options.c in Sources */,
 				274FF6A11333B1C400317ECB /* ipp-support.c in Sources */,
@@ -3030,6 +3045,7 @@
 				72220F18133305BB00FCA411 /* http-addr.c in Sources */,
 				278CA9052884D9B100367E41 /* rand.c in Sources */,
 				72220F19133305BB00FCA411 /* http-addrlist.c in Sources */,
+				274265BE2C08EC5200510CD4 /* oauth.c in Sources */,
 				72220F1B133305BB00FCA411 /* http-support.c in Sources */,
 				72220F1C133305BB00FCA411 /* http.c in Sources */,
 				72CF95E518A13543000FCAE4 /* dest-options.c in Sources */,
