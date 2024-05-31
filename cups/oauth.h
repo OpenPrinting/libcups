@@ -19,9 +19,10 @@ extern "C" {
 // Functions...
 //
 
-extern void		cupsOAuthClear(const char *auth_server, const char *res_server) _CUPS_PUBLIC;
-extern const char	cupsOAuthGet(const char *auth_server, const char *res_server) _CUPS_PUBLIC;
-extern const char	cupsOAuthSet(const char *auth_server, const char *res_server, const char *token) _CUPS_PUBLIC;
+extern void		cupsOAuthClearTokens(const char *auth_server, const char *res_server) _CUPS_PUBLIC;
+extern const char	*cupsOAuthGetAuthToken(const char *auth_server, const char *res_server, char *token, size_t toksize) _CUPS_PUBLIC;
+extern const char	*cupsOAuthGetRefreshToken(const char *auth_server, const char *res_server, char *token, size_t toksize) _CUPS_PUBLIC;
+extern void		cupsOAuthSetTokens(const char *auth_server, const char *res_server, const char *auth_token, const char *refresh_token) _CUPS_PUBLIC;
 
 
 #  ifdef __cplusplus
