@@ -9,7 +9,7 @@
 
 #ifndef _CUPS_OAUTH_H_
 #  define _CUPS_OAUTH_H_
-#  include "base.h"
+#  include "jwt.h"
 #  ifdef __cplusplus
 extern "C" {
 #  endif /* __cplusplus */
@@ -21,6 +21,7 @@ extern "C" {
 
 extern void		cupsOAuthClearTokens(const char *auth_server, const char *res_server) _CUPS_PUBLIC;
 extern char		*cupsOAuthCopyAuthToken(const char *auth_server, const char *res_server, time_t *auth_expires) _CUPS_PUBLIC;
+extern cups_json_t	*cupsOAuthCopyMetadata(const char *auth_server) _CUPS_PUBLIC;
 extern char		*cupsOAuthCopyRefreshToken(const char *auth_server, const char *res_server) _CUPS_PUBLIC;
 extern void		cupsOAuthSetTokens(const char *auth_server, const char *res_server, const char *auth_token, time_t auth_expires, const char *refresh_token) _CUPS_PUBLIC;
 

@@ -19,6 +19,7 @@
 typedef enum _cups_otype_e
 {
   _CUPS_OTYPE_AUTH,
+  _CUPS_OTYPE_METADATA,
   _CUPS_OTYPE_REFRESH
 } _cups_otype_t;
 
@@ -98,6 +99,162 @@ cupsOAuthGetAuthToken(
   }
  
   return (auth_token);
+}
+
+
+//
+// 'cupsOAuthCopyMetadata()' - Get the metadata for an authorization server.
+//
+
+cups_json_t *				// O - JSON metadata or `NULL` on error
+cupsOAuthCopyMetadata(
+    const char *auth_server)		// I - Authorization server URI
+{
+  char		filename[1024];		// Local metadata filename
+  struct stat	fileinfo;		// Local metadata file info
+  char		filedate[256],		// Local metadata modification date
+		scheme[32],		// URI scheme
+		userpass[256],		// Username:password data (not used)
+		host[256],		// Hostname
+		resource[256];		// Resource path
+  int		port;			// Port to use
+  http_encryption_t encryption;		// Type of encryption to use
+  http_t	*http;			// Connection to server
+  http_status_t	status;			// Request status
+  size_t	i;			// Looping var
+  static const char * const paths[] =	// Metadata paths
+  {
+    "/.well-known/oauth-authorization-server",
+    "/.well-known/openid-configuration"
+  };
+
+
+  // Get existing metadata...
+  if (!oauth_make_path(filename, sizeof(filename), auth_server, /*resource_server*/NULL, _CUPS_OTYPE_METADATA))
+    return (NULL);
+
+  if (stat(filename, &fileinfo))
+    memset(&fileinfo, 0, sizeof(fileinfo));
+
+  if (fileinfo.st_mtime)
+    httpGetDateString(fileinfo.st_mtime, filedate, sizeof(filedate));
+  else
+    filedate[0] = '\0';
+
+  // Don't bother connecting if the metadata was updated recently...
+  if ((time(NULL) - fileinfo.st_mtime) <= 60)
+    goto load_metadata;
+
+  // Try getting the metadata...
+  if (httpSeparateURI(HTTP_URI_CODING_ALL, auth_server, scheme, sizeof(scheme), userpass, sizeof(userpass), host, sizeof(host), &port, resource, sizeof(resource)) < HTTP_URI_STATUS_OK)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad authorization server URI."), true);
+    return (NULL);
+  }
+
+  if (!strcmp(scheme, "https") || port == 443)
+    encryption = HTTP_ENCRYPTION_ALWAYS;
+  else
+    encryption = HTTP_ENCRYPTION_IF_REQUESTED;
+
+  if ((http = httpConnect(host, port, /*addrlist*/NULL, AF_UNSPEC, encryption, /*blocking*/true, /*msec*/30000, /*cancel*/NULL)) == NULL)
+    return (NULL);
+
+  for (i = 0; i < (sizeof(paths) / sizeof(paths[0])); i ++)
+  {
+    cupsCopyString(resource, paths[i], sizeof(resource));
+
+    do
+    {
+      if (!_cups_strcasecmp(httpGetField(http, HTTP_FIELD_CONNECTION), "close"))
+      {
+        httpClearFields(http);
+        if (!httpReconnect(http, /*msec*/30000, /*cancel*/NULL))
+        {
+	  status = HTTP_STATUS_ERROR;
+	  break;
+        }
+      }
+
+      httpClearFields(http);
+
+      httpSetField(http, HTTP_FIELD_IF_MODIFIED_SINCE, filedate);
+      if (!httpWriteRequest(http, "GET", resource))
+      {
+        if (httpReconnect(http, 30000, NULL))
+        {
+          status = HTTP_STATUS_UNAUTHORIZED;
+          continue;
+        }
+        else
+        {
+          status = HTTP_STATUS_ERROR;
+	  break;
+        }
+      }
+
+      while ((status = httpUpdate(http)) == HTTP_STATUS_CONTINUE)
+        ;
+
+      if (status >= HTTP_STATUS_MULTIPLE_CHOICES && status <= HTTP_STATUS_SEE_OTHER)
+      {
+        // Redirect
+	char	lscheme[32],		// Location scheme
+		luserpass[256],		// Location user:password (not used)
+		lhost[256],		// Location hostname
+		lresource[256];		// Location resource path
+	int	lport;			// Location port
+
+        if (httpSeparateURI(HTTP_URI_CODING_ALL, httpGetField(http, HTTP_FIELD_LOCATION), lscheme, sizeof(lscheme), luserpass, sizeof(luserpass), lhost, sizeof(lhost), &lport, lresource, sizeof(lresource)) < HTTP_URI_STATUS_OK)
+	  break;			// Don't redirect to an invalid URI
+
+        if (strcmp(scheme, lscheme) || _cups_strcasecmp(host, lhost) || port != lport)
+	  break;			// Don't redirect off this host
+
+        // Redirect to a local resource...
+        cupsCopyString(resource, lresource, sizeof(resource));
+      }
+    }
+    while (status >= HTTP_STATUS_MULTIPLE_CHOICES && status <= HTTP_STATUS_SEE_OTHER);
+
+    if (status == HTTP_STATUS_NOT_MODIFIED)
+    {
+      // Metadata isn't changed, stop now...
+      break;
+    }
+    else if (status == HTTP_STATUS_OK)
+    {
+      // Copy the metadata to the file...
+      int	fd;			// Local metadata file
+      char	buffer[8192];		// Copy buffer
+      size_t	bytes;			// Bytes read
+
+      if ((fd = open(filename, O_CREAT | O_TRUNC | O_WRONLY | O_NOFOLLOW, 0600)) < 0)
+      {
+        httpFlush(http);
+        break;
+      }
+
+      while ((bytes = httpRead(http, buffer, sizeof(buffer))) > 0)
+        write(fd, buffer, (size_t)bytes);
+
+      close(fd);
+      break;
+    }
+  }
+
+  if (status != HTTP_STATUS_OK && status != HTTP_STATUS_NOT_MODIFIED)
+  {
+    // Remove old cached data...
+    unlink(filename);
+  }
+
+  httpClose(http);
+
+  // Return the cached metadata, if any...
+  load_metadata:
+
+  return (cupsJSONImportFile(filename));
 }
 
 
@@ -216,12 +373,13 @@ oauth_make_path(
   static const char * const otypes[] =	// Filename extensions for each type
   {
     "auth",
+    "meta",
     "rfsh"
   };
 
 
   // Range check input...
-  if (!auth_server || !res_server)
+  if (!auth_server || (!res_server && otype != _CUPS_OTYPE_METADATA))
   {
     *buffer = '\0';
     return (NULL);
@@ -241,7 +399,10 @@ oauth_make_path(
     return (NULL);
   }
 
-  snprintf(buffer, bufsize, "%s/oauth/%s-%s.%s", cg->userconfig, auth_server, res_server, otypes[otype]);
+  if (otype == _CUPS_OTYPE_METADATA)
+    snprintf(buffer, bufsize, "%s/oauth/%s.%s", cg->userconfig, auth_server, otypes[otype]);
+  else
+    snprintf(buffer, bufsize, "%s/oauth/%s-%s.%s", cg->userconfig, auth_server, res_server, otypes[otype]);
 
   return (buffer);
 }
