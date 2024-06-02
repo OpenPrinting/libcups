@@ -13,10 +13,21 @@
 
 
 //
+// Local types...
+//
+
+typedef enum _cups_otype_e
+{
+  _CUPS_OTYPE_AUTH,
+  _CUPS_OTYPE_REFRESH
+} _cups_otype_t;
+
+
+//
 // Local functions...
 //
 
-static char *oauth_make_path(char *buffer, size_t bufsize, const char *auth_server, const char *res_server, const char *type);
+static char *oauth_make_path(char *buffer, size_t bufsize, const char *auth_server, const char *res_server, _cups_otype_t otype);
 
 
 //
@@ -31,85 +42,103 @@ cupsOAuthClearTokens(
   char	filename[1024];			// Token filename
 
 
-  if (oauth_make_path(filename, sizeof(filename), auth_server, res_server, "auth"))
+  if (oauth_make_path(filename, sizeof(filename), auth_server, res_server, _CUPS_OTYPE_AUTH))
     unlink(filename);
 
-  if (oauth_make_path(filename, sizeof(filename), auth_server, res_server, "rfsh"))
+  if (oauth_make_path(filename, sizeof(filename), auth_server, res_server, _CUPS_OTYPE_REFRESH))
     unlink(filename);
 }
 
 
 //
-// 'cupsOAuthGetAuthToken()' - Get a cached authorization token.
+// 'cupsOAuthCopyAuthToken()' - Get a cached authorization token.
+//
+// This function makes a copy of a cached authorization token and any
+// associated expiration time for the given authorization and resource
+// server combination.  The returned authorization token must be freed
+// using the `free` function.  `NULL` is returned if no token is cached.
 //
 
-const char *				// O - Authorization token
+char *					// O - Authorization token
 cupsOAuthGetAuthToken(
     const char *auth_server,		// I - Authorization server FQDN
     const char *res_server,		// I - Resource server FQDN
-    char       *token,			// I - Token buffer
-    size_t     toksize)			// I - Size of token buffer
+    time_t     *auth_expires)		// O - Expiration time of token or `NULL` for don't care
 {
-  char		filename[1024];		// Token filename
+  char		filename[1024],		// Token filename
+		buffer[1024],		// Token buffer
+		*bufptr,		// Pointer into token buffer
+		*auth_token = NULL;	// Authorization token
   int		fd;			// File descriptor
   ssize_t	bytes;			// Bytes read
 
 
   // Range check input...
-  if (token)
-    *token = '\0';
- 
-  if (!token || toksize < 256)
-    return (NULL);
+  if (auth_expires)
+    *auth_expires = 0;
  
   // See if we have a token file...
-  if (oauth_make_path(filename, sizeof(filename), auth_server, res_server, "auth") && (fd = open(filename, O_RDONLY)) >= 0)
+  if (oauth_make_path(filename, sizeof(filename), auth_server, res_server, _CUPS_OTYPE_AUTH) && (fd = open(filename, O_RDONLY)) >= 0)
   {
-    if ((bytes = read(fd, token, toksize - 1)) < 0)
+    if ((bytes = read(fd, buffer, sizeof(buffer) - 1)) < 0)
       bytes = 0;
 
     close(fd);
-    token[bytes] = '\0';
+
+    buffer[bytes] = '\0';
+    if ((bufptr = strchr(buffer, '\n')) != NULL)
+    {
+      *bufptr++ = '\0';
+
+      if (auth_expires)
+        *auth_expires = strtol(bufptr, NULL, 10);
+    }
+
+    auth_token = strdup(buffer);
   }
  
-  return (*token ? token : NULL);
+  return (auth_token);
 }
 
 
 //
-// 'cupsOAuthGetRefreshToken()' - Get a cached refresh token.
+// 'cupsOAuthCopyRefreshToken()' - Get a cached refresh token.
+//
+// This function makes a copy of a cached refresh token for the given
+// authorization and resource server combination.  The returned refresh
+// token must be freed using the `free` function.  `NULL` is returned
+// if no token is cached.
 //
 
-const char *				// O - Refresh token
-cupsOAuthGetRefreshToken(
+char *					// O - Refresh token
+cupsOAuthCopyRefreshToken(
     const char *auth_server,		// I - Authorization server FQDN
-    const char *res_server,		// I - Resource server FQDN
-    char       *token,			// I - Token buffer
-    size_t     toksize)			// I - Size of token buffer
+    const char *res_server)		// I - Resource server FQDN
 {
-  char		filename[1024];		// Token filename
+  char		filename[1024],		// Token filename
+		buffer[1024],		// Token buffer
+		*bufptr,		// Pointer into token buffer
+		*refresh_token = NULL;	// Refresh token
   int		fd;			// File descriptor
   ssize_t	bytes;			// Bytes read
 
 
-  // Range check input...
-  if (token)
-    *token = '\0';
- 
-  if (!token || toksize < 256)
-    return (NULL);
- 
   // See if we have a token file...
-  if (oauth_make_path(filename, sizeof(filename), auth_server, res_server, "rfsh") && (fd = open(filename, O_RDONLY)) >= 0)
+  if (oauth_make_path(filename, sizeof(filename), auth_server, res_server, _CUPS_OTYPE_REFRESH) && (fd = open(filename, O_RDONLY)) >= 0)
   {
-    if ((bytes = read(fd, token, toksize - 1)) < 0)
+    if ((bytes = read(fd, buffer, sizeof(buffer) - 1)) < 0)
       bytes = 0;
 
     close(fd);
-    token[bytes] = '\0';
+
+    buffer[bytes] = '\0';
+    if ((bufptr = strchr(buffer, '\n')) != NULL)
+      *bufptr++ = '\0';
+
+    refresh_token = strdup(buffer);
   }
  
-  return (*token ? token : NULL);
+  return (refresh_token);
 }
 
 
@@ -122,13 +151,15 @@ cupsOAuthSetTokens(
     const char *auth_server,		// I - Authorization server FQDN
     const char *res_server,		// I - Resource server FQDN
     const char *auth_token,		// I - Authorization token
+    time_t     auth_expires,		// I - Expiration time for authorization token
     const char *refresh_token)		// I - Refresh token
 {
-  char		filename[1024];		// Token filename
+  char		filename[1024],		// Token filename
+		temp[256];		// Temporary string
   int		fd;			// File descriptor
 
 
-  if (oauth_make_path(filename, sizeof(filename), auth_server, res_server, "auth"))
+  if (oauth_make_path(filename, sizeof(filename), auth_server, res_server, _CUPS_OTYPE_AUTH))
   {
     if (auth_token)
     {
@@ -136,6 +167,8 @@ cupsOAuthSetTokens(
       if ((fd = open(filename, O_CREAT | O_TRUNC | O_WRONLY | O_NOFOLLOW, 0600)) >= 0)
       {
         write(fd, auth_token, strlen(auth_token));
+	snprintf(temp, sizeof(temp), "\n%ld\n", (long)auth_expires);
+        write(fd, temp, strlen(temp));
 	close(fd);
       }
     }
@@ -146,7 +179,7 @@ cupsOAuthSetTokens(
     }
   }
 
-  if (oauth_make_path(filename, sizeof(filename), auth_server, res_server, "rfsh"))
+  if (oauth_make_path(filename, sizeof(filename), auth_server, res_server, _CUPS_OTYPE_REFRESH))
   {
     if (refresh_token)
     {
@@ -172,14 +205,19 @@ cupsOAuthSetTokens(
 
 static char *				// O - Filename
 oauth_make_path(
-    char       *buffer,			// I - Filename buffer
-    size_t     bufsize,			// I - Size of filename buffer
-    const char *auth_server,		// I - Authorization server FQDN
-    const char *res_server,		// I - Resource server FQDN
-    const char *type)			// I - Type ("auth" or "rfsh")
+    char          *buffer,		// I - Filename buffer
+    size_t        bufsize,		// I - Size of filename buffer
+    const char    *auth_server,		// I - Authorization server FQDN
+    const char    *res_server,		// I - Resource server FQDN
+    _cups_otype_t otype)		// I - Type (_CUPS_OTYPE_AUTH or _CUPS_OTYPE_REFRESH)
 {
   _cups_globals_t	*cg = _cupsGlobals();
 					// Global data
+  static const char * const otypes[] =	// Filename extensions for each type
+  {
+    "auth",
+    "rfsh"
+  };
 
 
   // Range check input...
@@ -203,7 +241,7 @@ oauth_make_path(
     return (NULL);
   }
 
-  snprintf(buffer, bufsize, "%s/oauth/%s-%s.%s", cg->userconfig, auth_server, res_server, type);
+  snprintf(buffer, bufsize, "%s/oauth/%s-%s.%s", cg->userconfig, auth_server, res_server, otypes[otype]);
 
   return (buffer);
 }
