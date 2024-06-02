@@ -35,4 +35,9 @@ make ossfuzz
 popd
 
 # prepare corpus
-cp $SRC/libcups/tests/seeds/* $OUT
+pushd $SRC/libcups/tests/seeds/
+for seed_folder in *; do
+    zip -r $seed_folder.zip $seed_folder
+done
+cp *.zip $OUT
+popd
