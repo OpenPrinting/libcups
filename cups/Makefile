@@ -75,6 +75,7 @@ TESTOBJS	= \
 		testipp.o \
 		testjson.o \
 		testjwt.o \
+		testoauth.o \
 		testoptions.o \
 		testpwg.o \
 		testraster.o \
@@ -105,6 +106,7 @@ HEADERS	=	\
 		json.h \
 		jwt.h \
 		language.h \
+		oauth.h \
 		ppd.h \
 		pwg.h \
 		raster.h \
@@ -157,6 +159,7 @@ UNITTARGETS =	\
 		testipp \
 		testjson \
 		testjwt \
+		testoauth \
 		testoptions \
 		testpwg \
 		testraster \
@@ -583,6 +586,16 @@ testlang:	testlang.o $(LIBCUPS_STATIC)
 	echo ls -al locale
 	ls -al locale
 	LOCALEDIR=locale ./testlang
+
+
+#
+# testoauth (dependency on static libraries is intentional)
+#
+
+testoauth:	testoauth.o $(LIBCUPS_STATIC)
+	echo Linking $@...
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testoauth.o $(LIBCUPS_STATIC) $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
 
 
 #

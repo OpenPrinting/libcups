@@ -387,6 +387,117 @@ cupsOAuthDoAuthorize(
 
 
 //
+// 'cupsOAuthDoRefresh()' - Refresh an access token.
+//
+
+char *					// O - New access token or `NULL` on error
+cupsOAuthDoRefresh(
+    cups_json_t *metadata,		// I - Authorization server metadata
+    const char  *resource_uri,		// I - Resource URI
+    const char  *refresh_token,		// I - Refresh token
+    time_t      *access_expires)	// O - New access token expiration time
+{
+  http_t	*http = NULL;		// HTTP connection
+  const char	*token_ep;		// token_endpoint
+  char		host[256],		// token_endpoint host
+		resource[256];		// token_endpoint resource
+  int		port;			// token_endpoint port
+  http_status_t	status;			// Response status
+  size_t	num_form = 0;		// Number of form variables
+  cups_option_t	*form = NULL;		// Form variables
+  char		*form_data = NULL;	// POST form data
+  size_t	form_length;		// Length of data
+  char		*json_data = NULL;	// JSON response data
+  cups_json_t	*json;			// JSON variables
+  char		*access_token = NULL;	// New access token
+
+
+  // Range check input...
+  if (access_expires)
+    *access_expires = 0;
+
+  if (!metadata || (token_ep = cupsJSONGetString(cupsJSONFind(metadata, "token_endpoint"))) == NULL || !refresh_token)
+    return (NULL);
+
+  // Prepare form data to get an access token...
+  num_form = cupsAddOption("grant_type", "refresh_token", num_form, &form);
+  num_form = cupsAddOption("refresh_token", refresh_token, num_form, &form);
+
+  if ((form_data = cupsFormEncode(/*url*/NULL, num_form, form)) == NULL)
+    goto done;
+
+  form_length = strlen(form_data);
+
+  // Send a POST request with the form data...
+  if ((http = oauth_connect(token_ep, host, sizeof(host), &port, resource, sizeof(resource))) == NULL)
+    goto done;
+
+  httpClearFields(http);
+  httpSetField(http, HTTP_FIELD_CONTENT_TYPE, "application/x-www-form-urlencoded");
+  httpSetLength(http, form_length);
+
+  if (!httpWriteRequest(http, "POST", resource))
+  {
+    if (!httpReconnect(http, 30000, NULL))
+      goto done;
+
+    if (!httpWriteRequest(http, "POST", resource))
+      goto done;
+  }
+
+  if (httpWrite(http, form_data, form_length) < form_length)
+    goto done;
+
+  while ((status = httpUpdate(http)) == HTTP_STATUS_CONTINUE);
+
+  if (status == HTTP_STATUS_OK)
+  {
+    const char	*access_value,		// access_token value
+		*refresh_value;		// refresh_token value
+    double	expires_in;		// expires_in value
+    time_t	access_expvalue;	// Expiration in seconds
+
+    json_data = oauth_copy_response(http);
+    json      = cupsJSONImportString(json_data);
+
+    access_value  = cupsJSONGetString(cupsJSONFind(json, "access_token"));
+    expires_in    = cupsJSONGetNumber(cupsJSONFind(json, "expires_in"));
+    refresh_value = cupsJSONGetString(cupsJSONFind(json, "refresh_token"));
+
+    if (expires_in > 0.0)
+      access_expvalue = time(NULL) + (long)expires_in;
+    else
+      access_expvalue = 0;
+
+    cupsOAuthSetTokens(token_ep, resource_uri, access_value, access_expvalue, refresh_value);
+
+    if (access_value)
+      access_token = strdup(access_value);
+
+    if (access_expires)
+      *access_expires = access_expvalue;
+
+    cupsJSONDelete(json);
+    free(json_data);
+  }
+  else
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, httpStatusString(status), false);
+  }
+
+  // Close the connection and return whatever we got...
+  done:
+
+  httpClose(http);
+
+  cupsFreeOptions(num_form, form);
+  free(form_data);
+
+  return (access_token);
+}
+
+
+//
 // 'cupsOAuthDoRegisterClient()' - Register a client application.
 //
 
@@ -593,7 +704,7 @@ cupsOAuthDoToken(
     expires_in    = cupsJSONGetNumber(cupsJSONFind(json, "expires_in"));
     refresh_value = cupsJSONGetString(cupsJSONFind(json, "refresh_token"));
 
-    if (expires_in > 0)
+    if (expires_in > 0.0)
       access_expvalue = time(NULL) + (long)expires_in;
     else
       access_expvalue = 0;
@@ -775,18 +886,22 @@ oauth_make_path(
     const char    *resource_uri,	// I - Resource URI
     _cups_otype_t otype)		// I - Type (_CUPS_OTYPE_xxx)
 {
-  _cups_globals_t	*cg = _cupsGlobals();
-					// Global data
+  char		auth_temp[1024],	// Temporary copy of auth_uri
+		resource_temp[1024],	// Temporary copy of resource_uri
+		*ptr;			// Pointer into temporary strings
+  unsigned char	auth_hash[32],		// SHA-256 hash of base auth_uri
+		resource_hash[32];	// SHA-256 hash of base resource_uri
+  _cups_globals_t *cg = _cupsGlobals();	// Global data
   static const char * const otypes[] =	// Filename extensions for each type
   {
-    "auth",
+    "accs",
     "meta",
     "rfsh"
   };
 
 
   // Range check input...
-  if (!auth_uri || (!resource_uri && otype != _CUPS_OTYPE_METADATA))
+  if (!auth_uri || strncmp(auth_uri, "https://", 8) || auth_uri[8] == '[' || isdigit(auth_uri[8] & 255) || (!resource_uri && otype != _CUPS_OTYPE_METADATA) || (resource_uri && strncmp(resource_uri, "https://", 8) && strncmp(resource_uri, "ipps://", 7)))
   {
     *buffer = '\0';
     return (NULL);
@@ -806,10 +921,51 @@ oauth_make_path(
     return (NULL);
   }
 
-  if (otype == _CUPS_OTYPE_METADATA)
-    snprintf(buffer, bufsize, "%s/oauth/%s.%s", cg->userconfig, auth_uri, otypes[otype]);
+  // Build the hashed versions of the auth and resource URIs...
+  cupsCopyString(auth_temp, auth_uri + 8, sizeof(auth_temp));
+  if ((ptr = strchr(auth_temp, '/')) != NULL)
+    *ptr = '\0';			// Strip resource path
+  if (!strchr(auth_temp, ':'))		// Add :443 if no port is present
+    cupsConcatString(auth_temp, ":443", sizeof(auth_temp));
+
+  cupsHashData("sha2-256", auth_temp, strlen(auth_temp), auth_hash, sizeof(auth_hash));
+  cupsHashString(auth_hash, sizeof(auth_hash), auth_temp, sizeof(auth_temp));
+
+  if (resource_uri)
+  {
+    if (!strncmp(resource_uri, "https://", 8))
+    {
+      // HTTPS URI
+      cupsCopyString(resource_temp, resource_uri + 8, sizeof(resource_temp));
+      if ((ptr = strchr(resource_temp, '/')) != NULL)
+        *ptr = '\0';			// Strip resource path
+      if (!strchr(resource_temp, ':'))	// Add :443 if no port is present
+        cupsConcatString(resource_temp, ":443", sizeof(resource_temp));
+    }
+    else
+    {
+      // IPPS URI
+      cupsCopyString(resource_temp, resource_uri + 7, sizeof(resource_temp));
+      if ((ptr = strchr(resource_temp, '/')) != NULL)
+        *ptr = '\0';			// Strip resource path
+      if (!strchr(resource_temp, ':'))	// Add :631 if no port is present
+        cupsConcatString(resource_temp, ":631", sizeof(resource_temp));
+    }
+
+    cupsHashData("sha2-256", resource_temp, strlen(resource_temp), resource_hash, sizeof(resource_hash));
+    cupsHashString(resource_hash, sizeof(resource_hash), resource_temp, sizeof(resource_temp));
+  }
   else
-    snprintf(buffer, bufsize, "%s/oauth/%s-%s.%s", cg->userconfig, auth_uri, resource_uri, otypes[otype]);
+  {
+    // Leave an empty string for the resource portion
+    resource_temp[0] = '\0';
+  }
+
+  // Build the filename for the corresponding data...
+  if (resource_temp[0])
+    snprintf(buffer, bufsize, "%s/oauth/%s+%s.%s", cg->userconfig, auth_temp, resource_temp, otypes[otype]);
+  else
+    snprintf(buffer, bufsize, "%s/oauth/%s.%s", cg->userconfig, auth_temp, otypes[otype]);
 
   return (buffer);
 }
