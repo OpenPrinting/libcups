@@ -23,6 +23,7 @@ extern void		cupsOAuthClearTokens(const char *auth_server, const char *res_serve
 extern char		*cupsOAuthCopyAuthToken(const char *auth_server, const char *res_server, time_t *auth_expires) _CUPS_PUBLIC;
 extern cups_json_t	*cupsOAuthCopyMetadata(const char *auth_server) _CUPS_PUBLIC;
 extern char		*cupsOAuthCopyRefreshToken(const char *auth_server, const char *res_server) _CUPS_PUBLIC;
+extern char		*cupsOAuthRegisterClient(cups_json_t *metadata, const char *redirect_uri, const char *client_name, const char *client_uri, const char *software_id, const char *software_version, const char *logo_uri, const char *tos_uri) _CUPS_PUBLIC;
 extern void		cupsOAuthSetTokens(const char *auth_server, const char *res_server, const char *auth_token, time_t auth_expires, const char *refresh_token) _CUPS_PUBLIC;
 
 
