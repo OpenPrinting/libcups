@@ -19,13 +19,14 @@ extern "C" {
 // Functions...
 //
 
-extern bool		cupsOAuthAuthorize(cups_json_t *metadata, const char *redirect_uri, const char *client_id, const char *state, const char *code_verifier, const char *scope);
-extern void		cupsOAuthClearTokens(const char *auth_server, const char *res_server) _CUPS_PUBLIC;
-extern char		*cupsOAuthCopyAuthToken(const char *auth_server, const char *res_server, time_t *auth_expires) _CUPS_PUBLIC;
-extern cups_json_t	*cupsOAuthCopyMetadata(const char *auth_server) _CUPS_PUBLIC;
-extern char		*cupsOAuthCopyRefreshToken(const char *auth_server, const char *res_server) _CUPS_PUBLIC;
-extern char		*cupsOAuthRegisterClient(cups_json_t *metadata, const char *redirect_uri, const char *client_name, const char *client_uri, const char *software_id, const char *software_version, const char *logo_uri, const char *tos_uri) _CUPS_PUBLIC;
-extern void		cupsOAuthSetTokens(const char *auth_server, const char *res_server, const char *auth_token, time_t auth_expires, const char *refresh_token) _CUPS_PUBLIC;
+extern void		cupsOAuthClearTokens(const char *auth_uri, const char *resource_uri) _CUPS_PUBLIC;
+extern char		*cupsOAuthCopyAccessToken(const char *auth_uri, const char *resource_uri, time_t *auth_expires) _CUPS_PUBLIC;
+extern cups_json_t	*cupsOAuthCopyMetadata(const char *auth_uri) _CUPS_PUBLIC;
+extern char		*cupsOAuthCopyRefreshToken(const char *auth_uri, const char *resource_uri) _CUPS_PUBLIC;
+extern bool		cupsOAuthDoAuthorize(cups_json_t *metadata, const char *resource_uri, const char *redirect_uri, const char *client_id, const char *state, const char *code_verifier, const char *scope);
+extern char		*cupsOAuthDoRegisterClient(cups_json_t *metadata, const char *redirect_uri, const char *client_name, const char *client_uri, const char *software_id, const char *software_version, const char *logo_uri, const char *tos_uri) _CUPS_PUBLIC;
+extern char		*cupsOAuthDoToken(cups_json_t *metadata, const char *resource_uri, const char *redirect_uri, const char *client_id, const char *code, const char *code_verifier, time_t *expires);
+extern void		cupsOAuthSetTokens(const char *auth_uri, const char *resource_uri, const char *access_token, time_t access_expires, const char *refresh_token) _CUPS_PUBLIC;
 
 
 #  ifdef __cplusplus
