@@ -19,6 +19,7 @@ extern "C" {
 // Functions...
 //
 
+extern bool		cupsOAuthAuthorize(cups_json_t *metadata, const char *redirect_uri, const char *client_id, const char *state, const char *code_verifier, const char *scope);
 extern void		cupsOAuthClearTokens(const char *auth_server, const char *res_server) _CUPS_PUBLIC;
 extern char		*cupsOAuthCopyAuthToken(const char *auth_server, const char *res_server, time_t *auth_expires) _CUPS_PUBLIC;
 extern cups_json_t	*cupsOAuthCopyMetadata(const char *auth_server) _CUPS_PUBLIC;

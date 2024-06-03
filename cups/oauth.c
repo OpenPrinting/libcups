@@ -10,7 +10,17 @@
 
 #include "cups-private.h"
 #include "oauth.h"
+#include "form.h"
 #include <sys/stat.h>
+
+#ifdef __APPLE__
+#  include <CoreFoundation/CoreFoundation.h>
+#  include <CoreServices/CoreServices.h>
+#else
+#  include <spawn.h>
+#  include <sys/wait.h>
+extern char **environ;			// @private@
+#endif // __APPLE__
 
 
 //
@@ -32,6 +42,93 @@ typedef enum _cups_otype_e
 static http_t	*oauth_connect(const char *uri, char *host, size_t host_size, int *port, char *resource, size_t resource_size);
 static char	*oauth_copy_response(http_t *http);
 static char	*oauth_make_path(char *buffer, size_t bufsize, const char *auth_server, const char *res_server, _cups_otype_t otype);
+
+
+//
+// 'cupsOAuthAuthorize()' - Start authorization using a web browser.
+//
+
+bool					// O - `true` on success, `false` otherwise
+cupsOAuthAuthorize(
+    cups_json_t *metadata,		// I - Server metadata
+    const char  *redirect_uri,		// I - Redirection URI
+    const char  *client_id,		// I - `client_id` value
+    const char  *state,			// I - `state` value
+    const char  *code_verifier,		// I - `code_verifier` value
+    const char  *scope)			// I - Space-delimited scopes
+{
+  const char	*authorization;		// Authorization endpoint
+  char		*url;			// URL for authorization page
+  bool		status = true;		// Return status
+  unsigned char	sha256[32];		// SHA-256 hash of code verifier
+  char		code_challenge[64];	// Hashed code verifier string
+  size_t	num_vars = 0;		// Number of form variables
+  cups_option_t	*vars = NULL;		// Form variables
+
+
+  // Range check input...
+  if (!metadata || (authorization = cupsJSONGetString(cupsJSONFind(metadata, "authorization_endpoint"))) == NULL || !redirect_uri || !client_id)
+    return (false);
+
+  // Make the authorization URL using the information supplied...
+  num_vars = cupsAddOption("response_type", "code", num_vars, &vars);
+  num_vars = cupsAddOption("client_id", client_id, num_vars, &vars);
+  num_vars = cupsAddOption("redirect_uri", redirect_uri, num_vars, &vars);
+
+  if (scope)
+    num_vars = cupsAddOption("scope", scope, num_vars, &vars);
+
+  if (state)
+    num_vars = cupsAddOption("state", state, num_vars, &vars);
+
+  if (code_verifier)
+  {
+    cupsHashData("sha2-256", code_verifier, strlen(code_verifier), sha256, sizeof(sha256));
+    httpEncode64(code_challenge, (int)sizeof(code_challenge), (char *)sha256, (int)sizeof(sha256), true);
+    num_vars = cupsAddOption("code_challenge", code_challenge, num_vars, &vars);
+  }
+
+  url = cupsFormEncode(authorization, num_vars, vars);
+
+  cupsFreeOptions(num_vars, vars);
+
+#ifdef __APPLE__
+  CFURLRef cfurl = CFURLCreateWithBytes(kCFAllocatorDefault, (const UInt8 *)url, (CFIndex)strlen(url), kCFStringEncodingASCII, NULL);
+
+  if (cfurl)
+  {
+    if (LSOpenCFURLRef(cfurl, NULL) != noErr)
+      status = false;			// Couldn't open URL
+
+    CFRelease(cfurl);
+  }
+  else
+  {
+    status = false;			// Couldn't create CFURL object
+  }
+
+#else
+  pid_t		pid = 0;		// Process ID
+  int		estatus;		// Exit status
+  const char	*xdg_open_argv[3];	// xdg-open arguments
+
+
+  xdg_open_argv[0] = "xdg-open";
+  xdg_open_argv[1] = url;
+  xdg_open_argv[2] = NULL;
+
+  if (posix_spawnp(&pid, "xdg-open", NULL, NULL, (char * const *)xdg_open_argv, environ))
+    status = false;			// Couldn't run xdg-open
+  else if (waitpid(pid, &estatus, 0))
+    status = false;			// Couldn't get exit status
+  else if (estatus)
+    status = false;			// Non-zero exit status
+#endif // __APPLE__
+
+  free(url);
+
+  return (status);
+}
 
 
 //
@@ -487,7 +584,7 @@ oauth_connect(const char *uri,		// I - URI
   // Separate the URI into its components...
   if (httpSeparateURI(HTTP_URI_CODING_ALL, uri, scheme, sizeof(scheme), userpass, sizeof(userpass), host, host_size, port, resource, resource_size) < HTTP_URI_STATUS_OK)
   {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad authorization server URI."), true);
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad URI."), true);
     return (NULL);
   }
 
