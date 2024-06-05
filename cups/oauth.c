@@ -24,6 +24,48 @@ extern char **environ;			// @private@
 
 
 //
+// Implementation Notes
+// ====================
+//
+// The CUPS OAuth implementation follows the IEEE-ISTO Printer Working Group's
+// IPP OAuth Extensions v1.0 (OAUTH) specification (pending publication), which
+// in turn depends on a boatload of IETF RFCs and the OpenID Connect
+// specifications.  In short, the IPP specification handles how to combine IPP
+// (which is layered on top of HTTP) with OAuth and works to "consolidate" the
+// different requirements of IETF OAuth 2.x and OpenID Connect so that we are as
+// widely interoperable as possible.
+//
+// Compatibility
+// -------------
+//
+// The intent is for CUPS to support using common OAuth implementations,
+// including (but not limited to):
+//
+// - Amazon Cognito (ADD LINK)
+// - Canonical Ubuntu One (ADD LINK)
+// - Github (ADD LINK)
+// - Google (ADD LINK)
+// - Microsoft Account/Azure Active Directory (ADD LINK)
+// - mOAuth (<https://www.msweet.org/moauth/>)
+// - Okta (ADD LINK)
+//
+// Security
+// --------
+//
+// Security on the wire is as good as OAuth and TLS provides.
+//
+// The current OAuth cache implementation uses unencrypted files in your home
+// directory with restricted permissions.  Ideally they should be encrypted
+// "at rest" but Unix doesn't have a universal solution for this and the
+// available options don't generally protect against malicious code running as
+// the target user.  The code is setup to facilitate replacement with another
+// storage "backend" (like the Keychain API on macOS), and adding conditional
+// platform support code for this is planned.  This sort of issue is generally
+// mitigated by access tokens having a limited life...
+//
+
+
+//
 // Local types...
 //
 
@@ -690,11 +732,12 @@ cupsOAuthGetTokens(
     const char    *resource_uri,	// I - Resource URI
     const char    *grant_code,		// I - Authorization code or refresh token
     cups_ogrant_t grant_type,		// I - Grant code type
-    const char    *code_verifier,	// I - Code verifier value
     const char    *redirect_uri,	// I - Redirect URI
     time_t        *access_expires)	// O - Expiration time for access token
 {
   const char	*token_ep;		// Token endpoint
+  char		*code_verifier,		// Prior code_verifier value
+		*nonce = NULL;		// Prior nonce value
   size_t	num_form = 0;		// Number of form variables
   cups_option_t	*form = NULL;		// Form variables
   char		*request = NULL;	// Form request data
@@ -704,6 +747,8 @@ cupsOAuthGetTokens(
 		*refresh_value = NULL;	// refresh_token
   double	expires_in;		// expires_in value
   time_t	access_expvalue;	// Expiration time for access_token
+  cups_jwt_t	*jwt = NULL;		// JWT of the id_token
+  const char	*jnonce;		// Nonce value from the JWT
   char		*access_token = NULL;	// Access token
   static const char * const grant_types[] =
   {					// Grant type strings
@@ -724,8 +769,11 @@ cupsOAuthGetTokens(
   num_form = cupsAddOption("code", grant_code, num_form, &form);
   num_form = cupsAddOption("redirect_uri", redirect_uri, num_form, &form);
 
-  if (code_verifier)
+  if ((code_verifier = oauth_load_value(auth_uri, resource_uri, _CUPS_OTYPE_CODE_VERIFIER)) != NULL)
+  {
     num_form = cupsAddOption("code_verifier", code_verifier, num_form, &form);
+    free(code_verifier);
+  }
 
   request = cupsFormEncode(/*url*/NULL, num_form, form);
   cupsFreeOptions(num_form, form);
@@ -740,6 +788,21 @@ cupsOAuthGetTokens(
   expires_in    = cupsJSONGetNumber(cupsJSONFind(response, "expires_in"));
   id_value      = cupsJSONGetString(cupsJSONFind(response, "id_token"));
   refresh_value = cupsJSONGetString(cupsJSONFind(response, "refresh_token"));
+
+  if (id_value)
+  {
+    // Validate the JWT
+    jwt    = cupsJWTImportString(id_value, CUPS_JWS_FORMAT_COMPACT);
+    jnonce = cupsJWTGetClaimString(jwt, "nonce");
+    nonce  = oauth_load_value(auth_uri, resource_uri, _CUPS_OTYPE_NONCE);
+
+    // Check nonce
+    if (!jwt || (jnonce && nonce && strcmp(jnonce, nonce)))
+      goto done;
+
+    // TODO: Validate id_token against Authorization Server's JWKS
+    // TODO: Validate at_hash claim string against access_token value
+  }
 
   if (expires_in > 0.0)
     access_expvalue = time(NULL) + (long)expires_in;
@@ -759,6 +822,8 @@ cupsOAuthGetTokens(
   // Return whatever we got...
   done:
 
+  cupsJWTDelete(jwt);
+  free(nonce);
   free(request);
 
   return (access_token);
