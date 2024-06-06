@@ -5058,8 +5058,8 @@ printf "%s\n" "#define HAVE_DNSSD 1" >>confdefs.h
 
 printf "%s\n" "#define HAVE_MDNSRESPONDER 1" >>confdefs.h
 
-	    LIBS="$LIBS -framework CoreFoundation -framework SystemConfiguration"
-	    PKGCONFIG_LIBS_PRIVATE="$PKGCONFIG_LIBS_PRIVATE -framework CoreFoundation -framework SystemConfiguration"
+	    LIBS="$LIBS -framework CoreFoundation -framework CoreServices -framework Security -framework SystemConfiguration"
+	    PKGCONFIG_LIBS_PRIVATE="$PKGCONFIG_LIBS_PRIVATE -framework CoreFoundation -framework CoreServices -framework Security -framework SystemConfiguration"
 	 ;; #(
   *) :
 

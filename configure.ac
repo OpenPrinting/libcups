@@ -358,8 +358,8 @@ AS_IF([test "x$with_dnssd" = xno], [
 	    DNSSD=1
 	    AC_DEFINE([HAVE_DNSSD], 1, [Have DNS-SD support?])
 	    AC_DEFINE([HAVE_MDNSRESPONDER], 1, [Have mDNSResponder?)])
-	    LIBS="$LIBS -framework CoreFoundation -framework SystemConfiguration"
-	    PKGCONFIG_LIBS_PRIVATE="$PKGCONFIG_LIBS_PRIVATE -framework CoreFoundation -framework SystemConfiguration"
+	    LIBS="$LIBS -framework CoreFoundation -framework CoreServices -framework Security -framework SystemConfiguration"
+	    PKGCONFIG_LIBS_PRIVATE="$PKGCONFIG_LIBS_PRIVATE -framework CoreFoundation -framework CoreServices -framework Security -framework SystemConfiguration"
 	], [*], [
 	    # All others...
 	    AC_MSG_CHECKING(for current version of dns_sd library)

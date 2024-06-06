@@ -42,8 +42,10 @@ static cups_mutex_t	tls_mutex = CUPS_MUTEX_INITIALIZER;
 static int		tls_options = -1,// Options for TLS connections
 			tls_min_version = _HTTP_TLS_1_2,
 			tls_max_version = _HTTP_TLS_MAX;
+#ifndef __APPLE__
 static cups_array_t	*tls_root_certs = NULL;
 					// List of known root CAs
+#endif // __APPLE__
 
 
 //
@@ -215,18 +217,65 @@ http_check_roots(const char *creds)	// I - Credentials
   bool		ret = false;		// Return value
 
 
-#ifdef X__APPLE__
+#ifdef __APPLE__
   // Apple hides all of the keychain stuff (all deprecated) so the best we can
   // do is use the SecTrust API to evaluate the certificate...
-  CFArrayRef		certs;		// Certificates from credentials
+  CFMutableArrayRef	certs = NULL;	// Certificates from credentials
+  SecCertificateRef	cert;
+  char			*tcreds = NULL,	// Copy of credentials string
+			*tstart,	// Start of certificate data
+			*tend,		// End of certificate data
+			*der = NULL;	// DER-encoded fragment buffer
+  size_t		dersize,	// Size of DER buffer
+			derlen;		// Length of DER data
   SecPolicyRef		policy;		// X.509 policy
   SecTrustRef		trust;		// Trust evaluator
 
 
-  // TODO: Need to implement PEM to DER and multiple certificate loader for macOS...
-  (void)creds;
+  // Convert PEM-encoded credentials to an array of DER-encoded certificates...
+  if ((tcreds = strdup(creds)) == NULL)
+    goto done;
 
-  // Convert PEM-encoded credentials to DER-encoded credentials...
+  if ((certs = CFArrayCreateMutable(kCFAllocatorDefault, /*capacity*/0, &kCFTypeArrayCallBacks)) == NULL)
+    goto done;
+
+  dersize = 3 * strlen(tcreds) / 4;
+  if ((der = malloc(dersize)) == NULL)
+    goto done;
+
+  for (tstart = strstr(tcreds, "-----BEGIN CERTIFICATE-----\n"); tstart; tstart = strstr(tend, "-----BEGIN CERTIFICATE-----\n"))
+  {
+    // Find the end of the certificate data...
+    tstart += 28;			// Skip "-----BEGIN CERTIFICATE-----\n"
+    if ((tend = strstr(tstart, "-----END CERTIFICATE-----\n")) == NULL)
+      break;				// Missing end...
+
+    // Nul-terminate the cert data...
+    *tend++ = '\0';
+
+    // Convert to DER format
+    derlen = dersize;
+    if (httpDecode64(der, &derlen, tstart, /*end*/NULL))
+    {
+      // Create a CFData object for the data...
+      CFDataRef data = CFDataCreate(kCFAllocatorDefault, (const UInt8 *)der, (CFIndex)derlen);
+
+      if (data)
+      {
+        // Create a certificate from the DER data...
+        if ((cert = SecCertificateCreateWithData(kCFAllocatorDefault, data)) != NULL)
+        {
+          // Add certificate to the array...
+          CFArrayAppendValue(certs, cert);
+          CFRelease(cert);
+	}
+
+        CFRelease(data);
+      }
+    }
+  }
+
+  // Test the certificate list against the macOS/iOS trust store...
   if ((policy = SecPolicyCreateBasicX509()) != NULL)
   {
     if (SecTrustCreateWithCertificates(certs, policy, &trust) == noErr)
@@ -238,7 +287,13 @@ http_check_roots(const char *creds)	// I - Credentials
     CFRelease(policy);
   }
 
-  CFRelease(certs);
+  done:
+
+  free(tcreds);
+  free(der);
+
+  if (certs)
+    CFRelease(certs);
 
 #else
   size_t	credslen;		// Length of credentials string

@@ -332,6 +332,19 @@
 		27A8096428A9B9D500B20BC8 /* dnssd.c in Sources */ = {isa = PBXBuildFile; fileRef = 27A8096028A9B9D500B20BC8 /* dnssd.c */; };
 		27A8096528A9B9D500B20BC8 /* dnssd.c in Sources */ = {isa = PBXBuildFile; fileRef = 27A8096028A9B9D500B20BC8 /* dnssd.c */; };
 		27A8096628A9B9D500B20BC8 /* dnssd.c in Sources */ = {isa = PBXBuildFile; fileRef = 27A8096028A9B9D500B20BC8 /* dnssd.c */; };
+		27C61E962C12780E00750E71 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5D1926750C000F61D3 /* Security.framework */; };
+		27C61E972C12782B00750E71 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5D1926750C000F61D3 /* Security.framework */; };
+		27C61E982C12785300750E71 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5D1926750C000F61D3 /* Security.framework */; };
+		27C61E992C1278CE00750E71 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5D1926750C000F61D3 /* Security.framework */; };
+		27C61E9A2C1278E000750E71 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5D1926750C000F61D3 /* Security.framework */; };
+		27C61E9B2C12790400750E71 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5D1926750C000F61D3 /* Security.framework */; };
+		27C61E9C2C12791400750E71 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5D1926750C000F61D3 /* Security.framework */; };
+		27C61E9D2C12792100750E71 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5D1926750C000F61D3 /* Security.framework */; };
+		27C61E9E2C12793100750E71 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5D1926750C000F61D3 /* Security.framework */; };
+		27C61E9F2C12794900750E71 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5D1926750C000F61D3 /* Security.framework */; };
+		27C61EA02C12795400750E71 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5D1926750C000F61D3 /* Security.framework */; };
+		27C61EA12C12796500750E71 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5D1926750C000F61D3 /* Security.framework */; };
+		27C61EA22C12796F00750E71 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5D1926750C000F61D3 /* Security.framework */; };
 		27CAFC61282C895700FE02FC /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC5F282C895700FE02FC /* libssl.a */; };
 		27CAFC62282C895700FE02FC /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC60282C895700FE02FC /* libcrypto.a */; };
 		27CAFC63282C898300FE02FC /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CAFC60282C895700FE02FC /* libcrypto.a */; };
@@ -1389,13 +1402,13 @@
 				2705325A29953A4100D62D33 /* libcrypto.a in Frameworks */,
 				2705325B29953A4100D62D33 /* libssl.a in Frameworks */,
 				2705325C29953A4100D62D33 /* libcups_static.a in Frameworks */,
-				2705325D29953A4100D62D33 /* CoreFoundation.framework in Frameworks */,
-				2707FC1C2C0E184E0035BBFC /* CoreServices.framework in Frameworks */,
 				2705325E29953A4100D62D33 /* libiconv.dylib in Frameworks */,
-				2707FC1D2C0E184E0035BBFC /* SystemConfiguration.framework in Frameworks */,
 				2705325F29953A4100D62D33 /* libresolv.dylib in Frameworks */,
 				2705326029953A4100D62D33 /* libz.dylib in Frameworks */,
+				2705325D29953A4100D62D33 /* CoreFoundation.framework in Frameworks */,
+				2707FC1C2C0E184E0035BBFC /* CoreServices.framework in Frameworks */,
 				2705326129953A4100D62D33 /* Security.framework in Frameworks */,
+				2707FC1D2C0E184E0035BBFC /* SystemConfiguration.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1417,14 +1430,15 @@
 			buildActionMask = 2147483647;
 			files = (
 				2707FC3E2C0E192E0035BBFC /* libcrypto.a in Frameworks */,
-				2707FC3F2C0E192E0035BBFC /* SystemConfiguration.framework in Frameworks */,
 				2707FC402C0E192E0035BBFC /* libssl.a in Frameworks */,
+				2707FC442C0E192E0035BBFC /* libcups_static.a in Frameworks */,
 				2707FC412C0E192E0035BBFC /* libresolv.tbd in Frameworks */,
 				2707FC422C0E192E0035BBFC /* libiconv.tbd in Frameworks */,
 				2707FC432C0E192E0035BBFC /* libz.tbd in Frameworks */,
-				2707FC442C0E192E0035BBFC /* libcups_static.a in Frameworks */,
 				2707FC452C0E192E0035BBFC /* CoreFoundation.framework in Frameworks */,
 				2707FC462C0E192E0035BBFC /* CoreServices.framework in Frameworks */,
+				27C61E9C2C12791400750E71 /* Security.framework in Frameworks */,
+				2707FC3F2C0E192E0035BBFC /* SystemConfiguration.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1435,13 +1449,13 @@
 				27CAFC65282C899E00FE02FC /* libcrypto.a in Frameworks */,
 				27CAFC66282C899E00FE02FC /* libssl.a in Frameworks */,
 				270D02191D707E0200EA9403 /* libcups_static.a in Frameworks */,
-				270D021A1D707E0200EA9403 /* CoreFoundation.framework in Frameworks */,
-				2707FC102C0E17E90035BBFC /* CoreServices.framework in Frameworks */,
 				270D021C1D707E0200EA9403 /* libiconv.dylib in Frameworks */,
-				2707FC112C0E17E90035BBFC /* SystemConfiguration.framework in Frameworks */,
 				270D021D1D707E0200EA9403 /* libresolv.dylib in Frameworks */,
 				270D021E1D707E0200EA9403 /* libz.dylib in Frameworks */,
+				270D021A1D707E0200EA9403 /* CoreFoundation.framework in Frameworks */,
+				2707FC102C0E17E90035BBFC /* CoreServices.framework in Frameworks */,
 				270D021F1D707E0200EA9403 /* Security.framework in Frameworks */,
+				2707FC112C0E17E90035BBFC /* SystemConfiguration.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1450,14 +1464,15 @@
 			buildActionMask = 2147483647;
 			files = (
 				27CAFC70282C8BCD00FE02FC /* libcrypto.a in Frameworks */,
-				2707FC372C0E19270035BBFC /* SystemConfiguration.framework in Frameworks */,
 				27CAFC71282C8BCD00FE02FC /* libssl.a in Frameworks */,
+				2712865D1CC1309000E517C7 /* libcups_static.a in Frameworks */,
 				27D3968327BB390D003D3D8E /* libresolv.tbd in Frameworks */,
 				27D3968127BB3906003D3D8E /* libz.tbd in Frameworks */,
 				27D3968027BB38F6003D3D8E /* libiconv.tbd in Frameworks */,
-				2712865D1CC1309000E517C7 /* libcups_static.a in Frameworks */,
 				2712865E1CC1309000E517C7 /* CoreFoundation.framework in Frameworks */,
 				2707FC362C0E19270035BBFC /* CoreServices.framework in Frameworks */,
+				27C61EA22C12796F00750E71 /* Security.framework in Frameworks */,
+				2707FC372C0E19270035BBFC /* SystemConfiguration.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1479,14 +1494,14 @@
 			files = (
 				27CAFC67282C89CB00FE02FC /* libcrypto.a in Frameworks */,
 				27CAFC68282C89CB00FE02FC /* libssl.a in Frameworks */,
-				2767FC5F1926750C000F61D3 /* CoreFoundation.framework in Frameworks */,
 				2767FC601926750C000F61D3 /* libiconv.dylib in Frameworks */,
-				2707FC122C0E18000035BBFC /* CoreServices.framework in Frameworks */,
-				2767FC611926750C000F61D3 /* libresolv.dylib in Frameworks */,
-				2707FC132C0E18000035BBFC /* SystemConfiguration.framework in Frameworks */,
-				2767FC621926750C000F61D3 /* libz.dylib in Frameworks */,
-				2767FC631926750C000F61D3 /* Security.framework in Frameworks */,
 				2767FC58192674E0000F61D3 /* libcups_static.a in Frameworks */,
+				2767FC611926750C000F61D3 /* libresolv.dylib in Frameworks */,
+				2767FC621926750C000F61D3 /* libz.dylib in Frameworks */,
+				2767FC5F1926750C000F61D3 /* CoreFoundation.framework in Frameworks */,
+				2707FC122C0E18000035BBFC /* CoreServices.framework in Frameworks */,
+				2767FC631926750C000F61D3 /* Security.framework in Frameworks */,
+				2707FC132C0E18000035BBFC /* SystemConfiguration.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1496,14 +1511,14 @@
 			files = (
 				2746EBC829DCD74E006A82B1 /* libcrypto.a in Frameworks */,
 				2746EBC929DCD74E006A82B1 /* libssl.a in Frameworks */,
+				2746EBCD29DCD74E006A82B1 /* libcups_static.a in Frameworks */,
 				2746EBCA29DCD74E006A82B1 /* libresolv.tbd in Frameworks */,
 				2746EBCB29DCD74E006A82B1 /* libiconv.tbd in Frameworks */,
-				2707FC1E2C0E18600035BBFC /* CoreServices.framework in Frameworks */,
 				2746EBCC29DCD74E006A82B1 /* libz.tbd in Frameworks */,
-				2707FC1F2C0E18600035BBFC /* SystemConfiguration.framework in Frameworks */,
-				2746EBCD29DCD74E006A82B1 /* libcups_static.a in Frameworks */,
 				2746EBCE29DCD74E006A82B1 /* CoreFoundation.framework in Frameworks */,
+				2707FC1E2C0E18600035BBFC /* CoreServices.framework in Frameworks */,
 				2746EBCF29DCD74E006A82B1 /* Security.framework in Frameworks */,
+				2707FC1F2C0E18600035BBFC /* SystemConfiguration.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1512,14 +1527,15 @@
 			buildActionMask = 2147483647;
 			files = (
 				27CAFC72282C8C0200FE02FC /* libcrypto.a in Frameworks */,
-				2707FC352C0E19190035BBFC /* SystemConfiguration.framework in Frameworks */,
 				27CAFC73282C8C0200FE02FC /* libssl.a in Frameworks */,
+				274770D72345342B0089BC31 /* libcups_static.a in Frameworks */,
 				27D3968B27BB3963003D3D8E /* libresolv.tbd in Frameworks */,
 				27D3968627BB392F003D3D8E /* libiconv.tbd in Frameworks */,
 				27D3967C27BB38AD003D3D8E /* libz.tbd in Frameworks */,
-				274770D72345342B0089BC31 /* libcups_static.a in Frameworks */,
 				274770D82345342B0089BC31 /* CoreFoundation.framework in Frameworks */,
 				2707FC342C0E19190035BBFC /* CoreServices.framework in Frameworks */,
+				27C61EA12C12796500750E71 /* Security.framework in Frameworks */,
+				2707FC352C0E19190035BBFC /* SystemConfiguration.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1553,13 +1569,13 @@
 				27CAFC69282C89E000FE02FC /* libcrypto.a in Frameworks */,
 				27CAFC6A282C89E000FE02FC /* libssl.a in Frameworks */,
 				2767FC6B192685E6000F61D3 /* libcups_static.a in Frameworks */,
-				2767FC6C192685E6000F61D3 /* CoreFoundation.framework in Frameworks */,
-				2707FC142C0E18120035BBFC /* CoreServices.framework in Frameworks */,
 				2767FC6D192685E6000F61D3 /* libiconv.dylib in Frameworks */,
-				2707FC152C0E18120035BBFC /* SystemConfiguration.framework in Frameworks */,
 				2767FC6E192685E6000F61D3 /* libresolv.dylib in Frameworks */,
 				2767FC6F192685E6000F61D3 /* libz.dylib in Frameworks */,
+				2767FC6C192685E6000F61D3 /* CoreFoundation.framework in Frameworks */,
+				2707FC142C0E18120035BBFC /* CoreServices.framework in Frameworks */,
 				2767FC70192685E6000F61D3 /* Security.framework in Frameworks */,
+				2707FC152C0E18120035BBFC /* SystemConfiguration.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1568,14 +1584,15 @@
 			buildActionMask = 2147483647;
 			files = (
 				27CAFC84282C8DA100FE02FC /* libcrypto.a in Frameworks */,
-				2707FC092C0E175F0035BBFC /* SystemConfiguration.framework in Frameworks */,
 				27CAFC85282C8DA100FE02FC /* libssl.a in Frameworks */,
 				2778BBCF275DA09B0070DA11 /* libcups_static.a in Frameworks */,
-				2778BBD0275DA09B0070DA11 /* CoreFoundation.framework in Frameworks */,
 				2778BBD1275DA09B0070DA11 /* libiconv.dylib in Frameworks */,
 				2778BBD2275DA09B0070DA11 /* libresolv.dylib in Frameworks */,
 				2778BBD3275DA09B0070DA11 /* libz.dylib in Frameworks */,
+				2778BBD0275DA09B0070DA11 /* CoreFoundation.framework in Frameworks */,
 				2707FC082C0E175F0035BBFC /* CoreServices.framework in Frameworks */,
+				27C61E972C12782B00750E71 /* Security.framework in Frameworks */,
+				2707FC092C0E175F0035BBFC /* SystemConfiguration.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1586,13 +1603,13 @@
 				27CAFC6D282C8A1800FE02FC /* libcrypto.a in Frameworks */,
 				27CAFC6E282C8A1800FE02FC /* libssl.a in Frameworks */,
 				72BFD5FB191AF0A30005DA37 /* libcups_static.a in Frameworks */,
-				72BFD5FC191AF0A30005DA37 /* CoreFoundation.framework in Frameworks */,
-				2707FC202C0E186D0035BBFC /* CoreServices.framework in Frameworks */,
 				72BFD5FE191AF0A30005DA37 /* libiconv.dylib in Frameworks */,
-				2707FC212C0E186D0035BBFC /* SystemConfiguration.framework in Frameworks */,
 				72BFD5FF191AF0A30005DA37 /* libresolv.dylib in Frameworks */,
 				72BFD600191AF0A30005DA37 /* libz.dylib in Frameworks */,
+				72BFD5FC191AF0A30005DA37 /* CoreFoundation.framework in Frameworks */,
+				2707FC202C0E186D0035BBFC /* CoreServices.framework in Frameworks */,
 				72BFD601191AF0A30005DA37 /* Security.framework in Frameworks */,
+				2707FC212C0E186D0035BBFC /* SystemConfiguration.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1602,14 +1619,14 @@
 			files = (
 				2794DA7D29DCB7F200B71A3F /* libcrypto.a in Frameworks */,
 				2794DA7E29DCB7F200B71A3F /* libssl.a in Frameworks */,
+				2794DA8229DCB7F200B71A3F /* libcups_static.a in Frameworks */,
 				2794DA7F29DCB7F200B71A3F /* libresolv.tbd in Frameworks */,
 				2794DA8029DCB7F200B71A3F /* libiconv.tbd in Frameworks */,
-				2707FC282C0E18B70035BBFC /* CoreServices.framework in Frameworks */,
 				2794DA8129DCB7F200B71A3F /* libz.tbd in Frameworks */,
-				2707FC292C0E18B70035BBFC /* SystemConfiguration.framework in Frameworks */,
-				2794DA8229DCB7F200B71A3F /* libcups_static.a in Frameworks */,
 				2794DA8329DCB7F200B71A3F /* CoreFoundation.framework in Frameworks */,
+				2707FC282C0E18B70035BBFC /* CoreServices.framework in Frameworks */,
 				2794DA8429DCB7F200B71A3F /* Security.framework in Frameworks */,
+				2707FC292C0E18B70035BBFC /* SystemConfiguration.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1620,13 +1637,13 @@
 				2794E8FF28AFFC2400BEDC04 /* libcrypto.a in Frameworks */,
 				2794E90028AFFC2400BEDC04 /* libssl.a in Frameworks */,
 				2794E90128AFFC2400BEDC04 /* libcups_static.a in Frameworks */,
-				2794E90228AFFC2400BEDC04 /* CoreFoundation.framework in Frameworks */,
-				2707FC162C0E18230035BBFC /* CoreServices.framework in Frameworks */,
 				2794E90328AFFC2400BEDC04 /* libiconv.dylib in Frameworks */,
-				2707FC172C0E18230035BBFC /* SystemConfiguration.framework in Frameworks */,
 				2794E90428AFFC2400BEDC04 /* libresolv.dylib in Frameworks */,
 				2794E90528AFFC2400BEDC04 /* libz.dylib in Frameworks */,
+				2794E90228AFFC2400BEDC04 /* CoreFoundation.framework in Frameworks */,
+				2707FC162C0E18230035BBFC /* CoreServices.framework in Frameworks */,
 				2794E90628AFFC2400BEDC04 /* Security.framework in Frameworks */,
+				2707FC172C0E18230035BBFC /* SystemConfiguration.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1636,14 +1653,14 @@
 			files = (
 				2797D72928E5D2360056D546 /* libcrypto.a in Frameworks */,
 				2797D72A28E5D2360056D546 /* libssl.a in Frameworks */,
+				2797D72E28E5D2360056D546 /* libcups_static.a in Frameworks */,
 				2797D72B28E5D2360056D546 /* libresolv.tbd in Frameworks */,
 				2797D72C28E5D2360056D546 /* libiconv.tbd in Frameworks */,
-				2707FC262C0E18A60035BBFC /* CoreServices.framework in Frameworks */,
 				2797D72D28E5D2360056D546 /* libz.tbd in Frameworks */,
-				2707FC272C0E18A60035BBFC /* SystemConfiguration.framework in Frameworks */,
-				2797D72E28E5D2360056D546 /* libcups_static.a in Frameworks */,
 				2797D72F28E5D2360056D546 /* CoreFoundation.framework in Frameworks */,
+				2707FC262C0E18A60035BBFC /* CoreServices.framework in Frameworks */,
 				2797D73028E5D2360056D546 /* Security.framework in Frameworks */,
+				2707FC272C0E18A60035BBFC /* SystemConfiguration.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1652,14 +1669,15 @@
 			buildActionMask = 2147483647;
 			files = (
 				27CAFC80282C8C9300FE02FC /* libcrypto.a in Frameworks */,
-				2707FC332C0E19050035BBFC /* SystemConfiguration.framework in Frameworks */,
 				27CAFC81282C8C9300FE02FC /* libssl.a in Frameworks */,
+				27D3966E27BA81D3003D3D8E /* libcups_static.a in Frameworks */,
 				27D3968927BB394D003D3D8E /* libiconv.tbd in Frameworks */,
 				27D3968827BB3946003D3D8E /* libresolv.tbd in Frameworks */,
 				27D3968727BB393C003D3D8E /* libz.tbd in Frameworks */,
-				27D3966E27BA81D3003D3D8E /* libcups_static.a in Frameworks */,
 				27D3966F27BA81D3003D3D8E /* CoreFoundation.framework in Frameworks */,
 				2707FC322C0E19050035BBFC /* CoreServices.framework in Frameworks */,
+				27C61EA02C12795400750E71 /* Security.framework in Frameworks */,
+				2707FC332C0E19050035BBFC /* SystemConfiguration.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1670,13 +1688,13 @@
 				27FB612F29C9DAED008305E3 /* libcrypto.a in Frameworks */,
 				27FB613029C9DAED008305E3 /* libssl.a in Frameworks */,
 				27FB613129C9DAED008305E3 /* libcups_static.a in Frameworks */,
-				27FB613229C9DAED008305E3 /* CoreFoundation.framework in Frameworks */,
-				2707FC1A2C0E183E0035BBFC /* CoreServices.framework in Frameworks */,
 				27FB613329C9DAED008305E3 /* libiconv.dylib in Frameworks */,
-				2707FC1B2C0E183E0035BBFC /* SystemConfiguration.framework in Frameworks */,
 				27FB613429C9DAED008305E3 /* libresolv.dylib in Frameworks */,
 				27FB613529C9DAED008305E3 /* libz.dylib in Frameworks */,
+				27FB613229C9DAED008305E3 /* CoreFoundation.framework in Frameworks */,
+				2707FC1A2C0E183E0035BBFC /* CoreServices.framework in Frameworks */,
 				27FB613629C9DAED008305E3 /* Security.framework in Frameworks */,
+				2707FC1B2C0E183E0035BBFC /* SystemConfiguration.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1685,13 +1703,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				27CAFC61282C895700FE02FC /* libssl.a in Frameworks */,
-				2707FC052C0E16AA0035BBFC /* SystemConfiguration.framework in Frameworks */,
 				27CAFC62282C895700FE02FC /* libcrypto.a in Frameworks */,
 				728FB7F11536167A005426E1 /* libiconv.dylib in Frameworks */,
 				728FB7F21536167A005426E1 /* libresolv.dylib in Frameworks */,
 				728FB7ED1536161C005426E1 /* libz.dylib in Frameworks */,
 				728FB7E91536161C005426E1 /* CoreFoundation.framework in Frameworks */,
 				2707FC072C0E17340035BBFC /* CoreServices.framework in Frameworks */,
+				27C61E962C12780E00750E71 /* Security.framework in Frameworks */,
+				2707FC052C0E16AA0035BBFC /* SystemConfiguration.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1700,14 +1719,15 @@
 			buildActionMask = 2147483647;
 			files = (
 				27CAFC82282C8D8100FE02FC /* libcrypto.a in Frameworks */,
-				2707FC0D2C0E179E0035BBFC /* SystemConfiguration.framework in Frameworks */,
 				27CAFC83282C8D8100FE02FC /* libssl.a in Frameworks */,
-				724FA53D1CC037370092477B /* CoreFoundation.framework in Frameworks */,
 				724FA53E1CC037370092477B /* libiconv.dylib in Frameworks */,
 				724FA53F1CC037370092477B /* libresolv.dylib in Frameworks */,
 				724FA5401CC037370092477B /* libz.dylib in Frameworks */,
 				724FA5431CC037370092477B /* libcups_static.a in Frameworks */,
+				724FA53D1CC037370092477B /* CoreFoundation.framework in Frameworks */,
 				2707FC0C2C0E179E0035BBFC /* CoreServices.framework in Frameworks */,
+				27C61E982C12785300750E71 /* Security.framework in Frameworks */,
+				2707FC0D2C0E179E0035BBFC /* SystemConfiguration.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1718,13 +1738,13 @@
 				27CAFC6B282C89FE00FE02FC /* libcrypto.a in Frameworks */,
 				27CAFC6C282C89FE00FE02FC /* libssl.a in Frameworks */,
 				724FA5761CC037810092477B /* libcups_static.a in Frameworks */,
-				724FA5771CC037810092477B /* CoreFoundation.framework in Frameworks */,
-				2707FC182C0E182F0035BBFC /* CoreServices.framework in Frameworks */,
 				724FA5781CC037810092477B /* libiconv.dylib in Frameworks */,
-				2707FC192C0E18300035BBFC /* SystemConfiguration.framework in Frameworks */,
 				724FA5791CC037810092477B /* libresolv.dylib in Frameworks */,
 				724FA57A1CC037810092477B /* libz.dylib in Frameworks */,
+				724FA5771CC037810092477B /* CoreFoundation.framework in Frameworks */,
+				2707FC182C0E182F0035BBFC /* CoreServices.framework in Frameworks */,
 				724FA57B1CC037810092477B /* Security.framework in Frameworks */,
+				2707FC192C0E18300035BBFC /* SystemConfiguration.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1733,14 +1753,15 @@
 			buildActionMask = 2147483647;
 			files = (
 				27CAFC76282C8C3300FE02FC /* libcrypto.a in Frameworks */,
-				2707FC232C0E187E0035BBFC /* SystemConfiguration.framework in Frameworks */,
 				27CAFC77282C8C3300FE02FC /* libssl.a in Frameworks */,
 				724FA5891CC037980092477B /* libcups_static.a in Frameworks */,
-				724FA58A1CC037980092477B /* CoreFoundation.framework in Frameworks */,
 				724FA58C1CC037980092477B /* libiconv.dylib in Frameworks */,
 				724FA58D1CC037980092477B /* libresolv.dylib in Frameworks */,
 				724FA58E1CC037980092477B /* libz.dylib in Frameworks */,
+				724FA58A1CC037980092477B /* CoreFoundation.framework in Frameworks */,
 				2707FC222C0E187E0035BBFC /* CoreServices.framework in Frameworks */,
+				27C61E992C1278CE00750E71 /* Security.framework in Frameworks */,
+				2707FC232C0E187E0035BBFC /* SystemConfiguration.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1749,14 +1770,15 @@
 			buildActionMask = 2147483647;
 			files = (
 				27CAFC78282C8C4900FE02FC /* libcrypto.a in Frameworks */,
-				2707FC252C0E18930035BBFC /* SystemConfiguration.framework in Frameworks */,
 				27CAFC79282C8C4900FE02FC /* libssl.a in Frameworks */,
 				724FA59C1CC037AA0092477B /* libcups_static.a in Frameworks */,
-				724FA59D1CC037AA0092477B /* CoreFoundation.framework in Frameworks */,
 				724FA59F1CC037AA0092477B /* libiconv.dylib in Frameworks */,
 				724FA5A01CC037AA0092477B /* libresolv.dylib in Frameworks */,
 				724FA5A11CC037AA0092477B /* libz.dylib in Frameworks */,
+				724FA59D1CC037AA0092477B /* CoreFoundation.framework in Frameworks */,
 				2707FC242C0E18930035BBFC /* CoreServices.framework in Frameworks */,
+				27C61E9A2C1278E000750E71 /* Security.framework in Frameworks */,
+				2707FC252C0E18930035BBFC /* SystemConfiguration.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1765,14 +1787,15 @@
 			buildActionMask = 2147483647;
 			files = (
 				27CAFC7A282C8C5A00FE02FC /* libcrypto.a in Frameworks */,
-				2707FC2B2C0E18C90035BBFC /* SystemConfiguration.framework in Frameworks */,
 				27CAFC7B282C8C5A00FE02FC /* libssl.a in Frameworks */,
 				724FA5AF1CC037C60092477B /* libcups_static.a in Frameworks */,
-				724FA5B01CC037C60092477B /* CoreFoundation.framework in Frameworks */,
 				724FA5B21CC037C60092477B /* libiconv.dylib in Frameworks */,
 				724FA5B31CC037C60092477B /* libresolv.dylib in Frameworks */,
 				724FA5B41CC037C60092477B /* libz.dylib in Frameworks */,
+				724FA5B01CC037C60092477B /* CoreFoundation.framework in Frameworks */,
 				2707FC2A2C0E18C90035BBFC /* CoreServices.framework in Frameworks */,
+				27C61E9B2C12790400750E71 /* Security.framework in Frameworks */,
+				2707FC2B2C0E18C90035BBFC /* SystemConfiguration.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1781,14 +1804,15 @@
 			buildActionMask = 2147483647;
 			files = (
 				27CAFC74282C8C1900FE02FC /* libcrypto.a in Frameworks */,
-				2707FC2D2C0E18D90035BBFC /* SystemConfiguration.framework in Frameworks */,
 				27CAFC75282C8C1900FE02FC /* libssl.a in Frameworks */,
+				724FA5D71CC037F00092477B /* libcups_static.a in Frameworks */,
 				27D3968A27BB3957003D3D8E /* libresolv.tbd in Frameworks */,
 				27D3968527BB3926003D3D8E /* libiconv.tbd in Frameworks */,
 				27D3968427BB391F003D3D8E /* libz.tbd in Frameworks */,
-				724FA5D71CC037F00092477B /* libcups_static.a in Frameworks */,
 				724FA5D81CC037F00092477B /* CoreFoundation.framework in Frameworks */,
 				2707FC2C2C0E18D80035BBFC /* CoreServices.framework in Frameworks */,
+				27C61E9D2C12792100750E71 /* Security.framework in Frameworks */,
+				2707FC2D2C0E18D90035BBFC /* SystemConfiguration.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1796,15 +1820,16 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				271607952A0EC955002508F6 /* libz.tbd in Frameworks */,
-				2707FC2F2C0E18E70035BBFC /* SystemConfiguration.framework in Frameworks */,
-				271607972A0EC971002508F6 /* libiconv.tbd in Frameworks */,
 				27CAFC7C282C8C6F00FE02FC /* libcrypto.a in Frameworks */,
-				271607962A0EC96B002508F6 /* libresolv.tbd in Frameworks */,
 				27CAFC7D282C8C6F00FE02FC /* libssl.a in Frameworks */,
 				724FA5FF1CC038190092477B /* libcups_static.a in Frameworks */,
+				271607972A0EC971002508F6 /* libiconv.tbd in Frameworks */,
+				271607962A0EC96B002508F6 /* libresolv.tbd in Frameworks */,
+				271607952A0EC955002508F6 /* libz.tbd in Frameworks */,
 				724FA6001CC038190092477B /* CoreFoundation.framework in Frameworks */,
 				2707FC2E2C0E18E60035BBFC /* CoreServices.framework in Frameworks */,
+				27C61E9E2C12793100750E71 /* Security.framework in Frameworks */,
+				2707FC2F2C0E18E70035BBFC /* SystemConfiguration.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1813,14 +1838,15 @@
 			buildActionMask = 2147483647;
 			files = (
 				27CAFC7E282C8C8000FE02FC /* libcrypto.a in Frameworks */,
-				2707FC312C0E18F40035BBFC /* SystemConfiguration.framework in Frameworks */,
 				27CAFC7F282C8C8000FE02FC /* libssl.a in Frameworks */,
+				724FA6131CC0382B0092477B /* libcups_static.a in Frameworks */,
 				27D3968C27BB3972003D3D8E /* libresolv.tbd in Frameworks */,
 				27D3967F27BB38E6003D3D8E /* libiconv.tbd in Frameworks */,
 				27D3967D27BB38BD003D3D8E /* libz.tbd in Frameworks */,
-				724FA6131CC0382B0092477B /* libcups_static.a in Frameworks */,
 				724FA6141CC0382B0092477B /* CoreFoundation.framework in Frameworks */,
 				2707FC302C0E18F40035BBFC /* CoreServices.framework in Frameworks */,
+				27C61E9F2C12794900750E71 /* Security.framework in Frameworks */,
+				2707FC312C0E18F40035BBFC /* SystemConfiguration.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1830,9 +1856,9 @@
 			files = (
 				279AE6F52395B80F004DD600 /* libpam.tbd in Frameworks */,
 				273B1ECA226B420C00428143 /* libcups3.dylib in Frameworks */,
-				2767FC6619267538000F61D3 /* CoreFoundation.framework in Frameworks */,
 				2767FC6719267538000F61D3 /* libresolv.dylib in Frameworks */,
 				2767FC6819267538000F61D3 /* libz.dylib in Frameworks */,
+				2767FC6619267538000F61D3 /* CoreFoundation.framework in Frameworks */,
 				2707FC0A2C0E177B0035BBFC /* CoreServices.framework in Frameworks */,
 				2707FC0B2C0E177B0035BBFC /* SystemConfiguration.framework in Frameworks */,
 				2767FC6919267538000F61D3 /* Security.framework in Frameworks */,
@@ -1847,12 +1873,12 @@
 				27CAFC64282C898300FE02FC /* libssl.a in Frameworks */,
 				27D3968E27BB3989003D3D8E /* libresolv.tbd in Frameworks */,
 				27D3968D27BB397F003D3D8E /* libiconv.tbd in Frameworks */,
-				2707FC0E2C0E17B90035BBFC /* CoreServices.framework in Frameworks */,
 				27D3967B27BB389C003D3D8E /* libz.tbd in Frameworks */,
-				2707FC0F2C0E17B90035BBFC /* SystemConfiguration.framework in Frameworks */,
 				729181B5201155C1005E7560 /* libcups_static.a in Frameworks */,
 				729181B6201155C1005E7560 /* CoreFoundation.framework in Frameworks */,
+				2707FC0E2C0E17B90035BBFC /* CoreServices.framework in Frameworks */,
 				729181B8201155C1005E7560 /* Security.framework in Frameworks */,
+				2707FC0F2C0E17B90035BBFC /* SystemConfiguration.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -37,7 +37,6 @@ _cups_gettimeofday
 _cups_hstrerror
 _cups_strcasecmp
 _cups_strcpy
-_cups_strcpy
 _cups_strncasecmp
 _httpCreateCredentials
 _httpDecodeURI
@@ -56,6 +55,7 @@ _httpTLSWrite
 _httpUpdate
 _httpUseCredentials
 _httpWait
+_ippCheckOptions
 _ippFindOption
 _pwgMediaNearSize
 _pwgMediaTable
@@ -112,6 +112,7 @@ cupsDNSSDAssembleFullName
 cupsDNSSDBrowseDelete
 cupsDNSSDBrowseGetContext
 cupsDNSSDBrowseNew
+cupsDNSSDCopyComputerName
 cupsDNSSDCopyHostName
 cupsDNSSDDecodeTXT
 cupsDNSSDDelete
@@ -279,6 +280,19 @@ cupsMutexDestroy
 cupsMutexInit
 cupsMutexLock
 cupsMutexUnlock
+cupsOAuthClearTokens
+cupsOAuthCopyAccessToken
+cupsOAuthCopyClientId
+cupsOAuthCopyId
+cupsOAuthCopyRefreshToken
+cupsOAuthGetAuthorizationCode
+cupsOAuthGetClientId
+cupsOAuthGetMetadata
+cupsOAuthGetTokens
+cupsOAuthMakeAuthorizationURL
+cupsOAuthMakeBase64Random
+cupsOAuthSetClientId
+cupsOAuthSetTokens
 cupsParseOptions
 cupsPutFd
 cupsPutFile
