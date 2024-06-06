@@ -24,8 +24,8 @@ extern char **environ;			// @private@
 
 
 //
-// Implementation Notes
-// ====================
+// Overview
+// ========
 //
 // The CUPS OAuth implementation follows the IEEE-ISTO Printer Working Group's
 // IPP OAuth Extensions v1.0 (OAUTH) specification (pending publication), which
@@ -35,6 +35,7 @@ extern char **environ;			// @private@
 // different requirements of IETF OAuth 2.x and OpenID Connect so that we are as
 // widely interoperable as possible.
 //
+//
 // Compatibility
 // -------------
 //
@@ -42,12 +43,12 @@ extern char **environ;			// @private@
 // including (but not limited to):
 //
 // - Amazon Cognito (<https://aws.amazon.com/cognito/>)
-// - Canonical Ubuntu One (ADD LINK)
-// - Github (ADD LINK)
-// - Google (ADD LINK)
-// - Microsoft Account/Azure Active Directory (ADD LINK)
+// - Github  (<https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps>)
+// - Google (<https://developers.google.com/identity/openid-connect/openid-connect>)
+// - Microsoft Account/Azure Active Directory/Entra ID (<https://learn.microsoft.com/en-us/entra/identity/>)
 // - mOAuth (<https://www.msweet.org/moauth/>)
-// - Okta (ADD LINK)
+// - Okta Auth0 (<https://developer.auth0.com>)
+//
 //
 // Security
 // --------
@@ -63,6 +64,22 @@ extern char **environ;			// @private@
 // platform support code for this is planned.  This sort of issue is generally
 // mitigated by access tokens having a limited life...
 //
+//
+// Notes
+// -----
+//
+// - Amazon and Microsoft require you to setup an Authorization Server for your
+//   domain before you can play/test.  There is no public sandbox service.
+// - Github support currently depends on hardcoded metadata
+//   (<https://github.com/orgs/community/discussions/127556>) and has a few
+//   authorization extensions that might require some special-handling.
+// - Google implements OpenID Connect but not RFC 8414
+//   (<https://accounts.google.com>) and seems to only allow a redirect URI of
+//   "http://localhost" without a specified path.
+// - Okta Auth0 provides a sample OpenID Connect Authorization Server
+//   (<https://samples.auth0.com>) that also supports Device Connect and a few
+//   other extensions that might be handy in the future.
+//
 
 
 //
@@ -71,10 +88,9 @@ extern char **environ;			// @private@
 
 static const char *github_metadata =	// Github.com OAuth metadata
 "{\
-\"issuer\":\"\",\
+\"issuer\":\"https://github.com\",\
 \"authorization_endpoint\":\"https://github.com/login/oauth/authorize\",\
 \"token_endpoint\":\"https://github.com/login/oauth/access_token\",\
-\"registration_endpoint\":\"\",\
 \"token_endpoint_auth_methods_supported\":[\"client_secret_basic\"],\
 \"scopes_supported\":[\"repo\",\"repo:status\",\"repo_deployment\",\"public_repo\",\"repo:invite\",\"security_events\",\"admin:repo_hook\",\"write:repo_hook\",\"read:repo_hook\",\"admin:org\",\"write:org\",\"read:org\",\"admin:public_key\",\"write:public_key\",\"read:public_key\",\"admin:org_hook\",\"gist\",\"notifications\",\"user\",\"read:user\",\"user:email\",\"user:follow\",\"project\",\"read:project\",\"delete_repo\",\"write:packages\",\"read:packages\",\"delete:packages\",\"admin.gpg_key\",\"write:gpg_key\",\"read:gpg_key\",\"codespace\",\"workflow\"],\
 \"response_types_supported\":[\"code\"],\

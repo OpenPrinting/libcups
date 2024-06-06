@@ -1,7 +1,7 @@
 //
 // HTTP test program for CUPS.
 //
-// Copyright © 2021-2023 by OpenPrinting.
+// Copyright © 2021-2024 by OpenPrinting.
 // Copyright © 2007-2018 by Apple Inc.
 // Copyright © 1997-2006 by Easy Software Products.
 //
@@ -596,7 +596,7 @@ main(int  argc,				// I - Number of command-line arguments
       if ((creds = httpCopyPeerCredentials(http)) != NULL)
       {
 	char *lcreds;
-        http_trust_t trust = cupsGetCredentialsTrust(NULL, hostname, creds);
+        http_trust_t trust = cupsGetCredentialsTrust(NULL, hostname, creds, /*require_ca*/false);
 
         cupsGetCredentialsInfo(creds, info, sizeof(info));
 
@@ -633,7 +633,7 @@ main(int  argc,				// I - Number of command-line arguments
         if (trust != HTTP_TRUST_OK)
 	{
 	  printf("SaveCredentials: %s\n", cupsSaveCredentials(NULL, hostname, creds, /*key*/NULL) ? "true" : "false");
-	  trust = cupsGetCredentialsTrust(NULL, hostname, creds);
+	  trust = cupsGetCredentialsTrust(NULL, hostname, creds, /*require_ca*/false);
 	  printf("New Trust: %s\n", trusts[trust]);
 	}
 

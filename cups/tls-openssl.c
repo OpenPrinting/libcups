@@ -224,7 +224,7 @@ cupsCreateCredentials(
   if ((cert = X509_new()) == NULL)
   {
     EVP_PKEY_free(pkey);
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create X.509 certificate."), 1);
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create X.509 certificate."), true);
     return (false);
   }
 
@@ -278,7 +278,7 @@ cupsCreateCredentials(
 
     if (!root_cert || !root_key)
     {
-      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to load X.509 CA certificate and private key."), 1);
+      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to load X.509 CA certificate and private key."), true);
       goto done;
     }
   }
@@ -367,7 +367,7 @@ cupsCreateCredentials(
 
   if (!PEM_write_bio_PrivateKey(bio, pkey, NULL, NULL, 0, NULL, NULL))
   {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to write private key."), 1);
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to write private key."), true);
     BIO_free(bio);
     goto done;
   }
@@ -382,7 +382,7 @@ cupsCreateCredentials(
 
   if (!PEM_write_bio_X509(bio, cert))
   {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to write X.509 certificate."), 1);
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to write X.509 certificate."), true);
     BIO_free(bio);
     goto done;
   }
@@ -525,7 +525,7 @@ cupsCreateCredentialsRequest(
 
   if ((csr = X509_REQ_new()) == NULL)
   {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create X.509 certificate signing request."), 1);
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create X.509 certificate signing request."), true);
     goto done;
   }
 
@@ -586,7 +586,7 @@ cupsCreateCredentialsRequest(
 
   if (!PEM_write_bio_PrivateKey(bio, pkey, NULL, NULL, 0, NULL, NULL))
   {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to write private key."), 1);
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to write private key."), true);
     BIO_free(bio);
     goto done;
   }
@@ -601,7 +601,7 @@ cupsCreateCredentialsRequest(
 
   if (!PEM_write_bio_X509_REQ(bio, csr))
   {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to write X.509 certificate signing request."), 1);
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to write X.509 certificate signing request."), true);
     BIO_free(bio);
     goto done;
   }
@@ -736,12 +736,37 @@ cupsGetCredentialsInfo(
 //
 // 'cupsGetCredentialsTrust()' - Return the trust of credentials.
 //
+// This function determines the level of trust for the supplied credentials.
+// The "path" parameter specifies the certificate/key store for known
+// credentials and certificate authorities.  The "common_name" parameter
+// specifies the FQDN of the service being accessed such as
+// "printer.example.com".  The "credentials" parameter provides the credentials
+// being evaluated, which are usually obtained with the
+// @link httpCopyPeerCredentials@ function.  The "require_ca" parameter
+// specifies whether a CA-signed certificate is required for trust.
+//
+// The `AllowAnyRoot`, `AllowExpiredCerts`, `TrustOnFirstUse`, and
+// `ValidateCerts` options in the "client.conf" file (or corresponding
+// preferences file on macOS) control the trust policy, which defaults to
+// AllowAnyRoot=Yes, AllowExpiredCerts=No, TrustOnFirstUse=Yes, and
+// ValidateCerts=No.  When the "require_ca" parameter is `true` the AllowAnyRoot
+// and TrustOnFirstUse policies are turned off ("No").
+//
+// The returned trust value can be one of the following:
+//
+// - `HTTP_TRUST_OK`: Credentials are OK/trusted
+// - `HTTP_TRUST_INVALID`: Credentials are invalid
+// - `HTTP_TRUST_EXPIRED`: Credentials are expired
+// - `HTTP_TRUST_RENEWED`: Credentials have been renewed
+// - `HTTP_TRUST_UNKNOWN`: Credentials are unknown/new
+//
 
 http_trust_t				// O - Level of trust
 cupsGetCredentialsTrust(
     const char *path,			// I - Directory path for certificate/key store or `NULL` for default
     const char *common_name,		// I - Common name for trust lookup
-    const char *credentials)		// I - Credentials
+    const char *credentials,		// I - Credentials
+    bool       require_ca)		// I - Require a CA-signed certificate?
 {
   http_trust_t		trust = HTTP_TRUST_OK;
 					// Trusted?
@@ -790,24 +815,24 @@ cupsGetCredentialsTrust(
     {
       // Credentials don't match, let's look at the expiration date of the new
       // credentials and allow if the new ones have a later expiration...
-      if (!cg->trust_first)
+      if (!cg->trust_first || require_ca)
       {
         // Do not trust certificates on first use...
-        _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Trust on first use is disabled."), 1);
+        _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Trust on first use is disabled."), true);
 
         trust = HTTP_TRUST_INVALID;
       }
       else if (cupsGetCredentialsExpiration(credentials) <= cupsGetCredentialsExpiration(tcreds))
       {
         // The new credentials are not newly issued...
-        _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("New credentials are older than stored credentials."), 1);
+        _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("New credentials are older than stored credentials."), true);
 
         trust = HTTP_TRUST_INVALID;
       }
       else if (!cupsAreCredentialsValidForName(credentials, common_name))
       {
         // The common name does not match the issued certificate...
-        _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("New credentials are not valid for name."), 1);
+        _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("New credentials are not valid for name."), true);
 
         trust = HTTP_TRUST_INVALID;
       }
@@ -822,12 +847,12 @@ cupsGetCredentialsTrust(
 
     free(tcreds);
   }
-  else if (cg->validate_certs && !cupsAreCredentialsValidForName(common_name, credentials))
+  else if ((cg->validate_certs || require_ca) && !cupsAreCredentialsValidForName(common_name, credentials))
   {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("No stored credentials, not valid for name."), 1);
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("No stored credentials, not valid for name."), true);
     trust = HTTP_TRUST_INVALID;
   }
-  else if (!cg->trust_first)
+  else if (sk_X509_num(certs) > 1 && !http_check_roots(credentials))
   {
     // See if we have a site CA certificate we can compare...
     if ((tcreds = cupsCopyCredentials(path, "_site_")) != NULL)
@@ -846,15 +871,27 @@ cupsGetCredentialsTrust(
       }
 
       if (trust != HTTP_TRUST_OK)
-	_cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Credentials do not validate against site CA certificate."), 1);
+	_cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Credentials do not validate against site CA certificate."), true);
 
       free(tcreds);
+
+      // TODO: Support common CA's/roots
     }
-    else
+    else if (require_ca)
     {
-      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Trust on first use is disabled."), 1);
+      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Trust on first use is disabled."), true);
       trust = HTTP_TRUST_INVALID;
     }
+    else if (!cg->trust_first)
+    {
+      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Trust on first use is disabled."), true);
+      trust = HTTP_TRUST_INVALID;
+    }
+  }
+  else if ((!cg->any_root || require_ca) && sk_X509_num(certs) == 1)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Self-signed credentials are blocked."), true);
+    trust = HTTP_TRUST_INVALID;
   }
 
   if (trust == HTTP_TRUST_OK && !cg->expired_certs)
@@ -864,15 +901,9 @@ cupsGetCredentialsTrust(
     time(&curtime);
     if (curtime < openssl_get_date(cert, 0) || curtime > openssl_get_date(cert, 1))
     {
-      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Credentials have expired."), 1);
+      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Credentials have expired."), true);
       trust = HTTP_TRUST_EXPIRED;
     }
-  }
-
-  if (trust == HTTP_TRUST_OK && !cg->any_root && sk_X509_num(certs) == 1)
-  {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Self-signed credentials are blocked."), 1);
-    trust = HTTP_TRUST_INVALID;
   }
 
   sk_X509_free(certs);
@@ -998,13 +1029,13 @@ cupsSignCredentialsRequest(
 
   if (!crq)
   {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to import X.509 certificate request."), 1);
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to import X.509 certificate request."), true);
     return (false);
   }
 
   if (X509_REQ_verify(crq, X509_REQ_get_pubkey(crq)) < 0)
   {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to verify X.509 certificate request."), 1);
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to verify X.509 certificate request."), true);
     goto done;
   }
 
@@ -1013,7 +1044,7 @@ cupsSignCredentialsRequest(
 
   if ((cert = X509_new()) == NULL)
   {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create X.509 certificate."), 1);
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create X.509 certificate."), true);
     goto done;
   }
 
@@ -1074,7 +1105,7 @@ cupsSignCredentialsRequest(
 
           if (datalen < 12 || data[2] != 0x30 || data[3] != (datalen - 4))
           {
-            _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad keyUsage extension in X.509 certificate request."), 1);
+            _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad keyUsage extension in X.509 certificate request."), true);
 	    goto done;
           }
 
@@ -1082,7 +1113,7 @@ cupsSignCredentialsRequest(
           {
             if (data[j] != 0x06 || data[j + 1] != 8 || memcmp(data + j + 2, "+\006\001\005\005\007\003", 7))
             {
-	      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad keyUsage extension in X.509 certificate request."), 1);
+	      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad keyUsage extension in X.509 certificate request."), true);
 	      goto done;
             }
 
@@ -1107,7 +1138,7 @@ cupsSignCredentialsRequest(
                   purpose |= CUPS_CREDPURPOSE_OCSP_SIGNING;
                   break;
 	      default :
-		  _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad keyUsage extension in X.509 certificate request."), 1);
+		  _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad keyUsage extension in X.509 certificate request."), true);
 		  goto done;
             }
           }
@@ -1116,7 +1147,7 @@ cupsSignCredentialsRequest(
 
           if (purpose & ~allowed_purpose)
           {
-            _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad keyUsage extension in X.509 certificate request."), 1);
+            _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad keyUsage extension in X.509 certificate request."), true);
 	    goto done;
           }
           break;
@@ -1127,7 +1158,7 @@ cupsSignCredentialsRequest(
 
           if (datalen < 6 || datalen > 7 || data[2] != 0x03 || data[3] != (datalen - 4))
           {
-            _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad extKeyUsage extension in X.509 certificate request."), 1);
+            _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad extKeyUsage extension in X.509 certificate request."), true);
 	    goto done;
           }
 
@@ -1155,7 +1186,7 @@ cupsSignCredentialsRequest(
 
           if (usage & ~allowed_usage)
           {
-            _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad extKeyUsage extension in X.509 certificate request."), 1);
+            _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad extKeyUsage extension in X.509 certificate request."), true);
 	    goto done;
           }
           break;
@@ -1166,7 +1197,7 @@ cupsSignCredentialsRequest(
 
           if (datalen < 4 || data[2] != 0x30 || data[3] != (datalen - 4))
           {
-            _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad subjectAltName extension in X.509 certificate request."), 1);
+            _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad subjectAltName extension in X.509 certificate request."), true);
 	    goto done;
           }
 
@@ -1183,7 +1214,7 @@ cupsSignCredentialsRequest(
 
               if (!(cb)(common_name, temp, cb_data))
               {
-                _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Validation of subjectAltName in X.509 certificate request failed."), 1);
+                _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Validation of subjectAltName in X.509 certificate request failed."), true);
                 goto done;
               }
 	    }
@@ -1201,7 +1232,7 @@ cupsSignCredentialsRequest(
   // Add basic constraints for an "edge" certificate...
   if ((ext = X509V3_EXT_conf_nid(/*conf*/NULL, /*ctx*/NULL, NID_basic_constraints, "critical,CA:FALSE,pathlen:0")) == NULL || !X509_add_ext(cert, ext, -1))
   {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to add extension to X.509 certificate."), 1);
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to add extension to X.509 certificate."), true);
     goto done;
   }
 
@@ -1210,7 +1241,7 @@ cupsSignCredentialsRequest(
   {
     if ((ext = X509V3_EXT_conf_nid(/*conf*/NULL, /*ctx*/NULL, NID_key_usage, "critical,digitalSignature,keyEncipherment")) == NULL || !X509_add_ext(cert, ext, -1))
     {
-      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to add extension to X.509 certificate."), 1);
+      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to add extension to X.509 certificate."), true);
       goto done;
     }
   }
@@ -1219,7 +1250,7 @@ cupsSignCredentialsRequest(
   {
     if ((ext = X509V3_EXT_conf_nid(/*conf*/NULL, /*ctx*/NULL, NID_ext_key_usage, tls_usage_strings[0])) == NULL || !X509_add_ext(cert, ext, -1))
     {
-      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to add extension to X.509 certificate."), 1);
+      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to add extension to X.509 certificate."), true);
       goto done;
     }
   }
@@ -1228,7 +1259,7 @@ cupsSignCredentialsRequest(
   {
     if ((ext = openssl_create_san(common_name, /*num_alt_names*/0, /*alt_names*/NULL)) == NULL || !X509_add_ext(cert, ext, -1))
     {
-      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to add extension to X.509 certificate."), 1);
+      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to add extension to X.509 certificate."), true);
       goto done;
     }
   }
@@ -1261,7 +1292,7 @@ cupsSignCredentialsRequest(
 
   if (!root_cert || !root_key)
   {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to load X.509 CA certificate and private key."), 1);
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to load X.509 CA certificate and private key."), true);
     goto done;
   }
 
@@ -1279,7 +1310,7 @@ cupsSignCredentialsRequest(
 
   if (!PEM_write_bio_X509(bio, cert))
   {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to write X.509 certificate."), 1);
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to write X.509 certificate."), true);
     BIO_free(bio);
     goto done;
   }
@@ -1536,7 +1567,7 @@ _httpTLSStart(http_t *http)		// I - Connection to server
     DEBUG_puts("4_httpTLSStart: cupsSetServerCredentials not called.");
     http->error  = errno = EINVAL;
     http->status = HTTP_STATUS_ERROR;
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Server credentials not set."), 1);
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Server credentials not set."), true);
 
     return (false);
   }
@@ -1657,7 +1688,7 @@ _httpTLSStart(http_t *http)		// I - Connection to server
 	DEBUG_puts("4_httpTLSStart: cupsCreateCredentials failed.");
 	http->error  = errno = EINVAL;
 	http->status = HTTP_STATUS_ERROR;
-	_cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create server credentials."), 1);
+	_cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create server credentials."), true);
 	SSL_CTX_free(context);
         cupsMutexUnlock(&tls_mutex);
 
@@ -2069,15 +2100,15 @@ openssl_create_key(
   pkey = NULL;
 
   if ((ctx = EVP_PKEY_CTX_new_id(algid, NULL)) == NULL)
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create private key context."), 1);
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create private key context."), true);
   else if (EVP_PKEY_keygen_init(ctx) <= 0)
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to initialize private key context."), 1);
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to initialize private key context."), true);
   else if (bits && EVP_PKEY_CTX_set_rsa_keygen_bits(ctx, bits) <= 0)
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to configure private key context."), 1);
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to configure private key context."), true);
   else if (curveid && EVP_PKEY_CTX_set_ec_paramgen_curve_nid(ctx, curveid) <= 0)
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to configure private key context."), 1);
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to configure private key context."), true);
   else if (EVP_PKEY_keygen(ctx, &pkey) <= 0)
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create private key."), 1);
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create private key."), true);
 
   EVP_PKEY_CTX_free(ctx);
 

@@ -764,12 +764,37 @@ cupsGetCredentialsInfo(
 //
 // 'cupsGetCredentialsTrust()' - Return the trust of credentials.
 //
+// This function determines the level of trust for the supplied credentials.
+// The "path" parameter specifies the certificate/key store for known
+// credentials and certificate authorities.  The "common_name" parameter
+// specifies the FQDN of the service being accessed such as
+// "printer.example.com".  The "credentials" parameter provides the credentials
+// being evaluated, which are usually obtained with the
+// @link httpCopyPeerCredentials@ function.  The "require_ca" parameter
+// specifies whether a CA-signed certificate is required for trust.
+//
+// The `AllowAnyRoot`, `AllowExpiredCerts`, `TrustOnFirstUse`, and
+// `ValidateCerts` options in the "client.conf" file (or corresponding
+// preferences file on macOS) control the trust policy, which defaults to
+// AllowAnyRoot=Yes, AllowExpiredCerts=No, TrustOnFirstUse=Yes, and
+// ValidateCerts=No.  When the "require_ca" parameter is `true` the AllowAnyRoot
+// and TrustOnFirstUse policies are turned off ("No").
+//
+// The returned trust value can be one of the following:
+//
+// - `HTTP_TRUST_OK`: Credentials are OK/trusted
+// - `HTTP_TRUST_INVALID`: Credentials are invalid
+// - `HTTP_TRUST_EXPIRED`: Credentials are expired
+// - `HTTP_TRUST_RENEWED`: Credentials have been renewed
+// - `HTTP_TRUST_UNKNOWN`: Credentials are unknown/new
+//
 
 http_trust_t				// O - Level of trust
 cupsGetCredentialsTrust(
     const char *path,	        	// I - Directory path for certificate/key store or `NULL` for default
     const char *common_name,		// I - Common name for trust lookup
-    const char *credentials)		// I - Credentials
+    const char *credentials,		// I - Credentials
+    bool       require_ca)		// I - Require a CA-signed certificate?
 {
   http_trust_t		trust = HTTP_TRUST_OK;
 					// Trusted?
@@ -794,7 +819,7 @@ cupsGetCredentialsTrust(
   // Load the credentials...
   if (!gnutls_import_certs(credentials, &num_certs, certs))
   {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to import credentials."), 1);
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to import credentials."), true);
     return (HTTP_TRUST_UNKNOWN);
   }
 
@@ -817,24 +842,24 @@ cupsGetCredentialsTrust(
     {
       // Credentials don't match, let's look at the expiration date of the new
       // credentials and allow if the new ones have a later expiration...
-      if (!cg->trust_first)
+      if (!cg->trust_first || require_ca)
       {
         // Do not trust certificates on first use...
-        _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Trust on first use is disabled."), 1);
+        _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Trust on first use is disabled."), true);
 
         trust = HTTP_TRUST_INVALID;
       }
       else if (cupsGetCredentialsExpiration(credentials) <= cupsGetCredentialsExpiration(tcreds))
       {
         // The new credentials are not newly issued...
-        _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("New credentials are older than stored credentials."), 1);
+        _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("New credentials are older than stored credentials."), true);
 
         trust = HTTP_TRUST_INVALID;
       }
       else if (!cupsAreCredentialsValidForName(common_name, credentials))
       {
         // The common name does not match the issued certificate...
-        _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("New credentials are not valid for name."), 1);
+        _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("New credentials are not valid for name."), true);
 
         trust = HTTP_TRUST_INVALID;
       }
@@ -849,12 +874,12 @@ cupsGetCredentialsTrust(
 
     free(tcreds);
   }
-  else if (cg->validate_certs && !cupsAreCredentialsValidForName(common_name, credentials))
+  else if ((cg->validate_certs || require_ca) && !cupsAreCredentialsValidForName(common_name, credentials))
   {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("No stored credentials, not valid for name."), 1);
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("No stored credentials, not valid for name."), true);
     trust = HTTP_TRUST_INVALID;
   }
-  else if (!cg->trust_first)
+  else if (num_certs > 1 && !http_check_roots(credentials))
   {
     // See if we have a site CA certificate we can compare...
     if ((tcreds = cupsCopyCredentials(path, "_site_")) != NULL)
@@ -873,15 +898,25 @@ cupsGetCredentialsTrust(
       }
 
       if (trust != HTTP_TRUST_OK)
-	_cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Credentials do not validate against site CA certificate."), 1);
+	_cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Credentials do not validate against site CA certificate."), true);
 
       free(tcreds);
     }
-    else
+    else if (require_ca)
     {
-      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Trust on first use is disabled."), 1);
+      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Trust on first use is disabled."), true);
       trust = HTTP_TRUST_INVALID;
     }
+    else if (!cg->trust_first)
+    {
+      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Trust on first use is disabled."), true);
+      trust = HTTP_TRUST_INVALID;
+    }
+  }
+  else if ((!cg->any_root || require_ca) && num_certs == 1)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Self-signed credentials are blocked."), true);
+    trust = HTTP_TRUST_INVALID;
   }
 
   if (trust == HTTP_TRUST_OK && !cg->expired_certs)
@@ -891,15 +926,9 @@ cupsGetCredentialsTrust(
     time(&curtime);
     if (curtime < gnutls_x509_crt_get_activation_time(certs[0]) || curtime > gnutls_x509_crt_get_expiration_time(certs[0]))
     {
-      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Credentials have expired."), 1);
+      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Credentials have expired."), true);
       trust = HTTP_TRUST_EXPIRED;
     }
-  }
-
-  if (trust == HTTP_TRUST_OK && !cg->any_root && num_certs == 1)
-  {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Self-signed credentials are blocked."), 1);
-    trust = HTTP_TRUST_INVALID;
   }
 
   gnutls_free_certs(num_certs, certs);
@@ -1104,7 +1133,7 @@ cupsSignCredentialsRequest(
     }
     else
     {
-      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Validation of subjectAltName in X.509 certificate request failed."), 1);
+      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Validation of subjectAltName in X.509 certificate request failed."), true);
       goto done;
     }
   }
@@ -1131,7 +1160,7 @@ cupsSignCredentialsRequest(
 
   if (purpose & ~allowed_purpose)
   {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad keyUsage extension in X.509 certificate request."), 1);
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad keyUsage extension in X.509 certificate request."), true);
     goto done;
   }
 
@@ -1180,7 +1209,7 @@ cupsSignCredentialsRequest(
 
     if (usage & ~allowed_usage)
     {
-      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad extKeyUsage extension in X.509 certificate request."), 1);
+      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad extKeyUsage extension in X.509 certificate request."), true);
       goto done;
     }
   }
@@ -1233,7 +1262,7 @@ cupsSignCredentialsRequest(
 
   if (!root_crt || !root_key)
   {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to load X.509 CA certificate and private key."), 1);
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to load X.509 CA certificate and private key."), true);
     goto done;
   }
 
@@ -1515,7 +1544,7 @@ _httpTLSStart(http_t *http)		// I - Connection to server
     DEBUG_puts("4_httpTLSStart: cupsSetServerCredentials not called.");
     http->error  = errno = EINVAL;
     http->status = HTTP_STATUS_ERROR;
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Server credentials not set."), 1);
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Server credentials not set."), true);
 
     return (false);
   }
@@ -1648,7 +1677,7 @@ _httpTLSStart(http_t *http)		// I - Connection to server
 	DEBUG_puts("4_httpTLSStart: cupsCreateCredentials failed.");
 	http->error  = errno = EINVAL;
 	http->status = HTTP_STATUS_ERROR;
-	_cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create server credentials."), 1);
+	_cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create server credentials."), true);
 	cupsMutexUnlock(&tls_mutex);
 
 	return (false);
@@ -1664,7 +1693,7 @@ _httpTLSStart(http_t *http)		// I - Connection to server
       DEBUG_puts("4_httpTLSStart: cupsCreateCredentials failed.");
       http->error  = errno = EINVAL;
       http->status = HTTP_STATUS_ERROR;
-      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create server credentials."), 1);
+      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create server credentials."), true);
       cupsMutexUnlock(&tls_mutex);
       return (false);
     }
