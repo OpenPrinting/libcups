@@ -1870,7 +1870,6 @@
 		273BF6B81333B4A90022CAAB /* tests */ = {
 			isa = PBXGroup;
 			children = (
-				2707FC4C2C0E19660035BBFC /* testoauth.c */,
 				27DD4F1A28ECE86300F20662 /* test-internal.h */,
 				2778BBDA275DA0D80070DA11 /* fuzzipp.c */,
 				2712866A1CC130FF00E517C7 /* rasterbench.c */,
@@ -1890,6 +1889,7 @@
 				2797D73828E5D2760056D546 /* testjson.c */,
 				2794DA8A29DCB82000B71A3F /* testjwt.c */,
 				727EF048192E3544001EF690 /* testlang.c */,
+				2707FC4C2C0E19660035BBFC /* testoauth.c */,
 				727EF049192E3544001EF690 /* testoptions.c */,
 				727EF04B192E3544001EF690 /* testpwg.c */,
 				27F89DA21B3AC43B00E5A4B7 /* testraster.c */,

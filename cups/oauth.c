@@ -66,6 +66,24 @@ extern char **environ;			// @private@
 
 
 //
+// Local constants...
+//
+
+static const char *github_metadata =	// Github.com OAuth metadata
+"{\
+\"issuer\":\"\",\
+\"authorization_endpoint\":\"https://github.com/login/oauth/authorize\",\
+\"token_endpoint\":\"https://github.com/login/oauth/access_token\",\
+\"registration_endpoint\":\"\",\
+\"token_endpoint_auth_methods_supported\":[\"client_secret_basic\"],\
+\"scopes_supported\":[\"repo\",\"repo:status\",\"repo_deployment\",\"public_repo\",\"repo:invite\",\"security_events\",\"admin:repo_hook\",\"write:repo_hook\",\"read:repo_hook\",\"admin:org\",\"write:org\",\"read:org\",\"admin:public_key\",\"write:public_key\",\"read:public_key\",\"admin:org_hook\",\"gist\",\"notifications\",\"user\",\"read:user\",\"user:email\",\"user:follow\",\"project\",\"read:project\",\"delete_repo\",\"write:packages\",\"read:packages\",\"delete:packages\",\"admin.gpg_key\",\"write:gpg_key\",\"read:gpg_key\",\"codespace\",\"workflow\"],\
+\"response_types_supported\":[\"code\"],\
+\"grant_types_supported\":[\"authorization_code\",\"refresh_token\",\"\",\"urn:ietf:params:oauth:grant-type:device_code\"],\
+\"device_authorization_endpoint\":\"https://github.com/login/device/code\",\
+}";
+
+
+//
 // Local types...
 //
 
@@ -73,6 +91,7 @@ typedef enum _cups_otype_e		// OAuth data type
 {
   _CUPS_OTYPE_ACCESS,			// Access token
   _CUPS_OTYPE_CLIENT_ID,		// Client ID
+  _CUPS_OTYPE_CLIENT_SECRET,		// Client secret
   _CUPS_OTYPE_CODE_VERIFIER,		// Client code_verifier
   _CUPS_OTYPE_ID,			// (User) ID token
   _CUPS_OTYPE_METADATA,			// Server metadata
@@ -91,6 +110,7 @@ static cups_json_t *oauth_do_post(const char *ep, const char *content_type, cons
 static char	*oauth_load_value(const char *auth_uri, const char *secondary_uri, _cups_otype_t otype);
 static char	*oauth_make_path(char *buffer, size_t bufsize, const char *auth_uri, const char *secondary_uri, _cups_otype_t otype);
 static char	*oauth_make_software_id(char *buffer, size_t bufsize);
+static bool	oauth_metadata_contains(cups_json_t *metadata, const char *parameter, const char *value);
 static void	oauth_save_value(const char *auth_uri, const char *secondary_uri, _cups_otype_t otype, const char *value);
 static bool	oauth_set_error(cups_json_t *json, size_t num_form, cups_option_t *form);
 
@@ -288,15 +308,20 @@ cupsOAuthGetAuthorizationCode(
   httpAssembleURI(HTTP_URI_CODING_ALL, redirect_uri, sizeof(redirect_uri), "http", /*userpass*/NULL, "127.0.0.1", port, "/finish");
 
   // Make state and code verification strings...
-  code_verifier = cupsOAuthMakeBase64Random(128);
-  nonce         = cupsOAuthMakeBase64Random(16);
-  state         = cupsOAuthMakeBase64Random(16);
+  if (oauth_metadata_contains(metadata, "code_challenge_methods_supported", "S256"))
+    code_verifier = cupsOAuthMakeBase64Random(128);
+  else
+    code_verifier = NULL;
 
-  if (!code_verifier || !nonce || !state)
+  if (oauth_metadata_contains(metadata, "scopes_supported", "openid"))
+    nonce = cupsOAuthMakeBase64Random(16);
+  else
+    nonce = NULL;
+
+  state = cupsOAuthMakeBase64Random(16);
+
+  if (!state)
     goto done;
-
-  oauth_save_value(auth_uri, resource_uri, _CUPS_OTYPE_CODE_VERIFIER, /*value*/NULL);
-  oauth_save_value(auth_uri, resource_uri, _CUPS_OTYPE_NONCE, /*value*/NULL);
 
   // Get the authorization URL...
   if ((url = cupsOAuthMakeAuthorizationURL(auth_uri, metadata, resource_uri, scopes, client_id, code_verifier, nonce, redirect_uri, state)) == NULL)
@@ -559,15 +584,9 @@ cupsOAuthGetClientId(
   {
     if ((client_id = strdup(value)) != NULL)
     {
-      // Save client_id...
-      char	filename[1024];		// Client ID file
-      int	fd;			// File descriptor
-
-      if (oauth_make_path(filename, sizeof(filename), auth_uri, redirect_uri, _CUPS_OTYPE_CLIENT_ID) && (fd = open(filename, O_CREAT | O_TRUNC | O_WRONLY | O_NOFOLLOW, 0600)) >= 0)
-      {
-        write(fd, client_id, strlen(client_id));
-        close(fd);
-      }
+      // Save client_id and optional client_secret...
+      oauth_save_value(auth_uri, redirect_uri, _CUPS_OTYPE_CLIENT_ID, value);
+      oauth_save_value(auth_uri, redirect_uri, _CUPS_OTYPE_CLIENT_SECRET, cupsJSONGetString(cupsJSONFind(response, "client_secret")));
     }
   }
 
@@ -606,6 +625,10 @@ cupsOAuthGetMetadata(
     "/.well-known/openid-configuration"
   };
 
+
+  // Special-cases...
+  if (!strcmp(auth_uri, "https://github.com"))
+    return (cupsJSONImportString(github_metadata));
 
   // Get existing metadata...
   if (!oauth_make_path(filename, sizeof(filename), auth_uri, /*secondary_uri*/NULL, _CUPS_OTYPE_METADATA))
@@ -736,7 +759,8 @@ cupsOAuthGetTokens(
     time_t        *access_expires)	// O - Expiration time for access token
 {
   const char	*token_ep;		// Token endpoint
-  char		*code_verifier,		// Prior code_verifier value
+  char		*client_secret,		// Prior client_secret value
+		*code_verifier,		// Prior code_verifier value
 		*nonce = NULL;		// Prior nonce value
   size_t	num_form = 0;		// Number of form variables
   cups_option_t	*form = NULL;		// Form variables
@@ -753,6 +777,7 @@ cupsOAuthGetTokens(
   static const char * const grant_types[] =
   {					// Grant type strings
     "authorization_code",
+    "urn:ietf:params:oauth:grant-type:device_code",
     "refresh_token"
   };
 
@@ -768,6 +793,12 @@ cupsOAuthGetTokens(
   num_form = cupsAddOption("grant_type", grant_types[grant_type], num_form, &form);
   num_form = cupsAddOption("code", grant_code, num_form, &form);
   num_form = cupsAddOption("redirect_uri", redirect_uri, num_form, &form);
+
+  if ((client_secret = oauth_load_value(auth_uri, resource_uri, _CUPS_OTYPE_CLIENT_SECRET)) != NULL)
+  {
+    num_form = cupsAddOption("client_secret", client_secret, num_form, &form);
+    free(client_secret);
+  }
 
   if ((code_verifier = oauth_load_value(auth_uri, resource_uri, _CUPS_OTYPE_CODE_VERIFIER)) != NULL)
   {
@@ -900,20 +931,30 @@ cupsOAuthMakeAuthorizationURL(
     return (NULL);
 
   // Make the authorization URL using the information supplied...
-  num_vars = cupsAddOption("response_type", "code", num_vars, &vars);
+  if (oauth_metadata_contains(metadata, "response_type_supported", "code id_token"))
+    num_vars = cupsAddOption("response_type", "code id_token", num_vars, &vars);
+  else
+    num_vars = cupsAddOption("response_type", "code", num_vars, &vars);
+
   num_vars = cupsAddOption("client_id", client_id, num_vars, &vars);
   num_vars = cupsAddOption("redirect_uri", redirect_uri, num_vars, &vars);
 
-  if (code_verifier)
+  if (code_verifier && oauth_metadata_contains(metadata, "code_challenge_methods_supported", "S256"))
   {
+    oauth_save_value(auth_uri, resource_uri, _CUPS_OTYPE_CODE_VERIFIER, /*value*/NULL);
+
     cupsHashData("sha2-256", code_verifier, strlen(code_verifier), sha256, sizeof(sha256));
-    httpEncode64(code_challenge, (int)sizeof(code_challenge), (char *)sha256, (int)sizeof(sha256), true);
+    httpEncode64(code_challenge, sizeof(code_challenge), (char *)sha256, sizeof(sha256), true);
     num_vars = cupsAddOption("code_challenge", code_challenge, num_vars, &vars);
     num_vars = cupsAddOption("code_challenge_method", "S256", num_vars, &vars);
   }
 
-  if (nonce)
+  if (nonce && oauth_metadata_contains(metadata, "scopes_supported", "openid"))
+  {
+    oauth_save_value(auth_uri, resource_uri, _CUPS_OTYPE_NONCE, /*value*/NULL);
+
     num_vars = cupsAddOption("nonce", nonce, num_vars, &vars);
+  }
 
   if (resource_uri)
     num_vars = cupsAddOption("resource", resource_uri, num_vars, &vars);
@@ -960,6 +1001,22 @@ cupsOAuthMakeBase64Random(size_t len)	// I - Number of bytes
 
   // Copy and return the random string...
   return (strdup(base64url));
+}
+
+
+//
+// 'cupsOAuthSetClientId()' - Save client_id and client_secret values.
+//
+
+void
+cupsOAuthSetClientId(
+    const char *auth_uri,		// I - Authorization Server URI
+    const char *redirect_uri,		// I - Redirection URI
+    const char *client_id,		// I - client_id
+    const char *client_secret)		// I - client_secret value or `NULL` for none
+{
+  oauth_save_value(auth_uri, redirect_uri, _CUPS_OTYPE_CLIENT_ID, client_id);
+  oauth_save_value(auth_uri, redirect_uri, _CUPS_OTYPE_CLIENT_SECRET, client_secret);
 }
 
 
@@ -1106,6 +1163,7 @@ oauth_do_post(const char *ep,		// I - Endpoint URI
   req_length = strlen(request);
 
   httpClearFields(http);
+  httpSetField(http, HTTP_FIELD_ACCEPT, "application/json,text/json");
   httpSetField(http, HTTP_FIELD_CONTENT_TYPE, content_type);
   httpSetLength(http, req_length);
 
@@ -1209,6 +1267,7 @@ oauth_make_path(
   {
     "accs",				// Access token
     "clid",				// Client ID
+    "csec",				// Client secret
     "cver",				// Code verifier
     "idtk",				// ID token
     "meta",				// Metadata
@@ -1339,6 +1398,24 @@ oauth_make_software_id(char   *buffer,	// I - UUID buffer
   snprintf(buffer, bufsize, "%02X%02X%02X%02X-%02X%02X-%02X%02X-%02X%02X-%02X%02X%02X%02X%02X%02X", uuid[0], uuid[1], uuid[2], uuid[3], uuid[4], uuid[5], uuid[6], uuid[7], uuid[8], uuid[9], uuid[10], uuid[11], uuid[12], uuid[13], uuid[14], uuid[15]);
 
   return (buffer);
+}
+
+
+//
+// 'oauth_metadata_contains()' - Determine whether a metadata parameter contains the specified value.
+//
+
+static bool				// O - `true` if present, `false` otherwise
+oauth_metadata_contains(
+    cups_json_t *metadata,		// I - Authorization server metadata
+    const char  *parameter,		// I - Metadata parameter
+    const char  *value)			// I - Parameter value
+{
+  (void)metadata;
+  (void)parameter;
+  (void)value;
+
+  return (false);
 }
 
 

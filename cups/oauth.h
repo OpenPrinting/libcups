@@ -22,6 +22,7 @@ extern "C" {
 typedef enum cups_ogrant_e		// OAuth Grant Types
 {
   CUPS_OGRANT_AUTHORIZATION_CODE,	// Authorization code
+  CUPS_OGRANT_DEVICE_CODE,		// Device code
   CUPS_OGRANT_REFRESH_TOKEN		// Refresh token
 } cups_ogrant_t;
 
@@ -45,6 +46,7 @@ extern char		*cupsOAuthGetTokens(const char *auth_uri, cups_json_t *metadata, co
 extern char		*cupsOAuthMakeAuthorizationURL(const char *auth_uri, cups_json_t *metadata, const char *resource_uri, const char *scopes, const char *client_id, const char *code_verifier, const char *nonce, const char *redirect_uri, const char *state) _CUPS_PUBLIC;
 extern char		*cupsOAuthMakeBase64Random(size_t len) _CUPS_PUBLIC;
 
+extern void		cupsOAuthSetClientId(const char *auth_uri, const char *redirect_uri, const char *client_id, const char *client_secret) _CUPS_PUBLIC;
 extern void		cupsOAuthSetTokens(const char *auth_uri, const char *resource_uri, const char *access_token, time_t access_expires, const char *id_token, const char *refresh_token) _CUPS_PUBLIC;
 
 
