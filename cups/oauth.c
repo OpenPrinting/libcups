@@ -41,7 +41,7 @@ extern char **environ;			// @private@
 // The intent is for CUPS to support using common OAuth implementations,
 // including (but not limited to):
 //
-// - Amazon Cognito (ADD LINK)
+// - Amazon Cognito (<https://aws.amazon.com/cognito/>)
 // - Canonical Ubuntu One (ADD LINK)
 // - Github (ADD LINK)
 // - Google (ADD LINK)
@@ -289,7 +289,9 @@ cupsOAuthGetAuthorizationCode(
 
   // Listen to a local port for 127.0.0.1...
   memset(&addr, 0, sizeof(addr));
+#ifdef __APPLE__
   addr.ipv4.sin_len         = sizeof(struct sockaddr_in);
+#endif // __APPLE__
   addr.ipv4.sin_family      = AF_INET;
   addr.ipv4.sin_addr.s_addr = htonl(0x7f000001);
 
