@@ -125,7 +125,7 @@ bool					// O - `true` on success, `false` on failure
 cupsSaveCredentials(
     const char *path,			// I - Directory path for certificate/key store or `NULL` for default
     const char *common_name,		// I - Common name for certificate
-    const char *credentials,		// I - PEM-encoded certificate chain
+    const char *credentials,		// I - PEM-encoded certificate chain or `NULL` to remove
     const char *key)			// I - PEM-encoded private key or `NULL` for none
 {
   if (http_save_file(path, common_name, "crt", credentials))
@@ -660,14 +660,22 @@ http_save_file(const char *path,	// I - Directory path for certificate/key store
 
 
   // Range check input...
-  if (!common_name || !value)
+  if (!common_name)
     return (false);
 
   // Get default path as needed...
   if (!path)
     path = http_default_path(defpath, sizeof(defpath));
 
-  if ((fd = open(http_make_path(filename, sizeof(filename), path, common_name, ext), O_CREAT | O_WRONLY | O_TRUNC, 0644)) < 0)
+  http_make_path(filename, sizeof(filename), path, common_name, ext);
+
+  if (!value)
+  {
+    unlink(filename);
+    return (true);
+  }
+
+  if ((fd = open(filename, O_CREAT | O_WRONLY | O_TRUNC, 0644)) < 0)
     return (false);
 
   if (write(fd, value, strlen(value)) < 0)

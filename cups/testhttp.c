@@ -554,7 +554,7 @@ main(int  argc,				// I - Number of command-line arguments
 
   // Test HTTP GET requests...
   http = NULL;
-  out = stdout;
+  out  = stdout;
 
   for (i = 1; i < argc; i ++)
   {
@@ -596,12 +596,12 @@ main(int  argc,				// I - Number of command-line arguments
       if ((creds = httpCopyPeerCredentials(http)) != NULL)
       {
 	char *lcreds;
-        http_trust_t trust = cupsGetCredentialsTrust(NULL, hostname, creds, /*require_ca*/false);
+        http_trust_t trust = cupsGetCredentialsTrust(NULL, hostname, creds, /*require_ca*/true);
 
         cupsGetCredentialsInfo(creds, info, sizeof(info));
 
 //	printf("Count: %u\n", (unsigned)cupsArrayGetCount(creds));
-        printf("Trust: %s\n", trusts[trust]);
+        printf("Trust: %s (%s)\n", trusts[trust], cupsGetErrorString());
         printf("Expiration: %s\n", httpGetDateString(cupsGetCredentialsExpiration(creds), expstr, sizeof(expstr)));
         printf("IsValidName: %s\n", cupsAreCredentialsValidForName(hostname, creds) ? "true" : "false");
         printf("String: \"%s\"\n", info);
@@ -635,6 +635,7 @@ main(int  argc,				// I - Number of command-line arguments
 	  printf("SaveCredentials: %s\n", cupsSaveCredentials(NULL, hostname, creds, /*key*/NULL) ? "true" : "false");
 	  trust = cupsGetCredentialsTrust(NULL, hostname, creds, /*require_ca*/false);
 	  printf("New Trust: %s\n", trusts[trust]);
+ 	  printf("SaveCredentials (NULL): %s\n", cupsSaveCredentials(NULL, hostname, /*creds*/NULL, /*key*/NULL) ? "true" : "false");
 	}
 
         free(creds);
@@ -669,7 +670,7 @@ main(int  argc,				// I - Number of command-line arguments
       httpSetField(http, HTTP_FIELD_AUTHORIZATION, httpGetAuthString(http));
       httpSetField(http, HTTP_FIELD_ACCEPT_LANGUAGE, "en");
 
-      if (httpWriteRequest(http, "HEAD", resource))
+      if (!httpWriteRequest(http, "HEAD", resource))
       {
         if (httpReconnect(http, 30000, NULL))
         {
@@ -763,7 +764,7 @@ main(int  argc,				// I - Number of command-line arguments
       httpSetField(http, HTTP_FIELD_ACCEPT_LANGUAGE, "en");
       httpSetField(http, HTTP_FIELD_ACCEPT_ENCODING, encoding);
 
-      if (httpWriteRequest(http, "GET", resource))
+      if (!httpWriteRequest(http, "GET", resource))
       {
         if (httpReconnect(http, 30000, NULL))
         {

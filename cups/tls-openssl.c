@@ -11,6 +11,7 @@
 // information.
 //
 
+//// This file is included from tls.c
 #include <openssl/x509v3.h>
 #include <openssl/evp.h>
 #include <openssl/objects.h>
@@ -80,9 +81,21 @@ cupsAreCredentialsValidForName(
   bool			result = false;	// Result
 
 
+  DEBUG_printf("cupsAreCredentialsValidForName(common_name=\"%s\", credentials=\"%s\")", common_name, credentials);
+
+  // Range check input...
+  if (!common_name || !credentials)
+    return (false);
+
+  // Load the credentials...
   if ((certs = openssl_load_x509(credentials)) != NULL)
   {
-    result = X509_check_host(sk_X509_value(certs, 0), common_name, strlen(common_name), 0, NULL) != 0;
+    // Check the hostname against the primary certificate...
+    int val = X509_check_host(sk_X509_value(certs, 0), common_name, strlen(common_name), /*flags*/0, /*peername*/NULL);
+
+    DEBUG_printf("1cupsAreCredentialsValidForName: X509_check_host(\"%s\") returned %d", common_name, val);
+
+    result = val > 0;
 
     sk_X509_free(certs);
   }
@@ -874,8 +887,6 @@ cupsGetCredentialsTrust(
 	_cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Credentials do not validate against site CA certificate."), true);
 
       free(tcreds);
-
-      // TODO: Support common CA's/roots
     }
     else if (require_ca)
     {
