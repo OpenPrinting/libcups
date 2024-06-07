@@ -266,7 +266,7 @@ clean:
 #
 
 depend:
-	$(CC) -MM -I.. -D_CUPS_SOURCE $(CPPFLAGS) $(OPTIONS) $(OBJS:.o=.c) | sed -e '1,$$s/ \/usr\/include\/[^ ]*//g' -e '1,$$s/ \/usr\/local\/include\/[^ ]*//g' | grep -e '^  \\$$' -v >Dependencies
+	$(CC) -MM -I.. -D_CUPS_SOURCE $(CPPFLAGS) $(OPTIONS) $(OBJS:.o=.c) | sed -e '1,$$s/ \/usr\/[^ ]*//g' | grep -e '^  \\$$' -v >Dependencies
 
 
 #
