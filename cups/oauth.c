@@ -318,7 +318,7 @@ cupsOAuthGetAuthorizationCode(
   }
 
   if (polldata.fd < 0)
-    return (NULL);
+    goto done;
 
   polldata.events = POLLIN | POLLERR | POLLHUP;
 
@@ -538,7 +538,8 @@ cupsOAuthGetAuthorizationCode(
   done:
 
   // Free strings, close the listen socket, and return...
-  httpAddrClose(&addr, polldata.fd);
+  if (polldata.fd >= 0)
+    httpAddrClose(&addr, polldata.fd);
 
   free(client_id);
   free(code_verifier);
@@ -866,11 +867,10 @@ cupsOAuthGetTokens(
   if (access_expires)
     *access_expires = access_expvalue;
 
-  cupsJSONDelete(response);
-
   // Return whatever we got...
   done:
 
+  cupsJSONDelete(response);
   cupsJWTDelete(jwt);
   free(nonce);
   free(request);
