@@ -2877,7 +2877,7 @@ ippReadIO(void        *src,		// I - Data source
 
 		buffer[n] = '\0';
 		value->string.text = _cupsStrAlloc((char *)buffer);
-		DEBUG_printf("2ippReadIO: value=\"%s\"", value->string.text);
+		DEBUG_printf("2ippReadIO: value=\"%s\"(%p)", value->string.text, value->string.text);
 	        break;
 
 	    case IPP_TAG_DATE :
@@ -3866,6 +3866,8 @@ ippSetValueTag(
   ipp_tag_t	temp_tag;		// Temporary value tag
 
 
+  DEBUG_printf("ippSetValueTag(ipp=%p, attr=%p(%p), value_tag=0x%x(%s))", ipp, attr, attr ? *attr : NULL, value_tag, ippTagString(value_tag));
+
   // Range check input...
   if (!ipp || !attr || !*attr)
     return (false);
@@ -3874,7 +3876,10 @@ ippSetValueTag(
   temp_tag = (ipp_tag_t)((int)((*attr)->value_tag) & IPP_TAG_CUPS_MASK);
 
   if (value_tag == temp_tag)
+  {
+    DEBUG_puts("2ippSetValueTag: No change.");
     return (true);
+  }
 
   // Otherwise implement changes as needed...
   switch (value_tag)
@@ -3896,12 +3901,16 @@ ippSetValueTag(
 
     case IPP_TAG_RANGE :
         if (temp_tag != IPP_TAG_INTEGER)
+        {
+          DEBUG_printf("2ippSetValueTag: Unable to convert %s to rangeOfInteger.", ippTagString(temp_tag));
           return (false);
+        }
 
         for (i = (*attr)->num_values, value = (*attr)->values; i > 0; i --, value ++)
         {
           integer            = value->integer;
           value->range.lower = value->range.upper = integer;
+          DEBUG_printf("2ippSetValueTag: values[%u].lower=%d, .upper=%d", (unsigned)((*attr)->num_values - i), value->range.lower, value->range.upper);
         }
 
         (*attr)->value_tag = IPP_TAG_RANGE;
@@ -3909,7 +3918,10 @@ ippSetValueTag(
 
     case IPP_TAG_NAME :
         if (temp_tag != IPP_TAG_KEYWORD)
+        {
+          DEBUG_printf("2ippSetValueTag: Unable to convert %s to name.", ippTagString(temp_tag));
           return (false);
+        }
 
         (*attr)->value_tag = (ipp_tag_t)(IPP_TAG_NAME | ((*attr)->value_tag & IPP_TAG_CUPS_CONST));
         break;
@@ -3917,10 +3929,16 @@ ippSetValueTag(
     case IPP_TAG_NAMELANG :
     case IPP_TAG_TEXTLANG :
         if (value_tag == IPP_TAG_NAMELANG && (temp_tag != IPP_TAG_NAME && temp_tag != IPP_TAG_KEYWORD))
+        {
+          DEBUG_printf("2ippSetValueTag: Unable to convert %s to nameWithLanguage.", ippTagString(temp_tag));
           return (false);
+        }
 
         if (value_tag == IPP_TAG_TEXTLANG && temp_tag != IPP_TAG_TEXT)
+        {
+          DEBUG_printf("2ippSetValueTag: Unable to convert %s to textWithLanguage.", ippTagString(temp_tag));
           return (false);
+        }
 
         if (ipp->attrs && ipp->attrs->next && ipp->attrs->next->name && !strcmp(ipp->attrs->next->name, "attributes-natural-language") && (ipp->attrs->next->value_tag & IPP_TAG_CUPS_MASK) == IPP_TAG_LANGUAGE)
         {
@@ -3934,14 +3952,22 @@ ippSetValueTag(
 	  (*attr)->values[0].string.language = _cupsStrAlloc(ipp_lang_code(cupsLangGetName(language), code, sizeof(code)));
         }
 
+	DEBUG_printf("2ippSetValueTag: values[0].string.language=\"%s\"(%p)", (*attr)->values[0].string.language, (*attr)->values[0].string.language);
+
         for (i = (*attr)->num_values - 1, value = (*attr)->values + 1; i > 0; i --, value ++)
+        {
           value->string.language = (*attr)->values[0].string.language;
+          DEBUG_printf("2ippSetValueTag: values[%u].string.language=\"%s\"(%s)", (unsigned)((*attr)->num_values - i), value->string.language, value->string.language);
+        }
 
         if ((int)(*attr)->value_tag & IPP_TAG_CUPS_CONST)
         {
           // Make copies of all values...
 	  for (i = (*attr)->num_values, value = (*attr)->values; i > 0; i --, value ++)
+	  {
 	    value->string.text = _cupsStrAlloc(value->string.text);
+	    DEBUG_printf("2ippSetValueTag: values[%u].string.text=\"%s\"(%s)", (unsigned)((*attr)->num_values - i), value->string.text, value->string.text);
+	  }
         }
 
         (*attr)->value_tag = IPP_TAG_NAMELANG;
@@ -3949,8 +3975,12 @@ ippSetValueTag(
 
     case IPP_TAG_KEYWORD :
         if (temp_tag == IPP_TAG_NAME || temp_tag == IPP_TAG_NAMELANG)
+        {
+          DEBUG_printf("2ippSetValueTag: Ignoring change of %s to keyword.", ippTagString(temp_tag));
           break;			// Silently "allow" name -> keyword
+        }
 
+        DEBUG_printf("2ippSetValueTag: Unable to convert %s to keyword.", ippTagString(temp_tag));
         return (false);
 
     case IPP_TAG_EXTENSION :
@@ -3958,13 +3988,16 @@ ippSetValueTag(
         {
           // Allow octetString -> extension
           (*attr)->value_tag = value_tag;
+          DEBUG_puts("2ippSetValueTag: Changing octetString to extension.");
           break;
         }
 
     default :
+        DEBUG_printf("2ippSetValueTag: Unable to convert %s to %s.", ippTagString(temp_tag), ippTagString(value_tag));
         return (false);
   }
 
+  DEBUG_puts("2ippSetValueTag: Successful.");
   return (true);
 }
 
