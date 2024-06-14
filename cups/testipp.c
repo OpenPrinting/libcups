@@ -761,9 +761,11 @@ main(int  argc,			// I - Number of command-line arguments
   }
   else
   {
-    // Read IPP files...
+    // Read/write IPP files...
     for (i = 1; i < (size_t)argc; i ++)
     {
+      char	outname[1024];		// Output filename
+
       if (strlen(argv[i]) > 5 && !strcmp(argv[i] + strlen(argv[i]) - 5, ".test"))
       {
         // Read an ASCII IPP message...
@@ -805,22 +807,18 @@ main(int  argc,			// I - Number of command-line arguments
         // Read a raw (binary) IPP message...
 	if ((fp = cupsFileOpen(argv[i], "r")) == NULL)
 	{
-	  printf("Unable to open \"%s\" - %s\n", argv[i], strerror(errno));
+	  printf("Unable to open \"%s\": %s\n", argv[i], strerror(errno));
 	  status = 1;
 	  continue;
 	}
 
 	request = ippNew();
-	while ((state = ippReadIO(fp, (ipp_io_cb_t)cupsFileRead, 1, NULL,
-				  request)) == IPP_STATE_ATTRIBUTE);
+	while ((state = ippReadIO(fp, (ipp_io_cb_t)cupsFileRead, 1, NULL, request)) == IPP_STATE_ATTRIBUTE);
 
 	if (state != IPP_STATE_DATA)
 	{
 	  printf("Error reading IPP message from \"%s\": %s\n", argv[i], cupsGetErrorString());
 	  status = 1;
-
-	  ippDelete(request);
-	  request = NULL;
 	}
 
         cupsFileClose(fp);
@@ -828,8 +826,31 @@ main(int  argc,			// I - Number of command-line arguments
 
       if (request)
       {
+        // Print message to stdout...
 	printf("\n%s:\n", argv[i]);
 	print_attributes(request, 4);
+
+        // Write to FILENAME.out
+        snprintf(outname, sizeof(outname), "%s.out", argv[i]);
+
+        if ((fp = cupsFileOpen(outname, "w")) == NULL)
+        {
+          printf("Unable to create \"%s\": %s\n", outname, strerror(errno));
+          status = 1;
+        }
+        else
+        {
+          ippSetState(request, IPP_STATE_IDLE);
+          while ((state = ippWriteIO(fp, (ipp_io_cb_t)cupsFileWrite, 1, NULL, request)) == IPP_STATE_ATTRIBUTE);
+          cupsFileClose(fp);
+
+          if (state != IPP_STATE_DATA)
+	  {
+	    printf("Error writing IPP message to \"%s\": %s\n", outname, cupsGetErrorString());
+	    status = 1;
+	  }
+        }
+
 	ippDelete(request);
       }
     }
