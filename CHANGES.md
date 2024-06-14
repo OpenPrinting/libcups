@@ -27,6 +27,7 @@ libcups v3.0rc1 (TBD)
 - Fixed hang/crash in `cupsEnumDests`/`cupsGetDests` (Issue #74)
 - Fixed encoding of IPv6 addresses in HTTP requests (Issue #78)
 - Fixed encoding of `IPP_TAG_EXTENSION` values in IPP messages (Issue #80)
+- Fixed error handling when reading a mixed `1setOf` attribute (Issue #83)
 - Fixed non-quick copy of collection values.
 - Fixed error handling in `cupsConnectDest`.
 - Fixed TLS negotiation using OpenSSL with servers that require the TLS SNI
