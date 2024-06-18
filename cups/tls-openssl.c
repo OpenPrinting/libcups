@@ -91,11 +91,84 @@ cupsAreCredentialsValidForName(
   if ((certs = openssl_load_x509(credentials)) != NULL)
   {
     // Check the hostname against the primary certificate...
-    int val = X509_check_host(sk_X509_value(certs, 0), common_name, strlen(common_name), /*flags*/0, /*peername*/NULL);
+    X509	*cert = sk_X509_value(certs, 0);
+					// Primary certificate
+    char 	subjectName[256];	// Common name from certificate
+    STACK_OF(GENERAL_NAME) *names = NULL;
+					// subjectAltName values
 
-    DEBUG_printf("1cupsAreCredentialsValidForName: X509_check_host(\"%s\") returned %d", common_name, val);
+    DEBUG_printf("1cupsAreCredentialsValidForName: certs=%p(num=%d), cert=%p", certs, sk_X509_num(certs), cert);
 
-    result = val > 0;
+    X509_NAME_get_text_by_NID(X509_get_subject_name(cert), NID_commonName, subjectName, sizeof(subjectName));
+    DEBUG_printf("1cupsAreCredentialsValidForName: subjectName=\"%s\"", subjectName);
+
+    if (!_cups_strcasecmp(common_name, subjectName))
+    {
+      DEBUG_puts("1cupsAreCredentialsValidForName: Match.");
+      result = true;
+    }
+
+#ifdef DEBUG
+    char issuerName[256];
+    X509_NAME_get_text_by_NID(X509_get_issuer_name(cert), NID_commonName, issuerName, sizeof(issuerName));
+    DEBUG_printf("1cupsAreCredentialsValidForName: issuerName=\"%s\"", issuerName);
+#endif // DEBUG
+
+    if (!result)
+    {
+      names = X509_get_ext_d2i(cert, NID_subject_alt_name, /*crit*/NULL, /*idx*/NULL);
+      DEBUG_printf("1cupsAreCredentialsValidForName: names=%p", names);
+    }
+
+    if (names)
+    {
+      // Got subjectAltName values, look at them...
+      int	i,			// Looping var
+		count;			// Number of values
+
+      for (i = 0, count = sk_GENERAL_NAME_num(names); i < count && !result; i ++)
+      {
+	const GENERAL_NAME *name = sk_GENERAL_NAME_value(names, i);
+					// subjectAltName value
+
+        if (!name)
+          continue;
+
+        DEBUG_printf("1cupsAreCredentialsValidForName: subjectAltName[%d/%d].type=%d", i + 1, count, name->type);
+	if (name->type == GEN_DNS)
+	{
+	  // Match a DNS name...
+	  char	*dNSName;		// DNS name value
+
+          if (ASN1_STRING_to_UTF8((unsigned char **)&dNSName, name->d.dNSName) > 0)
+          {
+            DEBUG_printf("1cupsAreCredentialsValidForName: subjectAltName[%d/%d].dNSName=\"%s\"", i + 1, count, dNSName);
+
+            if (!_cups_strcasecmp(common_name, dNSName))
+            {
+              // Direct name match...
+              DEBUG_puts("1cupsAreCredentialsValidForName: Match.");
+              result = true;
+	    }
+	    else if (!strncmp(dNSName, "*.", 2))
+	    {
+	      // Compare wildcard...
+	      const char *domain_name = strchr(common_name, '.');
+					// Domain name of common name
+              if (domain_name && !_cups_strcasecmp(domain_name, dNSName + 1))
+              {
+		DEBUG_puts("1cupsAreCredentialsValidForName: Match.");
+                result = true;
+	      }
+	    }
+
+	    OPENSSL_free(dNSName);
+          }
+        }
+      }
+
+      GENERAL_NAMES_free(names);
+    }
 
     sk_X509_free(certs);
   }
@@ -691,7 +764,9 @@ cupsGetCredentialsInfo(
     const char		*sigalg;	// Signature algorithm
     unsigned char	md5_digest[16];	// MD5 result
 
+    DEBUG_printf("2cupsGetCredentialsInfo: certs=%p(%d certificates)", certs, sk_X509_num(certs));
     cert = sk_X509_value(certs, 0);
+    DEBUG_printf("2cupsGetCredentialsInfo: cert=%p", cert);
 
     X509_NAME_get_text_by_NID(X509_get_subject_name(cert), NID_commonName, name, sizeof(name));
     X509_NAME_get_text_by_NID(X509_get_issuer_name(cert), NID_commonName, issuer, sizeof(issuer));
@@ -1362,14 +1437,14 @@ httpCopyPeerCredentials(http_t *http)	// I - Connection to server
   STACK_OF(X509) *chain;		// Certificate chain
 
 
-  DEBUG_printf("httpCopyCredentials(http=%p)", http);
+  DEBUG_printf("httpCopyPeerCredentials(http=%p)", http);
 
   if (http && http->tls)
   {
     // Get the chain of certificates for the remote end...
     chain = SSL_get_peer_cert_chain(http->tls);
 
-    DEBUG_printf("1httpCopyCredentials: chain=%p", chain);
+    DEBUG_printf("1httpCopyPeerCredentials: chain=%p", chain);
 
     if (chain)
     {
@@ -1383,6 +1458,21 @@ httpCopyPeerCredentials(http_t *http)	// I - Connection to server
 					  // Current certificate
 	BIO	*bio = BIO_new(BIO_s_mem());
 					  // Memory buffer for cert
+
+        DEBUG_printf("1httpCopyPeerCredentials: chain[%d/%d]=%p", i + 1, count, cert);
+
+#ifdef DEBUG
+	char subjectName[256], issuerName[256];
+	X509_NAME_get_text_by_NID(X509_get_subject_name(cert), NID_commonName, subjectName, sizeof(subjectName));
+	X509_NAME_get_text_by_NID(X509_get_issuer_name(cert), NID_commonName, issuerName, sizeof(issuerName));
+	DEBUG_printf("1httpCopyPeerCredentials: subjectName=\"%s\", issuerName=\"%s\"", subjectName, issuerName);
+
+	STACK_OF(GENERAL_NAME) *names;	// subjectAltName values
+	names = X509_get_ext_d2i(cert, NID_subject_alt_name, /*crit*/NULL, /*idx*/NULL);
+	DEBUG_printf("1httpCopyPeerCredentials: subjectAltNames=%p(%d)", names, names ? sk_GENERAL_NAME_num(names) : 0);
+        if (names)
+          GENERAL_NAMES_free(names);
+#endif // DEBUG
 
 	if (bio)
 	{
@@ -1412,6 +1502,8 @@ httpCopyPeerCredentials(http_t *http)	// I - Connection to server
       }
     }
   }
+
+  DEBUG_printf("1httpCopyPeerCredentials: Returning \"%s\".", credentials);
 
   return (credentials);
 }
@@ -2373,6 +2465,8 @@ openssl_load_x509(
       X509_free(cert);
       break;
     }
+
+    cert = NULL;
   }
 
   BIO_free(bio);

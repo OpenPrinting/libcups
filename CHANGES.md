@@ -32,6 +32,8 @@ libcups v3.0rc1 (TBD)
 - Fixed error handling in `cupsConnectDest`.
 - Fixed TLS negotiation using OpenSSL with servers that require the TLS SNI
   extension.
+- Fixed a certificate loading issue with OpenSSL.
+- Fixed cupsAreCredentialsValidForName with OpenSSL.
 
 
 libcups v3.0b2 (October 5, 2023)
