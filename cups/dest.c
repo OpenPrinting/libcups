@@ -1641,7 +1641,7 @@ cupsSetDests(http_t      *http,		// I - Connection to server or @code CUPS_HTTP_
   if (cg->userconfig)
   {
     // Create user subdirectory...
-    if (mkdir(cg->userconfig, 0700) && errno != EEXIST)
+    if (!_cupsDirCreate(cg->userconfig, 0700))
     {
       cupsFreeDests(num_temps, temps);
       return (false);

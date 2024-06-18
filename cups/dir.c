@@ -3,7 +3,7 @@
 //
 // This set of APIs abstracts enumeration of directory entries.
 //
-// Copyright © 2022-2023 by OpenPrinting.
+// Copyright © 2022-2024 by OpenPrinting.
 // Copyright © 2007-2021 by Apple Inc.
 // Copyright © 1997-2005 by Easy Software Products, all rights reserved.
 //
@@ -13,8 +13,47 @@
 
 #include "string-private.h"
 #include "debug-internal.h"
-#include "cups.h"
+#include "cups-private.h"
 #include "dir.h"
+
+
+//
+// Common code...
+//
+
+bool					// O - `true` on success, `false` on failure
+_cupsDirCreate(const char *path,	// I - Directory path
+               mode_t     mode)		// I - Permissions of final directory
+{
+  bool	ret = true;			// Return value
+  char	*copypath,			// Copy of path
+	*ptr;				// Pointer into path
+
+
+  // Copy the path
+  if ((copypath = strdup(path)) == NULL)
+    return (false);
+
+  // Create any intermediate paths as needed...
+  for (ptr = strchr(copypath + 1, '/'); ptr; ptr = strchr(ptr + 1, '/'))
+  {
+    // Truncate path for the subdir and create it modulo the umask...
+    *ptr = '\0';
+    if (mkdir(copypath, 0777) && errno != EEXIST)
+    {
+      ret = false;
+      break;
+    }
+    *ptr = '/';
+  }
+
+  // Free the copy of the path and then make the last component...
+  free(copypath);
+  if (ret && mkdir(path, mode) && errno != EEXIST)
+    ret = false;
+
+  return (ret);
+}
 
 
 //

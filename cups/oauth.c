@@ -1302,14 +1302,8 @@ oauth_make_path(
   }
 
   // First make sure the "oauth" directory exists...
-  if (mkdir(cg->userconfig, 0700) && errno != EEXIST)
-  {
-    *buffer = '\0';
-    return (NULL);
-  }
-
   snprintf(buffer, bufsize, "%s/oauth", cg->userconfig);
-  if (mkdir(buffer, 0700) && errno != EEXIST)
+  if (!_cupsDirCreate(buffer, 0700))
   {
     *buffer = '\0';
     return (NULL);
