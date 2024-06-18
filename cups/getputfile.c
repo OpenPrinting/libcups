@@ -62,7 +62,7 @@ cupsGetFd(http_t     *http,		// I - Connection to server or @code CUPS_HTTP_DEFA
     if (!_cups_strcasecmp(httpGetField(http, HTTP_FIELD_CONNECTION), "close"))
     {
       httpClearFields(http);
-      if (!httpReconnect(http, 30000, NULL))
+      if (!httpConnectAgain(http, 30000, NULL))
       {
 	status = HTTP_STATUS_ERROR;
 	break;
@@ -84,7 +84,7 @@ cupsGetFd(http_t     *http,		// I - Connection to server or @code CUPS_HTTP_DEFA
 
     if (!httpWriteRequest(http, "GET", resource))
     {
-      if (httpReconnect(http, 30000, NULL))
+      if (httpConnectAgain(http, 30000, NULL))
       {
         status = HTTP_STATUS_UNAUTHORIZED;
         continue;
@@ -114,7 +114,7 @@ cupsGetFd(http_t     *http,		// I - Connection to server or @code CUPS_HTTP_DEFA
         break;
       }
 
-      if (!httpReconnect(http, 30000, NULL))
+      if (!httpConnectAgain(http, 30000, NULL))
       {
         status = HTTP_STATUS_ERROR;
         break;
@@ -128,7 +128,7 @@ cupsGetFd(http_t     *http,		// I - Connection to server or @code CUPS_HTTP_DEFA
       httpFlush(http);
 
       // Reconnect...
-      if (!httpReconnect(http, 30000, NULL))
+      if (!httpConnectAgain(http, 30000, NULL))
       {
         status = HTTP_STATUS_ERROR;
         break;
@@ -253,7 +253,7 @@ cupsPutFd(http_t     *http,		// I - Connection to server or @code CUPS_HTTP_DEFA
     if (!_cups_strcasecmp(httpGetField(http, HTTP_FIELD_CONNECTION), "close"))
     {
       httpClearFields(http);
-      if (!httpReconnect(http, 30000, NULL))
+      if (!httpConnectAgain(http, 30000, NULL))
       {
 	status = HTTP_STATUS_ERROR;
 	break;
@@ -278,7 +278,7 @@ cupsPutFd(http_t     *http,		// I - Connection to server or @code CUPS_HTTP_DEFA
 
     if (!httpWriteRequest(http, "PUT", resource))
     {
-      if (httpReconnect(http, 30000, NULL))
+      if (httpConnectAgain(http, 30000, NULL))
       {
         status = HTTP_STATUS_UNAUTHORIZED;
         continue;
@@ -341,7 +341,7 @@ cupsPutFd(http_t     *http,		// I - Connection to server or @code CUPS_HTTP_DEFA
       httpFlush(http);
 
       // Reconnect...
-      if (!httpReconnect(http, 30000, NULL))
+      if (!httpConnectAgain(http, 30000, NULL))
       {
         status = HTTP_STATUS_ERROR;
         break;
@@ -369,7 +369,7 @@ cupsPutFd(http_t     *http,		// I - Connection to server or @code CUPS_HTTP_DEFA
         break;
       }
 
-      if (!httpReconnect(http, 30000, NULL))
+      if (!httpConnectAgain(http, 30000, NULL))
       {
         status = HTTP_STATUS_ERROR;
         break;
@@ -383,7 +383,7 @@ cupsPutFd(http_t     *http,		// I - Connection to server or @code CUPS_HTTP_DEFA
       httpFlush(http);
 
       // Reconnect...
-      if (!httpReconnect(http, 30000, NULL))
+      if (!httpConnectAgain(http, 30000, NULL))
       {
         status = HTTP_STATUS_ERROR;
         break;

@@ -355,7 +355,7 @@ cupsGetResponse(http_t     *http,	// I - Connection to server or `CUPS_HTTP_DEFA
 
       if (cupsDoAuthentication(http, "POST", resource))
       {
-        if (!httpReconnect(http, 30000, NULL))
+        if (!httpConnectAgain(http, 30000, NULL))
           http->status = HTTP_STATUS_ERROR;
       }
       else
@@ -368,7 +368,7 @@ cupsGetResponse(http_t     *http,	// I - Connection to server or `CUPS_HTTP_DEFA
       // Force a reconnect with encryption...
       DEBUG_puts("2cupsGetResponse: Need encryption...");
 
-      if (httpReconnect(http, 30000, NULL))
+      if (httpConnectAgain(http, 30000, NULL))
         httpSetEncryption(http, HTTP_ENCRYPTION_REQUIRED);
     }
   }
@@ -498,7 +498,7 @@ cupsSendRequest(http_t     *http,	// I - Connection to server or `CUPS_HTTP_DEFA
   else if (http->state != HTTP_STATE_WAITING)
   {
     DEBUG_printf("1cupsSendRequest: Unknown HTTP state (%d), reconnecting.", http->state);
-    if (!httpReconnect(http, 30000, NULL))
+    if (!httpConnectAgain(http, 30000, NULL))
       return (HTTP_STATUS_ERROR);
   }
 
@@ -516,7 +516,7 @@ cupsSendRequest(http_t     *http,	// I - Connection to server or `CUPS_HTTP_DEFA
   {
     DEBUG_puts("2cupsSendRequest: Connection: close");
     httpClearFields(http);
-    if (!httpReconnect(http, 30000, NULL))
+    if (!httpConnectAgain(http, 30000, NULL))
     {
       DEBUG_puts("1cupsSendRequest: Unable to reconnect.");
       return (HTTP_STATUS_SERVICE_UNAVAILABLE);
@@ -555,7 +555,7 @@ cupsSendRequest(http_t     *http,	// I - Connection to server or `CUPS_HTTP_DEFA
     if (!httpWriteRequest(http, "POST", resource))
     {
       DEBUG_puts("2cupsSendRequest: POST failed, reconnecting.");
-      if (!httpReconnect(http, 30000, NULL))
+      if (!httpConnectAgain(http, 30000, NULL))
       {
         DEBUG_puts("1cupsSendRequest: Unable to reconnect.");
         return (HTTP_STATUS_SERVICE_UNAVAILABLE);
@@ -656,7 +656,7 @@ cupsSendRequest(http_t     *http,	// I - Connection to server or `CUPS_HTTP_DEFA
 
           DEBUG_puts("2cupsSendRequest: Reconnecting after HTTP_STATUS_UNAUTHORIZED.");
 
-	  if (!httpReconnect(http, 30000, NULL))
+	  if (!httpConnectAgain(http, 30000, NULL))
 	  {
 	    DEBUG_puts("1cupsSendRequest: Unable to reconnect.");
 	    return (HTTP_STATUS_SERVICE_UNAVAILABLE);
@@ -668,7 +668,7 @@ cupsSendRequest(http_t     *http,	// I - Connection to server or `CUPS_HTTP_DEFA
 	  // encryption...
           DEBUG_puts("2cupsSendRequest: Reconnecting after HTTP_STATUS_UPGRADE_REQUIRED.");
 
-	  if (!httpReconnect(http, 30000, NULL))
+	  if (!httpConnectAgain(http, 30000, NULL))
 	  {
 	    DEBUG_puts("1cupsSendRequest: Unable to reconnect.");
 	    return (HTTP_STATUS_SERVICE_UNAVAILABLE);
@@ -688,7 +688,7 @@ cupsSendRequest(http_t     *http,	// I - Connection to server or `CUPS_HTTP_DEFA
 
           DEBUG_puts("2cupsSendRequest: Reconnecting after HTTP_EXPECTATION_FAILED.");
 
-	  if (!httpReconnect(http, 30000, NULL))
+	  if (!httpConnectAgain(http, 30000, NULL))
 	  {
 	    DEBUG_puts("1cupsSendRequest: Unable to reconnect.");
 	    return (HTTP_STATUS_SERVICE_UNAVAILABLE);

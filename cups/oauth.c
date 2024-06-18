@@ -678,7 +678,7 @@ cupsOAuthGetMetadata(
       if (!_cups_strcasecmp(httpGetField(http, HTTP_FIELD_CONNECTION), "close"))
       {
         httpClearFields(http);
-        if (!httpReconnect(http, /*msec*/30000, /*cancel*/NULL))
+        if (!httpConnectAgain(http, /*msec*/30000, /*cancel*/NULL))
         {
 	  status = HTTP_STATUS_ERROR;
 	  break;
@@ -690,7 +690,7 @@ cupsOAuthGetMetadata(
       httpSetField(http, HTTP_FIELD_IF_MODIFIED_SINCE, filedate);
       if (!httpWriteRequest(http, "GET", resource))
       {
-        if (!httpReconnect(http, 30000, NULL) || !httpWriteRequest(http, "GET", resource))
+        if (!httpConnectAgain(http, 30000, NULL) || !httpWriteRequest(http, "GET", resource))
         {
           status = HTTP_STATUS_ERROR;
 	  break;
@@ -1187,7 +1187,7 @@ oauth_do_post(const char *ep,		// I - Endpoint URI
 
   if (!httpWriteRequest(http, "POST", resource))
   {
-    if (!httpReconnect(http, 30000, NULL))
+    if (!httpConnectAgain(http, 30000, NULL))
       goto done;
 
     if (!httpWriteRequest(http, "POST", resource))

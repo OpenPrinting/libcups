@@ -1,7 +1,7 @@
 ---
 title: CUPS Programming Manual
 author: Michael R Sweet
-copyright: Copyright © 2021-2023 by OpenPrinting. All Rights Reserved.
+copyright: Copyright © 2021-2024 by OpenPrinting. All Rights Reserved.
 version: 3.0.0
 ...
 
@@ -1369,7 +1369,7 @@ The following functions have been renamed in CUPS 3.0:
 | `httpGetSubField2`               | `httpGetSubField`                |
 | `httpGets2`                      | `httpGets`                       |
 | `httpRead2`                      | `httpRead`                       |
-| `httpReconnect2`                 | `httpReconnect`                  |
+| `httpReconnect2`                 | `httpConnectAgain`               |
 | `httpWrite2`                     | `httpWrite`                      |
 
 Similarly, the following types have been renamed in CUPS 3.0:

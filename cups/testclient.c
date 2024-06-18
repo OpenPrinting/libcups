@@ -611,7 +611,7 @@ monitor_printer(
   {
     // Reconnect to the printer as needed...
     if (httpGetFd(http) < 0)
-      httpReconnect(http, 30000, NULL);
+      httpConnectAgain(http, 30000, NULL);
 
     if (httpGetFd(http) >= 0)
     {

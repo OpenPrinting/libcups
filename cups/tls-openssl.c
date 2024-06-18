@@ -11,7 +11,6 @@
 // information.
 //
 
-//// This file is included from tls.c
 #include <openssl/x509v3.h>
 #include <openssl/evp.h>
 #include <openssl/objects.h>

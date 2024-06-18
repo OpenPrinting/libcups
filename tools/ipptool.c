@@ -1224,7 +1224,7 @@ do_monitor_printer_state(
 	httpGetError(data->http) != ETIMEDOUT)
 #endif // _WIN32
     {
-      if (!httpReconnect(http, 30000, NULL))
+      if (!httpConnectAgain(http, 30000, NULL))
 	break;
     }
     else if (status == HTTP_STATUS_ERROR || status == HTTP_STATUS_CUPS_AUTHORIZATION_CANCELED)
@@ -1602,7 +1602,7 @@ do_test(ipp_file_t     *f,		// I - IPP data file
 	    httpGetError(data->http) != ETIMEDOUT)
 #endif // _WIN32
 	{
-	  if (!httpReconnect(data->http, 30000, NULL))
+	  if (!httpConnectAgain(data->http, 30000, NULL))
 	    data->prev_pass = false;
 	}
 	else if (status == HTTP_STATUS_ERROR || status == HTTP_STATUS_CUPS_AUTHORIZATION_CANCELED)
@@ -1629,13 +1629,13 @@ do_test(ipp_file_t     *f,		// I - IPP data file
 	httpGetError(data->http) != ETIMEDOUT)
 #endif // _WIN32
     {
-      if (!httpReconnect(data->http, 30000, NULL))
+      if (!httpConnectAgain(data->http, 30000, NULL))
 	data->prev_pass = false;
     }
     else if (status == HTTP_STATUS_ERROR)
     {
       if (!Cancel)
-	httpReconnect(data->http, 30000, NULL);
+	httpConnectAgain(data->http, 30000, NULL);
 
       data->prev_pass = false;
     }

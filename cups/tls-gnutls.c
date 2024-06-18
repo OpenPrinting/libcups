@@ -1,6 +1,8 @@
 //
 // TLS support code for CUPS using GNU TLS.
 //
+// Note: This file is included from tls.c
+//
 // Copyright © 2020-2024 by OpenPrinting
 // Copyright © 2007-2019 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products, all rights reserved.
@@ -8,9 +10,6 @@
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
 // information.
 //
-
-//// This file is included from tls.c
-
 
 //
 // Local functions...

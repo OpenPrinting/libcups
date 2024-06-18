@@ -8,7 +8,7 @@
 <meta name="generator" content="codedoc v3.7">
 <meta name="author" content="Michael R Sweet">
 <meta name="language" content="en-US">
-<meta name="copyright" content="Copyright © 2021-2023 by OpenPrinting. All Rights Reserved.">
+<meta name="copyright" content="Copyright © 2021-2024 by OpenPrinting. All Rights Reserved.">
 <meta name="version" content="3.0.0">
 <style type="text/css"><!--
 body {
@@ -254,7 +254,7 @@ span.string {
 <div class="header">
 <h1 class="title">CUPS Programming Manual</h1>
 <p>Michael R Sweet</p>
-<p>Copyright © 2021-2023 by OpenPrinting. All Rights Reserved.</p>
+<p>Copyright © 2021-2024 by OpenPrinting. All Rights Reserved.</p>
 </div>
 <div class="contents">
 <h2 class="title">Contents</h2>
@@ -511,6 +511,19 @@ span.string {
 <li><a href="#cupsMutexInit">cupsMutexInit</a></li>
 <li><a href="#cupsMutexLock">cupsMutexLock</a></li>
 <li><a href="#cupsMutexUnlock">cupsMutexUnlock</a></li>
+<li><a href="#cupsOAuthClearTokens">cupsOAuthClearTokens</a></li>
+<li><a href="#cupsOAuthCopyAccessToken">cupsOAuthCopyAccessToken</a></li>
+<li><a href="#cupsOAuthCopyClientId">cupsOAuthCopyClientId</a></li>
+<li><a href="#cupsOAuthCopyId">cupsOAuthCopyId</a></li>
+<li><a href="#cupsOAuthCopyRefreshToken">cupsOAuthCopyRefreshToken</a></li>
+<li><a href="#cupsOAuthGetAuthorizationCode">cupsOAuthGetAuthorizationCode</a></li>
+<li><a href="#cupsOAuthGetClientId">cupsOAuthGetClientId</a></li>
+<li><a href="#cupsOAuthGetMetadata">cupsOAuthGetMetadata</a></li>
+<li><a href="#cupsOAuthGetTokens">cupsOAuthGetTokens</a></li>
+<li><a href="#cupsOAuthMakeAuthorizationURL">cupsOAuthMakeAuthorizationURL</a></li>
+<li><a href="#cupsOAuthMakeBase64Random">cupsOAuthMakeBase64Random</a></li>
+<li><a href="#cupsOAuthSetClientId">cupsOAuthSetClientId</a></li>
+<li><a href="#cupsOAuthSetTokens">cupsOAuthSetTokens</a></li>
 <li><a href="#cupsParseOptions">cupsParseOptions</a></li>
 <li><a href="#cupsPutFd">cupsPutFd</a></li>
 <li><a href="#cupsPutFile">cupsPutFile</a></li>
@@ -576,6 +589,7 @@ span.string {
 <li><a href="#httpClearFields">httpClearFields</a></li>
 <li><a href="#httpClose">httpClose</a></li>
 <li><a href="#httpConnect">httpConnect</a></li>
+<li><a href="#httpConnectAgain">httpConnectAgain</a></li>
 <li><a href="#httpCopyPeerCredentials">httpCopyPeerCredentials</a></li>
 <li><a href="#httpDecode64">httpDecode64</a></li>
 <li><a href="#httpEncode64">httpEncode64</a></li>
@@ -613,7 +627,6 @@ span.string {
 <li><a href="#httpPrintf">httpPrintf</a></li>
 <li><a href="#httpRead">httpRead</a></li>
 <li><a href="#httpReadRequest">httpReadRequest</a></li>
-<li><a href="#httpReconnect">httpReconnect</a></li>
 <li><a href="#httpResolveHostname">httpResolveHostname</a></li>
 <li><a href="#httpResolveURI">httpResolveURI</a></li>
 <li><a href="#httpSeparateURI">httpSeparateURI</a></li>
@@ -809,6 +822,7 @@ span.string {
 <li><a href="#cups_mediapos_t">cups_mediapos_t</a></li>
 <li><a href="#cups_mutex_t">cups_mutex_t</a></li>
 <li><a href="#cups_oauth_cb_t">cups_oauth_cb_t</a></li>
+<li><a href="#cups_ogrant_t">cups_ogrant_t</a></li>
 <li><a href="#cups_option_t">cups_option_t</a></li>
 <li><a href="#cups_order_t">cups_order_t</a></li>
 <li><a href="#cups_orient_t">cups_orient_t</a></li>
@@ -887,6 +901,7 @@ span.string {
 <li><a href="#cups_jws_format_e">cups_jws_format_e</a></li>
 <li><a href="#cups_media_flags_e">cups_media_flags_e</a></li>
 <li><a href="#cups_mediapos_e">cups_mediapos_e</a></li>
+<li><a href="#cups_ogrant_e">cups_ogrant_e</a></li>
 <li><a href="#cups_order_e">cups_order_e</a></li>
 <li><a href="#cups_orient_e">cups_orient_e</a></li>
 <li><a href="#cups_ptype_e">cups_ptype_e</a></li>
@@ -1912,7 +1927,7 @@ token_cb(ipp_file_t *file, <span class="reserved">void</span> *cb_data, <span cl
 <td> <code>httpRead</code></td>
 </tr>
 <tr><td> <code>httpReconnect2</code></td>
-<td> <code>httpReconnect</code></td>
+<td> <code>httpConnectAgain</code></td>
 </tr>
 <tr><td> <code>httpWrite2</code></td>
 <td> <code>httpWrite</code></td>
@@ -4382,7 +4397,7 @@ time_t cupsGetCredentialsExpiration(<span class="reserved">const</span> <span cl
 <h3 class="function"><a id="cupsGetCredentialsTrust">cupsGetCredentialsTrust</a></h3>
 <p class="description">Return the trust of credentials.</p>
 <p class="code">
-<a href="#http_trust_t">http_trust_t</a> cupsGetCredentialsTrust(<span class="reserved">const</span> <span class="reserved">char</span> *path, <span class="reserved">const</span> <span class="reserved">char</span> *common_name, <span class="reserved">const</span> <span class="reserved">char</span> *credentials);</p>
+<a href="#http_trust_t">http_trust_t</a> cupsGetCredentialsTrust(<span class="reserved">const</span> <span class="reserved">char</span> *path, <span class="reserved">const</span> <span class="reserved">char</span> *common_name, <span class="reserved">const</span> <span class="reserved">char</span> *credentials, <span class="reserved">bool</span> require_ca);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>path</th>
@@ -4391,9 +4406,41 @@ time_t cupsGetCredentialsExpiration(<span class="reserved">const</span> <span cl
 <td class="description">Common name for trust lookup</td></tr>
 <tr><th>credentials</th>
 <td class="description">Credentials</td></tr>
+<tr><th>require_ca</th>
+<td class="description">Require a CA-signed certificate?</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Level of trust</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function determines the level of trust for the supplied credentials.
+The &quot;path&quot; parameter specifies the certificate/key store for known
+credentials and certificate authorities.  The &quot;common_name&quot; parameter
+specifies the FQDN of the service being accessed such as
+&quot;printer.example.com&quot;.  The &quot;credentials&quot; parameter provides the credentials
+being evaluated, which are usually obtained with the
+<a href="#httpCopyPeerCredentials"><code>httpCopyPeerCredentials</code></a> function.  The &quot;require_ca&quot; parameter
+specifies whether a CA-signed certificate is required for trust.<br>
+<br>
+The <code>AllowAnyRoot</code>, <code>AllowExpiredCerts</code>, <code>TrustOnFirstUse</code>, and
+<code>ValidateCerts</code> options in the &quot;client.conf&quot; file (or corresponding
+preferences file on macOS) control the trust policy, which defaults to
+AllowAnyRoot=Yes, AllowExpiredCerts=No, TrustOnFirstUse=Yes, and
+ValidateCerts=No.  When the &quot;require_ca&quot; parameter is <code>true</code> the AllowAnyRoot
+and TrustOnFirstUse policies are turned off (&quot;No&quot;).<br>
+<br>
+The returned trust value can be one of the following:
+
+</p><ul>
+<li><code>HTTP_TRUST_OK</code>: Credentials are OK/trusted
+</li>
+<li><code>HTTP_TRUST_INVALID</code>: Credentials are invalid
+</li>
+<li><code>HTTP_TRUST_EXPIRED</code>: Credentials are expired
+</li>
+<li><code>HTTP_TRUST_RENEWED</code>: Credentials have been renewed
+</li>
+<li><code>HTTP_TRUST_UNKNOWN</code>: Credentials are unknown/new</li>
+</ul>
 <h3 class="function"><a id="cupsGetDefault">cupsGetDefault</a></h3>
 <p class="description">Get the default printer or class for the specified server.</p>
 <p class="code">
@@ -5843,6 +5890,295 @@ message.  The returned string must be freed by the caller using <code>free</code
 <tr><th>mutex</th>
 <td class="description">Mutex</td></tr>
 </tbody></table>
+<h3 class="function"><a id="cupsOAuthClearTokens">cupsOAuthClearTokens</a></h3>
+<p class="description">Clear any cached authorization or refresh tokens.</p>
+<p class="code">
+<span class="reserved">void</span> cupsOAuthClearTokens(<span class="reserved">const</span> <span class="reserved">char</span> *auth_uri, <span class="reserved">const</span> <span class="reserved">char</span> *resource_uri);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>auth_uri</th>
+<td class="description">Authorization server URI</td></tr>
+<tr><th>resource_uri</th>
+<td class="description">Resource server URI</td></tr>
+</tbody></table>
+<h3 class="function"><a id="cupsOAuthCopyAccessToken">cupsOAuthCopyAccessToken</a></h3>
+<p class="description">Get a cached access token.</p>
+<p class="code">
+<span class="reserved">char</span> *cupsOAuthCopyAccessToken(<span class="reserved">const</span> <span class="reserved">char</span> *auth_uri, <span class="reserved">const</span> <span class="reserved">char</span> *resource_uri, time_t *access_expires);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>auth_uri</th>
+<td class="description">Authorization Server URI</td></tr>
+<tr><th>resource_uri</th>
+<td class="description">Resource URI</td></tr>
+<tr><th>access_expires</th>
+<td class="description">Access expiration time or <code>NULL</code> for don't care</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Access token</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function makes a copy of a cached access token and any
+associated expiration time for the given authorization and resource
+server combination.  The returned access token must be freed using
+the <code>free</code> function.  <code>NULL</code> is returned if no token is cached.</p>
+<h3 class="function"><a id="cupsOAuthCopyClientId">cupsOAuthCopyClientId</a></h3>
+<p class="description">Get the cached <code>client_id</code> value.</p>
+<p class="code">
+<span class="reserved">char</span> *cupsOAuthCopyClientId(<span class="reserved">const</span> <span class="reserved">char</span> *auth_uri, <span class="reserved">const</span> <span class="reserved">char</span> *redirect_uri);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>auth_uri</th>
+<td class="description">Authorization Server URI</td></tr>
+<tr><th>redirect_uri</th>
+<td class="description">Redirection URI</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description"><code>client_id</code> value</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function makes a copy of the cached <code>client_id</code> value for a given
+Authorization Server and Redirection URI.  The returned value must be freed
+using the <code>free</code> function.  <code>NULL</code> is returned if no <code>client_id</code> is cached.</p>
+<h3 class="function"><a id="cupsOAuthCopyId">cupsOAuthCopyId</a></h3>
+<p class="description">Get cached identification information.</p>
+<p class="code">
+<a href="#cups_jwt_t">cups_jwt_t</a> *cupsOAuthCopyId(<span class="reserved">const</span> <span class="reserved">char</span> *auth_uri, <span class="reserved">const</span> <span class="reserved">char</span> *resource_uri);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>auth_uri</th>
+<td class="description">Authorization Server URI</td></tr>
+<tr><th>resource_uri</th>
+<td class="description">Resource URI</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Identification information</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function makes a copy of cached identification information for the
+given authorization and resource server combination.  The returned JWT must
+be freed using the <a href="#cupsJWTDelete"><code>cupsJWTDelete</code></a> function.  <code>NULL</code> is returned if no
+identification information is cached.</p>
+<h3 class="function"><a id="cupsOAuthCopyRefreshToken">cupsOAuthCopyRefreshToken</a></h3>
+<p class="description">Get a cached refresh token.</p>
+<p class="code">
+<span class="reserved">char</span> *cupsOAuthCopyRefreshToken(<span class="reserved">const</span> <span class="reserved">char</span> *auth_uri, <span class="reserved">const</span> <span class="reserved">char</span> *resource_uri);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>auth_uri</th>
+<td class="description">Authorization Server URI</td></tr>
+<tr><th>resource_uri</th>
+<td class="description">Resource URI</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Refresh token</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function makes a copy of a cached refresh token for the given
+authorization and resource server combination.  The returned refresh
+token must be freed using the <code>free</code> function.  <code>NULL</code> is returned
+if no token is cached.</p>
+<h3 class="function"><a id="cupsOAuthGetAuthorizationCode">cupsOAuthGetAuthorizationCode</a></h3>
+<p class="description">Authorize access using a web browser.</p>
+<p class="code">
+<span class="reserved">char</span> *cupsOAuthGetAuthorizationCode(<span class="reserved">const</span> <span class="reserved">char</span> *auth_uri, <a href="#cups_json_t">cups_json_t</a> *metadata, <span class="reserved">const</span> <span class="reserved">char</span> *resource_uri, <span class="reserved">const</span> <span class="reserved">char</span> *scopes);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>auth_uri</th>
+<td class="description">Authorization Server URI</td></tr>
+<tr><th>metadata</th>
+<td class="description">Authorization Server metadata</td></tr>
+<tr><th>resource_uri</th>
+<td class="description">Resource URI</td></tr>
+<tr><th>scopes</th>
+<td class="description">Space-delimited scopes</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Authorization code or <code>NULL</code> on error</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function performs the OAuth authorization flow to obtain an
+authorization code for use with the <a href="#cupsOAuthGetTokens"><code>cupsOAuthGetTokens</code></a> function.<br>
+<br>
+The &quot;auth_uri&quot; parameter specifies the URI for the OAuth Authorization
+Server.  The &quot;metadata&quot; parameter specifies the Authorization Server metadata
+as obtained using <a href="#cupsOAuthCopyMetadata"><code>cupsOAuthCopyMetadata</code></a> and/or
+<a href="#cupsOAuthGetMetadata"><code>cupsOAuthGetMetadata</code></a>.<br>
+<br>
+The &quot;resource_uri&quot; parameter specifies the URI for a resource (printer, web
+file, etc.) that you which to access.<br>
+<br>
+The &quot;scopes&quot; parameter specifies zero or more whitespace-delimited scope
+names to request during authorization.  The list of supported scope names are
+available from the Authorization Server metadata, for example:
+
+<pre>
+cups_json_t *metadata = cupsOAuthGetMetadata(auth_uri);
+cups_json_t *scopes_supported = cupsJSONFind(metadata, &quot;scopes_supported&quot;);
+</pre>
+</p>
+<h3 class="function"><a id="cupsOAuthGetClientId">cupsOAuthGetClientId</a></h3>
+<p class="description">Register a client application and get its ID.</p>
+<p class="code">
+<span class="reserved">char</span> *cupsOAuthGetClientId(<span class="reserved">const</span> <span class="reserved">char</span> *auth_uri, <a href="#cups_json_t">cups_json_t</a> *metadata, <span class="reserved">const</span> <span class="reserved">char</span> *redirect_uri, <span class="reserved">const</span> <span class="reserved">char</span> *logo_uri, <span class="reserved">const</span> <span class="reserved">char</span> *tos_uri);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>auth_uri</th>
+<td class="description">Authorization Server URI</td></tr>
+<tr><th>metadata</th>
+<td class="description">Authorization Server metadata</td></tr>
+<tr><th>redirect_uri</th>
+<td class="description">Redirection URL</td></tr>
+<tr><th>logo_uri</th>
+<td class="description">Logo URL or <code>NULL</code> for none</td></tr>
+<tr><th>tos_uri</th>
+<td class="description">Terms-of-service URL or <code>NULL</code> for none</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description"><code>client_id</code> string or <code>NULL</code> on error</p>
+<h3 class="function"><a id="cupsOAuthGetMetadata">cupsOAuthGetMetadata</a></h3>
+<p class="description">Get the metadata for an Authorization Server.</p>
+<p class="code">
+<a href="#cups_json_t">cups_json_t</a> *cupsOAuthGetMetadata(<span class="reserved">const</span> <span class="reserved">char</span> *auth_uri);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>auth_uri</th>
+<td class="description">Authorization Server URI</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">JSON metadata or <code>NULL</code> on error</p>
+<h3 class="function"><a id="cupsOAuthGetTokens">cupsOAuthGetTokens</a></h3>
+<p class="description">Obtain access, ID, and refresh tokens from an
+                         authorization code or refresh token.</p>
+<p class="code">
+<span class="reserved">char</span> *cupsOAuthGetTokens(<span class="reserved">const</span> <span class="reserved">char</span> *auth_uri, <a href="#cups_json_t">cups_json_t</a> *metadata, <span class="reserved">const</span> <span class="reserved">char</span> *resource_uri, <span class="reserved">const</span> <span class="reserved">char</span> *grant_code, <a href="#cups_ogrant_t">cups_ogrant_t</a> grant_type, <span class="reserved">const</span> <span class="reserved">char</span> *redirect_uri, time_t *access_expires);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>auth_uri</th>
+<td class="description">Authorization Server URI</td></tr>
+<tr><th>metadata</th>
+<td class="description">Authorization Server metadata</td></tr>
+<tr><th>resource_uri</th>
+<td class="description">Resource URI</td></tr>
+<tr><th>grant_code</th>
+<td class="description">Authorization code or refresh token</td></tr>
+<tr><th>grant_type</th>
+<td class="description">Grant code type</td></tr>
+<tr><th>redirect_uri</th>
+<td class="description">Redirect URI</td></tr>
+<tr><th>access_expires</th>
+<td class="description">Expiration time for access token</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Access token or <code>NULL</code> on error</p>
+<h3 class="function"><a id="cupsOAuthMakeAuthorizationURL">cupsOAuthMakeAuthorizationURL</a></h3>
+<p class="description">Make an authorization URL.</p>
+<p class="code">
+<span class="reserved">char</span> *cupsOAuthMakeAuthorizationURL(<span class="reserved">const</span> <span class="reserved">char</span> *auth_uri, <a href="#cups_json_t">cups_json_t</a> *metadata, <span class="reserved">const</span> <span class="reserved">char</span> *resource_uri, <span class="reserved">const</span> <span class="reserved">char</span> *scopes, <span class="reserved">const</span> <span class="reserved">char</span> *client_id, <span class="reserved">const</span> <span class="reserved">char</span> *code_verifier, <span class="reserved">const</span> <span class="reserved">char</span> *nonce, <span class="reserved">const</span> <span class="reserved">char</span> *redirect_uri, <span class="reserved">const</span> <span class="reserved">char</span> *state);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>auth_uri</th>
+<td class="description">Authorization URI</td></tr>
+<tr><th>metadata</th>
+<td class="description">Authorization server metadata</td></tr>
+<tr><th>resource_uri</th>
+<td class="description">Resource URI</td></tr>
+<tr><th>scopes</th>
+<td class="description">Space-delimited scope(s)</td></tr>
+<tr><th>client_id</th>
+<td class="description">Client ID</td></tr>
+<tr><th>code_verifier</th>
+<td class="description">Code verifier string</td></tr>
+<tr><th>nonce</th>
+<td class="description">Nonce</td></tr>
+<tr><th>redirect_uri</th>
+<td class="description">Redirection URI</td></tr>
+<tr><th>state</th>
+<td class="description">State</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Authorization URL</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function makes an authorization URL for the specified authorization
+server and resource.<br>
+<br>
+The &quot;auth_uri&quot; parameter specifies the URI for the OAuth Authorization
+Server.  The &quot;metadata&quot; parameter specifies the Authorization Server metadata
+as obtained using <a href="#cupsOAuthCopyMetadata"><code>cupsOAuthCopyMetadata</code></a> and/or
+<a href="#cupsOAuthGetMetadata"><code>cupsOAuthGetMetadata</code></a>.<br>
+<br>
+The &quot;resource_uri&quot; parameter specifies the URI for a resource (printer, web
+file, etc.) that you which to access.<br>
+<br>
+The &quot;scopes&quot; parameter specifies zero or more whitespace-delimited scope
+names to request during authorization.  The list of supported scope names are
+available from the Authorization Server metadata, for example:
+
+<pre>
+cups_json_t *metadata = cupsOAuthGetMetadata(auth_uri);
+cups_json_t *scopes_supported = cupsJSONFind(metadata, &quot;scopes_supported&quot;);
+</pre>
+
+The &quot;client_id&quot; parameter specifies the client identifier obtained using
+<a href="#cupsOAuthCopyClientId"><code>cupsOAuthCopyClientId</code></a> and/or <a href="#cupsOAuthGetClientId"><code>cupsOAuthGetClientId</code></a>.<br>
+<br>
+The &quot;client_id&quot; parameter is the string returned by
+<a href="#cupsOAuthCopyClientId"><code>cupsOAuthCopyClientId</code></a> or <a href="#cupsOAuthGetClientId"><code>cupsOAuthGetClientId</code></a>.<br>
+<br>
+The &quot;code_verifier&quot; parameter specifies a random Base64URL-encoded string
+that is used by the Proof Key for Code Exchange [RFC7636] extension to help
+secure the authorization flow.  The <a href="#cupsOAuthMakeBase64Random"><code>cupsOAuthMakeBase64Random</code></a> function
+can be used to generate this string.<br>
+<br>
+The &quot;nonce&quot; parameter specifies a random Base64URL-encoded string that is
+used by OpenID to validate the ID token. The <a href="#cupsOAuthMakeBase64Random"><code>cupsOAuthMakeBase64Random</code></a>
+function can be used to generate this string.<br>
+<br>
+The &quot;redirect_uri&quot; parameter specifies the URI that will receive the
+authorization grant code.<br>
+<br>
+The &quot;state&quot; parameter is a unique (random) identifier for the authorization
+request.  It is provided to the redirection URI as a form parameter.</p>
+<h3 class="function"><a id="cupsOAuthMakeBase64Random">cupsOAuthMakeBase64Random</a></h3>
+<p class="description">Make a random data string.</p>
+<p class="code">
+<span class="reserved">char</span> *cupsOAuthMakeBase64Random(size_t len);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>len</th>
+<td class="description">Number of bytes</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Random string</p>
+<h3 class="function"><a id="cupsOAuthSetClientId">cupsOAuthSetClientId</a></h3>
+<p class="description">Save client_id and client_secret values.</p>
+<p class="code">
+<span class="reserved">void</span> cupsOAuthSetClientId(<span class="reserved">const</span> <span class="reserved">char</span> *auth_uri, <span class="reserved">const</span> <span class="reserved">char</span> *redirect_uri, <span class="reserved">const</span> <span class="reserved">char</span> *client_id, <span class="reserved">const</span> <span class="reserved">char</span> *client_secret);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>auth_uri</th>
+<td class="description">Authorization Server URI</td></tr>
+<tr><th>redirect_uri</th>
+<td class="description">Redirection URI</td></tr>
+<tr><th>client_id</th>
+<td class="description">client_id</td></tr>
+<tr><th>client_secret</th>
+<td class="description">client_secret value or <code>NULL</code> for none</td></tr>
+</tbody></table>
+<h3 class="function"><a id="cupsOAuthSetTokens">cupsOAuthSetTokens</a></h3>
+<p class="description">Save authorization and refresh tokens.</p>
+<p class="code">
+<span class="reserved">void</span> cupsOAuthSetTokens(<span class="reserved">const</span> <span class="reserved">char</span> *auth_uri, <span class="reserved">const</span> <span class="reserved">char</span> *resource_uri, <span class="reserved">const</span> <span class="reserved">char</span> *access_token, time_t access_expires, <span class="reserved">const</span> <span class="reserved">char</span> *id_token, <span class="reserved">const</span> <span class="reserved">char</span> *refresh_token);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>auth_uri</th>
+<td class="description">Authorization server FQDN</td></tr>
+<tr><th>resource_uri</th>
+<td class="description">Resource server FQDN</td></tr>
+<tr><th>access_token</th>
+<td class="description">Access token</td></tr>
+<tr><th>access_expires</th>
+<td class="description">Access expiration time</td></tr>
+<tr><th>id_token</th>
+<td class="description">ID token</td></tr>
+<tr><th>refresh_token</th>
+<td class="description">Refresh token</td></tr>
+</tbody></table>
 <h3 class="function"><a id="cupsParseOptions">cupsParseOptions</a></h3>
 <p class="description">Parse options from a command-line argument.</p>
 <p class="code">
@@ -6218,7 +6554,7 @@ size_t cupsRemoveOption(<span class="reserved">const</span> <span class="reserve
 <tr><th>common_name</th>
 <td class="description">Common name for certificate</td></tr>
 <tr><th>credentials</th>
-<td class="description">PEM-encoded certificate chain</td></tr>
+<td class="description">PEM-encoded certificate chain or <code>NULL</code> to remove</td></tr>
 <tr><th>key</th>
 <td class="description">PEM-encoded private key or <code>NULL</code> for none</td></tr>
 </tbody></table>
@@ -7045,6 +7381,21 @@ The &quot;msec&quot; argument specifies how long to try to connect to the server
 to just create an unconnected <code>http_t</code> object.  The &quot;cancel&quot; argument
 specifies an integer variable that can be set to a non-zero value to cancel
 the connection process.</p>
+<h3 class="function"><a id="httpConnectAgain">httpConnectAgain</a></h3>
+<p class="description">Reconnect to a HTTP server with timeout and optional cancel variable.</p>
+<p class="code">
+<span class="reserved">bool</span> httpConnectAgain(<a href="#http_t">http_t</a> *http, <span class="reserved">int</span> msec, <span class="reserved">int</span> *cancel);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>http</th>
+<td class="description">HTTP connection</td></tr>
+<tr><th>msec</th>
+<td class="description">Timeout in milliseconds</td></tr>
+<tr><th>cancel</th>
+<td class="description">Pointer to &quot;cancel&quot; variable</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description"><code>true</code> on success, <code>false</code> on failure</p>
 <h3 class="function"><a id="httpCopyPeerCredentials">httpCopyPeerCredentials</a></h3>
 <p class="description">Copy the credentials associated with the peer in an encrypted connection.</p>
 <p class="code">
@@ -7564,21 +7915,6 @@ ssize_t httpRead(<a href="#http_t">http_t</a> *http, <span class="reserved">char
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">New state of connection</p>
-<h3 class="function"><a id="httpReconnect">httpReconnect</a></h3>
-<p class="description">Reconnect to a HTTP server with timeout and optional cancel.</p>
-<p class="code">
-<span class="reserved">bool</span> httpReconnect(<a href="#http_t">http_t</a> *http, <span class="reserved">int</span> msec, <span class="reserved">int</span> *cancel);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>http</th>
-<td class="description">HTTP connection</td></tr>
-<tr><th>msec</th>
-<td class="description">Timeout in milliseconds</td></tr>
-<tr><th>cancel</th>
-<td class="description">Pointer to &quot;cancel&quot; variable</td></tr>
-</tbody></table>
-<h4 class="returnvalue">Return Value</h4>
-<p class="description"><code>true</code> on success, <code>false</code> on failure</p>
 <h3 class="function"><a id="httpResolveHostname">httpResolveHostname</a></h3>
 <p class="description">Resolve the hostname of the HTTP connection
                           address.</p>
@@ -10562,6 +10898,11 @@ typedef pthread_mutex_t cups_mutex_t;
 <p class="code">
 typedef const char *(*)(http_t *http, const char *realm, const char *scope, const char *resource, void *user_data)cups_oauth_cb_t;
 </p>
+<h3 class="typedef"><a id="cups_ogrant_t">cups_ogrant_t</a></h3>
+<p class="description">OAuth Grant Types</p>
+<p class="code">
+typedef enum <a href="#cups_ogrant_e">cups_ogrant_e</a> cups_ogrant_t;
+</p>
 <h3 class="typedef"><a id="cups_option_t">cups_option_t</a></h3>
 <p class="description">Printer Options</p>
 <p class="code">
@@ -11423,6 +11764,14 @@ factor not applied)</td></tr>
 <tr><th>CUPS_MEDIAPOS_TRAY_8 </th><td class="description">'tray-8'</td></tr>
 <tr><th>CUPS_MEDIAPOS_TRAY_9 </th><td class="description">'tray-9'</td></tr>
 </tbody></table>
+<h3 class="enumeration"><a id="cups_ogrant_e">cups_ogrant_e</a></h3>
+<p class="description">OAuth Grant Types</p>
+<h4 class="constants">Constants</h4>
+<table class="list"><tbody>
+<tr><th>CUPS_OGRANT_AUTHORIZATION_CODE </th><td class="description">Authorization code</td></tr>
+<tr><th>CUPS_OGRANT_DEVICE_CODE </th><td class="description">Device code</td></tr>
+<tr><th>CUPS_OGRANT_REFRESH_TOKEN </th><td class="description">Refresh token</td></tr>
+</tbody></table>
 <h3 class="enumeration"><a id="cups_order_e">cups_order_e</a></h3>
 <p class="description">cupsColorOrder attribute values</p>
 <h4 class="constants">Constants</h4>
@@ -12091,6 +12440,7 @@ factor not applied)</td></tr>
 <tr><th>IPP_STATUS_ERROR_COMPRESSION_NOT_SUPPORTED </th><td class="description">client-error-compression-not-supported</td></tr>
 <tr><th>IPP_STATUS_ERROR_CONFLICTING </th><td class="description">client-error-conflicting-attributes</td></tr>
 <tr><th>IPP_STATUS_ERROR_CUPS_AUTHENTICATION_CANCELED </th><td class="description">cups-authentication-canceled - Authentication canceled by user</td></tr>
+<tr><th>IPP_STATUS_ERROR_CUPS_OAUTH </th><td class="description">cups-oauth - OAuth error</td></tr>
 <tr><th>IPP_STATUS_ERROR_CUPS_PKI </th><td class="description">cups-pki-error - Error negotiating a secure connection</td></tr>
 <tr><th>IPP_STATUS_ERROR_CUPS_UPGRADE_REQUIRED </th><td class="description">cups-upgrade-required - TLS upgrade required</td></tr>
 <tr><th>IPP_STATUS_ERROR_DEVICE </th><td class="description">server-error-device-error</td></tr>

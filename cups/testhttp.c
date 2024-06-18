@@ -367,9 +367,13 @@ main(int  argc,				// I - Number of command-line arguments
 
       httpAddrFreeList(addrlist);
     }
-    else if (!strncmp(hostname, "mac-", 4) && isdigit(hostname[4] & 255))
+    else if (isdigit(hostname[0] & 255))
     {
       testEndMessage(true, "ignored because hostname is numeric");
+    }
+    else if (!strncmp(hostname, "mac-", 4) && isdigit(hostname[4]))
+    {
+      testEndMessage(true, "ignored because GitHub Actions macOS runner doesn't resolve its own hostname");
     }
     else
     {
@@ -656,7 +660,7 @@ main(int  argc,				// I - Number of command-line arguments
       if (!_cups_strcasecmp(httpGetField(http, HTTP_FIELD_CONNECTION), "close"))
       {
 	httpClearFields(http);
-	if (!httpReconnect(http, 30000, NULL))
+	if (!httpConnectAgain(http, 30000, NULL))
 	{
           status = HTTP_STATUS_ERROR;
           break;
@@ -672,7 +676,7 @@ main(int  argc,				// I - Number of command-line arguments
 
       if (!httpWriteRequest(http, "HEAD", resource))
       {
-        if (httpReconnect(http, 30000, NULL))
+        if (httpConnectAgain(http, 30000, NULL))
         {
           status = HTTP_STATUS_UNAUTHORIZED;
           continue;
@@ -702,7 +706,7 @@ main(int  argc,				// I - Number of command-line arguments
 	  break;
 	}
 
-	if (!httpReconnect(http, 30000, NULL))
+	if (!httpConnectAgain(http, 30000, NULL))
 	{
 	  status = HTTP_STATUS_ERROR;
 	  break;
@@ -716,7 +720,7 @@ main(int  argc,				// I - Number of command-line arguments
 	httpFlush(http);
 
 	// Reconnect...
-	if (!httpReconnect(http, 30000, NULL))
+	if (!httpConnectAgain(http, 30000, NULL))
 	{
 	  status = HTTP_STATUS_ERROR;
 	  break;
@@ -749,7 +753,7 @@ main(int  argc,				// I - Number of command-line arguments
       if (!_cups_strcasecmp(httpGetField(http, HTTP_FIELD_CONNECTION), "close"))
       {
 	httpClearFields(http);
-	if (!httpReconnect(http, 30000, NULL))
+	if (!httpConnectAgain(http, 30000, NULL))
 	{
           status = HTTP_STATUS_ERROR;
           break;
@@ -766,7 +770,7 @@ main(int  argc,				// I - Number of command-line arguments
 
       if (!httpWriteRequest(http, "GET", resource))
       {
-        if (httpReconnect(http, 30000, NULL))
+        if (httpConnectAgain(http, 30000, NULL))
         {
           status = HTTP_STATUS_UNAUTHORIZED;
           continue;
@@ -796,7 +800,7 @@ main(int  argc,				// I - Number of command-line arguments
 	  break;
 	}
 
-	if (!httpReconnect(http, 30000, NULL))
+	if (!httpConnectAgain(http, 30000, NULL))
 	{
 	  status = HTTP_STATUS_ERROR;
 	  break;
@@ -810,7 +814,7 @@ main(int  argc,				// I - Number of command-line arguments
 	httpFlush(http);
 
 	// Reconnect...
-	if (!httpReconnect(http, 30000, NULL))
+	if (!httpConnectAgain(http, 30000, NULL))
 	{
 	  status = HTTP_STATUS_ERROR;
 	  break;

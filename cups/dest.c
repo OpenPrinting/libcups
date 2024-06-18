@@ -572,7 +572,7 @@ cupsConnectDest(
     if (cb)
       (*cb)(user_data, CUPS_DEST_FLAGS_UNCONNECTED | CUPS_DEST_FLAGS_CONNECTING, dest);
 
-    if (!httpReconnect(http, msec, cancel) && cb)
+    if (!httpConnectAgain(http, msec, cancel) && cb)
     {
       if (cancel && *cancel)
 	(*cb)(user_data, CUPS_DEST_FLAGS_UNCONNECTED | CUPS_DEST_FLAGS_CONNECTING, dest);

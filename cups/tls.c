@@ -68,7 +68,7 @@ static bool		http_save_file(const char *path, const char *common_name, const cha
 //
 
 #ifdef HAVE_OPENSSL
-#    include "tls-openssl.c"
+#  include "tls-openssl.c"
 #else // HAVE_GNUTLS
 #  include "tls-gnutls.c"
 #endif // HAVE_OPENSSL

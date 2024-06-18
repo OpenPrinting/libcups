@@ -336,13 +336,115 @@ httpConnect(
     return (NULL);
 
   // Optionally connect to the remote system...
-  if (msec == 0 || httpReconnect(http, msec, cancel))
+  if (msec == 0 || httpConnectAgain(http, msec, cancel))
     return (http);
 
   // Could not connect to any known address - bail out!
   httpClose(http);
 
   return (NULL);
+}
+
+
+//
+// 'httpConnectAgain()' - Reconnect to a HTTP server with timeout and optional cancel variable.
+//
+
+bool					// O - `true` on success, `false` on failure
+httpConnectAgain(http_t *http,		// I - HTTP connection
+	      int    msec,		// I - Timeout in milliseconds
+	      int    *cancel)		// I - Pointer to "cancel" variable
+{
+  http_addrlist_t	*addr;		// Connected address
+#ifdef DEBUG
+  http_addrlist_t	*current;	// Current address
+  char			temp[256];	// Temporary address string
+#endif // DEBUG
+
+
+  DEBUG_printf("httpConnectAgain(http=%p, msec=%d, cancel=%p)", (void *)http, msec, (void *)cancel);
+
+  // Range check input...
+  if (!http)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), 0);
+    return (false);
+  }
+
+  if (http->tls)
+  {
+    DEBUG_puts("2httpConnectAgain: Shutting down SSL/TLS...");
+    _httpTLSStop(http);
+  }
+
+  // Close any previously open socket...
+  if (http->fd >= 0)
+  {
+    DEBUG_printf("2httpConnectAgain: Closing socket %d...", http->fd);
+
+    httpAddrClose(NULL, http->fd);
+
+    http->fd = -1;
+  }
+
+  // Reset all state (except fields, which may be reused)...
+  http->state           = HTTP_STATE_WAITING;
+  http->version         = HTTP_VERSION_1_1;
+  http->keep_alive      = HTTP_KEEPALIVE_OFF;
+  http->data_encoding   = HTTP_ENCODING_FIELDS;
+  http->used            = 0;
+  http->data_remaining  = 0;
+  http->hostaddr        = NULL;
+  http->wused           = 0;
+
+  // Connect to the server...
+#ifdef DEBUG
+  for (current = http->hostlist; current; current = current->next)
+    DEBUG_printf("2httpConnectAgain: Address %s:%d", httpAddrGetString(&(current->addr), temp, sizeof(temp)), httpAddrGetPort(&(current->addr)));
+#endif // DEBUG
+
+  if ((addr = httpAddrConnect(http->hostlist, &(http->fd), msec, cancel)) == NULL)
+  {
+    // Unable to connect...
+#ifdef _WIN32
+    http->error  = WSAGetLastError();
+#else
+    http->error  = errno;
+#endif // _WIN32
+    http->status = HTTP_STATUS_ERROR;
+
+    DEBUG_printf("1httpConnectAgain: httpAddrConnect failed: %s", strerror(http->error));
+
+    return (false);
+  }
+
+  DEBUG_printf("2httpConnectAgain: New socket=%d", http->fd);
+
+  if (http->timeout_value > 0)
+    http_set_timeout(http->fd, http->timeout_value);
+
+  http->hostaddr = &(addr->addr);
+  http->error    = 0;
+
+  if (http->encryption == HTTP_ENCRYPTION_ALWAYS)
+  {
+    // Always do encryption via SSL.
+    if (!_httpTLSStart(http))
+    {
+      httpAddrClose(NULL, http->fd);
+      http->fd = -1;
+
+      return (false);
+    }
+  }
+  else if (http->encryption == HTTP_ENCRYPTION_REQUIRED && !http->tls_upgrade)
+  {
+    return (http_tls_upgrade(http));
+  }
+
+  DEBUG_printf("1httpConnectAgain: Connected to %s:%d...", httpAddrGetString(http->hostaddr, temp, sizeof(temp)), httpAddrGetPort(http->hostaddr));
+
+  return (true);
 }
 
 
@@ -1777,108 +1879,6 @@ httpReadRequest(http_t *http,		// I - HTTP connection
 
 
 //
-// 'httpReconnect()' - Reconnect to a HTTP server with timeout and optional cancel.
-//
-
-bool					// O - `true` on success, `false` on failure
-httpReconnect(http_t *http,		// I - HTTP connection
-	      int    msec,		// I - Timeout in milliseconds
-	      int    *cancel)		// I - Pointer to "cancel" variable
-{
-  http_addrlist_t	*addr;		// Connected address
-#ifdef DEBUG
-  http_addrlist_t	*current;	// Current address
-  char			temp[256];	// Temporary address string
-#endif // DEBUG
-
-
-  DEBUG_printf("httpReconnect(http=%p, msec=%d, cancel=%p)", (void *)http, msec, (void *)cancel);
-
-  // Range check input...
-  if (!http)
-  {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), 0);
-    return (false);
-  }
-
-  if (http->tls)
-  {
-    DEBUG_puts("2httpReconnect: Shutting down SSL/TLS...");
-    _httpTLSStop(http);
-  }
-
-  // Close any previously open socket...
-  if (http->fd >= 0)
-  {
-    DEBUG_printf("2httpReconnect: Closing socket %d...", http->fd);
-
-    httpAddrClose(NULL, http->fd);
-
-    http->fd = -1;
-  }
-
-  // Reset all state (except fields, which may be reused)...
-  http->state           = HTTP_STATE_WAITING;
-  http->version         = HTTP_VERSION_1_1;
-  http->keep_alive      = HTTP_KEEPALIVE_OFF;
-  http->data_encoding   = HTTP_ENCODING_FIELDS;
-  http->used            = 0;
-  http->data_remaining  = 0;
-  http->hostaddr        = NULL;
-  http->wused           = 0;
-
-  // Connect to the server...
-#ifdef DEBUG
-  for (current = http->hostlist; current; current = current->next)
-    DEBUG_printf("2httpReconnect: Address %s:%d", httpAddrGetString(&(current->addr), temp, sizeof(temp)), httpAddrGetPort(&(current->addr)));
-#endif // DEBUG
-
-  if ((addr = httpAddrConnect(http->hostlist, &(http->fd), msec, cancel)) == NULL)
-  {
-    // Unable to connect...
-#ifdef _WIN32
-    http->error  = WSAGetLastError();
-#else
-    http->error  = errno;
-#endif // _WIN32
-    http->status = HTTP_STATUS_ERROR;
-
-    DEBUG_printf("1httpReconnect: httpAddrConnect failed: %s", strerror(http->error));
-
-    return (false);
-  }
-
-  DEBUG_printf("2httpReconnect: New socket=%d", http->fd);
-
-  if (http->timeout_value > 0)
-    http_set_timeout(http->fd, http->timeout_value);
-
-  http->hostaddr = &(addr->addr);
-  http->error    = 0;
-
-  if (http->encryption == HTTP_ENCRYPTION_ALWAYS)
-  {
-    // Always do encryption via SSL.
-    if (!_httpTLSStart(http))
-    {
-      httpAddrClose(NULL, http->fd);
-      http->fd = -1;
-
-      return (false);
-    }
-  }
-  else if (http->encryption == HTTP_ENCRYPTION_REQUIRED && !http->tls_upgrade)
-  {
-    return (http_tls_upgrade(http));
-  }
-
-  DEBUG_printf("1httpReconnect: Connected to %s:%d...", httpAddrGetString(http->hostaddr, temp, sizeof(temp)), httpAddrGetPort(http->hostaddr));
-
-  return (true);
-}
-
-
-//
 // 'httpSetAuthString()' - Set the current authorization string.
 //
 // This function stores a copy of the current authorization string in the HTTP
@@ -2003,7 +2003,7 @@ httpSetEncryption(
     http->encryption = e;
 
     if ((http->encryption == HTTP_ENCRYPTION_ALWAYS && !http->tls) || (http->encryption == HTTP_ENCRYPTION_NEVER && http->tls))
-      return (httpReconnect(http, 30000, NULL));
+      return (httpConnectAgain(http, 30000, NULL));
     else if (http->encryption == HTTP_ENCRYPTION_REQUIRED && !http->tls)
       return (http_tls_upgrade(http));
     else
@@ -3595,7 +3595,7 @@ http_send(http_t       *http,		// I - HTTP connection
   {
     DEBUG_printf("5http_send: Reconnecting, fd=%d, status=%d, tls_upgrade=%d", http->fd, http->status, http->tls_upgrade);
 
-    if (!httpReconnect(http, 30000, NULL))
+    if (!httpConnectAgain(http, 30000, NULL))
       return (false);
   }
 
@@ -3604,7 +3604,7 @@ http_send(http_t       *http,		// I - HTTP connection
   {
     if (httpFlushWrite(http) < 0)
     {
-      if (!httpReconnect(http, 30000, NULL))
+      if (!httpConnectAgain(http, 30000, NULL))
         return (false);
     }
   }

@@ -1,7 +1,7 @@
 //
 // Hyper-Text Transport Protocol definitions for CUPS.
 //
-// Copyright © 2021-2023 by OpenPrinting.
+// Copyright © 2021-2024 by OpenPrinting.
 // Copyright © 2007-2018 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products, all rights reserved.
 //
@@ -449,6 +449,7 @@ extern void		httpClearFields(http_t *http) _CUPS_PUBLIC;
 extern void		httpClose(http_t *http) _CUPS_PUBLIC;
 extern void		httpClearCookie(http_t *http) _CUPS_PUBLIC;
 extern http_t		*httpConnect(const char *host, int port, http_addrlist_t *addrlist, int family, http_encryption_t encryption, bool blocking, int msec, int *cancel) _CUPS_PUBLIC;
+extern bool		httpConnectAgain(http_t *http, int msec, int *cancel) _CUPS_PUBLIC;
 extern char		*httpCopyPeerCredentials(http_t *http) _CUPS_PUBLIC;
 
 extern char		*httpDecode64(char *out, size_t *outlen, const char *in, const char **end) _CUPS_PUBLIC;
@@ -493,7 +494,6 @@ extern ssize_t		httpPrintf(http_t *http, const char *format, ...) _CUPS_FORMAT(2
 
 extern ssize_t		httpRead(http_t *http, char *buffer, size_t length) _CUPS_PUBLIC;
 extern http_state_t	httpReadRequest(http_t *http, char *resource, size_t resourcelen) _CUPS_PUBLIC;
-extern bool		httpReconnect(http_t *http, int msec, int *cancel) _CUPS_PUBLIC;
 extern const char	*httpResolveHostname(http_t *http, char *buffer, size_t bufsize) _CUPS_PUBLIC;
 extern const char	*httpResolveURI(const char *uri, char *resolved_uri, size_t resolved_size, http_resolve_t options, http_resolve_cb_t cb, void *cb_data) _CUPS_PUBLIC;
 
