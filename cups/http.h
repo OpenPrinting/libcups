@@ -85,17 +85,6 @@ extern "C" {
 // Types and structures...
 //
 
-typedef enum http_auth_e		// HTTP authentication types @exclude all@
-{
-  HTTP_AUTH_NONE,			// No authentication in use
-  HTTP_AUTH_BASIC,			// Basic authentication in use
-  HTTP_AUTH_MD5,			// Digest authentication in use
-  HTTP_AUTH_MD5_SESS,			// MD5-session authentication in use
-  HTTP_AUTH_MD5_INT,			// Digest authentication in use for body
-  HTTP_AUTH_MD5_SESS_INT,		// MD5-session authentication in use for body
-  HTTP_AUTH_NEGOTIATE			// GSSAPI authentication in use
-} http_auth_t;
-
 typedef enum http_encoding_e		// HTTP transfer encoding values
 {
   HTTP_ENCODING_LENGTH,			// Data is sent with Content-Length
