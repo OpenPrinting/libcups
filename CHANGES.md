@@ -34,6 +34,7 @@ libcups v3.0rc1 (TBD)
   extension.
 - Fixed a certificate loading issue with OpenSSL.
 - Fixed cupsAreCredentialsValidForName with OpenSSL.
+- Fixed how `ippeveprinter` responds to an unsupported request character set.
 
 
 libcups v3.0b2 (October 5, 2023)
