@@ -5,6 +5,7 @@ _cupsBufferGet
 _cupsBufferRelease
 _cupsConnect
 _cupsCreateDest
+_cupsDirCreate
 _cupsEncodeOption
 _cupsFilePeekAhead
 _cupsGetDestResource
@@ -37,6 +38,7 @@ _cups_gettimeofday
 _cups_hstrerror
 _cups_strcasecmp
 _cups_strcpy
+_cups_strcpy
 _cups_strncasecmp
 _httpCreateCredentials
 _httpDecodeURI
@@ -55,7 +57,6 @@ _httpTLSWrite
 _httpUpdate
 _httpUseCredentials
 _httpWait
-_ippCheckOptions
 _ippFindOption
 _pwgMediaNearSize
 _pwgMediaTable
@@ -358,6 +359,8 @@ httpClearCookie
 httpClearFields
 httpClose
 httpConnect
+httpConnectAgain
+httpConnectURI
 httpCopyPeerCredentials
 httpDecode64
 httpEncode64
@@ -395,7 +398,6 @@ httpPeek
 httpPrintf
 httpRead
 httpReadRequest
-httpReconnect
 httpResolveHostname
 httpResolveURI
 httpSeparateURI
