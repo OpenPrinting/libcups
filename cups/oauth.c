@@ -120,7 +120,6 @@ typedef enum _cups_otype_e		// OAuth data type
 // Local functions...
 //
 
-static http_t	*oauth_connect(const char *uri, char *host, size_t host_size, int *port, char *resource, size_t resource_size);
 static char	*oauth_copy_response(http_t *http);
 static cups_json_t *oauth_do_post(const char *ep, const char *content_type, const char *data);
 static char	*oauth_load_value(const char *auth_uri, const char *secondary_uri, _cups_otype_t otype);
@@ -666,7 +665,7 @@ cupsOAuthGetMetadata(
     goto load_metadata;
 
   // Try getting the metadata...
-  if ((http = oauth_connect(auth_uri, host, sizeof(host), &port, resource, sizeof(resource))) == NULL)
+  if ((http = httpConnectURI(auth_uri, host, sizeof(host), &port, resource, sizeof(resource), /*blocking*/true, /*msec*/30000, /*cancel*/NULL, /*require_ca*/true)) == NULL)
     return (NULL);
 
   for (i = 0; i < (sizeof(paths) / sizeof(paths[0])); i ++)
@@ -1076,46 +1075,6 @@ cupsOAuthSetTokens(
 
 
 //
-// 'oauth_connect()' - Connect to a server for a URI.
-//
-
-static http_t *				// O - HTTP connection
-oauth_connect(const char *uri,		// I - URI
-              char       *host,		// I - Hostname buffer
-	      size_t     host_size,	// I - Size of hostname buffer
-	      int        *port,		// O - Port
-	      char       *resource,	// I - Resource buffer
-	      size_t     resource_size)	// I - Size of resource buffer
-{
-  char		scheme[32],		// URI scheme
-		userpass[256];		// Username:password data (not used)
-  http_encryption_t encryption;		// Type of encryption to use
-  http_t	*http;			// Connection to server
-
-
-  // Separate the URI into its components...
-  if (httpSeparateURI(HTTP_URI_CODING_ALL, uri, scheme, sizeof(scheme), userpass, sizeof(userpass), host, host_size, port, resource, resource_size) < HTTP_URI_STATUS_OK)
-  {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad URI."), true);
-    return (NULL);
-  }
-
-  // Try connecting with the appropriate level of encryption...
-  if (!strcmp(scheme, "https") || *port == 443)
-    encryption = HTTP_ENCRYPTION_ALWAYS;
-  else
-    encryption = HTTP_ENCRYPTION_IF_REQUESTED;
-
-  http = httpConnect(host, *port, /*addrlist*/NULL, AF_UNSPEC, encryption, /*blocking*/true, /*msec*/30000, /*cancel*/NULL);
-
-  // TODO: Validate certificate trust
-
-  // Return the connection...
-  return (http);
-}
-
-
-//
 // 'oauth_copy_response()' - Copy the response from a HTTP response.
 //
 
@@ -1174,7 +1133,7 @@ oauth_do_post(const char *ep,		// I - Endpoint URI
 
 
   // Connect to the endpoint...
-  if ((http = oauth_connect(ep, host, sizeof(host), &port, resource, sizeof(resource))) == NULL)
+  if ((http = httpConnectURI(ep, host, sizeof(host), &port, resource, sizeof(resource), /*blocking*/true, /*msec*/30000, /*cancel*/NULL, /*require_ca*/true)) == NULL)
     return (NULL);
 
   // Send a POST request with the request data...

@@ -439,6 +439,7 @@ extern void		httpClose(http_t *http) _CUPS_PUBLIC;
 extern void		httpClearCookie(http_t *http) _CUPS_PUBLIC;
 extern http_t		*httpConnect(const char *host, int port, http_addrlist_t *addrlist, int family, http_encryption_t encryption, bool blocking, int msec, int *cancel) _CUPS_PUBLIC;
 extern bool		httpConnectAgain(http_t *http, int msec, int *cancel) _CUPS_PUBLIC;
+extern http_t		*httpConnectURI(const char *uri, char *host, size_t hsize, int *port, char *resource, size_t rsize, bool blocking, int msec, int *cancel, bool require_ca) _CUPS_PUBLIC;
 extern char		*httpCopyPeerCredentials(http_t *http) _CUPS_PUBLIC;
 
 extern char		*httpDecode64(char *out, size_t *outlen, const char *in, const char **end) _CUPS_PUBLIC;
