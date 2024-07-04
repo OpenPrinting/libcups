@@ -60,7 +60,7 @@ static const char * const cups_modes[] =
 
 static ssize_t	cups_raster_io(cups_raster_t *r, unsigned char *buf, size_t bytes);
 static ssize_t	cups_raster_read(cups_raster_t *r, unsigned char *buf, size_t bytes);
-static int	cups_raster_update(cups_raster_t *r);
+static bool	cups_raster_update(cups_raster_t *r);
 static ssize_t	cups_raster_write(cups_raster_t *r, const unsigned char *pixels);
 static ssize_t	cups_read_fd(void *ctx, unsigned char *buf, size_t bytes);
 static void	cups_swap(unsigned char *buf, size_t bytes);
@@ -275,9 +275,12 @@ cupsRasterInitHeader(
   };
 
 
+  DEBUG_printf("cupsRasterInitHeader(h=%p, media=%p(%dx%d), optimize=\"%s\", quality=%d, intent=\"%s\", orientation=%d, sides=\"%s\", type=\"%s\", xdpi=%d, ydpi=%d, sheet_back=\"%s\")", (void *)h, (void *)media, media ? media->width : 0, media ? media->length : 0, optimize, quality, intent, orientation, sides, type, xdpi, ydpi, sheet_back);
+
   if (!h || !media || !type || xdpi <= 0 || ydpi <= 0)
   {
     _cupsRasterAddError("%s", strerror(EINVAL));
+    DEBUG_puts("1cupsRasterInitHeader: Returning false.");
     return (false);
   }
 
@@ -344,6 +347,7 @@ cupsRasterInitHeader(
   if (h->cupsWidth > 0x00ffffff || h->cupsHeight > 0x00ffffff)
   {
     _cupsRasterAddError("Raster dimensions too large.");
+    DEBUG_puts("1cupsRasterInitHeader: Returning false.");
     return (false);
   }
 
@@ -402,6 +406,7 @@ cupsRasterInitHeader(
     if (sscanf(type, "device%d_%d", &ncolors, &bits) != 2 || ncolors > 15 || (bits != 8 && bits != 16))
     {
       _cupsRasterAddError("Unsupported raster type \'%s\'.", type);
+      DEBUG_puts("1cupsRasterInitHeader: Returning false.");
       return (false);
     }
 
@@ -454,6 +459,7 @@ cupsRasterInitHeader(
   else
   {
     _cupsRasterAddError("Unsupported raster type \'%s\'.", type);
+    DEBUG_puts("1cupsRasterInitHeader: Returning false.");
     return (false);
   }
 
@@ -499,10 +505,20 @@ cupsRasterInitHeader(
       else if (strcmp(sheet_back, "normal"))
       {
 	_cupsRasterAddError("Unsupported sheet_back value '%s'.", sheet_back);
+	DEBUG_puts("1cupsRasterInitHeader: Returning false.");
 	return (false);
       }
     }
   }
+
+  DEBUG_printf("1cupsRasterInitHeader: cupsColorSpace=%s", _cupsRasterColorSpaceString(h->cupsColorSpace));
+  DEBUG_printf("1cupsRasterInitHeader: cupsBitsPerColor=%u", h->cupsBitsPerColor);
+  DEBUG_printf("1cupsRasterInitHeader: cupsBitsPerPixel=%u", h->cupsBitsPerPixel);
+  DEBUG_printf("1cupsRasterInitHeader: cupsBytesPerLine=%u", h->cupsBytesPerLine);
+  DEBUG_printf("1cupsRasterInitHeader: cupsWidth=%u", h->cupsWidth);
+  DEBUG_printf("1cupsRasterInitHeader: cupsHeight=%u", h->cupsHeight);
+
+  DEBUG_puts("1cupsRasterInitHeader: Returning true.");
 
   return (true);
 }
@@ -1521,7 +1537,7 @@ cups_raster_read(cups_raster_t *r,	// I - Raster stream
 //                          current page.
 //
 
-static int				// O - 1 on success, 0 on failure
+static bool				// O - `true` on success, `false` on failure
 cups_raster_update(cups_raster_t *r)	// I - Raster stream
 {
   if (r->sync == CUPS_RASTER_SYNCv1 || r->sync == CUPS_RASTER_REVSYNCv1 ||
@@ -1596,17 +1612,22 @@ cups_raster_update(cups_raster_t *r)	// I - Raster stream
       case CUPS_CSPACE_DEVICED :
       case CUPS_CSPACE_DEVICEE :
       case CUPS_CSPACE_DEVICEF :
-          r->header.cupsNumColors = r->header.cupsColorSpace -
-	                            CUPS_CSPACE_DEVICE1 + 1;
+          r->header.cupsNumColors = r->header.cupsColorSpace - CUPS_CSPACE_DEVICE1 + 1;
 	  break;
 
       default :
           // Unknown color space
-          return (0);
+          return (false);
     }
+
+    DEBUG_printf("4cups_raster_update: cupsNumColors=%u", r->header.cupsNumColors);
   }
 
   // Set the number of bytes per pixel/color...
+  DEBUG_printf("4cups_raster_update: cupsColorOrder=%u", r->header.cupsColorOrder);
+  DEBUG_printf("4cups_raster_update: cupsBitsPerPixel=%u", r->header.cupsBitsPerPixel);
+  DEBUG_printf("4cups_raster_update: cupsBitsPerColor=%u", r->header.cupsBitsPerColor);
+
   if (r->header.cupsColorOrder == CUPS_ORDER_CHUNKED)
     r->bpp = (r->header.cupsBitsPerPixel + 7) / 8;
   else
@@ -1615,17 +1636,23 @@ cups_raster_update(cups_raster_t *r)	// I - Raster stream
   if (r->bpp == 0)
     r->bpp = 1;
 
+  DEBUG_printf("4cups_raster_update: bpp=%u", r->bpp);
+
+  if (r->bpp > 30)
+    return (false);			// Something went wrong!
+
   // Set the number of remaining rows...
   if (r->header.cupsColorOrder == CUPS_ORDER_PLANAR)
     r->remaining = r->header.cupsHeight * r->header.cupsNumColors;
   else
     r->remaining = r->header.cupsHeight;
 
+  DEBUG_printf("4cups_raster_update: remaining=%u", r->remaining);
+
   // Allocate the compression buffer...
   if (r->compressed)
   {
-    if (r->pixels != NULL)
-      free(r->pixels);
+    free(r->pixels);
 
     if ((r->pixels = calloc(r->header.cupsBytesPerLine, 1)) == NULL)
     {
@@ -1633,15 +1660,17 @@ cups_raster_update(cups_raster_t *r)	// I - Raster stream
       r->pend     = NULL;
       r->count    = 0;
 
-      return (0);
+      return (false);
     }
 
     r->pcurrent = r->pixels;
     r->pend     = r->pixels + r->header.cupsBytesPerLine;
     r->count    = 0;
+
+    DEBUG_printf("4cups_raster_update: Allocated %u bytes at %p.", r->header.cupsBytesPerLine, r->pixels);
   }
 
-  return (1);
+  return (true);
 }
 
 
@@ -1665,6 +1694,7 @@ cups_raster_write(
 
 
   DEBUG_printf("3cups_raster_write(r=%p, pixels=%p)", (void *)r, (void *)pixels);
+  DEBUG_printf("4cups_raster_write: cupsBytesPerLine=%u", r->header.cupsBytesPerLine);
 
   // Determine whether we need to swap bytes...
   if (r->swapped && (r->header.cupsBitsPerColor == 16 || r->header.cupsBitsPerPixel == 12 || r->header.cupsBitsPerPixel == 16))
@@ -1704,15 +1734,19 @@ cups_raster_write(
   wptr    = r->buffer;
   *wptr++ = (unsigned char)(r->count - 1);
 
+  DEBUG_printf("4cups_raster_write: bpp=%u, pend=%ld, plast=%ld, wptr=%ld", bpp, pend - pixels, plast - pixels, wptr - r->buffer);
+
   // Write using a modified PackBits compression...
   for (ptr = pixels; ptr < pend;)
   {
     start = ptr;
     ptr += bpp;
 
-    if (ptr == pend)
+    if (ptr >= pend)
     {
       // Encode a single pixel at the end...
+      DEBUG_printf("4cups_raster_write: SINGLE-END - ptr=%ld, pend=%ld, plast=%ld, start=%ld, wptr=%ld", ptr - pixels, pend - pixels, plast - pixels, start - pixels, wptr - r->buffer);
+
       *wptr++ = 0;
       (*cf)(wptr, start, bpp);
       wptr += bpp;
