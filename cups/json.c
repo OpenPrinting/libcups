@@ -1117,14 +1117,8 @@ cupsJSONImportURL(
     const char *url,			// I  - URL
     time_t     *last_modified)		// IO - Last modified date/time or `NULL`
 {
-  char		scheme[32],		// URL scheme
-		userpass[64],		// URL username:password info
-		host[256],		// URL hostname
-		resource[1024];		// URL resource path
-  int		port;			// URL port number
-  http_uri_status_t uri_status;		// URL decode status
-  http_encryption_t encryption;		// Encryption to use
   http_t	*http;			// HTTP connection
+  char		resource[1024];		// URL resource path
   http_status_t	status;			// HTTP request status
   http_state_t	initial_state;		// Initial HTTP state
   char		if_modified_since[HTTP_MAX_VALUE];
@@ -1143,26 +1137,8 @@ cupsJSONImportURL(
   if (!url)
     return (NULL);
 
-  // Get the URL components...
-  if ((uri_status = httpSeparateURI(HTTP_URI_CODING_ALL, url, scheme, sizeof(scheme), userpass, sizeof(userpass), host, sizeof(host), &port, resource, sizeof(resource))) < HTTP_URI_STATUS_OK)
-  {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, httpURIStatusString(uri_status), 0);
-    return (NULL);
-  }
-
-  if (strcmp(scheme, "http") && strcmp(scheme, "https"))
-  {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unsupported URI scheme."), 1);
-    return (NULL);
-  }
-
-  // Connect to the server...
-  if (!strcmp(scheme, "https") || port == 443)
-    encryption = HTTP_ENCRYPTION_ALWAYS;
-  else
-    encryption = HTTP_ENCRYPTION_IF_REQUESTED;
-
-  if ((http = httpConnect(host, port, NULL, AF_UNSPEC, encryption, true, 30000, NULL)) == NULL)
+  // Connect to the URI...
+  if ((http = httpConnectURI(url, /*host*/NULL, /*hsize*/0, /*port*/NULL, resource, sizeof(resource), /*blocking*/true, /*msec*/30000, /*cancel*/NULL, /*require_ca*/true)) == NULL)
     return (NULL);
 
   // Send a GET request for the resource path...
@@ -1201,7 +1177,7 @@ cupsJSONImportURL(
     // Send the GET request...
     if (!httpWriteRequest(http, "GET", resource))
     {
-      if (httpConnectAgain(http, 30000, NULL))
+      if (httpConnectAgain(http, /*msec*/30000, /*cancel*/NULL))
       {
         status = HTTP_STATUS_UNAUTHORIZED;
         continue;
@@ -1232,7 +1208,7 @@ cupsJSONImportURL(
         break;
       }
 
-      if (!httpConnectAgain(http, 30000, NULL))
+      if (!httpConnectAgain(http, /*msec*/30000, /*cancel*/NULL))
       {
         status = HTTP_STATUS_ERROR;
         break;
@@ -1246,7 +1222,7 @@ cupsJSONImportURL(
       httpFlush(http);
 
       // Reconnect...
-      if (!httpConnectAgain(http, 30000, NULL))
+      if (!httpConnectAgain(http, /*msec*/30000, /*cancel*/NULL))
       {
         status = HTTP_STATUS_ERROR;
         break;

@@ -468,10 +468,10 @@ httpConnectAgain(http_t *http,		// I - HTTP connection
 
 http_t *				// O - New HTTP connection
 httpConnectURI(const char *uri,		// I - Service to connect to
-               char       *host,	// I - Host name buffer
+               char       *host,	// I - Host name buffer (`NULL` for don't care)
                size_t     hsize,	// I - Size of host name buffer
-               int        *port,	// O - Port number
-               char       *resource,	// I - Resource path buffer
+               int        *port,	// O - Port number (`NULL` for don't care)
+               char       *resource,	// I - Resource path buffer (`NULL` for don't care)
                size_t     rsize,	// I - Size of resource path buffer
                bool       blocking,	// I - `true` for blocking connection, `false` for non-blocking
                int        msec,		// I - Connection timeout in milliseconds, `0` means don't connect
@@ -480,11 +480,44 @@ httpConnectURI(const char *uri,		// I - Service to connect to
 {
   http_t	*http;			// New HTTP connection
   char		scheme[32],		// URI scheme
-		userpass[32];		// URI username:password
+		userpass[32],		// URI username:password
+		lhost[256],		// URI host (local copy)
+		lresource[256];		// URI resource (local copy)
+  int		lport;			// URI port (local copy)
   http_encryption_t encryption;		// Type of encryption to use
 
 
   DEBUG_printf("httpConnectURI(uri=\"%s\", host=%p, hsize=%u, port=%p, resource=%p, rsize=%u, blocking=%d, msec=%d, cancel=%p, require_ca=%s)", uri, (void *)host, (unsigned)hsize, (void *)port, (void *)resource, (unsigned)rsize, blocking, msec, (void *)cancel, require_ca ? "true" : "false");
+
+  // Range check input...
+  if (!uri)
+  {
+    if (host)
+      *host = '\0';
+
+    if (port)
+      *port = 0;
+
+    if (resource)
+      *resource = '\0';
+
+    return (NULL);
+  }
+
+  if (!host)
+  {
+    host  = lhost;
+    hsize = sizeof(lhost);
+  }
+
+  if (!port)
+    port = &lport;
+
+  if (!resource)
+  {
+    resource = lresource;
+    rsize    = sizeof(lresource);
+  }
 
   // Get the URI components...
   if (httpSeparateURI(HTTP_URI_CODING_ALL, uri, scheme, sizeof(scheme), userpass, sizeof(userpass), host, hsize, port, resource, rsize) < HTTP_URI_STATUS_OK)

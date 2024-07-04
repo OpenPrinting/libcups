@@ -7,6 +7,8 @@ libcups v3.0rc1 (TBD)
 - Added `cupsFormatString` and `cupsFormatStringv` APIs to safely format UTF-8
   strings.
 - Added support for per-user instances of `cups-locald` (Issue #69)
+- Added `httpConnectURI` API.
+- Renamed `httpReconnect` to `httpConnectAgain`.
 - Updated `cupsDestInfo` to accept a `cups_dest_flags_t` argument.
 - Updated `cupsCopyString` and `cupsConcatString` APIs to safely terminate UTF-8
   strings.
