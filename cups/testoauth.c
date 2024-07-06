@@ -23,7 +23,15 @@
 // Local functions...
 //
 
-static int	unit_tests(void);
+static int	authorize(const char *oauth_uri, const char *scopes, const char *resource_uri);
+static int	clear(const char *oauth_uri, const char *resource_uri);
+static int	get_access_token(const char *oauth_uri, const char *resource_uri);
+static int	get_client_id(const char *oauth_uri, const char *redirect_uri);
+static int	get_metadata(const char *oauth_uri);
+static int	get_refresh_token(const char *oauth_uri, const char *resource_uri);
+static int	get_user_id(const char *oauth_uri, const char *resource_uri);
+static int	set_client_id(const char *oauth_uri, const char *redirect_uri, const char *client_id, const char *client_secret);
+static int	unit_tests(const char *oauth_uri);
 static int	usage(FILE *out);
 
 
@@ -39,15 +47,12 @@ main(int  argc,				// I - Number of command-line arguments
   const char	*opt,			// Current option
 		*oauth_uri = NULL,	// OAuth authorization server URI
 		*command = NULL,	// Command
-//		*resource_uri = NULL,	// Resource URI
+		*redirect_uri = CUPS_OAUTH_REDIRECT_URI,
+					// Redirection URI
 		*scopes = NULL;		// Scopes
 
 
-  // Run unit tests if no arguments are specified...
-  if (argc == 1)
-    return (unit_tests());
-
-  // Otherwise parse the command-line...
+  // Parse the command-line...
   for (i = 1; i < argc; i ++)
   {
     if (!strcmp(argv[i], "--help"))
@@ -71,7 +76,18 @@ main(int  argc,				// I - Number of command-line arguments
               oauth_uri = argv[i];
               break;
 
-          case 's' :
+          case 'r' : // -r REDIRECT-URI
+              i ++;
+              if (i >= argc)
+              {
+                fputs("testoauth: Missing redirect URI after '-r'.\n", stderr);
+                return (usage(stderr));
+              }
+
+              redirect_uri = argv[i];
+              break;
+
+          case 's' : // -s SCOPE(S)
               i ++;
               if (i >= argc)
               {
@@ -101,19 +117,207 @@ main(int  argc,				// I - Number of command-line arguments
     }
   }
 
+  // Apply defaults...
+  if (!command)
+    command = "test";
+
   if (!oauth_uri)
     oauth_uri = TEST_OAUTH_URI;
 
-  if (oauth_uri)
-    puts(oauth_uri);
+  // Do commands...
+  if (!strcmp(command, "authorize"))
+  {
+    if (i >= argc)
+    {
+      fputs("testoauth: Missing resource URI.\n", stderr);
+      return (usage(stderr));
+    }
 
-  if (scopes)
-    puts(scopes);
+    return (authorize(oauth_uri, scopes, argv[i]));
+  }
+  else if (!strcmp(command, "clear"))
+  {
+    if (i >= argc)
+    {
+      fputs("testoauth: Missing resource URI.\n", stderr);
+      return (usage(stderr));
+    }
 
-  if (command)
-    puts(command);
+    return (clear(oauth_uri, argv[i]));
+  }
+  else if (!strcmp(command, "get-access-token"))
+  {
+    if (i >= argc)
+    {
+      fputs("testoauth: Missing resource URI.\n", stderr);
+      return (usage(stderr));
+    }
 
-  return (0);
+    return (get_access_token(oauth_uri, argv[i]));
+  }
+  else if (!strcmp(command, "get-client-id"))
+  {
+    return (get_client_id(oauth_uri, redirect_uri));
+  }
+  else if (!strcmp(command, "get-metadata"))
+  {
+    return (get_metadata(oauth_uri));
+  }
+  else if (!strcmp(command, "get-refresh-token"))
+  {
+    if (i >= argc)
+    {
+      fputs("testoauth: Missing resource URI.\n", stderr);
+      return (usage(stderr));
+    }
+
+    return (get_refresh_token(oauth_uri, argv[i]));
+  }
+  else if (!strcmp(command, "get-user-id"))
+  {
+    if (i >= argc)
+    {
+      fputs("testoauth: Missing resource URI.\n", stderr);
+      return (usage(stderr));
+    }
+
+    return (get_user_id(oauth_uri, argv[i]));
+  }
+  else if (!strcmp(command, "set-client-id"))
+  {
+    if ((i + 1) >= argc)
+    {
+      fputs("testoauth: Missing client_id and/or client_secret.\n", stderr);
+      return (usage(stderr));
+    }
+
+    return (set_client_id(oauth_uri, redirect_uri, argv[i], argv[i + 1]));
+  }
+  else if (!strcmp(command, "test"))
+  {
+    return (unit_tests(oauth_uri));
+  }
+  else
+  {
+    fprintf(stderr, "testoauth: Unknown command '%s'.\n", command);
+    return (usage(stderr));
+  }
+}
+
+
+//
+// '()' - .
+//
+
+static int				// O - Exit status
+authorize(const char *oauth_uri, const char *scopes, const char *resource_uri)
+{
+  (void)oauth_uri;
+  (void)scopes;
+  (void)resource_uri;
+
+  return (1);
+}
+
+
+//
+// '()' - .
+//
+
+static int				// O - Exit status
+clear(const char *oauth_uri, const char *resource_uri)
+{
+  (void)oauth_uri;
+  (void)resource_uri;
+
+  return (1);
+}
+
+
+//
+// '()' - .
+//
+
+static int				// O - Exit status
+get_access_token(const char *oauth_uri, const char *resource_uri)
+{
+  (void)oauth_uri;
+  (void)resource_uri;
+
+  return (1);
+}
+
+
+//
+// '()' - .
+//
+
+static int				// O - Exit status
+get_client_id(const char *oauth_uri, const char *redirect_uri)
+{
+  (void)oauth_uri;
+  (void)redirect_uri;
+
+  return (1);
+}
+
+
+//
+// '()' - .
+//
+
+static int				// O - Exit status
+get_metadata(const char *oauth_uri)
+{
+  (void)oauth_uri;
+  return (1);
+}
+
+
+//
+// '()' - .
+//
+
+static int				// O - Exit status
+get_refresh_token(const char *oauth_uri, const char *resource_uri)
+{
+  (void)oauth_uri;
+  (void)resource_uri;
+
+  return (1);
+}
+
+
+//
+// '()' - .
+//
+
+static int				// O - Exit status
+get_user_id(const char *oauth_uri, const char *resource_uri)
+{
+  (void)oauth_uri;
+  (void)resource_uri;
+
+  return (1);
+}
+
+
+//
+// '()' - .
+//
+
+static int				// O - Exit status
+set_client_id(const char *oauth_uri,	// I - Authorization Server URI
+              const char *redirect_uri,	// I - Redirect URI
+              const char *client_id,	// I - Client ID
+              const char *client_secret)// I - Client secret
+{
+  (void)oauth_uri;
+  (void)redirect_uri;
+  (void)client_id;
+  (void)client_secret;
+
+  return (1);
 }
 
 
@@ -122,8 +326,10 @@ main(int  argc,				// I - Number of command-line arguments
 //
 
 static int				// O - Exit status
-unit_tests(void)
+unit_tests(const char *oauth_uri)	// I - Authorization Server URI
 {
+  (void)oauth_uri;
+
   return (1);
 }
 
@@ -145,6 +351,7 @@ usage(FILE *out)			// I - Output file
   fputs("  get-refresh-token RESOURCE-URI\n", out);
   fputs("  get-user-id RESOURCE-URI\n", out);
   fputs("  set-client-id CLIENT-ID CLIENT-SECRET\n", out);
+  fputs("  test\n", out);
 
   return (out == stdout ? 0 : 1);
 }
