@@ -86,6 +86,13 @@ extern char **environ;			// @private@
 // Local constants...
 //
 
+#define _CUPS_OAUTH_REDIRECT_FORMAT	"http://127.0.0.1:%d/"
+					// Redirect URI with port
+#define _CUPS_OAUTH_REDIRECT_PATH	"/?"
+					// Redirect URI request path prefix
+#define _CUPS_OAUTH_REDIRECT_PATHLEN	2
+					// Redirect URI request path length
+
 static const char *github_metadata =	// Github.com OAuth metadata
 "{\
 \"issuer\":\"https://github.com\",\
@@ -109,7 +116,7 @@ typedef enum _cups_otype_e		// OAuth data type
   _CUPS_OTYPE_CLIENT_ID,		// Client ID
   _CUPS_OTYPE_CLIENT_SECRET,		// Client secret
   _CUPS_OTYPE_CODE_VERIFIER,		// Client code_verifier
-  _CUPS_OTYPE_ID,			// (User) ID token
+  _CUPS_OTYPE_USER_ID,			// (User) ID token
   _CUPS_OTYPE_METADATA,			// Server metadata
   _CUPS_OTYPE_NONCE,			// Client nonce
   _CUPS_OTYPE_REFRESH			// Refresh token
@@ -131,8 +138,10 @@ static bool	oauth_set_error(cups_json_t *json, size_t num_form, cups_option_t *f
 
 
 //
-// 'cupsOAuthClearTokens()' - Clear any cached authorization or refresh tokens.
+// 'cupsOAuthClearTokens()' - Clear any cached authorization information.
 //
+// This function clears cached authorization information for the given
+// Authorization Server "auth_uri" and Resource "resource_uri" combination.
 
 void
 cupsOAuthClearTokens(
@@ -141,7 +150,7 @@ cupsOAuthClearTokens(
 {
   oauth_save_value(auth_uri, resource_uri, _CUPS_OTYPE_ACCESS, /*value*/NULL);
   oauth_save_value(auth_uri, resource_uri, _CUPS_OTYPE_CODE_VERIFIER, NULL);
-  oauth_save_value(auth_uri, resource_uri, _CUPS_OTYPE_ID, /*value*/NULL);
+  oauth_save_value(auth_uri, resource_uri, _CUPS_OTYPE_USER_ID, /*value*/NULL);
   oauth_save_value(auth_uri, resource_uri, _CUPS_OTYPE_NONCE, NULL);
   oauth_save_value(auth_uri, resource_uri, _CUPS_OTYPE_REFRESH, /*value*/NULL);
 }
@@ -151,9 +160,11 @@ cupsOAuthClearTokens(
 // 'cupsOAuthCopyAccessToken()' - Get a cached access token.
 //
 // This function makes a copy of a cached access token and any
-// associated expiration time for the given authorization and resource
-// server combination.  The returned access token must be freed using
-// the `free` function.  `NULL` is returned if no token is cached.
+// associated expiration time for the given Authorization Server "auth_uri" and
+// Resource "resource_uri" combination.  The returned access token must be freed
+// using the `free` function.
+//
+// `NULL` is returned if no token is cached.
 //
 
 char *					// O - Access token
@@ -189,8 +200,10 @@ cupsOAuthCopyAccessToken(
 // 'cupsOAuthCopyClientId()' - Get the cached `client_id` value.
 //
 // This function makes a copy of the cached `client_id` value for a given
-// Authorization Server and Redirection URI.  The returned value must be freed
-// using the `free` function.  `NULL` is returned if no `client_id` is cached.
+// Authorization Server "auth_uri" and Redirection URI "resource_uri". The
+// returned value must be freed using the `free` function.
+//
+// `NULL` is returned if no `client_id` is cached.
 //
 
 char *					// O - `client_id` value
@@ -203,38 +216,14 @@ cupsOAuthCopyClientId(
 
 
 //
-// 'cupsOAuthCopyId()' - Get cached identification information.
-//
-// This function makes a copy of cached identification information for the
-// given authorization and resource server combination.  The returned JWT must
-// be freed using the @link cupsJWTDelete@ function.  `NULL` is returned if no
-// identification information is cached.
-//
-
-cups_jwt_t *				// O - Identification information
-cupsOAuthCopyId(
-    const char *auth_uri,		// I - Authorization Server URI
-    const char *resource_uri)		// I - Resource URI
-{
-  char		*value;			// ID token value
-  cups_jwt_t	*jwt;			// JWT value
-
-
-  value = oauth_load_value(auth_uri, resource_uri, _CUPS_OTYPE_ID);
-  jwt   = cupsJWTImportString(value, CUPS_JWS_FORMAT_COMPACT);
-
-  free(value);
-  return (jwt);
-}
-
-
-//
 // 'cupsOAuthCopyRefreshToken()' - Get a cached refresh token.
 //
 // This function makes a copy of a cached refresh token for the given
-// authorization and resource server combination.  The returned refresh
-// token must be freed using the `free` function.  `NULL` is returned
-// if no token is cached.
+// given Authorization Server "auth_uri" and Resource "resource_uri"
+// combination.  The returned refresh token must be freed using the `free`
+// function.
+//
+// `NULL` is returned if no refresh token is cached.
 //
 
 char *					// O - Refresh token
@@ -247,9 +236,37 @@ cupsOAuthCopyRefreshToken(
 
 
 //
+// 'cupsOAuthCopyUserId()' - Get cached user identification information.
+//
+// This function makes a copy of cached user identification information for the
+// given Authorization Server "auth_uri" and Resource "resource_uri"
+// combination. The returned user information must be freed using the
+// @link cupsJWTDelete@ function.
+//
+// `NULL` is returned if no identification information is cached.
+//
+
+cups_jwt_t *				// O - Identification information
+cupsOAuthCopyUserId(
+    const char *auth_uri,		// I - Authorization Server URI
+    const char *resource_uri)		// I - Resource URI
+{
+  char		*value;			// ID token value
+  cups_jwt_t	*jwt;			// JWT value
+
+
+  value = oauth_load_value(auth_uri, resource_uri, _CUPS_OTYPE_USER_ID);
+  jwt   = cupsJWTImportString(value, CUPS_JWS_FORMAT_COMPACT);
+
+  free(value);
+  return (jwt);
+}
+
+
+//
 // 'cupsOAuthGetAuthorizationCode()' - Authorize access using a web browser.
 //
-// This function performs the OAuth authorization flow to obtain an
+// This function performs a local/"native" OAuth authorization flow to obtain an
 // authorization code for use with the @link cupsOAuthGetTokens@ function.
 //
 // The "auth_uri" parameter specifies the URI for the OAuth Authorization
@@ -268,6 +285,8 @@ cupsOAuthCopyRefreshToken(
 // cups_json_t *metadata = cupsOAuthGetMetadata(auth_uri);
 // cups_json_t *scopes_supported = cupsJSONFind(metadata, "scopes_supported");
 // ```
+//
+// The returned authorization code must be freed using the `free` function.
 //
 
 char *					// O - Authorization code or `NULL` on error
@@ -296,8 +315,8 @@ cupsOAuthGetAuthorizationCode(
     return (NULL);
 
   // Get the client_id value...
-  if ((client_id = cupsOAuthCopyClientId(auth_uri, resource_uri)) == NULL)
-    client_id = cupsOAuthGetClientId(auth_uri, metadata, "http://127.0.0.1/finish", /*logo_uri*/NULL, /*tos_uri*/NULL);
+  if ((client_id = cupsOAuthCopyClientId(auth_uri, CUPS_OAUTH_REDIRECT_URI)) == NULL)
+    client_id = cupsOAuthGetClientId(auth_uri, metadata, CUPS_OAUTH_REDIRECT_URI, /*logo_uri*/NULL, /*tos_uri*/NULL);
 
   if (!client_id)
     return (NULL);
@@ -322,7 +341,7 @@ cupsOAuthGetAuthorizationCode(
   polldata.events = POLLIN | POLLERR | POLLHUP;
 
   // Point redirection to the local port...
-  httpAssembleURI(HTTP_URI_CODING_ALL, redirect_uri, sizeof(redirect_uri), "http", /*userpass*/NULL, "127.0.0.1", port, "/finish");
+  snprintf(redirect_uri, sizeof(redirect_uri), _CUPS_OAUTH_REDIRECT_FORMAT, port);
 
   // Make state and code verification strings...
   if (oauth_metadata_contains(metadata, "code_challenge_methods_supported", "S256"))
@@ -421,15 +440,10 @@ cupsOAuthGetAuthorizationCode(
                 break;
 
             case HTTP_STATE_HEAD :
-		if (!strncmp(resource, "/finish?", 10))
+		if (!strncmp(resource, _CUPS_OAUTH_REDIRECT_PATH, _CUPS_OAUTH_REDIRECT_PATHLEN))
 		{
 		  // Respond that the content will be HTML...
 		  htype = "text/html";
-		}
-		else if (!strcmp(resource, "/finish"))
-		{
-		  // Respond that you can't access without parameters...
-		  hstatus = HTTP_STATUS_BAD_REQUEST;
 		}
 		else
 		{
@@ -439,7 +453,7 @@ cupsOAuthGetAuthorizationCode(
 		break;
 
 	    case HTTP_STATE_GET :
-		if (!strncmp(resource, "/finish?", 8))
+		if (!strncmp(resource, _CUPS_OAUTH_REDIRECT_PATH, _CUPS_OAUTH_REDIRECT_PATHLEN))
 		{
 		  // Collect form parameters from resource...
 		  const char	*code_value,		// Authoziation code value
@@ -493,13 +507,6 @@ cupsOAuthGetAuthorizationCode(
                   // Respond accordingly...
 		  htype = "text/html";
 		}
-		else if (!strcmp(resource, "/finish"))
-		{
-		  // Respond that you can't access without parameters...
-		  hstatus = HTTP_STATUS_BAD_REQUEST;
-		  htype   = "text/plain";
-		  hbody   = "Bad request.\n";
-		}
 		else
 		{
 		  // Resource doesn't exist...
@@ -552,6 +559,27 @@ cupsOAuthGetAuthorizationCode(
 
 //
 // 'cupsOAuthGetClientId()' - Register a client application and get its ID.
+//
+// This function registers a client application with the specified OAuth
+// Authorization Server.
+//
+// The "auth_uri" parameter specifies the URI for the OAuth Authorization
+// Server. The "metadata" parameter specifies the Authorization Server metadata
+// as obtained using @link cupsOAuthCopyMetadata@ and/or
+// @link cupsOAuthGetMetadata@.
+//
+// The "redirect_uri" argument specifies the URL to use for providing
+// authorization results to a WWW application.
+//
+// The "logo_uri" argument specifies a public URL for the logo of your
+// application, while the "tos_uri" specifies a public URL for the terms of
+// service for your application.
+//
+// The returned "client_id" string must be freed using the `free` function.
+//
+// *Note*: This function should only be used to register WWW applications. The
+// @link cupsOAuthGetAuthorizationCode@ function handles registration of
+// local/"native" applications for you.
 //
 
 char *					// O - `client_id` string or `NULL` on error
@@ -621,6 +649,11 @@ cupsOAuthGetClientId(
 
 //
 // 'cupsOAuthGetMetadata()' - Get the metadata for an Authorization Server.
+//
+// This function gets the metadata for the specified Authorization Server URI
+// "auth_uri". Metadata is cached per-user for better performance.
+//
+// The returned metadata must be freed using the @link cupsJSONDelete@ function.
 //
 
 cups_json_t *				// O - JSON metadata or `NULL` on error
@@ -762,8 +795,36 @@ cupsOAuthGetMetadata(
 
 
 //
-// 'cupsOAuthGetTokens()' - Obtain access, ID, and refresh tokens from an
-//                          authorization code or refresh token.
+// 'cupsOAuthGetTokens()' - Obtain access and refresh tokens.
+//
+// This function obtains a access and refresh tokens from an OAuth Authorization
+// Server. OpenID Authorization Servers also provide user identification
+// information.
+//
+// The "auth_uri" parameter specifies the URI for the OAuth Authorization
+// Server.  The "metadata" parameter specifies the Authorization Server metadata
+// as obtained using @link cupsOAuthCopyMetadata@ and/or
+// @link cupsOAuthGetMetadata@.
+//
+// The "resource_uri" parameter specifies the URI for a resource (printer, web
+// file, etc.) that you which to access.
+//
+// The "grant_code" parameter specifies the code or token to use while the
+// "grant_type" parameter specifies the type of code:
+//
+// - `CUPS_OGRANT_AUTHORIZATION_CODE`: A user authorization grant code.
+// - `CUPS_OGRANT_DEVICE_CODE`: A device authorization grant code.
+// - `CUPS_OGRANT_REFRESH_TOKEN`: A refresh token.
+//
+// The "redirect_uri" specifies the redirection URI used to obtain the code. The
+// constant `CUPS_OAUTH_REDIRECT_URI` should be used for codes obtained using
+// the @link cupsOAuthGetAuthorizationCode@ function.
+//
+// When successful, the access token and expiration time are returned. The
+// access token must be freed using the `free` function. The new refresh token
+// and any user ID information can be obtained using the
+// @link cupsOAuthCopyRefreshToken@ and @link cupsOAuthCopyUserId@ functions
+// respectively.
 //
 
 char *					// O - Access token or `NULL` on error
@@ -858,7 +919,7 @@ cupsOAuthGetTokens(
   else
     access_expvalue = 0;
 
-  cupsOAuthSetTokens(token_ep, resource_uri, access_value, access_expvalue, id_value, refresh_value);
+  cupsOAuthSaveTokens(token_ep, resource_uri, access_value, access_expvalue, id_value, refresh_value);
 
   if (access_value)
     access_token = strdup(access_value);
@@ -925,8 +986,8 @@ cupsOAuthGetTokens(
 
 char *					// O - Authorization URL
 cupsOAuthMakeAuthorizationURL(
-    const char  *auth_uri,		// I - Authorization URI
-    cups_json_t *metadata,		// I - Authorization server metadata
+    const char  *auth_uri,		// I - Authorization Server URI
+    cups_json_t *metadata,		// I - Authorization Server metadata
     const char  *resource_uri,		// I - Resource URI
     const char  *scopes,		// I - Space-delimited scope(s)
     const char  *client_id,		// I - Client ID
@@ -993,6 +1054,10 @@ cupsOAuthMakeAuthorizationURL(
 //
 // 'cupsOAuthMakeBase64Random()' - Make a random data string.
 //
+// This function creates a string containing random data that has been Base64URL
+// encoded. "len" specifies the number of random bytes to include in the string.
+// The returned string must be freed using the `free` function.
+//
 
 char *					// O - Random string
 cupsOAuthMakeBase64Random(size_t len)	// I - Number of bytes
@@ -1022,14 +1087,19 @@ cupsOAuthMakeBase64Random(size_t len)	// I - Number of bytes
 
 
 //
-// 'cupsOAuthSetClientId()' - Save client_id and client_secret values.
+// 'cupsOAuthSaveClientId()' - Save client_id and client_secret values.
+//
+// This function saves the "client_id" and "client_secret" values for the given
+// Authorization Server "auth_uri" and redirection URI "redirect_uri". If the
+// "client_id" is `NULL` then any saved values are deleted from the per-user
+// store.
 //
 
 void
-cupsOAuthSetClientId(
+cupsOAuthSaveClientId(
     const char *auth_uri,		// I - Authorization Server URI
     const char *redirect_uri,		// I - Redirection URI
-    const char *client_id,		// I - client_id
+    const char *client_id,		// I - client_id or `NULL` to delete
     const char *client_secret)		// I - client_secret value or `NULL` for none
 {
   oauth_save_value(auth_uri, redirect_uri, _CUPS_OTYPE_CLIENT_ID, client_id);
@@ -1038,17 +1108,22 @@ cupsOAuthSetClientId(
 
 
 //
-// 'cupsOAuthSetTokens()' - Save authorization and refresh tokens.
+// 'cupsOAuthSaveTokens()' - Save authorization and refresh tokens.
+//
+// This function saves the access token "access_token", user ID "user_id", and
+// refresh token "refresh_token" values for the given Authorization Server
+// "auth_uri" and resource "resource_uri". Specifying `NULL` for any of the
+// values will delete the corresponding saved values from the per-user store.
 //
 
 void
-cupsOAuthSetTokens(
-    const char *auth_uri,		// I - Authorization server FQDN
-    const char *resource_uri,		// I - Resource server FQDN
-    const char *access_token,		// I - Access token
+cupsOAuthSaveTokens(
+    const char *auth_uri,		// I - Authorization Server URI
+    const char *resource_uri,		// I - Resource URI
+    const char *access_token,		// I - Access token or `NULL` to delete
     time_t     access_expires,		// I - Access expiration time
-    const char *id_token,		// I - ID token
-    const char *refresh_token)		// I - Refresh token
+    const char *user_id,		// I - User ID or `NULL` to delete
+    const char *refresh_token)		// I - Refresh token or `NULL` to delete
 {
   char		temp[16384];		// Temporary string
 
@@ -1066,8 +1141,8 @@ cupsOAuthSetTokens(
     oauth_save_value(auth_uri, resource_uri, _CUPS_OTYPE_ACCESS, NULL);
   }
 
-  // ID token...
-  oauth_save_value(auth_uri, resource_uri, _CUPS_OTYPE_ID, id_token);
+  // User ID...
+  oauth_save_value(auth_uri, resource_uri, _CUPS_OTYPE_USER_ID, user_id);
 
   // Refresh token...
   oauth_save_value(auth_uri, resource_uri, _CUPS_OTYPE_REFRESH, refresh_token);

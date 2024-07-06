@@ -16,6 +16,14 @@ extern "C" {
 
 
 //
+// Constants...
+//
+
+#  define CUPS_OAUTH_REDIRECT_URI	"http://127.0.0.1/"
+					// Redirect URI for local authorization
+
+
+//
 // Types...
 //
 
@@ -32,11 +40,10 @@ typedef enum cups_ogrant_e		// OAuth Grant Types
 //
 
 extern void		cupsOAuthClearTokens(const char *auth_uri, const char *resource_uri) _CUPS_PUBLIC;
-extern void		cupsOAuthConnect(const char *auth_uri, const char *metadata, const char *endpoint_name, char *resource, size_t resource_size) _CUPS_PUBLIC;
 extern char		*cupsOAuthCopyAccessToken(const char *auth_uri, const char *resource_uri, time_t *access_expires) _CUPS_PUBLIC;
 extern char		*cupsOAuthCopyClientId(const char *auth_uri, const char *redirect_uri) _CUPS_PUBLIC;
-extern cups_jwt_t	*cupsOAuthCopyId(const char *auth_uri, const char *resource_uri) _CUPS_PUBLIC;
 extern char		*cupsOAuthCopyRefreshToken(const char *auth_uri, const char *resource_uri) _CUPS_PUBLIC;
+extern cups_jwt_t	*cupsOAuthCopyUserId(const char *auth_uri, const char *resource_uri) _CUPS_PUBLIC;
 
 extern char		*cupsOAuthGetAuthorizationCode(const char *auth_uri, cups_json_t *metadata, const char *resource_uri, const char *scopes) _CUPS_PUBLIC;
 extern char		*cupsOAuthGetClientId(const char *auth_uri, cups_json_t *metadata, const char *redirect_uri, const char *logo_uri, const char *tos_uri) _CUPS_PUBLIC;
@@ -46,8 +53,8 @@ extern char		*cupsOAuthGetTokens(const char *auth_uri, cups_json_t *metadata, co
 extern char		*cupsOAuthMakeAuthorizationURL(const char *auth_uri, cups_json_t *metadata, const char *resource_uri, const char *scopes, const char *client_id, const char *code_verifier, const char *nonce, const char *redirect_uri, const char *state) _CUPS_PUBLIC;
 extern char		*cupsOAuthMakeBase64Random(size_t len) _CUPS_PUBLIC;
 
-extern void		cupsOAuthSetClientId(const char *auth_uri, const char *redirect_uri, const char *client_id, const char *client_secret) _CUPS_PUBLIC;
-extern void		cupsOAuthSetTokens(const char *auth_uri, const char *resource_uri, const char *access_token, time_t access_expires, const char *id_token, const char *refresh_token) _CUPS_PUBLIC;
+extern void		cupsOAuthSaveClientId(const char *auth_uri, const char *redirect_uri, const char *client_id, const char *client_secret) _CUPS_PUBLIC;
+extern void		cupsOAuthSaveTokens(const char *auth_uri, const char *resource_uri, const char *access_token, time_t access_expires, const char *user_id, const char *refresh_token) _CUPS_PUBLIC;
 
 
 #  ifdef __cplusplus

@@ -514,16 +514,16 @@ span.string {
 <li><a href="#cupsOAuthClearTokens">cupsOAuthClearTokens</a></li>
 <li><a href="#cupsOAuthCopyAccessToken">cupsOAuthCopyAccessToken</a></li>
 <li><a href="#cupsOAuthCopyClientId">cupsOAuthCopyClientId</a></li>
-<li><a href="#cupsOAuthCopyId">cupsOAuthCopyId</a></li>
 <li><a href="#cupsOAuthCopyRefreshToken">cupsOAuthCopyRefreshToken</a></li>
+<li><a href="#cupsOAuthCopyUserId">cupsOAuthCopyUserId</a></li>
 <li><a href="#cupsOAuthGetAuthorizationCode">cupsOAuthGetAuthorizationCode</a></li>
 <li><a href="#cupsOAuthGetClientId">cupsOAuthGetClientId</a></li>
 <li><a href="#cupsOAuthGetMetadata">cupsOAuthGetMetadata</a></li>
 <li><a href="#cupsOAuthGetTokens">cupsOAuthGetTokens</a></li>
 <li><a href="#cupsOAuthMakeAuthorizationURL">cupsOAuthMakeAuthorizationURL</a></li>
 <li><a href="#cupsOAuthMakeBase64Random">cupsOAuthMakeBase64Random</a></li>
-<li><a href="#cupsOAuthSetClientId">cupsOAuthSetClientId</a></li>
-<li><a href="#cupsOAuthSetTokens">cupsOAuthSetTokens</a></li>
+<li><a href="#cupsOAuthSaveClientId">cupsOAuthSaveClientId</a></li>
+<li><a href="#cupsOAuthSaveTokens">cupsOAuthSaveTokens</a></li>
 <li><a href="#cupsParseOptions">cupsParseOptions</a></li>
 <li><a href="#cupsPutFd">cupsPutFd</a></li>
 <li><a href="#cupsPutFile">cupsPutFile</a></li>
@@ -590,6 +590,7 @@ span.string {
 <li><a href="#httpClose">httpClose</a></li>
 <li><a href="#httpConnect">httpConnect</a></li>
 <li><a href="#httpConnectAgain">httpConnectAgain</a></li>
+<li><a href="#httpConnectURI">httpConnectURI</a></li>
 <li><a href="#httpCopyPeerCredentials">httpCopyPeerCredentials</a></li>
 <li><a href="#httpDecode64">httpDecode64</a></li>
 <li><a href="#httpEncode64">httpEncode64</a></li>
@@ -5891,7 +5892,7 @@ message.  The returned string must be freed by the caller using <code>free</code
 <td class="description">Mutex</td></tr>
 </tbody></table>
 <h3 class="function"><a id="cupsOAuthClearTokens">cupsOAuthClearTokens</a></h3>
-<p class="description">Clear any cached authorization or refresh tokens.</p>
+<p class="description">Clear any cached authorization information.</p>
 <p class="code">
 <span class="reserved">void</span> cupsOAuthClearTokens(<span class="reserved">const</span> <span class="reserved">char</span> *auth_uri, <span class="reserved">const</span> <span class="reserved">char</span> *resource_uri);</p>
 <h4 class="parameters">Parameters</h4>
@@ -5901,6 +5902,9 @@ message.  The returned string must be freed by the caller using <code>free</code
 <tr><th>resource_uri</th>
 <td class="description">Resource server URI</td></tr>
 </tbody></table>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function clears cached authorization information for the given
+Authorization Server &quot;auth_uri&quot; and Resource &quot;resource_uri&quot; combination.</p>
 <h3 class="function"><a id="cupsOAuthCopyAccessToken">cupsOAuthCopyAccessToken</a></h3>
 <p class="description">Get a cached access token.</p>
 <p class="code">
@@ -5918,9 +5922,11 @@ message.  The returned string must be freed by the caller using <code>free</code
 <p class="description">Access token</p>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">This function makes a copy of a cached access token and any
-associated expiration time for the given authorization and resource
-server combination.  The returned access token must be freed using
-the <code>free</code> function.  <code>NULL</code> is returned if no token is cached.</p>
+associated expiration time for the given Authorization Server &quot;auth_uri&quot; and
+Resource &quot;resource_uri&quot; combination.  The returned access token must be freed
+using the <code>free</code> function.<br>
+<br>
+<code>NULL</code> is returned if no token is cached.</p>
 <h3 class="function"><a id="cupsOAuthCopyClientId">cupsOAuthCopyClientId</a></h3>
 <p class="description">Get the cached <code>client_id</code> value.</p>
 <p class="code">
@@ -5936,26 +5942,10 @@ the <code>free</code> function.  <code>NULL</code> is returned if no token is ca
 <p class="description"><code>client_id</code> value</p>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">This function makes a copy of the cached <code>client_id</code> value for a given
-Authorization Server and Redirection URI.  The returned value must be freed
-using the <code>free</code> function.  <code>NULL</code> is returned if no <code>client_id</code> is cached.</p>
-<h3 class="function"><a id="cupsOAuthCopyId">cupsOAuthCopyId</a></h3>
-<p class="description">Get cached identification information.</p>
-<p class="code">
-<a href="#cups_jwt_t">cups_jwt_t</a> *cupsOAuthCopyId(<span class="reserved">const</span> <span class="reserved">char</span> *auth_uri, <span class="reserved">const</span> <span class="reserved">char</span> *resource_uri);</p>
-<h4 class="parameters">Parameters</h4>
-<table class="list"><tbody>
-<tr><th>auth_uri</th>
-<td class="description">Authorization Server URI</td></tr>
-<tr><th>resource_uri</th>
-<td class="description">Resource URI</td></tr>
-</tbody></table>
-<h4 class="returnvalue">Return Value</h4>
-<p class="description">Identification information</p>
-<h4 class="discussion">Discussion</h4>
-<p class="discussion">This function makes a copy of cached identification information for the
-given authorization and resource server combination.  The returned JWT must
-be freed using the <a href="#cupsJWTDelete"><code>cupsJWTDelete</code></a> function.  <code>NULL</code> is returned if no
-identification information is cached.</p>
+Authorization Server &quot;auth_uri&quot; and Redirection URI &quot;resource_uri&quot;. The
+returned value must be freed using the <code>free</code> function.<br>
+<br>
+<code>NULL</code> is returned if no <code>client_id</code> is cached.</p>
 <h3 class="function"><a id="cupsOAuthCopyRefreshToken">cupsOAuthCopyRefreshToken</a></h3>
 <p class="description">Get a cached refresh token.</p>
 <p class="code">
@@ -5971,9 +5961,31 @@ identification information is cached.</p>
 <p class="description">Refresh token</p>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">This function makes a copy of a cached refresh token for the given
-authorization and resource server combination.  The returned refresh
-token must be freed using the <code>free</code> function.  <code>NULL</code> is returned
-if no token is cached.</p>
+given Authorization Server &quot;auth_uri&quot; and Resource &quot;resource_uri&quot;
+combination.  The returned refresh token must be freed using the <code>free</code>
+function.<br>
+<br>
+<code>NULL</code> is returned if no refresh token is cached.</p>
+<h3 class="function"><a id="cupsOAuthCopyUserId">cupsOAuthCopyUserId</a></h3>
+<p class="description">Get cached user identification information.</p>
+<p class="code">
+<a href="#cups_jwt_t">cups_jwt_t</a> *cupsOAuthCopyUserId(<span class="reserved">const</span> <span class="reserved">char</span> *auth_uri, <span class="reserved">const</span> <span class="reserved">char</span> *resource_uri);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>auth_uri</th>
+<td class="description">Authorization Server URI</td></tr>
+<tr><th>resource_uri</th>
+<td class="description">Resource URI</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Identification information</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function makes a copy of cached user identification information for the
+given Authorization Server &quot;auth_uri&quot; and Resource &quot;resource_uri&quot;
+combination. The returned user information must be freed using the
+<a href="#cupsJWTDelete"><code>cupsJWTDelete</code></a> function.<br>
+<br>
+<code>NULL</code> is returned if no identification information is cached.</p>
 <h3 class="function"><a id="cupsOAuthGetAuthorizationCode">cupsOAuthGetAuthorizationCode</a></h3>
 <p class="description">Authorize access using a web browser.</p>
 <p class="code">
@@ -5992,7 +6004,7 @@ if no token is cached.</p>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Authorization code or <code>NULL</code> on error</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">This function performs the OAuth authorization flow to obtain an
+<p class="discussion">This function performs a local/&quot;native&quot; OAuth authorization flow to obtain an
 authorization code for use with the <a href="#cupsOAuthGetTokens"><code>cupsOAuthGetTokens</code></a> function.<br>
 <br>
 The &quot;auth_uri&quot; parameter specifies the URI for the OAuth Authorization
@@ -6011,7 +6023,8 @@ available from the Authorization Server metadata, for example:
 cups_json_t *metadata = cupsOAuthGetMetadata(auth_uri);
 cups_json_t *scopes_supported = cupsJSONFind(metadata, &quot;scopes_supported&quot;);
 </pre>
-</p>
+
+The returned authorization code must be freed using the <code>free</code> function.</p>
 <h3 class="function"><a id="cupsOAuthGetClientId">cupsOAuthGetClientId</a></h3>
 <p class="description">Register a client application and get its ID.</p>
 <p class="code">
@@ -6031,6 +6044,27 @@ cups_json_t *scopes_supported = cupsJSONFind(metadata, &quot;scopes_supported&qu
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description"><code>client_id</code> string or <code>NULL</code> on error</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function registers a client application with the specified OAuth
+Authorization Server.<br>
+<br>
+The &quot;auth_uri&quot; parameter specifies the URI for the OAuth Authorization
+Server. The &quot;metadata&quot; parameter specifies the Authorization Server metadata
+as obtained using <a href="#cupsOAuthCopyMetadata"><code>cupsOAuthCopyMetadata</code></a> and/or
+<a href="#cupsOAuthGetMetadata"><code>cupsOAuthGetMetadata</code></a>.<br>
+<br>
+The &quot;redirect_uri&quot; argument specifies the URL to use for providing
+authorization results to a WWW application.<br>
+<br>
+The &quot;logo_uri&quot; argument specifies a public URL for the logo of your
+application, while the &quot;tos_uri&quot; specifies a public URL for the terms of
+service for your application.<br>
+<br>
+The returned &quot;client_id&quot; string must be freed using the <code>free</code> function.<br>
+<br>
+<em>Note</em>: This function should only be used to register WWW applications. The
+<a href="#cupsOAuthGetAuthorizationCode"><code>cupsOAuthGetAuthorizationCode</code></a> function handles registration of
+local/&quot;native&quot; applications for you.</p>
 <h3 class="function"><a id="cupsOAuthGetMetadata">cupsOAuthGetMetadata</a></h3>
 <p class="description">Get the metadata for an Authorization Server.</p>
 <p class="code">
@@ -6042,9 +6076,13 @@ cups_json_t *scopes_supported = cupsJSONFind(metadata, &quot;scopes_supported&qu
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">JSON metadata or <code>NULL</code> on error</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function gets the metadata for the specified Authorization Server URI
+&quot;auth_uri&quot;. Metadata is cached per-user for better performance.<br>
+<br>
+The returned metadata must be freed using the <a href="#cupsJSONDelete"><code>cupsJSONDelete</code></a> function.</p>
 <h3 class="function"><a id="cupsOAuthGetTokens">cupsOAuthGetTokens</a></h3>
-<p class="description">Obtain access, ID, and refresh tokens from an
-                         authorization code or refresh token.</p>
+<p class="description">Obtain access and refresh tokens.</p>
 <p class="code">
 <span class="reserved">char</span> *cupsOAuthGetTokens(<span class="reserved">const</span> <span class="reserved">char</span> *auth_uri, <a href="#cups_json_t">cups_json_t</a> *metadata, <span class="reserved">const</span> <span class="reserved">char</span> *resource_uri, <span class="reserved">const</span> <span class="reserved">char</span> *grant_code, <a href="#cups_ogrant_t">cups_ogrant_t</a> grant_type, <span class="reserved">const</span> <span class="reserved">char</span> *redirect_uri, time_t *access_expires);</p>
 <h4 class="parameters">Parameters</h4>
@@ -6066,6 +6104,38 @@ cups_json_t *scopes_supported = cupsJSONFind(metadata, &quot;scopes_supported&qu
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Access token or <code>NULL</code> on error</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function obtains a access and refresh tokens from an OAuth Authorization
+Server. OpenID Authorization Servers also provide user identification
+information.<br>
+<br>
+The &quot;auth_uri&quot; parameter specifies the URI for the OAuth Authorization
+Server.  The &quot;metadata&quot; parameter specifies the Authorization Server metadata
+as obtained using <a href="#cupsOAuthCopyMetadata"><code>cupsOAuthCopyMetadata</code></a> and/or
+<a href="#cupsOAuthGetMetadata"><code>cupsOAuthGetMetadata</code></a>.<br>
+<br>
+The &quot;resource_uri&quot; parameter specifies the URI for a resource (printer, web
+file, etc.) that you which to access.<br>
+<br>
+The &quot;grant_code&quot; parameter specifies the code or token to use while the
+&quot;grant_type&quot; parameter specifies the type of code:
+
+</p><ul>
+<li><code>CUPS_OGRANT_AUTHORIZATION_CODE</code>: A user authorization grant code.
+</li>
+<li><code>CUPS_OGRANT_DEVICE_CODE</code>: A device authorization grant code.
+</li>
+<li><code>CUPS_OGRANT_REFRESH_TOKEN</code>: A refresh token.</li>
+</ul>
+<p class="discussion">The &quot;redirect_uri&quot; specifies the redirection URI used to obtain the code. The
+constant <code>CUPS_OAUTH_REDIRECT_URI</code> should be used for codes obtained using
+the <a href="#cupsOAuthGetAuthorizationCode"><code>cupsOAuthGetAuthorizationCode</code></a> function.<br>
+<br>
+When successful, the access token and expiration time are returned. The
+access token must be freed using the <code>free</code> function. The new refresh token
+and any user ID information can be obtained using the
+<a href="#cupsOAuthCopyRefreshToken"><code>cupsOAuthCopyRefreshToken</code></a> and <a href="#cupsOAuthCopyUserId"><code>cupsOAuthCopyUserId</code></a> functions
+respectively.</p>
 <h3 class="function"><a id="cupsOAuthMakeAuthorizationURL">cupsOAuthMakeAuthorizationURL</a></h3>
 <p class="description">Make an authorization URL.</p>
 <p class="code">
@@ -6073,9 +6143,9 @@ cups_json_t *scopes_supported = cupsJSONFind(metadata, &quot;scopes_supported&qu
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>auth_uri</th>
-<td class="description">Authorization URI</td></tr>
+<td class="description">Authorization Server URI</td></tr>
 <tr><th>metadata</th>
-<td class="description">Authorization server metadata</td></tr>
+<td class="description">Authorization Server metadata</td></tr>
 <tr><th>resource_uri</th>
 <td class="description">Resource URI</td></tr>
 <tr><th>scopes</th>
@@ -6145,10 +6215,14 @@ request.  It is provided to the redirection URI as a form parameter.</p>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Random string</p>
-<h3 class="function"><a id="cupsOAuthSetClientId">cupsOAuthSetClientId</a></h3>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function creates a string containing random data that has been Base64URL
+encoded. &quot;len&quot; specifies the number of random bytes to include in the string.
+The returned string must be freed using the <code>free</code> function.</p>
+<h3 class="function"><a id="cupsOAuthSaveClientId">cupsOAuthSaveClientId</a></h3>
 <p class="description">Save client_id and client_secret values.</p>
 <p class="code">
-<span class="reserved">void</span> cupsOAuthSetClientId(<span class="reserved">const</span> <span class="reserved">char</span> *auth_uri, <span class="reserved">const</span> <span class="reserved">char</span> *redirect_uri, <span class="reserved">const</span> <span class="reserved">char</span> *client_id, <span class="reserved">const</span> <span class="reserved">char</span> *client_secret);</p>
+<span class="reserved">void</span> cupsOAuthSaveClientId(<span class="reserved">const</span> <span class="reserved">char</span> *auth_uri, <span class="reserved">const</span> <span class="reserved">char</span> *redirect_uri, <span class="reserved">const</span> <span class="reserved">char</span> *client_id, <span class="reserved">const</span> <span class="reserved">char</span> *client_secret);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>auth_uri</th>
@@ -6156,29 +6230,39 @@ request.  It is provided to the redirection URI as a form parameter.</p>
 <tr><th>redirect_uri</th>
 <td class="description">Redirection URI</td></tr>
 <tr><th>client_id</th>
-<td class="description">client_id</td></tr>
+<td class="description">client_id or <code>NULL</code> to delete</td></tr>
 <tr><th>client_secret</th>
 <td class="description">client_secret value or <code>NULL</code> for none</td></tr>
 </tbody></table>
-<h3 class="function"><a id="cupsOAuthSetTokens">cupsOAuthSetTokens</a></h3>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function saves the &quot;client_id&quot; and &quot;client_secret&quot; values for the given
+Authorization Server &quot;auth_uri&quot; and redirection URI &quot;redirect_uri&quot;. If the
+&quot;client_id&quot; is <code>NULL</code> then any saved values are deleted from the per-user
+store.</p>
+<h3 class="function"><a id="cupsOAuthSaveTokens">cupsOAuthSaveTokens</a></h3>
 <p class="description">Save authorization and refresh tokens.</p>
 <p class="code">
-<span class="reserved">void</span> cupsOAuthSetTokens(<span class="reserved">const</span> <span class="reserved">char</span> *auth_uri, <span class="reserved">const</span> <span class="reserved">char</span> *resource_uri, <span class="reserved">const</span> <span class="reserved">char</span> *access_token, time_t access_expires, <span class="reserved">const</span> <span class="reserved">char</span> *id_token, <span class="reserved">const</span> <span class="reserved">char</span> *refresh_token);</p>
+<span class="reserved">void</span> cupsOAuthSaveTokens(<span class="reserved">const</span> <span class="reserved">char</span> *auth_uri, <span class="reserved">const</span> <span class="reserved">char</span> *resource_uri, <span class="reserved">const</span> <span class="reserved">char</span> *access_token, time_t access_expires, <span class="reserved">const</span> <span class="reserved">char</span> *user_id, <span class="reserved">const</span> <span class="reserved">char</span> *refresh_token);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>auth_uri</th>
-<td class="description">Authorization server FQDN</td></tr>
+<td class="description">Authorization Server URI</td></tr>
 <tr><th>resource_uri</th>
-<td class="description">Resource server FQDN</td></tr>
+<td class="description">Resource URI</td></tr>
 <tr><th>access_token</th>
-<td class="description">Access token</td></tr>
+<td class="description">Access token or <code>NULL</code> to delete</td></tr>
 <tr><th>access_expires</th>
 <td class="description">Access expiration time</td></tr>
-<tr><th>id_token</th>
-<td class="description">ID token</td></tr>
+<tr><th>user_id</th>
+<td class="description">User ID or <code>NULL</code> to delete</td></tr>
 <tr><th>refresh_token</th>
-<td class="description">Refresh token</td></tr>
+<td class="description">Refresh token or <code>NULL</code> to delete</td></tr>
 </tbody></table>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function saves the access token &quot;access_token&quot;, user ID &quot;user_id&quot;, and
+refresh token &quot;refresh_token&quot; values for the given Authorization Server
+&quot;auth_uri&quot; and resource &quot;resource_uri&quot;. Specifying <code>NULL</code> for any of the
+values will delete the corresponding saved values from the per-user store.</p>
 <h3 class="function"><a id="cupsParseOptions">cupsParseOptions</a></h3>
 <p class="description">Parse options from a command-line argument.</p>
 <p class="code">
@@ -7359,9 +7443,9 @@ The buffer needs to be at least 46 bytes in size.</p>
 <tr><th>blocking</th>
 <td class="description"><code>true</code> for blocking connection, <code>false</code> for non-blocking</td></tr>
 <tr><th>msec</th>
-<td class="description">Connection timeout in milliseconds, 0 means don't connect</td></tr>
+<td class="description">Connection timeout in milliseconds, <code>0</code> means don't connect</td></tr>
 <tr><th>cancel</th>
-<td class="description">Pointer to &quot;cancel&quot; variable</td></tr>
+<td class="description">Pointer to &quot;cancel&quot; variable or <code>NULL</code> for none</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">New HTTP connection</p>
@@ -7396,6 +7480,49 @@ the connection process.</p>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description"><code>true</code> on success, <code>false</code> on failure</p>
+<h3 class="function"><a id="httpConnectURI">httpConnectURI</a></h3>
+<p class="description">Connect to a HTTP service using a URI.</p>
+<p class="code">
+<a href="#http_t">http_t</a> *httpConnectURI(<span class="reserved">const</span> <span class="reserved">char</span> *uri, <span class="reserved">char</span> *host, size_t hsize, <span class="reserved">int</span> *port, <span class="reserved">char</span> *resource, size_t rsize, <span class="reserved">bool</span> blocking, <span class="reserved">int</span> msec, <span class="reserved">int</span> *cancel, <span class="reserved">bool</span> require_ca);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>uri</th>
+<td class="description">Service to connect to</td></tr>
+<tr><th>host</th>
+<td class="description">Host name buffer (<code>NULL</code> for don't care)</td></tr>
+<tr><th>hsize</th>
+<td class="description">Size of host name buffer</td></tr>
+<tr><th>port</th>
+<td class="description">Port number (<code>NULL</code> for don't care)</td></tr>
+<tr><th>resource</th>
+<td class="description">Resource path buffer (<code>NULL</code> for don't care)</td></tr>
+<tr><th>rsize</th>
+<td class="description">Size of resource path buffer</td></tr>
+<tr><th>blocking</th>
+<td class="description"><code>true</code> for blocking connection, <code>false</code> for non-blocking</td></tr>
+<tr><th>msec</th>
+<td class="description">Connection timeout in milliseconds, <code>0</code> means don't connect</td></tr>
+<tr><th>cancel</th>
+<td class="description">Pointer to &quot;cancel&quot; variable or <code>NULL</code> for none</td></tr>
+<tr><th>require_ca</th>
+<td class="description"><code>true</code> to require a CA-signed X.509 certificate</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">New HTTP connection</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function creates a connection to a HTTP server.  The &quot;uri&quot; argument
+specifies a &quot;http&quot;, &quot;https&quot;, &quot;ipp&quot;, or &quot;ipps&quot; URI for the service.<br>
+<br>
+The resource path for the service is returned in the buffer pointed to by
+the &quot;resource&quot; argument of size &quot;rsize&quot;.<br>
+<br>
+The &quot;msec&quot; argument specifies how long to try to connect to the server or <code>0</code>
+to just create an unconnected <code>http_t</code> object.  The &quot;cancel&quot; argument
+specifies an integer variable that can be set to a non-zero value to cancel
+the connection process.<br>
+<br>
+The &quot;require_ca&quot; argument specifies whether to verify that the service
+connection is using a CA-signed X.509 certificate.</p>
 <h3 class="function"><a id="httpCopyPeerCredentials">httpCopyPeerCredentials</a></h3>
 <p class="description">Copy the credentials associated with the peer in an encrypted connection.</p>
 <p class="code">
