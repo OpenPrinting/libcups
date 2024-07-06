@@ -328,9 +328,85 @@ set_client_id(const char *oauth_uri,	// I - Authorization Server URI
 static int				// O - Exit status
 unit_tests(const char *oauth_uri)	// I - Authorization Server URI
 {
-  (void)oauth_uri;
+  cups_json_t	*metadata;		// Server metadata
+  char		*auth_code = NULL,	// Authorization code
+ 		*access_token = NULL,	// Access token
+ 		*refresh_token = NULL;	// Refresh token
+  cups_jwt_t	*user_id = NULL;	// User identification
+  time_t	access_expires;		// Expiration data of access token
 
-  return (1);
+
+  // Get metadata...
+  testBegin("cupsOAuthGetMetadata(%s)", oauth_uri);
+  if ((metadata = cupsOAuthGetMetadata(oauth_uri)) != NULL)
+  {
+    testEnd(true);
+  }
+  else
+  {
+    testEndMessage(false, "%s", cupsGetErrorString());
+    goto done;
+  }
+
+  // Authorize...
+  testBegin("cupsOAuthGetAuthorizationCode(%s)", oauth_uri);
+  if ((auth_code = cupsOAuthGetAuthorizationCode(oauth_uri, metadata, /*resource_uri*/NULL, /*scopes*/NULL)) != NULL)
+  {
+    testEndMessage(true, "%s", auth_code);
+  }
+  else
+  {
+    testEndMessage(false, "%s", cupsGetErrorString());
+    goto done;
+  }
+
+  // Get the access token...
+  testBegin("cupsOAuthGetTokens(%s)", oauth_uri);
+  if ((access_token = cupsOAuthGetTokens(oauth_uri, metadata, /*resource_uri*/NULL, auth_code, CUPS_OGRANT_AUTHORIZATION_CODE, CUPS_OAUTH_REDIRECT_URI, &access_expires)) != NULL)
+  {
+    testEndMessage(true, "%s, expires in %ld seconds", access_token, (long)(access_expires - time(NULL)));
+  }
+  else
+  {
+    testEndMessage(false, "%s", cupsGetErrorString());
+    goto done;
+  }
+
+  // Get the refresh token...
+  testBegin("cupsOAuthCopyRefreshToken(%s)", oauth_uri);
+  if ((refresh_token = cupsOAuthCopyRefreshToken(oauth_uri, /*resource_uri*/NULL)) != NULL)
+  {
+    testEndMessage(true, "%s", refresh_token);
+  }
+  else
+  {
+    testEndMessage(false, "%s", cupsGetErrorString());
+    goto done;
+  }
+
+  // Get the user identifications...
+  testBegin("cupsOAuthCopyUserId(%s)", oauth_uri);
+  if ((user_id = cupsOAuthCopyUserId(oauth_uri, /*resource_uri*/NULL)) != NULL)
+  {
+    testEnd(true);
+    // TODO: Show user ID
+  }
+  else
+  {
+    testEndMessage(false, "%s", cupsGetErrorString());
+    goto done;
+  }
+
+  // Free memory and return...
+  done:
+
+  cupsJSONDelete(metadata);
+  free(auth_code);
+  free(access_token);
+  free(refresh_token);
+  cupsJWTDelete(user_id);
+
+  return (testsPassed ? 0 : 1);
 }
 
 
