@@ -303,7 +303,7 @@ get_user_id(const char *oauth_uri, const char *resource_uri)
 
 
 //
-// '()' - .
+// 'set_client_id()' - Save client_id and client_secret values.
 //
 
 static int				// O - Exit status
@@ -312,12 +312,9 @@ set_client_id(const char *oauth_uri,	// I - Authorization Server URI
               const char *client_id,	// I - Client ID
               const char *client_secret)// I - Client secret
 {
-  (void)oauth_uri;
-  (void)redirect_uri;
-  (void)client_id;
-  (void)client_secret;
+  cupsOAuthSaveClientId(oauth_uri, redirect_uri, client_id, client_secret);
 
-  return (1);
+  return (0);
 }
 
 
@@ -350,7 +347,7 @@ unit_tests(const char *oauth_uri)	// I - Authorization Server URI
 
   // Authorize...
   testBegin("cupsOAuthGetAuthorizationCode(%s)", oauth_uri);
-  if ((auth_code = cupsOAuthGetAuthorizationCode(oauth_uri, metadata, /*resource_uri*/NULL, /*scopes*/NULL)) != NULL)
+  if ((auth_code = cupsOAuthGetAuthorizationCode(oauth_uri, metadata, /*resource_uri*/NULL, "openid email profile")) != NULL)
   {
     testEndMessage(true, "%s", auth_code);
   }

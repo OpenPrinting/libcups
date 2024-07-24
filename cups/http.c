@@ -2749,6 +2749,8 @@ httpWriteRequest(http_t     *http,	// I - HTTP connection
                  const char *method,	// I - Request method ("GET", "POST", "PUT", etc.)
                  const char *uri)	// I - Request URI
 {
+  DEBUG_printf("httpWriteRequest(http=%p, method=\"%s\", uri=\"%s\")", (void *)http, method, uri);
+
   if (!strcasecmp(method, "COPY"))
     return (http_send(http, HTTP_STATE_COPY, uri));
   else if (!strcasecmp(method, "DELETE"))
@@ -2777,8 +2779,10 @@ httpWriteRequest(http_t     *http,	// I - HTTP connection
     return (http_send(http, HTTP_STATE_TRACE, uri));
   else if (!strcasecmp(method, "UNLOCK"))
     return (http_send(http, HTTP_STATE_UNLOCK, uri));
-  else
-    return (false);
+
+  DEBUG_printf("httpWriteRequest: Unknown method, returning false.");
+
+  return (false);
 }
 
 

@@ -83,30 +83,6 @@ extern char **environ;			// @private@
 
 
 //
-// Local constants...
-//
-
-#define _CUPS_OAUTH_REDIRECT_FORMAT	"http://127.0.0.1:%d/"
-					// Redirect URI with port
-#define _CUPS_OAUTH_REDIRECT_PATH	"/?"
-					// Redirect URI request path prefix
-#define _CUPS_OAUTH_REDIRECT_PATHLEN	2
-					// Redirect URI request path length
-
-static const char *github_metadata =	// Github.com OAuth metadata
-"{\
-\"issuer\":\"https://github.com\",\
-\"authorization_endpoint\":\"https://github.com/login/oauth/authorize\",\
-\"token_endpoint\":\"https://github.com/login/oauth/access_token\",\
-\"token_endpoint_auth_methods_supported\":[\"client_secret_basic\"],\
-\"scopes_supported\":[\"repo\",\"repo:status\",\"repo_deployment\",\"public_repo\",\"repo:invite\",\"security_events\",\"admin:repo_hook\",\"write:repo_hook\",\"read:repo_hook\",\"admin:org\",\"write:org\",\"read:org\",\"admin:public_key\",\"write:public_key\",\"read:public_key\",\"admin:org_hook\",\"gist\",\"notifications\",\"user\",\"read:user\",\"user:email\",\"user:follow\",\"project\",\"read:project\",\"delete_repo\",\"write:packages\",\"read:packages\",\"delete:packages\",\"admin.gpg_key\",\"write:gpg_key\",\"read:gpg_key\",\"codespace\",\"workflow\"],\
-\"response_types_supported\":[\"code\"],\
-\"grant_types_supported\":[\"authorization_code\",\"refresh_token\",\"\",\"urn:ietf:params:oauth:grant-type:device_code\"],\
-\"device_authorization_endpoint\":\"https://github.com/login/device/code\",\
-}";
-
-
-//
 // Local types...
 //
 
@@ -119,8 +95,48 @@ typedef enum _cups_otype_e		// OAuth data type
   _CUPS_OTYPE_USER_ID,			// (User) ID token
   _CUPS_OTYPE_METADATA,			// Server metadata
   _CUPS_OTYPE_NONCE,			// Client nonce
+  _CUPS_OTYPE_REDIRECT_URI,		// Redirect URI used
   _CUPS_OTYPE_REFRESH			// Refresh token
 } _cups_otype_t;
+
+
+//
+// Local constants...
+//
+
+#define _CUPS_OAUTH_REDIRECT_FORMAT	"http://127.0.0.1:%d/"
+					// Redirect URI with port
+#define _CUPS_OAUTH_REDIRECT_PATH	"/?"
+					// Redirect URI request path prefix
+#define _CUPS_OAUTH_REDIRECT_PATHLEN	2
+					// Redirect URI request path length
+
+#ifdef DEBUG
+static const char * const cups_otypes[] =
+{					// OAuth data types...
+  "_CUPS_OTYPE_ACCESS",			// Access token
+  "_CUPS_OTYPE_CLIENT_ID",		// Client ID
+  "_CUPS_OTYPE_CLIENT_SECRET",		// Client secret
+  "_CUPS_OTYPE_CODE_VERIFIER",		// Client code_verifier
+  "_CUPS_OTYPE_USER_ID",		// (User) ID token
+  "_CUPS_OTYPE_METADATA",		// Server metadata
+  "_CUPS_OTYPE_NONCE",			// Client nonce
+  "_CUPS_OTYPE_REDIRECT_URI",		// Redirect URI used
+  "_CUPS_OTYPE_REFRESH"			// Refresh token
+};
+#endif // DEBUG
+
+static const char *github_metadata =	// Github.com OAuth metadata
+"{\
+\"issuer\":\"https://github.com\",\
+\"authorization_endpoint\":\"https://github.com/login/oauth/authorize\",\
+\"token_endpoint\":\"https://github.com/login/oauth/access_token\",\
+\"token_endpoint_auth_methods_supported\":[\"client_secret_basic\"],\
+\"scopes_supported\":[\"repo\",\"repo:status\",\"repo_deployment\",\"public_repo\",\"repo:invite\",\"security_events\",\"admin:repo_hook\",\"write:repo_hook\",\"read:repo_hook\",\"admin:org\",\"write:org\",\"read:org\",\"admin:public_key\",\"write:public_key\",\"read:public_key\",\"admin:org_hook\",\"gist\",\"notifications\",\"user\",\"read:user\",\"user:email\",\"user:follow\",\"project\",\"read:project\",\"delete_repo\",\"write:packages\",\"read:packages\",\"delete:packages\",\"admin.gpg_key\",\"write:gpg_key\",\"read:gpg_key\",\"codespace\",\"workflow\"],\
+\"response_types_supported\":[\"code\"],\
+\"grant_types_supported\":[\"authorization_code\",\"refresh_token\",\"\",\"urn:ietf:params:oauth:grant-type:device_code\"],\
+\"device_authorization_endpoint\":\"https://github.com/login/device/code\",\
+}";
 
 
 //
@@ -310,6 +326,7 @@ cupsOAuthGetAuthorizationCode(
   char		*auth_code = NULL;	// Authorization code
 
 
+  // TODO: Map NULL scopes to scopes_supported
   // Range check input...
   if (!auth_uri || !metadata || cupsJSONGetString(cupsJSONFind(metadata, "authorization_endpoint")) == NULL)
     return (NULL);
@@ -342,6 +359,7 @@ cupsOAuthGetAuthorizationCode(
 
   // Point redirection to the local port...
   snprintf(redirect_uri, sizeof(redirect_uri), _CUPS_OAUTH_REDIRECT_FORMAT, port);
+  oauth_save_value(auth_uri, resource_uri, _CUPS_OTYPE_REDIRECT_URI, redirect_uri);
 
   // Make state and code verification strings...
   if (oauth_metadata_contains(metadata, "code_challenge_methods_supported", "S256"))
@@ -463,7 +481,7 @@ cupsOAuthGetAuthorizationCode(
 		  size_t	num_form;		// Number of form variables
 		  cups_option_t	*form = NULL;		// Form variables
 
-		  num_form    = cupsFormDecode(resource + 8, &form);
+		  num_form    = cupsFormDecode(resource + _CUPS_OAUTH_REDIRECT_PATHLEN, &form);
                   code_value  = cupsGetOption("code", num_form, form);
                   error_code  = cupsGetOption("error", num_form, form);
                   error_desc  = cupsGetOption("error_description", num_form, form);
@@ -623,7 +641,7 @@ cupsOAuthGetClientId(
   if (!req_data)
     goto done;
 
-  if ((response = oauth_do_post(registration_ep, "text/json", req_data)) == NULL)
+  if ((response = oauth_do_post(registration_ep, "application/json", req_data)) == NULL)
     goto done;
 
   if ((value = cupsJSONGetString(cupsJSONFind(response, "client_id"))) != NULL)
@@ -676,6 +694,8 @@ cupsOAuthGetMetadata(
     "/.well-known/openid-configuration"
   };
 
+
+  DEBUG_printf("cupsOAuthGetMetadata(auth_uri=\"%s\")", auth_uri);
 
   // Special-cases...
   if (!strcmp(auth_uri, "https://github.com"))
@@ -838,8 +858,7 @@ cupsOAuthGetTokens(
     time_t        *access_expires)	// O - Expiration time for access token
 {
   const char	*token_ep;		// Token endpoint
-  char		*client_secret,		// Prior client_secret value
-		*code_verifier,		// Prior code_verifier value
+  char		*value,			// Prior value
 		*nonce = NULL;		// Prior nonce value
   size_t	num_form = 0;		// Number of form variables
   cups_option_t	*form = NULL;		// Form variables
@@ -861,6 +880,8 @@ cupsOAuthGetTokens(
   };
 
 
+  DEBUG_printf("cupsOAuthGetTokens(auth_uri=\"%s\", metadata=%p, resource_uri=\"%s\", grant_code=\"%s\", grant_type=%d, redirect_uri=\"%s\", access_expires=%p)", auth_uri, (void *)metadata, resource_uri, grant_code, grant_type, redirect_uri, (void *)access_expires);
+
   // Range check input...
   if (access_expires)
     *access_expires = 0;
@@ -871,18 +892,37 @@ cupsOAuthGetTokens(
   // Prepare form data to get an access token...
   num_form = cupsAddOption("grant_type", grant_types[grant_type], num_form, &form);
   num_form = cupsAddOption("code", grant_code, num_form, &form);
-  num_form = cupsAddOption("redirect_uri", redirect_uri, num_form, &form);
 
-  if ((client_secret = oauth_load_value(auth_uri, resource_uri, _CUPS_OTYPE_CLIENT_SECRET)) != NULL)
+  if (!strcmp(redirect_uri, CUPS_OAUTH_REDIRECT_URI) && (value = oauth_load_value(auth_uri, resource_uri, _CUPS_OTYPE_REDIRECT_URI)) != NULL)
   {
-    num_form = cupsAddOption("client_secret", client_secret, num_form, &form);
-    free(client_secret);
+    DEBUG_printf("1cupsOAuthGetTokens: redirect_uri=\"%s\"", value);
+    num_form = cupsAddOption("redirect_uri", value, num_form, &form);
+    free(value);
+  }
+  else
+  {
+    num_form = cupsAddOption("redirect_uri", redirect_uri, num_form, &form);
   }
 
-  if ((code_verifier = oauth_load_value(auth_uri, resource_uri, _CUPS_OTYPE_CODE_VERIFIER)) != NULL)
+  if ((value = oauth_load_value(auth_uri, redirect_uri, _CUPS_OTYPE_CLIENT_ID)) != NULL)
   {
-    num_form = cupsAddOption("code_verifier", code_verifier, num_form, &form);
-    free(code_verifier);
+    DEBUG_printf("1cupsOAuthGetTokens: client_id=\"%s\"", value);
+    num_form = cupsAddOption("client_id", value, num_form, &form);
+    free(value);
+  }
+
+  if ((value = oauth_load_value(auth_uri, redirect_uri, _CUPS_OTYPE_CLIENT_SECRET)) != NULL)
+  {
+    DEBUG_printf("1cupsOAuthGetTokens: client_secret=\"%s\"", value);
+    num_form = cupsAddOption("client_secret", value, num_form, &form);
+    free(value);
+  }
+
+  if ((value = oauth_load_value(auth_uri, resource_uri, _CUPS_OTYPE_CODE_VERIFIER)) != NULL)
+  {
+    DEBUG_printf("1cupsOAuthGetTokens: code_verifier=\"%s\"", value);
+    num_form = cupsAddOption("code_verifier", value, num_form, &form);
+    free(value);
   }
 
   request = cupsFormEncode(/*url*/NULL, num_form, form);
@@ -919,7 +959,7 @@ cupsOAuthGetTokens(
   else
     access_expvalue = 0;
 
-  cupsOAuthSaveTokens(token_ep, resource_uri, access_value, access_expvalue, id_value, refresh_value);
+  cupsOAuthSaveTokens(auth_uri, resource_uri, access_value, access_expvalue, id_value, refresh_value);
 
   if (access_value)
     access_token = strdup(access_value);
@@ -1207,6 +1247,8 @@ oauth_do_post(const char *ep,		// I - Endpoint URI
   bool		resp_error;		// Is the response an error?
 
 
+  DEBUG_printf("3oauth_do_post(ep=\"%s\", content_type=\"%s\", request=\"%s\")", ep, content_type, request);
+
   // Connect to the endpoint...
   if ((http = httpConnectURI(ep, host, sizeof(host), &port, resource, sizeof(resource), /*blocking*/true, /*msec*/30000, /*cancel*/NULL, /*require_ca*/true)) == NULL)
     return (NULL);
@@ -1278,6 +1320,8 @@ oauth_load_value(
   char		*value = NULL;		// Value
 
 
+  DEBUG_printf("3oauth_load_value(auth_uri=\"%s\", secondary_uri=\"%s\", otype=%s)", auth_uri, secondary_uri, cups_otypes[otype]);
+
   // Try to make the corresponding file path...
   if (!oauth_make_path(filename, sizeof(filename), auth_uri, secondary_uri, otype))
     return (NULL);
@@ -1288,11 +1332,19 @@ oauth_load_value(
     // Opened, read up to 64k of data...
     if (!fstat(fd, &fileinfo) && fileinfo.st_size <= 65536 && (value = calloc(1, (size_t)fileinfo.st_size + 1)) != NULL)
       read(fd, value, (size_t)fileinfo.st_size);
+    else
+      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), false);
 
     close(fd);
   }
+  else
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), false);
+  }
 
   // Return whatever we have...
+  DEBUG_printf("4oauth_load_value: Returning \"%s\".", value);
+
   return (value);
 }
 
@@ -1324,13 +1376,17 @@ oauth_make_path(
     "idtk",				// ID token
     "meta",				// Metadata
     "nonc",				// Nonce
+    "ruri",				// Redirect URI
     "rfsh"				// Refresh token
   };
 
 
+  DEBUG_printf("3oauth_make_path(buffer=%p, bufsize=%lu, auth_uri=\"%s\", secondary_uri=\"%s\", otype=%s)", (void *)buffer, (unsigned long)bufsize, auth_uri, secondary_uri, cups_otypes[otype]);
+
   // Range check input...
-  if (!auth_uri || strncmp(auth_uri, "https://", 8) || auth_uri[8] == '[' || isdigit(auth_uri[8] & 255) || (!secondary_uri && otype != _CUPS_OTYPE_METADATA) || (secondary_uri && strncmp(secondary_uri, "http://", 7) && strncmp(secondary_uri, "https://", 8) && strncmp(secondary_uri, "ipps://", 7)))
+  if (!auth_uri || strncmp(auth_uri, "https://", 8) || auth_uri[8] == '[' || isdigit(auth_uri[8] & 255) || (secondary_uri && strncmp(secondary_uri, "http://", 7) && strncmp(secondary_uri, "https://", 8) && strncmp(secondary_uri, "ipps://", 7)))
   {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), false);
     *buffer = '\0';
     return (NULL);
   }
@@ -1339,6 +1395,7 @@ oauth_make_path(
   snprintf(buffer, bufsize, "%s/oauth", cg->userconfig);
   if (!_cupsDirCreate(buffer, 0700))
   {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), false);
     *buffer = '\0';
     return (NULL);
   }
@@ -1397,6 +1454,8 @@ oauth_make_path(
     snprintf(buffer, bufsize, "%s/oauth/%s+%s.%s", cg->userconfig, auth_temp, secondary_temp, otypes[otype]);
   else
     snprintf(buffer, bufsize, "%s/oauth/%s.%s", cg->userconfig, auth_temp, otypes[otype]);
+
+  DEBUG_printf("4oauth_make_path: Returning \"%s\".", buffer);
 
   return (buffer);
 }
@@ -1479,6 +1538,8 @@ oauth_save_value(
   char	filename[1024];			// Filename
   int	fd;				// File descriptor
 
+
+  DEBUG_printf("3oauth_save_value(auth_uri=\"%s\", secondary_uri=\"%s\", otype=%s, value=\"%s\")", auth_uri, secondary_uri, cups_otypes[otype], value);
 
   // Try making the filename...
   if (!oauth_make_path(filename, sizeof(filename), auth_uri, secondary_uri, otype))
