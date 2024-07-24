@@ -3859,7 +3859,7 @@ ippSetValueTag(
     ipp_attribute_t **attr,		// IO - IPP attribute
     ipp_tag_t       value_tag)		// I  - Value tag
 {
-  int		i;			// Looping var
+  size_t	i;			// Looping var
   _ipp_value_t	*value;			// Current value
   int		integer;		// Current integer value
   cups_lang_t	*language;		// Current language
