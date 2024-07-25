@@ -310,7 +310,7 @@ httpAddrListen(http_addr_t *addr,	// I - Address to bind to
   // Create the socket and set options...
   if ((fd = socket(addr->addr.sa_family, SOCK_STREAM, 0)) < 0)
   {
-    _cupsSetHTTPError(HTTP_STATUS_ERROR);
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), false);
     return (-1);
   }
 
@@ -365,7 +365,7 @@ addr->un.sun_path, strerror(errno));
 
   if (status)
   {
-    _cupsSetHTTPError(HTTP_STATUS_ERROR);
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), false);
 
     close(fd);
 
@@ -375,7 +375,7 @@ addr->un.sun_path, strerror(errno));
   // Listen...
   if (listen(fd, INT_MAX))
   {
-    _cupsSetHTTPError(HTTP_STATUS_ERROR);
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), false);
 
     close(fd);
 

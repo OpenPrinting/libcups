@@ -1,7 +1,7 @@
 //
 // Get/put file functions for CUPS.
 //
-// Copyright © 2021-2023 by OpenPrinting.
+// Copyright © 2021-2024 by OpenPrinting.
 // Copyright © 2007-2018 by Apple Inc.
 // Copyright © 1997-2006 by Easy Software Products.
 //
@@ -51,8 +51,10 @@ cupsGetFd(http_t     *http,		// I - Connection to server or @code CUPS_HTTP_DEFA
   }
 
   if (!http)
+  {
     if ((http = _cupsConnect()) == NULL)
       return (HTTP_STATUS_SERVICE_UNAVAILABLE);
+  }
 
   // Then send GET requests to the HTTP server...
   cupsCopyString(if_modified_since, httpGetField(http, HTTP_FIELD_IF_MODIFIED_SINCE), sizeof(if_modified_since));
@@ -152,7 +154,7 @@ cupsGetFd(http_t     *http,		// I - Connection to server or @code CUPS_HTTP_DEFA
   }
   else
   {
-    _cupsSetHTTPError(status);
+    _cupsSetHTTPError(http, status);
     httpFlush(http);
   }
 
@@ -181,6 +183,8 @@ cupsGetFile(http_t     *http,		// I - Connection to server or @code CUPS_HTTP_DE
   // Range check input...
   if (!http || !resource || !filename)
   {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), false);
+
     if (http)
       http->error = EINVAL;
 
@@ -191,6 +195,8 @@ cupsGetFile(http_t     *http,		// I - Connection to server or @code CUPS_HTTP_DE
   if ((fd = open(filename, O_WRONLY | O_EXCL | O_TRUNC)) < 0)
   {
     // Couldn't open the file!
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), false);
+
     http->error = errno;
 
     return (HTTP_STATUS_ERROR);
@@ -203,7 +209,10 @@ cupsGetFile(http_t     *http,		// I - Connection to server or @code CUPS_HTTP_DE
   close(fd);
 
   if (status != HTTP_STATUS_OK)
+  {
+    _cupsSetHTTPError(http, status);
     unlink(filename);
+  }
 
   // Return the HTTP status code...
   return (status);
@@ -235,6 +244,8 @@ cupsPutFd(http_t     *http,		// I - Connection to server or @code CUPS_HTTP_DEFA
 
   if (!resource || fd < 0)
   {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), false);
+
     if (http)
       http->error = EINVAL;
 
@@ -242,8 +253,10 @@ cupsPutFd(http_t     *http,		// I - Connection to server or @code CUPS_HTTP_DEFA
   }
 
   if (!http)
+  {
     if ((http = _cupsConnect()) == NULL)
       return (HTTP_STATUS_SERVICE_UNAVAILABLE);
+  }
 
   // Then send PUT requests to the HTTP server...
   retries = 0;
@@ -401,7 +414,7 @@ cupsPutFd(http_t     *http,		// I - Connection to server or @code CUPS_HTTP_DEFA
   // See if we actually put the file or an error...
   if (status != HTTP_STATUS_CREATED)
   {
-    _cupsSetHTTPError(status);
+    _cupsSetHTTPError(http, status);
     httpFlush(http);
   }
 
@@ -430,6 +443,8 @@ cupsPutFile(http_t     *http,		// I - Connection to server or @code CUPS_HTTP_DE
   // Range check input...
   if (!http || !resource || !filename)
   {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), false);
+
     if (http)
       http->error = EINVAL;
 
@@ -440,6 +455,8 @@ cupsPutFile(http_t     *http,		// I - Connection to server or @code CUPS_HTTP_DE
   if ((fd = open(filename, O_RDONLY)) < 0)
   {
     // Couldn't open the file!
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), false);
+
     http->error = errno;
 
     return (HTTP_STATUS_ERROR);
@@ -449,6 +466,8 @@ cupsPutFile(http_t     *http,		// I - Connection to server or @code CUPS_HTTP_DE
   status = cupsPutFd(http, resource, fd);
 
   close(fd);
+
+  _cupsSetHTTPError(http, status);
 
   return (status);
 }

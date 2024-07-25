@@ -1,7 +1,7 @@
 //
 // Private definitions for CUPS.
 //
-// Copyright © 2021-2023 by OpenPrinting.
+// Copyright © 2021-2024 by OpenPrinting.
 // Copyright © 2007-2019 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products, all rights reserved.
 //
@@ -236,7 +236,7 @@ extern void		_cupsGlobalUnlock(void) _CUPS_PRIVATE;
 extern _cups_globals_t	*_cupsGlobals(void) _CUPS_PRIVATE;
 extern void		_cupsSetDefaults(void) _CUPS_INTERNAL;
 extern void		_cupsSetError(ipp_status_t status, const char *message, bool localize) _CUPS_PRIVATE;
-extern void		_cupsSetHTTPError(http_status_t status) _CUPS_INTERNAL;
+extern void		_cupsSetHTTPError(http_t *http, http_status_t status) _CUPS_INTERNAL;
 
 
 #  ifdef __cplusplus

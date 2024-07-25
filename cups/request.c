@@ -1,7 +1,7 @@
 //
 // IPP utilities for CUPS.
 //
-// Copyright © 2021-2023 by OpenPrinting.
+// Copyright © 2021-2024 by OpenPrinting.
 // Copyright © 2007-2018 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products.
 //
@@ -202,7 +202,7 @@ cupsDoIORequest(http_t     *http,	// I - Connection to server or `CUPS_HTTP_DEFA
 
     if (status == HTTP_STATUS_ERROR || (status >= HTTP_STATUS_BAD_REQUEST && status != HTTP_STATUS_UNAUTHORIZED && status != HTTP_STATUS_UPGRADE_REQUIRED))
     {
-      _cupsSetHTTPError(status);
+      _cupsSetHTTPError(http, status);
       break;
     }
 
@@ -345,7 +345,7 @@ cupsGetResponse(http_t     *http,	// I - Connection to server or `CUPS_HTTP_DEFA
     // Flush any error message...
     httpFlush(http);
 
-    _cupsSetHTTPError(status);
+    _cupsSetHTTPError(http, status);
 
     // Then handle encryption and authentication...
     if (status == HTTP_STATUS_UNAUTHORIZED)
@@ -628,7 +628,7 @@ cupsSendRequest(http_t     *http,	// I - Connection to server or `CUPS_HTTP_DEFA
     {
       int temp_status;			// Temporary status
 
-      _cupsSetHTTPError(status);
+      _cupsSetHTTPError(http, status);
 
       do
       {
@@ -756,7 +756,7 @@ cupsWriteRequestData(
       _httpUpdate(http, &status);
       if (status >= HTTP_STATUS_MULTIPLE_CHOICES)
       {
-        _cupsSetHTTPError(status);
+        _cupsSetHTTPError(http, status);
 
 	do
 	{
@@ -897,7 +897,8 @@ _cupsSetError(ipp_status_t status,	// I - IPP status code
 //
 
 void
-_cupsSetHTTPError(http_status_t status)	// I - HTTP status code
+_cupsSetHTTPError(http_t        *http,	// I - HTTP connection
+                  http_status_t status)	// I - HTTP status code
 {
   switch (status)
   {
@@ -946,12 +947,15 @@ _cupsSetHTTPError(http_status_t status)	// I - HTTP status code
         break;
 
     case HTTP_STATUS_ERROR :
-	_cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), false);
+	_cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(http->error), false);
         break;
 
     default :
-	DEBUG_printf("4_cupsSetHTTPError: HTTP error %d mapped to IPP_STATUS_ERROR_SERVICE_UNAVAILABLE!", status);
-	_cupsSetError(IPP_STATUS_ERROR_SERVICE_UNAVAILABLE, httpStatusString(status), false);
+        if ((int)status >= 300)
+        {
+	  DEBUG_printf("4_cupsSetHTTPError: HTTP error %d mapped to IPP_STATUS_ERROR_SERVICE_UNAVAILABLE!", status);
+	  _cupsSetError(IPP_STATUS_ERROR_SERVICE_UNAVAILABLE, httpStatusString(status), false);
+	}
 	break;
   }
 }

@@ -1262,7 +1262,7 @@ cupsJSONImportURL(
   else
   {
     // Save the last HTTP status as a CUPS error...
-    _cupsSetHTTPError(status);
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), false);
   }
 
   // Flush any remaining data...
