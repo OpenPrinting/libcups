@@ -316,7 +316,9 @@ cupsOAuthGetAuthorizationCode(
 		*code_verifier = NULL,	// Code verifier string
 		*nonce = NULL,		// Nonce string
 		*state = NULL,		// State string
-		*url = NULL;		// URL for authorization page
+		*url = NULL,		// URL for authorization page
+		*scopes_supported = NULL;
+					// Supported scopes
   char		redirect_uri[1024];	// Final redirect URI
   http_addr_t	addr;			// Loopback listen address
   int		port;			// Port number
@@ -326,7 +328,6 @@ cupsOAuthGetAuthorizationCode(
   char		*auth_code = NULL;	// Authorization code
 
 
-  // TODO: Map NULL scopes to scopes_supported
   // Range check input...
   if (!auth_uri || !metadata || cupsJSONGetString(cupsJSONFind(metadata, "authorization_endpoint")) == NULL)
     return (NULL);
@@ -377,6 +378,51 @@ cupsOAuthGetAuthorizationCode(
   if (!state)
     goto done;
 
+  if (!scopes)
+  {
+    cups_json_t	*values;		// Parameter values
+
+    if ((values = cupsJSONFind(metadata, "scopes_supported")) != NULL)
+    {
+      // Convert scopes_supported to a string...
+      size_t		i,		// Looping var
+			count,		// Number of values
+	 	     	length = 0;	// Length of string
+      cups_json_t	*current;	// Current value
+
+      for (i = 0, count = cupsJSONGetCount(values); i < count; i ++)
+      {
+	current = cupsJSONGetChild(values, i);
+
+	if (cupsJSONGetType(current) == CUPS_JTYPE_STRING)
+	  length += strlen(cupsJSONGetString(current)) + 1;
+      }
+
+      if (length > 0 && (scopes_supported = malloc(length)) != NULL)
+      {
+        // Copy the scopes to a string with spaces between them...
+        char	*ptr;			// Pointer into value
+
+	for (i = 0, ptr = scopes_supported; i < count; i ++)
+	{
+	  current = cupsJSONGetChild(values, i);
+
+	  if (cupsJSONGetType(current) == CUPS_JTYPE_STRING)
+	  {
+	    if (i)
+	      *ptr++ = ' ';
+
+	    cupsCopyString(ptr, cupsJSONGetString(current), length - (size_t)(ptr - scopes_supported));
+	    ptr += strlen(ptr);
+	  }
+	}
+
+        // Use the supported scopes in the request...
+	scopes = scopes_supported;
+      }
+    }
+  }
+
   // Get the authorization URL...
   if ((url = cupsOAuthMakeAuthorizationURL(auth_uri, metadata, resource_uri, scopes, client_id, code_verifier, nonce, redirect_uri, state)) == NULL)
     goto done;
@@ -413,8 +459,8 @@ cupsOAuthGetAuthorizationCode(
     goto done;				// Non-zero exit status
 #endif // __APPLE__
 
-  // Listen for connections up to 300 seconds...
-  endtime = time(NULL) + 300;
+  // Listen for connections up to 60 seconds...
+  endtime = time(NULL) + 60;
 
   while (auth_code == NULL && time(NULL) < endtime)
   {
@@ -424,7 +470,7 @@ cupsOAuthGetAuthorizationCode(
       if ((http = httpAcceptConnection(polldata.fd, true)) != NULL)
       {
         // Respond to HTTP requests...
-        while (auth_code == NULL && time(NULL) < endtime && httpWait(http, 10000))
+        while (auth_code == NULL && time(NULL) < endtime && httpWait(http, 1000))
         {
           char		resource[4096],	// Resource path
 			message[2048];	// Response message
@@ -568,6 +614,7 @@ cupsOAuthGetAuthorizationCode(
   free(client_id);
   free(code_verifier);
   free(nonce);
+  free(scopes_supported);
   free(state);
   free(url);
 
@@ -1127,7 +1174,7 @@ cupsOAuthMakeBase64Random(size_t len)	// I - Number of bytes
 
 
 //
-// 'cupsOAuthSaveClientId()' - Save client_id and client_secret values.
+// 'cupsOAuthSaveClientData()' - Save client_id and client_secret values.
 //
 // This function saves the "client_id" and "client_secret" values for the given
 // Authorization Server "auth_uri" and redirection URI "redirect_uri". If the
@@ -1136,7 +1183,7 @@ cupsOAuthMakeBase64Random(size_t len)	// I - Number of bytes
 //
 
 void
-cupsOAuthSaveClientId(
+cupsOAuthSaveClientData(
     const char *auth_uri,		// I - Authorization Server URI
     const char *redirect_uri,		// I - Redirection URI
     const char *client_id,		// I - client_id or `NULL` to delete
@@ -1516,9 +1563,27 @@ oauth_metadata_contains(
     const char  *parameter,		// I - Metadata parameter
     const char  *value)			// I - Parameter value
 {
-  (void)metadata;
-  (void)parameter;
-  (void)value;
+  size_t	i,			// Looping var
+		count;			// Number of values
+  cups_json_t	*values,		// Parameter values
+		*current;		// Current value
+
+
+  DEBUG_printf("3oauth_metadata_contains(metadata=%p, parameter=\"%s\", value=\"%s\")", (void *)metadata, parameter, value);
+
+  if ((values = cupsJSONFind(metadata, parameter)) == NULL)
+  {
+    DEBUG_puts("4oauth_metadata: Returning false.");
+    return (false);
+  }
+
+  for (i = 0, count = cupsJSONGetCount(values); i < count; i ++)
+  {
+    current = cupsJSONGetChild(values, i);
+
+    if (cupsJSONGetType(current) == CUPS_JTYPE_STRING && !strcmp(value, cupsJSONGetString(current)))
+      return (true);
+  }
 
   return (false);
 }

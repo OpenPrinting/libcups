@@ -53,7 +53,7 @@ extern char		*cupsOAuthGetTokens(const char *auth_uri, cups_json_t *metadata, co
 extern char		*cupsOAuthMakeAuthorizationURL(const char *auth_uri, cups_json_t *metadata, const char *resource_uri, const char *scopes, const char *client_id, const char *code_verifier, const char *nonce, const char *redirect_uri, const char *state) _CUPS_PUBLIC;
 extern char		*cupsOAuthMakeBase64Random(size_t len) _CUPS_PUBLIC;
 
-extern void		cupsOAuthSaveClientId(const char *auth_uri, const char *redirect_uri, const char *client_id, const char *client_secret) _CUPS_PUBLIC;
+extern void		cupsOAuthSaveClientData(const char *auth_uri, const char *redirect_uri, const char *client_id, const char *client_secret) _CUPS_PUBLIC;
 extern void		cupsOAuthSaveTokens(const char *auth_uri, const char *resource_uri, const char *access_token, time_t access_expires, const char *user_id, const char *refresh_token) _CUPS_PUBLIC;
 
 

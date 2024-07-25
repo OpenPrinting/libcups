@@ -6,6 +6,20 @@
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
 // information.
 //
+// Usage: testoauth [-a OAUTH-URI] [-s SCOPE(S)] [COMMAND [ARGUMENT(S)]]
+//
+// Commands:
+//
+//   authorize RESOURCE-URI
+//   clear RESOURCE-URI
+//   get-access-token RESOURCE-URI
+//   get-client-id
+//   get-metadata
+//   get-refresh-token RESOURCE-URI
+//   get-user-id RESOURCE-URI
+//   set-client-data CLIENT-ID CLIENT-SECRET
+//   test
+//
 
 #include "cups.h"
 #include "oauth.h"
@@ -30,7 +44,7 @@ static int	get_client_id(const char *oauth_uri, const char *redirect_uri);
 static int	get_metadata(const char *oauth_uri);
 static int	get_refresh_token(const char *oauth_uri, const char *resource_uri);
 static int	get_user_id(const char *oauth_uri, const char *resource_uri);
-static int	set_client_id(const char *oauth_uri, const char *redirect_uri, const char *client_id, const char *client_secret);
+static int	set_client_data(const char *oauth_uri, const char *redirect_uri, const char *client_id, const char *client_secret);
 static int	unit_tests(const char *oauth_uri);
 static int	usage(FILE *out);
 
@@ -183,7 +197,7 @@ main(int  argc,				// I - Number of command-line arguments
 
     return (get_user_id(oauth_uri, argv[i]));
   }
-  else if (!strcmp(command, "set-client-id"))
+  else if (!strcmp(command, "set-client-data"))
   {
     if ((i + 1) >= argc)
     {
@@ -191,7 +205,7 @@ main(int  argc,				// I - Number of command-line arguments
       return (usage(stderr));
     }
 
-    return (set_client_id(oauth_uri, redirect_uri, argv[i], argv[i + 1]));
+    return (set_client_data(oauth_uri, redirect_uri, argv[i], argv[i + 1]));
   }
   else if (!strcmp(command, "test"))
   {
@@ -303,16 +317,17 @@ get_user_id(const char *oauth_uri, const char *resource_uri)
 
 
 //
-// 'set_client_id()' - Save client_id and client_secret values.
+// 'set_client_data()' - Save client_id and client_secret values.
 //
 
 static int				// O - Exit status
-set_client_id(const char *oauth_uri,	// I - Authorization Server URI
-              const char *redirect_uri,	// I - Redirect URI
-              const char *client_id,	// I - Client ID
-              const char *client_secret)// I - Client secret
+set_client_data(
+    const char *oauth_uri,		// I - Authorization Server URI
+    const char *redirect_uri,		// I - Redirect URI
+    const char *client_id,		// I - Client ID
+    const char *client_secret)		// I - Client secret
 {
-  cupsOAuthSaveClientId(oauth_uri, redirect_uri, client_id, client_secret);
+  cupsOAuthSaveClientData(oauth_uri, redirect_uri, client_id, client_secret);
 
   return (0);
 }
@@ -423,7 +438,7 @@ usage(FILE *out)			// I - Output file
   fputs("  get-metadata\n", out);
   fputs("  get-refresh-token RESOURCE-URI\n", out);
   fputs("  get-user-id RESOURCE-URI\n", out);
-  fputs("  set-client-id CLIENT-ID CLIENT-SECRET\n", out);
+  fputs("  set-client-data CLIENT-ID CLIENT-SECRET\n", out);
   fputs("  test\n", out);
 
   return (out == stdout ? 0 : 1);

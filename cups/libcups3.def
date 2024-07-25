@@ -292,7 +292,7 @@ cupsOAuthGetMetadata
 cupsOAuthGetTokens
 cupsOAuthMakeAuthorizationURL
 cupsOAuthMakeBase64Random
-cupsOAuthSaveClientId
+cupsOAuthSaveClientData
 cupsOAuthSaveTokens
 cupsParseOptions
 cupsPutFd
