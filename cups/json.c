@@ -702,6 +702,13 @@ cupsJSONImportString(const char *s)	// I - JSON string
   DEBUG_printf("cupsJSONImportString(s=\"%s\")", s);
 
   // Range check input...
+  if (s)
+  {
+    // Skip leading whitespace...
+    while (*s && isspace(*s & 255))
+      s ++;
+  }
+
   if (!s || *s != '{')
   {
     DEBUG_puts("2cupsJSONImportString: Doesn't start with '{'.");
