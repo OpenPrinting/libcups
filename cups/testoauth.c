@@ -6,7 +6,7 @@
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
 // information.
 //
-// Usage: testoauth [-a OAUTH-URI] [-s SCOPE(S)] [COMMAND [ARGUMENT(S)]]
+// Usage: testoauth [-a OAUTH-URI] [-r REDIRECT-URI] [-s SCOPE(S)] [COMMAND [ARGUMENT(S)]]
 //
 // Commands:
 //
@@ -37,7 +37,7 @@
 // Local functions...
 //
 
-static int	authorize(const char *oauth_uri, const char *scopes, const char *resource_uri);
+static int	authorize(const char *oauth_uri, const char *scopes, const char *resource_uri, const char *redirect_uri);
 static int	clear(const char *oauth_uri, const char *resource_uri);
 static int	get_access_token(const char *oauth_uri, const char *resource_uri);
 static int	get_client_id(const char *oauth_uri, const char *redirect_uri);
@@ -45,7 +45,7 @@ static int	get_metadata(const char *oauth_uri);
 static int	get_refresh_token(const char *oauth_uri, const char *resource_uri);
 static int	get_user_id(const char *oauth_uri, const char *resource_uri);
 static int	set_client_data(const char *oauth_uri, const char *redirect_uri, const char *client_id, const char *client_secret);
-static int	unit_tests(const char *oauth_uri);
+static int	unit_tests(const char *oauth_uri, const char *redirect_uri);
 static int	usage(FILE *out);
 
 
@@ -61,8 +61,7 @@ main(int  argc,				// I - Number of command-line arguments
   const char	*opt,			// Current option
 		*oauth_uri = NULL,	// OAuth authorization server URI
 		*command = NULL,	// Command
-		*redirect_uri = CUPS_OAUTH_REDIRECT_URI,
-					// Redirection URI
+		*redirect_uri = NULL,	// Redirection URI
 		*scopes = NULL;		// Scopes
 
 
@@ -147,7 +146,7 @@ main(int  argc,				// I - Number of command-line arguments
       return (usage(stderr));
     }
 
-    return (authorize(oauth_uri, scopes, argv[i]));
+    return (authorize(oauth_uri, scopes, argv[i], redirect_uri));
   }
   else if (!strcmp(command, "clear"))
   {
@@ -209,7 +208,7 @@ main(int  argc,				// I - Number of command-line arguments
   }
   else if (!strcmp(command, "test"))
   {
-    return (unit_tests(oauth_uri));
+    return (unit_tests(oauth_uri, redirect_uri));
   }
   else
   {
@@ -220,26 +219,31 @@ main(int  argc,				// I - Number of command-line arguments
 
 
 //
-// '()' - .
+// 'authorize()' - Authorize access.
 //
 
 static int				// O - Exit status
-authorize(const char *oauth_uri, const char *scopes, const char *resource_uri)
+authorize(const char *oauth_uri,	// I - Authorization Server URI
+          const char *scopes,		// I - Scope(s)
+          const char *resource_uri,	// I - Resource URI
+          const char *redirect_uri)	// I - Redirect URI
 {
   (void)oauth_uri;
   (void)scopes;
   (void)resource_uri;
+  (void)redirect_uri;
 
   return (1);
 }
 
 
 //
-// '()' - .
+// 'clear()' - Clear authorization information.
 //
 
 static int				// O - Exit status
-clear(const char *oauth_uri, const char *resource_uri)
+clear(const char *oauth_uri,		// I - Authorization Server URI
+      const char *resource_uri)		// I - Resource URI
 {
   (void)oauth_uri;
   (void)resource_uri;
@@ -249,11 +253,13 @@ clear(const char *oauth_uri, const char *resource_uri)
 
 
 //
-// '()' - .
+// 'get_access_token()' - Get an access token.
 //
 
 static int				// O - Exit status
-get_access_token(const char *oauth_uri, const char *resource_uri)
+get_access_token(
+    const char *oauth_uri,		// I - Authorization Server URI
+    const char *resource_uri)		// I - Resource URI
 {
   (void)oauth_uri;
   (void)resource_uri;
@@ -263,11 +269,12 @@ get_access_token(const char *oauth_uri, const char *resource_uri)
 
 
 //
-// '()' - .
+// 'get_client_id()' - Get the client ID value.
 //
 
 static int				// O - Exit status
-get_client_id(const char *oauth_uri, const char *redirect_uri)
+get_client_id(const char *oauth_uri,	// I - Authorization Server URI
+              const char *redirect_uri)	// I - Redirection URI
 {
   (void)oauth_uri;
   (void)redirect_uri;
@@ -277,11 +284,11 @@ get_client_id(const char *oauth_uri, const char *redirect_uri)
 
 
 //
-// '()' - .
+// 'get_metadata()' - Get authorization server metadata.
 //
 
 static int				// O - Exit status
-get_metadata(const char *oauth_uri)
+get_metadata(const char *oauth_uri)	// I - Authorization Server URI
 {
   (void)oauth_uri;
   return (1);
@@ -289,11 +296,13 @@ get_metadata(const char *oauth_uri)
 
 
 //
-// '()' - .
+// 'get_refresh_token()' - Get the resource token.
 //
 
 static int				// O - Exit status
-get_refresh_token(const char *oauth_uri, const char *resource_uri)
+get_refresh_token(
+    const char *oauth_uri,		// I - Authorization Server URI
+    const char *resource_uri)		// I - Resource URI
 {
   (void)oauth_uri;
   (void)resource_uri;
@@ -303,11 +312,12 @@ get_refresh_token(const char *oauth_uri, const char *resource_uri)
 
 
 //
-// '()' - .
+// 'get_user_id()' - Get user identification.
 //
 
 static int				// O - Exit status
-get_user_id(const char *oauth_uri, const char *resource_uri)
+get_user_id(const char *oauth_uri,	// I - Authorization Server URI
+            const char *resource_uri)	// I - Resource URI
 {
   (void)oauth_uri;
   (void)resource_uri;
@@ -327,7 +337,7 @@ set_client_data(
     const char *client_id,		// I - Client ID
     const char *client_secret)		// I - Client secret
 {
-  cupsOAuthSaveClientData(oauth_uri, redirect_uri, client_id, client_secret);
+  cupsOAuthSaveClientData(oauth_uri, redirect_uri ? redirect_uri : CUPS_OAUTH_REDIRECT_URI, client_id, client_secret);
 
   return (0);
 }
@@ -338,7 +348,8 @@ set_client_data(
 //
 
 static int				// O - Exit status
-unit_tests(const char *oauth_uri)	// I - Authorization Server URI
+unit_tests(const char *oauth_uri,	// I - Authorization Server URI
+           const char *redirect_uri)	// I - Redirection URI
 {
   cups_json_t	*metadata;		// Server metadata
   char		*auth_code = NULL,	// Authorization code
@@ -362,7 +373,7 @@ unit_tests(const char *oauth_uri)	// I - Authorization Server URI
 
   // Authorize...
   testBegin("cupsOAuthGetAuthorizationCode(%s)", oauth_uri);
-  if ((auth_code = cupsOAuthGetAuthorizationCode(oauth_uri, metadata, /*resource_uri*/NULL, "openid email profile")) != NULL)
+  if ((auth_code = cupsOAuthGetAuthorizationCode(oauth_uri, metadata, /*resource_uri*/NULL, "openid email profile", redirect_uri)) != NULL)
   {
     testEndMessage(true, "%s", auth_code);
   }
@@ -429,7 +440,7 @@ unit_tests(const char *oauth_uri)	// I - Authorization Server URI
 static int				// O - Exit status
 usage(FILE *out)			// I - Output file
 {
-  fputs("Usage: testoauth [-a OAUTH-URI] [-s SCOPE(S)] [COMMAND [ARGUMENT(S)]]\n", out);
+  fputs("Usage: testoauth [-a OAUTH-URI] [-r REDIRECT-URI] [-s SCOPE(S)] [COMMAND [ARGUMENT(S)]]\n", out);
   fputs("Commands:\n", out);
   fputs("  authorize RESOURCE-URI\n", out);
   fputs("  clear RESOURCE-URI\n", out);

@@ -297,6 +297,10 @@ cupsOAuthCopyUserId(
 // names to request during authorization.  The list of supported scope names are
 // available from the Authorization Server metadata, for example:
 //
+// The "redirect_uri" parameter specifies a 'http:' URL with a listen address,
+// port, and path to use.  If `NULL`, 127.0.0.1 on a random port is used with a
+// path of "/".
+//
 // ```
 // cups_json_t *metadata = cupsOAuthGetMetadata(auth_uri);
 // cups_json_t *scopes_supported = cupsJSONFind(metadata, "scopes_supported");
@@ -310,7 +314,8 @@ cupsOAuthGetAuthorizationCode(
     const char  *auth_uri,		// I - Authorization Server URI
     cups_json_t *metadata,		// I - Authorization Server metadata
     const char  *resource_uri,		// I - Resource URI
-    const char  *scopes)		// I - Space-delimited scopes
+    const char  *scopes,		// I - Space-delimited scopes
+    const char  *redirect_uri)		// I - Redirect URI or `NULL` for default
 {
   char		*client_id = NULL,	// `client_id` value
 		*code_verifier = NULL,	// Code verifier string
@@ -319,7 +324,9 @@ cupsOAuthGetAuthorizationCode(
 		*url = NULL,		// URL for authorization page
 		*scopes_supported = NULL;
 					// Supported scopes
-  char		redirect_uri[1024];	// Final redirect URI
+  char		resource[256],		// Resource path
+		final_uri[1024];	// Final redirect URI
+  size_t	resourcelen;		// Length of resource path
   http_addr_t	addr;			// Loopback listen address
   int		port;			// Port number
   struct pollfd	polldata;		// Poll data
@@ -329,37 +336,77 @@ cupsOAuthGetAuthorizationCode(
 
 
   // Range check input...
+  DEBUG_printf("cupsOAuthGetAuthorizationCode(auth_uri=\"%s\", metadata=%p, resource_uri=\"%s\", scopes=\"%s\", redirect_uri=\"%s\")", auth_uri, (void *)metadata, resource_uri, scopes, redirect_uri);
+
   if (!auth_uri || !metadata || cupsJSONGetString(cupsJSONFind(metadata, "authorization_endpoint")) == NULL)
     return (NULL);
 
   // Get the client_id value...
-  if ((client_id = cupsOAuthCopyClientId(auth_uri, CUPS_OAUTH_REDIRECT_URI)) == NULL)
-    client_id = cupsOAuthGetClientId(auth_uri, metadata, CUPS_OAUTH_REDIRECT_URI, /*logo_uri*/NULL, /*tos_uri*/NULL);
+  if ((client_id = cupsOAuthCopyClientId(auth_uri, redirect_uri ? redirect_uri : CUPS_OAUTH_REDIRECT_URI)) == NULL)
+    client_id = cupsOAuthGetClientId(auth_uri, metadata, redirect_uri ? redirect_uri : CUPS_OAUTH_REDIRECT_URI, /*logo_uri*/NULL, /*tos_uri*/NULL);
 
   if (!client_id)
     return (NULL);
 
-  // Listen to a local port for 127.0.0.1...
-  memset(&addr, 0, sizeof(addr));
-#ifdef __APPLE__
-  addr.ipv4.sin_len         = sizeof(struct sockaddr_in);
-#endif // __APPLE__
-  addr.ipv4.sin_family      = AF_INET;
-  addr.ipv4.sin_addr.s_addr = htonl(0x7f000001);
-
-  for (port = 10000; port < 11000; port ++)
+  // Listen on a local port...
+  if (redirect_uri)
   {
-    if ((polldata.fd = httpAddrListen(&addr, port)) >= 0)
-      break;
+    // Use the host/port/resource from the URI
+    char	scheme[32],		// URL scheme
+		userpass[256],		// Username:password (ignored)
+		host[256];		// Hostname
+
+    if (httpSeparateURI(HTTP_URI_CODING_ALL, redirect_uri, scheme, sizeof(scheme), userpass, sizeof(userpass), host, sizeof(host), &port, resource, sizeof(resource)) < HTTP_URI_STATUS_OK || strcmp(scheme, "http"))
+    {
+      DEBUG_printf("1cupsOAuthGetAuthorizationCode: Bad redirect_uri '%s'.", redirect_uri);
+      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), false);
+      goto done;
+    }
+
+    memset(&addr, 0, sizeof(addr));
+#ifdef __APPLE__
+    addr.ipv4.sin_len    = sizeof(struct sockaddr_in);
+#endif // __APPLE__
+    addr.ipv4.sin_family = AF_INET;
+
+    if (!strcmp(host, "localhost") || !strcmp(host, "127.0.0.1"))
+      addr.ipv4.sin_addr.s_addr = htonl(0x7f000001);
+
+    polldata.fd = httpAddrListen(&addr, port);
+
+    cupsConcatString(resource, "?", sizeof(resource));
   }
+  else
+  {
+    // Find the next available port on 127.0.0.1...
+    memset(&addr, 0, sizeof(addr));
+#ifdef __APPLE__
+    addr.ipv4.sin_len         = sizeof(struct sockaddr_in);
+#endif // __APPLE__
+    addr.ipv4.sin_family      = AF_INET;
+    addr.ipv4.sin_addr.s_addr = htonl(0x7f000001);
+
+    for (port = 10000; port < 11000; port ++)
+    {
+      if ((polldata.fd = httpAddrListen(&addr, port)) >= 0)
+	break;
+    }
+
+    // Save the redirect URI and resource...
+    cupsCopyString(resource, _CUPS_OAUTH_REDIRECT_PATH, sizeof(resource));
+    snprintf(final_uri, sizeof(final_uri), _CUPS_OAUTH_REDIRECT_FORMAT, port);
+    redirect_uri = final_uri;
+  }
+
+  DEBUG_printf("1cupsOAuthGetAuthorizationCode: Listen socket for port %d is %d (%s)", port, polldata.fd, strerror(errno));
 
   if (polldata.fd < 0)
     goto done;
 
+  resourcelen     = strlen(resource);
   polldata.events = POLLIN | POLLERR | POLLHUP;
 
   // Point redirection to the local port...
-  snprintf(redirect_uri, sizeof(redirect_uri), _CUPS_OAUTH_REDIRECT_FORMAT, port);
   oauth_save_value(auth_uri, resource_uri, _CUPS_OTYPE_REDIRECT_URI, redirect_uri);
 
   // Make state and code verification strings...
@@ -472,7 +519,7 @@ cupsOAuthGetAuthorizationCode(
         // Respond to HTTP requests...
         while (auth_code == NULL && time(NULL) < endtime && httpWait(http, 1000))
         {
-          char		resource[4096],	// Resource path
+          char		reqres[4096],	// Resource path
 			message[2048];	// Response message
 	  http_state_t	hstate;		// HTTP request state
 	  http_status_t	hstatus;	// HTTP request status
@@ -480,7 +527,7 @@ cupsOAuthGetAuthorizationCode(
 			*hbody = NULL;	// HTTP response body
 
           // Get the request header...
-          if ((hstate = httpReadRequest(http, resource, sizeof(resource))) == HTTP_STATE_WAITING)
+          if ((hstate = httpReadRequest(http, reqres, sizeof(reqres))) == HTTP_STATE_WAITING)
             continue;
 	  else if (hstate == HTTP_STATE_ERROR || hstate == HTTP_STATE_UNKNOWN_METHOD || hstate == HTTP_STATE_UNKNOWN_VERSION)
             break;
@@ -504,7 +551,7 @@ cupsOAuthGetAuthorizationCode(
                 break;
 
             case HTTP_STATE_HEAD :
-		if (!strncmp(resource, _CUPS_OAUTH_REDIRECT_PATH, _CUPS_OAUTH_REDIRECT_PATHLEN))
+		if (!strncmp(reqres, resource, resourcelen))
 		{
 		  // Respond that the content will be HTML...
 		  htype = "text/html";
@@ -517,7 +564,7 @@ cupsOAuthGetAuthorizationCode(
 		break;
 
 	    case HTTP_STATE_GET :
-		if (!strncmp(resource, _CUPS_OAUTH_REDIRECT_PATH, _CUPS_OAUTH_REDIRECT_PATHLEN))
+		if (!strncmp(reqres, resource, resourcelen))
 		{
 		  // Collect form parameters from resource...
 		  const char	*code_value,		// Authoziation code value
@@ -527,7 +574,7 @@ cupsOAuthGetAuthorizationCode(
 		  size_t	num_form;		// Number of form variables
 		  cups_option_t	*form = NULL;		// Form variables
 
-		  num_form    = cupsFormDecode(resource + _CUPS_OAUTH_REDIRECT_PATHLEN, &form);
+		  num_form    = cupsFormDecode(reqres + resourcelen, &form);
                   code_value  = cupsGetOption("code", num_form, form);
                   error_code  = cupsGetOption("error", num_form, form);
                   error_desc  = cupsGetOption("error_description", num_form, form);
