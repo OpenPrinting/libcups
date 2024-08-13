@@ -118,18 +118,37 @@ cupsLocalizeDestMedia(
     lsize = temp;
   }
 
-  if (mdb)
+  if (media->source[0])
+  {
+    if ((lsource = cupsLocalizeDestValue(http, dest, dinfo, "media-source", media->source)) == media->source)
+      lsource = cupsLangGetString(lang, _("Other Tray"));
+  }
+  else if (mdb)
   {
     DEBUG_printf("1cupsLocalizeDestMedia: MATCH mdb%p [key=\"%s\" size_name=\"%s\" source=\"%s\" type=\"%s\" width=%d length=%d B%d L%d R%d T%d]", (void *)mdb, mdb->key, mdb->size_name, mdb->source, mdb->type, mdb->width, mdb->length, mdb->bottom, mdb->left, mdb->right, mdb->top);
 
     if ((lsource = cupsLocalizeDestValue(http, dest, dinfo, "media-source", mdb->source)) == mdb->source && mdb->source)
       lsource = cupsLangGetString(lang, _("Other Tray"));
+  }
+  else
+  {
+    lsource = NULL;
+  }
+
+  if (media->type[0])
+  {
+    if ((ltype = cupsLocalizeDestValue(http, dest, dinfo, "media-type", media->type)) == media->type)
+      ltype = cupsLangGetString(lang, _("Other Media"));
+  }
+  else if (mdb)
+  {
+    DEBUG_printf("1cupsLocalizeDestMedia: MATCH mdb%p [key=\"%s\" size_name=\"%s\" source=\"%s\" type=\"%s\" width=%d length=%d B%d L%d R%d T%d]", (void *)mdb, mdb->key, mdb->size_name, mdb->source, mdb->type, mdb->width, mdb->length, mdb->bottom, mdb->left, mdb->right, mdb->top);
+
     if ((ltype = cupsLocalizeDestValue(http, dest, dinfo, "media-type", mdb->type)) == mdb->type && mdb->type)
       ltype = cupsLangGetString(lang, _("Other Media"));
   }
   else
   {
-    lsource = NULL;
     ltype   = NULL;
   }
 
