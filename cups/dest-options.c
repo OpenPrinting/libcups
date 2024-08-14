@@ -1835,8 +1835,12 @@ cups_create_media_db(
 
       if (!mdb.key)
       {
-        if (!mdb.size_name && (pwg = pwgMediaForSize(mdb.width, mdb.length)) != NULL)
-	  mdb.size_name = (char *)pwg->pwg;
+        pwg_media_t	pwg;		// PWG media info
+	char		keyword[128],	// PWG size keyword
+			ppdname[41];	// PPD size name
+
+        if (!mdb.size_name && _pwgMediaNearSize(&pwg, keyword, sizeof(keyword), ppdname, sizeof(ppdname), mdb.width, mdb.length, _PWG_EPSILON))
+	  mdb.size_name = keyword;
 
         if (!mdb.size_name)
         {
