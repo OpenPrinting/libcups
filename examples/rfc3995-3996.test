@@ -1,0 +1,114 @@
+#
+# RFC 3995: IPP Event Notifications and Subscriptions
+# RFC 3996: The 'ippget' Delivery Method for Event Notifications
+#
+# https://www.rfc-editor.org/rfc/rfc3995.html
+# https://www.rfc-editor.org/rfc/rfc3996.html
+#
+# Copyright © 2024 by OpenPrinting.
+#
+# Usage:
+#
+#   ./ipptool [OPTIONS] -f FILENAME -t PRINTER-URI rfc3995-3996.test
+#
+# Options:
+#
+#   -d NOPRINT=1              Disable the print tests.
+#   -d REQUIRE_RFC3995=1      Require support for RFC 3995.
+#   -d REQUIRE_RFC3996=1      Require support for RFC 3996.
+#
+
+{
+    NAME "RFC 3995: Operations, Attributes, and Values"
+    OPERATION Get-Printer-Attributes
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR language attributes-natural-language en
+    ATTR uri printer-uri $uri
+
+    STATUS successful-ok
+
+    # Operations - all but Create-Job-Subscription are required...
+    EXPECT operations-supported OF-TYPE enum IN-GROUP printer-attributes-tag
+    EXPECT operations-supported WITH-VALUE 0x0016 DEFINE-MATCH PRINTER_HAS_NOTIFICATIONS # Create-Printer-Subscription
+
+    EXPECT operations-supported WITH-VALUE 0x0016 IF-DEFINED REQUIRE_RFC3995
+    EXPECT operations-supported WITH-VALUE 0x0016 IF-DEFINED PRINTER_HAS_NOTIFICATIONS
+    EXPECT operations-supported WITH-VALUE 0x0016 DEFINE-MATCH PRINTER_HAS_CREATE_PRINTER_SUBCRIPTION
+
+    EXPECT operations-supported WITH-VALUE 0x0017 DEFINE-MATCH PRINTER_HAS_CREATE_JOB_SUBCRIPTION
+
+    EXPECT operations-supported WITH-VALUE 0x0018 IF-DEFINED REQUIRE_RFC3995
+    EXPECT operations-supported WITH-VALUE 0x0018 IF-DEFINED PRINTER_HAS_NOTIFICATIONS
+    EXPECT operations-supported WITH-VALUE 0x0018 DEFINE-MATCH PRINTER_HAS_GET_SUBCRIPTION_ATTRIBUTES
+
+    EXPECT operations-supported WITH-VALUE 0x0019 IF-DEFINED REQUIRE_RFC3995
+    EXPECT operations-supported WITH-VALUE 0x0019 IF-DEFINED PRINTER_HAS_NOTIFICATIONS
+    EXPECT operations-supported WITH-VALUE 0x0019 DEFINE-MATCH PRINTER_HAS_GET_SUBCRIPTIONS
+
+    EXPECT operations-supported WITH-VALUE 0x001A IF-DEFINED REQUIRE_RFC3995
+    EXPECT operations-supported WITH-VALUE 0x001A IF-DEFINED PRINTER_HAS_NOTIFICATIONS
+    EXPECT operations-supported WITH-VALUE 0x001A DEFINE-MATCH PRINTER_HAS_RENEW_SUBCRIPTION
+
+    EXPECT operations-supported WITH-VALUE 0x001B IF-DEFINED REQUIRE_RFC3995
+    EXPECT operations-supported WITH-VALUE 0x001B IF-DEFINED PRINTER_HAS_NOTIFICATIONS
+    EXPECT operations-supported WITH-VALUE 0x001B DEFINE-MATCH PRINTER_HAS_CANCEL_SUBCRIPTION
+
+    # Subscription template attributes - defaults and supported values
+    EXPECT notify-attributes-supported IF-DEFINED PRINTER_HAS_NOTIFICATIONS
+    EXPECT notify-attributes-supported OF-TYPE keyword IN-GROUP printer-attributes-tag
+
+    EXPECT notify-events-default IF-DEFINED PRINTER_HAS_NOTIFICATIONS
+    EXPECT notify-events-default OF-TYPE keyword IN-GROUP printer-attributes-tag
+
+    EXPECT notify-events-supported IF-DEFINED PRINTER_HAS_NOTIFICATIONS
+    EXPECT notify-events-supported OF-TYPE keyword IN-GROUP printer-attributes-tag
+    EXPECT notify-events-supported WITH-VALUE job-completed IF-DEFINED PRINTER_HAS_NOTIFICATIONS
+    EXPECT notify-events-supported WITH-VALUE job-created IF-DEFINED PRINTER_HAS_NOTIFICATIONS
+    EXPECT notify-events-supported WITH-VALUE job-state-changed IF-DEFINED PRINTER_HAS_NOTIFICATIONS
+    EXPECT notify-events-supported WITH-VALUE none IF-DEFINED PRINTER_HAS_NOTIFICATIONS
+    EXPECT notify-events-supported WITH-VALUE printer-state-changed IF-DEFINED PRINTER_HAS_NOTIFICATIONS
+    EXPECT notify-events-supported WITH-VALUE printer-stopped IF-DEFINED PRINTER_HAS_NOTIFICATIONS
+
+    EXPECT notify-lease-duration-default IF-DEFINED PRINTER_HAS_NOTIFICATIONS
+    EXPECT notify-lease-duration-default OF-TYPE integer(0:67108863) IN-GROUP printer-attributes-tag COUNT 1
+
+    EXPECT notify-lease-duration-supported IF-DEFINED PRINTER_HAS_NOTIFICATIONS
+    EXPECT notify-lease-duration-supported OF-TYPE integer(0:67108863)|rangeOfInteger(0:67108863) IN-GROUP printer-attributes-tag
+
+    EXPECT notify-max-events-supported IF-DEFINED PRINTER_HAS_NOTIFICATIONS
+    EXPECT notify-max-events-supported OF-TYPE integer(2:MAX) IN-GROUP printer-attributes-tag COUNT 1
+
+    EXPECT ?notify-pull-method-supported OF-TYPE keyword IN-GROUP printer-attributes-tag
+
+    EXPECT ?notify-schemes-supported OF-TYPE uriScheme IN-GROUP printer-attributes-tag
+}
+
+
+{
+    NAME "RFC 3996: Operations, Attributes, and Values"
+    OPERATION Get-Printer-Attributes
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR language attributes-natural-language en
+    ATTR uri printer-uri $uri
+
+    STATUS successful-ok
+
+    # Operations
+    EXPECT operations-supported OF-TYPE enum IN-GROUP printer-attributes-tag
+    EXPECT operations-supported WITH-VALUE 0x001C DEFINE-MATCH PRINTER_HAS_GET_NOTIFICATIONS
+    EXPECT operations-supported WITH-VALUE 0x001C IF-DEFINED REQUIRE_RFC3996
+
+    # Attributes and values
+    EXPECT ippget-event-life IF-DEFINED REQUIRE_RFC3996
+    EXPECT ippget-event-life IF-DEFINED PRINTER_HAS_GET_NOTIFICATIONS
+    EXPECT ippget-event-life OF-TYPE integer(15:MAX) IN-GROUP printer-attributes-tag COUNT 1
+
+    EXPECT notify-pull-method-supported IF-DEFINED REQUIRE_RFC3996
+    EXPECT notify-pull-method-supported WITH-VALUE ippget IF-DEFINED REQUIRE_RFC3996
+    EXPECT notify-pull-method-supported WITH-VALUE ippget IF-DEFINED PRINTER_HAS_GET_NOTIFICATIONS
+}
+
+
+# TODO: Add notification tests...
