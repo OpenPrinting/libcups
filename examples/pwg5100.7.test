@@ -1,0 +1,1693 @@
+#
+# PWG 5100.7-2023: IPP Job Extensions v2.1 (JOBEXT)
+#
+# https://ftp.pwg.org/pub/pwg/candidates/cs-ippjobext21-20230210-5100.7.pdf
+#
+# Copyright © 2018-2024 by OpenPrinting.
+#
+# Usage:
+#
+#   ./ipptool [OPTIONS] -f FILENAME -t PRINTER-URI pwg5100.7.test
+#
+# Options:
+#
+#   -d NOPRINT=1              Disable the print tests.
+#   -d REQUIRE_JOBEXT=1       Require support for the JOBEXT specification.
+#
+
+{
+    NAME "PWG 5100.7-2023: Operations, Attributes, and Values"
+    OPERATION Get-Printer-Attributes
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR language attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR keyword requested-attributes all,media-col-database
+
+    STATUS successful-ok
+
+    # Required operations
+    EXPECT operations-supported OF-TYPE enum IN-GROUP printer-attributes-tag
+    EXPECT operations-supported WITH-VALUE 0x0038 IF-DEFINED REQUIRE_JOBEXT # Cancel-Jobs
+    EXPECT operations-supported WITH-VALUE 0x0039 IF-DEFINED REQUIRE_JOBEXT # Cancel-My-Jobs
+    EXPECT operations-supported WITH-VALUE 0x003A IF-DEFINED REQUIRE_JOBEXT # Close-Job
+
+    EXPECT operations-supported WITH-VALUE 0x0038 DEFINE-MATCH PRINTER_HAS_CANCEL_JOBS
+    EXPECT operations-supported WITH-VALUE 0x0039 DEFINE-MATCH PRINTER_HAS_CANCEL_MY_JOBS
+    EXPECT operations-supported WITH-VALUE 0x003A DEFINE-MATCH PRINTER_HAS_CLOSE_JOB
+    EXPECT operations-supported WITH-VALUE 0x003B DEFINE-MATCH PRINTER_HAS_RESUBMIT_JOB
+
+    # Attributes and values
+    EXPECT job-creation-attributes-supported WITH-VALUE client-info DEFINE-MATCH PRINTER_HAS_CLIENT_INFO
+    EXPECT client-info-supported IF-DEFINED PRINTER_HAS_CLIENT_INFO
+    EXPECT ?client-info-supported OF-TYPE keyword IN-GROUP printer-attributes-tag
+
+    EXPECT document-charset-supported DEFINE-MATCH PRINTER_HAS_DOCUMENT_CHARSET
+    EXPECT document-charset-default OF-TYPE charset IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE-FROM document-charset-supported IF-DEFINED PRINTER_HAS_DOCUMENT_CHARSET
+    EXPECT document-charset-supported OF-TYPE charset IN-GROUP printer-attributes-tag IF-DEFINED PRINTER_HAS_DOCUMENT_CHARSET
+
+    EXPECT document-natural-language-supported DEFINE-MATCH PRINTER_HAS_DOCUMENT_NATURAL_LANGUAGE
+    EXPECT document-natural-language-default OF-TYPE naturalLanguage IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE-FROM document-natural-language-supported IF-DEFINED PRINTER_HAS_DOCUMENT_NATURAL_LANGUAGE
+    EXPECT document-natural-language-supported OF-TYPE naturalLanguage IN-GROUP printer-attributes-tag IF-DEFINED PRINTER_HAS_DOCUMENT_NATURAL_LANGUAGE
+
+    EXPECT job-account-id-supported DEFINE-MATCH PRINTER_HAS_JOB_ACCOUNT_ID
+    EXPECT job-account-id-default OF-TYPE name|no-value IN-GROUP printer-attributes-tag COUNT 1 IF-DEFINED PRINTER_HAS_JOB_ACCOUNT_ID
+    EXPECT job-account-id-supported OF-TYPE boolean IN-GROUP printer-attributes-tag COUNT 1 IF-DEFINED PRINTER_HAS_JOB_ACCOUNT_ID
+
+    EXPECT job-accounting-user-id-supported DEFINE-MATCH PRINTER_HAS_JOB_ACCOUNTING_USER_ID
+    EXPECT job-accounting-user-id-default OF-TYPE name|no-value IN-GROUP printer-attributes-tag COUNT 1 IF-DEFINED PRINTER_HAS_JOB_ACCOUNTING_USER_ID
+    EXPECT job-accounting-user-id-supported OF-TYPE boolean IN-GROUP printer-attributes-tag COUNT  1 IF-DEFINED PRINTER_HAS_JOB_ACCOUNTING_USER_ID
+
+    EXPECT job-cancel-after-supported DEFINE-MATCH PRINTER_HAS_JOB_CANCEL_AFTER
+    EXPECT job-cancel-after-default OF-TYPE integer(0:MAX)|no-value IN-GROUP printer-attributes-tag COUNT 1 IF-DEFINED PRINTER_HAS_JOB_CANCEL-AFTER
+    EXPECT job-cancel-after-supported OF-TYPE rangeOfInteger(0:MAX) IN-GROUP printer-attributes-tag COUNT 1 IF-DEFINED PRINTER_HAS_JOB_CANCEL-AFTER
+
+    EXPECT job-creation-attributes-supported IF-DEFINED REQUIRE_JOBEXT
+    EXPECT ?job-creation-attributes-supported OF-TYPE keyword IN-GROUP printer-attributes-tag
+
+    EXPECT job-delay-output-until-supported DEFINE-MATCH PRINTER_HAS_JOB_DELAY_OUTPUT_UNTIL
+    EXPECT job-delay-output-until-default OF-TYPE keyword|name IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE-FROM job-delay-output-until-supported IF-DEFINED PRINTER_HAS_JOB_DELAY_OUTPUT_UNTIL
+    EXPECT job-delay-output-until-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag IF-DEFINED PRINTER_HAS_JOB_DELAY_OUTPUT_UNTIL
+    EXPECT job-delay-output-until-time-supported OF-TYPE rangeOfInteger(0:MAX) IN-GROUP printer-attributes-tag COUNT 1 IF-DEFINED PRINTER_HAS_JOB_DELAY_OUTPUT_UNTIL
+
+    EXPECT job-history-attributes-configured IF-DEFINED REQUIRE_JOBEXT
+    EXPECT ?job-history-attributes-configured OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUES-FROM job-history-attributes-supported
+    EXPECT job-history-attributes-supported IF-DEFINED REQUIRE_JOBEXT
+    EXPECT ?job-history-attributes-supported OF-TYPE keyword IN-GROUP printer-attributes-tag
+
+    EXPECT job-history-interval-configured IF-DEFINED REQUIRE_JOBEXT
+    EXPECT ?job-history-interval-configured OF-TYPE integer(0:MAX) IN-GROUP printer-attributes-tag COUNT 1
+    EXPECT job-history-interval-supported IF-DEFINED REQUIRE_JOBEXT
+    EXPECT ?job-history-interval-supported OF-TYPE rangeOfInteger(0:MAX) IN-GROUP printer-attributes-tag COUNT 1
+
+    EXPECT job-hold-until-supported DEFINE-MATCH PRINTER_HAS_JOB_HOLD_UNTIL
+    EXPECT job-hold-until-time-supported IF-DEFINED PRINTER_HAS_JOB_HOLD_UNTIL
+    EXPECT ?job-hold-until-time-supported OF-TYPE boolean IN-GROUP printer-attributes-tag COUNT 1
+
+    EXPECT job-ids-supported OF-TYPE boolean IN-GROUP printer-attributes-tag COUNT 1 IF-DEFINED REQUIRE_JOBEXT
+
+    EXPECT job-mandatory-attributes-supported OF-TYPE boolean IN-GROUP printer-attributes-tag COUNT  1 IF-DEFINED REQUIRE_JOBEXT
+
+    EXPECT job-retain-until-supported DEFINE-MATCH PRINTER_HAS_JOB_RETAIN_UNTIL
+    EXPECT job-retain-until-default OF-TYPE keyword|name IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE-FROM job-retain-until-supported IF-DEFINED PRINTER_HAS_JOB_RETAIN_UNTIL
+    EXPECT job-retain-until-interval-default OF-TYPE integer(0:MAX)|no-value IN-GROUP printer-attributes-tag COUNT 1 IF-DEFINED PRINTER_HAS_JOB_RETAIN_UNTIL
+    EXPECT job-retain-until-interval-supported OF-TYPE rangeOfInteger(0:MAX) IN-GROUP printer-attributes-tag COUNT 1 IF-DEFINED PRINTER_HAS_JOB_RETAIN_UNTIL
+    EXPECT job-retain-until-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag IF-DEFINED PRINTER_HAS_JOB_RETAIN_UNTIL
+    EXPECT job-retain-until-time-supported OF-TYPE boolean IN-GROUP printer-attributes-tag COUNT 1 IF-DEFINED PRINTER_HAS_JOB_RETAIN_UNTIL
+
+    EXPECT job-sheets-supported DEFINE-MATCH PRINTER_HAS_JOB_SHEETS
+    EXPECT job-sheets-col-default OF-TYPE collection|no-value IN-GROUP printer-attributes-tag COUNT 1 IF-DEFINED PRINTER_HAS_JOB_SHEETS
+    EXPECT job-sheets-col-supported OF-TYPE keyword IN-GROUP printer-attributes-tag IF-DEFINED PRINTER_HAS_JOB_SHEETS
+
+    EXPECT job-spooling-supported IF-DEFINED REQUIRE_JOBEXT
+    EXPECT ?job-spooling-supported OF-TYPE keyword IN-GROUP printer-attributes-tag COUNT 1
+
+    EXPECT max-client-info-supported IF-DEFINED PRINTER_HAS_CLIENT_INFO
+    EXPECT ?max-client-info-supported OF-TYPE integer(4:MAX) IN-GROUP printer-attributes-tag COUNT 1
+
+    EXPECT page-ranges-supported DEFINE-MATCH PRINTER_HAS_PAGE_RANGES
+    EXPECT max-page-ranges-supported OF-TYPE integer(1:MAX) IN-GROUP printer-attributes-tag COUNT 1 IF-DEFINED PRINTER_HAS_PAGE_RANGES
+
+    EXPECT media-col-supported DEFINE-MATCH PRINTER_HAS_MEDIA_COL
+
+    EXPECT media-col-database IF-DEFINED REQUIRE_JOBEXT
+    EXPECT ?media-col-database OF-TYPE collection IN-GROUP printer-attributes-tag
+    EXPECT media-col-database/media-size OF-TYPE collection COUNT 1 IF-DEFINED PRINTER_HAS_MEDIA_COL
+
+    EXPECT media-col-default IF-DEFINED REQUIRE_JOBEXT
+    EXPECT media-col-default OF-TYPE collection IN-GROUP printer-attributes-tag COUNT 1 IF-DEFINED PRINTER_HAS_MEDIA_COL
+    EXPECT media-col-default/media-size OF-TYPE collection COUNT 1 IF-DEFINED PRINTER_HAS_MEDIA_COL
+
+    EXPECT media-col-ready IF-DEFINED REQUIRE_JOBEXT
+    EXPECT ?media-col-ready OF-TYPE collection IN-GROUP printer-attributes-tag
+    EXPECT media-col-ready/media-size OF-TYPE collection COUNT 1 IF-DEFINED PRINTER_HAS_MEDIA_COL
+
+    EXPECT media-col-supported IF-DEFINED REQUIRE_JOBEXT
+    EXPECT media-col-supported OF-TYPE keyword IN-GROUP printer-attributes-tag IF-DEFINED PRINTER_HAS_MEDIA_COL
+    EXPECT media-col-supported WITH-VALUE media-back-coating DEFINE-MATCH PRINTER_HAS_MEDIA_BACK_COATING
+    EXPECT media-col-supported WITH-VALUE media-bottom-margin IF-DEFINED REQUIRE_JOBEXT
+    EXPECT media-col-supported WITH-VALUE media-color DEFINE-MATCH PRINTER_HAS_MEDIA_COLOR
+    EXPECT media-col-supported WITH-VALUE media-front-coating DEFINE-MATCH PRINTER_HAS_MEDIA_FRONT_COATING
+    EXPECT media-col-supported WITH-VALUE media-grain DEFINE-MATCH PRINTER_HAS_MEDIA_GRAIN
+    EXPECT media-col-supported WITH-VALUE media-hole-count DEFINE-MATCH PRINTER_HAS_MEDIA_HOLE_COUNT
+    EXPECT media-col-supported WITH-VALUE media-key DEFINE-MATCH PRINTER_HAS_MEDIA_KEY
+    EXPECT media-col-supported WITH-VALUE media-left-margin IF-DEFINED REQUIRE_JOBEXT
+    EXPECT media-col-supported WITH-VALUE media-order-count DEFINE-MATCH PRINTER_HAS_MEDIA_ORDER_COUNT
+    EXPECT media-col-supported WITH-VALUE media-pre-printed DEFINE-MATCH PRINTER_HAS_MEDIA_PRE_PRINTED
+    EXPECT media-col-supported WITH-VALUE media-recycled DEFINE-MATCH PRINTER_HAS_MEDIA_RECYCLED
+    EXPECT media-col-supported WITH-VALUE media-right-margin IF-DEFINED REQUIRE_JOBEXT
+    EXPECT media-col-supported WITH-VALUE media-size IF-DEFINED REQUIRE_JOBEXT
+    EXPECT media-col-supported WITH-VALUE media-source IF-DEFINED REQUIRE_JOBEXT
+    EXPECT media-col-supported WITH-VALUE media-thickness DEFINE-MATCH PRINTER_HAS_MEDIA_THICKNESS
+    EXPECT media-col-supported WITH-VALUE media-tooth DEFINE-MATCH PRINTER_HAS_MEDIA_TOOTH
+    EXPECT media-col-supported WITH-VALUE media-top-margin IF-DEFINED REQUIRE_JOBEXT
+    EXPECT media-col-supported WITH-VALUE media-type IF-DEFINED REQUIRE_JOBEXT
+    EXPECT media-col-supported WITH-VALUE media-weight DEFINE-MATCH PRINTER_HAS_MEDIA_WEIGHT
+
+    EXPECT media-back-coating-supported IF-DEFINED PRINTER_HAS_MEDIA_BACK_COATING
+    EXPECT ?media-back-coating-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag
+
+    EXPECT media-bottom-margin-supported IF-DEFINED REQUIRE_JOBEXT
+    EXPECT ?media-bottom-margin-supported OF-TYPE integer(0:MAX) IN-GROUP printer-attributes-tag
+
+    EXPECT media-color-supported IF-DEFINED PRINTER_HAS_MEDIA_COLOR
+    EXPECT ?media-color-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag
+
+    EXPECT media-front-coating-supported IF-DEFINED PRINTER_HAS_MEDIA_FRONT_COATING
+    EXPECT ?media-front-coating-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag
+
+    EXPECT media-grain-supported IF-DEFINED PRINTER_HAS_MEDIA_GRAIN
+    EXPECT ?media-grain-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag
+
+    EXPECT media-hole-count-supported IF-DEFINED PRINTER_HAS_MEDIA_HOLE_COUNT
+    EXPECT ?media-hole-count-supported OF-TYPE rangeOfInteger(0:MAX) IN-GROUP printer-attributes-tag
+
+    EXPECT media-key-supported IF-DEFINED PRINTER_HAS_MEDIA_KEY
+    EXPECT ?media-key-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag
+
+    EXPECT media-left-margin-supported IF-DEFINED REQUIRE_JOBEXT
+    EXPECT ?media-left-margin-supported OF-TYPE integer(0:MAX) IN-GROUP printer-attributes-tag
+
+    EXPECT media-order-count-supported IF-DEFINED PRINTER_HAS_MEDIA_ORDER_COUNT
+    EXPECT ?media-order-count-supported OF-TYPE rangeOfInteger(0:MAX) IN-GROUP printer-attributes-tag
+
+    EXPECT media-pre-printed-supported IF-DEFINED PRINTER_HAS_MEDIA_PRE_PRINTED
+    EXPECT ?media-pre-printed-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag
+
+    EXPECT media-recycled-supported IF-DEFINED PRINTER_HAS_MEDIA_RECYCLED
+    EXPECT ?media-recycled-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag
+
+    EXPECT media-right-margin-supported IF-DEFINED REQUIRE_JOBEXT
+    EXPECT ?media-right-margin-supported OF-TYPE integer(0:MAX) IN-GROUP printer-attributes-tag
+
+    EXPECT media-size-supported IF-DEFINED REQUIRE_JOBEXT
+    EXPECT ?media-size-supported OF-TYPE collection IN-GROUP printer-attributes-tag
+    EXPECT-ALL media-size-supported/x-dimension IF-DEFINED REQUIRE_JOBEXT
+    EXPECT-ALL ?media-size-supported/x-dimension OF-TYPE integer(0:MAX)|rangeOfInteger(0:MAX)
+    EXPECT-ALL media-size-supported/y-dimension IF-DEFINED REQUIRE_JOBEXT
+    EXPECT-ALL ?media-size-supported/y-dimension OF-TYPE integer(0:MAX)|rangeOfInteger(0:MAX)
+
+    EXPECT media-source-supported IF-DEFINED REQUIRE_JOBEXT
+    EXPECT ?media-source-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag
+
+    EXPECT media-thickness-supported IF-DEFINED PRINTER_HAS_MEDIA_THICKNESS
+    EXPECT ?media-thickness-supported OF-TYPE rangeOfInteger(1:MAX) IN-GROUP printer-attributes-tag
+
+    EXPECT media-tooth-supported IF-DEFINED PRINTER_HAS_MEDIA_TOOTH
+    EXPECT ?media-tooth-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag
+
+    EXPECT media-top-margin-supported IF-DEFINED REQUIRE_JOBEXT
+    EXPECT ?media-top-margin-supported OF-TYPE integer(0:MAX) IN-GROUP printer-attributes-tag
+
+    EXPECT media-type-supported IF-DEFINED REQUIRE_JOBEXT
+    EXPECT ?media-type-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag
+
+    EXPECT media-weight-supported IF-DEFINED PRINTER_HAS_MEDIA_WEIGHT
+    EXPECT ?media-weight-supported OF-TYPE rangeOfInteger(1:MAX) IN-GROUP printer-attributes-tag
+
+    EXPECT job-creation-attributes-supported WITH-VALUE output-device DEFINE-MATCH PRINTER_HAS_OUTPUT_DEVICE
+    EXPECT output-device-supported IF-DEFINED PRINTER_HAS_OUTPUT_DEVICE
+    EXPECT ?output-device-supported OF-TYPE name(127) IN-GROUP printer-attributes-tag
+
+    EXPECT print-content-optimize-supported DEFINE-MATCH PRINTER_HAS_PRINT_CONTENT_OPTIMIZE
+    EXPECT print-content-optimize-default IF-DEFINED PRINTER_HAS_PRINT_CONTENT_OPTIMIZE
+    EXPECT ?print-content-optimize-default OF-TYPE keyword IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE-FROM print-content-optimize-supported
+    EXPECT ?print-content-optimize-supported OF-TYPE keyword IN-GROUP printer-attributes-tag
+
+    EXPECT printer-requested-client-type IF-DEFINED PRINTER_HAS_CLIENT_INFO
+    EXPECT ?printer-requested-client-type OF-TYPE enum IN-GROUP printer-attributes-tag
+
+    EXPECT which-jobs-supported IF-DEFINED REQUIRE_JOBEXT
+    EXPECT ?which-jobs-supported OF-TYPE keyword IN-GROUP printer-attributes-tag
+}
+
+
+# TODO: Finish updating the rest of 5100.7 tests...
+# {
+# 	NAME "Print-job operation to pass the media-col attribute along with the request"
+# 	OPERATION Print-Job
+# 	GROUP operation-attributes-tag
+# 		ATTR charset attributes-charset utf-8
+# 		ATTR language attributes-natural-language en
+# 		ATTR uri printer-uri $uri
+# 		ATTR name requesting-user-name $user
+#
+# 	GROUP job-attributes-tag
+# 		ATTR collection media-col{
+# 			MEMBER integer media-bottom-margin 0
+#
+# 		}
+#
+#
+# 	FILE $filename
+#
+# 	STATUS successful-ok
+# 	EXPECT job-id OF-TYPE integer IN-GROUP Job-attributes-tag WITH-VALUE >0
+# }
+#
+# {
+#
+#
+# 	NAME "Test media-col and conditionally dependent attributes"
+# 	OPERATION Get-Job-Attributes
+# 	GROUP operation-attributes-tag
+# 	ATTR charset attributes-charset utf-8
+# 	ATTR naturalLanguage attributes-natural-language en
+# 	ATTR uri printer-uri $uri
+# 	ATTR integer job-id $job-id
+# 	ATTR name requesting-user-name $user
+#
+# 	STATUS successful-ok
+# 	EXPECT media-col OF-TYPE collection IN-GROUP job-attributes-tag
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_BACK_COATING
+# 	NAME "Print-job operation to pass the media-back-coating attribute along with the request"
+# 	OPERATION Print-Job
+# 	GROUP operation-attributes-tag
+# 		ATTR charset attributes-charset utf-8
+# 		ATTR language attributes-natural-language en
+# 		ATTR uri printer-uri $uri
+# 		ATTR name requesting-user-name $user
+#
+# 	GROUP job-attributes-tag
+# 		ATTR collection media-col{
+# 			MEMBER keyword media-back-coating none
+# 		}
+#
+# 	FILE $filename
+#
+# 	STATUS successful-ok
+# 	EXPECT job-id OF-TYPE integer IN-GROUP Job-attributes-tag WITH-VALUE >0
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_BACK_COATING
+#
+# 	NAME "Test media-back-coating and conditionally dependent attributes"
+# 	OPERATION Get-Job-Attributes
+# 	GROUP operation-attributes-tag
+# 	ATTR charset attributes-charset utf-8
+# 	ATTR naturalLanguage attributes-natural-language en
+# 	ATTR uri printer-uri $uri
+# 	ATTR integer job-id $job-id
+# 	ATTR name requesting-user-name $user
+#
+#
+# 	STATUS successful-ok
+# 	EXPECT media-col OF-TYPE collection IN-GROUP job-attributes-tag
+# 	EXPECT media-col/media-back-coating OF-TYPE keyword|name IN-GROUP job-attributes-tag WITH-VALUE "none"
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_BOTTOM_MARGIN
+# 	NAME "Print-job operation to pass the media-bottom-margin attribute along with the request"
+# 	OPERATION Print-Job
+# 	GROUP operation-attributes-tag
+# 		ATTR charset attributes-charset utf-8
+# 		ATTR language attributes-natural-language en
+# 		ATTR uri printer-uri $uri
+# 		ATTR name requesting-user-name $user
+#
+# 	GROUP job-attributes-tag
+# 		ATTR collection media-col{
+# 			MEMBER integer media-bottom-margin 0
+# 		}
+#
+#
+# 	FILE $filename
+#
+# 	STATUS successful-ok
+# 	EXPECT job-id OF-TYPE integer IN-GROUP Job-attributes-tag WITH-VALUE >0
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_BOTTOM_MARGIN
+# 	NAME "Test media-bottom-margin and conditionally dependent attributes"
+# 	OPERATION Get-Job-Attributes
+# 	GROUP operation-attributes-tag
+# 		ATTR charset attributes-charset utf-8
+# 		ATTR language attributes-natural-language en
+# 		ATTR uri printer-uri $uri
+# 		ATTR integer job-id $job-id
+#
+# 	STATUS successful-ok
+# 	 EXPECT media-col OF-TYPE collection IN-GROUP job-attributes-tag COUNT 1
+#      EXPECT media-col/media-bottom-margin OF-TYPE integer COUNT 1 WITH-VALUE 0
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_COLOR
+# 	NAME "Print-job operation to pass the media-color attribute along with the request"
+# 	OPERATION Print-Job
+# 	GROUP operation-attributes-tag
+# 		ATTR charset attributes-charset utf-8
+# 		ATTR language attributes-natural-language en
+# 		ATTR uri printer-uri $uri
+# 		ATTR name requesting-user-name $user
+#
+# 	GROUP job-attributes-tag
+# 		ATTR collection media-col{
+# 			MEMBER keyword media-color black
+# 		}
+#
+# 	FILE $filename
+#
+# 	STATUS successful-ok
+# 	EXPECT job-id OF-TYPE integer IN-GROUP Job-attributes-tag WITH-VALUE >0
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_COLOR
+#
+# 	NAME "Test media-color and conditionally dependent attributes"
+# 	OPERATION Get-Job-Attributes
+# 	GROUP operation-attributes-tag
+# 	ATTR charset attributes-charset utf-8
+# 	ATTR naturalLanguage attributes-natural-language en
+# 	ATTR uri printer-uri $uri
+# 	ATTR integer job-id $job-id
+# 	ATTR name requesting-user-name $user
+#
+# 	STATUS successful-ok
+# 	EXPECT media-col OF-TYPE collection IN-GROUP job-attributes-tag
+# 	EXPECT media-col/media-color OF-TYPE keyword|name IN-GROUP job-attributes-tag WITH-VALUE "black"
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_FRONT_COATING
+# 	NAME "Print-job operation to pass the media-front-coating attribute along with the request"
+# 	OPERATION Print-Job
+# 	GROUP operation-attributes-tag
+# 		ATTR charset attributes-charset utf-8
+# 		ATTR language attributes-natural-language en
+# 		ATTR uri printer-uri $uri
+# 		ATTR name requesting-user-name $user
+#
+# 	GROUP job-attributes-tag
+# 		ATTR collection media-col{
+# 			MEMBER keyword media-front-coating none
+# 		}
+#
+# 	FILE $filename
+#
+# 	STATUS successful-ok
+# 	EXPECT job-id OF-TYPE integer IN-GROUP Job-attributes-tag WITH-VALUE >0
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_FRONT_COATING
+#
+# 	NAME "Test media-front-coating and conditionally dependent attributes"
+# 	OPERATION Get-Job-Attributes
+# 	GROUP operation-attributes-tag
+# 	ATTR charset attributes-charset utf-8
+# 	ATTR naturalLanguage attributes-natural-language en
+# 	ATTR uri printer-uri $uri
+# 	ATTR integer job-id $job-id
+# 	ATTR name requesting-user-name $user
+#
+# 	STATUS successful-ok
+# 	EXPECT media-col OF-TYPE collection IN-GROUP job-attributes-tag
+# 	EXPECT media-col/media-front-coating OF-TYPE keyword|name IN-GROUP job-attributes-tag WITH-VALUE "none"
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_GRAIN
+# 	NAME "Print-job operation to pass the media-grain attribute along with the request"
+# 	OPERATION Print-Job
+# 	GROUP operation-attributes-tag
+# 		ATTR charset attributes-charset utf-8
+# 		ATTR language attributes-natural-language en
+# 		ATTR uri printer-uri $uri
+# 		ATTR name requesting-user-name $user
+#
+# 	GROUP job-attributes-tag
+# 		ATTR collection media-col{
+# 			MEMBER keyword media-grain x-direction
+# 		}
+#
+# 	FILE $filename
+#
+# 	STATUS successful-ok
+# 	EXPECT job-id OF-TYPE integer IN-GROUP Job-attributes-tag WITH-VALUE >0
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_GRAIN
+#
+# 	NAME "Test media-grain and conditionally dependent attributes"
+# 	OPERATION Get-Job-Attributes
+# 	GROUP operation-attributes-tag
+# 	ATTR charset attributes-charset utf-8
+# 	ATTR naturalLanguage attributes-natural-language en
+# 	ATTR uri printer-uri $uri
+# 	ATTR integer job-id $job-id
+# 	ATTR name requesting-user-name $user
+#
+# 	STATUS successful-ok
+# 	EXPECT media-col OF-TYPE collection IN-GROUP job-attributes-tag
+# 	EXPECT media-col/media-grain OF-TYPE keyword|name IN-GROUP job-attributes-tag WITH-VALUE "x-direction"
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_HOLE_COUNT
+# 	NAME "Print-job operation to pass the media-hole-count attribute along with the request"
+# 	OPERATION Print-Job
+# 	GROUP operation-attributes-tag
+# 		ATTR charset attributes-charset utf-8
+# 		ATTR language attributes-natural-language en
+# 		ATTR uri printer-uri $uri
+# 		ATTR name requesting-user-name $user
+#
+# 	GROUP job-attributes-tag
+# 		ATTR collection media-col{
+# 			MEMBER integer media-hole-count 0
+# 		}
+#
+#
+# 	FILE $filename
+#
+# 	STATUS successful-ok
+# 	EXPECT job-id OF-TYPE integer IN-GROUP Job-attributes-tag WITH-VALUE >0
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_HOLE_COUNT
+# 	NAME "Test media-hole-count and conditionally dependent attributes"
+# 	OPERATION Get-Job-Attributes
+# 	GROUP operation-attributes-tag
+# 		ATTR charset attributes-charset utf-8
+# 		ATTR language attributes-natural-language en
+# 		ATTR uri printer-uri $uri
+# 		ATTR integer job-id $job-id
+#
+# 	STATUS successful-ok
+# 	 EXPECT media-col OF-TYPE collection IN-GROUP job-attributes-tag COUNT 1
+#      EXPECT media-col/media-hole-count OF-TYPE integer COUNT 1 WITH-VALUE 0
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_INFO
+# 	NAME "Print-job operation to pass the media-info attribute along with the request"
+#
+# 	OPERATION Print-Job
+# 	GROUP operation-attributes-tag
+# 		ATTR charset attributes-charset utf-8
+# 		ATTR language attributes-natural-language en
+# 		ATTR uri printer-uri $uri
+# 		ATTR name requesting-user-name $user
+#
+# 	GROUP job-attributes-tag
+# 		ATTR collection media-col{
+# 			MEMBER text media-info "bogus bogus"
+# 		}
+#
+#
+# 	FILE $filename
+#
+# 	STATUS successful-ok
+# 	EXPECT job-id OF-TYPE integer IN-GROUP Job-attributes-tag WITH-VALUE >0
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_INFO
+# 	NAME "Test media-info and conditionally dependent attributes"
+# 	OPERATION Get-Job-Attributes
+# 	GROUP operation-attributes-tag
+# 		ATTR charset attributes-charset utf-8
+# 		ATTR language attributes-natural-language en
+# 		ATTR uri printer-uri $uri
+# 		ATTR integer job-id $job-id
+#
+# 	STATUS successful-ok
+# 	 EXPECT media-col OF-TYPE collection IN-GROUP job-attributes-tag COUNT 1
+#      EXPECT media-col/media-info OF-TYPE text IN-GROUP job-attributes-tag WITH-VALUE "bogus bogus"
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_LEFT_MARGIN
+# 	NAME "Print-job operation to pass the media-left-margin attribute along with the request"
+# 	OPERATION Print-Job
+# 	GROUP operation-attributes-tag
+# 		ATTR charset attributes-charset utf-8
+# 		ATTR language attributes-natural-language en
+# 		ATTR uri printer-uri $uri
+# 		ATTR name requesting-user-name $user
+#
+# 	GROUP job-attributes-tag
+# 		ATTR collection media-col{
+# 			MEMBER integer media-left-margin 0
+# 		}
+#
+#
+# 	FILE $filename
+#
+# 	STATUS successful-ok
+# 	EXPECT job-id OF-TYPE integer IN-GROUP Job-attributes-tag WITH-VALUE >0
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_LEFT_MARGIN
+# 	NAME "Test media-left-margin and conditionally dependent attributes"
+# 	OPERATION Get-Job-Attributes
+# 	GROUP operation-attributes-tag
+# 		ATTR charset attributes-charset utf-8
+# 		ATTR language attributes-natural-language en
+# 		ATTR uri printer-uri $uri
+# 		ATTR integer job-id $job-id
+#
+# 	STATUS successful-ok
+# 	 EXPECT media-col OF-TYPE collection IN-GROUP job-attributes-tag COUNT 1
+#      EXPECT media-col/media-left-margin OF-TYPE integer COUNT 1 WITH-VALUE 0
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_ORDER_COUNT
+# 	NAME "Print-job operation to pass the media-order-count attribute along with the request"
+# 	OPERATION Print-Job
+# 	GROUP operation-attributes-tag
+# 		ATTR charset attributes-charset utf-8
+# 		ATTR language attributes-natural-language en
+# 		ATTR uri printer-uri $uri
+# 		ATTR name requesting-user-name $user
+#
+# 	GROUP job-attributes-tag
+# 		ATTR collection media-col{
+# 			MEMBER integer media-order-count 1
+# 		}
+#
+#
+# 	FILE $filename
+#
+# 	STATUS successful-ok
+# 	EXPECT job-id OF-TYPE integer IN-GROUP Job-attributes-tag WITH-VALUE >0
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_ORDER_COUNT
+# 	NAME "Test media-order-count and conditionally dependent attributes"
+# 	OPERATION Get-Job-Attributes
+# 	GROUP operation-attributes-tag
+# 		ATTR charset attributes-charset utf-8
+# 		ATTR language attributes-natural-language en
+# 		ATTR uri printer-uri $uri
+# 		ATTR integer job-id $job-id
+#
+# 	STATUS successful-ok
+# 	 EXPECT media-col OF-TYPE collection IN-GROUP job-attributes-tag COUNT 1
+#      EXPECT media-col/media-order-count OF-TYPE integer COUNT 1 WITH-VALUE 1
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_PRE_PRINTED
+# 	NAME "Print-job operation to pass the media-pre-printed attribute along with the request"
+# 	OPERATION Print-Job
+# 	GROUP operation-attributes-tag
+# 		ATTR charset attributes-charset utf-8
+# 		ATTR language attributes-natural-language en
+# 		ATTR uri printer-uri $uri
+# 		ATTR name requesting-user-name $user
+#
+# 	GROUP job-attributes-tag
+# 		ATTR collection media-col{
+# 			MEMBER keyword media-pre-printed blank
+# 		}
+#
+# 	FILE $filename
+#
+# 	STATUS successful-ok
+# 	EXPECT job-id OF-TYPE integer IN-GROUP Job-attributes-tag WITH-VALUE >0
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_PRE_PRINTED
+#
+# 	NAME "Test media-pre-printed and conditionally dependent attributes"
+# 	OPERATION Get-Job-Attributes
+# 	GROUP operation-attributes-tag
+# 	ATTR charset attributes-charset utf-8
+# 	ATTR naturalLanguage attributes-natural-language en
+# 	ATTR uri printer-uri $uri
+# 	ATTR integer job-id $job-id
+# 	ATTR name requesting-user-name $user
+#
+# 	STATUS successful-ok
+# 	EXPECT media-col OF-TYPE collection IN-GROUP job-attributes-tag
+# 	EXPECT media-col/media-pre-printed OF-TYPE keyword|name IN-GROUP job-attributes-tag WITH-VALUE "blank"
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_RECYCLED
+# 	NAME "Print-job operation to pass the media-recycled attribute along with the request"
+# 	OPERATION Print-Job
+# 	GROUP operation-attributes-tag
+# 		ATTR charset attributes-charset utf-8
+# 		ATTR language attributes-natural-language en
+# 		ATTR uri printer-uri $uri
+# 		ATTR name requesting-user-name $user
+#
+# 	GROUP job-attributes-tag
+# 		ATTR collection media-col{
+# 			MEMBER keyword media-recycled none
+# 		}
+#
+# 	FILE $filename
+#
+# 	STATUS successful-ok
+# 	EXPECT job-id OF-TYPE integer IN-GROUP Job-attributes-tag WITH-VALUE >0
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_RECYCLED
+#
+# 	NAME "Test media-recycled and conditionally dependent attributes"
+# 	OPERATION Get-Job-Attributes
+# 	GROUP operation-attributes-tag
+# 	ATTR charset attributes-charset utf-8
+# 	ATTR naturalLanguage attributes-natural-language en
+# 	ATTR uri printer-uri $uri
+# 	ATTR integer job-id $job-id
+# 	ATTR name requesting-user-name $user
+#
+# 	STATUS successful-ok
+# 	EXPECT media-col OF-TYPE collection IN-GROUP job-attributes-tag
+# 	EXPECT media-col/media-recycled OF-TYPE keyword|name IN-GROUP job-attributes-tag WITH-VALUE "none"
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_RIGHT_MARGIN
+# 	NAME "Print-job operation to pass the media-right-margin attribute along with the request"
+# 	OPERATION Print-Job
+# 	GROUP operation-attributes-tag
+# 		ATTR charset attributes-charset utf-8
+# 		ATTR language attributes-natural-language en
+# 		ATTR uri printer-uri $uri
+# 		ATTR name requesting-user-name $user
+#
+# 	GROUP job-attributes-tag
+# 		ATTR collection media-col{
+# 			MEMBER integer media-right-margin 0
+# 		}
+#
+#
+# 	FILE $filename
+#
+# 	STATUS successful-ok
+# 	EXPECT job-id OF-TYPE integer IN-GROUP Job-attributes-tag WITH-VALUE >0
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_RIGHT_MARGIN
+# 	NAME "Test media-right-margin and conditionally dependent attributes"
+# 	OPERATION Get-Job-Attributes
+# 	GROUP operation-attributes-tag
+# 		ATTR charset attributes-charset utf-8
+# 		ATTR language attributes-natural-language en
+# 		ATTR uri printer-uri $uri
+# 		ATTR integer job-id $job-id
+#
+# 	STATUS successful-ok
+# 	 EXPECT media-col OF-TYPE collection IN-GROUP job-attributes-tag COUNT 1
+#      EXPECT media-col/media-right-margin OF-TYPE integer COUNT 1 WITH-VALUE 0
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_SIZE
+# 	NAME "Print-job operation to pass the media-size attribute along with the request"
+# 	OPERATION Print-Job
+# 	GROUP operation-attributes-tag
+# 		ATTR charset attributes-charset utf-8
+# 		ATTR language attributes-natural-language en
+# 		ATTR uri printer-uri $uri
+# 		ATTR name requesting-user-name $user
+#
+# 	GROUP job-attributes-tag
+# 		ATTR collection media-size {
+# 				MEMBER integer x-dimension 0
+# 				MEMBER integer y-dimension 0
+# 			}
+#
+#
+# 	FILE $filename
+#
+# 	STATUS successful-ok
+# 	EXPECT job-id OF-TYPE integer IN-GROUP Job-attributes-tag WITH-VALUE >0
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_SIZE
+# 	NAME "Test media-size and conditionally dependent attributes"
+# 	OPERATION Get-Job-Attributes
+# 	GROUP operation-attributes-tag
+# 		ATTR charset attributes-charset utf-8
+# 		ATTR language attributes-natural-language en
+# 		ATTR uri printer-uri $uri
+# 		ATTR integer job-id $job-id
+#
+# 	STATUS successful-ok
+#      EXPECT media-size OF-TYPE collection
+# 	 EXPECT media-size/x-dimension OF-TYPE integer COUNT 1 WITH-VALUE 0
+# 	 EXPECT media-size/y-dimension OF-TYPE integer COUNT 1 WITH-VALUE 0
+#
+# }
+#
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_SOURCE
+# 	NAME "Print-job operation to pass the media-source attribute along with the request"
+# 	OPERATION Print-Job
+# 	GROUP operation-attributes-tag
+# 		ATTR charset attributes-charset utf-8
+# 		ATTR language attributes-natural-language en
+# 		ATTR uri printer-uri $uri
+# 		ATTR name requesting-user-name $user
+#
+# 	GROUP job-attributes-tag
+# 		ATTR keyword media-source alternate
+# 		ATTR collection media-source-properties{
+# 			MEMBER keyword media-source-feed-direction short-edge-first
+# 			MEMBER enum media-source-feed-orientation 1
+# 		}
+#
+# 	FILE $filename
+#
+# 	STATUS successful-ok
+# 	EXPECT job-id OF-TYPE integer IN-GROUP Job-attributes-tag WITH-VALUE >0
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_SOURCE
+#
+# 	NAME "Test media-source and conditionally dependent attributes"
+# 	OPERATION Get-Job-Attributes
+# 	GROUP operation-attributes-tag
+# 	ATTR charset attributes-charset utf-8
+# 	ATTR naturalLanguage attributes-natural-language en
+# 	ATTR uri printer-uri $uri
+# 	ATTR integer job-id $job-id
+# 	ATTR name requesting-user-name $user
+#
+# 	STATUS successful-ok
+# 	EXPECT media-source OF-TYPE keyword IN-GROUP job-attributes-tag WITH-VALUE "alternate"
+# 	EXPECT media-source-properties OF-TYPE collection IN-GROUP job-attributes-tag
+# 	EXPECT media-source-properties/media-source-feed-direction OF-TYPE keyword WITH-VALUE "short-edge-first"
+# 	EXPECT media-source-properties/media-source-feed-orientation OF-TYPE enum WITH-VALUE 1
+#
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_THICKNESS
+# 	NAME "Print-job operation to pass the media-thickness attribute along with the request"
+# 	OPERATION Print-Job
+# 	GROUP operation-attributes-tag
+# 		ATTR charset attributes-charset utf-8
+# 		ATTR language attributes-natural-language en
+# 		ATTR uri printer-uri $uri
+# 		ATTR name requesting-user-name $user
+#
+# 	GROUP job-attributes-tag
+# 		ATTR collection media-col{
+# 			MEMBER integer media-thickness 1
+# 		}
+#
+# 	FILE $filename
+#
+# 	STATUS successful-ok
+# 	EXPECT job-id OF-TYPE integer IN-GROUP Job-attributes-tag WITH-VALUE >0
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_THICKNESS
+#
+# 	NAME "Test media-thickness and conditionally dependent attributes"
+# 	OPERATION Get-Job-Attributes
+# 	GROUP operation-attributes-tag
+# 	ATTR charset attributes-charset utf-8
+# 	ATTR naturalLanguage attributes-natural-language en
+# 	ATTR uri printer-uri $uri
+# 	ATTR integer job-id $job-id
+# 	ATTR name requesting-user-name $user
+#
+# 	STATUS successful-ok
+# 	EXPECT media-col OF-TYPE collection IN-GROUP job-attributes-tag
+# 	EXPECT media-col/media-thickness OF-TYPE integer IN-GROUP job-attributes-tag WITH-VALUE 1
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_TOOTH
+# 	NAME "Print-job operation to pass the media-tooth attribute along with the request"
+# 	OPERATION Print-Job
+# 	GROUP operation-attributes-tag
+# 		ATTR charset attributes-charset utf-8
+# 		ATTR language attributes-natural-language en
+# 		ATTR uri printer-uri $uri
+# 		ATTR name requesting-user-name $user
+#
+# 	GROUP job-attributes-tag
+# 		ATTR collection media-col{
+# 			MEMBER keyword media-tooth fine
+# 		}
+#
+# 	FILE $filename
+#
+# 	STATUS successful-ok
+# 	EXPECT job-id OF-TYPE integer IN-GROUP Job-attributes-tag WITH-VALUE >0
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_TOOTH
+#
+# 	NAME "Test media-tooth and conditionally dependent attributes"
+# 	OPERATION Get-Job-Attributes
+# 	GROUP operation-attributes-tag
+# 	ATTR charset attributes-charset utf-8
+# 	ATTR naturalLanguage attributes-natural-language en
+# 	ATTR uri printer-uri $uri
+# 	ATTR integer job-id $job-id
+# 	ATTR name requesting-user-name $user
+#
+# 	STATUS successful-ok
+# 	EXPECT media-col OF-TYPE collection IN-GROUP job-attributes-tag
+# 	EXPECT media-col/media-tooth OF-TYPE keyword|name IN-GROUP job-attributes-tag WITH-VALUE "fine"
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_TOP_MARGIN
+# 	NAME "Print-job operation to pass the media-top-margin attribute along with the request"
+# 	OPERATION Print-Job
+# 	GROUP operation-attributes-tag
+# 		ATTR charset attributes-charset utf-8
+# 		ATTR language attributes-natural-language en
+# 		ATTR uri printer-uri $uri
+# 		ATTR name requesting-user-name $user
+#
+# 	GROUP job-attributes-tag
+# 		ATTR collection media-col{
+# 			MEMBER integer media-top-margin 0
+# 		}
+#
+#
+# 	FILE $filename
+#
+# 	STATUS successful-ok
+# 	EXPECT job-id OF-TYPE integer IN-GROUP Job-attributes-tag WITH-VALUE >0
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_TOP_MARGIN
+# 	NAME "Test media-top-margin and conditionally dependent attributes"
+# 	OPERATION Get-Job-Attributes
+# 	GROUP operation-attributes-tag
+# 		ATTR charset attributes-charset utf-8
+# 		ATTR language attributes-natural-language en
+# 		ATTR uri printer-uri $uri
+# 		ATTR integer job-id $job-id
+#
+# 	STATUS successful-ok
+# 	 EXPECT media-col OF-TYPE collection IN-GROUP job-attributes-tag COUNT 1
+#      EXPECT media-col/media-top-margin OF-TYPE integer COUNT 1 WITH-VALUE 0
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_TYPE
+# 	NAME "Print-job operation to pass the media-type attribute along with the request"
+# 	OPERATION Print-Job
+# 	GROUP operation-attributes-tag
+# 		ATTR charset attributes-charset utf-8
+# 		ATTR language attributes-natural-language en
+# 		ATTR uri printer-uri $uri
+# 		ATTR name requesting-user-name $user
+#
+# 	GROUP job-attributes-tag
+# 		ATTR keyword media-type auto
+#
+#
+# 	FILE $filename
+#
+# 	STATUS successful-ok
+# 	EXPECT job-id OF-TYPE integer IN-GROUP Job-attributes-tag WITH-VALUE >0
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_TYPE
+# 	NAME "Test media-type and conditionally dependent attributes"
+# 	OPERATION Get-Job-Attributes
+# 	GROUP operation-attributes-tag
+# 		ATTR charset attributes-charset utf-8
+# 		ATTR language attributes-natural-language en
+# 		ATTR uri printer-uri $uri
+# 		ATTR integer job-id $job-id
+#
+# 	STATUS successful-ok
+# 	EXPECT media-type OF-TYPE keyword|name IN-GROUP job-attributes-tag WITH-VALUE "auto"
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_WEIGHT_METRIC
+# 	NAME "Print-job operation to pass the media-weight-metric attribute along with the request"
+# 	OPERATION Print-Job
+# 	GROUP operation-attributes-tag
+# 		ATTR charset attributes-charset utf-8
+# 		ATTR language attributes-natural-language en
+# 		ATTR uri printer-uri $uri
+# 		ATTR name requesting-user-name $user
+#
+# 	GROUP job-attributes-tag
+# 		ATTR collection media-col{
+# 			MEMBER integer media-weight-metric 0
+# 		}
+#
+# 	FILE $filename
+#
+# 	STATUS successful-ok
+# 	EXPECT job-id OF-TYPE integer IN-GROUP Job-attributes-tag WITH-VALUE >0
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_WEIGHT_METRIC
+#
+# 	NAME "Test media-weight-metric and conditionally dependent attributes"
+# 	OPERATION Get-Job-Attributes
+# 	GROUP operation-attributes-tag
+# 	ATTR charset attributes-charset utf-8
+# 	ATTR naturalLanguage attributes-natural-language en
+# 	ATTR uri printer-uri $uri
+# 	ATTR integer job-id $job-id
+# 	ATTR name requesting-user-name $user
+#
+# 	STATUS successful-ok
+# 	EXPECT media-col OF-TYPE collection IN-GROUP job-attributes-tag
+# 	EXPECT media-col/media-weight-metric OF-TYPE integer IN-GROUP job-attributes-tag WITH-VALUE 0
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_PRINT_CONTENT_OPTIMIZE
+# 	NAME "Print-job operation to pass the print-content-optimize attribute along with the request"
+# 	OPERATION Print-Job
+# 	GROUP operation-attributes-tag
+# 		ATTR charset attributes-charset utf-8
+# 		ATTR language attributes-natural-language en
+# 		ATTR uri printer-uri $uri
+# 		ATTR name requesting-user-name $user
+#
+# 	GROUP job-attributes-tag
+# 		ATTR keyword print-content-optimize text
+# 	FILE $filename
+#
+# 	STATUS successful-ok
+# 	EXPECT job-id OF-TYPE integer IN-GROUP Job-attributes-tag WITH-VALUE >0
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_PRINT_CONTENT_OPTIMIZE
+#
+# 	NAME "Test print-content-optimize and conditionally dependent attributes"
+# 	OPERATION Get-Job-Attributes
+# 	GROUP operation-attributes-tag
+# 	ATTR charset attributes-charset utf-8
+# 	ATTR naturalLanguage attributes-natural-language en
+# 	ATTR uri printer-uri $uri
+# 	ATTR integer job-id $job-id
+# 	ATTR name requesting-user-name $user
+#
+# 	STATUS successful-ok
+#
+# 	EXPECT print-content-optimize  OF-TYPE keyword IN-GROUP job-attributes-tag WITH-VALUE "text"
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED SUPPORT_OUTPUT_DEVICE
+# 	NAME "Print-job operation to pass the output-device attribute along with the request"
+# 	OPERATION Print-Job
+# 	GROUP operation-attributes-tag
+# 		ATTR charset attributes-charset utf-8
+# 		ATTR language attributes-natural-language en
+# 		ATTR uri printer-uri $uri
+# 		ATTR name requesting-user-name $user
+#
+# 	GROUP job-attributes-tag
+# 		ATTR name output-device none
+# 	FILE $filename
+#
+# 	STATUS successful-ok
+# 	EXPECT job-id OF-TYPE integer IN-GROUP Job-attributes-tag WITH-VALUE >0
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED SUPPORT_OUTPUT_DEVICE
+#
+# 	NAME "Test output-device and conditionally dependent attributes"
+# 	OPERATION Get-Job-Attributes
+# 	GROUP operation-attributes-tag
+# 	ATTR charset attributes-charset utf-8
+# 	ATTR naturalLanguage attributes-natural-language en
+# 	ATTR uri printer-uri $uri
+# 	ATTR integer job-id $job-id
+# 	ATTR name requesting-user-name $user
+#
+# 	STATUS successful-ok
+#
+# 	EXPECT output-device OF-TYPE name IN-GROUP job-attributes-tag WITH-VALUE "none"
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED SUPPORT_JOB_ACCOUNT_ID
+# 	NAME "Print-job operation to pass the job-account-id attribute along with the request"
+# 	OPERATION Print-Job
+# 	GROUP operation-attributes-tag
+# 		ATTR charset attributes-charset utf-8
+# 		ATTR language attributes-natural-language en
+# 		ATTR uri printer-uri $uri
+# 		ATTR name requesting-user-name $user
+#
+# 	GROUP job-attributes-tag
+# 		ATTR name job-account-id none
+# 	FILE $filename
+#
+# 	STATUS successful-ok
+# 	EXPECT job-id OF-TYPE integer IN-GROUP Job-attributes-tag WITH-VALUE >0
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED SUPPORT_JOB_ACCOUNT_ID
+#
+# 	NAME "Test job-account-id and conditionally dependent attributes"
+# 	OPERATION Get-Job-Attributes
+# 	GROUP operation-attributes-tag
+# 	ATTR charset attributes-charset utf-8
+# 	ATTR naturalLanguage attributes-natural-language en
+# 	ATTR uri printer-uri $uri
+# 	ATTR integer job-id $job-id
+# 	ATTR name requesting-user-name $user
+#
+# 	STATUS successful-ok
+#
+# 	EXPECT job-account-id OF-TYPE name IN-GROUP job-attributes-tag WITH-VALUE "none"
+#
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED SUPPORT_JOB_ACCOUNTING_USER_ID
+# 	NAME "Print-job operation to pass the job-accounting-user-id attribute along with the request"
+# 	OPERATION Print-Job
+# 	GROUP operation-attributes-tag
+# 		ATTR charset attributes-charset utf-8
+# 		ATTR language attributes-natural-language en
+# 		ATTR uri printer-uri $uri
+# 		ATTR name requesting-user-name $user
+#
+# 	GROUP job-attributes-tag
+# 		ATTR name job-account-user-id none
+# 	FILE $filename
+#
+# 	STATUS successful-ok
+# 	EXPECT job-id OF-TYPE integer IN-GROUP Job-attributes-tag WITH-VALUE >0
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED SUPPORT_JOB_ACCOUNTING_USER_ID
+#
+# 	NAME "Test job-account-user-id and conditionally dependent attributes"
+# 	OPERATION Get-Job-Attributes
+# 	GROUP operation-attributes-tag
+# 	ATTR charset attributes-charset utf-8
+# 	ATTR naturalLanguage attributes-natural-language en
+# 	ATTR uri printer-uri $uri
+# 	ATTR integer job-id $job-id
+# 	ATTR name requesting-user-name $user
+#
+# 	STATUS successful-ok
+#
+# 	EXPECT job-account-user-id OF-TYPE name IN-GROUP job-attributes-tag WITH-VALUE "none"
+#
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED SUPPORT_JOB_DELAY_OUTPUT_UNTIL
+# 	NAME "Print-job operation to pass the job-delay-output-until attribute along with the request"
+# 	OPERATION Print-Job
+# 	GROUP operation-attributes-tag
+# 		ATTR charset attributes-charset utf-8
+# 		ATTR language attributes-natural-language en
+# 		ATTR uri printer-uri $uri
+# 		ATTR name requesting-user-name $user
+#
+# 	GROUP job-attributes-tag
+# 		ATTR keyword job-delay-output-until evening
+# 	FILE $filename
+#
+# 	STATUS successful-ok
+# 	EXPECT job-id OF-TYPE integer IN-GROUP Job-attributes-tag WITH-VALUE >0
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED SUPPORT_JOB_DELAY_OUTPUT_UNTIL
+#
+# 	NAME "Test job-delay-output-until and conditionally dependent attributes"
+# 	OPERATION Get-Job-Attributes
+# 	GROUP operation-attributes-tag
+# 	ATTR charset attributes-charset utf-8
+# 	ATTR naturalLanguage attributes-natural-language en
+# 	ATTR uri printer-uri $uri
+# 	ATTR integer job-id $job-id
+# 	ATTR name requesting-user-name $user
+#
+# 	STATUS successful-ok
+#
+# 	EXPECT job-delay-output-until OF-TYPE keyword|name IN-GROUP job-attributes-tag WITH-VALUE "evening"
+#
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED SUPPORT_JOB_SHEETS_COL
+# 	NAME "Print-job operation to pass the job-sheets-col attribute along with the request"
+# 	OPERATION Print-Job
+# 	GROUP operation-attributes-tag
+# 		ATTR charset attributes-charset utf-8
+# 		ATTR language attributes-natural-language en
+# 		ATTR uri printer-uri $uri
+# 		ATTR name requesting-user-name $user
+#
+# 	GROUP job-attributes-tag
+# 		ATTR collection job-sheets-col {
+# 			MEMBER keyword job-sheets none
+# 			MEMBER keyword media na_letter_8.5x11in
+# 			MEMBER collection media-col {
+# 				MEMBER collection media-size {
+# 					MEMBER integer x-dimension 21590
+# 					MEMBER integer y-dimension 27940
+# 				}
+# 			}
+# 		}
+# 	FILE $filename
+#
+# 	STATUS successful-ok
+# 	EXPECT job-id OF-TYPE integer IN-GROUP Job-attributes-tag WITH-VALUE >0
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED SUPPORT_JOB_SHEETS_COL
+#
+# 	NAME "Test job-sheets-col and conditionally dependent attributes"
+# 	OPERATION Get-Job-Attributes
+# 	GROUP operation-attributes-tag
+# 	ATTR charset attributes-charset utf-8
+# 	ATTR naturalLanguage attributes-natural-language en
+# 	ATTR uri printer-uri $uri
+# 	ATTR integer job-id $job-id
+# 	ATTR name requesting-user-name $user
+#
+# 	STATUS successful-ok
+#
+# 	EXPECT job-sheets-col OF-TYPE collection IN-GROUP job-attributes-tag
+# 	EXPECT job-sheets-col/job-sheets OF-TYPE keyword|name WITH-VALUE "none"
+# 	EXPECT job-sheets-col/media OF-TYPE keyword|name WITH-VALUE "na_letter_8.5x11in"
+# 	EXPECT job-sheets-col/media-col OF-TYPE collection
+# 	EXPECT job-sheets-col/media-col/media-size OF-TYPE collection
+# 	EXPECT job-sheets-col/media-col/media-size/x-dimension OF-TYPE integer WITH-VALUE 21590
+# 	EXPECT job-sheets-col/media-col/media-size/y-dimension OF-TYPE integer WITH-VALUE 27940
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED SUPPORT_JOB_SHEETS
+# 	NAME "Print-job operation to pass the job-sheets attribute along with the request"
+# 	OPERATION Print-Job
+# 	GROUP operation-attributes-tag
+# 		ATTR charset attributes-charset utf-8
+# 		ATTR language attributes-natural-language en
+# 		ATTR uri printer-uri $uri
+# 		ATTR name requesting-user-name $user
+#
+# 	GROUP job-attributes-tag
+# 		ATTR keyword job-sheets none
+# 	FILE $filename
+#
+# 	STATUS successful-ok
+# 	EXPECT job-id OF-TYPE integer IN-GROUP Job-attributes-tag WITH-VALUE >0
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED SUPPORT_JOB_SHEETS
+#
+# 	NAME "Test job-sheets and conditionally dependent attributes"
+# 	OPERATION Get-Job-Attributes
+# 	GROUP operation-attributes-tag
+# 	ATTR charset attributes-charset utf-8
+# 	ATTR naturalLanguage attributes-natural-language en
+# 	ATTR uri printer-uri $uri
+# 	ATTR integer job-id $job-id
+# 	ATTR name requesting-user-name $user
+#
+# 	STATUS successful-ok
+#
+# 	EXPECT job-sheets OF-TYPE keyword|name IN-GROUP job-attributes-tag WITH-VALUE "none"
+#
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_CHOICE
+# 	NAME "Print-job operation to pass the media-choice attribute along with the request"
+# 	OPERATION Print-Job
+# 	GROUP operation-attributes-tag
+# 		ATTR charset attributes-charset utf-8
+# 		ATTR language attributes-natural-language en
+# 		ATTR uri printer-uri $uri
+# 		ATTR name requesting-user-name $user
+#
+# 	GROUP job-attributes-tag
+# 		ATTR keyword media-actual none
+# 	FILE $filename
+#
+# 	STATUS successful-ok
+# 	EXPECT job-id OF-TYPE integer IN-GROUP Job-attributes-tag WITH-VALUE >0
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_MEDIA_CHOICE
+#
+# 	NAME "Test media and conditionally dependent attributes"
+# 	OPERATION Get-Job-Attributes
+# 	GROUP operation-attributes-tag
+# 	ATTR charset attributes-charset utf-8
+# 	ATTR naturalLanguage attributes-natural-language en
+# 	ATTR uri printer-uri $uri
+# 	ATTR integer job-id $job-id
+# 	ATTR name requesting-user-name $user
+#
+# 	STATUS successful-ok
+#
+# 	EXPECT media-actual OF-TYPE keyword|name IN-GROUP job-attributes-tag WITH-VALUE "none"
+#
+# }
+#
+#
+# {
+# 	# The name of the test...
+# 	NAME "Print file using Print-Job"
+#
+# 	# The operation to use
+# 	OPERATION Print-Job
+#
+# 	# Attributes, starting in the operation group...
+# 	GROUP operation-attributes-tag
+# 	ATTR charset attributes-charset utf-8
+# 	ATTR language attributes-natural-language en
+# 	ATTR uri printer-uri $uri
+# 	ATTR name requesting-user-name $user
+#
+#
+# 	GROUP job-attributes-tag
+# 	ATTR integer copies 1
+#
+# 	FILE $filename
+#
+# 	# What statuses are OK?
+# 	STATUS successful-ok
+# 	STATUS successful-ok-ignored-or-substituted-attributes
+#
+# 	# What attributes do we expect?
+# 	EXPECT job-id
+# 	EXPECT job-uri
+# }
+#
+# {
+# 	NAME "Get-Job-Attributes Operation"
+# 	OPERATION Get-Job-Attributes
+# 	GROUP operation-attributes-tag
+# 	ATTR charset attributes-charset utf-8
+# 	ATTR naturalLanguage attributes-natural-language en
+# 	ATTR uri printer-uri $uri
+# 	ATTR integer job-id $job-id
+# 	ATTR name requesting-user-name $user
+#
+# 	EXPECT ?serrors-count OF-TYPE integer IN-GROUP job-attributes-tag WITH-ALL-VALUES >-1
+# 	EXPECT ?sprint-content-optimize-actual OF-TYPE keyword IN-GROUP job-attributes-tag
+# 	EXPECT ?swarnings-count OF-TYPE integer IN-GROUP job-attributes-tag WITH-ALL-VALUES >-1
+#
+# }
+# {
+#     SKIP-IF-NOT-DEFINED PRINTER_HAS_PRINT_CONTENT_OPTIMIZE
+# 	SKIP-IF-NOT-DEFINED PHOTO_PRINT_CONTENT
+#
+# 	NAME "Print using print-content-optimize (photo)"
+# 	OPERATION Print-Job
+#
+# 	GROUP operation-attributes-tag
+# 	ATTR charset attributes-charset utf-8
+# 	ATTR language attributes-natural-language en
+# 	ATTR uri printer-uri $uri
+# 	ATTR name requesting-user-name $user
+# 	ATTR name document-name color.jpg
+# 	ATTR mimeMediaType document-format image/jpeg
+#
+# 	GROUP job-attributes-tag
+# 	ATTR integer copies 1
+#     ATTR keyword print-content-optimize photo
+#
+# 	FILE ../libcups/examples/color.jpg
+#
+# 	STATUS successful-ok
+#
+# 	EXPECT job-id OF-TYPE integer IN-GROUP job-attributes-tag WITH-VALUE >0 COUNT 1
+# 	EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1
+# 	EXPECT job-mandatory-attributes OF-TYPE keyword IN-GROUP printer-attributes-tag
+# }
+#
+# {
+#     SKIP-IF-NOT-DEFINED PRINTER_HAS_PRINT_CONTENT_OPTIMIZE
+# 	SKIP-IF-NOT-DEFINED PHOTO_PRINT_CONTENT
+#
+#     NAME "Get job attributes"
+#     OPERATION Get-Job-Attributes
+#
+#     GROUP operation
+# 	ATTR charset attributes-charset utf-8
+# 	ATTR language attributes-natural-language en
+# 	ATTR uri printer-uri $uri
+# 	ATTR integer job-id $job-id
+# 	ATTR name requesting-user-name $user
+#
+# 	STATUS successful-ok
+#
+# 	EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE $job-uri
+# 	EXPECT job-state OF-TYPE enum IN-GROUP job-attributes-tag COUNT 1
+#
+#     EXPECT print-content-optimize OF-TYPE keyword IN-GROUP job-attributes-tag WITH-VALUE photo COUNT 1
+# }
+#
+# {
+#     SKIP-IF-NOT-DEFINED PRINTER_HAS_PRINT_CONTENT_OPTIMIZE
+# 	SKIP-IF-NOT-DEFINED GRAPHICS_PRINT_CONTENT
+#
+# 	NAME "Print using print-content-optimize (graphics)"
+# 	OPERATION Print-Job
+#
+# 	GROUP operation-attributes-tag
+# 	ATTR charset attributes-charset utf-8
+# 	ATTR language attributes-natural-language en
+# 	ATTR uri printer-uri $uri
+# 	ATTR name requesting-user-name $user
+# 	ATTR name document-name testfile.ps					# might need to choose some other file than testfile.ps (vector file)
+# 	ATTR mimeMediaType document-format application/postscript
+#
+# 	GROUP job-attributes-tag
+# 	ATTR integer copies 1
+#     ATTR keyword print-content-optimize graphics
+#
+# 	FILE ../libcups/examples/testfile.ps
+#
+# 	STATUS successful-ok
+#
+# 	EXPECT job-id OF-TYPE integer IN-GROUP job-attributes-tag WITH-VALUE >0 COUNT 1
+# 	EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1
+# }
+#
+# {
+#     SKIP-IF-NOT-DEFINED PRINTER_HAS_PRINT_CONTENT_OPTIMIZE
+# 	SKIP-IF-NOT-DEFINED GRAPHICS_PRINT_CONTENT
+#
+#     NAME "Get job attributes"
+#     OPERATION Get-Job-Attributes
+#
+#     GROUP operation
+# 	ATTR charset attributes-charset utf-8
+# 	ATTR language attributes-natural-language en
+# 	ATTR uri printer-uri $uri
+# 	ATTR integer job-id $job-id
+# 	ATTR name requesting-user-name $user
+#
+# 	STATUS successful-ok
+#
+# 	EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE $job-uri
+# 	EXPECT job-state OF-TYPE enum IN-GROUP job-attributes-tag COUNT 1
+#
+#     EXPECT print-content-optimize OF-TYPE keyword IN-GROUP job-attributes-tag WITH-VALUE graphics COUNT 1
+# }
+#
+# {
+#     SKIP-IF-NOT-DEFINED PRINTER_HAS_PRINT_CONTENT_OPTIMIZE
+# 	SKIP-IF-NOT-DEFINED TEXT_PRINT_CONTENT
+#
+# 	NAME "Print using print-content-optimize (text)"
+# 	OPERATION Print-Job
+#
+# 	GROUP operation-attributes-tag
+# 	ATTR charset attributes-charset utf-8
+# 	ATTR language attributes-natural-language en
+# 	ATTR uri printer-uri $uri
+# 	ATTR name requesting-user-name $user
+# 	ATTR name document-name testfile.txt
+# 	ATTR mimeMediaType document-format text/plain
+#
+# 	GROUP job-attributes-tag
+# 	ATTR integer copies 1
+#     ATTR keyword print-content-optimize text
+#
+# 	FILE ../libcups/examples/testfile.txt
+#
+# 	STATUS successful-ok
+#
+# 	EXPECT job-id OF-TYPE integer IN-GROUP job-attributes-tag WITH-VALUE >0 COUNT 1
+# 	EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1
+# }
+#
+# {
+#     SKIP-IF-NOT-DEFINED PRINTER_HAS_PRINT_CONTENT_OPTIMIZE
+# 	SKIP-IF-NOT-DEFINED TEXT_PRINT_CONTENT
+#
+#     NAME "Get job attributes"
+#     OPERATION Get-Job-Attributes
+#
+#     GROUP operation
+# 	ATTR charset attributes-charset utf-8
+# 	ATTR language attributes-natural-language en
+# 	ATTR uri printer-uri $uri
+# 	ATTR integer job-id $job-id
+# 	ATTR name requesting-user-name $user
+#
+# 	STATUS successful-ok
+#
+# 	EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE $job-uri
+# 	EXPECT job-state OF-TYPE enum IN-GROUP job-attributes-tag COUNT 1
+#
+#     EXPECT print-content-optimize OF-TYPE keyword IN-GROUP job-attributes-tag WITH-VALUE text COUNT 1
+# }
+#
+# {
+#     SKIP-IF-NOT-DEFINED PRINTER_HAS_PRINT_CONTENT_OPTIMIZE
+# 	SKIP-IF-NOT-DEFINED TEXT_AND_GRAPHICS_PRINT_CONTENT
+#
+# 	NAME "Print using print-content-optimize (text-and-graphics)"
+# 	OPERATION Print-Job
+#
+# 	GROUP operation-attributes-tag
+# 	ATTR charset attributes-charset utf-8
+# 	ATTR language attributes-natural-language en
+# 	ATTR uri printer-uri $uri
+# 	ATTR name requesting-user-name $user
+# 	ATTR name document-name onepage-letter.pdf				# might need to choose some other file than onepage-letter.pdf (vector file)
+# 	ATTR mimeMediaType document-format application/pdf
+#
+# 	GROUP job-attributes-tag
+# 	ATTR integer copies 1
+#     ATTR keyword print-content-optimize "text-and-graphics"
+#
+# 	FILE ../libcups/examples/onepage-letter.pdf
+#
+# 	STATUS successful-ok
+#
+# 	EXPECT job-id OF-TYPE integer IN-GROUP job-attributes-tag WITH-VALUE >0 COUNT 1
+# 	EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1
+# }
+#
+# {
+#     SKIP-IF-NOT-DEFINED PRINTER_HAS_PRINT_CONTENT_OPTIMIZE
+# 	SKIP-IF-NOT-DEFINED TEXT_AND_GRAPHICS_PRINT_CONTENT
+#
+#     NAME "Get job attributes"
+#     OPERATION Get-Job-Attributes
+#
+#     GROUP operation
+# 	ATTR charset attributes-charset utf-8
+# 	ATTR language attributes-natural-language en
+# 	ATTR uri printer-uri $uri
+# 	ATTR integer job-id $job-id
+# 	ATTR name requesting-user-name $user
+#
+# 	STATUS successful-ok
+#
+# 	EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE $job-uri
+# 	EXPECT job-state OF-TYPE enum IN-GROUP job-attributes-tag COUNT 1
+#
+#     EXPECT print-content-optimize OF-TYPE keyword IN-GROUP job-attributes-tag WITH-VALUE "text-and-graphics" COUNT 1
+# }
+#
+# {
+# 	SKIP-IF-DEFINED output-device
+# 	SKIP-IF-NOT-DEFINED SUPPORT_OUTPUT_DEVICE
+#
+# 	NAME "Display output-device-supported values"
+# 	OPERATION Get-Printer-Attributes
+#
+# 	GROUP operation-attributes-tag
+# 	ATTR charset attributes-charset utf-8
+# 	ATTR language attributes-natural-language en
+# 	ATTR uri printer-uri $uri
+#
+# 	STATUS successful-ok
+#
+#     EXPECT output-device-supported OF-TYPE name IN-GROUP printer-attributes-tag
+# 	DISPLAY output-device-supported
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED output-device
+#     SKIP-IF-NOT-DEFINED SUPPORT_OUTPUT_DEVICE
+#
+# 	NAME "Print using output-device"
+# 	OPERATION Print-Job
+#
+# 	GROUP operation-attributes-tag
+# 	ATTR charset attributes-charset utf-8
+# 	ATTR language attributes-natural-language en
+# 	ATTR uri printer-uri $uri
+# 	ATTR name requesting-user-name $user
+# 	ATTR mimeMediaType document-format $filetype
+#
+# 	GROUP job-attributes-tag
+# 	ATTR integer copies 1
+#     ATTR name output-device $output-device
+#
+# 	FILE $filename
+#
+# 	STATUS successful-ok
+#
+# 	EXPECT job-id OF-TYPE integer IN-GROUP job-attributes-tag WITH-VALUE >0 COUNT 1
+# 	EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1
+# }
+#
+# {
+# 	SKIP-IF-NOT-DEFINED output-device
+#     SKIP-IF-NOT-DEFINED SUPPORT_OUTPUT_DEVICE
+#
+#     NAME "Get job attributes"
+#     OPERATION Get-Job-Attributes
+#
+#     GROUP operation
+# 	ATTR charset attributes-charset utf-8
+# 	ATTR language attributes-natural-language en
+# 	ATTR uri printer-uri $uri
+# 	ATTR integer job-id $job-id
+# 	ATTR name requesting-user-name $user
+#
+# 	STATUS successful-ok
+#
+# 	EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE $job-uri
+# 	EXPECT job-state OF-TYPE enum IN-GROUP job-attributes-tag COUNT 1
+#
+#     EXPECT output-device OF-TYPE name IN-GROUP job-attributes-tag WITH-VALUE $output-device COUNT 1
+# }
+# {
+#
+#     NAME "Print test page using Create-Job"
+#
+#     OPERATION Create-Job
+#
+#     GROUP operation-attributes-tag
+#         ATTR charset attributes-charset utf-8
+#         ATTR language attributes-natural-language en
+#         ATTR uri printer-uri $uri
+#         ATTR name requesting-user-name $user
+#
+#     GROUP job-attributes-tag
+#         ATTR integer copies 1
+#
+#     STATUS successful-ok
+#
+#     EXPECT job-id
+#     EXPECT job-uri
+#
+# }
+# {
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_CANCEL_MY_JOBS
+#
+# 	NAME "Cancel-My-Jobs"
+# 	OPERATION Cancel-My-Jobs
+#
+# 	GROUP operation
+# 	ATTR charset attributes-charset utf-8
+# 	ATTR language attributes-natural-language en
+# 	ATTR uri printer-uri $uri
+# 	ATTR integer job-id $job-id
+# 	ATTR name requesting-user-name $user
+#
+# 	STATUS successful-ok
+#
+# 	EXPECT ?job-ids OF-TYPE integer IN-GROUP printer-attributes-tag
+#
+# }
+# {
+#
+#     NAME "Print test page using Create-Job"
+#
+#     OPERATION Create-Job
+#
+#     GROUP operation-attributes-tag
+#         ATTR charset attributes-charset utf-8
+#         ATTR language attributes-natural-language en
+#         ATTR uri printer-uri $uri
+#         ATTR name requesting-user-name $user
+#
+#     GROUP job-attributes-tag
+#         ATTR integer copies 1
+#
+#     STATUS successful-ok
+#
+#     EXPECT job-id
+#     EXPECT job-uri
+#
+# }
+# {
+#
+# 	SKIP-IF-NOT-DEFINED PRINTER_HAS_CLOSE_JOB
+#
+# 	NAME "Close-Job"
+# 	OPERATION Close-Job
+#
+# 	GROUP operation
+# 	ATTR charset attributes-charset utf-8
+# 	ATTR language attributes-natural-language en
+# 	ATTR uri printer-uri $uri
+# 	ATTR integer job-id $job-id
+# 	ATTR name requesting-user-name $user
+#
+# 	STATUS successful-ok
+#
+# 	EXPECT ?job-state OF-TYPE enum IN-GROUP job-attributes-tag COUNT 1
+# 	EXPECT ?job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
+# 	EXPECT ?job-state-message OF-TYPE text IN-GROUP job-attributes-tag
+# 	EXPECT ?number-of-intervening-jobs OF-TYPE integer
+# 	       IN-GROUP job-attributes-tag WITH-VALUE >-1
+#
+# }
+#
+#
+# #{
+# #	SKIP-IF-NOT-DEFINED PRINTER_HAS_CANCEL_JOBS
+# #
+# #	NAME "Cancel Jobs"
+# #    OPERATION Cancel-Jobs
+# #
+# #    GROUP operation
+# #	ATTR charset attributes-charset utf-8
+# #	ATTR language attributes-natural-language en
+# #	ATTR uri printer-uri $uri
+# #	ATTR integer job-ids $job-ids
+# #	ATTR name requesting-user-name $user
+# #
+# #	STATUS successful-ok
+# #
+# #}
