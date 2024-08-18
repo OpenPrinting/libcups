@@ -25,6 +25,40 @@ exception to allow linking against GNU GPL2-only software.  See the files
 `LICENSE` and `NOTICE` for more information.
 
 
+Getting the Code
+----------------
+
+*Do not use the ZIP file available via the Github "Code" button on the main*
+*project page, as that archive is missing the PDFio submodule and will not*
+*compile.*
+
+The source code is available in release tarballs or via the Github repository.
+For a release tarball, run the following commands:
+
+    tar xvzf libcups-VERSION.tar.gz
+    cd libcups-VERSION
+
+Similarly, the release ZIP file can be extracted with the following commands:
+
+    unzip libcups-VERSION.zip
+    cd libcups-VERSION
+
+From the Github sources, clone the repository with the `--recurse-submodules`
+option *or* use the `git submodule` commands:
+
+    git clone --recurse-submodules git@github.com:OpenPrinting/libcups.git
+    cd libcups
+
+    git clone git@github.com:OpenPrinting/libcups.git
+    cd libcups
+    git submodule update --init --recursive
+
+To update an already-cloned repository:
+
+    git pull
+    git submodule update --init --recursive
+
+
 Reading the Documentation
 -------------------------
 
