@@ -1,0 +1,34 @@
+#
+# PWG 5101.1-2023: Media Standardized Names v2.1 (MSN)
+#
+# https://ftp.pwg.org/pub/pwg/candidates/cs-pwgmsn21-20230915-5101.1.pdf
+#
+# Copyright © 2022-2024 by OpenPrinting.
+# Copyright © 2007-2017 by Apple Inc.
+# Copyright © 2001-2006 by Easy Software Products. All rights reserved.
+#
+# Licensed under Apache License v2.0.  See the file "LICENSE" for more
+# information.
+#
+
+# Regular expression for PWG self-describing media size names (eek!)
+DEFINE MEDIA_REGEX "/^(choice(_((custom|na|asme|roc|oe|roll)_[a-z0-9][-a-z0-9]*_([1-9][0-9]*(\.[0-9]*[1-9])?|0\.[0-9]*[1-9])x([1-9][0-9]*(\.[0-9]*[1-9])?|0\.[0-9]*[1-9])in|(custom|iso|jis|jpn|prc|om|roll)_[a-z0-9][-a-z0-9]*_([1-9][0-9]*(\.[0-9]*[1-9])?|0\.[0-9]*[1-9])x([1-9][0-9]*(\.[0-9]*[1-9])?|0\.[0-9]*[1-9])mm)){2,}|(custom|na|asme|roc|oe|roll)_[a-z0-9][-a-z0-9]*_([1-9][0-9]*(\.[0-9]*[1-9])?|0\.[0-9]*[1-9])x([1-9][0-9]*(\.[0-9]*[1-9])?|0\.[0-9]*[1-9])in|(custom|iso|jis|jpn|prc|om|roll)_[a-z0-9][-a-z0-9]*_([1-9][0-9]*(\.[0-9]*[1-9])?|0\.[0-9]*[1-9])x([1-9][0-9]*(\.[0-9]*[1-9])?|0\.[0-9]*[1-9])mm)$$/"
+
+
+# Simple test of media-xxx values...
+{
+    NAME "PWG 5101.1: Self-Describing Media Size Names"
+    OPERATION Get-Printer-Attributes
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR name requesting-user-name $user
+    ATTR mimeMediaType document-format application/octet-stream
+
+    STATUS successful-ok
+
+    EXPECT media-default OF-TYPE keyword|name COUNT 1 IN-GROUP printer-attributes-tag WITH-VALUE "$MEDIA_REGEX"
+    EXPECT ?media-ready OF-TYPE keyword|name IN-GROUP printer-attributes-tag WITH-ALL-VALUES "$MEDIA_REGEX"
+    EXPECT media-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag WITH-ALL-VALUES "$MEDIA_REGEX"
+}
