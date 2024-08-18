@@ -1,0 +1,103 @@
+#
+# Top-level Makefile for IPP sample implementations.
+#
+# Copyright © 2014-2022 by the Printer Working Group.
+#
+# Licensed under Apache License v2.0.  See the file "LICENSE" for more
+# information.
+#
+# Usage:
+#
+#   ./ipptool -t PRINTER-URI pwg5100.3.test
+#
+
+{
+    NAME "PWG 5100.3-20YY: Required Attributes"
+    OPERATION Get-Printer-Attributes
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR language attributes-natural-language en
+    ATTR uri printer-uri $uri
+
+    STATUS successful-ok
+
+    EXPECT cover-back-supported OF-TYPE keyword IN-GROUP printer-attributes-tag DEFINE-MATCH HAVE_COVER_BACK
+    EXPECT cover-back-default OF-TYPE collection|no-value IN-GROUP printer-attributes-tag COUNT 1 IF-DEFINED HAVE_COVER_BACK
+
+    EXPECT cover-front-supported OF-TYPE keyword IN-GROUP printer-attributes-tag DEFINE-MATCH HAVE_COVER_FRONT
+    EXPECT cover-front-default OF-TYPE collection|no-value IN-GROUP printer-attributes-tag COUNT 1 IF-DEFINED HAVE_COVER_FRONT
+
+    EXPECT cover-type-supported OF-TYPE keyword IN-GROUP printer-attributes-tag IF-DEFINED HAVE_COVER_BACK
+    EXPECT cover-type-supported OF-TYPE keyword IN-GROUP printer-attributes-tag IF-DEFINED HAVE_COVER_FRONT
+
+    EXPECT image-orientation-default OF-TYPE enum|no-value IN-GROUP printer-attributes-tag COUNT 1
+    EXPECT image-orientation-supported OF-TYPE enum IN-GROUP printer-attributes-tag
+
+    EXPECT imposition-template-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag DEFINE-MATCH HAVE_IMPOSITION_TEMPLATE
+    EXPECT imposition-template-default OF-TYPE keyword|NAME IN-GROUP printer-attributes-tag COUNT 1 IF-DEFINED HAVE_IMPOSITION_TEMPLATE
+
+    EXPECT insert-count-supported OF-TYPE rangeOfInteger IN-GROUP printer-attributes-tag COUNT 1
+    EXPECT insert-sheet-default OF-TYPE collection|no-value IN-GROUP printer-attributes-tag COUNT 1
+    EXPECT insert-sheet-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE "insert-after-page-number"
+    EXPECT insert-sheet-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE "insert-count"
+    EXPECT insert-sheet-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE "media"
+    EXPECT insert-sheet-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE "media-col"
+
+    EXPECT job-error-sheet-default OF-TYPE collection|no-value IN-GROUP printer-attributes-tag COUNT 1
+    EXPECT job-error-sheet-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE job-error-sheet-type
+    EXPECT job-error-sheet-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE job-error-sheet-when
+    EXPECT job-error-sheet-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE media
+    EXPECT job-error-sheet-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE media-col
+
+    EXPECT job-error-sheet-type-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE none
+    EXPECT job-error-sheet-type-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE standard
+
+    EXPECT job-error-sheet-when-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE always
+    EXPECT job-error-sheet-when-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE on-error
+
+    EXPECT job-message-to-operator-supported OF-TYPE boolean IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE true
+
+    EXPECT job-sheet-message-supported OF-TYPE boolean IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE true
+
+    EXPECT separator-sheets-default OF-TYPE collection|no-value IN-GROUP printer-attributes-tag COUNT 1
+    EXPECT separator-sheets-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE separator-sheets-type
+    EXPECT separator-sheets-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE media
+    EXPECT separator-sheets-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE media-col
+    EXPECT separator-sheets-type-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE both-sheets
+    EXPECT separator-sheets-type-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE end-sheet
+    EXPECT separator-sheets-type-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE none
+    EXPECT separator-sheets-type-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE slip-sheets
+    EXPECT separator-sheets-type-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE start-sheet
+
+    EXPECT x-image-position-default OF-TYPE keyword IN-GROUP printer-attributes-tag COUNT 1
+    EXPECT x-image-position-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE center
+    EXPECT x-image-position-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE left
+    EXPECT x-image-position-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE none
+    EXPECT x-image-position-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE right
+
+    EXPECT x-image-shift-default OF-TYPE integer IN-GROUP printer-attributes-tag COUNT 1
+    EXPECT x-image-shift-supported OF-TYPE rangeOfInteger IN-GROUP printer-attributes-tag COUNT 1
+
+    EXPECT x-side1-image-shift-default OF-TYPE integer IN-GROUP printer-attributes-tag COUNT 1
+    EXPECT x-side1-image-shift-supported OF-TYPE rangeOfInteger IN-GROUP printer-attributes-tag COUNT 1
+
+    EXPECT x-side2-image-shift-default OF-TYPE integer IN-GROUP printer-attributes-tag COUNT 1
+    EXPECT x-side2-image-shift-supported OF-TYPE rangeOfInteger IN-GROUP printer-attributes-tag COUNT 1
+
+    EXPECT y-image-position-default OF-TYPE keyword IN-GROUP printer-attributes-tag COUNT 1
+    EXPECT y-image-position-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE bottom
+    EXPECT y-image-position-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE center
+    EXPECT y-image-position-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE none
+    EXPECT y-image-position-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE top
+
+    EXPECT y-image-shift-default OF-TYPE integer IN-GROUP printer-attributes-tag COUNT 1
+    EXPECT y-image-shift-supported OF-TYPE rangeOfInteger IN-GROUP printer-attributes-tag COUNT 1
+
+    EXPECT y-side1-image-shift-default OF-TYPE integer IN-GROUP printer-attributes-tag COUNT 1
+    EXPECT y-side1-image-shift-supported OF-TYPE rangeOfInteger IN-GROUP printer-attributes-tag COUNT 1
+
+    EXPECT y-side2-image-shift-default OF-TYPE integer IN-GROUP printer-attributes-tag COUNT 1
+    EXPECT y-side2-image-shift-supported OF-TYPE rangeOfInteger IN-GROUP printer-attributes-tag COUNT 1
+}
+# TODO: Add print tests for imposition, covers, error sheets, etc.
