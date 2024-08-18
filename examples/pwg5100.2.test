@@ -34,6 +34,7 @@
 
     STATUS successful-ok
 
+    EXPECT output-bin-default OF-TYPE keyword|name IN-GROUP printer-attributes-tag COUNT 1 IF-DEFINED REQUIRE_OUTPUT_BIN
     EXPECT output-bin-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag IF-DEFINED REQUIRE_OUTPUT_BIN
     EXPECT output-bin-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag DEFINE-MATCH PRINTER_HAS_OUTPUT_BIN
 
