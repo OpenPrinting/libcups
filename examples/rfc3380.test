@@ -1,0 +1,71 @@
+#
+# RFC 3380: IPP Job and Printer Administrative Operations
+#
+# https://www.rfc-editor.org/rfc/rfc3380.html
+#
+# Copyright © 2024 by OpenPrinting.
+#
+# Usage:
+#
+#   ./ipptool [OPTIONS] -f FILENAME -t PRINTER-URI rfc3380.test
+#
+# Options:
+#
+#   -d REQUIRE_RFC3380=1      Require support for RFC 3380.
+#
+
+{
+    NAME "RFC 3380: Operations, Attributes, and Values"
+    OPERATION Get-Printer-Attributes
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR language attributes-natural-language en
+    ATTR uri printer-uri $uri
+
+    STATUS successful-ok
+
+    # Operations
+    EXPECT operations-supported OF-TYPE enum IN-GROUP printer-attributes-tag
+    EXPECT operations-supported WITH-VALUE 0x0013 IF-DEFINED REQUIRE_RFC3380
+    EXPECT operations-supported WITH-VALUE 0x0014 IF-DEFINED REQUIRE_RFC3380
+    EXPECT operations-supported WITH-VALUE 0x0015 IF-DEFINED REQUIRE_RFC3380
+
+    EXPECT operations-supported WITH-VALUE 0x0013 DEFINE-MATCH PRINTER_HAS_SET_PRINTER_ATTRIBUTES
+        EXPECT operations-supported WITH-VALUE 0x0015 IF-DEFINED PRINTER_HAS_SET_PRINTER_ATTRIBUTES
+    EXPECT operations-supported WITH-VALUE 0x0014 DEFINE-MATCH PRINTER_HAS_SET_JOB_ATTRIBUTES
+    EXPECT operations-supported WITH-VALUE 0x0015 DEFINE-MATCH PRITNER_HAS_GET_PRINTER_SUPPORTED_VALUES
+        EXPECT operations-supported WITH-VALUE 0x0013 IF-DEFINED PRINTER_HAS_GET_PRINTER_SUPPORTED_VALUES
+
+    # Attributes
+    EXPECT ?document-format-varying-attributes OF-TYPE keyword IN-GROUP printer-attributes-tag
+
+    EXPECT job-settable-attributes-supported IF-DEFINED REQUIRE_RFC3380
+    EXPECT job-settable-attributes-supported IF-DEFINED PRINTER_HAS_SET_JOB_ATTRIBUTES
+    EXPECT ?job-settable-attributes-supported OF-TYPE keyword IN-GROUP printer-attributes-tag
+
+    EXPECT printer-message-from-operator DEFINE-MATCH PRINTER_HAS_PRINTER_MESSAGE
+    EXPECT printer-message-date-time IF-DEFINED PRINTER_HAS_PRINTER_MESSAGE
+    EXPECT ?printer-message-date-time OF-TYPE dateTime|no-value IN-GROUP printer-attributes-tag COUNT 1
+    EXPECT printer-message-time IF-DEFINED PRINTER_HAS_PRINTER_MESSAGE
+    EXPECT ?printer-message-time OF-TYPE integer|no-value IN-GROUP printer-attributes-tag COUNT 1
+
+    EXPECT printer-settable-attributes-supported IF-DEFINED REQUIRE_RFC3380
+    EXPECT printer-settable-attributes-supported IF-DEFINED PRINTER_HAS_SET_PRINTER_ATTRIBUTES
+    EXPECT ?printer-settable-attributes-supported OF-TYPE keyword IN-GROUP printer-attributes-tag
+
+    EXPECT printer-xri-supported DEFINE-MATCH PRINTER_HAS_PRINTER_XRI
+    EXPECT ?printer-xri-supported OF-TYPE collection IN-GROUP printer-attributes-tag
+    EXPECT printer-xri-supported/xri-authentication IF-DEFINED PRINTER_HAS_PRINTER_XRI
+    EXPECT-ALL ?printer-xri-supported/xri-authentication OF-TYPE keyword COUNT 1 WITH-VALUE-FROM uri-authentication-supported
+    EXPECT printer-xri-supported/xri-security IF-DEFINED PRINTER_HAS_PRINTER_XRI
+    EXPECT-ALL ?printer-xri-supported/xri-security OF-TYPE keyword COUNT 1 WITH-VALUE-FROM uri-authentication-supported
+    EXPECT printer-xri-supported/xri-uri IF-DEFINED PRINTER_HAS_PRINTER_XRI
+    EXPECT-ALL ?printer-xri-supported/xri-uri OF-TYPE uri COUNT 1 WITH-VALUE-FROM printer-uri-supported
+
+    EXPECT xri-authentication-supported IF-DEFINED PRINTER_HAS_PRINTER_XRI
+    EXPECT ?xri-authentication-supported OF-TYPE keyword IN-GROUP printer-attributes-tag
+    EXPECT xri-security-supported IF-DEFINED PRINTER_HAS_PRINTER_XRI
+    EXPECT ?xri-security-supported OF-TYPE keyword IN-GROUP printer-attributes-tag
+    EXPECT xri-uri-scheme-supported IF-DEFINED PRINTER_HAS_PRINTER_XRI
+    EXPECT ?xri-uri-scheme-supported OF-TYPE uriScheme IN-GROUP printer-attributes-tag WITH-ALL-VALUES "/^(ipp|ipps)$$/"
+}
