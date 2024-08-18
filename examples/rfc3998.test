@@ -1,0 +1,72 @@
+#
+# RFC 3998: IPP Job and Printer Administrative Operations
+#
+# https://www.rfc-editor.org/rfc/rfc3998.html
+#
+# Copyright © 2024 by OpenPrinting.
+#
+# Usage:
+#
+#   ./ipptool [OPTIONS] -f FILENAME -t PRINTER-URI rfc3998.test
+#
+# Options:
+#
+#   -d NOPRINT=1              Disable the print tests.
+#   -d REQUIRE_RFC3998=1      Require support for RFC 3998.
+#
+
+{
+    NAME "RFC 3998: Operations, Attributes, and Values"
+    OPERATION Get-Printer-Attributes
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR language attributes-natural-language en
+    ATTR uri printer-uri $uri
+
+    STATUS successful-ok
+
+    # Operations
+    EXPECT operations-supported OF-TYPE enum IN-GROUP printer-attributes-tag
+    EXPECT operations-supported WITH-VALUE 0x0022 DEFINE-MATCH PRINTER_HAS_ENABLE_PRINTER
+    EXPECT operations-supported WITH-VALUE 0x0023 DEFINE-MATCH PRINTER_HAS_DISABLE_PRINTER
+    EXPECT operations-supported WITH-VALUE 0x0024 DEFINE-MATCH PRINTER_HAS_PAUSE_PRINTER_AFTER_CURRENT_JOB
+    EXPECT operations-supported WITH-VALUE 0x0025 DEFINE-MATCH PRINTER_HAS_HOLD_NEW_JOBS
+    EXPECT operations-supported WITH-VALUE 0x0026 DEFINE-MATCH PRINTER_HAS_RELEASE_HELD_NEW_JOBS
+    EXPECT operations-supported WITH-VALUE 0x0027 DEFINE-MATCH PRINTER_HAS_DEACTIVATE_PRINTER
+    EXPECT operations-supported WITH-VALUE 0x0028 DEFINE-MATCH PRINTER_HAS_ACTIVATE_PRINTER
+    EXPECT operations-supported WITH-VALUE 0x0029 DEFINE-MATCH PRINTER_HAS_RESTART_PRINTER
+    EXPECT operations-supported WITH-VALUE 0x002A DEFINE-MATCH PRINTER_HAS_SHUTDOWN_PRINTER
+    EXPECT operations-supported WITH-VALUE 0x002B DEFINE-MATCH PRINTER_HAS_STARTUP_PRINTER
+
+    EXPECT operations-supported WITH-VALUE 0x002C DEFINE-MATCH PRINTER_HAS_REPROCESS_JOB
+    EXPECT operations-supported WITH-VALUE 0x002D DEFINE-MATCH PRINTER_HAS_CANCEL_CURRENT_JOB
+    EXPECT operations-supported WITH-VALUE 0x002E DEFINE-MATCH PRINTER_HAS_SUSPEND_CURRENT_JOB
+    EXPECT operations-supported WITH-VALUE 0x002F DEFINE-MATCH PRINTER_HAS_RESUME_JOB
+    EXPECT operations-supported WITH-VALUE 0x0030 DEFINE-MATCH PRINTER_HAS_PROMOTE_JOB
+    EXPECT operations-supported WITH-VALUE 0x0031 DEFINE-MATCH PRINTER_HAS_SCHEDULE_JOB_AFTER
+
+    # Conditionally required operations from section 11...
+    EXPECT operations-supported WITH-VALUE 0x0023 IF-DEFINED PRINTER_HAS_ENABLE_PRINTER
+    EXPECT operations-supported WITH-VALUE 0x0022 IF-DEFINED PRINTER_HAS_DISABLE_PRINTER
+    EXPECT operations-supported WITH-VALUE 0x0011 IF-DEFINED PRINTER_HAS_PAUSE_PRINTER_AFTER_CURRENT_JOB # Resume-Printer
+    EXPECT operations-supported WITH-VALUE 0x0026 IF-DEFINED PRINTER_HAS_HOLD_NEW_JOBS
+    EXPECT operations-supported WITH-VALUE 0x0025 IF-DEFINED PRINTER_HAS_RELEASE_HELD_NEW_JOBS
+    EXPECT operations-supported WITH-VALUE 0x0028 IF-DEFINED PRINTER_HAS_DEACTIVATE_PRINTER # Activate-Printer
+    EXPECT operations-supported WITH-VALUE 0x0023 IF-DEFINED PRINTER_HAS_DEACTIVATE_PRINTER # Disable-Printer
+    EXPECT operations-supported WITH-VALUE 0x0024 IF-DEFINED PRINTER_HAS_DEACTIVATE_PRINTER # Pause-Printer-After-Current-Job
+    EXPECT operations-supported WITH-VALUE 0x0027 IF-DEFINED PRINTER_HAS_ACTIVATE_PRINTER # Deactivate-Printer
+    EXPECT operations-supported WITH-VALUE 0x0022 IF-DEFINED PRINTER_HAS_ACTIVATE_PRINTER # Enable-Printer
+    EXPECT operations-supported WITH-VALUE 0x0011 IF-DEFINED PRINTER_HAS_ACTIVATE_PRINTER # Resume-Printer
+    EXPECT operations-supported WITH-VALUE 0x002F IF-DEFINED PRINTER_HAS_SUSPEND_CURRENT_JOB
+    EXPECT operations-supported WITH-VALUE 0x002E IF-DEFINED PRINTER_HAS_RESUME_JOB
+    EXPECT operations-supported WITH-VALUE 0x0031 IF-DEFINED PRINTER_HAS_PROMOTE_JOB
+
+    # Attributes
+    EXPECT parent-printers-supported IF-DEFINED PRINTER_HAS_SUBORDINATE_PRINTERS
+    EXPECT ?parent-printers-supported OF-TYPE uri IN-GROUP printer-attributes-tag WITH-ALL-SCHEMES "/^(ipp|ipps)$$/"
+
+    EXPECT subordinate-printers-supported IF-DEFINED PRINTER_HAS_SUBORDINATE_PRINTERS
+    EXPECT ?subordinate-printers-supported OF-TYPE uri IN-GROUP printer-attributes-tag WITH-ALL-SCHEMES "/^(ipp|ipps)$$/"
+
+
+}
