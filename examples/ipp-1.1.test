@@ -1,7 +1,7 @@
 #
 # IPP/1.1 test suite.
 #
-# Copyright © 2022 by OpenPrinting.
+# Copyright © 2022-2024 by OpenPrinting.
 # Copyright © 2007-2017 by Apple Inc.
 # Copyright © 2001-2006 by Easy Software Products. All rights reserved.
 #
@@ -10,19 +10,20 @@
 #
 # Usage:
 #
-#   ./ipptool -f filename [-d document-uri=SOMEURI] -t printer-uri ipp-1.1.test
-#   ./ipptool -f filename -d NOPRINT=1 -t printer-uri ipp-1.1.test
+#   ./ipptool -f FILENAME [-d document-uri=SOMEURI] -t PRINTER-URI ipp-1.1.test
+#   ./ipptool -f FILENAME -d NOPRINT=1 -t PRINTER-URI ipp-1.1.test
 #
 # The latter form disables all but the basic file printing.
 #
 
 # Regular expressions for URI schemes:
 #
-#   HTTP_URI_SCHEME - Matches strings beginning with http:// or https://
-#   IPP_URI_SCHEME  - Matches strings beginning with ipp:// or ipps://
+#   HTTP_URI_REGEX - Matches strings beginning with http:// or https://
+#   IPP_URI_REGEX  - Matches strings beginning with ipp:// or ipps://
 
-DEFINE HTTP_URI_SCHEME "/^https?://.+$$/"
-DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
+DEFINE HTTP_URI_REGEX "/^https?://.+$$/"
+DEFINE IPP_URI_REGEX "/^ipps?://.+$$/"
+
 
 # Test that a request-id value of 0 is not accepted.
 #
@@ -94,7 +95,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     ATTR uri printer-uri $uri
 
     STATUS successful-ok
-    EXPECT printer-uri-supported OF-TYPE uri WITH-ALL-VALUES "$IPP_URI_SCHEME"
+    EXPECT printer-uri-supported OF-TYPE uri WITH-ALL-VALUES "$IPP_URI_REGEX"
 }
 
 
@@ -154,7 +155,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     STATUS server-error-job-canceled
     STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
 
-    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_REGEX"
     EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
     EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
     EXPECT job-state WITH-VALUE 7,8,9 DEFINE-MATCH PRINT_JOB_COMPLETED
@@ -163,6 +164,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     EXPECT ?number-of-intervening-jobs OF-TYPE integer
 	   IN-GROUP job-attributes-tag WITH-VALUE >-1
 }
+
 
 # Test Validate-Job operation
 #
@@ -204,38 +206,43 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     DISPLAY color-supported
     DISPLAY compression-supported
     DISPLAY document-format-supported
-    DISPLAY finishings-supported
     DISPLAY ipp-versions-supported
-    DISPLAY job-sheets-supported
     DISPLAY media-supported
-    DISPLAY number-up-supported
     DISPLAY operations-supported
     DISPLAY pages-per-minute
     DISPLAY pages-per-minute-color
     DISPLAY print-quality-supported
+    DISPLAY printer-info
+    DISPLAY printer-location
+    DISPLAY printer-make-and-model
+    DISPLAY printer-name
     DISPLAY printer-uri-supported
-    DISPLAY reference-uri-schemes-supported
-    DISPLAY sizes-supported
     DISPLAY uri-authentication-supported
     DISPLAY uri-security-supported
 
     # Operations
     EXPECT operations-supported OF-TYPE enum IN-GROUP printer-attributes-tag WITH-VALUE 0x0002 # Print-Job
-    EXPECT operations-supported WITH-VALUE 0x0003 DEFINE-MATCH OPTIONAL_PRINT_URI # Print-URI
+    EXPECT operations-supported WITH-VALUE 0x0003 DEFINE-MATCH PRINTER_HAS_PRINT_URI # Print-URI
     EXPECT operations-supported WITH-VALUE 0x0004 # Validate-Job
-    EXPECT operations-supported WITH-VALUE 0x0005 DEFINE-MATCH OPTIONAL_CREATE_JOB # Create-Job
-    EXPECT operations-supported WITH-VALUE 0x0006 DEFINE-MATCH OPTIONAL_SEND_DOCUMENT # Send-Document
-    EXPECT operations-supported WITH-VALUE 0x0007 DEFINE-MATCH OPTIONAL_SEND_URI # Send-URI
+    EXPECT operations-supported WITH-VALUE 0x0005 DEFINE-MATCH PRINTER_HAS_CREATE_JOB # Create-Job
+        EXPECT operations-supported WITH-VALUE 0x0006 IF-DEFINED PRINTER_HAS_CREATE_JOB # Must have Send-Document, too
+    EXPECT operations-supported WITH-VALUE 0x0006 DEFINE-MATCH PRINTER_HAS_SEND_DOCUMENT # Send-Document
+	EXPECT operations-supported WITH-VALUE 0x0005 IF-DEFINED PRINTER_HAS_SEND_DOCUMENT # Must have Create-Job, too
+    EXPECT operations-supported WITH-VALUE 0x0007 DEFINE-MATCH PRINTER_HAS_SEND_URI # Send-URI
     EXPECT operations-supported WITH-VALUE 0x0008 # Cancel-Job
     EXPECT operations-supported WITH-VALUE 0x0009 # Get-Job-Attributes
     EXPECT operations-supported WITH-VALUE 0x000a # Get-Jobs
     EXPECT operations-supported WITH-VALUE 0x000b # Get-Printer-Attributes
-    EXPECT operations-supported WITH-VALUE 0x000c DEFINE-MATCH OPTIONAL_HOLD_JOB # Hold-Job
-    EXPECT operations-supported WITH-VALUE 0x000d DEFINE-MATCH OPTIONAL_RELEASE_JOB # Release-Job
-    EXPECT operations-supported WITH-VALUE 0x000e DEFINE-MATCH OPTIONAL_RESTART_JOB # Restart-Job
-    EXPECT operations-supported WITH-VALUE 0x0010 DEFINE-MATCH OPTIONAL_PAUSE_PRINTER # Pause-Printer
-    EXPECT operations-supported WITH-VALUE 0x0011 DEFINE-MATCH OPTIONAL_RESUME_PRINTER # Resume-Printer
-    EXPECT operations-supported WITH-VALUE 0x0012 DEFINE-MATCH OPTIONAL_PURGE_JOBS # Purge-Jobs
+    EXPECT operations-supported WITH-VALUE 0x000c DEFINE-MATCH PRINTER_HAS_HOLD_JOB # Hold-Job
+        EXPECT operations-supported WITH-VALUE 0x000d IF-DEFINED PRINTER_HAS_HOLD_JOB # Must have Release-Job, too
+    EXPECT operations-supported WITH-VALUE 0x000d DEFINE-MATCH PRINTER_HAS_RELEASE_JOB # Release-Job
+	EXPECT operations-supported WITH-VALUE 0x000c IF-DEFINED PRINTER_HAS_RELEASE_JOB # Must have Hold-Job, too
+    EXPECT operations-supported WITH-VALUE 0x000e DEFINE-MATCH PRINTER_HAS_RESTART_JOB # Restart-Job
+    EXPECT operations-supported WITH-VALUE 0x0010 DEFINE-MATCH PRINTER_HAS_PAUSE_PRINTER # Pause-Printer
+	EXPECT operations-supported WITH-VALUE 0x0011 IF-DEFINED PRINTER_HAS_PAUSE_PRINTER # Must have Resume-Printer, too
+    EXPECT operations-supported WITH-VALUE 0x0011 DEFINE-MATCH PRINTER_HAS_RESUME_PRINTER # Resume-Printer
+	EXPECT operations-supported WITH-VALUE 0x0010 IF-DEFINED PRINTER_HAS_RESUME_PRINTER # Must have Pause-Printer, too
+    EXPECT operations-supported WITH-VALUE 0x0012 DEFINE-MATCH PRINTER_HAS_PURGE_JOBS # Purge-Jobs
 
     # Job template attributes
     EXPECT ?copies-default OF-TYPE integer IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE >0
@@ -244,8 +251,8 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     EXPECT ?finishings-supported OF-TYPE enum IN-GROUP printer-attributes-tag WITH-VALUE 3
     EXPECT ?job-hold-until-default OF-TYPE keyword|name IN-GROUP printer-attributes-tag COUNT 1
     EXPECT ?job-hold-until-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag WITH-VALUE no-hold
-    EXPECT job-hold-until-default IF-DEFINED OPTIONAL_HOLD_JOB
-    EXPECT job-hold-until-supported IF-DEFINED OPTIONAL_HOLD_JOB
+    EXPECT job-hold-until-default IF-DEFINED PRINTER_HAS_HOLD_JOB
+    EXPECT job-hold-until-supported IF-DEFINED PRINTER_HAS_HOLD_JOB
     EXPECT ?job-priority-default OF-TYPE integer IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE >0,<101
     EXPECT ?job-priority-supported OF-TYPE integer IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE >0,<101
     EXPECT ?job-sheets-default OF-TYPE keyword|name IN-GROUP printer-attributes-tag
@@ -269,24 +276,24 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     EXPECT ?sides-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE "/^(one-sided|two-sided-long-edge|two-sided-short-edge)$$/"
 
     # Job template attributes for specific tests...
-    EXPECT copies-supported WITH-VALUE >1 DEFINE-MATCH OPTIONAL_COPIES
-    EXPECT document-format-supported WITH-VALUE "application/pdf" DEFINE-MATCH OPTIONAL_PDF
-    EXPECT document-format-supported WITH-VALUE "application/postscript" DEFINE-MATCH OPTIONAL_POSTSCRIPT
-    EXPECT document-format-supported WITH-VALUE "image/jpeg" DEFINE-MATCH OPTIONAL_JPEG
-    EXPECT job-sheets-supported WITH-VALUE "standard" DEFINE-MATCH OPTIONAL_STANDARD_SHEET
-    EXPECT media-supported WITH-VALUE "a4" DEFINE-VALUE OPTIONAL_A4_MEDIA
-    EXPECT media-supported WITH-VALUE "iso-a4" DEFINE-VALUE OPTIONAL_A4_MEDIA
-    EXPECT media-supported WITH-VALUE "iso_a4_210x297mm" DEFINE-VALUE OPTIONAL_A4_MEDIA
-    EXPECT media-supported WITH-VALUE "letter" DEFINE-VALUE OPTIONAL_LETTER_MEDIA
-    EXPECT media-supported WITH-VALUE "na-letter" DEFINE-VALUE OPTIONAL_LETTER_MEDIA
-    EXPECT media-supported WITH-VALUE "na_letter_8.5x11in" DEFINE-VALUE OPTIONAL_LETTER_MEDIA
-    EXPECT media-supported WITH-VALUE "index-4x6" DEFINE-VALUE OPTIONAL_4X6_MEDIA
-    EXPECT media-supported WITH-VALUE "na_index-4x6_4x6in" DEFINE-VALUE OPTIONAL_4X6_MEDIA
-    EXPECT number-up-supported WITH-VALUE 2 DEFINE-MATCH OPTIONAL_2UP
-    EXPECT print-quality WITH-VALUE 3 DEFINE-MATCH OPTIONAL_DRAFT_QUALITY
-    EXPECT print-quality WITH-VALUE 4 DEFINE-MATCH OPTIONAL_NORMAL_QUALITY
-    EXPECT print-quality WITH-VALUE 5 DEFINE-MATCH OPTIONAL_BEST_QUALITY
-    EXPECT sides-supported WITH-VALUE "two-sided-long-edge" DEFINE-MATCH OPTIONAL_DUPLEX
+    EXPECT copies-supported WITH-VALUE >1 DEFINE-MATCH PRINTER_HAS_COPIES
+    EXPECT document-format-supported WITH-VALUE "application/pdf" DEFINE-MATCH PRINTER_HAS_PDF
+    EXPECT document-format-supported WITH-VALUE "application/postscript" DEFINE-MATCH PRINTER_HAS_POSTSCRIPT
+    EXPECT document-format-supported WITH-VALUE "image/jpeg" DEFINE-MATCH PRINTER_HAS_JPEG
+    EXPECT job-sheets-supported WITH-VALUE "standard" DEFINE-MATCH PRINTER_HAS_STANDARD_SHEET
+    EXPECT media-supported WITH-VALUE "a4" DEFINE-VALUE PRINTER_HAS_A4_MEDIA
+    EXPECT media-supported WITH-VALUE "iso-a4" DEFINE-VALUE PRINTER_HAS_A4_MEDIA
+    EXPECT media-supported WITH-VALUE "iso_a4_210x297mm" DEFINE-VALUE PRINTER_HAS_A4_MEDIA
+    EXPECT media-supported WITH-VALUE "letter" DEFINE-VALUE PRINTER_HAS_LETTER_MEDIA
+    EXPECT media-supported WITH-VALUE "na-letter" DEFINE-VALUE PRINTER_HAS_LETTER_MEDIA
+    EXPECT media-supported WITH-VALUE "na_letter_8.5x11in" DEFINE-VALUE PRINTER_HAS_LETTER_MEDIA
+    EXPECT media-supported WITH-VALUE "index-4x6" DEFINE-VALUE PRINTER_HAS_4X6_MEDIA
+    EXPECT media-supported WITH-VALUE "na_index-4x6_4x6in" DEFINE-VALUE PRINTER_HAS_4X6_MEDIA
+    EXPECT number-up-supported WITH-VALUE 2 DEFINE-MATCH PRINTER_HAS_2UP
+    EXPECT print-quality WITH-VALUE 3 DEFINE-MATCH PRINTER_HAS_DRAFT_QUALITY
+    EXPECT print-quality WITH-VALUE 4 DEFINE-MATCH PRINTER_HAS_NORMAL_QUALITY
+    EXPECT print-quality WITH-VALUE 5 DEFINE-MATCH PRINTER_HAS_BEST_QUALITY
+    EXPECT sides-supported WITH-VALUE "two-sided-long-edge" DEFINE-MATCH PRINTER_HAS_DUPLEX
 
     # Printer description attributes
     EXPECT ?color-supported OF-TYPE boolean IN-GROUP printer-attributes-tag COUNT 1
@@ -302,12 +309,12 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     EXPECT ?printer-location OF-TYPE text(127) IN-GROUP printer-attributes-tag COUNT 1
     EXPECT ?printer-make-and-model OF-TYPE text(127) IN-GROUP printer-attributes-tag COUNT 1
     EXPECT ?printer-message-from-operator OF-TYPE text(127) IN-GROUP printer-attributes-tag COUNT 1
-    EXPECT ?printer-more-info OF-TYPE uri IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE "$HTTP_URI_SCHEME"
-    EXPECT ?printer-more-info-manufacturer OF-TYPE uri IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE "$HTTP_URI_SCHEME"
+    EXPECT ?printer-more-info OF-TYPE uri IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE "$HTTP_URI_REGEX"
+    EXPECT ?printer-more-info-manufacturer OF-TYPE uri IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE "$HTTP_URI_REGEX"
     EXPECT ?printer-state-message OF-TYPE text IN-GROUP printer-attributes-tag
     EXPECT ?reference-uri-schemes-supported OF-TYPE uriScheme IN-GROUP printer-attributes-tag
-    EXPECT reference-uri-schemes-supported WITH-VALUE "ftp" IF-DEFINED OPTIONAL_PRINT_URI
-    EXPECT reference-uri-schemes-supported WITH-VALUE "ftp" IF-DEFINED OPTIONAL_SEND_URI IF-NOT-DEFINED OPTIONAL_PRINT_URI
+    EXPECT reference-uri-schemes-supported WITH-VALUE "ftp" IF-DEFINED PRINTER_HAS_PRINT_URI
+    EXPECT reference-uri-schemes-supported WITH-VALUE "ftp" IF-DEFINED PRINTER_HAS_SEND_URI IF-NOT-DEFINED PRINTER_HAS_PRINT_URI
     EXPECT charset-configured OF-TYPE charset IN-GROUP printer-attributes-tag COUNT 1
     EXPECT charset-supported OF-TYPE charset IN-GROUP printer-attributes-tag WITH-VALUE utf-8
     EXPECT compression-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE none
@@ -322,7 +329,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     EXPECT printer-state OF-TYPE enum IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE 3,4,5
     EXPECT printer-state-reasons OF-TYPE keyword IN-GROUP printer-attributes-tag
     EXPECT printer-up-time OF-TYPE integer IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE >0
-    EXPECT printer-uri-supported OF-TYPE uri IN-GROUP printer-attributes-tag SAME-COUNT-AS uri-security-supported WITH-ALL-VALUES "$IPP_URI_SCHEME"
+    EXPECT printer-uri-supported OF-TYPE uri IN-GROUP printer-attributes-tag SAME-COUNT-AS uri-security-supported WITH-ALL-VALUES "$IPP_URI_REGEX"
     EXPECT queued-job-count OF-TYPE integer IN-GROUP printer-attributes-tag COUNT 1
     EXPECT uri-authentication-supported OF-TYPE keyword IN-GROUP printer-attributes-tag
     EXPECT uri-security-supported OF-TYPE keyword IN-GROUP printer-attributes-tag SAME-COUNT-AS uri-authentication-supported
@@ -345,7 +352,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 
     STATUS successful-ok
 
-    EXPECT printer-uri-supported OF-TYPE uri IN-GROUP printer-attributes-tag WITH-ALL-VALUES "$IPP_URI_SCHEME"
+    EXPECT printer-uri-supported OF-TYPE uri IN-GROUP printer-attributes-tag WITH-ALL-VALUES "$IPP_URI_REGEX"
     EXPECT !printer-name
 }
 
@@ -364,7 +371,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 
     STATUS successful-ok
     EXPECT ?job-id OF-TYPE integer IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE >0
-    EXPECT ?job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT ?job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_REGEX"
     EXPECT !job-printer-uri
     EXPECT !job-more-info
     EXPECT !job-name
@@ -424,9 +431,9 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 
     STATUS successful-ok
     EXPECT ?job-id OF-TYPE integer IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE >0
-    EXPECT ?job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_SCHEME"
-    EXPECT ?job-printer-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_SCHEME"
-    EXPECT ?job-more-info OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$HTTP_URI_SCHEME"
+    EXPECT ?job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_REGEX"
+    EXPECT ?job-printer-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_REGEX"
+    EXPECT ?job-more-info OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$HTTP_URI_REGEX"
     EXPECT ?job-name OF-TYPE name IN-GROUP job-attributes-tag COUNT 1
     EXPECT ?job-originating-user-name OF-TYPE name IN-GROUP job-attributes-tag COUNT 1
     EXPECT ?job-state OF-TYPE unknown|enum IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE >2,<10
@@ -484,7 +491,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 
     STATUS successful-ok
     EXPECT ?job-id OF-TYPE integer IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE >0
-    EXPECT ?job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT ?job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_REGEX"
     EXPECT !job-printer-uri
     EXPECT !job-more-info
     EXPECT !job-name
@@ -608,7 +615,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 
     STATUS successful-ok
     EXPECT ?job-id OF-TYPE integer IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE >0
-    EXPECT ?job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT ?job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_REGEX"
     EXPECT !job-printer-uri
     EXPECT !job-more-info
     EXPECT !job-name
@@ -685,7 +692,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 
     STATUS successful-ok
     EXPECT job-id OF-TYPE integer IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE >0
-    EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_REGEX"
     EXPECT !job-printer-uri
     EXPECT !job-more-info
     EXPECT !job-name
@@ -746,9 +753,9 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 
     STATUS successful-ok
     EXPECT job-id OF-TYPE integer IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE >0
-    EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_SCHEME"
-    EXPECT job-printer-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_SCHEME"
-    EXPECT ?job-more-info OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$HTTP_URI_SCHEME"
+    EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_REGEX"
+    EXPECT job-printer-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_REGEX"
+    EXPECT ?job-more-info OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$HTTP_URI_REGEX"
     EXPECT job-name OF-TYPE name IN-GROUP job-attributes-tag COUNT 1
     EXPECT job-originating-user-name OF-TYPE name IN-GROUP job-attributes-tag COUNT 1
     EXPECT job-state OF-TYPE unknown|enum IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE >2,<10
@@ -829,7 +836,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     STATUS server-error-job-canceled
     STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
 
-    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_REGEX"
     EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
     EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
     EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
@@ -872,9 +879,9 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 
     STATUS successful-ok
     EXPECT job-id OF-TYPE integer IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE >0
-    EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_SCHEME"
-    EXPECT job-printer-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_SCHEME"
-    EXPECT ?job-more-info OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$HTTP_URI_SCHEME"
+    EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_REGEX"
+    EXPECT job-printer-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_REGEX"
+    EXPECT ?job-more-info OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$HTTP_URI_REGEX"
     EXPECT job-name OF-TYPE name IN-GROUP job-attributes-tag COUNT 1
     EXPECT job-originating-user-name OF-TYPE name IN-GROUP job-attributes-tag COUNT 1
     EXPECT job-state OF-TYPE unknown|enum IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE >2,<10
@@ -919,7 +926,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 #
 # Defined by: RFC 8011 section 4.2.2
 {
-    SKIP-IF-NOT-DEFINED OPTIONAL_PRINT_URI
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_PRINT_URI
     SKIP-IF-NOT-DEFINED document-uri
 
     NAME "RFC 8011 section 4.2.2: Print-URI Operation"
@@ -939,7 +946,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     STATUS server-error-job-canceled
     STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
 
-    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_REGEX"
     EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
     EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
     EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
@@ -953,7 +960,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 #
 # Defined by: RFC 8011 section 4.2.2
 {
-    SKIP-IF-NOT-DEFINED OPTIONAL_PRINT_URI
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_PRINT_URI
     SKIP-IF-NOT-DEFINED document-uri
 
     NAME "Print-URI with bad URI: Print-URI Operation"
@@ -983,8 +990,8 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 #
 # Defined by: RFC 8011 section 4.2.4 and 4.3.1
 {
-    SKIP-IF-NOT-DEFINED OPTIONAL_CREATE_JOB
-    SKIP-IF-NOT-DEFINED OPTIONAL_SEND_DOCUMENT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_CREATE_JOB
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_SEND_DOCUMENT
 
     NAME "RFC 8011 section 4.2.4: Create-Job Operation"
     OPERATION Create-Job
@@ -999,7 +1006,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     STATUS successful-ok
     STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
 
-    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_REGEX"
     EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
     EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
     EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
@@ -1009,8 +1016,8 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 }
 
 {
-    SKIP-IF-NOT-DEFINED OPTIONAL_CREATE_JOB
-    SKIP-IF-NOT-DEFINED OPTIONAL_SEND_DOCUMENT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_CREATE_JOB
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_SEND_DOCUMENT
     SKIP-PREVIOUS-ERROR yes
 
     NAME "RFC 8011 section 4.3.1: Send-Document Operation"
@@ -1036,8 +1043,8 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 #
 # Defined by: RFC 8011 section 4.2.4 and 4.3.1
 {
-    SKIP-IF-NOT-DEFINED OPTIONAL_CREATE_JOB
-    SKIP-IF-NOT-DEFINED OPTIONAL_SEND_DOCUMENT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_CREATE_JOB
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_SEND_DOCUMENT
 
     NAME "Send-Document missing last-document: Create-Job Operation"
     OPERATION Create-Job
@@ -1052,7 +1059,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     STATUS successful-ok
     STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
 
-    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_REGEX"
     EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
     EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
     EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
@@ -1062,8 +1069,8 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 }
 
 {
-    SKIP-IF-NOT-DEFINED OPTIONAL_CREATE_JOB
-    SKIP-IF-NOT-DEFINED OPTIONAL_SEND_DOCUMENT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_CREATE_JOB
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_SEND_DOCUMENT
     SKIP-PREVIOUS-ERROR yes
 
     NAME "Send-Document missing last-document: Send-Document Operation"
@@ -1083,8 +1090,8 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 }
 
 {
-    SKIP-IF-NOT-DEFINED OPTIONAL_CREATE_JOB
-    SKIP-IF-NOT-DEFINED OPTIONAL_SEND_DOCUMENT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_CREATE_JOB
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_SEND_DOCUMENT
     SKIP-PREVIOUS-ERROR yes
 
     NAME "RFC 8011 section 4.3.3: Cancel-Job Operation"
@@ -1104,8 +1111,8 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 #
 # Defined by: RFC 8011 section 4.2.4 and 4.3.2
 {
-    SKIP-IF-NOT-DEFINED OPTIONAL_CREATE_JOB
-    SKIP-IF-NOT-DEFINED OPTIONAL_SEND_URI
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_CREATE_JOB
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_SEND_URI
     SKIP-IF-NOT-DEFINED document-uri
 
     NAME "RFC 8011 section 4.2.4: Create-Job Operation"
@@ -1121,7 +1128,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     STATUS successful-ok
     STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
 
-    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_REGEX"
     EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
     EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
     EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
@@ -1131,8 +1138,8 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 }
 
 {
-    SKIP-IF-NOT-DEFINED OPTIONAL_CREATE_JOB
-    SKIP-IF-NOT-DEFINED OPTIONAL_SEND_URI
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_CREATE_JOB
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_SEND_URI
     SKIP-IF-NOT-DEFINED document-uri
     SKIP-PREVIOUS-ERROR yes
 
@@ -1158,8 +1165,8 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 #
 # Defined by: RFC 8011 section 4.2.4 and 4.3.2
 {
-    SKIP-IF-NOT-DEFINED OPTIONAL_CREATE_JOB
-    SKIP-IF-NOT-DEFINED OPTIONAL_SEND_URI
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_CREATE_JOB
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_SEND_URI
 
     NAME "Send-URI with bad URI: Create-Job Operation"
     OPERATION Create-Job
@@ -1174,7 +1181,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     STATUS successful-ok
     STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
 
-    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_REGEX"
     EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
     EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
     EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
@@ -1184,8 +1191,8 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 }
 
 {
-    SKIP-IF-NOT-DEFINED OPTIONAL_CREATE_JOB
-    SKIP-IF-NOT-DEFINED OPTIONAL_SEND_URI
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_CREATE_JOB
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_SEND_URI
     SKIP-IF-NOT-DEFINED document-uri
     SKIP-PREVIOUS-ERROR yes
 
@@ -1207,8 +1214,8 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 }
 
 {
-    SKIP-IF-NOT-DEFINED OPTIONAL_CREATE_JOB
-    SKIP-IF-NOT-DEFINED OPTIONAL_SEND_URI
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_CREATE_JOB
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_SEND_URI
     SKIP-PREVIOUS-ERROR yes
 
     NAME "Send-URI with bad URI: Cancel-Job Operation"
@@ -1227,7 +1234,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 
 # Test multiple copy output
 {
-    SKIP-IF-NOT-DEFINED OPTIONAL_COPIES
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_COPIES
 
     NAME "Print-Job with copies"
     OPERATION Print-Job
@@ -1250,7 +1257,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     STATUS server-error-job-canceled
     STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
 
-    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_REGEX"
     EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
     EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
     EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
@@ -1263,8 +1270,8 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 # Test PDF output
 {
     SKIP-IF-DEFINED NOPRINT
-    SKIP-IF-NOT-DEFINED OPTIONAL_PDF
-    SKIP-IF-NOT-DEFINED OPTIONAL_A4_MEDIA
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_PDF
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_A4_MEDIA
 
     NAME "Print-Job with A4 PDF"
     OPERATION Print-Job
@@ -1279,14 +1286,14 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     ATTR keyword compression none
     ATTR mimeMediaType document-format application/pdf
     GROUP job-attributes-tag
-    ATTR keyword media $OPTIONAL_A4_MEDIA
+    ATTR keyword media $PRINTER_HAS_A4_MEDIA
     FILE document-a4.pdf
 
     STATUS successful-ok
     STATUS server-error-job-canceled
     STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
 
-    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_REGEX"
     EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
     EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
     EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
@@ -1297,9 +1304,9 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 
 {
     SKIP-IF-DEFINED NOPRINT
-    SKIP-IF-NOT-DEFINED OPTIONAL_PDF
-    SKIP-IF-NOT-DEFINED OPTIONAL_A4_MEDIA
-    SKIP-IF-NOT-DEFINED OPTIONAL_DUPLEX
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_PDF
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_A4_MEDIA
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_DUPLEX
 
     NAME "Print-Job with A4 PDF, Duplex"
     OPERATION Print-Job
@@ -1314,7 +1321,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     ATTR keyword compression none
     ATTR mimeMediaType document-format application/pdf
     GROUP job-attributes-tag
-    ATTR keyword media $OPTIONAL_A4_MEDIA
+    ATTR keyword media $PRINTER_HAS_A4_MEDIA
     ATTR keyword sides two-sided-long-edge
     FILE document-a4.pdf
 
@@ -1322,7 +1329,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     STATUS server-error-job-canceled
     STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
 
-    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_REGEX"
     EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
     EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
     EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
@@ -1333,8 +1340,8 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 
 {
     SKIP-IF-DEFINED NOPRINT
-    SKIP-IF-NOT-DEFINED OPTIONAL_PDF
-    SKIP-IF-NOT-DEFINED OPTIONAL_LETTER_MEDIA
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_PDF
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_LETTER_MEDIA
 
     NAME "Print-Job with US Letter PDF"
     OPERATION Print-Job
@@ -1349,14 +1356,14 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     ATTR keyword compression none
     ATTR mimeMediaType document-format application/pdf
     GROUP job-attributes-tag
-    ATTR keyword media $OPTIONAL_LETTER_MEDIA
+    ATTR keyword media $PRINTER_HAS_LETTER_MEDIA
     FILE document-letter.pdf
 
     STATUS successful-ok
     STATUS server-error-job-canceled
     STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
 
-    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_REGEX"
     EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
     EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
     EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
@@ -1367,9 +1374,9 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 
 {
     SKIP-IF-DEFINED NOPRINT
-    SKIP-IF-NOT-DEFINED OPTIONAL_PDF
-    SKIP-IF-NOT-DEFINED OPTIONAL_LETTER_MEDIA
-    SKIP-IF-NOT-DEFINED OPTIONAL_DUPLEX
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_PDF
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_LETTER_MEDIA
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_DUPLEX
 
     NAME "Print-Job with US Letter PDF, Duplex"
     OPERATION Print-Job
@@ -1384,7 +1391,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     ATTR keyword compression none
     ATTR mimeMediaType document-format application/pdf
     GROUP job-attributes-tag
-    ATTR keyword media $OPTIONAL_LETTER_MEDIA
+    ATTR keyword media $PRINTER_HAS_LETTER_MEDIA
     ATTR keyword sides two-sided-long-edge
     FILE document-letter.pdf
 
@@ -1392,7 +1399,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     STATUS server-error-job-canceled
     STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
 
-    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_REGEX"
     EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
     EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
     EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
@@ -1405,8 +1412,8 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 # Test PostScript output
 {
     SKIP-IF-DEFINED NOPRINT
-    SKIP-IF-NOT-DEFINED OPTIONAL_POSTSCRIPT
-    SKIP-IF-NOT-DEFINED OPTIONAL_A4_MEDIA
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_POSTSCRIPT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_A4_MEDIA
 
     NAME "Print-Job with A4 PostScript"
     OPERATION Print-Job
@@ -1421,14 +1428,14 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     ATTR keyword compression none
     ATTR mimeMediaType document-format application/postscript
     GROUP job-attributes-tag
-    ATTR keyword media $OPTIONAL_LETTER_MEDIA
+    ATTR keyword media $PRINTER_HAS_LETTER_MEDIA
     FILE document-a4.ps
 
     STATUS successful-ok
     STATUS server-error-job-canceled
     STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
 
-    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_REGEX"
     EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
     EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
     EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
@@ -1439,9 +1446,9 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 
 {
     SKIP-IF-DEFINED NOPRINT
-    SKIP-IF-NOT-DEFINED OPTIONAL_POSTSCRIPT
-    SKIP-IF-NOT-DEFINED OPTIONAL_A4_MEDIA
-    SKIP-IF-NOT-DEFINED OPTIONAL_DUPLEX
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_POSTSCRIPT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_A4_MEDIA
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_DUPLEX
 
     NAME "Print-Job with A4 PostScript, Duplex"
     OPERATION Print-Job
@@ -1456,7 +1463,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     ATTR keyword compression none
     ATTR mimeMediaType document-format application/postscript
     GROUP job-attributes-tag
-    ATTR keyword media $OPTIONAL_A4_MEDIA
+    ATTR keyword media $PRINTER_HAS_A4_MEDIA
     ATTR keyword sides two-sided-long-edge
     FILE document-a4.ps
 
@@ -1464,7 +1471,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     STATUS server-error-job-canceled
     STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
 
-    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_REGEX"
     EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
     EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
     EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
@@ -1475,8 +1482,8 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 
 {
     SKIP-IF-DEFINED NOPRINT
-    SKIP-IF-NOT-DEFINED OPTIONAL_POSTSCRIPT
-    SKIP-IF-NOT-DEFINED OPTIONAL_LETTER_MEDIA
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_POSTSCRIPT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_LETTER_MEDIA
 
     NAME "Print-Job with US Letter PostScript"
     OPERATION Print-Job
@@ -1491,14 +1498,14 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     ATTR keyword compression none
     ATTR mimeMediaType document-format application/postscript
     GROUP job-attributes-tag
-    ATTR keyword media $OPTIONAL_LETTER_MEDIA
+    ATTR keyword media $PRINTER_HAS_LETTER_MEDIA
     FILE document-letter.ps
 
     STATUS successful-ok
     STATUS server-error-job-canceled
     STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
 
-    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_REGEX"
     EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
     EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
     EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
@@ -1509,9 +1516,9 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 
 {
     SKIP-IF-DEFINED NOPRINT
-    SKIP-IF-NOT-DEFINED OPTIONAL_POSTSCRIPT
-    SKIP-IF-NOT-DEFINED OPTIONAL_LETTER_MEDIA
-    SKIP-IF-NOT-DEFINED OPTIONAL_DUPLEX
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_POSTSCRIPT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_LETTER_MEDIA
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_DUPLEX
 
     NAME "Print-Job with US Letter PostScript, Duplex"
     OPERATION Print-Job
@@ -1526,7 +1533,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     ATTR keyword compression none
     ATTR mimeMediaType document-format application/postscript
     GROUP job-attributes-tag
-    ATTR keyword media $OPTIONAL_LETTER_MEDIA
+    ATTR keyword media $PRINTER_HAS_LETTER_MEDIA
     ATTR keyword sides two-sided-long-edge
     FILE document-letter.ps
 
@@ -1534,7 +1541,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     STATUS server-error-job-canceled
     STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
 
-    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_REGEX"
     EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
     EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
     EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
@@ -1547,8 +1554,8 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 # Test JPEG output
 {
     SKIP-IF-DEFINED NOPRINT
-    SKIP-IF-NOT-DEFINED OPTIONAL_JPEG
-    SKIP-IF-NOT-DEFINED OPTIONAL_A4_MEDIA
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_JPEG
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_A4_MEDIA
 
     NAME "Print-Job with Color JPEG on A4"
     OPERATION Print-Job
@@ -1563,14 +1570,14 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     ATTR keyword compression none
     ATTR mimeMediaType document-format image/jpeg
     GROUP job-attributes-tag
-    ATTR keyword media $OPTIONAL_A4_MEDIA
+    ATTR keyword media $PRINTER_HAS_A4_MEDIA
     FILE color.jpg
 
     STATUS successful-ok
     STATUS server-error-job-canceled
     STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
 
-    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_REGEX"
     EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
     EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
     EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
@@ -1581,8 +1588,8 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 
 {
     SKIP-IF-DEFINED NOPRINT
-    SKIP-IF-NOT-DEFINED OPTIONAL_JPEG
-    SKIP-IF-NOT-DEFINED OPTIONAL_LETTER_MEDIA
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_JPEG
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_LETTER_MEDIA
 
     NAME "Print-Job with Color JPEG on US Letter"
     OPERATION Print-Job
@@ -1597,14 +1604,14 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     ATTR keyword compression none
     ATTR mimeMediaType document-format image/jpeg
     GROUP job-attributes-tag
-    ATTR keyword media $OPTIONAL_LETTER_MEDIA
+    ATTR keyword media $PRINTER_HAS_LETTER_MEDIA
     FILE color.jpg
 
     STATUS successful-ok
     STATUS server-error-job-canceled
     STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
 
-    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_REGEX"
     EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
     EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
     EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
@@ -1615,8 +1622,8 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 
 {
     SKIP-IF-DEFINED NOPRINT
-    SKIP-IF-NOT-DEFINED OPTIONAL_JPEG
-    SKIP-IF-NOT-DEFINED OPTIONAL_4X6_MEDIA
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_JPEG
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_4X6_MEDIA
 
     NAME "Print-Job with Color JPEG on 4x6"
     OPERATION Print-Job
@@ -1631,14 +1638,14 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     ATTR keyword compression none
     ATTR mimeMediaType document-format image/jpeg
     GROUP job-attributes-tag
-    ATTR keyword media $OPTIONAL_4X6_MEDIA
+    ATTR keyword media $PRINTER_HAS_4X6_MEDIA
     FILE color.jpg
 
     STATUS successful-ok
     STATUS server-error-job-canceled
     STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
 
-    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_REGEX"
     EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
     EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
     EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
@@ -1649,8 +1656,8 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 
 {
     SKIP-IF-DEFINED NOPRINT
-    SKIP-IF-NOT-DEFINED OPTIONAL_JPEG
-    SKIP-IF-NOT-DEFINED OPTIONAL_A4_MEDIA
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_JPEG
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_A4_MEDIA
 
     NAME "Print-Job with Grayscale JPEG on A4"
     OPERATION Print-Job
@@ -1665,14 +1672,14 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     ATTR keyword compression none
     ATTR mimeMediaType document-format image/jpeg
     GROUP job-attributes-tag
-    ATTR keyword media $OPTIONAL_A4_MEDIA
+    ATTR keyword media $PRINTER_HAS_A4_MEDIA
     FILE gray.jpg
 
     STATUS successful-ok
     STATUS server-error-job-canceled
     STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
 
-    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_REGEX"
     EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
     EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
     EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
@@ -1683,8 +1690,8 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 
 {
     SKIP-IF-DEFINED NOPRINT
-    SKIP-IF-NOT-DEFINED OPTIONAL_JPEG
-    SKIP-IF-NOT-DEFINED OPTIONAL_LETTER_MEDIA
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_JPEG
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_LETTER_MEDIA
 
     NAME "Print-Job with Grayscale JPEG on US Letter"
     OPERATION Print-Job
@@ -1699,14 +1706,14 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     ATTR keyword compression none
     ATTR mimeMediaType document-format image/jpeg
     GROUP job-attributes-tag
-    ATTR keyword media $OPTIONAL_LETTER_MEDIA
+    ATTR keyword media $PRINTER_HAS_LETTER_MEDIA
     FILE gray.jpg
 
     STATUS successful-ok
     STATUS server-error-job-canceled
     STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
 
-    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_REGEX"
     EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
     EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
     EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
@@ -1717,8 +1724,8 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 
 {
     SKIP-IF-DEFINED NOPRINT
-    SKIP-IF-NOT-DEFINED OPTIONAL_JPEG
-    SKIP-IF-NOT-DEFINED OPTIONAL_4X6_MEDIA
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_JPEG
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_4X6_MEDIA
 
     NAME "Print-Job with Grayscale JPEG on 4x6"
     OPERATION Print-Job
@@ -1733,14 +1740,14 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     ATTR keyword compression none
     ATTR mimeMediaType document-format image/jpeg
     GROUP job-attributes-tag
-    ATTR keyword media $OPTIONAL_4X6_MEDIA
+    ATTR keyword media $PRINTER_HAS_4X6_MEDIA
     FILE gray.jpg
 
     STATUS successful-ok
     STATUS server-error-job-canceled
     STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
 
-    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_REGEX"
     EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
     EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
     EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
@@ -1753,9 +1760,9 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 # Print-Job with job-sheets
 {
     SKIP-IF-DEFINED NOPRINT
-    SKIP-IF-NOT-DEFINED OPTIONAL_PDF
-    SKIP-IF-NOT-DEFINED OPTIONAL_A4_MEDIA
-    SKIP-IF-NOT-DEFINED OPTIONAL_STANDARD_SHEET
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_PDF
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_A4_MEDIA
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_STANDARD_SHEET
 
     NAME "Print-Job with A4 PDF and Standard Sheet"
     OPERATION Print-Job
@@ -1770,7 +1777,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     ATTR keyword compression none
     ATTR mimeMediaType document-format application/pdf
     GROUP job-attributes-tag
-    ATTR keyword media $OPTIONAL_A4_MEDIA
+    ATTR keyword media $PRINTER_HAS_A4_MEDIA
     ATTR keyword job-sheets standard
     FILE document-a4.pdf
 
@@ -1778,7 +1785,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     STATUS server-error-job-canceled
     STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
 
-    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_REGEX"
     EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
     EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
     EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
@@ -1789,9 +1796,9 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 
 {
     SKIP-IF-DEFINED NOPRINT
-    SKIP-IF-NOT-DEFINED OPTIONAL_PDF
-    SKIP-IF-NOT-DEFINED OPTIONAL_LETTER_MEDIA
-    SKIP-IF-NOT-DEFINED OPTIONAL_STANDARD_SHEET
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_PDF
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_LETTER_MEDIA
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_STANDARD_SHEET
 
     NAME "Print-Job with US Letter PDF and Standard Sheet"
     OPERATION Print-Job
@@ -1806,7 +1813,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     ATTR keyword compression none
     ATTR mimeMediaType document-format application/pdf
     GROUP job-attributes-tag
-    ATTR keyword media $OPTIONAL_LETTER_MEDIA
+    ATTR keyword media $PRINTER_HAS_LETTER_MEDIA
     ATTR keyword job-sheets standard
     FILE document-a4.pdf
 
@@ -1814,7 +1821,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     STATUS server-error-job-canceled
     STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
 
-    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_REGEX"
     EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
     EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
     EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
@@ -1825,9 +1832,9 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 
 {
     SKIP-IF-DEFINED NOPRINT
-    SKIP-IF-NOT-DEFINED OPTIONAL_POSTSCRIPT
-    SKIP-IF-NOT-DEFINED OPTIONAL_A4_MEDIA
-    SKIP-IF-NOT-DEFINED OPTIONAL_STANDARD_SHEET
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_POSTSCRIPT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_A4_MEDIA
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_STANDARD_SHEET
 
     NAME "Print-Job with A4 PDF and Standard Sheet"
     OPERATION Print-Job
@@ -1842,7 +1849,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     ATTR keyword compression none
     ATTR mimeMediaType document-format application/postscript
     GROUP job-attributes-tag
-    ATTR keyword media $OPTIONAL_A4_MEDIA
+    ATTR keyword media $PRINTER_HAS_A4_MEDIA
     ATTR keyword job-sheets standard
     FILE document-a4.ps
 
@@ -1850,7 +1857,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     STATUS server-error-job-canceled
     STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
 
-    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_REGEX"
     EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
     EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
     EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
@@ -1861,9 +1868,9 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 
 {
     SKIP-IF-DEFINED NOPRINT
-    SKIP-IF-NOT-DEFINED OPTIONAL_POSTSCRIPT
-    SKIP-IF-NOT-DEFINED OPTIONAL_LETTER_MEDIA
-    SKIP-IF-NOT-DEFINED OPTIONAL_STANDARD_SHEET
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_POSTSCRIPT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_LETTER_MEDIA
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_STANDARD_SHEET
 
     NAME "Print-Job with US Letter PDF and Standard Sheet"
     OPERATION Print-Job
@@ -1878,7 +1885,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     ATTR keyword compression none
     ATTR mimeMediaType document-format application/postscript
     GROUP job-attributes-tag
-    ATTR keyword media $OPTIONAL_LETTER_MEDIA
+    ATTR keyword media $PRINTER_HAS_LETTER_MEDIA
     ATTR keyword job-sheets standard
     FILE document-a4.ps
 
@@ -1886,7 +1893,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     STATUS server-error-job-canceled
     STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
 
-    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_REGEX"
     EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
     EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
     EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
@@ -1899,9 +1906,9 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 # Test number-up output
 {
     SKIP-IF-DEFINED NOPRINT
-    SKIP-IF-NOT-DEFINED OPTIONAL_PDF
-    SKIP-IF-NOT-DEFINED OPTIONAL_A4_MEDIA
-    SKIP-IF-NOT-DEFINED OPTIONAL_2UP
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_PDF
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_A4_MEDIA
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_2UP
 
     NAME "Print-Job with A4 PDF, 2-Up"
     OPERATION Print-Job
@@ -1916,7 +1923,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     ATTR keyword compression none
     ATTR mimeMediaType document-format application/pdf
     GROUP job-attributes-tag
-    ATTR keyword media $OPTIONAL_A4_MEDIA
+    ATTR keyword media $PRINTER_HAS_A4_MEDIA
     ATTR integer number-up 2
     FILE document-a4.pdf
 
@@ -1924,7 +1931,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     STATUS server-error-job-canceled
     STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
 
-    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_REGEX"
     EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
     EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
     EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
@@ -1935,9 +1942,9 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 
 {
     SKIP-IF-DEFINED NOPRINT
-    SKIP-IF-NOT-DEFINED OPTIONAL_PDF
-    SKIP-IF-NOT-DEFINED OPTIONAL_LETTER_MEDIA
-    SKIP-IF-NOT-DEFINED OPTIONAL_2UP
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_PDF
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_LETTER_MEDIA
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_2UP
 
     NAME "Print-Job with US Letter PDF, 2-Up"
     OPERATION Print-Job
@@ -1952,7 +1959,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     ATTR keyword compression none
     ATTR mimeMediaType document-format application/pdf
     GROUP job-attributes-tag
-    ATTR keyword media $OPTIONAL_LETTER_MEDIA
+    ATTR keyword media $PRINTER_HAS_LETTER_MEDIA
     ATTR integer number-up 2
     FILE document-letter.pdf
 
@@ -1960,7 +1967,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     STATUS server-error-job-canceled
     STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
 
-    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_REGEX"
     EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
     EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
     EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
@@ -1971,9 +1978,9 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 
 {
     SKIP-IF-DEFINED NOPRINT
-    SKIP-IF-NOT-DEFINED OPTIONAL_POSTSCRIPT
-    SKIP-IF-NOT-DEFINED OPTIONAL_A4_MEDIA
-    SKIP-IF-NOT-DEFINED OPTIONAL_2UP
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_POSTSCRIPT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_A4_MEDIA
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_2UP
 
     NAME "Print-Job with A4 PDF, 2-Up"
     OPERATION Print-Job
@@ -1988,7 +1995,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     ATTR keyword compression none
     ATTR mimeMediaType document-format application/postscript
     GROUP job-attributes-tag
-    ATTR keyword media $OPTIONAL_A4_MEDIA
+    ATTR keyword media $PRINTER_HAS_A4_MEDIA
     ATTR integer number-up 2
     FILE document-a4.ps
 
@@ -1996,7 +2003,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     STATUS server-error-job-canceled
     STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
 
-    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_REGEX"
     EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
     EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
     EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
@@ -2007,9 +2014,9 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 
 {
     SKIP-IF-DEFINED NOPRINT
-    SKIP-IF-NOT-DEFINED OPTIONAL_POSTSCRIPT
-    SKIP-IF-NOT-DEFINED OPTIONAL_LETTER_MEDIA
-    SKIP-IF-NOT-DEFINED OPTIONAL_2UP
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_POSTSCRIPT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_LETTER_MEDIA
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_2UP
 
     NAME "Print-Job with US Letter PDF, 2-Up"
     OPERATION Print-Job
@@ -2024,7 +2031,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     ATTR keyword compression none
     ATTR mimeMediaType document-format application/postscript
     GROUP job-attributes-tag
-    ATTR keyword media $OPTIONAL_LETTER_MEDIA
+    ATTR keyword media $PRINTER_HAS_LETTER_MEDIA
     ATTR integer number-up 2
     FILE document-letter.ps
 
@@ -2032,7 +2039,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     STATUS server-error-job-canceled
     STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
 
-    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_REGEX"
     EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
     EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
     EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
@@ -2045,9 +2052,9 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 # Test output with print-quality...
 {
     SKIP-IF-DEFINED NOPRINT
-    SKIP-IF-NOT-DEFINED OPTIONAL_JPEG
-    SKIP-IF-NOT-DEFINED OPTIONAL_4X6_MEDIA
-    SKIP-IF-NOT-DEFINED OPTIONAL_DRAFT_QUALITY
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_JPEG
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_4X6_MEDIA
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_DRAFT_QUALITY
 
     NAME "Print-Job with JPEG on 4x6, Draft Quality"
     OPERATION Print-Job
@@ -2062,7 +2069,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     ATTR keyword compression none
     ATTR mimeMediaType document-format image/jpeg
     GROUP job-attributes-tag
-    ATTR keyword media $OPTIONAL_4X6_MEDIA
+    ATTR keyword media $PRINTER_HAS_4X6_MEDIA
     ATTR enum print-quality 3
     FILE color.jpg
 
@@ -2070,7 +2077,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     STATUS server-error-job-canceled
     STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
 
-    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_REGEX"
     EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
     EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
     EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
@@ -2081,9 +2088,9 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 
 {
     SKIP-IF-DEFINED NOPRINT
-    SKIP-IF-NOT-DEFINED OPTIONAL_JPEG
-    SKIP-IF-NOT-DEFINED OPTIONAL_4X6_MEDIA
-    SKIP-IF-NOT-DEFINED OPTIONAL_NORMAL_QUALITY
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_JPEG
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_4X6_MEDIA
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_NORMAL_QUALITY
 
     NAME "Print-Job with JPEG on 4x6, Normal Quality"
     OPERATION Print-Job
@@ -2098,7 +2105,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     ATTR keyword compression none
     ATTR mimeMediaType document-format image/jpeg
     GROUP job-attributes-tag
-    ATTR keyword media $OPTIONAL_4X6_MEDIA
+    ATTR keyword media $PRINTER_HAS_4X6_MEDIA
     ATTR enum print-quality 4
     FILE color.jpg
 
@@ -2106,7 +2113,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     STATUS server-error-job-canceled
     STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
 
-    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_REGEX"
     EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
     EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
     EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
@@ -2117,9 +2124,9 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 
 {
     SKIP-IF-DEFINED NOPRINT
-    SKIP-IF-NOT-DEFINED OPTIONAL_JPEG
-    SKIP-IF-NOT-DEFINED OPTIONAL_4X6_MEDIA
-    SKIP-IF-NOT-DEFINED OPTIONAL_HIGH_QUALITY
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_JPEG
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_4X6_MEDIA
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_HIGH_QUALITY
 
     NAME "Print-Job with JPEG on 4x6, High Quality"
     OPERATION Print-Job
@@ -2134,7 +2141,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     ATTR keyword compression none
     ATTR mimeMediaType document-format image/jpeg
     GROUP job-attributes-tag
-    ATTR keyword media $OPTIONAL_4X6_MEDIA
+    ATTR keyword media $PRINTER_HAS_4X6_MEDIA
     ATTR enum print-quality 5
     FILE color.jpg
 
@@ -2142,7 +2149,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     STATUS server-error-job-canceled
     STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
 
-    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_REGEX"
     EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
     EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
     EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
@@ -2153,9 +2160,9 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 
 {
     SKIP-IF-DEFINED NOPRINT
-    SKIP-IF-NOT-DEFINED OPTIONAL_PDF
-    SKIP-IF-NOT-DEFINED OPTIONAL_A4_MEDIA
-    SKIP-IF-NOT-DEFINED OPTIONAL_DRAFT_QUALITY
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_PDF
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_A4_MEDIA
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_DRAFT_QUALITY
 
     NAME "Print-Job with A4 PDF, Draft Quality"
     OPERATION Print-Job
@@ -2170,7 +2177,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     ATTR keyword compression none
     ATTR mimeMediaType document-format application/pdf
     GROUP job-attributes-tag
-    ATTR keyword media $OPTIONAL_A4_MEDIA
+    ATTR keyword media $PRINTER_HAS_A4_MEDIA
     ATTR enum print-quality 3
     FILE document-a4.pdf
 
@@ -2178,7 +2185,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     STATUS server-error-job-canceled
     STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
 
-    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_REGEX"
     EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
     EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
     EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
@@ -2189,9 +2196,9 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 
 {
     SKIP-IF-DEFINED NOPRINT
-    SKIP-IF-NOT-DEFINED OPTIONAL_PDF
-    SKIP-IF-NOT-DEFINED OPTIONAL_LETTER_MEDIA
-    SKIP-IF-NOT-DEFINED OPTIONAL_DRAFT_QUALITY
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_PDF
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_LETTER_MEDIA
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_DRAFT_QUALITY
 
     NAME "Print-Job with US Letter PDF, Draft Quality"
     OPERATION Print-Job
@@ -2206,7 +2213,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     ATTR keyword compression none
     ATTR mimeMediaType document-format application/pdf
     GROUP job-attributes-tag
-    ATTR keyword media $OPTIONAL_LETTER_MEDIA
+    ATTR keyword media $PRINTER_HAS_LETTER_MEDIA
     ATTR enum print-quality 3
     FILE document-letter.pdf
 
@@ -2214,7 +2221,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     STATUS server-error-job-canceled
     STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
 
-    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_REGEX"
     EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
     EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
     EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
@@ -2226,7 +2233,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 
 # Test hold/release in the context of Print-Job w/job-hold-until + Release-Job
 {
-    SKIP-IF-NOT-DEFINED OPTIONAL_HOLD_JOB
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_HOLD_JOB
 
     NAME "Print-Job with job-hold-until"
     OPERATION Print-Job
@@ -2247,7 +2254,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
     STATUS server-error-job-canceled
     STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
 
-    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_REGEX"
     EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
     EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
     EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
@@ -2257,7 +2264,7 @@ DEFINE IPP_URI_SCHEME "/^ipps?://.+$$/"
 }
 
 {
-    SKIP-IF-NOT-DEFINED OPTIONAL_HOLD_JOB
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_HOLD_JOB
 
     NAME "Release-Job"
     OPERATION Release-Job
