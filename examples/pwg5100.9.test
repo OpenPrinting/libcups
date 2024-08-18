@@ -1,0 +1,35 @@
+#
+# PWG 5100.9-2009: IPP Printer State Extensions v1.0 (STATE)
+#
+# https://ftp.pwg.org/pub/pwg/candidates/cs-ippstate10-20090731-5100.9.pdf
+#
+# Copyright © 2018-2024 by OpenPrinting.
+#
+# Usage:
+#
+#   ./ipptool [OPTIONS] -f FILENAME -t PRINTER-URI pwg5100.9.test
+#
+# Options:
+#
+#   -d NOPRINT=1              Disable the print tests.
+#   -d REQUIRE_STATE=1        Require support for the STATE specification.
+#
+#
+
+{
+    NAME "PWG 5100.9-2009: Attributes"
+    OPERATION Get-Printer-Attributes
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR language attributes-natural-language en
+    ATTR uri printer-uri $uri
+
+    STATUS successful-ok
+
+    EXPECT printer-alert IF-DEFINED REQUIRE_STATE
+    EXPECT ?printer-alert OF-TYPE octetString IN-GROUP printer-attributes-tag WITH-ALL-VALUES "/^[Cc][Oo][Dd][Ee]\=[A-Za-z]+(;([Ii][Nn][Dd][Ee][Xx]\=[0-9]+|[Ss][Ee][Vv][Ee][Rr][Ii][Tt][Yy]\=[A-Za-z]+|[Tt][Rr][Aa][Ii][Nn][Ii][Nn][Gg]\=[A-Za-z]+|[Gg][Rr][Oo][Uu][Pp]\=[A-Za-z]+|[Gg][Rr][Oo][Uu][Pp][Ii][Nn][Dd][Ee][Xx]\=[0-9]+|[Ll][Oo][Cc][Aa][Tt][Ii][Oo][Nn]\=[0-9]+|[Tt][Ii][Mm][Ee]\=[0-9]+)){0,1}$/" SAME-COUNT-AS printer-alert-description
+
+    EXPECT printer-alert-description IF-DEFINED REQUIRE_STATE
+    EXPECT ?printer-alert-description OF-TYPE text IN-GROUP printer-attributes-tag SAME-COUNT-AS printer-alert
+}
