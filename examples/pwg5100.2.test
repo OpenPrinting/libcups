@@ -1,0 +1,1326 @@
+#
+# PWG 5100.2-2001: Internet Printing Protocol (IPP): “output-bin” attribute
+# extension
+#
+# https://ftp.pwg.org/pub/pwg/candidates/cs-ippoutputbin10-20010207-5100.2.pdf
+#
+# Copyright © 2018-2024 by OpenPrinting.
+#
+# Licensed under Apache License v2.0.  See the file "LICENSE" for more
+# information.
+#
+# Usage:
+#
+#   ./ipptool [OPTIONS] -f FILENAME -t PRINTER-URI pwg5100.2.test
+#
+# Options:
+#
+#   -d NOPRINT=1              Disable the print tests.
+#   -d REQUIRE_OUTPUT_BIN=1   Require support for the output-bin attribute.
+#
+
+# Determine whether the Printer supports the output-bin attribute...
+{
+    NAME "PWG 5100.2-2001: output-bin Job Template Attribute"
+
+    OPERATION Get-Printer-Attributes
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+
+    DISPLAY output-bin-default
+    DISPLAY output-bin-supported
+
+    STATUS successful-ok
+
+    EXPECT output-bin-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag IF-DEFINED REQUIRE_OUTPUT_BIN
+    EXPECT output-bin-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag DEFINE-MATCH PRINTER_HAS_OUTPUT_BIN
+
+    EXPECT output-bin-default OF-TYPE keyword|name IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE-FROM output-bin-supported IF-DEFINED PRINTER_HAS_OUTPUT_BIN
+    EXPECT !output-bin-default IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN
+
+    # Job template values for specific tests...
+    EXPECT output-bin-supported WITH-VALUE "top" DEFINE-MATCH PRINTER_HAS_OUTPUT_BIN_TOP
+    EXPECT output-bin-supported WITH-VALUE "middle" DEFINE-MATCH PRINTER_HAS_OUTPUT_BIN_MIDDLE
+    EXPECT output-bin-supported WITH-VALUE "bottom" DEFINE-MATCH PRINTER_HAS_OUTPUT_BIN_BOTTOM
+    EXPECT output-bin-supported WITH-VALUE "side" DEFINE-MATCH PRINTER_HAS_OUTPUT_BIN_SIDE
+    EXPECT output-bin-supported WITH-VALUE "left" DEFINE-MATCH PRINTER_HAS_OUTPUT_BIN_LEFT
+    EXPECT output-bin-supported WITH-VALUE "right" DEFINE-MATCH PRINTER_HAS_OUTPUT_BIN_RIGHT
+    EXPECT output-bin-supported WITH-VALUE "center" DEFINE-MATCH PRINTER_HAS_OUTPUT_BIN_CENTER
+    EXPECT output-bin-supported WITH-VALUE "rear" DEFINE-MATCH PRINTER_HAS_OUTPUT_BIN_REAR
+    EXPECT output-bin-supported WITH-VALUE "face-down" DEFINE-MATCH PRINTER_HAS_OUTPUT_BIN_FACEDOWN
+    EXPECT output-bin-supported WITH-VALUE "face-up" DEFINE-MATCH PRINTER_HAS_OUTPUT_BIN_FACEUP
+    EXPECT output-bin-supported WITH-VALUE "large-capacity" DEFINE-MATCH PRINTER_HAS_OUTPUT_BIN_LARGECAPACITY
+    EXPECT output-bin-supported WITH-VALUE "my-mailbox" DEFINE-MATCH PRINTER_HAS_OUTPUT_BIN_MYMAILBOX
+
+    EXPECT output-bin-supported WITH-VALUE "/^stacker-[1-9][0-9]*$$/" DEFINE-MATCH PRINTER_HAS_OUTPUT_BIN_STACKERN
+    EXPECT output-bin-supported WITH-VALUE "stacker-1" IF-DEFINED PRINTER_HAS_OUTPUT_BIN_STACKERN
+    EXPECT output-bin-supported WITH-VALUE "stacker-1" DEFINE-MATCH PRINTER_HAS_OUTPUT_BIN_STACKER1
+    EXPECT output-bin-supported WITH-VALUE "stacker-2" DEFINE-MATCH PRINTER_HAS_OUTPUT_BIN_STACKER2
+    EXPECT output-bin-supported WITH-VALUE "/^mailbox-[1-9][0-9]*$$/" DEFINE-MATCH PRINTER_HAS_OUTPUT_BIN_MAILBOXN
+	EXPECT output-bin-supported WITH-VALUE "mailbox-1" IF-DEFINED PRINTER_HAS_OUTPUT_BIN_MAILBOXN
+    EXPECT output-bin-supported WITH-VALUE "mailbox-1" DEFINE-MATCH PRINTER_HAS_OUTPUT_BIN_MAILBOX1
+    EXPECT output-bin-supported WITH-VALUE "mailbox-2" DEFINE-MATCH PRINTER_HAS_OUTPUT_BIN_MAILBOX2
+    EXPECT output-bin-supported WITH-VALUE "tray-1" DEFINE-MATCH PRINTER_HAS_OUTPUT_BIN_TRAY1
+    EXPECT output-bin-supported WITH-VALUE "tray-2" DEFINE-MATCH PRINTER_HAS_OUTPUT_BIN_TRAY2
+    EXPECT output-bin-supported WITH-VALUE "tray-3" DEFINE-MATCH PRINTER_HAS_OUTPUT_BIN_TRAY3
+    EXPECT output-bin-supported WITH-VALUE "tray-4" DEFINE-MATCH PRINTER_HAS_OUTPUT_BIN_TRAY4
+    EXPECT output-bin-supported WITH-VALUE "tray-5" DEFINE-MATCH PRINTER_HAS_OUTPUT_BIN_TRAY5
+    EXPECT output-bin-supported WITH-VALUE "tray-6" DEFINE-MATCH PRINTER_HAS_OUTPUT_BIN_TRAY6
+
+}
+
+
+# Print-Job request with output-bin top
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_TOP
+
+    NAME "Print-Job with output-bin 'top'"
+
+    OPERATION Print-Job
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR name requesting-user-name $user
+    ATTR boolean ipp-attribute-fidelity false
+    ATTR mimeMediaType document-format $filetype
+
+    GROUP job-attributes-tag
+    ATTR keyword output-bin "top"
+
+    FILE $filename
+
+    STATUS successful-ok
+    STATUS server-error-job-canceled
+    STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
+
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
+    EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
+    EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
+    EXPECT ?job-state-message OF-TYPE text IN-GROUP job-attributes-tag
+    EXPECT ?number-of-intervening-jobs OF-TYPE integer IN-GROUP job-attributes-tag WITH-VALUE >-1
+}
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_TOP
+
+    NAME "Verify output-bin 'top'"
+
+    OPERATION Get-Job-Attributes
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR name requesting-user-name $user
+
+    DISPLAY output-bin
+
+    STATUS successful-ok
+    EXPECT job-id OF-TYPE integer IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE >0
+    EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT output-bin OF-TYPE keyword IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "top"
+}
+
+
+# Print-Job request with output-bin middle
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_MIDDLE
+
+    NAME "Print-Job with output-bin 'middle'"
+
+    OPERATION Print-Job
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR name requesting-user-name $user
+    ATTR boolean ipp-attribute-fidelity false
+    ATTR mimeMediaType document-format $filetype
+
+    GROUP job-attributes-tag
+    ATTR keyword output-bin "middle"
+
+    FILE $filename
+
+    STATUS successful-ok
+    STATUS server-error-job-canceled
+    STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
+
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
+    EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
+    EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
+    EXPECT ?job-state-message OF-TYPE text IN-GROUP job-attributes-tag
+    EXPECT ?number-of-intervening-jobs OF-TYPE integer IN-GROUP job-attributes-tag WITH-VALUE >-1
+}
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_MIDDLE
+
+    NAME "Verify output-bin 'middle'"
+
+    OPERATION Get-Job-Attributes
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR name requesting-user-name $user
+
+    DISPLAY output-bin
+
+    STATUS successful-ok
+    EXPECT job-id OF-TYPE integer IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE >0
+    EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT output-bin OF-TYPE keyword IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "middle"
+}
+
+
+# Print-Job request with output-bin bottom
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_BOTTOM
+
+    NAME "Print-Job with output-bin 'bottom'"
+
+    OPERATION Print-Job
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR name requesting-user-name $user
+    ATTR boolean ipp-attribute-fidelity false
+    ATTR mimeMediaType document-format $filetype
+
+    GROUP job-attributes-tag
+    ATTR keyword output-bin "bottom"
+
+    FILE $filename
+
+    STATUS successful-ok
+    STATUS server-error-job-canceled
+    STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
+
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
+    EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
+    EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
+    EXPECT ?job-state-message OF-TYPE text IN-GROUP job-attributes-tag
+    EXPECT ?number-of-intervening-jobs OF-TYPE integer IN-GROUP job-attributes-tag WITH-VALUE >-1
+}
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_BOTTOM
+
+    NAME "Verify output-bin 'bottom'"
+
+    OPERATION Get-Job-Attributes
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR name requesting-user-name $user
+
+    DISPLAY output-bin
+
+    STATUS successful-ok
+    EXPECT job-id OF-TYPE integer IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE >0
+    EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT ?output-bin OF-TYPE keyword IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "bottom"
+}
+
+
+# Print-Job request with output-bin side
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_SIDE
+
+    NAME "Print-Job with output-bin 'side'"
+
+    OPERATION Print-Job
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR name requesting-user-name $user
+    ATTR boolean ipp-attribute-fidelity false
+    ATTR mimeMediaType document-format $filetype
+
+    GROUP job-attributes-tag
+    ATTR keyword output-bin "side"
+
+    FILE $filename
+
+    STATUS successful-ok
+    STATUS server-error-job-canceled
+    STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
+
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
+    EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
+    EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
+    EXPECT ?job-state-message OF-TYPE text IN-GROUP job-attributes-tag
+    EXPECT ?number-of-intervening-jobs OF-TYPE integer IN-GROUP job-attributes-tag WITH-VALUE >-1
+}
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_SIDE
+
+    NAME "Verify output-bin 'side'"
+
+    OPERATION Get-Job-Attributes
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR name requesting-user-name $user
+
+    DISPLAY output-bin
+
+    STATUS successful-ok
+    EXPECT job-id OF-TYPE integer IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE >0
+    EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT ?output-bin OF-TYPE keyword IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "side"
+}
+
+
+# Print-Job request with output-bin left
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_LEFT
+
+    NAME "Print-Job with output-bin 'left'"
+
+    OPERATION Print-Job
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR name requesting-user-name $user
+    ATTR boolean ipp-attribute-fidelity false
+    ATTR mimeMediaType document-format $filetype
+
+    GROUP job-attributes-tag
+    ATTR keyword output-bin "left"
+
+    FILE $filename
+
+    STATUS successful-ok
+    STATUS server-error-job-canceled
+    STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
+
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
+    EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
+    EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
+    EXPECT ?job-state-message OF-TYPE text IN-GROUP job-attributes-tag
+    EXPECT ?number-of-intervening-jobs OF-TYPE integer IN-GROUP job-attributes-tag WITH-VALUE >-1
+}
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_LEFT
+
+    NAME "Verify output-bin 'left'"
+
+    OPERATION Get-Job-Attributes
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR name requesting-user-name $user
+
+    DISPLAY output-bin
+
+    STATUS successful-ok
+    EXPECT job-id OF-TYPE integer IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE >0
+    EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT ?output-bin OF-TYPE keyword IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "left"
+}
+
+
+# Print-Job request with output-bin right
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_RIGHT
+
+    NAME "Print-Job with output-bin 'right'"
+
+    OPERATION Print-Job
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR name requesting-user-name $user
+    ATTR boolean ipp-attribute-fidelity false
+    ATTR mimeMediaType document-format $filetype
+
+    GROUP job-attributes-tag
+    ATTR keyword output-bin "right"
+
+    FILE $filename
+
+    STATUS successful-ok
+    STATUS server-error-job-canceled
+    STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
+
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
+    EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
+    EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
+    EXPECT ?job-state-message OF-TYPE text IN-GROUP job-attributes-tag
+    EXPECT ?number-of-intervening-jobs OF-TYPE integer IN-GROUP job-attributes-tag WITH-VALUE >-1
+}
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_RIGHT
+
+    NAME "Verify output-bin 'right'"
+
+    OPERATION Get-Job-Attributes
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR name requesting-user-name $user
+
+    DISPLAY output-bin
+
+    STATUS successful-ok
+    EXPECT job-id OF-TYPE integer IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE >0
+    EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT ?output-bin OF-TYPE keyword IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "right"
+}
+
+
+# Print-Job request with output-bin center
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_CENTER
+
+    NAME "Print-Job with output-bin 'center'"
+
+    OPERATION Print-Job
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR name requesting-user-name $user
+    ATTR boolean ipp-attribute-fidelity false
+    ATTR mimeMediaType document-format $filetype
+
+    GROUP job-attributes-tag
+    ATTR keyword output-bin "center"
+
+    FILE $filename
+
+    STATUS successful-ok
+    STATUS server-error-job-canceled
+    STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
+
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
+    EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
+    EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
+    EXPECT ?job-state-message OF-TYPE text IN-GROUP job-attributes-tag
+    EXPECT ?number-of-intervening-jobs OF-TYPE integer IN-GROUP job-attributes-tag WITH-VALUE >-1
+}
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_CENTER
+
+    NAME "Verify output-bin 'center'"
+
+    OPERATION Get-Job-Attributes
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR name requesting-user-name $user
+
+    DISPLAY output-bin
+
+    STATUS successful-ok
+    EXPECT job-id OF-TYPE integer IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE >0
+    EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT ?output-bin OF-TYPE keyword IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "center"
+}
+
+
+# Print-Job request with output-bin rear
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_REAR
+
+    NAME "Print-Job with output-bin 'rear'"
+
+    OPERATION Print-Job
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR name requesting-user-name $user
+    ATTR boolean ipp-attribute-fidelity false
+    ATTR mimeMediaType document-format $filetype
+
+    GROUP job-attributes-tag
+    ATTR keyword output-bin "rear"
+
+    FILE $filename
+
+    STATUS successful-ok
+    STATUS server-error-job-canceled
+    STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
+
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
+    EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
+    EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
+    EXPECT ?job-state-message OF-TYPE text IN-GROUP job-attributes-tag
+    EXPECT ?number-of-intervening-jobs OF-TYPE integer IN-GROUP job-attributes-tag WITH-VALUE >-1
+}
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_REAR
+
+    NAME "Verify output-bin 'rear'"
+
+    OPERATION Get-Job-Attributes
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR name requesting-user-name $user
+
+    DISPLAY output-bin
+
+    STATUS successful-ok
+    EXPECT job-id OF-TYPE integer IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE >0
+    EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT ?output-bin OF-TYPE keyword IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "rear"
+}
+
+
+# Print-Job request with output-bin face-down
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_FACEDOWN
+
+    NAME "Print-Job with output-bin 'face-down'"
+
+    OPERATION Print-Job
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR name requesting-user-name $user
+    ATTR boolean ipp-attribute-fidelity false
+    ATTR mimeMediaType document-format $filetype
+
+    GROUP job-attributes-tag
+    ATTR keyword output-bin "face-down"
+
+    FILE $filename
+
+    STATUS successful-ok
+    STATUS server-error-job-canceled
+    STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
+
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
+    EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
+    EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
+    EXPECT ?job-state-message OF-TYPE text IN-GROUP job-attributes-tag
+    EXPECT ?number-of-intervening-jobs OF-TYPE integer IN-GROUP job-attributes-tag WITH-VALUE >-1
+}
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_FACEDOWN
+
+    NAME "Verify output-bin 'face-down'"
+
+    OPERATION Get-Job-Attributes
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR name requesting-user-name $user
+
+    DISPLAY output-bin
+
+    STATUS successful-ok
+    EXPECT job-id OF-TYPE integer IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE >0
+    EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT ?output-bin OF-TYPE keyword IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "face-down"
+}
+
+
+# Print-Job request with output-bin face-up
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_FACEUP
+
+    NAME "Print-Job with output-bin 'face-up'"
+
+    OPERATION Print-Job
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR name requesting-user-name $user
+    ATTR boolean ipp-attribute-fidelity false
+    ATTR mimeMediaType document-format $filetype
+
+    GROUP job-attributes-tag
+    ATTR keyword output-bin "face-up"
+
+    FILE $filename
+
+    STATUS successful-ok
+    STATUS server-error-job-canceled
+    STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
+
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
+    EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
+    EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
+    EXPECT ?job-state-message OF-TYPE text IN-GROUP job-attributes-tag
+    EXPECT ?number-of-intervening-jobs OF-TYPE integer IN-GROUP job-attributes-tag WITH-VALUE >-1
+}
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_FACEUP
+
+    NAME "Verify output-bin 'face-up'"
+
+    OPERATION Get-Job-Attributes
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR name requesting-user-name $user
+
+    DISPLAY output-bin
+
+    STATUS successful-ok
+    EXPECT job-id OF-TYPE integer IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE >0
+    EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT ?output-bin OF-TYPE keyword IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "face-up"
+}
+
+
+# Print-Job request with output-bin large-Capacity
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_LARGECAPACITY
+
+    NAME "Print-Job with output-bin 'large-capacity'"
+
+    OPERATION Print-Job
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR name requesting-user-name $user
+    ATTR boolean ipp-attribute-fidelity false
+    ATTR mimeMediaType document-format $filetype
+
+    GROUP job-attributes-tag
+    ATTR keyword output-bin "large-capacity"
+
+    FILE $filename
+
+    STATUS successful-ok
+    STATUS server-error-job-canceled
+    STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
+
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
+    EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
+    EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
+    EXPECT ?job-state-message OF-TYPE text IN-GROUP job-attributes-tag
+    EXPECT ?number-of-intervening-jobs OF-TYPE integer IN-GROUP job-attributes-tag WITH-VALUE >-1
+}
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_LARGECAPACITY
+
+    NAME "Verify output-bin 'large-capacity'"
+
+    OPERATION Get-Job-Attributes
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR name requesting-user-name $user
+
+    DISPLAY output-bin
+
+    STATUS successful-ok
+    EXPECT job-id OF-TYPE integer IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE >0
+    EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT ?output-bin OF-TYPE keyword IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "large-capacity"
+}
+
+
+# Print-Job request with output-bin my-mailbox
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_MYMAILBOX
+
+    NAME "Print-Job with output-bin 'my-mailbox'"
+
+    OPERATION Print-Job
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR name requesting-user-name $user
+    ATTR boolean ipp-attribute-fidelity false
+    ATTR mimeMediaType document-format $filetype
+
+    GROUP job-attributes-tag
+    ATTR keyword output-bin "my-mailbox"
+
+    FILE $filename
+
+    STATUS successful-ok
+    STATUS server-error-job-canceled
+    STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
+
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
+    EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
+    EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
+    EXPECT ?job-state-message OF-TYPE text IN-GROUP job-attributes-tag
+    EXPECT ?number-of-intervening-jobs OF-TYPE integer IN-GROUP job-attributes-tag WITH-VALUE >-1
+}
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_MYMAILBOX
+
+    NAME "Verify output-bin 'my-mailbox'"
+
+    OPERATION Get-Job-Attributes
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR name requesting-user-name $user
+
+    DISPLAY output-bin
+
+    STATUS successful-ok
+    EXPECT job-id OF-TYPE integer IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE >0
+    EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT ?output-bin OF-TYPE keyword IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "my-mailbox"
+}
+
+
+# Print-Job request with output-bin stacker-1
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_STACKER1
+
+    NAME "Print-Job with output-bin 'stacker-1'"
+
+    OPERATION Print-Job
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR name requesting-user-name $user
+    ATTR boolean ipp-attribute-fidelity false
+    ATTR mimeMediaType document-format $filetype
+
+    GROUP job-attributes-tag
+    ATTR keyword output-bin "stacker-1"
+
+    FILE $filename
+
+    STATUS successful-ok
+    STATUS server-error-job-canceled
+    STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
+
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
+    EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
+    EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
+    EXPECT ?job-state-message OF-TYPE text IN-GROUP job-attributes-tag
+    EXPECT ?number-of-intervening-jobs OF-TYPE integer IN-GROUP job-attributes-tag WITH-VALUE >-1
+}
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_STACKER1
+
+    NAME "Verify output-bin 'stacker-1'"
+
+    OPERATION Get-Job-Attributes
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR name requesting-user-name $user
+
+    DISPLAY output-bin
+
+    STATUS successful-ok
+    EXPECT job-id OF-TYPE integer IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE >0
+    EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT output-bin OF-TYPE keyword IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "stacker-1"
+}
+
+
+# Print-Job request with output-bin stacker-2
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_STACKER2
+
+    NAME "Print-Job with output-bin 'stacker-2'"
+
+    OPERATION Print-Job
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR name requesting-user-name $user
+    ATTR boolean ipp-attribute-fidelity false
+    ATTR mimeMediaType document-format $filetype
+
+    GROUP job-attributes-tag
+    ATTR keyword output-bin "stacker-2"
+
+    FILE $filename
+
+    STATUS successful-ok
+    STATUS server-error-job-canceled
+    STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
+
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
+    EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
+    EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
+    EXPECT ?job-state-message OF-TYPE text IN-GROUP job-attributes-tag
+    EXPECT ?number-of-intervening-jobs OF-TYPE integer IN-GROUP job-attributes-tag WITH-VALUE >-1
+}
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_STACKER2
+
+    NAME "Verify output-bin 'stacker-2'"
+
+    OPERATION Get-Job-Attributes
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR name requesting-user-name $user
+
+    DISPLAY output-bin
+
+    STATUS successful-ok
+    EXPECT job-id OF-TYPE integer IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE >0
+    EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT output-bin OF-TYPE keyword IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "stacker-2"
+}
+
+
+# Print-Job request with output-bin mailbox-1
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_MAILBOX1
+
+    NAME "Print-Job with output-bin 'mailbox-1'"
+
+    OPERATION Print-Job
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR name requesting-user-name $user
+    ATTR boolean ipp-attribute-fidelity false
+    ATTR mimeMediaType document-format $filetype
+
+    GROUP job-attributes-tag
+    ATTR keyword output-bin "mailbox-1"
+
+    FILE $filename
+
+    STATUS successful-ok
+    STATUS server-error-job-canceled
+    STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
+
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
+    EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
+    EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
+    EXPECT ?job-state-message OF-TYPE text IN-GROUP job-attributes-tag
+    EXPECT ?number-of-intervening-jobs OF-TYPE integer IN-GROUP job-attributes-tag WITH-VALUE >-1
+}
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_MAILBOX1
+
+    NAME "Verify output-bin 'mailbox-1'"
+
+    OPERATION Get-Job-Attributes
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR name requesting-user-name $user
+
+    DISPLAY output-bin
+
+    STATUS successful-ok
+    EXPECT job-id OF-TYPE integer IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE >0
+    EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT output-bin OF-TYPE keyword IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "mailbox-1"
+}
+
+
+# Print-Job request with output-bin mailbox-2
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_MAILBOX2
+
+    NAME "Print-Job with output-bin 'mailbox-2'"
+
+    OPERATION Print-Job
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR name requesting-user-name $user
+    ATTR boolean ipp-attribute-fidelity false
+    ATTR mimeMediaType document-format $filetype
+
+    GROUP job-attributes-tag
+    ATTR keyword output-bin "mailbox-2"
+
+    FILE $filename
+
+    STATUS successful-ok
+    STATUS server-error-job-canceled
+    STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
+
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
+    EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
+    EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
+    EXPECT ?job-state-message OF-TYPE text IN-GROUP job-attributes-tag
+    EXPECT ?number-of-intervening-jobs OF-TYPE integer IN-GROUP job-attributes-tag WITH-VALUE >-1
+}
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_MAILBOX2
+
+    NAME "Verify output-bin 'mailbox-2'"
+
+    OPERATION Get-Job-Attributes
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR name requesting-user-name $user
+
+    DISPLAY output-bin
+
+    STATUS successful-ok
+    EXPECT job-id OF-TYPE integer IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE >0
+    EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT output-bin OF-TYPE keyword IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "mailbox-2"
+}
+
+
+# Print-Job request with output-bin tray-1
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_TRAY1
+
+    NAME "Print-Job with output-bin 'tray-1'"
+
+    OPERATION Print-Job
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR name requesting-user-name $user
+    ATTR boolean ipp-attribute-fidelity false
+    ATTR mimeMediaType document-format $filetype
+
+    GROUP job-attributes-tag
+    ATTR keyword output-bin "tray-1"
+
+    FILE $filename
+
+    STATUS successful-ok
+    STATUS server-error-job-canceled
+    STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
+
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
+    EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
+    EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
+    EXPECT ?job-state-message OF-TYPE text IN-GROUP job-attributes-tag
+    EXPECT ?number-of-intervening-jobs OF-TYPE integer IN-GROUP job-attributes-tag WITH-VALUE >-1
+}
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_TRAY1
+
+    NAME "Verify output-bin 'tray-1'"
+
+    OPERATION Get-Job-Attributes
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR name requesting-user-name $user
+
+    DISPLAY output-bin
+
+    STATUS successful-ok
+    EXPECT job-id OF-TYPE integer IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE >0
+    EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT output-bin OF-TYPE keyword IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "tray-1"
+}
+
+
+# Print-Job request with output-bin tray-2
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_TRAY2
+
+    NAME "Print-Job with output-bin 'tray-2'"
+
+    OPERATION Print-Job
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR name requesting-user-name $user
+    ATTR boolean ipp-attribute-fidelity false
+    ATTR mimeMediaType document-format $filetype
+
+    GROUP job-attributes-tag
+    ATTR keyword output-bin "tray-2"
+
+    FILE $filename
+
+    STATUS successful-ok
+    STATUS server-error-job-canceled
+    STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
+
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
+    EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
+    EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
+    EXPECT ?job-state-message OF-TYPE text IN-GROUP job-attributes-tag
+    EXPECT ?number-of-intervening-jobs OF-TYPE integer IN-GROUP job-attributes-tag WITH-VALUE >-1
+}
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_TRAY2
+
+    NAME "Verify output-bin 'tray-2'"
+
+    OPERATION Get-Job-Attributes
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR name requesting-user-name $user
+
+    DISPLAY output-bin
+
+    STATUS successful-ok
+    EXPECT job-id OF-TYPE integer IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE >0
+    EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT output-bin OF-TYPE keyword IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "tray-2"
+}
+
+
+# Print-Job request with output-bin tray-3
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_TRAY3
+
+    NAME "Print-Job with output-bin 'tray-3'"
+
+    OPERATION Print-Job
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR name requesting-user-name $user
+    ATTR boolean ipp-attribute-fidelity false
+    ATTR mimeMediaType document-format $filetype
+
+    GROUP job-attributes-tag
+    ATTR keyword output-bin "tray-3"
+
+    FILE $filename
+
+    STATUS successful-ok
+    STATUS server-error-job-canceled
+    STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
+
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
+    EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
+    EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
+    EXPECT ?job-state-message OF-TYPE text IN-GROUP job-attributes-tag
+    EXPECT ?number-of-intervening-jobs OF-TYPE integer IN-GROUP job-attributes-tag WITH-VALUE >-1
+}
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_TRAY3
+
+    NAME "Verify output-bin 'tray-3'"
+
+    OPERATION Get-Job-Attributes
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR name requesting-user-name $user
+
+    DISPLAY output-bin
+
+    STATUS successful-ok
+    EXPECT job-id OF-TYPE integer IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE >0
+    EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT output-bin OF-TYPE keyword IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "tray-3"
+}
+
+
+# Print-Job request with output-bin tray-4
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_TRAY4
+
+    NAME "Print-Job with output-bin 'tray-4'"
+
+    OPERATION Print-Job
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR name requesting-user-name $user
+    ATTR boolean ipp-attribute-fidelity false
+    ATTR mimeMediaType document-format $filetype
+
+    GROUP job-attributes-tag
+    ATTR keyword output-bin "tray-4"
+
+    FILE $filename
+
+    STATUS successful-ok
+    STATUS server-error-job-canceled
+    STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
+
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
+    EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
+    EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
+    EXPECT ?job-state-message OF-TYPE text IN-GROUP job-attributes-tag
+    EXPECT ?number-of-intervening-jobs OF-TYPE integer IN-GROUP job-attributes-tag WITH-VALUE >-1
+}
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_TRAY4
+
+    NAME "Verify output-bin 'tray-4'"
+
+    OPERATION Get-Job-Attributes
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR name requesting-user-name $user
+
+    DISPLAY output-bin
+
+    STATUS successful-ok
+    EXPECT job-id OF-TYPE integer IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE >0
+    EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT output-bin OF-TYPE keyword IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "tray-4"
+}
+
+
+# Print-Job request with output-bin tray-5
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_TRAY5
+
+    NAME "Print-Job with output-bin 'tray-5'"
+
+    OPERATION Print-Job
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR name requesting-user-name $user
+    ATTR boolean ipp-attribute-fidelity false
+    ATTR mimeMediaType document-format $filetype
+
+    GROUP job-attributes-tag
+    ATTR keyword output-bin "tray-5"
+
+    FILE $filename
+
+    STATUS successful-ok
+    STATUS server-error-job-canceled
+    STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
+
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
+    EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
+    EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
+    EXPECT ?job-state-message OF-TYPE text IN-GROUP job-attributes-tag
+    EXPECT ?number-of-intervening-jobs OF-TYPE integer IN-GROUP job-attributes-tag WITH-VALUE >-1
+}
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_TRAY5
+
+    NAME "Verify output-bin 'tray-5'"
+
+    OPERATION Get-Job-Attributes
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR name requesting-user-name $user
+
+    DISPLAY output-bin
+
+    STATUS successful-ok
+    EXPECT job-id OF-TYPE integer IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE >0
+    EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT output-bin OF-TYPE keyword IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "tray-5"
+}
+
+
+# Print-Job request with output-bin tray-6
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_TRAY6
+
+    NAME "Print-Job with output-bin 'tray-6'"
+
+    OPERATION Print-Job
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR name requesting-user-name $user
+    ATTR boolean ipp-attribute-fidelity false
+    ATTR mimeMediaType document-format $filetype
+
+    GROUP job-attributes-tag
+    ATTR keyword output-bin "tray-6"
+
+    FILE $filename
+
+    STATUS successful-ok
+    STATUS server-error-job-canceled
+    STATUS server-error-busy REPEAT-MATCH REPEAT-LIMIT 30
+
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
+    EXPECT job-state OF-TYPE unknown|enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 3,4,5,6,7,8,9
+    EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag
+    EXPECT ?job-state-message OF-TYPE text IN-GROUP job-attributes-tag
+    EXPECT ?number-of-intervening-jobs OF-TYPE integer IN-GROUP job-attributes-tag WITH-VALUE >-1
+}
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_OUTPUT_BIN_TRAY6
+
+    NAME "Verify output-bin 'tray-6'"
+
+    OPERATION Get-Job-Attributes
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR name requesting-user-name $user
+
+    DISPLAY output-bin
+
+    STATUS successful-ok
+    EXPECT job-id OF-TYPE integer IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE >0
+    EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "$IPP_URI_SCHEME"
+    EXPECT output-bin OF-TYPE keyword IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE "tray-6"
+}
