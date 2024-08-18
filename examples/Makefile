@@ -1,7 +1,7 @@
 #
 # Example files makefile for libcups.
 #
-# Copyright © 2021-2023 by OpenPrinting.
+# Copyright © 2021-2024 by OpenPrinting.
 #
 # Licensed under Apache License v2.0.  See the file "LICENSE" for more
 # information.
@@ -57,6 +57,8 @@ TESTFILES	=	\
 			identify-printer.test \
 			ipp-1.1.test \
 			ipp-2.0.test \
+			ipp-2.1.test \
+			ipp-2.2.test \
 			print-job.test \
 			print-job-and-wait.test \
 			print-job-deflate.test \
@@ -69,6 +71,19 @@ TESTFILES	=	\
 			print-job-password.test \
 			print-job-raster.test \
 			print-uri.test \
+			pwg5100.1.test \
+			pwg5100.2.test \
+			pwg5100.3.test \
+			pwg5100.5.test \
+			pwg5100.6.test \
+			pwg5100.7.test \
+			pwg5100.8.test \
+			pwg5100.9.test \
+			pwg5100.11.test \
+			pwg5101.1.test \
+			rfc3380.test \
+			rfc3995-3996.test \
+			rfc3998.test \
 			set-attrs-hold.test \
 			validate-job.test
 
