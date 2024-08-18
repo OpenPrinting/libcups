@@ -1,7 +1,7 @@
 #
 # IPP/2.0 test suite.
 #
-# Copyright © 2022 by OpenPrinting.
+# Copyright © 2022-2024 by OpenPrinting.
 # Copyright © 2007-2017 by Apple Inc.
 # Copyright © 2001-2006 by Easy Software Products. All rights reserved.
 #
@@ -10,24 +10,43 @@
 #
 # Usage:
 #
-#   ./ipptool -V 2.0 -f filename -t printer-uri ipp-2.0.test
+#   ipptool -V 2.0 -f FILENAME -t PRINTER-URI ipp-2.0.test
 #
 
-# Do all of the IPP/1.1 tests as an IPP/2.0 client
-#
-# Required by: PWG 5100.12 section 4.1
+# (REQUIRED) IETF STD 92: Internet Printing Protocol/1.1
 INCLUDE "ipp-1.1.test"
 
+# (REQUIRED) PWG 5101.1-2023: Media Standardized Names v2.1 (MSN)
+DEFINE REQUIRE_MSN
+INCLUDE "pwg5101.1.test"
 
-# Regular expression for PWG media size names (eek!)
-DEFINE MEDIA_REGEX "/^(choice(_((custom|na|asme|roc|oe|roll)_[a-z0-9][-a-z0-9]*_([1-9][0-9]*(\.[0-9]*[1-9])?|0\.[0-9]*[1-9])x([1-9][0-9]*(\.[0-9]*[1-9])?|0\.[0-9]*[1-9])in|(custom|iso|jis|jpn|prc|om|roll)_[a-z0-9][-a-z0-9]*_([1-9][0-9]*(\.[0-9]*[1-9])?|0\.[0-9]*[1-9])x([1-9][0-9]*(\.[0-9]*[1-9])?|0\.[0-9]*[1-9])mm)){2,}|(custom|na|asme|roc|oe|roll)_[a-z0-9][-a-z0-9]*_([1-9][0-9]*(\.[0-9]*[1-9])?|0\.[0-9]*[1-9])x([1-9][0-9]*(\.[0-9]*[1-9])?|0\.[0-9]*[1-9])in|(custom|iso|jis|jpn|prc|om|roll)_[a-z0-9][-a-z0-9]*_([1-9][0-9]*(\.[0-9]*[1-9])?|0\.[0-9]*[1-9])x([1-9][0-9]*(\.[0-9]*[1-9])?|0\.[0-9]*[1-9])mm)$$/"
+# (REQUIRED) PWG 5100.1-2022: IPP Finishings v3.0 (MSN)
+DEFINE REQUIRE_FIN
+INCLUDE "pwg5100.1.test"
 
+# (REQUIRED) PWG 5100.2-2001: IPP "output-bin" Attribute
+DEFINE REQUIRE_OUTPUTBIN
+INCLUDE "pwg5100.2.test"
 
-# Test required printer description attribute support.
-#
-# Required by: PWG 5100.12 section 6.2
+# (RECOMMENDED) PWG 5100.7-2023: IPP Job Extensions v2.1 (JOBEXT)
+INCLUDE "pwg5100.7.test"
+
+# (RECOMMENDED) PWG 5100.9-2009: IPP Printer State Extensions v1.0 (STATE)
+INCLUDE "pwg5100.9.test"
+
+# (RECOMMENDED) RFC 3380: IPP: Job and Printer Set Operations
+INCLUDE "rfc3380.test"
+
+# (RECOMMENDED) RFC 3995: IPP: Notifications and Subscriptions
+# (RECOMMENDED) RFC 3996: IPP: The 'ippget' Delivery Method for Event Notifications
+INCLUDE "rfc3995-3996.test"
+
+# (RECOMMENDED) RFC 3998: IPP: Job and Printer Administrative Operations
+INCLUDE "rfc3998.test"
+
+# PWG 5100.12-2024: IPP/2.x Fourth Edition (for IPP/2.0)
 {
-    NAME "PWG 5100.12 section 6.2 - Required Printer Description Attributes"
+    NAME "PWG 5100.12-2024: Required Operations, Attributes, and Values"
     OPERATION Get-Printer-Attributes
     GROUP operation-attributes-tag
     ATTR charset attributes-charset utf-8
@@ -38,69 +57,82 @@ DEFINE MEDIA_REGEX "/^(choice(_((custom|na|asme|roc|oe|roll)_[a-z0-9][-a-z0-9]*_
 
     STATUS successful-ok
 
+    # Baseline requirement/value
+    EXPECT ipp-versions-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE "2.0"
+
+
     # Figure out capabilities
     EXPECT color-supported OF-TYPE boolean IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE true DEFINE-MATCH PRINTER_IS_COLOR
+    EXPECT job-hold-until-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag DEFINE-MATCH PRINTER_HAS_JOB_HOLD_UNTIL
+    EXPECT job-priority-supported OF-TYPE integer IN-GROUP printer-attributes-tag DEFINE-MATCH PRINTER_HAS_JOB_PRIORITY
+    EXPECT job-sheets-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag DEFINE-MATCH PRINTER_HAS_JOB_SHEETS
+    EXPECT media-col-supported OF-TYPE keyword IN-GROUP printer-attributes-tag DEFINE-MATCH PRINTER_HAS_MEDIA_COL
+    EXPECT output-bin-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag DEFINE-MATCH PRINTER_HAS_OUTPUT_BIN
+    EXPECT print-content-optimize-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag DEFINE-MATCH PRINTER_HAS_PRINT_CONTENT_OPTIMIZE
+    EXPECT sides-supported OF-TYPE keyword IN-GROUP printer-attributes-tag DEFINE-MATCH PRINTER_HAS_SIDES
 
-    # Job template attributes
+    # Table 2 - IPP Operations (IPP/2.0)
+    EXPECT operations-supported OF-TYPE enum IN-GROUP printer-attributes-tag
+    EXPECT operations-supported WITH-VALUE 0x0008 # Cancel-Job
+    EXPECT operations-supported WITH-VALUE 0x0005 DEFINE-MATCH PRINTER_HAS_CREATE_JOB # Create-Job
+	EXPECT operations-supported WITH-VALUE 0x0006 IF-DEFINED PRINTER_HAS_CREATE_JOB # Send-Document
+    EXPECT operations-supported WITH-VALUE 0x0009 # Get-Job-Attributes
+    EXPECT operations-supported WITH-VALUE 0x000A # Get-Jobs
+    EXPECT operations-supported WITH-VALUE 0x000B # Get-Printer-Attributes
+    EXPECT operations-supported WITH-VALUE 0x0002 # Print-Job
+    EXPECT operations-supported WITH-VALUE 0x0006 DEFINE-MATCH PRINTER_HAS_SEND_DOCUMENT # Send-Document
+	EXPECT operations-supported WITH-VALUE 0x0005 IF-DEFINED PRINTER_HAS_SEND_DOCUMENT # Create-Job
+    EXPECT operations-supported WITH-VALUE 0x0004 # Validate-Job
+
+    # Table 5 - Updated IPP Printer Description Attributes (IPP/2.0)
+    EXPECT color-supported OF-TYPE boolean IN-GROUP printer-attributes-tag COUNT 1
+
     EXPECT copies-default OF-TYPE integer IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE >0
     EXPECT copies-supported OF-TYPE rangeOfInteger IN-GROUP printer-attributes-tag
-    EXPECT finishings-default OF-TYPE enum IN-GROUP printer-attributes-tag
-    EXPECT finishings-supported OF-TYPE enum IN-GROUP printer-attributes-tag WITH-VALUE 3
+
+    EXPECT job-hold-until-default OF-TYPE keyword|name IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE-FROM job-hold-until-supported IF-DEFINED PRINTER_HAS_JOB_HOLD_UNTIL
+    EXPECT job-hold-until-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag IF-DEFINED PRINTER_HAS_JOB_HOLD_UNTIL
+    EXPECT job-hold-until-supported WITH-VALUE indefinite IF-DEFINED PRINTER_HAS_JOB_HOLD_UNTIL
+    EXPECT job-hold-until-supported WITH-VALUE no-hold IF-DEFINED PRINTER_HAS_JOB_HOLD_UNTIL
+
+    EXPECT job-priority-default OF-TYPE integer(1:100) COUNT 1 IN-GROUP printer-attributes-tag IF-DEFINED PRINTER_HAS_JOB_PRIORITY
+    EXPECT job-priority-supported OF-TYPE integer(1:100) COUNT 1 IN-GROUP printer-attributes-tag IF-DEFINED PRINTER_HAS_JOB_PRIORITY
+
+    EXPECT job-sheets-default OF-TYPE keyword|name COUNT 1 IN-GROUP printer-attributes-tag WITH-VALUE-FROM job-sheets-supported IF-DEFINED PRINTER_HAS_JOB_SHEETS
+    EXPECT job-sheets-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag IF-DEFINED PRINTER_HAS_JOB_SHEETS
+    EXPECT job-sheets-supported WITH-VALUE none IF-DEFINED PRINTER_HAS_JOB_SHEETS
+
     EXPECT media-default OF-TYPE no-value|keyword|name IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE "$MEDIA_REGEX"
     EXPECT ?media-ready OF-TYPE keyword|name IN-GROUP printer-attributes-tag WITH-ALL-VALUES "$MEDIA_REGEX"
     EXPECT media-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag WITH-ALL-VALUES "$MEDIA_REGEX"
+
     EXPECT orientation-requested-default OF-TYPE no-value|enum IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE 3,4,5,6,7
     EXPECT orientation-requested-supported OF-TYPE enum IN-GROUP printer-attributes-tag WITH-VALUE 3,4,5,6,7
-    EXPECT output-bin-default OF-TYPE keyword|name IN-GROUP printer-attributes-tag COUNT 1
+
+    EXPECT output-bin-default OF-TYPE keyword|name IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE-FROM output-bin-supported
     EXPECT output-bin-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag
-    EXPECT print-quality-default OF-TYPE enum IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE 3,4,5
-    EXPECT print-quality-supported OF-TYPE enum IN-GROUP printer-attributes-tag WITH-VALUE 3,4,5
-    EXPECT printer-resolution-default OF-TYPE resolution IN-GROUP printer-attributes-tag COUNT 1
-    EXPECT printer-resolution-supported OF-TYPE resolution IN-GROUP printer-attributes-tag
-    EXPECT sides-default OF-TYPE keyword IN-GROUP printer-attributes-tag COUNT 1 WITH-ALL-VALUES "/^(one-sided|two-sided-long-edge|two-sided-short-edge)$$/"
-    EXPECT sides-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-ALL-VALUES "/^(one-sided|two-sided-long-edge|two-sided-short-edge)$$/"
 
-    # Optional media-col support
-    EXPECT ?media-col-default OF-TYPE collection IN-GROUP printer-attributes-tag COUNT 1
-    EXPECT ?media-col-ready OF-TYPE collection IN-GROUP printer-attributes-tag
-    EXPECT ?media-col-supported OF-TYPE keyword IN-GROUP printer-attributes-tag
-    EXPECT media-col-supported WITH-VALUE media-back-coating DEFINE-MATCH HAVE_MEDIA_BACK_COATING
-    EXPECT media-col-supported WITH-VALUE media-color DEFINE-MATCH HAVE_MEDIA_COLOR
-    EXPECT media-col-supported WITH-VALUE media-front-coating DEFINE-MATCH HAVE_MEDIA_FRONT_COATING
-    EXPECT media-col-supported WITH-VALUE media-grain DEFINE-MATCH HAVE_MEDIA_GRAIN
-    EXPECT media-col-supported WITH-VALUE media-hole-count DEFINE-MATCH HAVE_MEDIA_HOLE_COUNT
-    EXPECT media-col-supported WITH-VALUE media-info DEFINE-MATCH HAVE_MEDIA_INFO
-    EXPECT media-col-supported WITH-VALUE media-key DEFINE-MATCH HAVE_MEDIA_KEY
-    EXPECT media-col-supported WITH-VALUE media-order-count DEFINE-MATCH HAVE_MEDIA_ORDER_COUNT
-    EXPECT media-col-supported WITH-VALUE media-pre-printed DEFINE-MATCH HAVE_MEDIA_PRE_PRINTED
-    EXPECT media-col-supported WITH-VALUE media-recycled DEFINE-MATCH HAVE_MEDIA_RECYCLED
-    EXPECT media-col-supported WITH-VALUE media-size DEFINE-MATCH HAVE_MEDIA_SIZE
-    EXPECT media-col-supported WITH-VALUE media-tooth DEFINE-MATCH HAVE_MEDIA_TOOTH
-    EXPECT media-col-supported WITH-VALUE media-type DEFINE-MATCH HAVE_MEDIA_TYPE
-    EXPECT media-col-supported WITH-VALUE media-weight-metric DEFINE-MATCH HAVE_MEDIA_WEIGHT_METRIC
-
-    EXPECT media-back-coating-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag IF-DEFINED HAVE_MEDIA_BACK_COATING
-    EXPECT media-color-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag IF-DEFINED HAVE_MEDIA_COLOR
-    EXPECT media-front-coating-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag IF-DEFINED HAVE_MEDIA_FRONT_COATING
-    EXPECT media-grain-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag IF-DEFINED HAVE_MEDIA_GRAIN
-    EXPECT media-hole-count-supported OF-TYPE rangeOfInteger IN-GROUP printer-attributes-tag WITH-VALUE >-1 IF-DEFINED HAVE_MEDIA_HOLE_COUNT
-    EXPECT media-info-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag IF-DEFINED HAVE_MEDIA_INFO
-    EXPECT media-key-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag IF-DEFINED HAVE_MEDIA_KEY
-    EXPECT media-order-count-supported OF-TYPE rangeOfInteger IN-GROUP printer-attributes-tag WITH-VALUE >0 IF-DEFINED HAVE_MEDIA_ORDER_COUNT
-    EXPECT media-pre-printed-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag IF-DEFINED HAVE_MEDIA_PRE_PRINTED
-    EXPECT media-recycled-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag IF-DEFINED HAVE_MEDIA_RECYCLED
-    EXPECT media-size-supported OF-TYPE collection IN-GROUP printer-attributes-tag IF-DEFINED HAVE_MEDIA_SIZE
-    EXPECT media-tooth-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag IF-DEFINED HAVE_MEDIA_TOOTH
-    EXPECT media-type-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag IF-DEFINED HAVE_MEDIA_TYPE
-    EXPECT media-weight-metric-supported OF-TYPE rangeOfInteger IN-GROUP printer-attributes-tag WITH-VALUE >-1 IF-DEFINED HAVE_MEDIA_WEIGHT_METRIC
-
-    # Printer description attributes
-    EXPECT color-supported OF-TYPE boolean IN-GROUP printer-attributes-tag COUNT 1
-    EXPECT pages-per-minute OF-TYPE integer IN-GROUP printer-attributes-tag COUNT 1
-    EXPECT pages-per-minute-color OF-TYPE integer IN-GROUP printer-attributes-tag COUNT 1 IF-DEFINED PRINTER_IS_COLOR
+    EXPECT pages-per-minute OF-TYPE integer IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE >-1
+    EXPECT pages-per-minute-color OF-TYPE integer IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE >-1 IF-DEFINED PRINTER_IS_COLOR
     EXPECT !pages-per-minute-color IF-NOT-DEFINED PRINTER_IS_COLOR
+
+    EXPECT print-content-optimize-default OF-TYPE keyword COUNT 1 IN-GROUP printer-attributes-tag IF-DEFINED PRINTER_HAS_PRINT_CONTENT_OPTIMIZE WITH-VALUE-FROM print-content-optimize-supported
+    EXPECT print-content-optimize-supported OF-TYPE keyword IN-GROUP printer-attributes-tag IF-DEFINED PRINTER_HAS_PRINT_CONTENT_OPTIMIZE WITH-ALL-VALUES "/^(auto|graphic|photo|text|text-and-graphic)$$/"
+
+    EXPECT print-quality-default OF-TYPE enum IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE-FROM print-quality-supported
+    EXPECT print-quality-supported OF-TYPE enum IN-GROUP printer-attributes-tag WITH-VALUE 3,4,5
+
     EXPECT printer-info OF-TYPE text(127) IN-GROUP printer-attributes-tag COUNT 1
+
     EXPECT printer-location OF-TYPE text(127) IN-GROUP printer-attributes-tag COUNT 1
+
     EXPECT printer-make-and-model OF-TYPE text(127) IN-GROUP printer-attributes-tag COUNT 1
+
     EXPECT printer-more-info OF-TYPE uri IN-GROUP printer-attributes-tag COUNT 1
+
+    EXPECT printer-resolution-default OF-TYPE resolution IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE-FROM printer-resolution-supported
+    EXPECT printer-resolution-supported OF-TYPE resolution IN-GROUP printer-attributes-tag
+
+    EXPECT sides-default OF-TYPE keyword IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE-FROM sides-supported IF-DEFINED PRINTER_HAS_SIDES
+    EXPECT sides-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-ALL-VALUES "/^(one-sided|two-sided-long-edge|two-sided-short-edge)$$/" IF-DEFINED PRINTER_HAS_SIDES
 }
