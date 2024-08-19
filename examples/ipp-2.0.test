@@ -10,15 +10,19 @@
 #
 # Usage:
 #
-#   ipptool -V 2.0 -f FILENAME -t PRINTER-URI ipp-2.0.test
+#   ipptool [OPTIONS] -V 2.0 -tf FILENAME PRINTER-URI ipp-2.0.test
+#
+# Options:
+#
+#   -d NOPRINT=1              Disable the print tests.
 #
 
-# (REQUIRED) IETF STD 92: Internet Printing Protocol/1.1
-INCLUDE "ipp-1.1.test"
 
 # (REQUIRED) PWG 5101.1-2023: Media Standardized Names v2.1 (MSN)
 DEFINE REQUIRE_MSN
-INCLUDE "pwg5101.1.test"
+
+# (REQUIRED) IETF STD 92: Internet Printing Protocol/1.1
+INCLUDE "ipp-1.1.test"
 
 # (REQUIRED) PWG 5100.1-2022: IPP Finishings v3.0 (MSN)
 DEFINE REQUIRE_FIN
@@ -59,7 +63,6 @@ INCLUDE "rfc3998.test"
 
     # Baseline requirement/value
     EXPECT ipp-versions-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE "2.0"
-
 
     # Figure out capabilities
     EXPECT color-supported OF-TYPE boolean IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE true DEFINE-MATCH PRINTER_IS_COLOR
