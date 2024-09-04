@@ -6,7 +6,7 @@
 // our own file functions allows us to provide transparent support of
 // different line endings, gzip'd print files, etc.
 //
-// Copyright © 2021-2023 by OpenPrinting.
+// Copyright © 2021-2024 by OpenPrinting.
 // Copyright © 2007-2019 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products, all rights reserved.
 //
@@ -53,7 +53,7 @@ struct _cups_file_s			// CUPS file structure...
 
 static bool	cups_compress(cups_file_t *fp, const char *buf, size_t bytes);
 static ssize_t	cups_fill(cups_file_t *fp);
-static int	cups_open(const char *filename, int mode);
+static int	cups_open(const char *filename, int oflag, int mode);
 static ssize_t	cups_read(cups_file_t *fp, char *buf, size_t bytes);
 static bool	cups_write(cups_file_t *fp, const char *buf, size_t bytes);
 
@@ -611,6 +611,9 @@ cupsFileNumber(cups_file_t *fp)		// I - CUPS file
 // supplied which enables Flate compression of the file.  Compression is
 // not supported for the "a" (append) mode.
 //
+// When opening for writing ("w") or append ("a"), an optional 'm###' suffix
+// can be used to set the permissions of the opened file.
+//
 // When opening a socket connection, the filename is a string of the form
 // "address:port" or "hostname:port". The socket will make an IPv4 or IPv6
 // connection as needed, generally preferring IPv6 connections when there is
@@ -626,17 +629,25 @@ cupsFileOpen(const char *filename,	// I - Name of file
   char		hostname[1024],		// Hostname
 		*portname;		// Port "name" (number or service)
   http_addrlist_t *addrlist;		// Host address list
+  int		perm = 0664;		// Permissions for write/append
+  const char	*ptr;			// Pointer into mode string
 
 
   // Range check input...
   if (!filename || !mode || (*mode != 'r' && *mode != 'w' && *mode != 'a' && *mode != 's') || (*mode == 'a' && isdigit(mode[1] & 255)))
     return (NULL);
 
+  if ((ptr = strchr(mode, 'm')) != NULL && ptr[1] >= '0' && ptr[1] <= '7')
+  {
+    // Get permissions from mode string...
+    perm = (int)strtol(mode + 1, NULL, 8);
+  }
+
   // Open the file...
   switch (*mode)
   {
     case 'a' : // Append file
-        fd = cups_open(filename, O_WRONLY | O_CREAT | O_APPEND | O_LARGEFILE | O_BINARY);
+        fd = cups_open(filename, O_WRONLY | O_CREAT | O_APPEND | O_LARGEFILE | O_BINARY, perm);
         break;
 
     case 'r' : // Read file
@@ -644,12 +655,12 @@ cupsFileOpen(const char *filename,	// I - Name of file
 	break;
 
     case 'w' : // Write file
-        fd = cups_open(filename, O_WRONLY | O_LARGEFILE | O_BINARY);
+        fd = cups_open(filename, O_WRONLY | O_LARGEFILE | O_BINARY, perm);
 	if (fd < 0 && errno == ENOENT)
 	{
-	  fd = cups_open(filename, O_WRONLY | O_CREAT | O_EXCL | O_LARGEFILE | O_BINARY);
+	  fd = cups_open(filename, O_WRONLY | O_CREAT | O_EXCL | O_LARGEFILE | O_BINARY, perm);
 	  if (fd < 0 && errno == EEXIST)
-	    fd = cups_open(filename, O_WRONLY | O_LARGEFILE | O_BINARY);
+	    fd = cups_open(filename, O_WRONLY | O_LARGEFILE | O_BINARY, perm);
 	}
 
 	if (fd >= 0)
@@ -1748,7 +1759,8 @@ cups_fill(cups_file_t *fp)		// I - CUPS file
 
 static int				// O - File descriptor or -1 otherwise
 cups_open(const char *filename,		// I - Filename
-	  int        mode)		// I - Open mode
+          int        oflag,		// I - Open flags
+	  int        mode)		// I - Open permissions
 {
   int		fd;			// File descriptor
   struct stat	fileinfo;		// File information
@@ -1758,7 +1770,7 @@ cups_open(const char *filename,		// I - Filename
 
 
   // Open the file...
-  if ((fd = open(filename, mode, 0666)) < 0)
+  if ((fd = open(filename, oflag, mode)) < 0)
     return (-1);
 
   // Then verify that the file descriptor doesn't point to a directory or hard-linked file.
