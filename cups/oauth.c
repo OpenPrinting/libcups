@@ -11,16 +11,20 @@
 #include "cups-private.h"
 #include "oauth.h"
 #include "form.h"
-#include <poll.h>
 #include <sys/stat.h>
-#ifdef __APPLE__
-#  include <CoreFoundation/CoreFoundation.h>
-#  include <CoreServices/CoreServices.h>
+#ifdef _WIN32
+#  include <process.h>
 #else
-#  include <spawn.h>
-#  include <sys/wait.h>
+#  include <poll.h>
+#  ifdef __APPLE__
+#    include <CoreFoundation/CoreFoundation.h>
+#    include <CoreServices/CoreServices.h>
+#  else
+#    include <spawn.h>
+#    include <sys/wait.h>
 extern char **environ;			// @private@
-#endif // __APPLE__
+#  endif // __APPLE__
+#endif // _WIN32
 
 
 //
@@ -329,7 +333,9 @@ cupsOAuthGetAuthorizationCode(
   size_t	resourcelen;		// Length of resource path
   http_addr_t	addr;			// Loopback listen address
   int		port;			// Port number
-  struct pollfd	polldata;		// Poll data
+  int		fd = -1;		// Listen file descriptor
+  fd_set	input;			// Input file descriptors for select()
+  struct timeval timeout;		// Timeout for select()
   time_t	endtime;		// End time
   http_t	*http;			// HTTP client
   char		*auth_code = NULL;	// Authorization code
@@ -372,7 +378,7 @@ cupsOAuthGetAuthorizationCode(
     if (!strcmp(host, "localhost") || !strcmp(host, "127.0.0.1"))
       addr.ipv4.sin_addr.s_addr = htonl(0x7f000001);
 
-    polldata.fd = httpAddrListen(&addr, port);
+    fd = httpAddrListen(&addr, port);
 
     cupsConcatString(resource, "?", sizeof(resource));
   }
@@ -388,7 +394,7 @@ cupsOAuthGetAuthorizationCode(
 
     for (port = 10000; port < 11000; port ++)
     {
-      if ((polldata.fd = httpAddrListen(&addr, port)) >= 0)
+      if ((fd = httpAddrListen(&addr, port)) >= 0)
 	break;
     }
 
@@ -398,13 +404,12 @@ cupsOAuthGetAuthorizationCode(
     redirect_uri = final_uri;
   }
 
-  DEBUG_printf("1cupsOAuthGetAuthorizationCode: Listen socket for port %d is %d (%s)", port, polldata.fd, strerror(errno));
+  DEBUG_printf("1cupsOAuthGetAuthorizationCode: Listen socket for port %d is %d (%s)", port, fd, strerror(errno));
 
-  if (polldata.fd < 0)
+  if (fd < 0)
     goto done;
 
-  resourcelen     = strlen(resource);
-  polldata.events = POLLIN | POLLERR | POLLHUP;
+  resourcelen = strlen(resource);
 
   // Point redirection to the local port...
   oauth_save_value(auth_uri, resource_uri, _CUPS_OTYPE_REDIRECT_URI, redirect_uri);
@@ -489,6 +494,10 @@ cupsOAuthGetAuthorizationCode(
   if (error != noErr)
     goto done;
 
+#elif defined(_WIN32)
+  if (_spawnl(_P_WAIT, "start", "", url, NULL))
+    goto done;
+
 #else
   pid_t		pid = 0;		// Process ID
   int		estatus;		// Exit status
@@ -511,10 +520,16 @@ cupsOAuthGetAuthorizationCode(
 
   while (auth_code == NULL && time(NULL) < endtime)
   {
-    if (poll(&polldata, 1, 1000) == 1 && (polldata.revents & POLLIN))
+    timeout.tv_sec  = 1;
+    timeout.tv_usec = 0;
+
+    FD_ZERO(&input);
+    FD_SET(fd, &input);
+
+    if (select(fd + 1, &input, /*writefds*/NULL, /*errorfds*/NULL, &timeout) > 0 && FD_ISSET(fd, &input))
     {
       // Try accepting a connection...
-      if ((http = httpAcceptConnection(polldata.fd, true)) != NULL)
+      if ((http = httpAcceptConnection(fd, true)) != NULL)
       {
         // Respond to HTTP requests...
         while (auth_code == NULL && time(NULL) < endtime && httpWait(http, 1000))
@@ -655,8 +670,8 @@ cupsOAuthGetAuthorizationCode(
   done:
 
   // Free strings, close the listen socket, and return...
-  if (polldata.fd >= 0)
-    httpAddrClose(&addr, polldata.fd);
+  if (fd >= 0)
+    httpAddrClose(&addr, fd);
 
   free(client_id);
   free(code_verifier);
