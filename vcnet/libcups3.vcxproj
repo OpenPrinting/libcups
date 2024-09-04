@@ -133,6 +133,7 @@
     <ClCompile Include="..\cups\language.c" />
     <ClCompile Include="..\cups\md5.c" />
     <ClCompile Include="..\cups\notify.c" />
+    <ClCompile Include="..\cups\oauth.c" />
     <ClCompile Include="..\cups\options.c" />
     <ClCompile Include="..\cups\pwg-media.c" />
     <ClCompile Include="..\cups\rand.c" />
@@ -151,35 +152,36 @@
     <None Include="..\cups\libcups3.def" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\cups\adminutil.h" />
     <ClInclude Include="..\cups\array.h" />
+    <ClInclude Include="..\cups\base.h" />
     <ClInclude Include="..\cups\cups-private.h" />
     <ClInclude Include="..\cups\cups.h" />
+    <ClInclude Include="..\cups\debug-internal.h" />
     <ClInclude Include="..\cups\debug-private.h" />
     <ClInclude Include="..\cups\dir.h" />
     <ClInclude Include="..\cups\dnssd.h" />
     <ClInclude Include="..\cups\file-private.h" />
     <ClInclude Include="..\cups\file.h" />
-    <ClInclude Include="..\cups\globals.h" />
+    <ClInclude Include="..\cups\form.h" />
     <ClInclude Include="..\cups\http-private.h" />
     <ClInclude Include="..\cups\http.h" />
     <ClInclude Include="..\cups\ipp-private.h" />
     <ClInclude Include="..\cups\ipp.h" />
+    <ClInclude Include="..\cups\json-private.h" />
     <ClInclude Include="..\cups\json.h" />
     <ClInclude Include="..\cups\jwt.h" />
-    <ClInclude Include="..\cups\language-private.h" />
     <ClInclude Include="..\cups\language.h" />
-    <ClInclude Include="..\cups\md5-private.h" />
-    <ClInclude Include="..\cups\ppd-private.h" />
+    <ClInclude Include="..\cups\md5-internal.h" />
+    <ClInclude Include="..\cups\oauth.h" />
     <ClInclude Include="..\cups\ppd.h" />
     <ClInclude Include="..\cups\pwg-private.h" />
     <ClInclude Include="..\cups\pwg.h" />
     <ClInclude Include="..\cups\raster-private.h" />
+    <ClInclude Include="..\cups\raster-testpage.h" />
     <ClInclude Include="..\cups\raster.h" />
     <ClInclude Include="..\cups\string-private.h" />
     <ClInclude Include="..\cups\thread.h" />
     <ClInclude Include="..\cups\transcode.h" />
-    <ClInclude Include="..\cups\versioning.h" />
     <ClInclude Include="config.h" />
   </ItemGroup>
   <ItemGroup>
