@@ -14,6 +14,7 @@
 #include <sys/stat.h>
 #ifdef _WIN32
 #  include <process.h>
+#  define O_NOFOLLOW 0			// Windows doesn't support this...
 #else
 #  include <poll.h>
 #  ifdef __APPLE__
