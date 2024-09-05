@@ -151,7 +151,7 @@ typedef struct ippeve_job_s ippeve_job_t;
 
 typedef struct ippeve_printer_s		// Printer data
 {
-  // TODO: One IPv4 and one IPv6 listener are really not sufficient
+  // Note: A "real" IPP implementation will support more than one IPv4 and one IPv6 listener
   int			ipv4,		// IPv4 listener
 			ipv6;		// IPv6 listener
   cups_dnssd_t		*dnssd;		// DNS-SD context
@@ -2135,8 +2135,6 @@ finish_document_data(
 
 
   // Create a file for the request data...
-  //
-  // TODO: Update code to support piping large raster data to the print command.
   if ((job->fd = create_job_file(job, filename, sizeof(filename), client->printer->directory, NULL)) < 0)
   {
     respond_ipp(client, IPP_STATUS_ERROR_INTERNAL, "Unable to create print file: %s", strerror(errno));
