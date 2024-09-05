@@ -98,6 +98,7 @@ typedef enum _cups_otype_e		// OAuth data type
   _CUPS_OTYPE_CLIENT_SECRET,		// Client secret
   _CUPS_OTYPE_CODE_VERIFIER,		// Client code_verifier
   _CUPS_OTYPE_USER_ID,			// (User) ID token
+  _CUPS_OTYPE_JWKS,			// Server key store
   _CUPS_OTYPE_METADATA,			// Server metadata
   _CUPS_OTYPE_NONCE,			// Client nonce
   _CUPS_OTYPE_REDIRECT_URI,		// Redirect URI used
@@ -124,6 +125,7 @@ static const char * const cups_otypes[] =
   "_CUPS_OTYPE_CLIENT_SECRET",		// Client secret
   "_CUPS_OTYPE_CODE_VERIFIER",		// Client code_verifier
   "_CUPS_OTYPE_USER_ID",		// (User) ID token
+  "_CUPS_OTYPE_JWKS",			// Server key store
   "_CUPS_OTYPE_METADATA",		// Server metadata
   "_CUPS_OTYPE_NONCE",			// Client nonce
   "_CUPS_OTYPE_REDIRECT_URI",		// Redirect URI used
@@ -150,6 +152,7 @@ static const char *github_metadata =	// Github.com OAuth metadata
 
 static char	*oauth_copy_response(http_t *http);
 static cups_json_t *oauth_do_post(const char *ep, const char *content_type, const char *data);
+static cups_json_t *oauth_get_jwks(const char *auth_uri, cups_json_t *metadata);
 static char	*oauth_load_value(const char *auth_uri, const char *secondary_uri, _cups_otype_t otype);
 static char	*oauth_make_path(char *buffer, size_t bufsize, const char *auth_uri, const char *secondary_uri, _cups_otype_t otype);
 static char	*oauth_make_software_id(char *buffer, size_t bufsize);
@@ -1052,6 +1055,9 @@ cupsOAuthGetTokens(
   if (id_value)
   {
     // Validate the JWT
+    cups_json_t	*jwks;			// JWT key set
+    bool	valid;			// Valid id_token?
+
     jwt    = cupsJWTImportString(id_value, CUPS_JWS_FORMAT_COMPACT);
     jnonce = cupsJWTGetClaimString(jwt, "nonce");
     nonce  = oauth_load_value(auth_uri, resource_uri, _CUPS_OTYPE_NONCE);
@@ -1060,7 +1066,16 @@ cupsOAuthGetTokens(
     if (!jwt || (jnonce && nonce && strcmp(jnonce, nonce)))
       goto done;
 
-    // TODO: Validate id_token against Authorization Server's JWKS
+    // Validate id_token against the Authorization Server's JWKS
+    if ((jwks = oauth_get_jwks(auth_uri, metadata)) == NULL)
+      goto done;
+
+    valid = cupsJWTHasValidSignature(jwt, jwks);
+    DEBUG_printf("1cupsOAuthGetTokens: valid=%s", valid ? "true" : "false");
+    cupsJSONDelete(jwks);
+    if (!valid)
+      goto done;
+
     // TODO: Validate at_hash claim string against access_token value
   }
 
@@ -1415,6 +1430,52 @@ oauth_do_post(const char *ep,		// I - Endpoint URI
 
 
 //
+// 'oauth_get_jwks()' - Get the JWT key set for an Authorization Server.
+//
+
+static cups_json_t *			// O - JWKS or `NULL` on error
+oauth_get_jwks(const char  *auth_uri,	// I - Authorization server URI
+               cups_json_t *metadata)	// I - Server metadata
+{
+  const char	*jwks_uri;		// URI of key set
+  cups_json_t	*jwks;			// JWT key set
+  char		filename[1024];		// Local metadata filename
+  struct stat	fileinfo;		// Local metadata file info
+
+
+  DEBUG_printf("oauth_get_jwks(auth_uri=\"%s\", metadata=%p)", auth_uri, (void *)metadata);
+
+  // Get existing key set...
+  if (!oauth_make_path(filename, sizeof(filename), auth_uri, /*secondary_uri*/NULL, _CUPS_OTYPE_JWKS))
+    return (NULL);
+
+  if (stat(filename, &fileinfo))
+    memset(&fileinfo, 0, sizeof(fileinfo));
+
+  // Don't bother connecting if the key set was updated recently...
+  if ((time(NULL) - fileinfo.st_mtime) <= 60)
+    return (cupsJSONImportFile(filename));
+
+  // Try getting the key set...
+  if ((jwks_uri = cupsJSONGetString(cupsJSONFind(metadata, "jwks_uri"))) == NULL)
+    return (NULL);
+
+  if ((jwks = cupsJSONImportURL(jwks_uri, &fileinfo.st_mtime)) != NULL)
+  {
+    // Save the key set...
+    char *s = cupsJSONExportString(jwks);
+					// JSON string
+
+    oauth_save_value(auth_uri, /*secondary_uri*/NULL, _CUPS_OTYPE_JWKS, s);
+    free(s);
+  }
+
+  // Return what we got...
+  return (jwks);
+}
+
+
+//
 // 'oauth_load_value()' - Load the contents of the specified value file.
 //
 
@@ -1484,6 +1545,7 @@ oauth_make_path(
     "csec",				// Client secret
     "cver",				// Code verifier
     "idtk",				// ID token
+    "jwks",				// Key store
     "meta",				// Metadata
     "nonc",				// Nonce
     "ruri",				// Redirect URI
