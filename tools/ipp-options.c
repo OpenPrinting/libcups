@@ -34,7 +34,6 @@
 //
 
 static int			compare_overrides(ippopt_override_t *a, ippopt_override_t *b);
-static ippopt_insert_sheet_t	*copy_insert_sheet(ippopt_insert_sheet_t *is);
 static ippopt_override_t	*copy_override(ippopt_override_t *is);
 static const char		*get_option(const char *name, size_t num_options, cups_option_t *options);
 static bool			parse_media(const char *value, cups_media_t *media);
@@ -76,7 +75,6 @@ ippOptionsDelete(ipp_options_t *ippo)	// I - IPP options
     return;
 
   // Free memory
-  cupsArrayDelete(ippo->insert_sheet);
   cupsArrayDelete(ippo->overrides);
   free(ippo);
 }
@@ -184,6 +182,7 @@ ippOptionsNew(size_t        num_options,// I - Number of command-line options
   size_t	i;			// Looping var
   size_t	num_col;		// Number of collection values
   cups_option_t	*col;			// Collection values
+  const char	*nextcol;		// Next collection value
 
 
   // Allocate memory and set defaults...
@@ -242,13 +241,6 @@ ippOptionsNew(size_t        num_options,// I - Number of command-line options
 
   if ((value = get_option("imposition-template", num_options, options)) != NULL)
     cupsCopyString(ippo->imposition_template, value, sizeof(ippo->imposition_template));
-
-  if ((value = get_option("insert-sheets", num_options, options)) != NULL && *value == '{')
-  {
-    // Parse "insert-sheets" collection value(s)...
-    // TODO: Implement me
-    ippo->insert_sheet = cupsArrayNew(NULL, NULL, NULL, 0, (cups_acopy_cb_t)copy_insert_sheet, (cups_afree_cb_t)free);
-  }
 
   if ((value = get_option("job-error-sheet", num_options, options)) != NULL)
   {
@@ -528,8 +520,66 @@ ippOptionsNew(size_t        num_options,// I - Number of command-line options
   if ((value = get_option("overrides", num_options, options)) != NULL && *value == '{')
   {
     // Parse "overrides" collection value(s)...
-    // TODO: Implement me
+    ippopt_override_t override;		// overrides value
+
     ippo->overrides = cupsArrayNew((cups_array_cb_t)compare_overrides, NULL, NULL, 0, (cups_acopy_cb_t)copy_override, (cups_afree_cb_t)free);
+
+    for (nextcol = value; nextcol && *nextcol;)
+    {
+      // Get the next collection value
+      if (*nextcol == ',')
+        nextcol ++;
+
+      num_col = cupsParseOptions(nextcol, &nextcol, 0, &col);
+
+      memset(&override, 0, sizeof(override));
+
+      if ((value = cupsGetOption("document-numbers", num_col, col)) != NULL)
+      {
+        switch (sscanf(value, "%d-%d", &override.first_document, &override.last_document))
+        {
+          case 1 :
+              override.last_document = override.first_document;
+              break;
+
+          case 2 :
+              break;
+
+	  default :
+	      override.first_document = 0;
+	      override.last_document  = 0;
+	      break;
+        }
+      }
+
+      if ((value = cupsGetOption("page-numbers", num_col, col)) != NULL)
+      {
+        switch (sscanf(value, "%d-%d", &override.first_page, &override.last_page))
+        {
+          case 1 :
+              override.last_page = override.first_page;
+              break;
+
+          case 2 :
+              break;
+
+	  default :
+	      override.first_page = 0;
+	      override.last_page  = 0;
+	      break;
+        }
+      }
+
+      if ((value = cupsGetOption("media", num_col, col)) == NULL)
+        value = cupsGetOption("media-col", num_col, col);
+      if (value)
+        parse_media(value, &override.media);
+
+      if ((value = cupsGetOption("orientation-requests", num_col, col)) != NULL && (intvalue = atoi(value)) >= IPP_ORIENT_PORTRAIT && intvalue <= IPP_ORIENT_NONE)
+        override.orientation_requested = (ipp_orient_t)intvalue;
+
+      cupsArrayAdd(ippo->overrides, &override);
+    }
   }
 
   // Return the final IPP options...
@@ -563,24 +613,6 @@ compare_overrides(ippopt_override_t *a,	// I - First override
     return (1);
   else
     return (0);
-}
-
-
-//
-// 'copy_insert_sheet()' - Copy an "insert-sheet" value.
-//
-
-static ippopt_insert_sheet_t *		// O - New "insert-sheet" value
-copy_insert_sheet(
-    ippopt_insert_sheet_t *is)		// I - "insert-sheet" value
-{
-  ippopt_insert_sheet_t	*nis;		// New "insert-sheet" value
-
-
-  if ((nis = (ippopt_insert_sheet_t *)malloc(sizeof(ippopt_insert_sheet_t))) != NULL)
-    memcpy(nis, is, sizeof(ippopt_insert_sheet_t));
-
-  return (nis);
 }
 
 

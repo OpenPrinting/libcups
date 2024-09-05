@@ -39,13 +39,6 @@ typedef struct ippopt_error_sheet_s	// "job-error-sheet" value
   cups_media_t	media;			// "media" or "media-col" value, if any
 } ippopt_error_sheet_t;
 
-typedef struct ippopt_insert_sheet_s	// "insert-sheet" value
-{
-  int		after_page,		// Where to insert the sheet (0 for before page 1)
-		count;			// Number of sheets to insert
-  cups_media_t	media;			// "media" or "media-col" value, if any
-} ippopt_insert_sheet_t;
-
 typedef enum ippopt_handling_e		// "multiple-document-handling" values
 {
   IPPOPT_HANDLING_COLLATED_COPIES,	// 'separate-documents-collated-copies'
@@ -104,7 +97,6 @@ typedef struct ipp_options_s		// All IPP options in one structure
   ipp_orient_t	image_orientation;	// "image-orientation" value
   char		imposition_template[128];
 					// "imposition-template" value, if any
-  cups_array_t	*insert_sheet;		// "insert-sheet" value(s)
   ippopt_error_sheet_t job_error_sheet;	// "job-error-sheet" value
   char		job_name[256];		// "job-name" value
   char		job_originating_user_name[256];
