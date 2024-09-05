@@ -19,6 +19,9 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <zlib.h>
+#ifndef va_copy
+#  define va_copy(__list1, __list2) ((void)(__list1 = __list2))
+#endif
 
 
 //
@@ -858,7 +861,7 @@ cupsFilePrintf(cups_file_t *fp,		// I - CUPS file
                const char  *format,	// I - Printf-style format string
 	       ...)			// I - Additional args as necessary
 {
-  va_list	ap;			// Argument list
+  va_list	ap, ap2;		// Argument list
   ssize_t	bytes;			// Formatted size
 
 
@@ -874,10 +877,9 @@ cupsFilePrintf(cups_file_t *fp,		// I - CUPS file
     fp->printf_size = 1024;
   }
 
-  // TODO: Use va_copy instead of calling va_start with the same args
   va_start(ap, format);
-  bytes = vsnprintf(fp->printf_buffer, fp->printf_size, format, ap);
-  va_end(ap);
+  va_copy(ap2, ap);
+  bytes = vsnprintf(fp->printf_buffer, fp->printf_size, format, ap2);
 
   if (bytes >= (ssize_t)fp->printf_size)
   {
@@ -893,10 +895,10 @@ cupsFilePrintf(cups_file_t *fp,		// I - CUPS file
     fp->printf_buffer = temp;
     fp->printf_size   = (size_t)(bytes + 1);
 
-    va_start(ap, format);
     bytes = vsnprintf(fp->printf_buffer, fp->printf_size, format, ap);
-    va_end(ap);
   }
+
+  va_end(ap);
 
   if (fp->mode == 's')
   {
