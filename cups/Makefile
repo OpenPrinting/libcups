@@ -75,6 +75,7 @@ TESTOBJS	= \
 		testipp.o \
 		testjson.o \
 		testjwt.o \
+		testlang.o \
 		testoauth.o \
 		testoptions.o \
 		testpwg.o \
@@ -159,6 +160,7 @@ UNITTARGETS =	\
 		testipp \
 		testjson \
 		testjwt \
+		testlang \
 		testoauth \
 		testoptions \
 		testpwg \
@@ -226,6 +228,9 @@ test:		$(UNITTARGETS)
 	echo ""
 	echo Running JWT API tests...
 	./testjwt 2>>test.log
+	echo ""
+	echo Running localization API tests...
+	./testlang 2>>test.log
 	echo ""
 	echo Running option API tests...
 	./testoptions 2>>test.log
@@ -575,17 +580,6 @@ testlang:	testlang.o $(LIBCUPS_STATIC)
 	echo Linking $@...
 	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testlang.o $(LIBCUPS_STATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
-	echo Creating locale directory structure...
-	$(RM) -r locale
-	for po in ../locale/cups_*.po; do \
-		lang=`basename $$po .po | sed -e '1,$$s/^cups_//'`; \
-		$(MKDIR) locale/$$lang; \
-		$(LN) ../../$$po locale/$$lang; \
-	done
-	echo Running language API tests...
-	echo ls -al locale
-	ls -al locale
-	LOCALEDIR=locale ./testlang
 
 
 #

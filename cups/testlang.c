@@ -3,9 +3,9 @@
 //
 // Usage:
 //
-//   ./testlang [-l locale] [-p ppd] ["String to localize"]
+//   ./testlang [-l locale] ["String to localize"]
 //
-// Copyright © 2021 by OpenPrinting.
+// Copyright © 2021-2024 by OpenPrinting.
 // Copyright © 2007-2017 by Apple Inc.
 // Copyright © 1997-2006 by Easy Software Products.
 //
@@ -13,22 +13,17 @@
 // information.
 //
 
-#include "cups-private.h"
-#include "ppd-private.h"
-#ifdef __APPLE__
-#  include <CoreFoundation/CoreFoundation.h>
-#endif // __APPLE__
-#include <cups/dir.h>
+#include <config.h>
+#include "cups.h"
+#include "dir.h"
+#include "language.h"
+#include "test-internal.h"
 
 
 //
 // Local functions...
 //
 
-static int	show_ppd(const char *filename);
-#ifdef __APPLE__
-static int	test_apple(void);
-#endif // __APPLE__
 static int	test_language(const char *locale);
 static int	test_string(cups_lang_t *language, const char *msgid);
 static void	usage(void);
@@ -51,7 +46,7 @@ main(int  argc,				// I - Number of command-line arguments
 
 
   // Parse command-line...
-  _cupsSetLocale(argv);
+  cupsLangSetLocale(argv);
 
   for (i = 1; i < argc; i ++)
   {
@@ -78,18 +73,6 @@ main(int  argc,				// I - Number of command-line arguments
                 lang = argv[i];
 		break;
 
-	    case 'p' :
-                i ++;
-                if (i >= argc)
-                {
-                  usage();
-                  return (1);
-                }
-
-		dotests = 0;
-		errors += show_ppd(argv[i]);
-                break;
-
             default :
                 usage();
                 return (1);
@@ -100,7 +83,7 @@ main(int  argc,				// I - Number of command-line arguments
     else
     {
       if (!language)
-        language = cupsLangGet(lang);
+        language = cupsLangFind(lang);
 
       dotests = 0;
       errors += test_string(language, argv[i]);
@@ -120,23 +103,31 @@ main(int  argc,				// I - Number of command-line arguments
       cups_dir_t	*dir;		// Locale directory
       cups_dentry_t	*dent;		// Directory entry
 
-      if ((dir = cupsDirOpen(getenv("LOCALEDIR"))) != NULL)
+      if ((dir = cupsDirOpen("strings")) != NULL)
       {
 	while ((dent = cupsDirRead(dir)) != NULL)
-	  errors += test_language(dent->filename);
+	{
+	  if (strstr(dent->filename, ".strings"))
+	  {
+	    char	temp[6],	// Temporary anguage
+	  		*tempptr;	// Pointer into temporary language
+
+            cupsCopyString(temp, dent->filename, sizeof(temp));
+            if ((tempptr = strchr(temp, '.')) != NULL)
+              *tempptr = '\0';
+
+	    errors += test_language(temp);
+	  }
+	}
       }
       else
       {
-        // No LOCALEDIR, just use the default language...
+        // No strings directory, just use the default language...
         errors += test_language(NULL);
       }
 
       cupsDirClose(dir);
     }
-
-#ifdef __APPLE__
-    errors += test_apple();
-#endif // __APPLE__
 
     if (!errors)
       puts("ALL TESTS PASSED");
@@ -147,169 +138,15 @@ main(int  argc,				// I - Number of command-line arguments
 
 
 //
-// 'show_ppd()' - Show localized strings in a PPD file.
-//
-// TODO: Move this to the testppd program.
-//
-
-static int				// O - Number of errors
-show_ppd(const char *filename)		// I - Filename
-{
-  ppd_file_t	*ppd;			// PPD file
-  ppd_option_t	*option;		// PageSize option
-  ppd_choice_t	*choice;		// PageSize/Letter choice
-  char		buffer[1024];		// String buffer
-
-
-  if ((ppd = ppdOpenFile(filename)) == NULL)
-  {
-    printf("Unable to open PPD file \"%s\".\n", filename);
-    return (1);
-  }
-
-  ppdLocalize(ppd);
-
-  if ((option = ppdFindOption(ppd, "PageSize")) == NULL)
-  {
-    puts("No PageSize option.");
-    return (1);
-  }
-  else
-  {
-    printf("PageSize: %s\n", option->text);
-
-    if ((choice = ppdFindChoice(option, "Letter")) == NULL)
-    {
-      puts("No Letter PageSize choice.");
-      return (1);
-    }
-    else
-    {
-      printf("Letter: %s\n", choice->text);
-    }
-  }
-
-  printf("media-empty: %s\n", ppdLocalizeIPPReason(ppd, "media-empty", NULL, buffer, sizeof(buffer)));
-
-  ppdClose(ppd);
-
-  return (0);
-}
-
-
-#ifdef __APPLE__
-//
-// 'test_apple()' - Test macOS locale handing...
-//
-
-static int				// O - Number of errors
-test_apple(void)
-{
-  int		errors = 0;		// Number of errors
-  CFIndex	i,			// Looping var
-		num_locales;		// Number of locales
-  CFArrayRef	locales;		// Locales
-  CFStringRef	locale_id,		// Current locale ID
-		language_id;		// Current language ID
-  cups_lang_t	*language = NULL;	// Message catalog
-  char		locale_str[256],	// Locale ID C string
-		language_str[256],	// Language ID C string
-		buffer[1024],		// String buffer
-		*bufptr;		// Pointer to ".UTF-8" in POSIX locale
-  size_t	buflen;			// Length of POSIX locale
-
-
-  // Test all possible language IDs for compatibility with _cupsAppleLocale...
-  locales     = CFLocaleCopyAvailableLocaleIdentifiers();
-  num_locales = CFArrayGetCount(locales);
-
-  printf("CFLocaleCopyAvailableLocaleIdentifiers: %d locales\n", (int)num_locales);
-
-  for (i = 0; i < num_locales; i ++)
-  {
-    locale_id   = CFArrayGetValueAtIndex(locales, i);
-    language_id = CFLocaleCreateCanonicalLanguageIdentifierFromString(kCFAllocatorDefault, locale_id);
-
-    printf("CFStringGetCString(locale_id %d): ", (int)i);
-    if (!locale_id || !CFStringGetCString(locale_id, locale_str, (CFIndex)sizeof(locale_str), kCFStringEncodingASCII))
-    {
-      puts("FAIL");
-      errors ++;
-      continue;
-    }
-    else
-      printf("PASS (\"%s\")\n", locale_str);
-
-    printf("CFStringGetCString(language_id %d): ", (int)i);
-    if (!language_id || !CFStringGetCString(language_id, language_str, (CFIndex)sizeof(language_str), kCFStringEncodingASCII))
-    {
-      printf("%d %s: FAIL (unable to get language ID string)\n", (int)i + 1, locale_str);
-      errors ++;
-      continue;
-    }
-    else
-      printf("PASS (\"%s\")\n", language_str);
-
-    printf("_cupsAppleLocale(\"%s\"): ", language_str);
-    if (!_cupsAppleLocale(language_id, buffer, sizeof(buffer)))
-    {
-      puts("FAIL");
-      errors ++;
-      continue;
-    }
-    else
-      printf("PASS (\"%s\")\n", buffer);
-
-    if ((bufptr = strstr(buffer, ".UTF-8")) != NULL)
-      buflen = (size_t)(bufptr - buffer);
-    else
-      buflen = strlen(buffer);
-
-    printf("cupsLangGet(\"%s\"): ", buffer);
-    if ((language = cupsLangGet(buffer)) == NULL)
-    {
-      puts("FAIL");
-      errors ++;
-      continue;
-    }
-    else if (strncasecmp(language->language, buffer, buflen))
-    {
-      printf("FAIL (got \"%s\")\n", language->language);
-      errors ++;
-      continue;
-    }
-    else
-      puts("PASS");
-  }
-
-  CFRelease(locales);
-
-  return (errors);
-}
-#endif // __APPLE__
-
-
-//
 // 'test_language()' - Test a specific language...
 //
 
 static int				// O - Number of errors
 test_language(const char *lang)		// I - Locale language code, NULL for default
 {
-  int		i;			// Looping var
   int		errors = 0;		// Number of errors
   cups_lang_t	*language = NULL,	// Message catalog
 		*language2 = NULL;	// Message catalog (second time)
-  struct lconv	*loc;			// Locale data
-  char		buffer[1024];		// String buffer
-  double	number;			// Number
-  static const char * const tests[] =	// Test strings
-  {
-    "1",
-    "-1",
-    "3",
-    "5.125"
-  };
 
 
   // Override the locale environment as needed...
@@ -317,99 +154,86 @@ test_language(const char *lang)		// I - Locale language code, NULL for default
   {
     // Test the specified locale code...
     setenv("LANG", lang, 1);
-    setenv("SOFTWARE", "CUPS/" CUPS_SVERSION, 1);
+    setenv("SOFTWARE", "CUPS/" LIBCUPS_VERSION, 1);
 
-    printf("cupsLangGet(\"%s\"): ", lang);
-    if ((language = cupsLangGet(lang)) == NULL)
+    testBegin("cupsLangFind(\"%s\")", lang);
+    if ((language = cupsLangFind(lang)) == NULL)
     {
-      puts("FAIL");
+      testEnd(false);
       errors ++;
     }
-    else if (strcasecmp(language->language, lang))
+    else if (strcasecmp(cupsLangGetName(language), lang))
     {
-      printf("FAIL (got \"%s\")\n", language->language);
+      testEndMessage(false, "got \"%s\"", cupsLangGetName(language));
       errors ++;
     }
     else
-      puts("PASS");
-
-    printf("cupsLangGet(\"%s\") again: ", lang);
-    if ((language2 = cupsLangGet(lang)) == NULL)
     {
-      puts("FAIL");
+      testEnd(true);
+    }
+
+    testBegin("cupsLangFind(\"%s\") again", lang);
+    if ((language2 = cupsLangFind(lang)) == NULL)
+    {
+      testEnd(false);
       errors ++;
     }
-    else if (strcasecmp(language2->language, lang))
+    else if (strcasecmp(cupsLangGetName(language2), lang))
     {
-      printf("FAIL (got \"%s\")\n", language2->language);
+      testEndMessage(false, "got \"%s\"", cupsLangGetName(language2));
       errors ++;
     }
     else if (language2 != language)
     {
-      puts("FAIL (cache failure)");
+      testEndMessage(false, "cache failure");
       errors ++;
     }
     else
-      puts("PASS");
+    {
+      testEnd(true);
+    }
   }
   else
   {
     // Test the default locale...
-    fputs("cupsLangDefault: ", stdout);
+    testBegin("cupsLangDefault");
     if ((language = cupsLangDefault()) == NULL)
     {
-      puts("FAIL");
+      testEnd(false);
       errors ++;
     }
     else
-      puts("PASS");
+    {
+      testEnd(true);
+    }
 
-    fputs("cupsLangDefault again: ", stdout);
+    testBegin("cupsLangDefault again");
     if ((language2 = cupsLangDefault()) == NULL)
     {
-      puts("FAIL");
+      testEnd(false);
       errors ++;
     }
     else if (language2 != language)
     {
-      puts("FAIL (cache failure)");
+      testEndMessage(false, "cache failure");
       errors ++;
     }
     else
-      puts("PASS");
+    {
+      testEnd(true);
+    }
   }
 
-  printf("language->language: \"%s\"\n", language->language);
-  printf("_cupsEncodingName(language): \"%s\"\n", _cupsEncodingName(language->encoding));
+  testBegin("cupsLangGetName(language)");
+  testEndMessage(true, "\"%s\"", cupsLangGetName(language));
 
-  errors += test_string(language, "No");
-  errors += test_string(language, "Yes");
+  errors += test_string(language, "Accepted");
+  errors += test_string(language, "Self-signed credentials are blocked.");
 
   if (language != language2)
   {
-    printf("language2->language: \"%s\"\n", language2->language);
-    printf("_cupsEncodingName(language2): \"%s\"\n", _cupsEncodingName(language2->encoding));
-  }
-
-  loc = localeconv();
-
-  for (i = 0; i < (int)(sizeof(tests) / sizeof(tests[0])); i ++)
-  {
-    number = _cupsStrScand(tests[i], NULL, loc);
-
-    printf("_cupsStrScand(\"%s\"): %f\n", tests[i], number);
-
-    _cupsStrFormatd(buffer, buffer + sizeof(buffer), number, loc);
-
-    printf("_cupsStrFormatd(%f): ", number);
-
-    if (strcmp(buffer, tests[i]))
-    {
-      errors ++;
-      printf("FAIL (got \"%s\")\n", buffer);
-    }
-    else
-      puts("PASS");
+    testBegin("cupsLangGetName(language2)");
+    testEndMessage(true, "\"%s\"", cupsLangGetName(language2));
   }
 
   return (errors);
@@ -431,20 +255,20 @@ test_string(cups_lang_t *language,	// I - Language
   //
   // For the POSIX locale, the string pointers should be the same.
   // For any other locale, the string pointers should be different.
-  printf("_cupsLangString(\"%s\"): ", msgid);
-  msgstr = _cupsLangString(language, msgid);
-  if (strcmp(language->language, "C") && msgid == msgstr)
+  testBegin("cupsLangGetString(\"%s\")", msgid);
+  msgstr = cupsLangGetString(language, msgid);
+  if (strcmp(cupsLangGetName(language), "C") && msgid == msgstr)
   {
-    puts("FAIL (no message catalog loaded)");
+    testEndMessage(false, "no message catalog loaded");
     return (1);
   }
-  else if (!strcmp(language->language, "C") && msgid != msgstr)
+  else if (!strcmp(cupsLangGetName(language), "C") && msgid != msgstr)
   {
-    puts("FAIL (POSIX locale is localized)");
+    testEndMessage(false, "POSIX locale is localized");
     return (1);
   }
 
-  printf("PASS (\"%s\")\n", msgstr);
+  testEndMessage(true, "\"%s\"", msgstr);
 
   return (0);
 }
@@ -457,7 +281,7 @@ test_string(cups_lang_t *language,	// I - Language
 static void
 usage(void)
 {
-  puts("Usage: ./testlang [-l locale] [-p ppd] [\"String to localize\"]");
+  puts("Usage: ./testlang [-l locale] [\"String to localize\"]");
   puts("");
   puts("If no arguments are specified, all locales are tested.");
 }
