@@ -1057,6 +1057,7 @@ cupsOAuthGetTokens(
     // Validate the JWT
     cups_json_t	*jwks;			// JWT key set
     bool	valid;			// Valid id_token?
+    const char	*at_hash;		// at_hash claim value
 
     jwt    = cupsJWTImportString(id_value, CUPS_JWS_FORMAT_COMPACT);
     jnonce = cupsJWTGetClaimString(jwt, "nonce");
@@ -1076,7 +1077,22 @@ cupsOAuthGetTokens(
     if (!valid)
       goto done;
 
-    // TODO: Validate at_hash claim string against access_token value
+    // Validate the at_hash claim string against access_token value
+    if (access_value && (at_hash = cupsJWTGetClaimString(jwt, "at_hash")) != NULL)
+    {
+      unsigned char sha256[32],		// Hash of the access_token value
+		at_hash_buffer[32];	// at_hash bytes
+      size_t	at_hash_bytes = sizeof(at_hash_buffer);
+		      			// Number of at_hash bytes
+
+      cupsHashData("sha2-256", access_value, strlen(access_value), sha256, sizeof(sha256));
+      httpDecode64((char *)at_hash_buffer, &at_hash_bytes, at_hash, /*end*/NULL);
+      if (at_hash_bytes != 16 || memcmp(sha256, at_hash_buffer, 16))
+      {
+        DEBUG_puts("1cupsOAuthGetTokens: at_hash doesn't match SHA-256 of access_token.");
+        goto done;
+      }
+    }
   }
 
   if (expires_in > 0.0)
