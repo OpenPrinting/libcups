@@ -2583,7 +2583,9 @@ httpWait(http_t *http,			// I - HTTP connection
 //
 // 'httpWrite()' - Write data to a HTTP connection.
 //
-// TODO: Expand this documentation to talk about chunking.
+// This function writes data to a HTTP connection. When using chunking or
+// content coding, specifying a "length" of `0` will complete the current HTTP
+// request/response message.
 //
 
 ssize_t					// O - Number of bytes written

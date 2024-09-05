@@ -1,7 +1,7 @@
 //
 // IPP unit test program for libcups.
 //
-// Copyright © 2021-2022 by OpenPrinting.
+// Copyright © 2021-2024 by OpenPrinting.
 // Copyright © 2007-2019 by Apple Inc.
 // Copyright © 1997-2005 by Easy Software Products.
 //
@@ -287,6 +287,7 @@ static ipp_uchar_t mixed[] =		// Mixed value buffer
 void	print_attributes(ipp_t *ipp, int indent);
 ssize_t	read_cb(_ippdata_t *data, ipp_uchar_t *buffer, size_t bytes);
 ssize_t	read_hex(cups_file_t *fp, ipp_uchar_t *buffer, size_t bytes);
+int	test_file(const char *color);
 bool	token_cb(ipp_file_t *f, void *user_data, const char *token);
 ssize_t	write_cb(_ippdata_t *data, ipp_uchar_t *buffer, size_t bytes);
 
@@ -295,29 +296,28 @@ ssize_t	write_cb(_ippdata_t *data, ipp_uchar_t *buffer, size_t bytes);
 // 'main()' - Main entry.
 //
 
-int				// O - Exit status
-main(int  argc,			// I - Number of command-line arguments
-     char *argv[])		// I - Command-line arguments
+int					// O - Exit status
+main(int  argc,				// I - Number of command-line arguments
+     char *argv[])			// I - Command-line arguments
 {
-  _ippdata_t	data;		// IPP buffer
-  ipp_uchar_t	buffer[8192];	// Write buffer data
-  ipp_t		*cols[2],	// Collections
-		*size;		// media-size collection
-  ipp_t		*request;	// Request
-  ipp_attribute_t *media_col,	// media-col attribute
-		*media_size,	// media-size attribute
-		*attr;		// Other attribute
-  ipp_state_t	state;		// State
-  size_t	length;		// Length of data
-  cups_file_t	*fp;		// File pointer
-  size_t	i;		// Looping var
-  int		status;		// Status of tests (0 = success, 1 = fail)
+  ipp_file_t	*file;			// IPP data file
+  _ippdata_t	data;			// IPP buffer
+  ipp_uchar_t	buffer[8192];		// Write buffer data
+  ipp_t		*cols[2],		// Collections
+		*size;			// media-size collection
+  ipp_t		*request;		// Request
+  ipp_attribute_t *media_col,		// media-col attribute
+		*media_size,		// media-size attribute
+		*attr;			// Other attribute
+  ipp_state_t	state;			// State
+  size_t	length;			// Length of data
+  cups_file_t	*fp;			// File pointer
+  size_t	i;			// Looping var
+  int		status = 0;		// Status of tests (0 = success, 1 = fail)
 #ifdef DEBUG
-  const char	*name;		// Option name
+  const char	*name;			// Option name
 #endif // DEBUG
 
-
-  status = 0;
 
   if (argc == 1)
   {
@@ -330,12 +330,9 @@ main(int  argc,			// I - Number of command-line arguments
     request->request.op.operation_id = IPP_OP_PRINT_JOB;
     request->request.op.request_id   = 1;
 
-    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_CHARSET,
-        	 "attributes-charset", NULL, "utf-8");
-    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_LANGUAGE,
-        	 "attributes-natural-language", NULL, "en");
-    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI,
-        	 "printer-uri", NULL, "ipp://localhost/printers/foo");
+    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_CHARSET, "attributes-charset", NULL, "utf-8");
+    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_LANGUAGE, "attributes-natural-language", NULL, "en");
+    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, "ipp://localhost/printers/foo");
 
     cols[0] = ippNew();
     size    = ippNew();
@@ -343,10 +340,8 @@ main(int  argc,			// I - Number of command-line arguments
     ippAddInteger(size, IPP_TAG_ZERO, IPP_TAG_INTEGER, "y-dimension", 27940);
     ippAddCollection(cols[0], IPP_TAG_JOB, "media-size", size);
     ippDelete(size);
-    ippAddString(cols[0], IPP_TAG_JOB, IPP_TAG_KEYWORD, "media-color", NULL,
-                 "blue");
-    ippAddString(cols[0], IPP_TAG_JOB, IPP_TAG_KEYWORD, "media-type", NULL,
-                 "plain");
+    ippAddString(cols[0], IPP_TAG_JOB, IPP_TAG_KEYWORD, "media-color", NULL, "blue");
+    ippAddString(cols[0], IPP_TAG_JOB, IPP_TAG_KEYWORD, "media-type", NULL, "plain");
 
     cols[1] = ippNew();
     size    = ippNew();
@@ -354,21 +349,17 @@ main(int  argc,			// I - Number of command-line arguments
     ippAddInteger(size, IPP_TAG_ZERO, IPP_TAG_INTEGER, "y-dimension", 29700);
     ippAddCollection(cols[1], IPP_TAG_JOB, "media-size", size);
     ippDelete(size);
-    ippAddString(cols[1], IPP_TAG_JOB, IPP_TAG_KEYWORD, "media-color", NULL,
-                 "plaid");
-    ippAddString(cols[1], IPP_TAG_JOB, IPP_TAG_KEYWORD, "media-type", NULL,
-		 "glossy");
+    ippAddString(cols[1], IPP_TAG_JOB, IPP_TAG_KEYWORD, "media-color", NULL, "plaid");
+    ippAddString(cols[1], IPP_TAG_JOB, IPP_TAG_KEYWORD, "media-type", NULL, "glossy");
 
-    ippAddCollections(request, IPP_TAG_JOB, "media-col", 2,
-                      (const ipp_t **)cols);
+    ippAddCollections(request, IPP_TAG_JOB, "media-col", 2, (const ipp_t **)cols);
     ippDelete(cols[0]);
     ippDelete(cols[1]);
 
     length = ippGetLength(request);
     if (length != sizeof(collection))
     {
-      testEndMessage(false, "wrong ippGetLength(), %d instead of %d bytes",
-             (int)length, (int)sizeof(collection));
+      testEndMessage(false, "wrong ippGetLength(), %d instead of %d bytes", (int)length, (int)sizeof(collection));
       status = 1;
     }
     else
@@ -381,8 +372,7 @@ main(int  argc,			// I - Number of command-line arguments
     data.wsize   = sizeof(buffer);
     data.wbuffer = buffer;
 
-    while ((state = ippWriteIO(&data, (ipp_io_cb_t)write_cb, 1, NULL,
-                               request)) != IPP_STATE_DATA)
+    while ((state = ippWriteIO(&data, (ipp_io_cb_t)write_cb, 1, NULL, request)) != IPP_STATE_DATA)
       if (state == IPP_STATE_ERROR)
 	break;
 
@@ -393,8 +383,7 @@ main(int  argc,			// I - Number of command-line arguments
     }
     else if (data.wused != sizeof(collection))
     {
-      testEndMessage(false, "wrote %d bytes, expected %d bytes", (int)data.wused,
-             (int)sizeof(collection));
+      testEndMessage(false, "wrote %d bytes, expected %d bytes", (int)data.wused, (int)sizeof(collection));
       testError("Bytes Written");
       testHexDump(data.wbuffer, data.wused);
       testError("Baseline");
@@ -404,8 +393,10 @@ main(int  argc,			// I - Number of command-line arguments
     else if (memcmp(data.wbuffer, collection, data.wused))
     {
       for (i = 0; i < data.wused; i ++)
+      {
         if (data.wbuffer[i] != collection[i])
 	  break;
+      }
 
       testEndMessage(false, "output does not match baseline at 0x%04x", (unsigned)i);
       testError("Bytes Written");
@@ -415,7 +406,9 @@ main(int  argc,			// I - Number of command-line arguments
       status = 1;
     }
     else
+    {
       testEnd(true);
+    }
 
     ippDelete(request);
 
@@ -425,8 +418,7 @@ main(int  argc,			// I - Number of command-line arguments
     request   = ippNew();
     data.rpos = 0;
 
-    while ((state = ippReadIO(&data, (ipp_io_cb_t)read_cb, 1, NULL,
-                              request)) != IPP_STATE_DATA)
+    while ((state = ippReadIO(&data, (ipp_io_cb_t)read_cb, 1, NULL, request)) != IPP_STATE_DATA)
     {
       if (state == IPP_STATE_ERROR)
 	break;
@@ -441,27 +433,25 @@ main(int  argc,			// I - Number of command-line arguments
     }
     else if (data.rpos != data.wused)
     {
-      testEndMessage(false, "read %d bytes, expected %d bytes", (int)data.rpos,
-             (int)data.wused);
+      testEndMessage(false, "read %d bytes, expected %d bytes", (int)data.rpos, (int)data.wused);
       print_attributes(request, 8);
       status = 1;
     }
     else if (length != sizeof(collection))
     {
-      testEndMessage(false, "wrong ippLength(), %d instead of %d bytes",
-             (int)length, (int)sizeof(collection));
+      testEndMessage(false, "wrong ippLength(), %d instead of %d bytes", (int)length, (int)sizeof(collection));
       print_attributes(request, 8);
       status = 1;
     }
     else
+    {
       testEnd(true);
+    }
 
     testBegin("ippFindAttribute(media-col)");
-    if ((media_col = ippFindAttribute(request, "media-col",
-                                      IPP_TAG_BEGIN_COLLECTION)) == NULL)
+    if ((media_col = ippFindAttribute(request, "media-col", IPP_TAG_BEGIN_COLLECTION)) == NULL)
     {
-      if ((media_col = ippFindAttribute(request, "media-col",
-                                        IPP_TAG_ZERO)) == NULL)
+      if ((media_col = ippFindAttribute(request, "media-col", IPP_TAG_ZERO)) == NULL)
         testEndMessage(false, "not found");
       else
         testEndMessage(false, "wrong type - %s", ippTagString(media_col->value_tag));
@@ -474,114 +464,90 @@ main(int  argc,			// I - Number of command-line arguments
       status = 1;
     }
     else
+    {
       testEnd(true);
+    }
 
     if (media_col)
     {
       testBegin("ippFindAttribute(media-size 1)");
-      if ((media_size = ippFindAttribute(media_col->values[0].collection,
-					 "media-size",
-					 IPP_TAG_BEGIN_COLLECTION)) == NULL)
+      if ((media_size = ippFindAttribute(media_col->values[0].collection, "media-size", IPP_TAG_BEGIN_COLLECTION)) == NULL)
       {
-	if ((media_size = ippFindAttribute(media_col->values[0].collection,
-					   "media-col",
-					   IPP_TAG_ZERO)) == NULL)
+	if ((media_size = ippFindAttribute(media_col->values[0].collection, "media-col", IPP_TAG_ZERO)) == NULL)
 	  testEndMessage(false, "not found");
 	else
-	  testEndMessage(false, "wrong type - %s",
-	         ippTagString(media_size->value_tag));
+	  testEndMessage(false, "wrong type - %s", ippTagString(media_size->value_tag));
 
 	status = 1;
       }
       else
       {
-	if ((attr = ippFindAttribute(media_size->values[0].collection,
-				     "x-dimension", IPP_TAG_INTEGER)) == NULL)
+	if ((attr = ippFindAttribute(media_size->values[0].collection, "x-dimension", IPP_TAG_INTEGER)) == NULL)
 	{
-	  if ((attr = ippFindAttribute(media_size->values[0].collection,
-				       "x-dimension", IPP_TAG_ZERO)) == NULL)
+	  if ((attr = ippFindAttribute(media_size->values[0].collection, "x-dimension", IPP_TAG_ZERO)) == NULL)
 	    testEndMessage(false, "missing x-dimension");
 	  else
-	    testEndMessage(false, "wrong type for x-dimension - %s",
-		   ippTagString(attr->value_tag));
+	    testEndMessage(false, "wrong type for x-dimension - %s",  ippTagString(attr->value_tag));
 
 	  status = 1;
 	}
 	else if (attr->values[0].integer != 21590)
 	{
-	  testEndMessage(false, "wrong value for x-dimension - %d",
-		 attr->values[0].integer);
+	  testEndMessage(false, "wrong value for x-dimension - %d", attr->values[0].integer);
 	  status = 1;
 	}
-	else if ((attr = ippFindAttribute(media_size->values[0].collection,
-					  "y-dimension",
-					  IPP_TAG_INTEGER)) == NULL)
+	else if ((attr = ippFindAttribute(media_size->values[0].collection, "y-dimension", IPP_TAG_INTEGER)) == NULL)
 	{
-	  if ((attr = ippFindAttribute(media_size->values[0].collection,
-				       "y-dimension", IPP_TAG_ZERO)) == NULL)
+	  if ((attr = ippFindAttribute(media_size->values[0].collection, "y-dimension", IPP_TAG_ZERO)) == NULL)
 	    testEndMessage(false, "missing y-dimension");
 	  else
-	    testEndMessage(false, "wrong type for y-dimension - %s",
-		   ippTagString(attr->value_tag));
+	    testEndMessage(false, "wrong type for y-dimension - %s", ippTagString(attr->value_tag));
 
 	  status = 1;
 	}
 	else if (attr->values[0].integer != 27940)
 	{
-	  testEndMessage(false, "wrong value for y-dimension - %d",
-		 attr->values[0].integer);
+	  testEndMessage(false, "wrong value for y-dimension - %d", attr->values[0].integer);
 	  status = 1;
 	}
 	else
+	{
 	  testEnd(true);
+	}
       }
 
       testBegin("ippFindAttribute(media-size 2)");
-      if ((media_size = ippFindAttribute(media_col->values[1].collection,
-					 "media-size",
-					 IPP_TAG_BEGIN_COLLECTION)) == NULL)
+      if ((media_size = ippFindAttribute(media_col->values[1].collection, "media-size", IPP_TAG_BEGIN_COLLECTION)) == NULL)
       {
-	if ((media_size = ippFindAttribute(media_col->values[1].collection,
-					   "media-col",
-					   IPP_TAG_ZERO)) == NULL)
+	if ((media_size = ippFindAttribute(media_col->values[1].collection, "media-col", IPP_TAG_ZERO)) == NULL)
 	  testEndMessage(false, "not found");
 	else
-	  testEndMessage(false, "wrong type - %s",
-	         ippTagString(media_size->value_tag));
+	  testEndMessage(false, "wrong type - %s", ippTagString(media_size->value_tag));
 
 	status = 1;
       }
       else
       {
-	if ((attr = ippFindAttribute(media_size->values[0].collection,
-				     "x-dimension",
-				     IPP_TAG_INTEGER)) == NULL)
+	if ((attr = ippFindAttribute(media_size->values[0].collection, "x-dimension", IPP_TAG_INTEGER)) == NULL)
 	{
-	  if ((attr = ippFindAttribute(media_size->values[0].collection,
-				       "x-dimension", IPP_TAG_ZERO)) == NULL)
+	  if ((attr = ippFindAttribute(media_size->values[0].collection, "x-dimension", IPP_TAG_ZERO)) == NULL)
 	    testEndMessage(false, "missing x-dimension");
 	  else
-	    testEndMessage(false, "wrong type for x-dimension - %s",
-		   ippTagString(attr->value_tag));
+	    testEndMessage(false, "wrong type for x-dimension - %s", ippTagString(attr->value_tag));
 
 	  status = 1;
 	}
 	else if (attr->values[0].integer != 21000)
 	{
-	  testEndMessage(false, "wrong value for x-dimension - %d",
-		 attr->values[0].integer);
+	  testEndMessage(false, "wrong value for x-dimension - %d", attr->values[0].integer);
 	  status = 1;
 	}
-	else if ((attr = ippFindAttribute(media_size->values[0].collection,
-					  "y-dimension",
-					  IPP_TAG_INTEGER)) == NULL)
+	else if ((attr = ippFindAttribute(media_size->values[0].collection, "y-dimension",  IPP_TAG_INTEGER)) == NULL)
 	{
-	  if ((attr = ippFindAttribute(media_size->values[0].collection,
-				       "y-dimension", IPP_TAG_ZERO)) == NULL)
+	  if ((attr = ippFindAttribute(media_size->values[0].collection, "y-dimension", IPP_TAG_ZERO)) == NULL)
 	    testEndMessage(false, "missing y-dimension");
 	  else
-	    testEndMessage(false, "wrong type for y-dimension - %s",
-		   ippTagString(attr->value_tag));
+	    testEndMessage(false, "wrong type for y-dimension - %s", ippTagString(attr->value_tag));
 
 	  status = 1;
 	}
@@ -592,7 +558,9 @@ main(int  argc,			// I - Number of command-line arguments
 	  status = 1;
 	}
 	else
+	{
 	  testEnd(true);
+	}
       }
     }
 
@@ -606,7 +574,9 @@ main(int  argc,			// I - Number of command-line arguments
         status = 1;
       }
       else
+      {
         testEnd(true);
+      }
     }
     else
     {
@@ -623,7 +593,9 @@ main(int  argc,			// I - Number of command-line arguments
         status = 1;
       }
       else
+      {
         testEnd(true);
+      }
     }
     else
     {
@@ -638,7 +610,9 @@ main(int  argc,			// I - Number of command-line arguments
       status = 1;
     }
     else
+    {
       testEnd(true);
+    }
 
     ippDelete(request);
 
@@ -652,8 +626,10 @@ main(int  argc,			// I - Number of command-line arguments
     data.wbuffer = bad_collection;
 
     while ((state = ippReadIO(&data, (ipp_io_cb_t)read_cb, 1, NULL, request)) != IPP_STATE_DATA)
+    {
       if (state == IPP_STATE_ERROR)
 	break;
+    }
 
     ippDelete(request);
 
@@ -672,10 +648,11 @@ main(int  argc,			// I - Number of command-line arguments
     data.wsize   = sizeof(mixed);
     data.wbuffer = mixed;
 
-    while ((state = ippReadIO(&data, (ipp_io_cb_t)read_cb, 1, NULL,
-                              request)) != IPP_STATE_DATA)
+    while ((state = ippReadIO(&data, (ipp_io_cb_t)read_cb, 1, NULL, request)) != IPP_STATE_DATA)
+    {
       if (state == IPP_STATE_ERROR)
 	break;
+    }
 
     length = ippGetLength(request);
 
@@ -686,24 +663,22 @@ main(int  argc,			// I - Number of command-line arguments
     }
     else if (data.rpos != sizeof(mixed))
     {
-      testEndMessage(false, "read %d bytes, expected %d bytes", (int)data.rpos,
-             (int)sizeof(mixed));
+      testEndMessage(false, "read %d bytes, expected %d bytes", (int)data.rpos, (int)sizeof(mixed));
       print_attributes(request, 8);
       status = 1;
     }
     else if (length != (sizeof(mixed) + 4))
     {
-      testEndMessage(false, "wrong ippLength(), %d instead of %d bytes",
-             (int)length, (int)sizeof(mixed) + 4);
+      testEndMessage(false, "wrong ippLength(), %d instead of %d bytes", (int)length, (int)sizeof(mixed) + 4);
       print_attributes(request, 8);
       status = 1;
     }
     else
+    {
       testEnd(true);
-
+    }
     testBegin("ippFindAttribute(notify-lease-duration-supported)");
-    if ((attr = ippFindAttribute(request, "notify-lease-duration-supported",
-                                 IPP_TAG_ZERO)) == NULL)
+    if ((attr = ippFindAttribute(request, "notify-lease-duration-supported", IPP_TAG_ZERO)) == NULL)
     {
       testEndMessage(false, "not found");
       status = 1;
@@ -718,20 +693,15 @@ main(int  argc,			// I - Number of command-line arguments
       testEndMessage(false, "wrong count - %d", attr->num_values);
       status = 1;
     }
-    else if (attr->values[0].range.lower != 1 ||
-             attr->values[0].range.upper != 1 ||
-             attr->values[1].range.lower != 16 ||
-             attr->values[1].range.upper != 32)
+    else if (attr->values[0].range.lower != 1 || attr->values[0].range.upper != 1 || attr->values[1].range.lower != 16 || attr->values[1].range.upper != 32)
     {
-      testEndMessage(false, "wrong values - %d,%d and %d,%d",
-             attr->values[0].range.lower,
-             attr->values[0].range.upper,
-             attr->values[1].range.lower,
-             attr->values[1].range.upper);
+      testEndMessage(false, "wrong values - %d,%d and %d,%d", attr->values[0].range.lower, attr->values[0].range.upper, attr->values[1].range.lower, attr->values[1].range.upper);
       status = 1;
     }
     else
+    {
       testEnd(true);
+    }
 
     ippDelete(request);
 
@@ -752,12 +722,18 @@ main(int  argc,			// I - Number of command-line arguments
     // Test _ippFindOption() private API...
     testBegin("_ippFindOption(\"printer-type\")");
     if (_ippFindOption("printer-type"))
+    {
       testEnd(true);
+    }
     else
     {
       testEnd(false);
       status = 1;
     }
+
+    // Test ippFile API...
+    status |= test_file(/*color*/NULL);
+    status |= test_file("blue");
   }
   else
   {
@@ -769,11 +745,10 @@ main(int  argc,			// I - Number of command-line arguments
       if (strlen(argv[i]) > 5 && !strcmp(argv[i] + strlen(argv[i]) - 5, ".test"))
       {
         // Read an ASCII IPP message...
-        ipp_file_t *file;		// IPP data file
-
-        file    = ippFileNew(NULL, NULL, NULL, NULL);
+        file    = ippFileNew(/*parent*/NULL, /*attr_cb*/NULL, /*error_cb*/NULL, /*cb_data*/NULL);
         request = ippNew();
 
+        ippFileSetAttributes(file, request);
         ippFileOpen(file, argv[i], "r");
         ippFileRead(file, token_cb, true);
         ippFileDelete(file);
@@ -878,7 +853,7 @@ print_attributes(ipp_t *ipp,		// I - IPP request
     if (!attr->name && indent == 4)
     {
       group = IPP_TAG_ZERO;
-      putchar('\n');
+      testError("");
       continue;
     }
 
@@ -886,12 +861,12 @@ print_attributes(ipp_t *ipp,		// I - IPP request
     {
       group = attr->group_tag;
 
-      testError("\n%*s%s:\n", indent - 4, "", ippTagString(group));
+      testError("\n%*s%s:", indent - 4, "", ippTagString(group));
     }
 
     ippAttributeString(attr, buffer, sizeof(buffer));
 
-    testError("%*s%s (%s%s): %s\n", indent, "", attr->name ? attr->name : "(null)", attr->num_values > 1 ? "1setOf " : "", ippTagString(attr->value_tag), buffer);
+    testError("%*s%s (%s%s): %s", indent, "", attr->name ? attr->name : "(null)", attr->num_values > 1 ? "1setOf " : "", ippTagString(attr->value_tag), buffer);
   }
 }
 
@@ -959,6 +934,213 @@ read_hex(cups_file_t *fp,		// I - File to read from
   }
 
   return (total == 0 ? -1 : (ssize_t)total);
+}
+
+
+//
+// 'test_file()' - Test ippFile APIs.
+//
+
+int					// O - Status
+test_file(const char *color)		// I - Media color or `NULL` for default
+{
+  int		status = 0;		// Status
+  ipp_file_t	*file;			// IPP file
+  ipp_t		*attrs;			// IPP attributes
+  ipp_attribute_t *attr;		// Other attribute
+  int		ivalue;			// Integer value
+  const char	*svalue;		// String value
+
+
+  testBegin("ippNew()");
+  if ((attrs = ippNew()) != NULL)
+  {
+    testEndMessage(true, "%p", attrs);
+  }
+  else
+  {
+    testEnd(false);
+    status = 1;
+  }
+
+  testBegin("ippFileNew()");
+  if ((file = ippFileNew(/*parent*/NULL, /*attr_cb*/NULL, /*error_cb*/NULL, /*cb_data*/NULL)) != NULL)
+  {
+    testEnd(true);
+  }
+  else
+  {
+    testEnd(false);
+    status = 1;
+  }
+
+  testBegin("ippFileSetAttributes()");
+  if (ippFileSetAttributes(file, attrs))
+  {
+    testEnd(true);
+  }
+  else
+  {
+    testEnd(false);
+    status = 1;
+  }
+
+  if (color)
+  {
+    testBegin("ippFileSetVar(\"color\", \"%s\")", color);
+    testEnd(ippFileSetVar(file, "color", color));
+  }
+  else
+  {
+    color = "white";
+  }
+
+  testBegin("ippFileOpen(\"testipp.test\", \"r\")");
+  if (ippFileOpen(file, "testipp.test", "r"))
+  {
+    testEnd(true);
+  }
+  else
+  {
+    testEnd(false);
+    status = 1;
+  }
+
+  testBegin("ippFileRead(token_cb, true)");
+  if (ippFileRead(file, token_cb, true))
+  {
+    testEnd(true);
+  }
+  else
+  {
+    testEnd(false);
+    status = 1;
+  }
+
+  testBegin("ippFileGetAttribute(\"job-name\")");
+  if ((attr = ippFileGetAttribute(file, "job-name", IPP_TAG_NAME)) == NULL)
+  {
+    testEndMessage(false, "missing");
+    status = 1;
+  }
+  else if (strcmp(svalue = ippGetString(attr, 0, NULL), "Test Job"))
+  {
+    testEndMessage(false, "Got '%s', expected 'Test Job'", svalue);
+    status = 1;
+  }
+  else if (ippGetCount(attr) != 1)
+  {
+    testEndMessage(false, "Got %d values, expected 1", (int)ippGetCount(attr));
+    status = 1;
+  }
+  else if (ippGetGroupTag(attr) != IPP_TAG_OPERATION)
+  {
+    testEndMessage(false, "Got group %s, expected operation-attributes-tag", ippTagString(ippGetGroupTag(attr)));
+    status = 1;
+  }
+  else
+  {
+    testEndMessage(true, "'%s'", svalue);
+  }
+
+  testBegin("ippFileGetAttribute(\"page-ranges\")");
+  if ((attr = ippFileGetAttribute(file, "page-ranges", IPP_TAG_RANGE)) == NULL)
+  {
+    testEndMessage(false, "missing");
+    status = 1;
+  }
+  else if (ippGetCount(attr) != 2)
+  {
+    testEndMessage(false, "Got %d values, expected 2", (int)ippGetCount(attr));
+    status = 1;
+  }
+  else if (ippGetGroupTag(attr) != IPP_TAG_JOB)
+  {
+    testEndMessage(false, "Got group %s, expected job-attributes-tag", ippTagString(ippGetGroupTag(attr)));
+    status = 1;
+  }
+  else
+  {
+    int	upper, lower;		// Range values
+
+    if ((lower = ippGetRange(attr, 0, &upper)) != 1 || upper != 4)
+    {
+      testEndMessage(false, "Got %d-%d, expected 1-4", lower, upper);
+      status = 1;
+    }
+    else if ((lower = ippGetRange(attr, 1, &upper)) != 11 || upper != 12)
+    {
+      testEndMessage(false, "Got %d-%d, expected 11-12", lower, upper);
+      status = 1;
+    }
+    else
+    {
+      testEnd(true);
+    }
+  }
+
+  testBegin("ippFileGetAttribute(\"media-col/media-color\")");
+  if ((attr = ippFileGetAttribute(file, "media-col/media-color", IPP_TAG_KEYWORD)) == NULL)
+  {
+    testEndMessage(false, "missing");
+    status = 1;
+  }
+  else if (ippGetCount(attr) != 1)
+  {
+    testEndMessage(false, "Got %d values, expected 1", (int)ippGetCount(attr));
+    status = 1;
+  }
+  else if (strcmp(svalue = ippGetString(attr, 0, NULL), color))
+  {
+    testEndMessage(false, "Got '%s', expected '%s'", svalue, color);
+    status = 1;
+  }
+  else
+  {
+    testEndMessage(true, "'%s'", svalue);
+  }
+
+  testBegin("ippFileGetAttribute(\"media-col/media-size/x-dimension\")");
+  if ((attr = ippFileGetAttribute(file, "media-col/media-size/x-dimension", IPP_TAG_INTEGER)) == NULL)
+  {
+    testEndMessage(false, "missing");
+    status = 1;
+  }
+  else if ((ivalue = ippGetInteger(attr, 0)) != 21000)
+  {
+    testEndMessage(false, "Got %d, expected 21000", ivalue);
+    status = 1;
+  }
+  else if (ippGetCount(attr) != 1)
+  {
+    testEndMessage(false, "Got %d values, expected 1", (int)ippGetCount(attr));
+    status = 1;
+  }
+  else
+  {
+    testEndMessage(true, "%d", ivalue);
+  }
+
+  testBegin("ippFileGetAttributes()");
+  if (ippFileGetAttributes(file) == attrs)
+  {
+    testEndMessage(true, "%p", attrs);
+  }
+  else if (ippFileGetAttributes(file))
+  {
+    testEndMessage(false, "Got %p, expected %p", ippFileGetAttributes(file), attrs);
+    status = 1;
+  }
+  else
+  {
+    testEnd(false);
+    status = 1;
+  }
+
+  ippFileDelete(file);
+  ippDelete(attrs);
+
+  return (status);
 }
 
 

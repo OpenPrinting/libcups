@@ -540,7 +540,7 @@ extern size_t		ippAttributeString(ipp_attribute_t *attr, char *buffer, size_t bu
 extern bool		ippContainsInteger(ipp_attribute_t *attr, int value) _CUPS_PUBLIC;
 extern bool		ippContainsString(ipp_attribute_t *attr, const char *value) _CUPS_PUBLIC;
 extern ipp_attribute_t	*ippCopyAttribute(ipp_t *dst, ipp_attribute_t *attr, bool quickcopy) _CUPS_PUBLIC;
-extern bool		ippCopyAttributes(ipp_t *dst, ipp_t *src, bool quickcopy, ipp_copy_cb_t cb, void *context) _CUPS_PUBLIC;
+extern bool		ippCopyAttributes(ipp_t *dst, ipp_t *src, bool quickcopy, ipp_copy_cb_t cb, void *cb_data) _CUPS_PUBLIC;
 extern char		*ippCopyCredentialsString(ipp_attribute_t *attr) _CUPS_PUBLIC;
 extern cups_array_t	*ippCreateRequestedArray(ipp_t *request) _CUPS_PUBLIC;
 
