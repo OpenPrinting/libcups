@@ -3209,7 +3209,7 @@ cups_get_dests(
     }
 
     // Add options until we hit the end of the line...
-    dest->num_options = cupsParseOptions(lineptr, dest->num_options, &(dest->options));
+    dest->num_options = cupsParseOptions(lineptr, /*end*/NULL, dest->num_options, &(dest->options));
 
     // If we found what we were looking for, stop now...
     if (match_name)

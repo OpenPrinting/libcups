@@ -185,7 +185,6 @@
 		2707FC452C0E192E0035BBFC /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 278C58E5136B64AF00836530 /* CoreFoundation.framework */; };
 		2707FC462C0E192E0035BBFC /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2707FC062C0E17340035BBFC /* CoreServices.framework */; };
 		2707FC4D2C0E19660035BBFC /* testoauth.c in Sources */ = {isa = PBXBuildFile; fileRef = 2707FC4C2C0E19660035BBFC /* testoauth.c */; };
-		2707FC4E2C0E19660035BBFC /* testoauth.c in Sources */ = {isa = PBXBuildFile; fileRef = 2707FC4C2C0E19660035BBFC /* testoauth.c */; };
 		270D02191D707E0200EA9403 /* libcups_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 72A4332F155844CF002E172D /* libcups_static.a */; };
 		270D021A1D707E0200EA9403 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 278C58E5136B64AF00836530 /* CoreFoundation.framework */; };
 		270D021C1D707E0200EA9403 /* libiconv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 728FB7EF1536167A005426E1 /* libiconv.dylib */; };
@@ -2926,7 +2925,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				271286691CC130C700E517C7 /* tlscheck.c in Sources */,
-				2707FC4E2C0E19660035BBFC /* testoauth.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -1,7 +1,7 @@
 //
 // Option support functions for the IPP tools.
 //
-// Copyright © 2023 by OpenPrinting.
+// Copyright © 2023-2024 by OpenPrinting.
 // Copyright © 2022-2023 by the Printer Working Group.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
@@ -253,7 +253,7 @@ ippOptionsNew(size_t        num_options,// I - Number of command-line options
   if ((value = get_option("job-error-sheet", num_options, options)) != NULL)
   {
     // Parse job-error-sheet collection value...
-    num_col = cupsParseOptions(value, 0, &col);
+    num_col = cupsParseOptions(value, /*end*/NULL, 0, &col);
 
     if ((value = cupsGetOption("job-error-sheet-when", num_col, col)) != NULL)
     {
@@ -281,7 +281,7 @@ ippOptionsNew(size_t        num_options,// I - Number of command-line options
   if ((value = get_option("job-sheets-col", num_options, options)) != NULL)
   {
     // Parse "job-sheets-col" collection value...
-    num_col = cupsParseOptions(value, 0, &col);
+    num_col = cupsParseOptions(value, /*end*/NULL, 0, &col);
 
     if ((value = cupsGetOption("media-col", num_col, col)) == NULL)
       value = cupsGetOption("media", num_col, col);
@@ -432,7 +432,7 @@ ippOptionsNew(size_t        num_options,// I - Number of command-line options
   if ((value = get_option("separator-sheets", num_options, options)) != NULL)
   {
     // Parse separator-sheets collection value...
-    num_col = cupsParseOptions(value, 0, &col);
+    num_col = cupsParseOptions(value, /*end*/NULL, 0, &col);
 
     if ((value = cupsGetOption("media-col", num_col, col)) == NULL)
       value = cupsGetOption("media", num_col, col);
@@ -670,7 +670,7 @@ parse_media(const char   *value,	// I - "media" or "media-col" value
 		*top_margin,		// "media-top-margin" value
 		*type;			// "media-type" value
 
-    num_col = cupsParseOptions(value, 0, &col);
+    num_col = cupsParseOptions(value, /*end*/NULL, 0, &col);
     if ((size_name = cupsGetOption("media-size-name", num_col, col)) != NULL)
     {
       if ((pwg = pwgMediaForPWG(size_name)) != NULL)
@@ -685,7 +685,7 @@ parse_media(const char   *value,	// I - "media" or "media-col" value
       const char	*x_dim,		// x-dimension
 			*y_dim;		// y-dimension
 
-      num_size = cupsParseOptions(size_col, 0, &size);
+      num_size = cupsParseOptions(size_col, /*end*/NULL, 0, &size);
       if ((x_dim = cupsGetOption("x-dimension", num_size, size)) != NULL && (y_dim = cupsGetOption("y-dimension", num_size, size)) != NULL && (pwg = pwgMediaForSize(atoi(x_dim), atoi(y_dim))) != NULL)
         cupsCopyString(media->media, pwg->pwg, sizeof(media->media));
       else

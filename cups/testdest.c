@@ -170,7 +170,7 @@ main(int  argc,				// I - Number of command-line arguments
     cups_option_t	*options = NULL;// Options
 
     for (i ++; i < argc; i ++)
-      num_options = cupsParseOptions(argv[i], num_options, &options);
+      num_options = cupsParseOptions(argv[i], /*end*/NULL, num_options, &options);
 
     show_conflicts(http, dest, dinfo, num_options, options);
   }
@@ -219,7 +219,7 @@ main(int  argc,				// I - Number of command-line arguments
     const char		*filename = argv[i + 1];
 
     for (i += 2; i < argc; i ++)
-      num_options = cupsParseOptions(argv[i], num_options, &options);
+      num_options = cupsParseOptions(argv[i], /*end*/NULL, num_options, &options);
 
     print_file(http, dest, dinfo, filename, num_options, options);
   }

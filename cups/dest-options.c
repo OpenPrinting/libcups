@@ -1,7 +1,7 @@
 //
 // Destination option/media support for CUPS.
 //
-// Copyright © 2021-2023 by OpenPrinting.
+// Copyright © 2021-2024 by OpenPrinting.
 // Copyright © 2012-2019 by Apple Inc.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
@@ -1835,11 +1835,11 @@ cups_create_media_db(
 
       if (!mdb.key)
       {
-        pwg_media_t	pwg;		// PWG media info
+        pwg_media_t	temppwg;	// PWG media info
 	char		keyword[128],	// PWG size keyword
 			ppdname[41];	// PPD size name
 
-        if (!mdb.size_name && _pwgMediaNearSize(&pwg, keyword, sizeof(keyword), ppdname, sizeof(ppdname), mdb.width, mdb.length, _PWG_EPSILON))
+        if (!mdb.size_name && _pwgMediaNearSize(&temppwg, keyword, sizeof(keyword), ppdname, sizeof(ppdname), mdb.width, mdb.length, _PWG_EPSILON))
 	  mdb.size_name = keyword;
 
         if (!mdb.size_name)

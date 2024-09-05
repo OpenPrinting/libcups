@@ -1,7 +1,7 @@
 //
 // Option routines for CUPS.
 //
-// Copyright © 2022-2023 by OpenPrinting.
+// Copyright © 2022-2024 by OpenPrinting.
 // Copyright © 2007-2017 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products.
 //
@@ -201,10 +201,14 @@ cupsGetOption(const char    *name,	// I - Name of option
 // intact - use @code cupsParseOptions@ on the value to extract the
 // collection attributes.
 //
+// The "end" argument, if not `NULL`, receives a pointer to the end of the
+// options.
+//
 
 size_t					// O - Number of options found
 cupsParseOptions(
     const char    *arg,			// I - Argument to parse
+    const char    **end,		// O - Pointer to end of options or `NULL` for "don't care"
     size_t        num_options,		// I - Number of options
     cups_option_t **options)		// O - Options found
 {
@@ -217,6 +221,9 @@ cupsParseOptions(
 
 
   // Range check input...
+  if (end)
+    *end = NULL;
+
   if (!arg)
     return (num_options);
 
@@ -231,20 +238,9 @@ cupsParseOptions(
   }
 
   if (*copyarg == '{')
-  {
-    // Remove surrounding {} so we can parse "{name=value ... name=value}"...
-    if ((ptr = copyarg + strlen(copyarg) - 1) > copyarg && *ptr == '}')
-    {
-      *ptr = '\0';
-      ptr  = copyarg + 1;
-    }
-    else
-      ptr = copyarg;
-  }
+    ptr  = copyarg + 1;
   else
-  {
     ptr = copyarg;
-  }
 
   // Skip leading spaces...
   while (_cups_isspace(*ptr))
@@ -261,6 +257,13 @@ cupsParseOptions(
     // Avoid an empty name...
     if (ptr == name)
       break;
+
+    // End after the closing brace...
+    if (*ptr == '}' && *copyarg == '{')
+    {
+      ptr ++;
+      break;
+    }
 
     // Skip trailing spaces...
     while (_cups_isspace(*ptr))
@@ -355,6 +358,10 @@ cupsParseOptions(
     // Add the string value...
     num_options = cupsAddOption(name, value, num_options, options);
   }
+
+  // Save the progress in the input string...
+  if (end)
+    *end = arg + (ptr - copyarg);
 
   // Free the copy of the argument we made and return the number of options found.
   free(copyarg);

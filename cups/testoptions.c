@@ -41,7 +41,7 @@ main(int  argc,				// I - Number of command-line arguments
 				   "foobar=FOO\\ BAR "
 				   "barfoo=barfoo "
 				   "barfoo=\"\'BAR FOO\'\" "
-				   "auth-info=user,pass\\\\,word\\\\\\\\", 0, &options);
+				   "auth-info=user,pass\\\\,word\\\\\\\\", /*end*/NULL, 0, &options);
 
     if (num_options != 6)
     {
@@ -146,7 +146,7 @@ main(int  argc,				// I - Number of command-line arguments
     cups_option_t	*option;	// Current option
 
 
-    num_options = cupsParseOptions(argv[1], 0, &options);
+    num_options = cupsParseOptions(argv[1], /*end*/NULL, 0, &options);
 
     for (i = 0, option = options; i < num_options; i ++, option ++)
       printf("options[%u].name=\"%s\", value=\"%s\"\n", (unsigned)i, option->name, option->value);

@@ -4694,7 +4694,7 @@ process_attr_message(
 
 
   // Grab attributes from the message line...
-  num_options = cupsParseOptions(message + 5, num_options, &options);
+  num_options = cupsParseOptions(message + 5, /*end*/NULL, num_options, &options);
 
   // Loop through the options and record them in the printer or job objects...
   for (i = num_options, option = options; i > 0; i --, option ++)

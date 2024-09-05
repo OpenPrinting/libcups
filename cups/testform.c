@@ -203,7 +203,7 @@ main(int  argc,				// I - Number of command-line arguments
 		  break;
 		}
 
-                num_vars = cupsParseOptions(argv[i], 0, &vars);
+                num_vars = cupsParseOptions(argv[i], /*end*/NULL, 0, &vars);
                 data     = cupsFormEncode(url, num_vars, vars);
 
                 if (data)

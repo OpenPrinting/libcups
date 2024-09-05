@@ -230,7 +230,7 @@ main(int  argc,				// I - Number of command-line arguments
     puts("IfIdx Service Name");
     puts("----- ----------------------------------------------------------------");
 
-    if ((browse = cupsDNSSDBrowseNew(dnssd, CUPS_DNSSD_IF_INDEX_ANY, argv[2], NULL, browse_print_cb, &testdata)) == NULL)
+    if (cupsDNSSDBrowseNew(dnssd, CUPS_DNSSD_IF_INDEX_ANY, argv[2], NULL, browse_print_cb, &testdata) == NULL)
     {
       cupsDNSSDDelete(dnssd);
       return (1);
@@ -317,6 +317,9 @@ browse_print_cb(
   testdata_t	*data = (testdata_t *)cb_data;
 					// Test data
 
+
+  (void)browse;
+  (void)flags;
 
   printf("%5u %s.%s.%s\n", if_index, name, regtype, domain);
 

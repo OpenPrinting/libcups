@@ -1,7 +1,7 @@
 //
 // Utility for converting PDF and JPEG files to raster data or HP PCL.
 //
-// Copyright © 2023 by OpenPrinting.
+// Copyright © 2023-2024 by OpenPrinting.
 // Copyright © 2016-2023 by the Printer Working Group.
 // Copyright © 2016-2019 by Apple Inc.
 //
@@ -383,7 +383,7 @@ main(int  argc,				// I - Number of command-line args
 	        return (usage(stderr));
 	      }
 
-	      num_options = cupsParseOptions(argv[i], num_options, &options);
+	      num_options = cupsParseOptions(argv[i], /*end*/NULL, num_options, &options);
 	      break;
 
 	  case 'r' : // pwg-raster-document-resolution-supported values

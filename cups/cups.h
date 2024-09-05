@@ -381,7 +381,7 @@ extern const char	*cupsLocalizeDestValue(http_t *http, cups_dest_t *dest, cups_d
 extern char		*cupsLocalizeNotifySubject(cups_lang_t *lang, ipp_t *event) _CUPS_PUBLIC;
 extern char		*cupsLocalizeNotifyText(cups_lang_t *lang, ipp_t *event) _CUPS_PUBLIC;
 
-extern size_t		cupsParseOptions(const char *arg, size_t num_options, cups_option_t **options) _CUPS_PUBLIC;
+extern size_t		cupsParseOptions(const char *arg, const char **end, size_t num_options, cups_option_t **options) _CUPS_PUBLIC;
 extern http_status_t	cupsPutFd(http_t *http, const char *resource, int fd) _CUPS_PUBLIC;
 extern http_status_t	cupsPutFile(http_t *http, const char *resource, const char *filename) _CUPS_PUBLIC;
 

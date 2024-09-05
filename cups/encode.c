@@ -1,7 +1,7 @@
 //
 // Option encoding routines for CUPS.
 //
-// Copyright © 2021-2023 by OpenPrinting.
+// Copyright © 2021-2024 by OpenPrinting.
 // Copyright © 2007-2019 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products.
 //
@@ -498,7 +498,7 @@ _cupsEncodeOption(
 
       case IPP_TAG_BEGIN_COLLECTION :
 	  // Collection value
-	  num_cols = cupsParseOptions(val, 0, &cols);
+	  num_cols = cupsParseOptions(val, /*end*/NULL, 0, &cols);
 	  if ((collection = ippNew()) == NULL)
 	  {
 	    cupsFreeOptions(num_cols, cols);

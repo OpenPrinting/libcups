@@ -8,6 +8,7 @@ libcups v3.0rc1 (TBD)
   strings.
 - Added support for per-user instances of `cups-locald` (Issue #69)
 - Added `httpConnectURI` API.
+- Added "end" argument to `cupsParseOptions` API.
 - Renamed `httpReconnect` to `httpConnectAgain`.
 - Updated `cupsDestInfo` to accept a `cups_dest_flags_t` argument.
 - Updated `cupsCopyString` and `cupsConcatString` APIs to safely terminate UTF-8
