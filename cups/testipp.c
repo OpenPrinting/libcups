@@ -1155,7 +1155,6 @@ token_cb(ipp_file_t *f,			// I - IPP file data
 {
   (void)user_data;
 
-  // TODO: Add a custom directive to test this.
   if (strcasecmp(token, "TEST"))
   {
     fprintf(stderr, "Unknown directive '%s' on line %d of '%s'.\n", token, ippFileGetLineNumber(f), ippFileGetFilename(f));
