@@ -188,12 +188,6 @@ main(int  argc,				// I - Number of command-line arguments
   }
   else if (!strcmp(command, "get-user-id"))
   {
-    if (i >= argc)
-    {
-      fputs("testoauth: Missing resource URI.\n", stderr);
-      return (usage(stderr));
-    }
-
     return (get_user_id(oauth_uri, argv[i]));
   }
   else if (!strcmp(command, "set-client-data"))
@@ -319,10 +313,52 @@ static int				// O - Exit status
 get_user_id(const char *oauth_uri,	// I - Authorization Server URI
             const char *resource_uri)	// I - Resource URI
 {
-  (void)oauth_uri;
-  (void)resource_uri;
+  cups_jwt_t	*user_id;		// User ID information
 
-  return (1);
+
+  if ((user_id = cupsOAuthCopyUserId(oauth_uri, resource_uri)) != NULL)
+  {
+    const char	*aud = cupsJWTGetClaimString(user_id, CUPS_JWT_AUD);
+					// Audience
+    const char	*iss = cupsJWTGetClaimString(user_id, CUPS_JWT_ISS);
+					// Issuer
+    const char	*jti = cupsJWTGetClaimString(user_id, CUPS_JWT_JTI);
+					// JWT ID
+    const char	*name = cupsJWTGetClaimString(user_id, CUPS_JWT_NAME);
+					// Display name
+    const char	*sub = cupsJWTGetClaimString(user_id, CUPS_JWT_SUB);
+					// Subject (username/ID)
+    double	iat = cupsJWTGetClaimNumber(user_id, CUPS_JWT_IAT);
+					// Issue time
+    double	exp = cupsJWTGetClaimNumber(user_id, CUPS_JWT_EXP);
+					// Expiration time
+    double	nbf = cupsJWTGetClaimNumber(user_id, CUPS_JWT_NBF);
+					// Not before time
+    char	date[256];		// Date
+
+    if (iss)
+      printf("Issuer: %s\n", iss);
+    if (name)
+      printf("Display Name: %s\n", name);
+    if (sub)
+      printf("Subject: %s\n", sub);
+    if (aud)
+      printf("Audience: %s\n", aud);
+    if (jti)
+      printf("JWT ID: %s\n", jti);
+    if (iat > 0.0)
+      printf("Issued On: %s\n", httpGetDateString((time_t)iat, date, sizeof(date)));
+    if (exp > 0.0)
+      printf("Expires On: %s\n", httpGetDateString((time_t)exp, date, sizeof(date)));
+    if (nbf > 0.0)
+      printf("Not Before: %s\n", httpGetDateString((time_t)nbf, date, sizeof(date)));
+
+    return (0);
+  }
+  else
+  {
+    return (1);
+  }
 }
 
 
@@ -411,8 +447,17 @@ unit_tests(const char *oauth_uri,	// I - Authorization Server URI
   testBegin("cupsOAuthCopyUserId(%s)", oauth_uri);
   if ((user_id = cupsOAuthCopyUserId(oauth_uri, /*resource_uri*/NULL)) != NULL)
   {
-    testEnd(true);
-    // TODO: Show user ID
+    const char	*iss = cupsJWTGetClaimString(user_id, CUPS_JWT_ISS);
+					// Issuer
+    const char	*name = cupsJWTGetClaimString(user_id, CUPS_JWT_NAME);
+					// Display name
+    const char	*sub = cupsJWTGetClaimString(user_id, CUPS_JWT_SUB);
+					// Subject (username/ID)
+    double	exp = cupsJWTGetClaimNumber(user_id, CUPS_JWT_EXP);
+					// Expiration time
+    char	expdate[256];		// Expiration date
+
+    testEndMessage(true, "iss=\"%s\", name=\"%s\", sub=\"%s\", exp=%s", iss, name, sub, httpGetDateString((time_t)exp, expdate, sizeof(expdate)));
   }
   else
   {
