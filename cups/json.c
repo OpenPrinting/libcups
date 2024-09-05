@@ -189,7 +189,7 @@ cupsJSONExportFile(
     return (false);
 
   // Create the file...
-  if ((fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0666)) < 0)
+  if ((fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0664)) < 0)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
     free(s);
