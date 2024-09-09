@@ -85,14 +85,14 @@ typedef struct ipptool_expect_s		// Expected attribute info
   char		*name,			// Attribute name
 		*of_type,		// Type name
 		*same_count_as,		// Parallel attribute name
-		*if_defined,		// Only required if variable defined
-		*if_not_defined,	// Only required if variable is not defined
 		*with_value,		// Attribute must include this value
 		*with_value_from,	// Attribute must have one of the values in this attribute
 		*define_match,		// Variable to define on match
 		*define_no_match,	// Variable to define on no-match
 		*define_value,		// Variable to define with value
 		*display_match;		// Message to display on a match
+  cups_array_t	*if_defined,		// Only required if variable(s) defined
+		*if_not_defined;	// Only required if variable(s) are not defined
   ipptool_content_t with_content;	// WITH-*-CONTENT value
   cups_array_t	*with_mime_types;	// WITH-*-MIME-TYPES value(s)
   char		*save_filespec;		// SAVE-*-CONTENT filespec
@@ -122,9 +122,9 @@ typedef struct ipptool_generate_s	//// GENERATE-FILE parameters
 typedef struct ipptool_status_s		// Status info
 {
   ipp_status_t	status;			// Expected status code
-  char		*if_defined,		// Only if variable is defined
-		*if_not_defined,	// Only if variable is not defined
-		*define_match,		// Variable to define on match
+  cups_array_t	*if_defined,		// Only required if variable(s) defined
+		*if_not_defined;	// Only required if variable(s) are not defined
+  char		*define_match,		// Variable to define on match
 		*define_no_match,	// Variable to define on no-match
 		*define_value;		// Variable to define with value
   int		repeat_limit;		// Maximum number of times to repeat
@@ -218,6 +218,7 @@ static bool	Cancel = false;		// Cancel test?
 
 static void	add_stringf(cups_array_t *a, const char *s, ...) _CUPS_FORMAT(2, 3);
 static ipptool_test_t *alloc_data(void);
+static bool	check_vars(ipp_file_t *f, cups_array_t *vars, bool need_all);
 static void	clear_data(ipptool_test_t *data);
 static int	compare_uris(const char *a, const char *b);
 static http_t	*connect_printer(ipptool_test_t *data);
@@ -826,6 +827,39 @@ alloc_data(void)
 
 
 //
+// 'check_vars()' - Check for the existence of the listed variables.
+//
+
+static bool				// O - `true` if vars are defined, `false` otherwise
+check_vars(ipp_file_t   *f,		// I - IPP file
+           cups_array_t *vars,		// I - Variables to look for
+           bool         need_all)	// I - Do we need all of them to exist?
+{
+  bool		ret = false;		// Return value
+  const char	*var;			// Current variable
+
+
+  if (!vars)
+    return (true);
+
+  for (var = (const char *)cupsArrayGetFirst(vars); var; var = (const char *)cupsArrayGetNext(vars))
+  {
+    if (ippFileGetVar(f, var))
+    {
+      if (getenv("IPPTOOL_DEBUG"))
+        fprintf(stderr, "ipptool: %s is present\n", var);
+
+      ret = true;
+    }
+    else if (need_all)
+      return (false);
+  }
+
+  return (ret);
+}
+
+
+//
 // 'clear_data()' - Clear per-test data...
 //
 
@@ -847,8 +881,8 @@ clear_data(ipptool_test_t *data)	// I - Test data
     free(expect->name);
     free(expect->of_type);
     free(expect->same_count_as);
-    free(expect->if_defined);
-    free(expect->if_not_defined);
+    cupsArrayDelete(expect->if_defined);
+    cupsArrayDelete(expect->if_not_defined);
     free(expect->with_value);
     free(expect->define_match);
     free(expect->define_no_match);
@@ -861,8 +895,8 @@ clear_data(ipptool_test_t *data)	// I - Test data
 
   for (i = 0; i < data->num_statuses; i ++)
   {
-    free(data->statuses[i].if_defined);
-    free(data->statuses[i].if_not_defined);
+    cupsArrayDelete(data->statuses[i].if_defined);
+    cupsArrayDelete(data->statuses[i].if_not_defined);
     free(data->statuses[i].define_match);
     free(data->statuses[i].define_no_match);
     free(data->statuses[i].define_value);
@@ -877,8 +911,8 @@ clear_data(ipptool_test_t *data)	// I - Test data
     free(expect->name);
     free(expect->of_type);
     free(expect->same_count_as);
-    free(expect->if_defined);
-    free(expect->if_not_defined);
+    cupsArrayDelete(expect->if_defined);
+    cupsArrayDelete(expect->if_not_defined);
     free(expect->with_value);
     free(expect->define_match);
     free(expect->define_no_match);
@@ -1243,10 +1277,10 @@ do_monitor_printer_state(
 
     for (i = data->num_monitor_expects, expect = data->monitor_expects; i > 0; i --, expect ++)
     {
-      if (expect->if_defined && !ippFileGetVar(data->parent, expect->if_defined))
+      if (expect->if_defined && !check_vars(data->parent, expect->if_defined, /*need_all*/true))
 	continue;
 
-      if (expect->if_not_defined && ippFileGetVar(data->parent, expect->if_not_defined))
+      if (expect->if_not_defined && check_vars(data->parent, expect->if_not_defined, /*need_all*/false))
 	continue;
 
       found = ippFindAttribute(response, expect->name, IPP_TAG_ZERO);
@@ -1828,10 +1862,10 @@ do_test(ipp_file_t     *f,		// I - IPP data file
       {
 	for (i = 0, status_ok = false; i < data->num_statuses; i ++)
 	{
-	  if (data->statuses[i].if_defined && !ippFileGetVar(f, data->statuses[i].if_defined))
+          if (data->statuses[i].if_defined && !check_vars(data->parent, data->statuses[i].if_defined, /*need_all*/true))
 	    continue;
 
-	  if (data->statuses[i].if_not_defined && ippFileGetVar(f, data->statuses[i].if_not_defined))
+          if (data->statuses[i].if_not_defined && check_vars(data->parent, data->statuses[i].if_not_defined, /*need_all*/false))
 	    continue;
 
 	  if (ippGetStatusCode(response) == data->statuses[i].status)
@@ -1862,10 +1896,10 @@ do_test(ipp_file_t     *f,		// I - IPP data file
       {
 	for (i = 0; i < data->num_statuses; i ++)
 	{
-	  if (data->statuses[i].if_defined && !ippFileGetVar(f, data->statuses[i].if_defined))
+          if (data->statuses[i].if_defined && !check_vars(data->parent, data->statuses[i].if_defined, /*need_all*/true))
 	    continue;
 
-	  if (data->statuses[i].if_not_defined && ippFileGetVar(f, data->statuses[i].if_not_defined))
+          if (data->statuses[i].if_not_defined && check_vars(data->parent, data->statuses[i].if_not_defined, /*need_all*/false))
 	    continue;
 
 	  if (!data->statuses[i].repeat_match || repeat_count >= data->statuses[i].repeat_limit)
@@ -1883,10 +1917,10 @@ do_test(ipp_file_t     *f,		// I - IPP data file
 			exp_pass;	// Did this expect pass?
 	ipp_attribute_t	*group_found;	// Found parent attribute for group tests
 
-	if (expect->if_defined && !ippFileGetVar(f, expect->if_defined))
+	if (expect->if_defined && !check_vars(data->parent, expect->if_defined, /*need_all*/true))
 	  continue;
 
-	if (expect->if_not_defined && ippFileGetVar(f, expect->if_not_defined))
+	if (expect->if_not_defined && check_vars(data->parent, expect->if_not_defined, /*need_all*/false))
 	  continue;
 
 	if ((found = ippFindAttribute(response, expect->name, IPP_TAG_ZERO)) != NULL && expect->in_group && expect->in_group != ippGetGroupTag(found))
@@ -2076,6 +2110,9 @@ do_test(ipp_file_t     *f,		// I - IPP data file
 
 	  if (found && expect->define_match)
 	  {
+	    if (getenv("IPPTOOL_DEBUG"))
+	      fprintf(stderr, "ipptool: %s=1\n", expect->define_match);
+
 	    ippFileSetVar(data->parent, expect->define_match, "1");
 	    exp_pass = true;
 	  }
@@ -2135,6 +2172,9 @@ do_test(ipp_file_t     *f,		// I - IPP data file
 		    break;
 	      }
 	    }
+
+	    if (getenv("IPPTOOL_DEBUG"))
+	      fprintf(stderr, "ipptool: %s=%s\n", expect->define_value, data->buffer);
 
 	    ippFileSetVar(data->parent, expect->define_value, data->buffer);
 	  }
@@ -3838,7 +3878,10 @@ parse_monitor_printer_state(
 
       if (data->last_expect)
       {
-	data->last_expect->if_defined = strdup(temp);
+        if (data->last_expect->if_defined)
+          cupsArrayAddStrings(data->last_expect->if_defined, temp, ',');
+        else
+          data->last_expect->if_defined = cupsArrayNewStrings(temp, ',');
       }
       else
       {
@@ -3856,7 +3899,10 @@ parse_monitor_printer_state(
 
       if (data->last_expect)
       {
-	data->last_expect->if_not_defined = strdup(temp);
+        if (data->last_expect->if_not_defined)
+          cupsArrayAddStrings(data->last_expect->if_not_defined, temp, ',');
+        else
+          data->last_expect->if_not_defined = cupsArrayNewStrings(temp, ',');
       }
       else
       {
@@ -5859,11 +5905,17 @@ token_cb(ipp_file_t     *f,		// I - IPP file data
 
       if (data->last_expect)
       {
-	data->last_expect->if_defined = strdup(temp);
+        if (data->last_expect->if_defined)
+          cupsArrayAddStrings(data->last_expect->if_defined, temp, ',');
+        else
+          data->last_expect->if_defined = cupsArrayNewStrings(temp, ',');
       }
       else if (data->last_status)
       {
-	data->last_status->if_defined = strdup(temp);
+        if (data->last_status->if_defined)
+          cupsArrayAddStrings(data->last_status->if_defined, temp, ',');
+        else
+          data->last_status->if_defined = cupsArrayNewStrings(temp, ',');
       }
       else
       {
@@ -5881,11 +5933,17 @@ token_cb(ipp_file_t     *f,		// I - IPP file data
 
       if (data->last_expect)
       {
-	data->last_expect->if_not_defined = strdup(temp);
+        if (data->last_expect->if_not_defined)
+          cupsArrayAddStrings(data->last_expect->if_not_defined, temp, ',');
+        else
+          data->last_expect->if_not_defined = cupsArrayNewStrings(temp, ',');
       }
       else if (data->last_status)
       {
-	data->last_status->if_not_defined = strdup(temp);
+        if (data->last_status->if_not_defined)
+          cupsArrayAddStrings(data->last_status->if_not_defined, temp, ',');
+        else
+          data->last_status->if_not_defined = cupsArrayNewStrings(temp, ',');
       }
       else
       {
