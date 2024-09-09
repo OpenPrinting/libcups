@@ -12,76 +12,167 @@
 #
 #   ./ipptool -V 2.1 -f filename -t printer-uri ipp-2.1.test
 #
-
-# Do all of the IPP/1.1 and IPP/2.0 tests as an IPP/2.1 client
-INCLUDE "ipp-2.0.test"
-
-
-# Test required printer description attribute support.
+# Options:
 #
-# Required by: PWG 5100.12 section 6.3
+#   -d NOPRINT=1              Disable the print tests.
+#
+
+
+# (REQUIRED) PWG 5101.1-2023: Media Standardized Names v2.1 (MSN)
+DEFINE REQUIRE_MSN 1
+
+# (REQUIRED) IETF STD 92: Internet Printing Protocol/1.1
+INCLUDE "ipp-1.1.test"
+
+# (REQUIRED) PWG 5100.1-2022: IPP Finishings v3.0 (MSN)
+DEFINE REQUIRE_FIN 1
+INCLUDE "pwg5100.1.test"
+
+# (REQUIRED) PWG 5100.2-2001: IPP "output-bin" Attribute
+DEFINE REQUIRE_OUTPUTBIN 1
+INCLUDE "pwg5100.2.test"
+
+# (RECOMMENDED) PWG 5100.5-2024: IPP Document Object v1.2 (DOCOBJECT)
+INCLUDE "pwg5100.5.test"
+
+# (RECOMMENDED) PWG 5100.6-2003: IPP Page Overrides
+INCLUDE "pwg5100.6.test"
+
+# (REQUIRED) PWG 5100.7-2023: IPP Job Extensions v2.1 (JOBEXT)
+DEFINE REQUIRE_JOBEXT 1
+INCLUDE "pwg5100.7.test"
+
+# (RECOMMENDED) PWG 5100.8-2003: IPP "-actual" attributes
+INCLUDE "pwg5100.8.test"
+
+# (REQUIRED) PWG 5100.9-2009: IPP Printer State Extensions v1.0 (STATE)
+DEFINE REQUIRE_STATE 1
+INCLUDE "pwg5100.9.test"
+
+# (REQUIRED) PWG 5100.11-2024: IPP Enterprise Printing Extensions v2.0 (EPX)
+DEFINE REQUIRE_EPX 1
+INCLUDE "pwg5100.11.test"
+
+# (REQUIRED) RFC 3380: IPP: Job and Printer Set Operations
+DEFINE REQUIRE_RFC3380 1
+INCLUDE "rfc3380.test"
+
+# (REQUIRED) RFC 3995: IPP: Notifications and Subscriptions
+# (REQUIRED) RFC 3996: IPP: The 'ippget' Delivery Method for Event Notifications
+DEFINE REQUIRE_RFC3995 1
+DEFINE REQUIRE_RFC3996 1
+INCLUDE "rfc3995-3996.test"
+
+# (REQUIRED) RFC 3998: IPP: Job and Printer Administrative Operations
+DEFINE REQUIRE_RFC3998 1
+INCLUDE "rfc3998.test"
+
+# PWG 5100.12-2024: IPP/2.x Fourth Edition (for IPP/2.1)
 {
-	NAME "PWG 5100.12 section 6.3 - Required Printer Description Attributes"
-	OPERATION Get-Printer-Attributes
-	GROUP operation-attributes-tag
-	ATTR charset attributes-charset utf-8
-	ATTR naturalLanguage attributes-natural-language en
-	ATTR uri printer-uri $uri
-	ATTR name requesting-user-name $user
-	ATTR mimeMediaType document-format application/octet-stream
+    NAME "PWG 5100.12-2024: Required Operations, Attributes, and Values"
+    OPERATION Get-Printer-Attributes
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR name requesting-user-name $user
+    ATTR mimeMediaType document-format application/octet-stream
 
-	STATUS successful-ok
+    STATUS successful-ok
 
-	# Job template attributes
-	EXPECT job-hold-until-default OF-TYPE keyword|name IN-GROUP printer-attributes-tag COUNT 1
-	EXPECT job-hold-until-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag WITH-VALUE no-hold
-	EXPECT job-priority-default OF-TYPE integer IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE >0,<101
-	EXPECT job-priority-supported OF-TYPE integer IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE >0,<101
-	EXPECT job-settable-attributes-supported OF-TYPE keyword IN-GROUP printer-attributes-tag
-	EXPECT job-sheets-default OF-TYPE keyword|name IN-GROUP printer-attributes-tag
-	EXPECT job-sheets-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag WITH-VALUE none
-	EXPECT media-col-default OF-TYPE collection IN-GROUP printer-attributes-tag COUNT 1
-	EXPECT media-col-supported OF-TYPE keyword IN-GROUP printer-attributes-tag
-	EXPECT media-col-supported WITH-VALUE media-size
-	EXPECT media-default OF-TYPE keyword|name IN-GROUP printer-attributes-tag COUNT 1
-	EXPECT media-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag
+    # Baseline requirement/value
+    EXPECT ipp-versions-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE "2.0"
 
-	# Subscription attributes
-	EXPECT notify-events-default OF-TYPE keyword IN-GROUP printer-attributes-tag
-	EXPECT notify-events-supported OF-TYPE keyword IN-GROUP printer-attributes-tag
-	EXPECT notify-lease-duration-default OF-TYPE integer IN-GROUP printer-attributes-tag COUNT 1
-	EXPECT notify-lease-duration-supported OF-TYPE integer|rangeOfInteger IN-GROUP printer-attributes-tag
-	EXPECT notify-max-events-supported OF-TYPE integer IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE >1
-	EXPECT notify-pull-method-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE ippget
+    # Figure out capabilities
+    EXPECT color-supported OF-TYPE boolean IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE true DEFINE-MATCH PRINTER_IS_COLOR
+    EXPECT job-hold-until-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag DEFINE-MATCH PRINTER_HAS_JOB_HOLD_UNTIL
+    EXPECT job-priority-supported OF-TYPE integer IN-GROUP printer-attributes-tag DEFINE-MATCH PRINTER_HAS_JOB_PRIORITY
+    EXPECT job-sheets-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag DEFINE-MATCH PRINTER_HAS_JOB_SHEETS
+    EXPECT media-col-supported OF-TYPE keyword IN-GROUP printer-attributes-tag DEFINE-MATCH PRINTER_HAS_MEDIA_COL
+    EXPECT output-bin-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag DEFINE-MATCH PRINTER_HAS_OUTPUT_BIN
+    EXPECT print-content-optimize-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag DEFINE-MATCH PRINTER_HAS_PRINT_CONTENT_OPTIMIZE
+    EXPECT sides-supported OF-TYPE keyword IN-GROUP printer-attributes-tag DEFINE-MATCH PRINTER_HAS_SIDES
 
-	# Printer description attributes
-	EXPECT ippget-event-life OF-TYPE integer IN-GROUP printer-attributes-tag COUNT 1
-	EXPECT multiple-operation-time-out OF-TYPE integer IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE >0
+    # Table 2 - IPP Operations (IPP/2.0)
+    EXPECT operations-supported OF-TYPE enum IN-GROUP printer-attributes-tag
+    EXPECT operations-supported WITH-VALUE 0x002D # Cancel-Current-Job
+    EXPECT operations-supported WITH-VALUE 0x0008 # Cancel-Job
+    EXPECT operations-supported WITH-VALUE 0x0038 # Cancel-Jobs
+    EXPECT operations-supported WITH-VALUE 0x0030 # Cancel-My-Jobs
+    EXPECT operations-supported WITH-VALUE 0x003B # Close-Job
+    EXPECT operations-supported WITH-VALUE 0x0005 # Create-Job
+    EXPECT operations-supported WITH-VALUE 0x0016 # Create-Printer-Subscriptions
+    EXPECT operations-supported WITH-VALUE 0x0023 # Disable-Printer
+    EXPECT operations-supported WITH-VALUE 0x0022 # Enable-Printer
+    EXPECT operations-supported WITH-VALUE 0x0009 # Get-Job-Attributes
+    EXPECT operations-supported WITH-VALUE 0x000A # Get-Jobs
+    EXPECT operations-supported WITH-VALUE 0x001C # Get-Notifications
+    EXPECT operations-supported WITH-VALUE 0x000B # Get-Printer-Attributes
+    EXPECT operations-supported WITH-VALUE 0x0015 # Get-Printer-Supported-Values
+    EXPECT operations-supported WITH-VALUE 0x0018 # Get-Subscription-Attributes
+    EXPECT operations-supported WITH-VALUE 0x0019 # Get-Subscriptions
+    EXPECT operations-supported WITH-VALUE 0x0066 # Get-User-Printer-Attributes
+    EXPECT operations-supported WITH-VALUE 0x000C # Hold-Job
+    EXPECT operations-supported WITH-VALUE 0x0010 # Pause-Printer
+    EXPECT operations-supported WITH-VALUE 0x0002 # Print-Job
+    EXPECT operations-supported WITH-VALUE 0x000D # Release-Job
+    EXPECT operations-supported WITH-VALUE 0x001A # Renew-Subscription
+    EXPECT operations-supported WITH-VALUE 0x003A # Resubmit-Job
+    EXPECT operations-supported WITH-VALUE 0x0011 # Resume-Printer
+    EXPECT operations-supported WITH-VALUE 0x0006 # Send-Document
+    EXPECT operations-supported WITH-VALUE 0x0014 # Set-Job-Attributes
+    EXPECT operations-supported WITH-VALUE 0x0013 # Set-Printer-Attributes
+    EXPECT operations-supported WITH-VALUE 0x0004 # Validate-Job
 
-	# Operations
-	EXPECT operations-supported WITH-VALUE 0x0005 # Create-Job
-	EXPECT operations-supported WITH-VALUE 0x0006 # Send-Document
-	EXPECT operations-supported WITH-VALUE 0x000C # Hold-Job
-	EXPECT operations-supported WITH-VALUE 0x000D # Release-Job
-	EXPECT operations-supported WITH-VALUE 0x000E # Restart-Job
-	EXPECT operations-supported WITH-VALUE 0x0010 # Pause-Printer
-	EXPECT operations-supported WITH-VALUE 0x0011 # Resume-Printer
-	EXPECT operations-supported WITH-VALUE 0x0012 # Purge-Jobs
-	EXPECT operations-supported WITH-VALUE 0x0013 # Set-Printer-Attributes
-	EXPECT operations-supported WITH-VALUE 0x0014 # Set-Job-Attributes
-	EXPECT operations-supported WITH-VALUE 0x0015 # Get-Printer-Supported-Values
-	EXPECT operations-supported WITH-VALUE 0x0016 # Create-Printer-Subscriptions
-	EXPECT operations-supported WITH-VALUE 0x0018 # Get-Subscription-Attributes
-	EXPECT operations-supported WITH-VALUE 0x0019 # Get-Subscriptions
-	EXPECT operations-supported WITH-VALUE 0x001A # Renew-Subscription
-	EXPECT operations-supported WITH-VALUE 0x001B # Cancel-Subscription
-	EXPECT operations-supported WITH-VALUE 0x001C # Get-Notifications
-	EXPECT operations-supported WITH-VALUE 0x0022 # Enable-Printer
-	EXPECT operations-supported WITH-VALUE 0x0023 # Disable-Printer
+    # Table 5 - Updated IPP Printer Description Attributes (IPP/2.0)
+    EXPECT color-supported OF-TYPE boolean IN-GROUP printer-attributes-tag COUNT 1
 
-	EXPECT ?printer-alert OF-TYPE octetString IN-GROUP printer-attributes-tag
-	EXPECT ?printer-alert-description OF-TYPE text IN-GROUP printer-attributes-tag SAME-COUNT-AS printer-alert
-	EXPECT printer-settable-attributes-supported OF-TYPE keyword IN-GROUP printer-attributes-tag
-	EXPECT printer-state-change-time OF-TYPE integer IN-GROUP printer-attributes-tag COUNT 1
-	EXPECT printer-state-reasons OF-TYPE keyword IN-GROUP printer-attributes-tag
+    EXPECT copies-default OF-TYPE integer IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE >0
+    EXPECT copies-supported OF-TYPE rangeOfInteger IN-GROUP printer-attributes-tag
+
+    EXPECT job-hold-until-default OF-TYPE keyword|name IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE-FROM job-hold-until-supported
+    EXPECT job-hold-until-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag
+    EXPECT job-hold-until-supported WITH-VALUE indefinite
+    EXPECT job-hold-until-supported WITH-VALUE no-hold
+
+    EXPECT job-priority-default OF-TYPE integer(1:100) COUNT 1 IN-GROUP printer-attributes-tag IF-DEFINED PRINTER_HAS_JOB_PRIORITY
+    EXPECT job-priority-supported OF-TYPE integer(1:100) COUNT 1 IN-GROUP printer-attributes-tag IF-DEFINED PRINTER_HAS_JOB_PRIORITY
+
+    EXPECT job-sheets-default OF-TYPE keyword|name COUNT 1 IN-GROUP printer-attributes-tag WITH-VALUE-FROM job-sheets-supported IF-DEFINED PRINTER_HAS_JOB_SHEETS
+    EXPECT job-sheets-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag IF-DEFINED PRINTER_HAS_JOB_SHEETS
+    EXPECT job-sheets-supported WITH-VALUE none IF-DEFINED PRINTER_HAS_JOB_SHEETS
+
+    EXPECT media-default OF-TYPE no-value|keyword|name IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE "$MEDIA_REGEX"
+    EXPECT ?media-ready OF-TYPE keyword|name IN-GROUP printer-attributes-tag WITH-ALL-VALUES "$MEDIA_REGEX"
+    EXPECT media-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag WITH-ALL-VALUES "$MEDIA_REGEX"
+
+    EXPECT orientation-requested-default OF-TYPE no-value|enum IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE 3,4,5,6,7
+    EXPECT orientation-requested-supported OF-TYPE enum IN-GROUP printer-attributes-tag WITH-VALUE 3,4,5,6,7
+
+    EXPECT output-bin-default OF-TYPE keyword|name IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE-FROM output-bin-supported
+    EXPECT output-bin-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag
+
+    EXPECT pages-per-minute OF-TYPE integer IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE >-1
+    EXPECT pages-per-minute-color OF-TYPE integer IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE >-1 IF-DEFINED PRINTER_IS_COLOR
+    EXPECT !pages-per-minute-color IF-NOT-DEFINED PRINTER_IS_COLOR
+
+    EXPECT print-content-optimize-default OF-TYPE keyword COUNT 1 IN-GROUP printer-attributes-tag IF-DEFINED PRINTER_HAS_PRINT_CONTENT_OPTIMIZE WITH-VALUE-FROM print-content-optimize-supported
+    EXPECT print-content-optimize-supported OF-TYPE keyword IN-GROUP printer-attributes-tag IF-DEFINED PRINTER_HAS_PRINT_CONTENT_OPTIMIZE WITH-ALL-VALUES "/^(auto|graphic|photo|text|text-and-graphic)$$/"
+
+    EXPECT print-quality-default OF-TYPE enum IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE-FROM print-quality-supported
+    EXPECT print-quality-supported OF-TYPE enum IN-GROUP printer-attributes-tag WITH-VALUE 3,4,5
+
+    EXPECT printer-info OF-TYPE text(127) IN-GROUP printer-attributes-tag COUNT 1
+
+    EXPECT printer-location OF-TYPE text(127) IN-GROUP printer-attributes-tag COUNT 1
+
+    EXPECT printer-make-and-model OF-TYPE text(127) IN-GROUP printer-attributes-tag COUNT 1
+
+    EXPECT printer-more-info OF-TYPE uri IN-GROUP printer-attributes-tag COUNT 1
+
+    EXPECT printer-resolution-default OF-TYPE resolution IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE-FROM printer-resolution-supported
+    EXPECT printer-resolution-supported OF-TYPE resolution IN-GROUP printer-attributes-tag
+
+    EXPECT sides-default OF-TYPE keyword IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE-FROM sides-supported IF-DEFINED PRINTER_HAS_SIDES
+    EXPECT sides-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-ALL-VALUES "/^(one-sided|two-sided-long-edge|two-sided-short-edge)$$/" IF-DEFINED PRINTER_HAS_SIDES
 }
