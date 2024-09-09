@@ -19,17 +19,17 @@
 
 
 # (REQUIRED) PWG 5101.1-2023: Media Standardized Names v2.1 (MSN)
-DEFINE REQUIRE_MSN
+DEFINE REQUIRE_MSN 1
 
 # (REQUIRED) IETF STD 92: Internet Printing Protocol/1.1
 INCLUDE "ipp-1.1.test"
 
 # (REQUIRED) PWG 5100.1-2022: IPP Finishings v3.0 (MSN)
-DEFINE REQUIRE_FIN
+DEFINE REQUIRE_FIN 1
 INCLUDE "pwg5100.1.test"
 
 # (REQUIRED) PWG 5100.2-2001: IPP "output-bin" Attribute
-DEFINE REQUIRE_OUTPUTBIN
+DEFINE REQUIRE_OUTPUTBIN 1
 INCLUDE "pwg5100.2.test"
 
 # (RECOMMENDED) PWG 5100.7-2023: IPP Job Extensions v2.1 (JOBEXT)
@@ -79,12 +79,14 @@ INCLUDE "rfc3998.test"
     EXPECT operations-supported WITH-VALUE 0x0008 # Cancel-Job
     EXPECT operations-supported WITH-VALUE 0x0005 DEFINE-MATCH PRINTER_HAS_CREATE_JOB # Create-Job
 	EXPECT operations-supported WITH-VALUE 0x0006 IF-DEFINED PRINTER_HAS_CREATE_JOB # Send-Document
+	EXPECT operations-supported WITH-VALUE 0x003B IF-DEFINED PRINTER_HAS_CREATE_JOB # Close-Job
     EXPECT operations-supported WITH-VALUE 0x0009 # Get-Job-Attributes
     EXPECT operations-supported WITH-VALUE 0x000A # Get-Jobs
     EXPECT operations-supported WITH-VALUE 0x000B # Get-Printer-Attributes
     EXPECT operations-supported WITH-VALUE 0x0002 # Print-Job
     EXPECT operations-supported WITH-VALUE 0x0006 DEFINE-MATCH PRINTER_HAS_SEND_DOCUMENT # Send-Document
 	EXPECT operations-supported WITH-VALUE 0x0005 IF-DEFINED PRINTER_HAS_SEND_DOCUMENT # Create-Job
+	EXPECT operations-supported WITH-VALUE 0x003B IF-DEFINED PRINTER_HAS_SEND_DOCUMENT # Close-Job
     EXPECT operations-supported WITH-VALUE 0x0004 # Validate-Job
 
     # Table 5 - Updated IPP Printer Description Attributes (IPP/2.0)

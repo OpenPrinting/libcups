@@ -256,7 +256,7 @@ DEFINE IPP_URI_REGEX "/^ipps?://.+$$/"
 
     EXPECT finishings-supported DEFINE-MATCH PRINTER_HAS_FINISHINGS
     EXPECT finishings-default IF-DEFINED PRINTER_HAS_FINISHINGS
-    EXPECT ?finishings-default OF-TYPE enum IN-GROUP printer-attributes-tag WITH-VALUES-FROM finishings-supported
+    EXPECT ?finishings-default OF-TYPE enum IN-GROUP printer-attributes-tag WITH-ALL-VALUES-FROM finishings-supported
     EXPECT ?finishings-supported OF-TYPE enum IN-GROUP printer-attributes-tag WITH-VALUE 3
 
     EXPECT job-hold-until-supported DEFINE-MATCH PRINTER_HAS_JOB_HOLD_UNTIL
@@ -330,7 +330,7 @@ DEFINE IPP_URI_REGEX "/^ipps?://.+$$/"
     EXPECT document-format-default OF-TYPE mimeMediaType IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE-FROM document-format-supported
     EXPECT document-format-supported OF-TYPE mimeMediaType IN-GROUP printer-attributes-tag
 
-    EXPECT generated-natural-language-supported OF-TYPE naturalLanguage IN-GROUP printer-attributes-tag WITH-VALUE-FROM natural-language-supported
+    EXPECT generated-natural-language-supported OF-TYPE naturalLanguage IN-GROUP printer-attributes-tag
 
     EXPECT ipp-versions-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE "1.1"
 
@@ -344,7 +344,7 @@ DEFINE IPP_URI_REGEX "/^ipps?://.+$$/"
 
     EXPECT ?multiple-operation-time-out OF-TYPE integer(1:MAX) IN-GROUP printer-attributes-tag COUNT 1
 
-    EXPECT natural-language-configured OF-TYPE naturalLanguage IN-GROUP printer-attributes-tag COUNT 1
+    EXPECT natural-language-configured OF-TYPE naturalLanguage IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE-FROM generated-natural-language-supported
 
     EXPECT ?pages-per-minute OF-TYPE integer IN-GROUP printer-attributes-tag COUNT 1
     EXPECT ?pages-per-minute-color OF-TYPE integer IN-GROUP printer-attributes-tag COUNT 1

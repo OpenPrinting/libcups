@@ -29,14 +29,15 @@
 
     # Required operations
     EXPECT operations-supported OF-TYPE enum IN-GROUP printer-attributes-tag
+    EXPECT operations-supported WITH-VALUE 0x0005 DEFINE-MATCH PRINTER_HAS_CREATE_JOB # Create-Job
+	EXPECT operations-supported WITH-VALUE 0x003B IF-DEFINED PRINTER_HAS_CREATE_JOB IF-DEFINED REQUIRE_JOBEXT # Close-Job
     EXPECT operations-supported WITH-VALUE 0x0038 IF-DEFINED REQUIRE_JOBEXT # Cancel-Jobs
     EXPECT operations-supported WITH-VALUE 0x0039 IF-DEFINED REQUIRE_JOBEXT # Cancel-My-Jobs
-    EXPECT operations-supported WITH-VALUE 0x003A IF-DEFINED REQUIRE_JOBEXT # Close-Job
 
     EXPECT operations-supported WITH-VALUE 0x0038 DEFINE-MATCH PRINTER_HAS_CANCEL_JOBS
     EXPECT operations-supported WITH-VALUE 0x0039 DEFINE-MATCH PRINTER_HAS_CANCEL_MY_JOBS
-    EXPECT operations-supported WITH-VALUE 0x003A DEFINE-MATCH PRINTER_HAS_CLOSE_JOB
-    EXPECT operations-supported WITH-VALUE 0x003B DEFINE-MATCH PRINTER_HAS_RESUBMIT_JOB
+    EXPECT operations-supported WITH-VALUE 0x003A DEFINE-MATCH PRINTER_HAS_RESUBMIT_JOB
+    EXPECT operations-supported WITH-VALUE 0x003B DEFINE-MATCH PRINTER_HAS_CLOSE_JOB
 
     # Attributes and values
     EXPECT job-creation-attributes-supported WITH-VALUE client-info DEFINE-MATCH PRINTER_HAS_CLIENT_INFO
@@ -72,7 +73,7 @@
     EXPECT job-delay-output-until-time-supported OF-TYPE rangeOfInteger(0:MAX) IN-GROUP printer-attributes-tag COUNT 1 IF-DEFINED PRINTER_HAS_JOB_DELAY_OUTPUT_UNTIL
 
     EXPECT job-history-attributes-configured IF-DEFINED REQUIRE_JOBEXT
-    EXPECT ?job-history-attributes-configured OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUES-FROM job-history-attributes-supported
+    EXPECT ?job-history-attributes-configured OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-ALL-VALUES-FROM job-history-attributes-supported
     EXPECT job-history-attributes-supported IF-DEFINED REQUIRE_JOBEXT
     EXPECT ?job-history-attributes-supported OF-TYPE keyword IN-GROUP printer-attributes-tag
 
