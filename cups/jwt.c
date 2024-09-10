@@ -10,6 +10,7 @@
 #include "cups-private.h"
 #include "jwt.h"
 #include "json-private.h"
+#include <assert.h>
 #ifdef HAVE_OPENSSL
 #  include <openssl/ecdsa.h>
 #  include <openssl/evp.h>
@@ -421,6 +422,7 @@ cupsJWTHasValidSignature(
 
 #ifdef HAVE_OPENSSL
         hash_len = cupsHashData(cups_jwa_algorithms[jwt->sigalg], text, text_len, hash, sizeof(hash));
+        assert(hash_len > 0);
 
         if ((rsa = make_rsa(jwk)) != NULL)
         {
@@ -457,6 +459,7 @@ cupsJWTHasValidSignature(
 
 #ifdef HAVE_OPENSSL
         hash_len = cupsHashData(cups_jwa_algorithms[jwt->sigalg], text, text_len, hash, sizeof(hash));
+        assert(hash_len > 0);
 
         if ((ec = make_ec_key(jwk, true)) != NULL)
         {
@@ -1758,6 +1761,8 @@ make_signature(cups_jwt_t    *jwt,	// I  - JWT
     if ((rsa = make_rsa(jwk)) != NULL)
     {
       hash_len = cupsHashData(cups_jwa_algorithms[alg], text, text_len, hash, sizeof(hash));
+      assert(hash_len > 0);
+
       if (RSA_sign(nids[alg - CUPS_JWA_RS256], hash, hash_len, signature, &siglen, rsa) == 1)
       {
         *sigsize = siglen;
@@ -1805,6 +1810,8 @@ make_signature(cups_jwt_t    *jwt,	// I  - JWT
     if ((ec = make_ec_key(jwk, false)) != NULL)
     {
       hash_len = cupsHashData(cups_jwa_algorithms[alg], text, text_len, hash, sizeof(hash));
+      assert(hash_len > 0);
+
       if ((ec_sig = ECDSA_do_sign(hash, hash_len, ec)) != NULL)
       {
         // Get the raw coordinates...

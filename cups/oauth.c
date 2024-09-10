@@ -1348,8 +1348,12 @@ oauth_copy_response(http_t *http)	// I - HTTP connection
   // Allocate memory for string...
   initial_state = httpGetState(http);
 
-  if ((bodylen = (size_t)httpGetLength(http)) == 0 || bodylen > 65536)
+  if ((bytes = httpGetLength(http)) < 0)
+    return (NULL);
+  else if (bytes == 0 || bytes > 65536)
     bodylen = 65536;			// Accept up to 64k for GETs/POSTs
+  else
+    bodylen = (size_t)bytes;
 
   if ((body = calloc(1, bodylen + 1)) != NULL)
   {

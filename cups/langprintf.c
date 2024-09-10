@@ -1,7 +1,7 @@
 //
 // Localized printf/puts functions for CUPS.
 //
-// Copyright © 2022 by OpenPrinting.
+// Copyright © 2022-2024 by OpenPrinting.
 // Copyright © 2007-2014 by Apple Inc.
 // Copyright © 2002-2007 by Easy Software Products.
 //
@@ -110,6 +110,7 @@ cupsLangPuts(FILE       *fp,		// I - File to write to
              const char *message)	// I - Message string to use
 {
   ssize_t	bytes;			// Number of bytes formatted
+  size_t	length = 0;		// Total length
   char		output[8192];		// Message buffer
   _cups_globals_t *cg = _cupsGlobals();	// Global data
 
@@ -122,12 +123,14 @@ cupsLangPuts(FILE       *fp,		// I - File to write to
     cg->lang_default = cupsLangDefault();
 
   // Transcode to the destination charset...
-  bytes = cupsUTF8ToCharset(output, cupsLangGetString(cg->lang_default, message), sizeof(output) - 4, cg->lang_encoding);
-  bytes += cupsUTF8ToCharset(output + bytes, "\n", sizeof(output) - (size_t)bytes, cg->lang_encoding);
+  if ((bytes = cupsUTF8ToCharset(output, cupsLangGetString(cg->lang_default, message), sizeof(output) - 4, cg->lang_encoding)) > 0)
+    length += (size_t)bytes;
+  if ((bytes = cupsUTF8ToCharset(output + length, "\n", sizeof(output) - length, cg->lang_encoding)) > 0)
+    length += (size_t)bytes;
 
   // Write the string and return the number of bytes written...
-  if (bytes > 0)
-    return ((ssize_t)fwrite(output, 1, (size_t)bytes, fp));
+  if (length > 0)
+    return ((ssize_t)fwrite(output, 1, length, fp));
   else
     return (bytes);
 }

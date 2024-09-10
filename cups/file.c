@@ -880,6 +880,7 @@ cupsFilePrintf(cups_file_t *fp,		// I - CUPS file
   va_start(ap, format);
   va_copy(ap2, ap);
   bytes = vsnprintf(fp->printf_buffer, fp->printf_size, format, ap2);
+  va_end(ap2);
 
   if (bytes >= (ssize_t)fp->printf_size)
   {
@@ -887,10 +888,16 @@ cupsFilePrintf(cups_file_t *fp,		// I - CUPS file
     char	*temp;			// Temporary buffer pointer
 
     if (bytes > 65535)
+    {
+      va_end(ap);
       return (-1);
+    }
 
     if ((temp = realloc(fp->printf_buffer, (size_t)(bytes + 1))) == NULL)
+    {
+      va_end(ap);
       return (-1);
+    }
 
     fp->printf_buffer = temp;
     fp->printf_size   = (size_t)(bytes + 1);
