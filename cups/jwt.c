@@ -14,7 +14,7 @@
 #  include <openssl/ecdsa.h>
 #  include <openssl/evp.h>
 #  include <openssl/rsa.h>
-#else
+#else // HAVE_GNUTLS
 #  include <gnutls/gnutls.h>
 #  include <gnutls/abstract.h>
 #  include <gnutls/crypto.h>

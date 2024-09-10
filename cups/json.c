@@ -10,6 +10,7 @@
 #include "cups-private.h"
 #include "json-private.h"
 #include <sys/stat.h>
+#include <fcntl.h>
 
 
 //
@@ -1160,7 +1161,7 @@ cupsJSONImportURL(
     if (!_cups_strcasecmp(httpGetField(http, HTTP_FIELD_CONNECTION), "close"))
     {
       httpClearFields(http);
-      if (!httpConnectAgain(http, 30000, NULL))
+      if (!httpConnectAgain(http, /*msec*/30000, /*cancel*/NULL))
       {
 	status = HTTP_STATUS_ERROR;
 	break;
@@ -1269,7 +1270,7 @@ cupsJSONImportURL(
   else
   {
     // Save the last HTTP status as a CUPS error...
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), false);
+    _cupsSetHTTPError(http, status);
   }
 
   // Flush any remaining data...
