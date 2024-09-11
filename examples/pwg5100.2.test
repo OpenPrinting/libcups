@@ -21,7 +21,7 @@
 
 # Determine whether the Printer supports the output-bin attribute...
 {
-    NAME "PWG 5100.2-2001: output-bin Job Template Attribute"
+    NAME "PWG 5100.2-2001: Attributes and Values"
 
     OPERATION Get-Printer-Attributes
     GROUP operation-attributes-tag

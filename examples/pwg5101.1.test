@@ -17,7 +17,7 @@ DEFINE MEDIA_REGEX "/^(choice(_((custom|na|asme|roc|oe|roll)_[a-z0-9][-a-z0-9]*_
 
 # Simple test of media-xxx values...
 {
-    NAME "PWG 5101.1: Self-Describing Media Size Names"
+    NAME "PWG 5101.1-2023: Self-Describing Media Size Names"
     OPERATION Get-Printer-Attributes
     GROUP operation-attributes-tag
     ATTR charset attributes-charset utf-8

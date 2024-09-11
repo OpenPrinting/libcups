@@ -17,7 +17,7 @@
 
 
 {
-    NAME "PWG 5100.1-2022: Finishings Attributes"
+    NAME "PWG 5100.1-2022: Attributes and Values"
     OPERATION Get-Printer-Attributes
 
     GROUP operation-attributes-tag

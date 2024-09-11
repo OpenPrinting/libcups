@@ -1,116 +1,94 @@
 #
-#Check a printer for conformance with pwg5100.11
+# PWG 5100.11-2024: IPP Enterprise Printing Extensions v2.0 (EPX)
 #
+# https://ftp.pwg.org/pub/pwg/candidates/cs-ippepx20-20240315-5100.11.pdf
 #
-#Usage:
+# Copyright © 2018-2024 by OpenPrinting.
 #
-#	./ipptool -f FILENAME printer-uri pwg5100.11.3.test
+# Usage:
+#
+#   ./ipptool [OPTIONS] -f FILENAME -t PRINTER-URI pwg5100.11.test
+#
+# Options:
+#
+#   -d NOPRINT=1              Disable the print tests.
+#   -d REQUIRE_EPX=1          Require support for the EPX specification.
+#
 #
 
 {
-    # get printer attributes and check support for REQUIRED attributes
-
-	NAME "Get printer attributes using Get-Printer-Attributes"
-	OPERATION Get-Printer-Attributes
-
-	GROUP operation-attributes-tag
-	ATTR charset attributes-charset utf-8
-	ATTR language attributes-natural-language en
-	ATTR uri printer-uri $uri
-
-	STATUS successful-ok
-    
-    EXPECT operations-supported OF-TYPE enum IN-GROUP printer-attributes-tag WITH-VALUE 0x0038 # Cancel-Jobs
-    EXPECT operations-supported OF-TYPE enum IN-GROUP printer-attributes-tag WITH-VALUE 0x0039 # Cancel-My-Jobs
-    EXPECT operations-supported OF-TYPE enum IN-GROUP printer-attributes-tag WITH-VALUE 0x003B # Close-Job
-    EXPECT operations-supported OF-TYPE enum IN-GROUP printer-attributes-tag WITH-VALUE 0x003A # Resubmit-Job
-    EXPECT operations-supported OF-TYPE enum IN-GROUP printer-attributes-tag WITH-VALUE 0x002C # Reprocess-Job
-
-    EXPECT job-ids-supported OF-TYPE boolean IN-GROUP printer-attributes-tag WITH-VALUE "true" COUNT 1   # To check the job-ids operation-attribute support in Get-Jobs and Purge-Jobs
-
-    EXPECT proof-print-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE proof-print-copies                              #
-    EXPECT proof-print-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE media                                           #
-                                                                                                                                            # checking proof-print and related attributes.
-    EXPECT proof-print-default OF-TYPE collection|no-value IN-GROUP printer-attributes-tag                                                  #
-                                                                                                                                            #
-    EXPECT which-jobs-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE completed                                        #
-    EXPECT which-jobs-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE not-completed                                    #
-    EXPECT which-jobs-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE saved                                            #
-
-    EXPECT ?job-hold-until-time-supported OF-TYPE rangeOfInteger IN-GROUP printer-attributes-tag DEFINE-MATCH HAVE_JOB_HOLD_UNTIL_TIME
-    EXPECT ?job-delay-output-until-time-supported OF-TYPE rangeOfInteger IN-GROUP printer-attributes-tag DEFINE-MATCH HAVE_JOB_DELAY_OUTPUT_UNTIL_TIME
-    EXPECT ?job-delay-output-until-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag DEFINE-MATCH HAVE_JOB_DELAY_OUTPUT_UNTIL
-    
-    EXPECT job-hold-until-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag IF-DEFINED HAVE_JOB_HOLD_UNTIL_TIME
-    EXPECT job-hold-until-default OF-TYPE keyword|name IN-GROUP printer-attributes-tag WITH-VALUE-FROM job-hold-until-supported COUNT 1 IF-DEFINED HAVE_JOB_HOLD_UNTIL_TIME
-    EXPECT operations-supported OF-TYPE enum IN-GROUP printer-attributes-tag WITH-VALUE 0x000C IF-DEFINED HAVE_JOB_HOLD_UNTIL_TIME                                              # Hold-Job
-    EXPECT operations-supported OF-TYPE enum IN-GROUP printer-attributes-tag WITH-VALUE 0x000D IF-DEFINED HAVE_JOB_HOLD_UNTIL_TIME                                              # Release-Job
-
-    EXPECT job-delay-output-until-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag IF-DEFINED HAVE_JOB_DELAY_OUTPUT_UNTIL_TIME
-    EXPECT job-delay-output-until-default OF-TYPE keyword|name IN-GROUP printer-attributes-tag WITH-VALUE-FROM job-delay-output-until-supported COUNT 1 IF-DEFINED HAVE_JOB_DELAY_OUTPUT_UNTIL_TIME
-    EXPECT operations-supported OF-TYPE enum IN-GROUP printer-attributes-tag WITH-VALUE 0x0014 IF-DEFINED HAVE_JOB_DELAY_OUTPUT_UNTIL_TIME                                      # Set-job-attributes
-
-    EXPECT operations-supported OF-TYPE enum IN-GROUP printer-attributes-tag WITH-VALUE 0x0014 IF-DEFINED HAVE_JOB_DELAY_OUTPUT_UNTIL                                           # Set-job-attributes
-}
-
-{
-    NAME "print-job with proof-print"
-    OPERATION Print-Job
-
-    GROUP operation-attributes-tag
-	ATTR charset attributes-charset utf-8
-	ATTR language attributes-natural-language en
-	ATTR uri printer-uri $uri
-	ATTR name requesting-user-name $user
-	ATTR mimeMediaType document-format $filetype
-
-	GROUP job-attributes-tag
-	ATTR integer copies 1
-    ATTR collection proof-print {
-        MEMBER integer proof-print-copies 1
-        MEMBER keyword media letterhead
-    }
-
-	FILE $filename
-
-	STATUS successful-ok
-
-	EXPECT job-id OF-TYPE integer IN-GROUP job-attributes-tag WITH-VALUE >0 COUNT 1
-	EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1
-}
-
-# Wait for job to complete...
-
-{
-    NAME "Get-Job-Attributes Until Job Complete"
-    OPERATION Get-Job-Attributes
-    
+    NAME "PWG 5100.11-2024: Operations, Attributes, and Values"
+    OPERATION Get-Printer-Attributes
     GROUP operation-attributes-tag
     ATTR charset attributes-charset utf-8
-    ATTR naturalLanguage attributes-natural-language en
+    ATTR language attributes-natural-language en
     ATTR uri printer-uri $uri
-    ATTR integer job-id $job-id
-    ATTR name requesting-user-name $user
 
     STATUS successful-ok
 
-    EXPECT proof-print OF-TYPE collection IN-GROUP job-attributes-tag COUNT 1
-    EXPECT proof-print/proof-print-copies OF-TYPE integer WITH-VALUE 1 COUNT 1
-    EXPECT proof-print/media OF-TYPE keyword WITH-VALUE letterhead COUNT 1
-    EXPECT job-state OF-TYPE unknown|enum IN-GROUP job-attributes-tag COUNT 1 WITH-VALUE >6 REPEAT-NO-MATCH REPEAT-LIMIT 30
-    DISPLAY job-state
+    # Section 5 - New Operations
+    EXPECT operations-supported OF-TYPE enum IN-GROUP printer-attributes-tag
+    EXPECT operations-supported WITH-VALUE 0x0038 DEFINE-MATCH PRINTER_HAS_GET_USER_PRINTER_ATTRIBUTES # Get-User-Printer-Attributes
+
+    # Section 6.4 - Printer Description Attributes
+    EXPECT ?job-cancel-after-supported OF-TYPE rangeOfInteger(1:MAX) IN-GROUP printer-attributes-tag COUNT 1
+    EXPECT job-cancel-after-supported DEFINE-MATCH PRINTER_HAS_JOB_CANCEL_AFTER
+
+    EXPECT ?job-cancel-after-default OF-TYPE integer(1:MAX)|no-value IN-GROUP printer-attribute-tag COUNT 1
+    EXPECT job-cancel-after-default IF-DEFINED PRINTER_HAS_JOB_CANCEL_AFTER
+
+    EXPECT ?job-password-supported OF-TYPE integer(0:255) IN-GROUP printer-attributes-tag COUNT 1
+    EXPECT job-password-supported DEFINE-MATCH PRINTER_HAS_JOB_PASSWORD
+
+    EXPECT ?job-password-encryption-supported OF-TYPE keyword IN-GROUP printer-attribute-tag
+    EXPECT job-password-encryption-supported IF-DEFINED PRINTER_HAS_JOB_PASSWORD
+
+    EXPECT ?job-password-length-supported OF-TYPE rangeOfInteger(4:MAX) IN-GROUP printer-attributes-tag COUNT 1
+    EXPECT job-password-length-supported IF-DEFINED PRINTER_HAS_JOB_PASSWORD
+
+    EXPECT ?job-password-repertoire-supported OF-TYPE keyword IN-GROUP printer-attributes-tag
+    EXPECT job-password-repertoire-supported IF-DEFINED PRINTER_HAS_JOB_PASSWORD
+
+    EXPECT ?job-password-repertoire-configured OF-TYPE keyword IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE-FROM job-password-repertoire-supported
+    EXPECT job-password-repertoire-configured IF-DEFINED PRINTER_HAS_JOB_PASSWORD
+
+    EXPECT ?job-release-action-supported OF-TYPE keyword IN-GROUP printer-attributes-tag
+    EXPECT job-release-action-supported DEFINE-MATCH PRINTER_HAS_JOB_RELEASE_ACTION
+
+    EXPECT ?job-release-action-default OF-TYPE keyword IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE-FROM job-release-action-supported
+    EXPECT job-release-action-default IF-DEFINED PRINTER_HAS_JOB_RELEASE_ACTION
+
+    EXPECT ?job-storage-supported OF-TYPE keyword IN-GROUP printer-attributes-tag
+    EXPECT job-storage-supported DEFINE-MATCH PRINTER_HAS_JOB_STORAGE
+
+    EXPECT ?job-storage-access-supported OF-TYPE keyword IN-GROUP printer-attributes-tag
+    EXPECT job-storage-access-supported DEFINE-MATCH PRINTER_HAS_JOB_STORAGE
+
+    EXPECT ?job-storage-disposition-supported OF-TYPE keyword IN-GROUP printer-attributes-tag
+    EXPECT job-storage-disposition-supported DEFINE-MATCH PRINTER_HAS_JOB_STORAGE
+
+    EXPECT ?job-storage-group-supported OF-TYPE name IN-GROUP printer-attributes-tag
+    EXPECT job-storage-group-supported DEFINE-MATCH PRINTER_HAS_JOB_STORAGE
+
+    EXPECT ?printer-asset-tag OF-TYPE octetString IN-GROUP printer-attributes-tag COUNT 1
+
+    EXPECT ?printer-detailed-status-messages OF-TYPE text IN-GROUP printer-attributes-tag
+
+    EXPECT ?printer-service-contact-col OF-TYPE collection|unknown IN-GROUP printer-attributes-tag COUNT 1
+    EXPECT printer-service-contact-col IF-DEFINED REQUIRE_EPX
+
+    EXPECT ?proof-copies-supported OF-TYPE rangeOfInteger(1:MAX) IN-GROUP printer-attributes-tag COUNT 1
+    EXPECT proof-copies-supported DEFINE-MATCH PRINTER_HAS_PROOF_COPIES
+
+    # Section 6.5 - Printer Status Attributes
+    EXPECT ?printer-serial-number OF-TYPE text IN-GROUP printer-attributes-tag COUNT 1
+    EXPECT printer-serial-number IF-DEFINED REQUIRE_EPX
+
+    EXPECT ?printer-storage OF-TYPE octetString IN-GROUP printer-attributes-tag SAME-COUNT-AS printer-storage-description
+    EXPECT printer-storage IF-DEFINED REQUIRE_EPX
+
+    EXPECT ?printer-storage-description OF-TYPE text IN-GROUP printer-attributes-tag SAME-COUNT-AS printer-storage
+    EXPECT printer-storage-description IF-DEFINED REQUIRE_EPX
 }
 
-{
-    NAME "Resubmit proof-print job"
-    OPERATION Resubmit-Job
-
-    GROUP operation-attributes-tag
-    ATTR charset attributes-charset utf-8
-	ATTR language attributes-natural-language en
-	ATTR uri printer-uri $uri
-    ATTR integer job-id $job-id
-	ATTR name requesting-user-name $user
-
-    STATUS successful-ok
-}
+# TODO: Add print tests for various features

@@ -1,304 +1,321 @@
 #
-#Check a printer for conformance with pwg5100.5: IPP Document Object
+# PWG 5100.5-2024: IPP Document Object v1.2 (DOCOBJECT)
 #
+# https://ftp.pwg.org/pub/pwg/candidates/cs-ippdocobject12-20240517-5100.5.pdf
 #
-#Usage:
+# Copyright © 2024 by OpenPrinting.
+# Copyright © 2014-2022 by the Printer Working Group.
 #
-#	./ipptool -f FILENAME -d "document-uri=URI" printer-uri pwg5100.5.test
+# Licensed under Apache License v2.0.  See the file "LICENSE" for more
+# information.
+#
+# Usage:
+#
+#   ./ipptool [OPTIONS] -f FILENAME -t PRINTER-URI pwg5100.5.test
+#
+# Options:
+#
+#   -d NOPRINT=1              Disable the print tests.
+#   -d REQUIRE_DOCOBJECT=1    Require support for the document object.
+#
 
 {
-	NAME "Check for 5100.5 required and optional operations support"
-	OPERATION Get-Printer-Attributes
+    NAME "PWG 5100.5-2024: Operations, Attributes, and Values"
+    OPERATION Get-Printer-Attributes
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR language attributes-natural-language en
+    ATTR uri printer-uri $uri
 
-	GROUP operation-attributes-tag
-	ATTR charset attributes-charset utf-8
-	ATTR language attributes-natural-language en
-	ATTR uri printer-uri $uri
-	ATTR keyword requested-attributes operations-supported,document-creation-attributes-supported
-	STATUS successful-ok
+    STATUS successful-ok
 
-	EXPECT ?operations-supported OF-TYPE enum IN-GROUP printer-attributes-tag WITH-VALUE 0x0037
-	EXPECT operations-supported OF-TYPE enum IN-GROUP printer-attributes-tag WITH-VALUE 0x0037 DEFINE-MATCH HAVE_SET_DOCUMENT_ATTRIBUTES	# Set-Document-Attributes
-    EXPECT operations-supported OF-TYPE enum IN-GROUP printer-attributes-tag WITH-VALUE 0x0003 
-	EXPECT operations-supported OF-TYPE enum IN-GROUP printer-attributes-tag WITH-VALUE 0x0003 DEFINE-MATCH HAVE_PRINT_URI                  # Print-URI
-	EXPECT operations-supported OF-TYPE enum IN-GROUP printer-attributes-tag WITH-VALUE 0x0007 
-	EXPECT operations-supported OF-TYPE enum IN-GROUP printer-attributes-tag WITH-VALUE 0x0007 DEFINE-MATCH HAVE_SEND_URI		            # Send-URI
-	EXPECT operations-supported OF-TYPE enum IN-GROUP printer-attributes-tag WITH-VALUE 0x0033 
-	EXPECT operations-supported OF-TYPE enum IN-GROUP printer-attributes-tag WITH-VALUE 0x0033 DEFINE-MATCH HAVE_CANCEL_DOCUMENT			# Cancel-Document
-	EXPECT operations-supported OF-TYPE enum IN-GROUP printer-attributes-tag WITH-VALUE 0x0034
-	EXPECT operations-supported OF-TYPE enum IN-GROUP printer-attributes-tag WITH-VALUE 0x0034 DEFINE-MATCH HAVE_GET_DOCUMENT_ATTRIBUTES	# Get-Document-Attributes
+    # Table 1 - IPP Operations
+    EXPECT operations-supported OF-TYPE enum IN-GROUP printer-attributes-tag
 
-	#REQUIRED Job operations
-	EXPECT operations-supported OF-TYPE enum IN-GROUP printer-attributes-tag WITH-VALUE 0x0035
-	EXPECT operations-supported OF-TYPE enum IN-GROUP printer-attributes-tag WITH-VALUE 0x0035 DEFINE-MATCH HAVE_GET_DOCUMENTS				# Get-Documents
-	
-	# Checking REQUIRED attributes.
+    EXPECT operations-supported WITH-VALUE 0x0034 DEFINE-MATCH PRINTER_HAS_DOCOBJECT
 
-	EXPECT document-creation-attributes-supported OF-TYPE keyword IN-GROUP printer-attributes-tag 
-	
+    EXPECT operations-supported WITH-VALUE 0x0033 IF-DEFINED REQUIRE_DOCOBJECT # REQUIRED Cancel-Document
+    EXPECT operations-supported WITH-VALUE 0x0005 IF-DEFINED REQUIRE_DOCOBJECT # REQUIRED Create-Job
+    EXPECT operations-supported WITH-VALUE 0x0034 IF-DEFINED REQUIRE_DOCOBJECT # REQUIRED Get-Document-Attributes
+    EXPECT operations-supported WITH-VALUE 0x0035 IF-DEFINED REQUIRE_DOCOBJECT # REQUIRED Get-Documents
+    EXPECT operations-supported WITH-VALUE 0x0002 IF-DEFINED REQUIRE_DOCOBJECT # REQUIRED Print-Job
+    EXPECT operations-supported WITH-VALUE 0x0006 IF-DEFINED REQUIRE_DOCOBJECT # REQUIRED Send-Document
+    EXPECT operations-supported WITH-VALUE 0x0007 DEFINE-MATCH PRINTER_HAS_SEND_URI # OPTIONAL Send-URI
+    EXPECT operations-supported WITH-VALUE 0x0037 DEFINE-MATCH PRINTER_HAS_SET_DOCUMENT_ATTRIBUTES	# OPTIONAL Set-Document-Attributes
 
-
-
+    # Section 6.5 Printer Description Attributes
+    EXPECT ?document-creation-attributes-supported OF-TYPE keyword IN-GROUP printer-attributes-tag
+    EXPECT document-creation-attributes-supported IF-DEFINED REQUIRE_DOCOBJECT
+    EXPECT document-creation-attributes-supported WITH-VALUE document-uri IF-DEFINED REQUIRE_DOCOBJECT IF-DEFINED PRINTER_HAS_SEND_URI
+    EXPECT !document-creation-attributes-supported WITH-VALUE document-uri IF-NOT-DEFINED PRINTER_HAS_SEND_URI
 }
 
 # testing document operations
 
 {
-	NAME "print-job to create document object"
-	OPERATION Print-Job
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_DOCOBJECT
 
-	GROUP operation-attributes-tag
-	ATTR charset attributes-charset utf-8
-	ATTR language attributes-natural-language en
-	ATTR uri printer-uri $uri
-	ATTR name requesting-user-name $user
-	#ATTR mimeMediaType document-format $filetype
+    NAME "print-job to create document object"
+    OPERATION Print-Job
 
-	GROUP job-attributes-tag
-	ATTR integer copies 1
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR language attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR name requesting-user-name $user
+    #ATTR mimeMediaType document-format $filetype
 
-	ATTR name document-name "test-document-1"
+    GROUP job-attributes-tag
+    ATTR integer copies 1
 
-	FILE $filename
+    ATTR name document-name "test-document-1"
 
-	STATUS successful-ok
-	STATUS successful-ok-ignored-or-substituted-attributes
+    FILE $filename
 
-	EXPECT job-id OF-TYPE integer IN-GROUP job-attributes-tag WITH-VALUE >0 COUNT 1
-	EXPECT ?document-number OF-TYPE integer IN-GROUP document-attributes-tag WITH-VALUE 1 COUNT 1
-	EXPECT ?document-state OF-TYPE enum IN-GROUP document-attributes-tag
-	EXPECT ?document-state-reasons OF-TYPE keyword IN-GROUP document-attributes-tag
+    STATUS successful-ok
+    STATUS successful-ok-ignored-or-substituted-attributes
+
+    EXPECT job-id OF-TYPE integer IN-GROUP job-attributes-tag WITH-VALUE >0 COUNT 1
+    EXPECT ?document-number OF-TYPE integer IN-GROUP document-attributes-tag WITH-VALUE 1 COUNT 1
+    EXPECT ?document-state OF-TYPE enum IN-GROUP document-attributes-tag
+    EXPECT ?document-state-reasons OF-TYPE keyword IN-GROUP document-attributes-tag
 }
 
 {
-	SKIP-IF-NOT-DEFINED HAVE_GET_DOCUMENT_ATTRIBUTE
-	NAME "Get document attributes"
-	OPERATION Get-Document-Attributes
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_DOCOBJECT
 
-	GROUP operation-attributes-tag
-	ATTR charset attributes-charset utf-8
-	ATTR language attributes-natural-language en
-	ATTR uri printer-uri $uri
-	ATTR integer job-id $job-id
-	ATTR integer document-number 1
-	ATTR name requesting-user-name $user
-	GROUP document-attributes-tag
-	ATTR integer printer-up-time 1
-	STATUS successful-ok
+    NAME "Get document attributes"
+    OPERATION Get-Document-Attributes
 
-	#Document description
-	EXPECT document-name OF-TYPE name IN-GROUP document-attributes-tag WITH-VALUE "test-document-1" COUNT 1
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR language attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR integer document-number 1
+    ATTR name requesting-user-name $user
+    GROUP document-attributes-tag
+    ATTR integer printer-up-time 1
+    STATUS successful-ok
 
-	#Document STATUS
-	EXPECT document-number OF-TYPE integer IN-GROUP document-attributes-tag WITH-VALUE 1 COUNT 1
-	EXPECT last-document OF-TYPE boolean IN-GROUP document-attributes-tag
+    #Document description
+    EXPECT document-name OF-TYPE name IN-GROUP document-attributes-tag WITH-VALUE "test-document-1" COUNT 1
 
-
-
-	EXPECT document-job-id OF-TYPE integer IN-GROUP document-attributes-tag WITH-VALUE >0 COUNT 1
-	EXPECT document-job-uri OF-TYPE uri IN-GROUP document-attributes-tag COUNT 1
-	
-	
-	EXPECT document-printer-uri OF-TYPE uri IN-GROUP document-attributes-tag WITH-VALUE $uri COUNT 1
-	EXPECT document-state OF-TYPE enum IN-GROUP document-attributes-tag
-	EXPECT document-state-reasons OF-TYPE keyword IN-GROUP document-attributes-tag
-
-	EXPECT printer-up-time OF-TYPE integer IN-GROUP document-attributes-tag WITH-VALUE >0 COUNT 1
-	EXPECT time-at-completed OF-TYPE integer|no-value IN-GROUP document-attributes-tag WITH-VALUE >0 COUNT 1
-	EXPECT time-at-created OF-TYPE integer|no-value IN-GROUP document-attributes-tag WITH-VALUE >0 COUNT 1
-	EXPECT time-at-processing OF-TYPE integer|no-value IN-GROUP document-attributes-tag WITH-VALUE >0 COUNT 1
+    #Document STATUS
+    EXPECT document-number OF-TYPE integer IN-GROUP document-attributes-tag WITH-VALUE 1 COUNT 1
+    EXPECT last-document OF-TYPE boolean IN-GROUP document-attributes-tag
 
 
 
+    EXPECT document-job-id OF-TYPE integer IN-GROUP document-attributes-tag WITH-VALUE >0 COUNT 1
+    EXPECT document-job-uri OF-TYPE uri IN-GROUP document-attributes-tag COUNT 1
+
+
+    EXPECT document-printer-uri OF-TYPE uri IN-GROUP document-attributes-tag WITH-VALUE $uri COUNT 1
+    EXPECT document-state OF-TYPE enum IN-GROUP document-attributes-tag
+    EXPECT document-state-reasons OF-TYPE keyword IN-GROUP document-attributes-tag
+
+    EXPECT printer-up-time OF-TYPE integer IN-GROUP document-attributes-tag WITH-VALUE >0 COUNT 1
+    EXPECT time-at-completed OF-TYPE integer|no-value IN-GROUP document-attributes-tag WITH-VALUE >0 COUNT 1
+    EXPECT time-at-created OF-TYPE integer|no-value IN-GROUP document-attributes-tag WITH-VALUE >0 COUNT 1
+    EXPECT time-at-processing OF-TYPE integer|no-value IN-GROUP document-attributes-tag WITH-VALUE >0 COUNT 1
 }
 
 {
-	SKIP-IF-NOT-DEFINED HAVE_SET_DOCUMENT_ATTRIBUTES
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_SET_DOCUMENT_ATTRIBUTES
 
-	NAME "Set Document Attributes"
-	OPERATION Set-Document-Attributes
+    NAME "Set Document Attributes"
+    OPERATION Set-Document-Attributes
 
-	GROUP operation-attributes-tag
-	ATTR charset attributes-charset utf-8
-	ATTR language attributes-natural-language en
-	ATTR uri printer-uri $uri
-	ATTR integer job-id $job-id
-	ATTR integer document-number 1
-	ATTR name requesting-user-name $user
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR language attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR integer document-number 1
+    ATTR name requesting-user-name $user
 
-	GROUP document-attributes-tag
-	ATTR name document-name "test-document-2" 
+    GROUP document-attributes-tag
+    ATTR name document-name "test-document-2"
 
-	STATUS successful-ok
-	STATUS client-error-not-possible
-
-
+    STATUS successful-ok
+    STATUS client-error-not-possible
 }
 
 {
-	SKIP-IF-NOT-DEFINED HAVE_SET_DOCUMENT_ATTRIBUTES
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_SET_DOCUMENT_ATTRIBUTES
 
-	NAME "To Set New Document Description Values"
-	OPERATION Get-Document-Attributes
+    NAME "To Set New Document Description Values"
+    OPERATION Get-Document-Attributes
 
-	GROUP operation-attributes-tag
-	ATTR charset attributes-charset utf-8
-	ATTR language attributes-natural-language en
-	ATTR uri printer-uri $uri
-	ATTR integer job-id $job-id
-	ATTR integer document-number 1
-	ATTR name requesting-user-name $user
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR language attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR integer document-number 1
+    ATTR name requesting-user-name $user
 
-	STATUS successful-ok
+    STATUS successful-ok
 
-	EXPECT document-job-id OF-TYPE integer IN-GROUP document-attributes-tag WITH-VALUE >0 COUNT 1
-	EXPECT document-job-uri OF-TYPE uri IN-GROUP document-attributes-tag COUNT 1
-	EXPECT document-name OF-TYPE name IN-GROUP document-attributes-tag COUNT 1
-	EXPECT document-number OF-TYPE integer IN-GROUP document-attributes-tag WITH-VALUE 1 COUNT 1
-	EXPECT document-printer-uri OF-TYPE uri IN-GROUP document-attributes-tag WITH-VALUE $uri COUNT 1
-	EXPECT document-state OF-TYPE enum IN-GROUP document-attributes-tag
-	EXPECT document-state-reasons OF-TYPE keyword IN-GROUP document-attributes-tag
+    EXPECT document-job-id OF-TYPE integer IN-GROUP document-attributes-tag WITH-VALUE >0 COUNT 1
+    EXPECT document-job-uri OF-TYPE uri IN-GROUP document-attributes-tag COUNT 1
+    EXPECT document-name OF-TYPE name IN-GROUP document-attributes-tag COUNT 1
+    EXPECT document-number OF-TYPE integer IN-GROUP document-attributes-tag WITH-VALUE 1 COUNT 1
+    EXPECT document-printer-uri OF-TYPE uri IN-GROUP document-attributes-tag WITH-VALUE $uri COUNT 1
+    EXPECT document-state OF-TYPE enum IN-GROUP document-attributes-tag
+    EXPECT document-state-reasons OF-TYPE keyword IN-GROUP document-attributes-tag
 }
 
 {
-	NAME "Create job"
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_DOCOBJECT
 
-	OPERATION create-job
+    NAME "Create job"
 
-	GROUP operation
-	ATTR charset attributes-charset utf-8
-	ATTR language attributes-natural-language en
-	ATTR uri printer-uri $uri
-	ATTR name requesting-user-name $user
+    OPERATION create-job
 
-	GROUP job
-	ATTR integer copies 1
+    GROUP operation
+    ATTR charset attributes-charset utf-8
+    ATTR language attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR name requesting-user-name $user
 
-	STATUS successful-ok
+    GROUP job
+    ATTR integer copies 1
 
-	EXPECT job-id OF-TYPE integer IN-GROUP job-attributes-tag WITH-VALUE >0 COUNT 1
-	EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1
+    STATUS successful-ok
+
+    EXPECT job-id OF-TYPE integer IN-GROUP job-attributes-tag WITH-VALUE >0 COUNT 1
+    EXPECT job-uri OF-TYPE uri IN-GROUP job-attributes-tag COUNT 1
 }
 
 {
-	NAME "testing document-attributes in send-document operation"
-	OPERATION send-document
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_DOCOBJECT
 
-	GROUP operation
-	ATTR charset attributes-charset utf-8
-	ATTR language attributes-natural-language en
-	ATTR uri printer-uri $uri
-	ATTR integer job-id $job-id
-	ATTR name requesting-user-name $user
-	ATTR boolean last-document true
+    NAME "testing document-attributes in send-document operation"
+    OPERATION send-document
 
-	GROUP job
-	ATTR integer copies 1
+    GROUP operation
+    ATTR charset attributes-charset utf-8
+    ATTR language attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR name requesting-user-name $user
+    ATTR boolean last-document true
 
-	FILE $filename
+    GROUP job
+    ATTR integer copies 1
 
-	STATUS successful-ok
+    FILE $filename
+
+    STATUS successful-ok
 
     EXPECT ?document-number OF-TYPE integer IN-GROUP document-attributes-tag WITH-VALUE >0 COUNT 1
     EXPECT ?document-state OF-TYPE enum IN-GROUP document-attributes-tag
     EXPECT ?document-state-reasons OF-TYPE keyword IN-GROUP document-attributes-tag
 	EXPECT ?document-state-message
-#ISSUE: document-number, document-state, and document-state-reasons NOT PRESENT.
-
+    #ISSUE: document-number, document-state, and document-state-reasons NOT PRESENT.
 }
 
 {
-	SKIP-IF-NOT-DEFINED HAVE_SEND_URI
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_SEND_URI
 
-	NAME "testing document-attributes in send-uri operation"
-	OPERATION Send-URI
+    NAME "testing document-attributes in send-uri operation"
+    OPERATION Send-URI
 
-	GROUP operation-attributes-tag
-	ATTR charset attributes-charset utf-8
-	ATTR naturalLanguage attributes-natural-language en
-	ATTR uri printer-uri $uri
-	ATTR integer job-id $job-id
-	ATTR name requesting-user-name $user	
-	ATTR boolean last-document true
-	ATTR uri document-uri $document-uri
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR name requesting-user-name $user
+    ATTR boolean last-document true
+    ATTR uri document-uri $document-uri
 
-	GROUP job-attributes-tag
-	ATTR integer copies 1
-	FILE $filename
-	STATUS successful-ok
-	EXPECT ?document-number OF-TYPE integer IN-GROUP document-attributes-tag WITH-VALUE >0 COUNT 1
+    GROUP job-attributes-tag
+    ATTR integer copies 1
+    FILE $filename
+    STATUS successful-ok
+    EXPECT ?document-number OF-TYPE integer IN-GROUP document-attributes-tag WITH-VALUE >0 COUNT 1
     EXPECT ?document-state OF-TYPE enum IN-GROUP document-attributes-tag
     EXPECT ?document-state-reasons OF-TYPE keyword IN-GROUP document-attributes-tag
 
-#ISSUE: Multiple document jobs are not supported
-
+    #ISSUE: Multiple document jobs are not supported
 }
 
 {
-	SKIP-IF-NOT-DEFINED HAVE_CANCEL_DOCUMENT
-	NAME "testing cancel-document operation"
-	OPERATION Cancel-Document
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_DOCOBJECT
 
-	GROUP operation-attributes-tag
-	ATTR charset attributes-charset utf-8
-	ATTR language attributes-natural-language en
-	ATTR uri printer-uri $uri
-	ATTR integer job-id $job-id
-	ATTR integer document-number 1
-	ATTR name requesting-user-name $user
+    NAME "testing cancel-document operation"
+    OPERATION Cancel-Document
 
-	STATUS successful-ok
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR language attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR integer document-number 1
+    ATTR name requesting-user-name $user
 
-
-
+    STATUS successful-ok
 }
+
+
 # To test Get-Documents operation
 {
-	SKIP-IF-NOT-DEFINED HAVE_GET_DOCUMENTS
-	NAME "Get Documents"
-	OPERATION Get-Documents
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_DOCOBJECT
 
-	GROUP operation-attributes-tag
-	ATTR charset attributes-charset utf-8
-	ATTR language attributes-natural-language en
-	ATTR uri printer-uri $uri
-	ATTR integer job-id $job-id
-	ATTR name requesting-user-name $user
+    NAME "Get Documents"
+    OPERATION Get-Documents
 
-	STATUS successful-ok
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR language attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR name requesting-user-name $user
 
-	
+    STATUS successful-ok
 
-
-	#Document STATUS
-	EXPECT document-number OF-TYPE integer IN-GROUP document-attributes-tag WITH-VALUE 1 COUNT 1
-	EXPECT last-document OF-TYPE boolean IN-GROUP document-attributes-tag
-	EXPECT ?document-charset OF-TYPE charset IN-GROUP document-attributes-tag
-	EXPECT ?document-format-detected OF-TYPE mimeMediaType IN-GROUP document-attributes-tag
-	EXPECT ?document-message OF-TYPE text IN-GROUP document-attributes-tag
-
-
+    #Document STATUS
+    EXPECT document-number OF-TYPE integer IN-GROUP document-attributes-tag WITH-VALUE 1 COUNT 1
+    EXPECT last-document OF-TYPE boolean IN-GROUP document-attributes-tag
+    EXPECT ?document-charset OF-TYPE charset IN-GROUP document-attributes-tag
+    EXPECT ?document-format-detected OF-TYPE mimeMediaType IN-GROUP document-attributes-tag
+    EXPECT ?document-message OF-TYPE text IN-GROUP document-attributes-tag
 }
+
 {
-	NAME "Get document attributes"
-	OPERATION Get-Document-Attributes
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_DOCOBJECT
 
-	GROUP operation-attributes-tag
-	ATTR charset attributes-charset utf-8
-	ATTR language attributes-natural-language en
-	ATTR uri printer-uri $uri
-	ATTR integer job-id $job-id
-	ATTR integer document-number 1
-	ATTR name requesting-user-name $user
+    NAME "Get document attributes"
+    OPERATION Get-Document-Attributes
 
-	STATUS successful-ok
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR language attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR integer document-number 1
+    ATTR name requesting-user-name $user
 
-	EXPECT document-job-id OF-TYPE integer IN-GROUP document-attributes-tag WITH-VALUE >0 COUNT 1
-	EXPECT document-job-uri OF-TYPE uri IN-GROUP document-attributes-tag COUNT 1
-	EXPECT document-number OF-TYPE integer IN-GROUP document-attributes-tag WITH-VALUE 1 COUNT 1
-	EXPECT document-printer-uri OF-TYPE uri IN-GROUP document-attributes-tag WITH-VALUE $uri COUNT 1
-	EXPECT ?document-state OF-TYPE enum IN-GROUP document-attributes-tag WITH-VALUE 5 COUNT 1 DEFINE-MATCH DOCUMENT_PROCESSING			# processing
-	EXPECT document-state OF-TYPE enum IN-GROUP document-attributes-tag WITH-VALUE 7 COUNT 1 IF-NOT-DEFINED DOCUMENT_PROCESSING 		# cancelled
-	EXPECT document-state-reasons OF-TYPE keyword IN-GROUP document-attributes-tag WITH-VALUE "processing-to-stop-print" IF-DEFINED DOCUMENT_PROCESSING
+    STATUS successful-ok
+
+    EXPECT document-job-id OF-TYPE integer IN-GROUP document-attributes-tag WITH-VALUE >0 COUNT 1
+    EXPECT document-job-uri OF-TYPE uri IN-GROUP document-attributes-tag COUNT 1
+    EXPECT document-number OF-TYPE integer IN-GROUP document-attributes-tag WITH-VALUE 1 COUNT 1
+    EXPECT document-printer-uri OF-TYPE uri IN-GROUP document-attributes-tag WITH-VALUE $uri COUNT 1
+    EXPECT ?document-state OF-TYPE enum IN-GROUP document-attributes-tag WITH-VALUE 5 COUNT 1 DEFINE-MATCH DOCUMENT_PROCESSING			# processing
+    EXPECT document-state OF-TYPE enum IN-GROUP document-attributes-tag WITH-VALUE 7 COUNT 1 IF-NOT-DEFINED DOCUMENT_PROCESSING 		# cancelled
+    EXPECT document-state-reasons OF-TYPE keyword IN-GROUP document-attributes-tag WITH-VALUE "processing-to-stop-print" IF-DEFINED DOCUMENT_PROCESSING
 }
-

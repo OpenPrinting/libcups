@@ -17,7 +17,7 @@
 #
 
 {
-    NAME "PWG 5100.9-2009: Attributes"
+    NAME "PWG 5100.9-2009: Attributes and Values"
     OPERATION Get-Printer-Attributes
 
     GROUP operation-attributes-tag
