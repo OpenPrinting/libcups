@@ -10,7 +10,7 @@
 #
 # Usage:
 #
-#   ./ipptool -V 2.1 -f filename -t printer-uri ipp-2.1.test
+#   ./ipptool [OPTIONS] -V 2.1 -f filename -t printer-uri ipp-2.1.test
 #
 # Options:
 #
@@ -69,7 +69,7 @@ INCLUDE "rfc3998.test"
 
 # PWG 5100.12-2024: IPP/2.x Fourth Edition (for IPP/2.1)
 {
-    NAME "PWG 5100.12-2024: Required Operations, Attributes, and Values"
+    NAME "PWG 5100.12-2024: Required IPP/2.1 Operations, Attributes, and Values"
     OPERATION Get-Printer-Attributes
     GROUP operation-attributes-tag
     ATTR charset attributes-charset utf-8
@@ -77,23 +77,26 @@ INCLUDE "rfc3998.test"
     ATTR uri printer-uri $uri
     ATTR name requesting-user-name $user
     ATTR mimeMediaType document-format application/octet-stream
+    ATTR keyword requested-attributes all,media-col-database
 
     STATUS successful-ok
 
     # Baseline requirement/value
-    EXPECT ipp-versions-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE "2.0"
+    EXPECT ipp-versions-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE "2.1"
+
 
     # Figure out capabilities
     EXPECT color-supported OF-TYPE boolean IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE true DEFINE-MATCH PRINTER_IS_COLOR
     EXPECT job-hold-until-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag DEFINE-MATCH PRINTER_HAS_JOB_HOLD_UNTIL
     EXPECT job-priority-supported OF-TYPE integer IN-GROUP printer-attributes-tag DEFINE-MATCH PRINTER_HAS_JOB_PRIORITY
     EXPECT job-sheets-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag DEFINE-MATCH PRINTER_HAS_JOB_SHEETS
-    EXPECT media-col-supported OF-TYPE keyword IN-GROUP printer-attributes-tag DEFINE-MATCH PRINTER_HAS_MEDIA_COL
+    EXPECT media-ready IN-GROUP printer-attributes-tag DEFINE-MATCH PRINTER_HAS_MEDIA_READY
     EXPECT output-bin-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag DEFINE-MATCH PRINTER_HAS_OUTPUT_BIN
     EXPECT print-content-optimize-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag DEFINE-MATCH PRINTER_HAS_PRINT_CONTENT_OPTIMIZE
     EXPECT sides-supported OF-TYPE keyword IN-GROUP printer-attributes-tag DEFINE-MATCH PRINTER_HAS_SIDES
 
-    # Table 2 - IPP Operations (IPP/2.0)
+
+    # Table 2 - IPP Operations (IPP/2.1)
     EXPECT operations-supported OF-TYPE enum IN-GROUP printer-attributes-tag
     EXPECT operations-supported WITH-VALUE 0x002D # Cancel-Current-Job
     EXPECT operations-supported WITH-VALUE 0x0008 # Cancel-Job
@@ -124,7 +127,8 @@ INCLUDE "rfc3998.test"
     EXPECT operations-supported WITH-VALUE 0x0013 # Set-Printer-Attributes
     EXPECT operations-supported WITH-VALUE 0x0004 # Validate-Job
 
-    # Table 5 - Updated IPP Printer Description Attributes (IPP/2.0)
+
+    # Table 5 - Updated IPP Printer Description Attributes (IPP/2.1)
     EXPECT color-supported OF-TYPE boolean IN-GROUP printer-attributes-tag COUNT 1
 
     EXPECT copies-default OF-TYPE integer IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE >0
@@ -142,8 +146,24 @@ INCLUDE "rfc3998.test"
     EXPECT job-sheets-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag IF-DEFINED PRINTER_HAS_JOB_SHEETS
     EXPECT job-sheets-supported WITH-VALUE none IF-DEFINED PRINTER_HAS_JOB_SHEETS
 
+    EXPECT media-col-database OF-TYPE collection IN-GROUP printer-attributes-tag
+    EXPECT media-col-database/media-size OF-TYPE collection
+    EXPECT media-col-database/media-size-supported/x-dimension OF-TYPE integer(1:MAX)|rangeOfInteger(1:MAX)
+    EXPECT media-col-database/media-size-supported/y-dimension OF-TYPE integer(0:MAX)|rangeOfInteger(0:MAX)
+    EXPECT media-col-default OF-TYPE no-value|collection IN-GROUP printer-attributes-tag COUNT 1
+    EXPECT media-col-default/media-size OF-TYPE collection
+    EXPECT media-col-default/media-size-supported/x-dimension OF-TYPE integer(1:MAX)
+    EXPECT media-col-default/media-size-supported/y-dimension OF-TYPE integer(1:MAX)
+    EXPECT media-col-ready OF-TYPE collection IN-GROUP printer-attributes-tag IF-DEFINED PRINTER_HAS_MEDIA_READY
+    EXPECT media-col-ready/media-size OF-TYPE collection IF-DEFINED PRINTER_HAS_MEDIA_READY
+    EXPECT media-col-ready/media-size-supported/x-dimension OF-TYPE integer(1:MAX) IF-DEFINED PRINTER_HAS_MEDIA_READY
+    EXPECT media-col-ready/media-size-supported/y-dimension OF-TYPE integer(1:MAX) IF-DEFINED PRINTER_HAS_MEDIA_READY
+    EXPECT media-col-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE media-size
     EXPECT media-default OF-TYPE no-value|keyword|name IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE "$MEDIA_REGEX"
     EXPECT ?media-ready OF-TYPE keyword|name IN-GROUP printer-attributes-tag WITH-ALL-VALUES "$MEDIA_REGEX"
+    EXPECT media-size-supported OF-TYPE collection IN-GROUP printer-attributes-tag
+    EXPECT media-size-supported/x-dimension OF-TYPE integer(1:MAX)|rangeOfInteger(1:MAX)
+    EXPECT media-size-supported/y-dimension OF-TYPE integer(0:MAX)|rangeOfInteger(0:MAX)
     EXPECT media-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag WITH-ALL-VALUES "$MEDIA_REGEX"
 
     EXPECT orientation-requested-default OF-TYPE no-value|enum IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE 3,4,5,6,7
@@ -151,10 +171,6 @@ INCLUDE "rfc3998.test"
 
     EXPECT output-bin-default OF-TYPE keyword|name IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE-FROM output-bin-supported
     EXPECT output-bin-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag
-
-    EXPECT pages-per-minute OF-TYPE integer IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE >-1
-    EXPECT pages-per-minute-color OF-TYPE integer IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE >-1 IF-DEFINED PRINTER_IS_COLOR
-    EXPECT !pages-per-minute-color IF-NOT-DEFINED PRINTER_IS_COLOR
 
     EXPECT print-content-optimize-default OF-TYPE keyword COUNT 1 IN-GROUP printer-attributes-tag IF-DEFINED PRINTER_HAS_PRINT_CONTENT_OPTIMIZE WITH-VALUE-FROM print-content-optimize-supported
     EXPECT print-content-optimize-supported OF-TYPE keyword IN-GROUP printer-attributes-tag IF-DEFINED PRINTER_HAS_PRINT_CONTENT_OPTIMIZE WITH-ALL-VALUES "/^(auto|graphic|photo|text|text-and-graphic)$$/"
@@ -175,4 +191,13 @@ INCLUDE "rfc3998.test"
 
     EXPECT sides-default OF-TYPE keyword IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE-FROM sides-supported IF-DEFINED PRINTER_HAS_SIDES
     EXPECT sides-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-ALL-VALUES "/^(one-sided|two-sided-long-edge|two-sided-short-edge)$$/" IF-DEFINED PRINTER_HAS_SIDES
+
+
+    # Table 6 - Updated IPP Printer Status Attributes (IPP/2.1)
+    EXPECT pages-per-minute OF-TYPE integer(0:MAX) IN-GROUP printer-attributes-tag COUNT 1
+    EXPECT pages-per-minute-color OF-TYPE integer(0:MAX) IN-GROUP printer-attributes-tag COUNT 1 IF-DEFINED PRINTER_IS_COLOR
+    EXPECT !pages-per-minute-color IF-NOT-DEFINED PRINTER_IS_COLOR
+
+    EXPECT printer-alert OF-TYPE octetString IN-GROUP printer-attributes-tag SAME-COUNT-AS printer-alert-description
+    EXPECT printer-alert-description OF-TYPE text IN-GROUP printer-attributes-tag SAME-COUNT-AS printer-alert
 }
