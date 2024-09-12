@@ -6882,7 +6882,7 @@ with_content(
           ret = false;
           goto get_done;
         }
-       }
+      }
       else if (!_cups_strcasecmp(content_type, "application/pdf"))
       {
         // Validate PDF content...
