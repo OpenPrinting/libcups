@@ -1,0 +1,29 @@
+# Validate printer resources
+{
+    NAME "Validate Printer Resources"
+    OPERATION Get-Printer-Attributes
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR language attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR name requesting-user-name $user
+
+    STATUS successful-ok
+
+    EXPECT ?printer-charge-info-uri OF-TYPE uri IN-GROUP printer-attributes-tag COUNT 1 WITH-CONTENT valid
+
+    EXPECT printer-icc-profiles OF-TYPE collection IN-GROUP printer-attributes-tag DEFINE-MATCH PRINTER_HAS_ICC_PROFILES
+    EXPECT printer-icc-profiles/profile-uri OF-TYPE uri COUNT 1 WITH-CONTENT valid IF-DEFINED PRINTER_HAS_ICC_PROFILES
+
+    EXPECT ?printer-icons OF-TYPE uri IN-GROUP printer-attributes-tag WITH-ALL-CONTENT valid-icon
+
+    EXPECT ?printer-more-info OF-TYPE uri IN-GROUP printer-attributes-tag COUNT 1 WITH-CONTENT valid
+
+    EXPECT ?printer-more-info-manufacturer OF-TYPE uri IN-GROUP printer-attributes-tag COUNT 1 WITH-CONTENT valid
+
+    EXPECT ?printer-privacy-policy-uri OF-TYPE uri IN-GROUP printer-attributes-tag COUNT 1 WITH-CONTENT valid
+
+    EXPECT ?printer-static-resource-directory-uri OF-TYPE uri IN-GROUP printer-attributes-tag COUNT 1 WITH-CONTENT valid
+
+    EXPECT ?printer-strings-uri OF-TYPE uri IN-GROUP printer-attributes-tag COUNT 1 WITH-CONTENT valid
+}

@@ -1,7 +1,7 @@
 //
 // ipptool command for CUPS.
 //
-// Copyright © 2021-2023 by OpenPrinting.
+// Copyright © 2021-2024 by OpenPrinting.
 // Copyright © 2020 by The Printer Working Group.
 // Copyright © 2007-2021 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products.
@@ -26,6 +26,7 @@
 #ifndef O_BINARY
 #  define O_BINARY 0
 #endif // !O_BINARY
+#include <pdfio.h>
 
 
 //
@@ -238,6 +239,7 @@ static bool	parse_generate_file(ipp_file_t *f, ipptool_test_t *data);
 static bool	parse_monitor_printer_state(ipp_file_t *f, ipptool_test_t *data);
 static const char *password_cb(const char *prompt, http_t *http, const char *method, const char *resource, void *user_data);
 static void	pause_message(const char *message);
+static bool	pdf_error_cb(pdfio_file_t *pdf, const char *message, cups_array_t *errors);
 static void	print_attr(cups_file_t *outfile, ipptool_output_t output, ipp_attribute_t *attr, ipp_tag_t *group);
 static ipp_attribute_t *print_csv(ipptool_test_t *data, ipp_t *ipp, ipp_attribute_t *attr, int num_displayed, char **displayed, size_t *widths);
 static void	print_fatal_error(ipptool_test_t *data, const char *s, ...) _CUPS_FORMAT(2, 3);
@@ -4122,6 +4124,23 @@ pause_message(const char *message)	// I - Message
 
 
 //
+// 'pdf_error_cb()' - PDFio error callback.
+//
+
+static bool				// O - `false` to stop loading
+pdf_error_cb(pdfio_file_t *pdf,		// I - PDF file
+             const char   *message,	// I - Error message
+             cups_array_t *errors)	// I - Array of error messages
+{
+  (void)pdf;
+
+  add_stringf(errors, "Unable to open PDF file: %s", message);
+
+  return (false);
+}
+
+
+//
 // 'print_attr()' - Print an attribute on the screen.
 //
 
@@ -6700,7 +6719,8 @@ with_content(
   char		scheme[256],		// Scheme
 		userpass[256],		// Username:password (not used)
 		host[256],		// Hostname
-		resource[256];		// Resource path
+		resource[256],		// Resource path
+		*resptr;		// Pointer into resource
   int		port;			// Port number
   http_encryption_t encryption;		// Encryption  mode
   http_uri_status_t uri_status;		// URI decoding status
@@ -6719,6 +6739,9 @@ with_content(
       ret = false;
       continue;
     }
+
+    if ((resptr = strchr(resource, '#')) != NULL)
+      *resptr = '\0';			// Strip HTML target ("...#target")
 
     if (strcmp(scheme, "http") && strcmp(scheme, "https") && strcmp(scheme, "ipp") && strcmp(scheme, "ipps"))
     {
@@ -6789,7 +6812,7 @@ with_content(
 
       if (status != HTTP_STATUS_OK)
       {
-        add_stringf(errors, "Got unexpected status %d for HEAD request to '%s'.", (int)status, uri);
+        add_stringf(errors, "Got unexpected status %d for GET request to '%s'.", (int)status, uri);
         ret = false;
         goto get_done;
       }
@@ -6833,14 +6856,70 @@ with_content(
       }
       else if (!_cups_strcasecmp(content_type, "image/jpeg") || !_cups_strcasecmp(content_type, "image/png"))
       {
+        // Validate image content
         if (!valid_image(filename, &width, &height, &depth))
         {
-	  add_stringf(errors, "Unable to load image '%s'.", uri);
+	  add_stringf(errors, "Unable to open image '%s'.", uri);
 	  ret = false;
 	  goto get_done;
         }
       }
-      else if (!_cups_strcasecmp(content_type, "application/pdf") || !_cups_strcasecmp(content_type, "application/ipp") || !_cups_strcasecmp(content_type, "application/vnd.iccprofile") || !_cups_strcasecmp(content_type, "text/css") || !_cups_strcasecmp(content_type, "text/html") || !_cups_strcasecmp(content_type, "text/strings"))
+      else if (!_cups_strcasecmp(content_type, "text/strings"))
+      {
+        // Validate .strings content...
+        cups_lang_t	*lang;		// Temporary language
+
+        if ((lang = cupsLangFind("zz")) == NULL)
+        {
+          add_stringf(errors, "Unable to validate '%s'.", uri);
+          ret = false;
+          goto get_done;
+        }
+
+        if (!cupsLangLoadStrings(lang, filename, /*strings*/NULL))
+        {
+          add_stringf(errors, "Unable to open '%s': %s", uri, cupsGetErrorString());
+          ret = false;
+          goto get_done;
+        }
+       }
+      else if (!_cups_strcasecmp(content_type, "application/pdf"))
+      {
+        // Validate PDF content...
+        pdfio_file_t	*pdf;		// PDF file
+
+        if ((pdf = pdfioFileOpen(filename, /*password_cb*/NULL, /*password_data*/NULL, (pdfio_error_cb_t)pdf_error_cb, errors)) == NULL)
+        {
+          ret = false;
+          goto get_done;
+        }
+
+        pdfioFileClose(pdf);
+      }
+      else if (!_cups_strcasecmp(content_type, "application/ipp"))
+      {
+        ipp_t	*ipp = ippNew();	// IPP message
+
+        if ((fd = open(filename, O_RDONLY | O_BINARY)) < 0)
+        {
+          add_stringf(errors, "Unable to open '%s': %s", uri, strerror(errno));
+          ippDelete(ipp);
+          ret = false;
+          goto get_done;
+        }
+        else if (ippReadFile(fd, ipp) != IPP_STATE_DATA)
+        {
+          add_stringf(errors, "Unable to read '%s': %s", uri, cupsGetErrorString());
+          ippDelete(ipp);
+          close(fd);
+          ret = false;
+          goto get_done;
+        }
+
+	ippDelete(ipp);
+	close(fd);
+      }
+      else if (!_cups_strcasecmp(content_type, "application/vnd.iccprofile") || !_cups_strcasecmp(content_type, "text/css") || !_cups_strcasecmp(content_type, "text/html") || !_cups_strncasecmp(content_type, "text/html;", 10))
       {
         // Just require these files to be non-empty for now, might add more checks in the future...
         if (fileinfo.st_size == 0)
@@ -6852,7 +6931,7 @@ with_content(
       }
       else
       {
-	add_stringf(errors, "Got unexpected Content-Type '%s' for HEAD request to '%s'.", content_type, uri);
+	add_stringf(errors, "Got unexpected Content-Type '%s' for GET request to '%s'.", content_type, uri);
 	ret = false;
 	goto get_done;
       }

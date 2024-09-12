@@ -1,13 +1,13 @@
 .\"
 .\" ipptoolfile man page.
 .\"
-.\" Copyright © 2021-2023 by OpenPrinting.
+.\" Copyright © 2021-2024 by OpenPrinting.
 .\" Copyright © 2010-2021 by Apple Inc.
 .\"
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH ipptoolfile 5 "CUPS" "2023-11-17" "OpenPrinting"
+.TH ipptoolfile 5 "CUPS" "2024-09-12" "OpenPrinting"
 .SH NAME
 ipptoolfile \- ipptool file format
 .SH DESCRIPTION
@@ -352,6 +352,9 @@ A "http" or "https" URI must respond to a GET request while a "ipp" or "ipps" UR
 .TP 5
 \fBWITH\-CONTENT valid\fR
 Requires that all "http" and "https" URI values be accessible and provide valid content.
+Currently
+.B ipptool
+is able to validate CSS, HTML, ICC, IPP, JPEG, PDF, PNG, and Apple .strings files.
 .TP 5
 \fBWITH\-ALL\-CONTENT valid-icon\fR
 .TP 5
@@ -886,4 +889,4 @@ PWG 5101.1-2023: PWG Media Standardized Names v2.1 (https://ftp.pwg.org/pub/pwg/
 .PP
 RFC 8011 (https://datatracker.ietf.org/doc/html/rfc8011)
 .SH COPYRIGHT
-Copyright \[co] 2021-2023 by OpenPrinting.
+Copyright \[co] 2021-2024 by OpenPrinting.

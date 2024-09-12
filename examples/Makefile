@@ -85,7 +85,8 @@ TESTFILES	=	\
 			rfc3995-3996.test \
 			rfc3998.test \
 			set-attrs-hold.test \
-			validate-job.test
+			validate-job.test \
+			validate-resources.test
 
 
 #

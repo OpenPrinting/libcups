@@ -172,7 +172,7 @@ ippfind-static:	ippfind.o ../cups/$(LIBCUPS_STATIC)
 
 ipptool:	ipptool.o ../cups/$(LIBCUPS) ipptool-static
 	echo Linking $@...
-	$(CC) $(LDFLAGS) $(OPTIM) -o $@ ipptool.o $(LINKCUPS) $(LIBS)
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ ipptool.o $(LINKCUPS) $(XFORMLIBS) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 
@@ -182,7 +182,7 @@ ipptool:	ipptool.o ../cups/$(LIBCUPS) ipptool-static
 
 ipptool-static:	ipptool.o ../cups/$(LIBCUPS_STATIC)
 	echo Linking $@...
-	$(CC) $(LDFLAGS) $(OPTIM) -o $@ ipptool.o ../cups/$(LIBCUPS_STATIC) $(LIBS)
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ ipptool.o ../cups/$(LIBCUPS_STATIC) $(XFORMLIBS) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 

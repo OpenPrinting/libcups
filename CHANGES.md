@@ -21,6 +21,8 @@ libcups v3.0rc1 (TBD)
 - Updated the various tool man pages, usage output, and examples.
 - Updated `ippCreateRequestedArray` for the Get-Documents and
   Get-Output-Device-Attributes operations.
+- Updated `ipptool` to validate IPP, PDF, and .strings files using the
+  "WITH-[ALL-]CONTENT" predicate (Issue #87)
 - Now use installed PDFio library, if available.
 - Now use NotoSansMono font for `ipptransform` text conversions.
 - Brought back IPP/2.x and related conformance test files (Issue #85)
