@@ -167,16 +167,16 @@ INCLUDE "rfc3998.test"
 
     EXPECT media-col-database OF-TYPE collection IN-GROUP printer-attributes-tag
     EXPECT media-col-database/media-size OF-TYPE collection
-    EXPECT media-col-database/media-size-supported/x-dimension OF-TYPE integer(1:MAX)|rangeOfInteger(1:MAX)
-    EXPECT media-col-database/media-size-supported/y-dimension OF-TYPE integer(0:MAX)|rangeOfInteger(0:MAX)
+    EXPECT media-col-database/media-size/x-dimension OF-TYPE integer(1:MAX)|rangeOfInteger(1:MAX)
+    EXPECT media-col-database/media-size/y-dimension OF-TYPE integer(0:MAX)|rangeOfInteger(0:MAX)
     EXPECT media-col-default OF-TYPE no-value|collection IN-GROUP printer-attributes-tag COUNT 1
     EXPECT media-col-default/media-size OF-TYPE collection
-    EXPECT media-col-default/media-size-supported/x-dimension OF-TYPE integer(1:MAX)
-    EXPECT media-col-default/media-size-supported/y-dimension OF-TYPE integer(1:MAX)
+    EXPECT media-col-default/media-size/x-dimension OF-TYPE integer(1:MAX)
+    EXPECT media-col-default/media-size/y-dimension OF-TYPE integer(1:MAX)
     EXPECT media-col-ready OF-TYPE collection IN-GROUP printer-attributes-tag
     EXPECT media-col-ready/media-size OF-TYPE collection
-    EXPECT media-col-ready/media-size-supported/x-dimension OF-TYPE integer(1:MAX)
-    EXPECT media-col-ready/media-size-supported/y-dimension OF-TYPE integer(1:MAX)
+    EXPECT media-col-ready/media-size/x-dimension OF-TYPE integer(1:MAX)
+    EXPECT media-col-ready/media-size/y-dimension OF-TYPE integer(0:MAX)
     EXPECT media-col-supported OF-TYPE keyword IN-GROUP printer-attributes-tag WITH-VALUE media-size
     EXPECT media-default OF-TYPE no-value|keyword|name IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE "$MEDIA_REGEX"
     EXPECT media-ready OF-TYPE keyword|name IN-GROUP printer-attributes-tag WITH-ALL-VALUES "$MEDIA_REGEX"
