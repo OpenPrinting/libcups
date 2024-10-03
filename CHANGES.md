@@ -1,6 +1,12 @@
 Changes in libcups
 ==================
 
+libcups v3.0.0 (Month DD, YYYY)
+-------------------------------
+
+- Fixed the default User-Agent string sent in requests.
+
+
 libcups v3.0rc1 (September 20, 2024)
 ------------------------------------
 

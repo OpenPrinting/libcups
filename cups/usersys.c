@@ -486,6 +486,8 @@ cupsSetUserAgent(const char *user_agent)// I - User-Agent string or `NULL`
 	  cupsCopyString(cg->user_agent, "CUPS/" LIBCUPS_VERSION " IPP/2.0", sizeof(cg->user_agent));
 	  break;
     }
+
+    return;
   }
 
 #ifdef _WIN32
