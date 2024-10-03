@@ -1,8 +1,8 @@
 Changes in libcups
 ==================
 
-libcups v3.0rc1 (TBD)
----------------------
+libcups v3.0rc1 (September 20, 2024)
+------------------------------------
 
 - Added `cupsFormatString` and `cupsFormatStringv` APIs to safely format UTF-8
   strings.
