@@ -102,6 +102,33 @@ static void	cups_set_user(_cups_client_conf_t *cc, const char *value);
 
 
 //
+// Local globals...
+//
+
+static const char * const uatokens[] =// UserAgentTokens values
+{
+  "None",
+  "ProductOnly",
+  "Major",
+  "Minor",
+  "Minimal",
+  "OS",
+  "Full"
+};
+#ifdef DEBUG
+static const char * const tls_versions[] =
+{					// TLS/SSL version numbers
+  "SSL3.0",
+  "TLS1.0",
+  "TLS1.1",
+  "TLS1.2",
+  "TLS1.3",
+  "TLS1.3"
+};
+#endif // DEBUG
+
+
+//
 // 'cupsGetEncryption()' - Get the current encryption settings.
 //
 // The default encryption setting comes from the CUPS_ENCRYPTION
@@ -825,6 +852,15 @@ _cupsSetDefaults(void)
   char		filename[1024];		// Filename
   _cups_client_conf_t cc;		// client.conf values
   _cups_globals_t *cg = _cupsGlobals();	// Pointer to library globals
+#ifdef DEBUG
+  static const char * const encryptions[] =
+  {					// Encryption values
+    "IfRequested",
+    "Never",
+    "Required",
+    "Always"
+  };
+#endif // DEBUG
 
 
   DEBUG_puts("_cupsSetDefaults()");
@@ -880,6 +916,17 @@ _cupsSetDefaults(void)
 
   if (cg->validate_certs < 0)
     cg->validate_certs = cc.validate_certs;
+
+  DEBUG_printf("1_cupsSetDefaults: AllowAnyRoot %s", cg->any_root ? "Yes" : "No");
+  DEBUG_printf("1_cupsSetDefaults: AllowExpiredCerts %s", cg->expired_certs ? "Yes" : "No");
+  DEBUG_printf("1_cupsSetDefaults: DigestOptions %s", cg->digestoptions == _CUPS_DIGESTOPTIONS_DENYMD5 ? "DenyMD5" : "None");
+  DEBUG_printf("1_cupsSetDefaults: Encryption %s", encryptions[cg->encryption]);
+  DEBUG_printf("1_cupsSetDefaults: ServerName %s", cg->servername);
+  DEBUG_printf("1_cupsSetDefaults: SSLOptions%s%s%s%s Min%s Max%s", cc.ssl_options == _HTTP_TLS_NONE ? " none" : "", (cc.ssl_options & _HTTP_TLS_ALLOW_RC4) ? " AllowRC4" : "", (cc.ssl_options & _HTTP_TLS_ALLOW_DH) ? " AllowDH" : "", (cc.ssl_options & _HTTP_TLS_DENY_CBC) ? " DenyCBC" : "", tls_versions[cc.ssl_min_version], tls_versions[cc.ssl_max_version]);
+  DEBUG_printf("1_cupsSetDefaults: TrustOnFirstUse %s", cg->trust_first ? "Yes" : "No");
+  DEBUG_printf("1_cupsSetDefaults: User %s", cg->user);
+  DEBUG_printf("1_cupsSetDefaults: UserAgentTokens %s", uatokens[cg->uatokens]);
+  DEBUG_printf("1_cupsSetDefaults: ValidateCerts %s", cg->validate_certs ? "Yes" : "No");
 
   _httpTLSSetOptions(cc.ssl_options | _HTTP_TLS_SET_DEFAULT, cc.ssl_min_version, cc.ssl_max_version);
 }
@@ -1388,16 +1435,7 @@ cups_set_uatokens(
     const char          *value)		// I - Value
 {
   int	i;				// Looping var
-  static const char * const uatokens[] =// UserAgentTokens values
-  {
-    "NONE",
-    "PRODUCTONLY",
-    "MAJOR",
-    "MINOR",
-    "MINIMAL",
-    "OS",
-    "FULL"
-  };
+
 
   for (i = 0; i < (int)(sizeof(uatokens) / sizeof(uatokens[0])); i ++)
   {
