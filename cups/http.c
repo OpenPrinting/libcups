@@ -3700,9 +3700,15 @@ http_send(http_t       *http,		// I - HTTP connection
   if (!http->fields[HTTP_FIELD_USER_AGENT])
   {
     if (http->default_fields[HTTP_FIELD_USER_AGENT])
+    {
+      DEBUG_puts("5http_send: Using default User-Agent.");
       httpSetField(http, HTTP_FIELD_USER_AGENT, http->default_fields[HTTP_FIELD_USER_AGENT]);
+    }
     else
+    {
+      DEBUG_puts("5http_send: Using client.conf User-Agent.");
       httpSetField(http, HTTP_FIELD_USER_AGENT, cupsGetUserAgent());
+    }
   }
 
   // Set the Accept-Encoding field if it isn't already...
@@ -3743,7 +3749,7 @@ http_send(http_t       *http,		// I - HTTP connection
   if (http->encryption == HTTP_ENCRYPTION_REQUIRED && !http->tls)
   {
     httpSetField(http, HTTP_FIELD_CONNECTION, "Upgrade");
-    httpSetField(http, HTTP_FIELD_UPGRADE, "TLS/1.2,TLS/1.1,TLS/1.0");
+    httpSetField(http, HTTP_FIELD_UPGRADE, "TLS/1.3,TLS/1.2,TLS/1.1,TLS/1.0");
   }
 
   if (httpPrintf(http, "%s %s HTTP/1.1\r\n", codes[request], buf) < 1)

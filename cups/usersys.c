@@ -459,11 +459,16 @@ cupsSetUserAgent(const char *user_agent)// I - User-Agent string or `NULL`
 #endif // _WIN32
 
 
+  DEBUG_printf("cupsSetUserAgent(\"%s\")", user_agent);
+
   if (user_agent)
   {
     cupsCopyString(cg->user_agent, user_agent, sizeof(cg->user_agent));
+    DEBUG_printf("1cupsSetUserAgent: user_agent=\"%s\"", cg->user_agent);
     return;
   }
+
+  DEBUG_printf("1cupsSetUserAgent: uatokens=%d(%s)", cg->uatokens, uatokens[cg->uatokens]);
 
   if (cg->uatokens < _CUPS_UATOKENS_OS)
   {
@@ -487,6 +492,7 @@ cupsSetUserAgent(const char *user_agent)// I - User-Agent string or `NULL`
 	  break;
     }
 
+    DEBUG_printf("1cupsSetUserAgent: user_agent=\"%s\"", cg->user_agent);
     return;
   }
 
@@ -568,6 +574,8 @@ cupsSetUserAgent(const char *user_agent)// I - User-Agent string or `NULL`
   else
     snprintf(cg->user_agent, sizeof(cg->user_agent), "CUPS/" LIBCUPS_VERSION " (%s %s; %s) IPP/2.0", name.sysname, name.release, name.machine);
 #endif // _WIN32
+
+  DEBUG_printf("1cupsSetUserAgent: user_agent=\"%s\"", cg->user_agent);
 }
 
 
@@ -605,6 +613,8 @@ cupsGetUserAgent(void)
 
   if (!cg->user_agent[0])
     cupsSetUserAgent(NULL);
+
+  DEBUG_printf("1cupsGetUserAgent: Returning \"%s\".", cg->user_agent);
 
   return (cg->user_agent);
 }
