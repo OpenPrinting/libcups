@@ -5,6 +5,7 @@ libcups v3.0.0 (YYYY-MM-DD)
 ---------------------------
 
 - Fixed the default User-Agent string sent in requests.
+- Fixed a recursion issue in `ippReadIO`.
 
 
 libcups v3.0rc1 (2024-09-20)
