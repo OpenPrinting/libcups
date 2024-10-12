@@ -4,6 +4,8 @@ Changes in libcups
 libcups v3.0.0 (YYYY-MM-DD)
 ---------------------------
 
+- Updated `httpConnectAgain` to re-validate the server's X.509 certificate
+  (Issue #90)
 - Fixed a compressed file error handling bug (Issue #91)
 - Fixed the default User-Agent string sent in requests.
 - Fixed a recursion issue in `ippReadIO`.
