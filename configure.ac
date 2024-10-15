@@ -13,7 +13,7 @@ dnl We need at least autoconf 2.71...
 AC_PREREQ([2.71])
 
 dnl Package name and version...
-AC_INIT([libcups],[3.0rc1],[https://github.com/OpenPrinting/libcups/issues],[cups],[https://openprinting.github.io/cups])
+AC_INIT([libcups],[3.0rc2],[https://github.com/OpenPrinting/libcups/issues],[cups],[https://openprinting.github.io/cups])
 AC_CONFIG_HEADERS([config.h])
 
 LIBCUPS_VERSION="AC_PACKAGE_VERSION"

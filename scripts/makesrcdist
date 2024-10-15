@@ -114,6 +114,7 @@ echo Exporting $fileversion...
 rm -rf $TMPDIR/libcups-$version
 mkdir $TMPDIR/libcups-$version
 git archive --format tar HEAD | (cd $TMPDIR/libcups-$version; tar xf -)
+(cd pdfio; git archive --prefix=pdfio/ HEAD) | (cd $TMPDIR/libcups-$version; tar xf -)
 
 echo Preparing files...
 cd $TMPDIR/libcups-$version
