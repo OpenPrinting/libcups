@@ -223,13 +223,13 @@ main(int  argc,				// I - Number of command-line args
           if (logic == IPPFIND_OP_OR)
           {
             cupsLangPrintf(stderr, _("%s: Cannot use '--and' after '--or'."), "ippfind");
-            return (usage(stderr));
+            exit(usage(stderr));
           }
 
           if (!current)
           {
             cupsLangPrintf(stderr, _("%s: Missing expression before '--and'."), "ippfind");
-            return (usage(stderr));
+            exit(usage(stderr));
           }
 
 	  temp = NULL;
@@ -240,7 +240,7 @@ main(int  argc,				// I - Number of command-line args
           if (i >= argc)
           {
             cupsLangPrintf(stderr, _("%s: Missing regular expression after '%s'."), "ippfind", "--domain");
-            return (usage(stderr));
+            exit(usage(stderr));
           }
 
           temp = new_expr(IPPFIND_OP_DOMAIN_REGEX, invert, NULL, argv[i], NULL);
@@ -251,7 +251,7 @@ main(int  argc,				// I - Number of command-line args
           if (i >= argc)
           {
             cupsLangPrintf(stderr, _("%s: Missing program after '%s'."), "ippfind", "--exec");
-            return (usage(stderr));
+            exit(usage(stderr));
           }
 
           temp = new_expr(IPPFIND_OP_EXEC, invert, NULL, NULL, argv + i);
@@ -267,7 +267,7 @@ main(int  argc,				// I - Number of command-line args
           if (i >= argc)
           {
             cupsLangPrintf(stderr, _("%s: Missing semi-colon after '%s'."), "ippfind", "--exec");
-            return (usage(stderr));
+            exit(usage(stderr));
           }
 
           have_output = true;
@@ -278,7 +278,7 @@ main(int  argc,				// I - Number of command-line args
         }
         else if (!strcmp(argv[i], "--help"))
         {
-          return (usage(stdout));
+          exit(usage(stdout));
         }
         else if (!strcmp(argv[i], "--host"))
         {
@@ -286,7 +286,7 @@ main(int  argc,				// I - Number of command-line args
           if (i >= argc)
           {
             cupsLangPrintf(stderr, _("%s: Missing regular expression after '%s'."), "ippfind", "--host");
-            return (usage(stderr));
+            exit(usage(stderr));
           }
 
           temp = new_expr(IPPFIND_OP_HOST_REGEX, invert, NULL, argv[i], NULL);
@@ -306,7 +306,7 @@ main(int  argc,				// I - Number of command-line args
           if (i >= argc)
           {
             cupsLangPrintf(stderr, _("%s: Missing name after '%s'."), "ippfind", "--literal-name");
-            return (usage(stderr));
+            exit(usage(stderr));
           }
 
           temp = new_expr(IPPFIND_OP_NAME_LITERAL, invert, argv[i], NULL, NULL);
@@ -317,7 +317,7 @@ main(int  argc,				// I - Number of command-line args
           if (i >= argc)
           {
             cupsLangPrintf(stderr, _("%s: Missing regular expression after '%s'."), "ippfind", "--name");
-            return (usage(stderr));
+            exit(usage(stderr));
           }
 
           temp = new_expr(IPPFIND_OP_NAME_REGEX, invert, NULL, argv[i], NULL);
@@ -331,7 +331,7 @@ main(int  argc,				// I - Number of command-line args
           if (!current)
           {
             cupsLangPrintf(stderr, _("%s: Missing expression before '--or'."), "ippfind");
-            return (usage(stderr));
+            exit(usage(stderr));
           }
 
           logic = IPPFIND_OP_OR;
@@ -397,7 +397,7 @@ main(int  argc,				// I - Number of command-line args
           if (i >= argc)
           {
             cupsLangPrintf(stderr, _("%s: Missing regular expression after '%s'."), "ippfind", "--path");
-            return (usage(stderr));
+            exit(usage(stderr));
           }
 
           temp = new_expr(IPPFIND_OP_PATH_REGEX, invert, NULL, argv[i], NULL);
@@ -408,7 +408,7 @@ main(int  argc,				// I - Number of command-line args
           if (i >= argc)
           {
             cupsLangPrintf(stderr, _("%s: Missing port range after '%s'."), "ippfind", "--port");
-            return (usage(stderr));
+            exit(usage(stderr));
           }
 
           temp = new_expr(IPPFIND_OP_PORT_RANGE, invert, argv[i], NULL, NULL);
@@ -442,7 +442,7 @@ main(int  argc,				// I - Number of command-line args
           if (i >= argc)
           {
             cupsLangPrintf(stderr, _("%s: Missing key name after '%s'."), "ippfind", "--txt");
-            return (usage(stderr));
+            exit(usage(stderr));
           }
 
           temp = new_expr(IPPFIND_OP_TXT_EXISTS, invert, argv[i], NULL, NULL);
@@ -455,7 +455,7 @@ main(int  argc,				// I - Number of command-line args
           if (i >= argc)
           {
             cupsLangPrintf(stderr, _("%s: Missing regular expression after '%s'."), "ippfind", argv[i - 1]);
-            return (usage(stderr));
+            exit(usage(stderr));
           }
 
           temp = new_expr(IPPFIND_OP_TXT_REGEX, invert, key, argv[i], NULL);
@@ -466,7 +466,7 @@ main(int  argc,				// I - Number of command-line args
           if (i >= argc)
           {
             cupsLangPrintf(stderr, _("%s: Missing regular expression after '%s'."), "ippfind", "--uri");
-            return (usage(stderr));
+            exit(usage(stderr));
           }
 
           temp = new_expr(IPPFIND_OP_URI_REGEX, invert, NULL, argv[i], NULL);
@@ -474,12 +474,12 @@ main(int  argc,				// I - Number of command-line args
         else if (!strcmp(argv[i], "--version"))
         {
           puts(LIBCUPS_VERSION);
-          return (0);
+          exit(0);
         }
         else
         {
 	  cupsLangPrintf(stderr, _("%s: Unknown option '%s'."), "ippfind", argv[i]);
-	  return (usage(stderr));
+	  exit(usage(stderr));
 	}
 
         if (temp)
@@ -541,7 +541,7 @@ main(int  argc,				// I - Number of command-line args
 		if (i >= argc)
 		{
 		  cupsLangPrintf(stderr, _("%s: Missing name after '%s'."), "ippfind", "-N");
-		  return (usage(stderr));
+		  exit(usage(stderr));
 		}
 
 		temp = new_expr(IPPFIND_OP_NAME_LITERAL, invert, argv[i], NULL, NULL);
@@ -552,7 +552,7 @@ main(int  argc,				// I - Number of command-line args
 		if (i >= argc)
 		{
 		  cupsLangPrintf(stderr, _("%s: Missing port range after '%s'."), "ippfind", "-P");
-		  return (usage(stderr));
+		  exit(usage(stderr));
 		}
 
 		temp = new_expr(IPPFIND_OP_PORT_RANGE, invert, argv[i], NULL, NULL);
@@ -563,7 +563,7 @@ main(int  argc,				// I - Number of command-line args
                 if (i >= argc)
 		{
 		  cupsLangPrintf(stderr, _("%s: Missing timeout after '-T'."), "ippfind");
-		  return (usage(stderr));
+		  exit(usage(stderr));
 		}
 
                 bonjour_timeout = atof(argv[i]);
@@ -574,7 +574,7 @@ main(int  argc,				// I - Number of command-line args
                 if (i >= argc)
 		{
 		  cupsLangPrintf(stderr, _("%s: Missing version after '-V'."), "ippfind");
-		  return (usage(stderr));
+		  exit(usage(stderr));
 		}
 
                 if (!strcmp(argv[i], "1.1"))
@@ -596,7 +596,7 @@ main(int  argc,				// I - Number of command-line args
                 else
                 {
                   cupsLangPrintf(stderr, _("%s: Unsupported version \"%s\"."), "ippfind", argv[i]);
-                  return (usage(stderr));
+                  exit(usage(stderr));
                 }
                 break;
 
@@ -605,7 +605,7 @@ main(int  argc,				// I - Number of command-line args
 		if (i >= argc)
 		{
 		  cupsLangPrintf(stderr, _("%s: Missing regular expression after '%s'."), "ippfind", "-d");
-		  return (usage(stderr));
+		  exit(usage(stderr));
 		}
 
 		temp = new_expr(IPPFIND_OP_DOMAIN_REGEX, invert, NULL, argv[i], NULL);
@@ -616,7 +616,7 @@ main(int  argc,				// I - Number of command-line args
 		if (i >= argc)
 		{
 		  cupsLangPrintf(stderr, _("%s: Missing regular expression after '%s'."), "ippfind", "-h");
-		  return (usage(stderr));
+		  exit(usage(stderr));
 		}
 
 		temp = new_expr(IPPFIND_OP_HOST_REGEX, invert, NULL, argv[i], NULL);
@@ -632,7 +632,7 @@ main(int  argc,				// I - Number of command-line args
 		if (i >= argc)
 		{
 		  cupsLangPrintf(stderr, _("%s: Missing regular expression after '%s'."), "ippfind", "-n");
-		  return (usage(stderr));
+		  exit(usage(stderr));
 		}
 
 		temp = new_expr(IPPFIND_OP_NAME_REGEX, invert, NULL, argv[i], NULL);
@@ -663,7 +663,7 @@ main(int  argc,				// I - Number of command-line args
 		if (i >= argc)
 		{
 		  cupsLangPrintf(stderr, _("%s: Missing key name after '%s'."), "ippfind", "-t");
-		  return (usage(stderr));
+		  exit(usage(stderr));
 		}
 
 		temp = new_expr(IPPFIND_OP_TXT_EXISTS, invert, argv[i], NULL, NULL);
@@ -674,7 +674,7 @@ main(int  argc,				// I - Number of command-line args
 		if (i >= argc)
 		{
 		  cupsLangPrintf(stderr, _("%s: Missing regular expression after '%s'."), "ippfind", "-u");
-		  return (usage(stderr));
+		  exit(usage(stderr));
 		}
 
 		temp = new_expr(IPPFIND_OP_URI_REGEX, invert, NULL, argv[i], NULL);
@@ -685,7 +685,7 @@ main(int  argc,				// I - Number of command-line args
 		if (i >= argc)
 		{
 		  cupsLangPrintf(stderr, _("%s: Missing program after '%s'."), "ippfind", "-x");
-		  return (usage(stderr));
+		  exit(usage(stderr));
 		}
 
 		temp = new_expr(IPPFIND_OP_EXEC, invert, NULL, NULL, argv + i);
@@ -701,7 +701,7 @@ main(int  argc,				// I - Number of command-line args
 		if (i >= argc)
 		{
 		  cupsLangPrintf(stderr, _("%s: Missing semi-colon after '%s'."), "ippfind", "-x");
-		  return (usage(stderr));
+		  exit(usage(stderr));
 		}
 
 		have_output = true;
@@ -709,7 +709,7 @@ main(int  argc,				// I - Number of command-line args
 
             default :
                 cupsLangPrintf(stderr, _("%s: Unknown option '-%c'."), "ippfind", *opt);
-                return (usage(stderr));
+                exit(usage(stderr));
           }
 
 	  if (temp)
@@ -758,7 +758,7 @@ main(int  argc,				// I - Number of command-line args
       if (num_parens >= 100)
       {
         cupsLangPrintf(stderr, _("%s: Too many parenthesis."), "ippfind");
-        return (usage(stderr));
+        exit(usage(stderr));
       }
 
       temp = new_expr(IPPFIND_OP_AND, invert, NULL, NULL, NULL);
@@ -786,7 +786,7 @@ main(int  argc,				// I - Number of command-line args
       if (num_parens <= 0)
       {
         cupsLangPrintf(stderr, _("%s: Missing open parenthesis."), "ippfind");
-        return (usage(stderr));
+        exit(usage(stderr));
       }
 
       current = parens[--num_parens];
@@ -812,7 +812,7 @@ main(int  argc,				// I - Number of command-line args
   if (num_parens > 0)
   {
     cupsLangPrintf(stderr, _("%s: Missing close parenthesis."), "ippfind");
-    return (usage(stderr));
+    exit(usage(stderr));
   }
 
   if (!have_output)
