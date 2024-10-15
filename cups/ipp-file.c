@@ -1,7 +1,7 @@
 //
 // IPP data file functions.
 //
-// Copyright © 2021-2022 by OpenPrinting.
+// Copyright © 2021-2024 by OpenPrinting.
 // Copyright © 2007-2019 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products.
 //
@@ -1706,7 +1706,7 @@ parse_value(ipp_file_t      *file,	// I  - IPP data file
 	      yres = (int)strtol(ptr + 1, (char **)&ptr, 10);
 	  }
 
-	  if (ptr <= value || xres <= 0 || yres <= 0 || !ptr || (_cups_strcasecmp(ptr, "dpi") && _cups_strcasecmp(ptr, "dpc") && _cups_strcasecmp(ptr, "dpcm") && _cups_strcasecmp(ptr, "other")))
+	  if (*value && (ptr <= value || xres <= 0 || yres <= 0 || !ptr || (_cups_strcasecmp(ptr, "dpi") && _cups_strcasecmp(ptr, "dpc") && _cups_strcasecmp(ptr, "dpcm") && _cups_strcasecmp(ptr, "other"))))
 	  {
 	    report_error(file, "Bad resolution value \"%s\" on line %d of '%s'.", value, file->linenum, file->filename);
 	    return (false);

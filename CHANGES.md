@@ -7,6 +7,7 @@ libcups v3.0rc2 (2024-10-15)
 - Updated `httpConnectAgain` to re-validate the server's X.509 certificate
   (Issue #90)
 - Updated the source tarball script to include the PDFio sources.
+- Fixed handling of empty resolution values passed to `ipptool` (Issue #63)
 - Fixed a compressed file error handling bug (Issue #91)
 - Fixed the default User-Agent string sent in requests.
 - Fixed a recursion issue in `ippReadIO`.
