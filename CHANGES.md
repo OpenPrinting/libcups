@@ -1,6 +1,16 @@
 Changes in libcups
 ==================
 
+libcups v3.0rc3 (YYYY-MM-DD)
+----------------------------
+
+- Updated `cupsCreateCertificateRequest` to store the new private key
+  separately.
+- Updated `cupsSaveCredentials` to validate the input credentials, support
+  using a saved private key from `cupsCreateCertificateRequest`, and support
+  credential removal as documented.
+
+
 libcups v3.0rc2 (2024-10-15)
 ----------------------------
 
