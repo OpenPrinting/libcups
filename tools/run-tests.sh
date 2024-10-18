@@ -2,7 +2,7 @@
 #
 # Script to test ippfind, ipptool, and ippeveprinter end-to-end.
 #
-# Copyright © 2022-2023 by OpenPrinting.
+# Copyright © 2022-2024 by OpenPrinting.
 #
 # Licensed under Apache License v2.0.  See the file "LICENSE" for more
 # information.
@@ -15,7 +15,7 @@ name="Test Printer $(date +%H%M%S)"
 status=0
 
 echo "Running ippeveprinter..."
-CUPS_DEBUG_LOG=test-cups.log CUPS_DEBUG_LEVEL=4 CUPS_DEBUG_FILTER='^(http|_http|ipp|_ipp|cupsDNSSD|cupsDo|cupsGet|cupsSend)' tools/ippeveprinter-static -vvv -a tools/test.conf "$name" 2>tools/test.log &
+CUPS_DEBUG_LOG=test-cups.log CUPS_DEBUG_LEVEL=4 CUPS_DEBUG_FILTER='^(http|_http|ipp|_ipp|cupsDNSSD|cupsDo|cupsGet|cupsSend)' tools/ippeveprinter-static -vvv -a tools/test.conf -n localhost "$name" 2>tools/test.log &
 ippeveprinter=$!
 
 # Test the instance...
