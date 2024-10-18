@@ -890,7 +890,7 @@ cupsGetCredentialsTrust(
   }
 
   // Look this common name up in the default keychains...
-  if ((tcreds = cupsCopyCredentials(path, common_name)) != NULL)
+  if (sk_X509_num(certs) == 1 && (tcreds = cupsCopyCredentials(path, common_name)) != NULL)
   {
     char	credentials_str[1024],	// String for incoming credentials
 		tcreds_str[1024];	// String for saved credentials

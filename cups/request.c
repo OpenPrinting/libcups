@@ -902,12 +902,12 @@ _cupsSetHTTPError(http_t        *http,	// I - HTTP connection
 {
   switch (status)
   {
+    case HTTP_STATUS_NOT_MODIFIED :
+        _cupsSetError(IPP_STATUS_OK_EVENTS_COMPLETE, httpStatusString(status), false);
+        break;
+
     case HTTP_STATUS_NOT_FOUND :
 	_cupsSetError(IPP_STATUS_ERROR_NOT_FOUND, httpStatusString(status), false);
-	break;
-
-    case HTTP_STATUS_NOT_MODIFIED :
-	_cupsSetError(IPP_STATUS_OK_EVENTS_COMPLETE, httpStatusString(status), false);
 	break;
 
     case HTTP_STATUS_UNAUTHORIZED :

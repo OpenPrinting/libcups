@@ -140,7 +140,7 @@ cupsSaveCredentials(
   if (credentials)
   {
     // Make sure it looks like a PEM-encoded cert...
-    if (strncmp(credentials, "-----BEGIN CERTIFICATE-----", 27) || strstr(key, "-----END CERTIFICATE-----") == NULL)
+    if (strncmp(credentials, "-----BEGIN CERTIFICATE-----", 27) || strstr(credentials, "-----END CERTIFICATE-----") == NULL)
       return (false);
   }
 
