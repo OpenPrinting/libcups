@@ -291,6 +291,8 @@ httpClose(http_t *http)			// I - HTTP connection
   free(http->authstring);
   free(http->cookie);
 
+  _httpFreeCredentials(http->tls_credentials);
+
   free(http);
 }
 
@@ -3341,6 +3343,7 @@ http_create(
   http_t	*http;			// New HTTP connection
   char		service[255];		// Service name
   http_addrlist_t *myaddrlist = NULL;	// My address list
+  _cups_globals_t *cg = _cupsGlobals();	// Thread global data
 
 
   DEBUG_printf("4http_create(host=\"%s\", port=%d, addrlist=%p, family=%d, encryption=%d, blocking=%s, mode=%d)", host, port, (void *)addrlist, family, encryption, blocking ? "true" : "false", mode);
@@ -3415,6 +3418,9 @@ http_create(
     http->encryption = encryption;
 
   http_set_wait(http);
+
+  // Set client credentials...
+  http->tls_credentials = _httpUseCredentials(cg->credentials);
 
   // Return the new structure...
   return (http);
