@@ -158,9 +158,12 @@ cups_globals_alloc(void)
 #ifdef _WIN32
   HKEY		key;			// Registry key
   DWORD		size;			// Size of string
+  const char	*userprofile = getenv("USERPROFILE");
+					// User profile (home) directory
+  char		userconfig[1024],	// User configuration directory
+		*userptr;		// Pointer into user config
   static char	installdir[1024] = "",	// Install directory
 		sysconfig[1024] = "";	// Server configuration directory
-  char		userconfig[1024] = "",	// User configuration directory
 #endif // _WIN32
 
 
@@ -226,24 +229,21 @@ cups_globals_alloc(void)
   if ((cg->sysconfig = getenv("CUPS_SERVERROOT")) == NULL)
     cg->sysconfig = sysconfig;
 
-  if (!userconfig[0])
-  {
-    const char	*userprofile = getenv("USERPROFILE");
-				// User profile (home) directory
-    char	*userptr;	// Pointer into user profile
+  DEBUG_printf("cups_globals_alloc: USERPROFILE=\"%s\"", userprofile);
 
-    DEBUG_printf("cups_globals_alloc: USERPROFILE=\"%s\"", userprofile);
-
+  if (userprofile)
     snprintf(userconfig, sizeof(userconfig), "%s/AppData/Local/cups", userprofile);
-    for (userptr = userconfig; *userptr; userptr ++)
-    {
-      // Convert back slashes to forward slashes
-      if (*userptr == '\\')
-        *userptr = '/';
-    }
+  else
+    cupsCopyString(userconfig, "C:/cups", sizeof(userconfig));
 
-    DEBUG_printf("cups_globals_alloc: userconfig=\"%s\"", userconfig);
+  for (userptr = userconfig; *userptr; userptr ++)
+  {
+    // Convert back slashes to forward slashes
+    if (*userptr == '\\')
+      *userptr = '/';
   }
+
+  DEBUG_printf("cups_globals_alloc: userconfig=\"%s\"", userconfig);
 
   cg->userconfig = strdup(userconfig);
 
