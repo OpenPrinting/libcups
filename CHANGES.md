@@ -11,6 +11,7 @@ libcups v3.0rc3 (YYYY-MM-DD)
   credential removal as documented.
 - Updated the raster functions to report more issues via
   `cupsRasterGetErrorString`.
+- Fixed a crash bug on Windows.
 
 
 libcups v3.0rc2 (2024-10-15)

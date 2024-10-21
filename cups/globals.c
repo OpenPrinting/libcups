@@ -159,8 +159,8 @@ cups_globals_alloc(void)
   HKEY		key;			// Registry key
   DWORD		size;			// Size of string
   static char	installdir[1024] = "",	// Install directory
-		userconfig[1024] = "",	// User configuration directory
 		sysconfig[1024] = "";	// Server configuration directory
+  char		userconfig[1024] = "",	// User configuration directory
 #endif // _WIN32
 
 
@@ -245,7 +245,7 @@ cups_globals_alloc(void)
     DEBUG_printf("cups_globals_alloc: userconfig=\"%s\"", userconfig);
   }
 
-  cg->userconfig = userconfig;
+  cg->userconfig = strdup(userconfig);
 
 #else
   const char	*home = getenv("HOME");	// HOME environment variable
