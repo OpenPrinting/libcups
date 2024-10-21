@@ -14,6 +14,15 @@
 
 
 //
+// Limits...
+//
+
+#define _CUPS_MAX_BYTES_PER_LINE	(16 * 1024 * 1024)
+#define _CUPS_MAX_BITS_PER_COLOR	16
+#define _CUPS_MAX_BITS_PER_PIXEL	240
+
+
+//
 // Private structures...
 //
 
@@ -838,7 +847,7 @@ cupsRasterReadHeader(
 
   memcpy(h, &r->header, sizeof(cups_page_header_t));
 
-  return (r->header.cupsBitsPerPixel > 0 && r->header.cupsBitsPerPixel <= 240 && r->header.cupsBitsPerColor > 0 && r->header.cupsBitsPerColor <= 16 && r->header.cupsBytesPerLine > 0 && r->header.cupsBytesPerLine <= 0x7fffffff && r->header.cupsHeight != 0 && (r->header.cupsBytesPerLine % r->bpp) == 0);
+  return (0);
 }
 
 
@@ -1540,6 +1549,9 @@ cups_raster_read(cups_raster_t *r,	// I - Raster stream
 static bool				// O - `true` on success, `false` on failure
 cups_raster_update(cups_raster_t *r)	// I - Raster stream
 {
+  bool	ret = true;			// Return value
+
+
   if (r->sync == CUPS_RASTER_SYNCv1 || r->sync == CUPS_RASTER_REVSYNCv1 ||
       r->header.cupsNumColors == 0)
   {
@@ -1617,7 +1629,11 @@ cups_raster_update(cups_raster_t *r)	// I - Raster stream
 
       default :
           // Unknown color space
-          return (false);
+          _cupsRasterAddError("Unknown color space in page header.");
+
+          r->header.cupsNumColors = 0;
+          ret                     = false;
+          break;
     }
 
     DEBUG_printf("4cups_raster_update: cupsNumColors=%u", r->header.cupsNumColors);
@@ -1649,28 +1665,72 @@ cups_raster_update(cups_raster_t *r)	// I - Raster stream
 
   DEBUG_printf("4cups_raster_update: remaining=%u", r->remaining);
 
+  // Validate the page header...
+  if (r->header.cupsBytesPerLine == 0)
+  {
+    _cupsRasterAddError("Invalid raster line length 0.");
+    ret = false;
+  }
+  else if (r->header.cupsBytesPerLine > _CUPS_MAX_BYTES_PER_LINE)
+  {
+    _cupsRasterAddError("Raster line length %u is greater than %d bytes.", r->header.cupsBytesPerLine, _CUPS_MAX_BYTES_PER_LINE);
+    ret = false;
+  }
+  else if ((r->header.cupsBytesPerLine % r->bpp) != 0)
+  {
+    _cupsRasterAddError("Raster line length %u is not a multiple of the pixel size (%d).", r->header.cupsBytesPerLine, r->bpp);
+    ret = false;
+  }
+
+  if (r->header.cupsBitsPerColor == 0 || r->header.cupsBitsPerColor > _CUPS_MAX_BITS_PER_COLOR)
+  {
+    _cupsRasterAddError("Invalid bits per color %u.", r->header.cupsBitsPerColor);
+    ret = false;
+  }
+
+  if (r->header.cupsBitsPerPixel == 0 || r->header.cupsBitsPerPixel > _CUPS_MAX_BITS_PER_PIXEL)
+  {
+    _cupsRasterAddError("Invalid bits per pixel %u.", r->header.cupsBitsPerPixel);
+    ret = false;
+  }
+
+  if (r->header.cupsWidth == 0)
+  {
+    _cupsRasterAddError("Invalid raster width 0.");
+    ret = false;
+  }
+
+  if (r->header.cupsHeight == 0)
+  {
+    _cupsRasterAddError("Invalid raster height 0.");
+    ret = false;
+  }
+
   // Allocate the compression buffer...
-  if (r->compressed)
+  if (ret && r->compressed)
   {
     free(r->pixels);
 
     if ((r->pixels = calloc(r->header.cupsBytesPerLine, 1)) == NULL)
     {
+      _cupsRasterAddError("Unable to allocate %u bytes for raster line: %s", r->header.cupsBytesPerLine, strerror(errno));
+
       r->pcurrent = NULL;
       r->pend     = NULL;
       r->count    = 0;
-
-      return (false);
+      ret         = false;
     }
+    else
+    {
+      r->pcurrent = r->pixels;
+      r->pend     = r->pixels + r->header.cupsBytesPerLine;
+      r->count    = 0;
 
-    r->pcurrent = r->pixels;
-    r->pend     = r->pixels + r->header.cupsBytesPerLine;
-    r->count    = 0;
-
-    DEBUG_printf("4cups_raster_update: Allocated %u bytes at %p.", r->header.cupsBytesPerLine, r->pixels);
+      DEBUG_printf("4cups_raster_update: Allocated %u bytes at %p.", r->header.cupsBytesPerLine, r->pixels);
+    }
   }
 
-  return (true);
+  return (ret);
 }
 
 

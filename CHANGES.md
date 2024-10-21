@@ -9,6 +9,8 @@ libcups v3.0rc3 (YYYY-MM-DD)
 - Updated `cupsSaveCredentials` to validate the input credentials, support
   using a saved private key from `cupsCreateCertificateRequest`, and support
   credential removal as documented.
+- Updated the raster functions to report more issues via
+  `cupsRasterGetErrorString`.
 
 
 libcups v3.0rc2 (2024-10-15)

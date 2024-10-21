@@ -1,7 +1,7 @@
 //
 // Raster test program routines for CUPS.
 //
-// Copyright © 2021-2022 by OpenPrinting.
+// Copyright © 2021-2024 by OpenPrinting.
 // Copyright © 2007-2019 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products.
 //
@@ -67,6 +67,7 @@ do_ras_file(const char *filename)	// I - Filename
   unsigned char		*data;		// Raster data
   int			errors = 0;	// Number of errors
   unsigned		pages = 0;	// Number of pages
+  const char		*errmsg;	// Error message, if any
 
 
   if ((fd = open(filename, O_RDONLY)) < 0)
@@ -77,7 +78,7 @@ do_ras_file(const char *filename)	// I - Filename
 
   if ((ras = cupsRasterOpen(fd, CUPS_RASTER_READ)) == NULL)
   {
-    printf("%s: cupsRasterOpen failed.\n", filename);
+    printf("%s: cupsRasterOpen failed: %s\n", filename, cupsRasterGetErrorString());
     close(fd);
     return (1);
   }
@@ -107,7 +108,10 @@ do_ras_file(const char *filename)	// I - Filename
     free(data);
   }
 
-  printf("EOF at %ld\n", (long)lseek(fd, SEEK_CUR, 0));
+  if ((errmsg = cupsRasterGetErrorString()) != NULL)
+    printf("Error at %ld: %s\n", (long)lseek(fd, SEEK_CUR, 0), errmsg);
+  else
+    printf("EOF at %ld\n", (long)lseek(fd, SEEK_CUR, 0));
 
   cupsRasterClose(ras);
   close(fd);
