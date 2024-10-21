@@ -65,8 +65,6 @@ jobs:
       uses: actions/checkout@v4
       with:
         submodules: recursive
-    - name: Install prerequisites
-      run: brew install gnutls pkg-config
     - name: Configure libcups
       run: ./configure --enable-debug --enable-debug-printfs --enable-maintainer || (cat config.log; pkg-config --list-all; exit 1)
     - name: Make libcups
