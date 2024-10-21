@@ -93,7 +93,6 @@ do_ras_file(const char *filename)	// I - Filename
     printf("    Page %u: %ux%ux%u@%ux%udpi", pages,
            header.cupsWidth, header.cupsHeight, header.cupsBitsPerPixel,
            header.HWResolution[0], header.HWResolution[1]);
-    fflush(stdout);
 
     for (y = 0; y < header.cupsHeight; y ++)
       if (cupsRasterReadPixels(ras, data, header.cupsBytesPerLine) <
@@ -134,10 +133,18 @@ do_raster_tests(cups_raster_mode_t mode)// O - Write mode
 			expected;	// Expected page header
   unsigned char		data[2048];	// Raster data
   int			errors = 0;	// Number of errors
+  static const char * const modes[] =	// Open modes
+  {
+    "CUPS_RASTER_READ",
+    "CUPS_RASTER_WRITE",
+    "CUPS_RASTER_WRITE_COMPRESSED",
+    "CUPS_RASTER_WRITE_PWG",
+    "CUPS_RASTER_WRITE_APPLE"
+  };
 
 
   // Test writing...
-  testBegin("cupsRasterOpen(%s)", mode == CUPS_RASTER_WRITE ? "CUPS_RASTER_WRITE" : mode == CUPS_RASTER_WRITE_COMPRESSED ? "CUPS_RASTER_WRITE_COMPRESSED" : mode == CUPS_RASTER_WRITE_PWG ? "CUPS_RASTER_WRITE_PWG" : "CUPS_RASTER_WRITE_APPLE");
+  testBegin("cupsRasterOpen(%s)", modes[mode]);
 
   if ((fp = fopen("test.raster", "wb")) == NULL)
   {
@@ -147,7 +154,7 @@ do_raster_tests(cups_raster_mode_t mode)// O - Write mode
 
   if ((r = cupsRasterOpen(fileno(fp), mode)) == NULL)
   {
-    testEndMessage(false, "%s", strerror(errno));
+    testEndMessage(false, "%s", cupsRasterGetErrorString());
     fclose(fp);
     return (1);
   }
@@ -203,21 +210,22 @@ do_raster_tests(cups_raster_mode_t mode)// O - Write mode
     }
     else
     {
-      puts("FAIL");
+      testEnd(false);
       errors ++;
     }
 
     testBegin("cupsRasterWritePixels");
-    fflush(stdout);
 
     memset(data, 0, header.cupsBytesPerLine);
     for (y = 0; y < 64; y ++)
+    {
       if (!cupsRasterWritePixels(r, data, header.cupsBytesPerLine))
         break;
+    }
 
     if (y < 64)
     {
-      puts("FAIL");
+      testEnd(false);
       errors ++;
     }
     else
@@ -226,24 +234,28 @@ do_raster_tests(cups_raster_mode_t mode)// O - Write mode
 	data[x] = (unsigned char)x;
 
       for (y = 0; y < 64; y ++)
+      {
 	if (!cupsRasterWritePixels(r, data, header.cupsBytesPerLine))
 	  break;
+      }
 
       if (y < 64)
       {
-	puts("FAIL");
+	testEnd(false);
 	errors ++;
       }
       else
       {
 	memset(data, 255, header.cupsBytesPerLine);
 	for (y = 0; y < 64; y ++)
+	{
 	  if (!cupsRasterWritePixels(r, data, header.cupsBytesPerLine))
 	    break;
+        }
 
 	if (y < 64)
 	{
-	  puts("FAIL");
+	  testEnd(false);
 	  errors ++;
 	}
 	else
@@ -252,16 +264,20 @@ do_raster_tests(cups_raster_mode_t mode)// O - Write mode
 	    data[x] = (unsigned char)(x / 4);
 
 	  for (y = 0; y < 64; y ++)
+	  {
 	    if (!cupsRasterWritePixels(r, data, header.cupsBytesPerLine))
 	      break;
+          }
 
 	  if (y < 64)
 	  {
-	    puts("FAIL");
+	    testEnd(false);
 	    errors ++;
 	  }
 	  else
+	  {
 	    testEnd(true);
+	  }
         }
       }
     }
@@ -272,7 +288,6 @@ do_raster_tests(cups_raster_mode_t mode)// O - Write mode
 
   // Test reading...
   testBegin("cupsRasterOpen(CUPS_RASTER_READ)");
-  fflush(stdout);
 
   if ((fp = fopen("test.raster", "rb")) == NULL)
   {
@@ -282,7 +297,7 @@ do_raster_tests(cups_raster_mode_t mode)// O - Write mode
 
   if ((r = cupsRasterOpen(fileno(fp), CUPS_RASTER_READ)) == NULL)
   {
-    testEndMessage(false, "%s", strerror(errno));
+    testEndMessage(false, "%s", cupsRasterGetErrorString());
     fclose(fp);
     return (1);
   }
@@ -341,11 +356,10 @@ do_raster_tests(cups_raster_mode_t mode)// O - Write mode
     }
 
     testBegin("cupsRasterReadHeader(page %d)", page + 1);
-    fflush(stdout);
 
     if (!cupsRasterReadHeader(r, &header))
     {
-      testEndMessage(false, "read error");
+      testEndMessage(false, "%s", cupsRasterGetErrorString());
       errors ++;
       break;
     }
@@ -359,13 +373,12 @@ do_raster_tests(cups_raster_mode_t mode)// O - Write mode
       testEnd(true);
 
     testBegin("cupsRasterReadPixels");
-    fflush(stdout);
 
     for (y = 0; y < 64; y ++)
     {
       if (!cupsRasterReadPixels(r, data, header.cupsBytesPerLine))
       {
-        testEndMessage(false, "read error");
+	testEndMessage(false, "%s", cupsRasterGetErrorString());
 	errors ++;
 	break;
       }
@@ -381,9 +394,9 @@ do_raster_tests(cups_raster_mode_t mode)// O - Write mode
 	    count ++;
 
 	    if (count == 10)
-	      testError("   ...");
+	      testMessage("   ...");
 	    else
-	      testError("  %4u %02X (expected %02X)", x, data[x], 0);
+	      testMessage("  %4u %02X (expected %02X)", x, data[x], 0);
 	  }
 	}
 
@@ -398,14 +411,16 @@ do_raster_tests(cups_raster_mode_t mode)// O - Write mode
       {
 	if (!cupsRasterReadPixels(r, data, header.cupsBytesPerLine))
 	{
-	  testEndMessage(false, "read error");
+	  testEndMessage(false, "%s", cupsRasterGetErrorString());
 	  errors ++;
 	  break;
 	}
 
 	for (x = 0; x < header.cupsBytesPerLine; x ++)
+	{
           if (data[x] != (x & 255))
 	    break;
+        }
 
 	if (x < header.cupsBytesPerLine)
 	{
@@ -418,9 +433,9 @@ do_raster_tests(cups_raster_mode_t mode)// O - Write mode
 	      count ++;
 
 	      if (count == 10)
-		testError("   ...");
+		testMessage("   ...");
 	      else
-		testError("  %4u %02X (expected %02X)", x, data[x], x & 255);
+		testMessage("  %4u %02X (expected %02X)", x, data[x], x & 255);
 	    }
 	  }
 
@@ -435,7 +450,7 @@ do_raster_tests(cups_raster_mode_t mode)// O - Write mode
 	{
 	  if (!cupsRasterReadPixels(r, data, header.cupsBytesPerLine))
 	  {
-	    testEndMessage(false, "read error");
+	    testEndMessage(false, "%s", cupsRasterGetErrorString());
 	    errors ++;
 	    break;
 	  }
@@ -451,9 +466,9 @@ do_raster_tests(cups_raster_mode_t mode)// O - Write mode
 		count ++;
 
 		if (count == 10)
-		  testError("   ...");
+		  testMessage("   ...");
 		else
-		  testError("  %4u %02X (expected %02X)", x, data[x], 255);
+		  testMessage("  %4u %02X (expected %02X)", x, data[x], 255);
 	      }
 	    }
 
@@ -468,7 +483,7 @@ do_raster_tests(cups_raster_mode_t mode)// O - Write mode
 	  {
 	    if (!cupsRasterReadPixels(r, data, header.cupsBytesPerLine))
 	    {
-	      testEndMessage(false, "read error");
+	      testEndMessage(false, "%s", cupsRasterGetErrorString());
 	      errors ++;
 	      break;
 	    }
@@ -488,9 +503,9 @@ do_raster_tests(cups_raster_mode_t mode)// O - Write mode
 		  count ++;
 
 		  if (count == 10)
-		    testError("   ...");
+		    testMessage("   ...");
 		  else
-		    testError("  %4u %02X (expected %02X)", x, data[x], (x / 4) & 255);
+		    testMessage("  %4u %02X (expected %02X)", x, data[x], (x / 4) & 255);
 		}
 	      }
 
@@ -526,159 +541,159 @@ print_changes(
 
 
   if (strcmp(header->MediaClass, expected->MediaClass))
-    testError("    MediaClass (%s), expected (%s)", header->MediaClass, expected->MediaClass);
+    testMessage("    MediaClass (%s), expected (%s)", header->MediaClass, expected->MediaClass);
 
   if (strcmp(header->MediaColor, expected->MediaColor))
-    testError("    MediaColor (%s), expected (%s)", header->MediaColor, expected->MediaColor);
+    testMessage("    MediaColor (%s), expected (%s)", header->MediaColor, expected->MediaColor);
 
   if (strcmp(header->MediaType, expected->MediaType))
-    testError("    MediaType (%s), expected (%s)", header->MediaType, expected->MediaType);
+    testMessage("    MediaType (%s), expected (%s)", header->MediaType, expected->MediaType);
 
   if (strcmp(header->OutputType, expected->OutputType))
-    testError("    OutputType (%s), expected (%s)", header->OutputType, expected->OutputType);
+    testMessage("    OutputType (%s), expected (%s)", header->OutputType, expected->OutputType);
 
   if (header->AdvanceDistance != expected->AdvanceDistance)
-    testError("    AdvanceDistance %d, expected %d", header->AdvanceDistance, expected->AdvanceDistance);
+    testMessage("    AdvanceDistance %d, expected %d", header->AdvanceDistance, expected->AdvanceDistance);
 
   if (header->AdvanceMedia != expected->AdvanceMedia)
-    testError("    AdvanceMedia %d, expected %d", header->AdvanceMedia, expected->AdvanceMedia);
+    testMessage("    AdvanceMedia %d, expected %d", header->AdvanceMedia, expected->AdvanceMedia);
 
   if (header->Collate != expected->Collate)
-    testError("    Collate %d, expected %d", header->Collate, expected->Collate);
+    testMessage("    Collate %d, expected %d", header->Collate, expected->Collate);
 
   if (header->CutMedia != expected->CutMedia)
-    testError("    CutMedia %d, expected %d", header->CutMedia, expected->CutMedia);
+    testMessage("    CutMedia %d, expected %d", header->CutMedia, expected->CutMedia);
 
   if (header->Duplex != expected->Duplex)
-    testError("    Duplex %d, expected %d", header->Duplex, expected->Duplex);
+    testMessage("    Duplex %d, expected %d", header->Duplex, expected->Duplex);
 
   if (header->HWResolution[0] != expected->HWResolution[0] ||
       header->HWResolution[1] != expected->HWResolution[1])
-    testError("    HWResolution [%d %d], expected [%d %d]", header->HWResolution[0], header->HWResolution[1], expected->HWResolution[0], expected->HWResolution[1]);
+    testMessage("    HWResolution [%d %d], expected [%d %d]", header->HWResolution[0], header->HWResolution[1], expected->HWResolution[0], expected->HWResolution[1]);
 
   if (memcmp(header->ImagingBoundingBox, expected->ImagingBoundingBox, sizeof(header->ImagingBoundingBox)))
-    testError("    ImagingBoundingBox [%d %d %d %d], expected [%d %d %d %d]", header->ImagingBoundingBox[0], header->ImagingBoundingBox[1], header->ImagingBoundingBox[2], header->ImagingBoundingBox[3], expected->ImagingBoundingBox[0], expected->ImagingBoundingBox[1], expected->ImagingBoundingBox[2], expected->ImagingBoundingBox[3]);
+    testMessage("    ImagingBoundingBox [%d %d %d %d], expected [%d %d %d %d]", header->ImagingBoundingBox[0], header->ImagingBoundingBox[1], header->ImagingBoundingBox[2], header->ImagingBoundingBox[3], expected->ImagingBoundingBox[0], expected->ImagingBoundingBox[1], expected->ImagingBoundingBox[2], expected->ImagingBoundingBox[3]);
 
   if (header->InsertSheet != expected->InsertSheet)
-    testError("    InsertSheet %d, expected %d", header->InsertSheet, expected->InsertSheet);
+    testMessage("    InsertSheet %d, expected %d", header->InsertSheet, expected->InsertSheet);
 
   if (header->Jog != expected->Jog)
-    testError("    Jog %d, expected %d", header->Jog, expected->Jog);
+    testMessage("    Jog %d, expected %d", header->Jog, expected->Jog);
 
   if (header->LeadingEdge != expected->LeadingEdge)
-    testError("    LeadingEdge %d, expected %d", header->LeadingEdge, expected->LeadingEdge);
+    testMessage("    LeadingEdge %d, expected %d", header->LeadingEdge, expected->LeadingEdge);
 
   if (header->Margins[0] != expected->Margins[0] || header->Margins[1] != expected->Margins[1])
-    testError("    Margins [%d %d], expected [%d %d]", header->Margins[0], header->Margins[1], expected->Margins[0], expected->Margins[1]);
+    testMessage("    Margins [%d %d], expected [%d %d]", header->Margins[0], header->Margins[1], expected->Margins[0], expected->Margins[1]);
 
   if (header->ManualFeed != expected->ManualFeed)
-    testError("    ManualFeed %d, expected %d", header->ManualFeed, expected->ManualFeed);
+    testMessage("    ManualFeed %d, expected %d", header->ManualFeed, expected->ManualFeed);
 
   if (header->MediaPosition != expected->MediaPosition)
-    testError("    MediaPosition %d, expected %d", header->MediaPosition, expected->MediaPosition);
+    testMessage("    MediaPosition %d, expected %d", header->MediaPosition, expected->MediaPosition);
 
   if (header->MediaWeight != expected->MediaWeight)
-    testError("    MediaWeight %d, expected %d", header->MediaWeight, expected->MediaWeight);
+    testMessage("    MediaWeight %d, expected %d", header->MediaWeight, expected->MediaWeight);
 
   if (header->MirrorPrint != expected->MirrorPrint)
-    testError("    MirrorPrint %d, expected %d", header->MirrorPrint, expected->MirrorPrint);
+    testMessage("    MirrorPrint %d, expected %d", header->MirrorPrint, expected->MirrorPrint);
 
   if (header->NegativePrint != expected->NegativePrint)
-    testError("    NegativePrint %d, expected %d", header->NegativePrint, expected->NegativePrint);
+    testMessage("    NegativePrint %d, expected %d", header->NegativePrint, expected->NegativePrint);
 
   if (header->NumCopies != expected->NumCopies)
-    testError("    NumCopies %d, expected %d", header->NumCopies, expected->NumCopies);
+    testMessage("    NumCopies %d, expected %d", header->NumCopies, expected->NumCopies);
 
   if (header->Orientation != expected->Orientation)
-    testError("    Orientation %d, expected %d", header->Orientation, expected->Orientation);
+    testMessage("    Orientation %d, expected %d", header->Orientation, expected->Orientation);
 
   if (header->OutputFaceUp != expected->OutputFaceUp)
-    testError("    OutputFaceUp %d, expected %d", header->OutputFaceUp, expected->OutputFaceUp);
+    testMessage("    OutputFaceUp %d, expected %d", header->OutputFaceUp, expected->OutputFaceUp);
 
   if (header->PageSize[0] != expected->PageSize[0] || header->PageSize[1] != expected->PageSize[1])
-    testError("    PageSize [%d %d], expected [%d %d]", header->PageSize[0], header->PageSize[1], expected->PageSize[0], expected->PageSize[1]);
+    testMessage("    PageSize [%d %d], expected [%d %d]", header->PageSize[0], header->PageSize[1], expected->PageSize[0], expected->PageSize[1]);
 
   if (header->Separations != expected->Separations)
-    testError("    Separations %d, expected %d", header->Separations, expected->Separations);
+    testMessage("    Separations %d, expected %d", header->Separations, expected->Separations);
 
   if (header->TraySwitch != expected->TraySwitch)
-    testError("    TraySwitch %d, expected %d", header->TraySwitch, expected->TraySwitch);
+    testMessage("    TraySwitch %d, expected %d", header->TraySwitch, expected->TraySwitch);
 
   if (header->Tumble != expected->Tumble)
-    testError("    Tumble %d, expected %d", header->Tumble, expected->Tumble);
+    testMessage("    Tumble %d, expected %d", header->Tumble, expected->Tumble);
 
   if (header->cupsWidth != expected->cupsWidth)
-    testError("    cupsWidth %d, expected %d", header->cupsWidth, expected->cupsWidth);
+    testMessage("    cupsWidth %d, expected %d", header->cupsWidth, expected->cupsWidth);
 
   if (header->cupsHeight != expected->cupsHeight)
-    testError("    cupsHeight %d, expected %d", header->cupsHeight, expected->cupsHeight);
+    testMessage("    cupsHeight %d, expected %d", header->cupsHeight, expected->cupsHeight);
 
   if (header->cupsMediaType != expected->cupsMediaType)
-    testError("    cupsMediaType %d, expected %d", header->cupsMediaType, expected->cupsMediaType);
+    testMessage("    cupsMediaType %d, expected %d", header->cupsMediaType, expected->cupsMediaType);
 
   if (header->cupsBitsPerColor != expected->cupsBitsPerColor)
-    testError("    cupsBitsPerColor %d, expected %d", header->cupsBitsPerColor, expected->cupsBitsPerColor);
+    testMessage("    cupsBitsPerColor %d, expected %d", header->cupsBitsPerColor, expected->cupsBitsPerColor);
 
   if (header->cupsBitsPerPixel != expected->cupsBitsPerPixel)
-    testError("    cupsBitsPerPixel %d, expected %d", header->cupsBitsPerPixel, expected->cupsBitsPerPixel);
+    testMessage("    cupsBitsPerPixel %d, expected %d", header->cupsBitsPerPixel, expected->cupsBitsPerPixel);
 
   if (header->cupsBytesPerLine != expected->cupsBytesPerLine)
-    testError("    cupsBytesPerLine %d, expected %d", header->cupsBytesPerLine, expected->cupsBytesPerLine);
+    testMessage("    cupsBytesPerLine %d, expected %d", header->cupsBytesPerLine, expected->cupsBytesPerLine);
 
   if (header->cupsColorOrder != expected->cupsColorOrder)
-    testError("    cupsColorOrder %d, expected %d", header->cupsColorOrder, expected->cupsColorOrder);
+    testMessage("    cupsColorOrder %d, expected %d", header->cupsColorOrder, expected->cupsColorOrder);
 
   if (header->cupsColorSpace != expected->cupsColorSpace)
-    testError("    cupsColorSpace %d, expected %d", header->cupsColorSpace, expected->cupsColorSpace);
+    testMessage("    cupsColorSpace %d, expected %d", header->cupsColorSpace, expected->cupsColorSpace);
 
   if (header->cupsCompression != expected->cupsCompression)
-    testError("    cupsCompression %d, expected %d", header->cupsCompression, expected->cupsCompression);
+    testMessage("    cupsCompression %d, expected %d", header->cupsCompression, expected->cupsCompression);
 
   if (header->cupsRowCount != expected->cupsRowCount)
-    testError("    cupsRowCount %d, expected %d", header->cupsRowCount, expected->cupsRowCount);
+    testMessage("    cupsRowCount %d, expected %d", header->cupsRowCount, expected->cupsRowCount);
 
   if (header->cupsRowFeed != expected->cupsRowFeed)
-    testError("    cupsRowFeed %d, expected %d", header->cupsRowFeed, expected->cupsRowFeed);
+    testMessage("    cupsRowFeed %d, expected %d", header->cupsRowFeed, expected->cupsRowFeed);
 
   if (header->cupsRowStep != expected->cupsRowStep)
-    testError("    cupsRowStep %d, expected %d", header->cupsRowStep, expected->cupsRowStep);
+    testMessage("    cupsRowStep %d, expected %d", header->cupsRowStep, expected->cupsRowStep);
 
   if (header->cupsNumColors != expected->cupsNumColors)
-    testError("    cupsNumColors %d, expected %d", header->cupsNumColors, expected->cupsNumColors);
+    testMessage("    cupsNumColors %d, expected %d", header->cupsNumColors, expected->cupsNumColors);
 
   if (fabs(header->cupsBorderlessScalingFactor - expected->cupsBorderlessScalingFactor) > 0.001)
-    testError("    cupsBorderlessScalingFactor %g, expected %g", header->cupsBorderlessScalingFactor, expected->cupsBorderlessScalingFactor);
+    testMessage("    cupsBorderlessScalingFactor %g, expected %g", header->cupsBorderlessScalingFactor, expected->cupsBorderlessScalingFactor);
 
   if (fabs(header->cupsPageSize[0] - expected->cupsPageSize[0]) > 0.001 || fabs(header->cupsPageSize[1] - expected->cupsPageSize[1]) > 0.001)
-    testError("    cupsPageSize [%g %g], expected [%g %g]", header->cupsPageSize[0], header->cupsPageSize[1], expected->cupsPageSize[0], expected->cupsPageSize[1]);
+    testMessage("    cupsPageSize [%g %g], expected [%g %g]", header->cupsPageSize[0], header->cupsPageSize[1], expected->cupsPageSize[0], expected->cupsPageSize[1]);
 
   if (fabs(header->cupsImagingBBox[0] - expected->cupsImagingBBox[0]) > 0.001 || fabs(header->cupsImagingBBox[1] - expected->cupsImagingBBox[1]) > 0.001 || fabs(header->cupsImagingBBox[2] - expected->cupsImagingBBox[2]) > 0.001 || fabs(header->cupsImagingBBox[3] - expected->cupsImagingBBox[3]) > 0.001)
-    testError("    cupsImagingBBox [%g %g %g %g], expected [%g %g %g %g]", header->cupsImagingBBox[0], header->cupsImagingBBox[1], header->cupsImagingBBox[2], header->cupsImagingBBox[3], expected->cupsImagingBBox[0], expected->cupsImagingBBox[1], expected->cupsImagingBBox[2], expected->cupsImagingBBox[3]);
+    testMessage("    cupsImagingBBox [%g %g %g %g], expected [%g %g %g %g]", header->cupsImagingBBox[0], header->cupsImagingBBox[1], header->cupsImagingBBox[2], header->cupsImagingBBox[3], expected->cupsImagingBBox[0], expected->cupsImagingBBox[1], expected->cupsImagingBBox[2], expected->cupsImagingBBox[3]);
 
   for (i = 0; i < 16; i ++)
   {
     if (header->cupsInteger[i] != expected->cupsInteger[i])
-      testError("    cupsInteger%d %d, expected %d", i, header->cupsInteger[i], expected->cupsInteger[i]);
+      testMessage("    cupsInteger%d %d, expected %d", i, header->cupsInteger[i], expected->cupsInteger[i]);
   }
 
   for (i = 0; i < 16; i ++)
   {
     if (fabs(header->cupsReal[i] - expected->cupsReal[i]) > 0.001)
-      testError("    cupsReal%d %g, expected %g", i, header->cupsReal[i], expected->cupsReal[i]);
+      testMessage("    cupsReal%d %g, expected %g", i, header->cupsReal[i], expected->cupsReal[i]);
   }
 
   for (i = 0; i < 16; i ++)
   {
     if (strcmp(header->cupsString[i], expected->cupsString[i]))
-      testError("    cupsString%d (%s), expected (%s)", i, header->cupsString[i], expected->cupsString[i]);
+      testMessage("    cupsString%d (%s), expected (%s)", i, header->cupsString[i], expected->cupsString[i]);
   }
 
   if (strcmp(header->cupsMarkerType, expected->cupsMarkerType))
-    testError("    cupsMarkerType (%s), expected (%s)", header->cupsMarkerType, expected->cupsMarkerType);
+    testMessage("    cupsMarkerType (%s), expected (%s)", header->cupsMarkerType, expected->cupsMarkerType);
 
   if (strcmp(header->cupsRenderingIntent, expected->cupsRenderingIntent))
-    testError("    cupsRenderingIntent (%s), expected (%s)", header->cupsRenderingIntent, expected->cupsRenderingIntent);
+    testMessage("    cupsRenderingIntent (%s), expected (%s)", header->cupsRenderingIntent, expected->cupsRenderingIntent);
 
   if (strcmp(header->cupsPageSizeName, expected->cupsPageSizeName))
-    testError("    cupsPageSizeName (%s), expected (%s)", header->cupsPageSizeName, expected->cupsPageSizeName);
+    testMessage("    cupsPageSizeName (%s), expected (%s)", header->cupsPageSizeName, expected->cupsPageSizeName);
 }
