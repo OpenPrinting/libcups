@@ -1,7 +1,7 @@
 Changes in libcups
 ==================
 
-libcups v3.0rc3 (YYYY-MM-DD)
+libcups v3.0rc3 (2024-10-22)
 ----------------------------
 
 - Updated `cupsCreateCertificateRequest` to store the new private key
