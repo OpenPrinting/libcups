@@ -185,6 +185,7 @@ cupsFreeDestInfo
 cupsFreeDests
 cupsFreeJobs
 cupsFreeOptions
+cupsGetClock
 cupsGetCredentialsExpiration
 cupsGetCredentialsInfo
 cupsGetCredentialsTrust

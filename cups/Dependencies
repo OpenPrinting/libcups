@@ -1,7 +1,13 @@
-array.o: array.c ../cups/cups.h file.h base.h ipp.h http.h array.h \
-  language.h transcode.h pwg.h string-private.h ../config.h \
+array.o: array.c ../cups/cups.h ../cups/file.h ../cups/base.h \
+  ../cups/ipp.h ../cups/http.h ../cups/array.h ../cups/language.h \
+  ../cups/transcode.h ../cups/pwg.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h
 auth.o: auth.c cups-private.h string-private.h ../config.h base.h \
+  debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
+  ipp.h http.h language.h transcode.h pwg.h http-private.h \
+  ../cups/language.h \
+  pwg-private.h thread.h
+clock.o: clock.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
   ../cups/language.h \
@@ -32,8 +38,10 @@ dest-options.o: dest-options.c cups-private.h string-private.h \
   http-private.h ../cups/language.h \
   pwg-private.h thread.h
 dir.o: dir.c string-private.h ../config.h base.h debug-internal.h \
-  debug-private.h cups.h file.h ipp.h http.h array.h language.h \
-  transcode.h pwg.h dir.h
+  debug-private.h cups-private.h array.h ipp-private.h cups.h file.h \
+  ipp.h http.h language.h transcode.h pwg.h http-private.h \
+  ../cups/language.h \
+  pwg-private.h thread.h dir.h
 dnssd.o: dnssd.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
@@ -202,14 +210,18 @@ util.o: util.c cups-private.h string-private.h ../config.h base.h \
 fuzzipp.o: fuzzipp.c file.h base.h string-private.h ../config.h \
   ipp-private.h cups.h ipp.h http.h array.h language.h transcode.h pwg.h \
   test-internal.h
-rasterbench.o: rasterbench.c ../config.h ../cups/raster.h cups.h file.h \
-  base.h ipp.h http.h array.h language.h transcode.h pwg.h
+rasterbench.o: rasterbench.c ../config.h ../cups/raster.h ../cups/cups.h \
+  ../cups/file.h ../cups/base.h ../cups/ipp.h ../cups/http.h \
+  ../cups/array.h ../cups/language.h ../cups/transcode.h ../cups/pwg.h
 testarray.o: testarray.c string-private.h ../config.h base.h \
   debug-private.h cups.h file.h ipp.h http.h array.h language.h \
   transcode.h pwg.h dir.h test-internal.h
-testclient.o: testclient.c ../config.h ../cups/cups.h file.h base.h ipp.h \
-  http.h array.h language.h transcode.h pwg.h ../cups/raster.h cups.h \
+testclient.o: testclient.c ../config.h ../cups/cups.h ../cups/file.h \
+  ../cups/base.h ../cups/ipp.h ../cups/http.h ../cups/array.h \
+  ../cups/language.h ../cups/transcode.h ../cups/pwg.h ../cups/raster.h \
   ../cups/string-private.h ../cups/thread.h
+testclock.o: testclock.c cups.h file.h base.h ipp.h http.h array.h \
+  language.h transcode.h pwg.h test-internal.h
 testcreds.o: testcreds.c cups-private.h string-private.h ../config.h \
   base.h debug-internal.h debug-private.h array.h ipp-private.h cups.h \
   file.h ipp.h http.h language.h transcode.h pwg.h http-private.h \
@@ -247,6 +259,8 @@ testjson.o: testjson.c cups.h file.h base.h ipp.h http.h array.h \
   language.h transcode.h pwg.h json.h test-internal.h
 testjwt.o: testjwt.c cups.h file.h base.h ipp.h http.h array.h language.h \
   transcode.h pwg.h jwt.h json.h test-internal.h
+testlang.o: testlang.c ../config.h cups.h file.h base.h ipp.h http.h \
+  array.h language.h transcode.h pwg.h dir.h test-internal.h
 testoauth.o: testoauth.c cups.h file.h base.h ipp.h http.h array.h \
   language.h transcode.h pwg.h oauth.h jwt.h json.h test-internal.h
 testoptions.o: testoptions.c cups-private.h string-private.h ../config.h \
@@ -263,8 +277,9 @@ testtestpage.o: testtestpage.c raster-testpage.h raster-private.h \
   raster.h cups.h file.h base.h ipp.h http.h array.h language.h \
   transcode.h pwg.h debug-private.h string-private.h ../config.h \
   test-internal.h
-testthreads.o: testthreads.c ../cups/cups.h file.h base.h ipp.h http.h \
-  array.h language.h transcode.h pwg.h ../cups/thread.h
+testthreads.o: testthreads.c ../cups/cups.h ../cups/file.h ../cups/base.h \
+  ../cups/ipp.h ../cups/http.h ../cups/array.h ../cups/language.h \
+  ../cups/transcode.h ../cups/pwg.h ../cups/thread.h
 tlscheck.o: tlscheck.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \

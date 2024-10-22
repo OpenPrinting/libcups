@@ -1,6 +1,12 @@
 Changes in libcups
 ==================
 
+libcups v3.0rc4 (YYYY-MM-DD)
+----------------------------
+
+- Added `cupsGetClock` API.
+
+
 libcups v3.0rc3 (2024-10-22)
 ----------------------------
 

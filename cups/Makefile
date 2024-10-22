@@ -17,6 +17,7 @@ include ../Makedefs
 LIBOBJS		= \
 		array.o \
 		auth.o \
+		clock.o \
 		debug.o \
 		dest.o \
 		dest-job.o \
@@ -62,6 +63,7 @@ TESTOBJS	= \
 		rasterbench.o \
 		testarray.o \
 		testclient.o \
+		testclock.o \
 		testcreds.o \
 		testcups.o \
 		testdest.o \
@@ -147,6 +149,7 @@ UNITTARGETS =	\
 		rasterbench \
 		testarray \
 		testclient \
+		testclock \
 		testcreds \
 		testcups \
 		testdest \
@@ -195,6 +198,9 @@ test:		$(UNITTARGETS)
 #		echo Running CUPS API tests...; \
 #		./testcups 2>>test.log; \
 #	fi
+	echo ""
+	echo Running clock API tests...
+	./testclock 2>>test.log
 	echo ""
 	echo Running credentials API tests...
 	./testcreds 2>>test.log
@@ -439,6 +445,16 @@ testarray:	testarray.o $(LIBCUPS_STATIC)
 testclient:	testclient.o $(LIBCUPS_STATIC)
 	echo Linking $@...
 	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testclient.o $(LIBCUPS_STATIC) $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
+
+
+#
+# testclock (dependency on static libraries is intentional)
+#
+
+testclock:	testclock.o $(LIBCUPS_STATIC)
+	echo Linking $@...
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testclock.o $(LIBCUPS_STATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 
