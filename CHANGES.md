@@ -4,6 +4,7 @@ Changes in libcups
 libcups v3.0rc4 (YYYY-MM-DD)
 ----------------------------
 
+- Added `cupsCopyCredentialsPublicKey` API.
 - Added `cupsGetClock` API.
 
 
