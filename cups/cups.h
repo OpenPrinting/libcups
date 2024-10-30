@@ -312,6 +312,7 @@ extern size_t		cupsConcatString(char *dst, const char *src, size_t dstsize) _CUP
 extern http_t		*cupsConnectDest(cups_dest_t *dest, unsigned flags, int msec, int *cancel, char *resource, size_t resourcesize, cups_dest_cb_t cb, void *user_data) _CUPS_PUBLIC;
 extern char		*cupsCopyCredentials(const char *path, const char *common_name) _CUPS_PUBLIC;
 extern char		*cupsCopyCredentialsKey(const char *path, const char *common_name) _CUPS_PUBLIC;
+extern char		*cupsCopyCredentialsPublicKey(const char *path, const char *common_name) _CUPS_PUBLIC;
 extern char		*cupsCopyCredentialsRequest(const char *path, const char *common_name) _CUPS_PUBLIC;
 extern size_t		cupsCopyDest(cups_dest_t *dest, size_t num_dests, cups_dest_t **dests) _CUPS_PUBLIC;
 extern cups_dinfo_t	*cupsCopyDestInfo(http_t *http, cups_dest_t *dest, cups_dest_flags_t dflags) _CUPS_PUBLIC;

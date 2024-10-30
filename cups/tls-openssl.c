@@ -266,6 +266,7 @@ cupsCreateCredentials(
   char		defpath[1024],		// Default path
  		crtfile[1024],		// Certificate filename
 		keyfile[1024],		// Private key filename
+		pubfile[1024],		// Public key filename
 		root_crtfile[1024],	// Root certificate filename
 		root_keyfile[1024];	// Root private key filename
   time_t	curtime;		// Current time
@@ -320,7 +321,7 @@ cupsCreateCredentials(
   X509_set_notBefore(cert, notBefore);
   ASN1_TIME_free(notBefore);
 
-  notAfter  = ASN1_TIME_new();
+  notAfter = ASN1_TIME_new();
   ASN1_TIME_set(notAfter, expiration_date);
   X509_set_notAfter(cert, notAfter);
   ASN1_TIME_free(notAfter);
@@ -443,6 +444,7 @@ cupsCreateCredentials(
   // Save them...
   http_make_path(crtfile, sizeof(crtfile), path, common_name, "crt");
   http_make_path(keyfile, sizeof(keyfile), path, common_name, "key");
+  http_make_path(pubfile, sizeof(pubfile), path, common_name, "pub");
 
   if ((bio = BIO_new_file(keyfile, "wb")) == NULL)
   {
@@ -453,6 +455,21 @@ cupsCreateCredentials(
   if (!PEM_write_bio_PrivateKey(bio, pkey, NULL, NULL, 0, NULL, NULL))
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to write private key."), true);
+    BIO_free(bio);
+    goto done;
+  }
+
+  BIO_free(bio);
+
+  if ((bio = BIO_new_file(pubfile, "wb")) == NULL)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
+    goto done;
+  }
+
+  if (!PEM_write_bio_PUBKEY(bio, pkey))
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to write public key."), true);
     BIO_free(bio);
     goto done;
   }
@@ -575,7 +592,8 @@ cupsCreateCredentialsRequest(
   char		temp[1024],		// Temporary directory name
 		*tempptr,		// Pointer into temporary string
  		csrfile[1024],		// Certificate signing request filename
-		keyfile[1024];		// Private key filename
+		keyfile[1024],		// Private key filename
+		pubfile[1024];		// Public key filename
   STACK_OF(X509_EXTENSION) *exts;	// Extensions
   unsigned	i;			// Looping var
   cups_credpurpose_t purpose_bit;	// Current purpose
@@ -596,6 +614,7 @@ cupsCreateCredentialsRequest(
 
   http_make_path(csrfile, sizeof(csrfile), path, common_name, "csr");
   http_make_path(keyfile, sizeof(keyfile), path, common_name, "ktm");
+  http_make_path(pubfile, sizeof(pubfile), path, common_name, "pub");
 
   // Create the encryption key...
   DEBUG_puts("1cupsCreateCredentialsRequest: Creating key pair.");
@@ -672,6 +691,21 @@ cupsCreateCredentialsRequest(
   if (!PEM_write_bio_PrivateKey(bio, pkey, NULL, NULL, 0, NULL, NULL))
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to write private key."), true);
+    BIO_free(bio);
+    goto done;
+  }
+
+  BIO_free(bio);
+
+  if ((bio = BIO_new_file(pubfile, "wb")) == NULL)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
+    goto done;
+  }
+
+  if (!PEM_write_bio_PUBKEY(bio, pkey))
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to write public key."), true);
     BIO_free(bio);
     goto done;
   }
@@ -1079,7 +1113,7 @@ cupsSignCredentialsRequest(
   ASN1_INTEGER	*serial;		// Serial number
   ASN1_TIME	*notBefore,		// Initial date
 		*notAfter;		// Expiration date
-  BIO		*bio;			// Output file
+  BIO		*bio;			// Input/output file
   char		temp[1024];		// Temporary string
   int		i, j,			// Looping vars
 		num_exts;		// Number of extensions
