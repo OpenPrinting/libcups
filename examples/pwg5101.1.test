@@ -12,7 +12,11 @@
 #
 # Usage:
 #
-#   ./ipptool -t PRINTER-URI pwg5101.1.test
+#   ./ipptool [OPTIONS] -t PRINTER-URI pwg5101.1.test
+#
+# Options:
+#
+#   -d REQUIRE_MSN=1          Require support for the MSN v2.1 specification.
 #
 
 # Regular expression for PWG self-describing media size names (eek!)
@@ -21,6 +25,8 @@ DEFINE MEDIA_REGEX "/^(choice(_((custom|na|asme|roc|oe|roll)_[a-z0-9][-a-z0-9]*_
 
 # Simple test of media-xxx values...
 {
+    SKIP-IF-NOT-DEFINED REQUIRE_MSN
+
     NAME "PWG 5101.1-2023: Self-Describing Media Size Names"
     OPERATION Get-Printer-Attributes
     GROUP operation-attributes-tag

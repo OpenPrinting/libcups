@@ -14,7 +14,6 @@
 #   -d NOPRINT=1              Disable the print tests.
 #   -d REQUIRE_EPX=1          Require support for the EPX specification.
 #
-#
 
 {
     NAME "PWG 5100.11-2024: Operations, Attributes, and Values"
