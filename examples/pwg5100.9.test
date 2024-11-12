@@ -14,7 +14,6 @@
 #   -d NOPRINT=1              Disable the print tests.
 #   -d REQUIRE_STATE=1        Require support for the STATE specification.
 #
-#
 
 {
     NAME "PWG 5100.9-2009: Attributes and Values"
