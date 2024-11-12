@@ -10,6 +10,10 @@
 # Licensed under Apache License v2.0.  See the file "LICENSE" for more
 # information.
 #
+# Usage:
+#
+#   ./ipptool -t PRINTER-URI pwg5101.1.test
+#
 
 # Regular expression for PWG self-describing media size names (eek!)
 DEFINE MEDIA_REGEX "/^(choice(_((custom|na|asme|roc|oe|roll)_[a-z0-9][-a-z0-9]*_([1-9][0-9]*(\.[0-9]*[1-9])?|0\.[0-9]*[1-9])x([1-9][0-9]*(\.[0-9]*[1-9])?|0\.[0-9]*[1-9])in|(custom|iso|jis|jpn|prc|om|roll)_[a-z0-9][-a-z0-9]*_([1-9][0-9]*(\.[0-9]*[1-9])?|0\.[0-9]*[1-9])x([1-9][0-9]*(\.[0-9]*[1-9])?|0\.[0-9]*[1-9])mm)){2,}|(custom|na|asme|roc|oe|roll)_[a-z0-9][-a-z0-9]*_([1-9][0-9]*(\.[0-9]*[1-9])?|0\.[0-9]*[1-9])x([1-9][0-9]*(\.[0-9]*[1-9])?|0\.[0-9]*[1-9])in|(custom|iso|jis|jpn|prc|om|roll)_[a-z0-9][-a-z0-9]*_([1-9][0-9]*(\.[0-9]*[1-9])?|0\.[0-9]*[1-9])x([1-9][0-9]*(\.[0-9]*[1-9])?|0\.[0-9]*[1-9])mm)$$/"
