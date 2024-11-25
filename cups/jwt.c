@@ -871,21 +871,20 @@ cupsJWTLoadCredentials(
 
 #else // HAVE_GNUTLS
   gnutls_datum_t	dat_key;	// Private key data
-  gnutls_privkey_t	key;		// Private key
-  gnutls_pk_algorithm_t	alg;		// Algorithm
+  gnutls_privkey_t	pkey;		// Private key
   unsigned		bits;		// Private key size in bits
 
 
-  if (gnutls_privkey_init(&key))
+  if (gnutls_privkey_init(&pkey))
     goto done;
 
-  dat_key.data = key;
+  dat_key.data = (unsigned char *)key;
   dat_key.size = strlen(key);
 
-  if (gnutls_privkey_import_x509_raw(&key, &dat_key, GNUTLS_X509_FMT_PEM, /*password*/NULL, /*flags*/0))
+  if (gnutls_privkey_import_x509_raw(pkey, &dat_key, GNUTLS_X509_FMT_PEM, /*password*/NULL, /*flags*/0))
     goto done;
 
-  isrsa = gnutls_privkey_get_pk_algorithm(&key, &bits) == GNUTLS_PK_RSA;
+  isrsa = gnutls_privkey_get_pk_algorithm(pkey, &bits) == GNUTLS_PK_RSA;
 
   if (isrsa)
   {
@@ -893,7 +892,7 @@ cupsJWTLoadCredentials(
     gnutls_datum_t	dat_n, dat_e, dat_d, dat_p, dat_q, dat_dp, dat_dq, dat_qi;
 					// RSA parameters
 
-    gnutls_privkey_export_rsa_raw(key, &dat_n, &dat_e, &dat_d, &dat_p, &dat_q, &dat_qi, &dat_dp, &dat_dq);
+    gnutls_privkey_export_rsa_raw(pkey, &dat_n, &dat_e, &dat_d, &dat_p, &dat_q, &dat_qi, &dat_dp, &dat_dq);
     make_datstring(&dat_n, n, sizeof(n));
     make_datstring(&dat_e, e, sizeof(e));
     make_datstring(&dat_d, d, sizeof(d));
@@ -910,7 +909,7 @@ cupsJWTLoadCredentials(
     gnutls_datum_t	dat_x, dat_y, dat_d;
 					// ECDSA parameters
 
-    gnutls_privkey_export_ecc_raw(key, &curve, &dat_x, &dat_y, &dat_d);
+    gnutls_privkey_export_ecc_raw(pkey, &curve, &dat_x, &dat_y, &dat_d);
     make_datstring(&dat_x, x, sizeof(x));
     make_datstring(&dat_y, y, sizeof(y));
     make_datstring(&dat_d, d, sizeof(d));
@@ -932,7 +931,7 @@ cupsJWTLoadCredentials(
     }
   }
 
-  gnutls_privkey_deinit(key);
+  gnutls_privkey_deinit(pkey);
 #endif // HAVE_OPENSSL
 
   // Create JWK
