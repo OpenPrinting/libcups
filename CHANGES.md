@@ -6,6 +6,7 @@ libcups v3.0rc4 (YYYY-MM-DD)
 
 - Added `cupsCopyCredentialsPublicKey` API.
 - Added `cupsGetClock` API.
+- Added `cupsJWTLoadCredentials` API.
 - Updated the `ipptool` utility to support the `--bearer-token` and
   `--client-name` options.
 - Updated `cupsOAuthGetMetadata` to support Microsoft Azure/Entra OAuth
