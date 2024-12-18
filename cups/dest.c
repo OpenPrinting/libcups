@@ -3050,9 +3050,9 @@ cups_get_cb(_cups_getdata_t *data,      // I - Data from cupsGetDests
     // Remove destination from array...
     data->num_dests = cupsRemoveDest(dest->name, dest->instance, data->num_dests, &data->dests);
   }
-  else
+  else if (!cupsGetDest(dest->name, dest->instance, data->num_dests, data->dests))
   {
-    // Add destination to array...
+    // Add destination to array if not already present...
     data->num_dests = cupsCopyDest(dest, data->num_dests, &data->dests);
   }
 

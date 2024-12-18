@@ -11,6 +11,7 @@ libcups v3.0rc4 (YYYY-MM-DD)
   `--client-name` options.
 - Updated `cupsOAuthGetMetadata` to support Microsoft Azure/Entra OAuth
   servers.
+- Fixed a duplicate printer reporting bug in `cupsGetDests`.
 
 
 libcups v3.0rc3 (2024-10-22)
