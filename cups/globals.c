@@ -278,6 +278,13 @@ cups_globals_alloc(void)
       cg->sysconfig = CUPS_SERVERROOT;
   }
 
+  if (!getuid())
+  {
+    // When running as root, make "userconfig" the same as "sysconfig"...
+    cg->userconfig = strdup(cg->sysconfig);
+    return (cg);
+  }
+
 #  ifdef __APPLE__
   if (!home)
 #else
