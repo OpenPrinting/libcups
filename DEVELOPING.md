@@ -137,7 +137,7 @@ the source file and the copyright and licensing notice:
     /*
      * Description of file contents.
      *
-     * Copyright © 2021 by OpenPrinting
+     * Copyright © 2025 by OpenPrinting
      *
      * Licensed under Apache License v2.0.  See the file "LICENSE" for more
      * information.
