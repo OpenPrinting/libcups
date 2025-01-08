@@ -15,6 +15,7 @@ libcups v3.0rc4 (YYYY-MM-DD)
   `ippeveprinter` tool (Issue #95)
 - Fixed a duplicate printer reporting bug in `cupsGetDests`.
 - Fixed handling of `NULL` path in `cupsSaveCredentials` API.
+- Fixed handling of default authorization strings.
 
 
 libcups v3.0rc3 (2024-10-22)
