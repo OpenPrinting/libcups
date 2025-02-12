@@ -16,7 +16,7 @@
         <tags>http ipp native</tags>
 	<dependencies>
 	    <dependency id="zlib_native.redist" version="1.2.11" />
-	    <dependency id="libressl_native.redist" version="3.7.3" />
+	    <dependency id="libressl_native.redist" version="4.0.0" />
 	</dependencies>
     </metadata>
     <files>
