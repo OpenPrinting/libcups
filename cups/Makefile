@@ -1,7 +1,7 @@
 #
 # Library Makefile for libcups.
 #
-# Copyright © 2021-2024 by OpenPrinting.
+# Copyright © 2021-2025 by OpenPrinting.
 #
 # Licensed under Apache License v2.0.  See the file "LICENSE" for more
 # information.

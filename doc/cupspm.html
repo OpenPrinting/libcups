@@ -5,10 +5,10 @@
 <title>CUPS Programming Manual</title>
 <meta name="keywords" content="Programming">
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
-<meta name="generator" content="codedoc v3.7">
+<meta name="generator" content="codedoc v3.8">
 <meta name="author" content="Michael R Sweet">
 <meta name="language" content="en-US">
-<meta name="copyright" content="Copyright © 2021-2024 by OpenPrinting. All Rights Reserved.">
+<meta name="copyright" content="Copyright © 2021-2025 by OpenPrinting. All Rights Reserved.">
 <meta name="version" content="3.0.0">
 <style type="text/css"><!--
 body {
@@ -254,7 +254,7 @@ span.string {
 <div class="header">
 <h1 class="title">CUPS Programming Manual</h1>
 <p>Michael R Sweet</p>
-<p>Copyright © 2021-2024 by OpenPrinting. All Rights Reserved.</p>
+<p>Copyright © 2021-2025 by OpenPrinting. All Rights Reserved.</p>
 </div>
 <div class="contents">
 <h2 class="title">Contents</h2>
@@ -329,6 +329,7 @@ span.string {
 <li><a href="#cupsConnectDest">cupsConnectDest</a></li>
 <li><a href="#cupsCopyCredentials">cupsCopyCredentials</a></li>
 <li><a href="#cupsCopyCredentialsKey">cupsCopyCredentialsKey</a></li>
+<li><a href="#cupsCopyCredentialsPublicKey">cupsCopyCredentialsPublicKey</a></li>
 <li><a href="#cupsCopyCredentialsRequest">cupsCopyCredentialsRequest</a></li>
 <li><a href="#cupsCopyDest">cupsCopyDest</a></li>
 <li><a href="#cupsCopyDestConflicts">cupsCopyDestConflicts</a></li>
@@ -415,6 +416,7 @@ span.string {
 <li><a href="#cupsFreeDests">cupsFreeDests</a></li>
 <li><a href="#cupsFreeJobs">cupsFreeJobs</a></li>
 <li><a href="#cupsFreeOptions">cupsFreeOptions</a></li>
+<li><a href="#cupsGetClock">cupsGetClock</a></li>
 <li><a href="#cupsGetCredentialsExpiration">cupsGetCredentialsExpiration</a></li>
 <li><a href="#cupsGetCredentialsInfo">cupsGetCredentialsInfo</a></li>
 <li><a href="#cupsGetCredentialsTrust">cupsGetCredentialsTrust</a></li>
@@ -480,6 +482,7 @@ span.string {
 <li><a href="#cupsJWTGetHeaders">cupsJWTGetHeaders</a></li>
 <li><a href="#cupsJWTHasValidSignature">cupsJWTHasValidSignature</a></li>
 <li><a href="#cupsJWTImportString">cupsJWTImportString</a></li>
+<li><a href="#cupsJWTLoadCredentials">cupsJWTLoadCredentials</a></li>
 <li><a href="#cupsJWTMakePrivateKey">cupsJWTMakePrivateKey</a></li>
 <li><a href="#cupsJWTMakePublicKey">cupsJWTMakePublicKey</a></li>
 <li><a href="#cupsJWTNew">cupsJWTNew</a></li>
@@ -522,7 +525,7 @@ span.string {
 <li><a href="#cupsOAuthGetTokens">cupsOAuthGetTokens</a></li>
 <li><a href="#cupsOAuthMakeAuthorizationURL">cupsOAuthMakeAuthorizationURL</a></li>
 <li><a href="#cupsOAuthMakeBase64Random">cupsOAuthMakeBase64Random</a></li>
-<li><a href="#cupsOAuthSaveClientId">cupsOAuthSaveClientId</a></li>
+<li><a href="#cupsOAuthSaveClientData">cupsOAuthSaveClientData</a></li>
 <li><a href="#cupsOAuthSaveTokens">cupsOAuthSaveTokens</a></li>
 <li><a href="#cupsParseOptions">cupsParseOptions</a></li>
 <li><a href="#cupsPutFd">cupsPutFd</a></li>
@@ -1782,7 +1785,7 @@ token_cb(ipp_file_t *file, <span class="reserved">void</span> *cb_data, <span cl
 <h3 class="title" id="writing-ipp-data-files">Writing IPP Data Files</h3>
 <p>As when reading an IPP data file, the <a href="#ippFileNew"><code>ippFileNew</code></a> function creates a new file object, <a href="#ippFileOpen"><code>ippFileOpen</code></a> opens the file, and <a href="#ippFileClose"><code>ippFileClose</code></a> closes the file. However, you call <a href="#ippFileWriteAttributes"><code>ippFileWriteAttributes</code></a> to write the attributes in an IPP message (<code>ipp_t</code>), <a href="#ippFileWriteComment"><code>ippFileWriteComment</code></a> to write a comment in the file, and <a href="#ippWriteToken"><code>ippWriteToken</code></a> or <a href="#ippWriteTokenf"><code>ippWriteTokenf</code></a> to write a token or value to the file.</p>
 <h2 class="title" id="migrating-code-from-cups-2.x-and-earlier">Migrating Code from CUPS 2.x and Earlier</h2>
-<p>The CUPS 3.x library removes all of the deprecated and obsolete APIs from CUPS 2.x and earlier and makes other naming changes for consistency. As a result, the CUPS 3.x library is no longer binary compatible with programs compiled against the CUPS 2.x library and earlier, and some source code may need minor changes to compile with the new library. This file describes the changes and how to migrate to the new library.</p>
+<p>The CUPS 3.x library removes all of the deprecated and obsolete APIs from CUPS 2.x and earlier and makes other naming changes for consistency. As a result, the CUPS 3.x library is no longer binary compatible with programs compiled against the CUPS 2.x library and earlier, and some source code may need minor changes to compile with the new library. This chapter describes the changes and how to migrate to the new library.</p>
 <h3 class="title" id="general-changes">General Changes</h3>
 <p>The following general changes have been made to the CUPS API:</p>
 <ul>
@@ -2639,8 +2642,21 @@ the connection is made to the CUPS scheduler associated with the destination.</p
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Copy the private key to a string.</p>
+<h3 class="function"><a id="cupsCopyCredentialsPublicKey">cupsCopyCredentialsPublicKey</a></h3>
+<p class="description">Copy the public key for a X.509 certificate request.</p>
+<p class="code">
+<span class="reserved">char</span> *cupsCopyCredentialsPublicKey(<span class="reserved">const</span> <span class="reserved">char</span> *path, <span class="reserved">const</span> <span class="reserved">char</span> *common_name);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>path</th>
+<td class="description">Directory path for certificate/key store or <code>NULL</code> for default</td></tr>
+<tr><th>common_name</th>
+<td class="description">Common name</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">PEM-encoded public key</p>
 <h3 class="function"><a id="cupsCopyCredentialsRequest">cupsCopyCredentialsRequest</a></h3>
-<p class="description"></p>
+<p class="description">Copy the X.509 certificate signing request to a string.</p>
 <p class="code">
 <span class="reserved">char</span> *cupsCopyCredentialsRequest(<span class="reserved">const</span> <span class="reserved">char</span> *path, <span class="reserved">const</span> <span class="reserved">char</span> *common_name);</p>
 <h4 class="parameters">Parameters</h4>
@@ -2651,7 +2667,7 @@ the connection is made to the CUPS scheduler associated with the destination.</p
 <td class="description">Common name</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">Copy the X.509 certificate signing request to a string.</p>
+<p class="description">PEM-encoded X.509 certificate signing request</p>
 <h3 class="function"><a id="cupsCopyDest">cupsCopyDest</a></h3>
 <p class="description">Copy a destination.</p>
 <p class="code">
@@ -3962,6 +3978,9 @@ When opening for writing (&quot;w&quot;), an optional number from <code>1</code>
 supplied which enables Flate compression of the file.  Compression is
 not supported for the &quot;a&quot; (append) mode.<br>
 <br>
+When opening for writing (&quot;w&quot;) or append (&quot;a&quot;), an optional 'm###' suffix
+can be used to set the permissions of the opened file.<br>
+<br>
 When opening a socket connection, the filename is a string of the form
 &quot;address:port&quot; or &quot;hostname:port&quot;. The socket will make an IPv4 or IPv6
 connection as needed, generally preferring IPv6 connections when there is
@@ -4369,6 +4388,18 @@ they can be safely displayed or logged.</p>
 <tr><th>options</th>
 <td class="description">Pointer to options</td></tr>
 </tbody></table>
+<h3 class="function"><a id="cupsGetClock">cupsGetClock</a></h3>
+<p class="description">Get a monotonic clock value in seconds.</p>
+<p class="code">
+<span class="reserved">double</span> cupsGetClock(<span class="reserved">void</span>);</p>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Elapsed seconds</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function returns a monotonically increasing clock value in seconds.  The
+first call will always return 0.0.  Subsequent calls will return the number
+of seconds that have elapsed since the first call, regardless of system time
+changes, sleep, etc.  The sub-second accuracy varies based on the operating
+system and hardware but is typically 10ms or better.</p>
 <h3 class="function"><a id="cupsGetCredentialsExpiration">cupsGetCredentialsExpiration</a></h3>
 <p class="description">Return the expiration date of the credentials.</p>
 <p class="code">
@@ -5478,6 +5509,19 @@ The return value must be freed using the <code>free</code> function.</p>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">JWT object</p>
+<h3 class="function"><a id="cupsJWTLoadCredentials">cupsJWTLoadCredentials</a></h3>
+<p class="description">Load X.509 credentials and private key into a JSON Web Key for signing.</p>
+<p class="code">
+<a href="#cups_json_t">cups_json_t</a> *cupsJWTLoadCredentials(<span class="reserved">const</span> <span class="reserved">char</span> *path, <span class="reserved">const</span> <span class="reserved">char</span> *common_name);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>path</th>
+<td class="description">Directory path for certificate/key store or <code>NULL</code> for default</td></tr>
+<tr><th>common_name</th>
+<td class="description">Common name</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">JSON Web Key of <code>NULL</code> on error</p>
 <h3 class="function"><a id="cupsJWTMakePrivateKey">cupsJWTMakePrivateKey</a></h3>
 <p class="description">Make a JSON Web Key for encryption and signing.</p>
 <p class="code">
@@ -5989,7 +6033,7 @@ combination. The returned user information must be freed using the
 <h3 class="function"><a id="cupsOAuthGetAuthorizationCode">cupsOAuthGetAuthorizationCode</a></h3>
 <p class="description">Authorize access using a web browser.</p>
 <p class="code">
-<span class="reserved">char</span> *cupsOAuthGetAuthorizationCode(<span class="reserved">const</span> <span class="reserved">char</span> *auth_uri, <a href="#cups_json_t">cups_json_t</a> *metadata, <span class="reserved">const</span> <span class="reserved">char</span> *resource_uri, <span class="reserved">const</span> <span class="reserved">char</span> *scopes);</p>
+<span class="reserved">char</span> *cupsOAuthGetAuthorizationCode(<span class="reserved">const</span> <span class="reserved">char</span> *auth_uri, <a href="#cups_json_t">cups_json_t</a> *metadata, <span class="reserved">const</span> <span class="reserved">char</span> *resource_uri, <span class="reserved">const</span> <span class="reserved">char</span> *scopes, <span class="reserved">const</span> <span class="reserved">char</span> *redirect_uri);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>auth_uri</th>
@@ -6000,6 +6044,8 @@ combination. The returned user information must be freed using the
 <td class="description">Resource URI</td></tr>
 <tr><th>scopes</th>
 <td class="description">Space-delimited scopes</td></tr>
+<tr><th>redirect_uri</th>
+<td class="description">Redirect URI or <code>NULL</code> for default</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Authorization code or <code>NULL</code> on error</p>
@@ -6017,7 +6063,11 @@ file, etc.) that you which to access.<br>
 <br>
 The &quot;scopes&quot; parameter specifies zero or more whitespace-delimited scope
 names to request during authorization.  The list of supported scope names are
-available from the Authorization Server metadata, for example:
+available from the Authorization Server metadata, for example:<br>
+<br>
+The &quot;redirect_uri&quot; parameter specifies a 'http:' URL with a listen address,
+port, and path to use.  If <code>NULL</code>, 127.0.0.1 on a random port is used with a
+path of &quot;/&quot;.
 
 <pre>
 cups_json_t *metadata = cupsOAuthGetMetadata(auth_uri);
@@ -6219,10 +6269,10 @@ request.  It is provided to the redirection URI as a form parameter.</p>
 <p class="discussion">This function creates a string containing random data that has been Base64URL
 encoded. &quot;len&quot; specifies the number of random bytes to include in the string.
 The returned string must be freed using the <code>free</code> function.</p>
-<h3 class="function"><a id="cupsOAuthSaveClientId">cupsOAuthSaveClientId</a></h3>
+<h3 class="function"><a id="cupsOAuthSaveClientData">cupsOAuthSaveClientData</a></h3>
 <p class="description">Save client_id and client_secret values.</p>
 <p class="code">
-<span class="reserved">void</span> cupsOAuthSaveClientId(<span class="reserved">const</span> <span class="reserved">char</span> *auth_uri, <span class="reserved">const</span> <span class="reserved">char</span> *redirect_uri, <span class="reserved">const</span> <span class="reserved">char</span> *client_id, <span class="reserved">const</span> <span class="reserved">char</span> *client_secret);</p>
+<span class="reserved">void</span> cupsOAuthSaveClientData(<span class="reserved">const</span> <span class="reserved">char</span> *auth_uri, <span class="reserved">const</span> <span class="reserved">char</span> *redirect_uri, <span class="reserved">const</span> <span class="reserved">char</span> *client_id, <span class="reserved">const</span> <span class="reserved">char</span> *client_secret);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>auth_uri</th>
@@ -6266,11 +6316,13 @@ values will delete the corresponding saved values from the per-user store.</p>
 <h3 class="function"><a id="cupsParseOptions">cupsParseOptions</a></h3>
 <p class="description">Parse options from a command-line argument.</p>
 <p class="code">
-size_t cupsParseOptions(<span class="reserved">const</span> <span class="reserved">char</span> *arg, size_t num_options, <a href="#cups_option_t">cups_option_t</a> **options);</p>
+size_t cupsParseOptions(<span class="reserved">const</span> <span class="reserved">char</span> *arg, <span class="reserved">const</span> <span class="reserved">char</span> **end, size_t num_options, <a href="#cups_option_t">cups_option_t</a> **options);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>arg</th>
 <td class="description">Argument to parse</td></tr>
+<tr><th>end</th>
+<td class="description">Pointer to end of options or <code>NULL</code> for &quot;don't care&quot;</td></tr>
 <tr><th>num_options</th>
 <td class="description">Number of options</td></tr>
 <tr><th>options</th>
@@ -6283,7 +6335,10 @@ size_t cupsParseOptions(<span class="reserved">const</span> <span class="reserve
 to the PAPI text option ABNF specification. Collection values
 (&quot;name={a=... b=... c=...}&quot;) are stored with the curley brackets
 intact - use <code>cupsParseOptions</code> on the value to extract the
-collection attributes.</p>
+collection attributes.<br>
+<br>
+The &quot;end&quot; argument, if not <code>NULL</code>, receives a pointer to the end of the
+options.</p>
 <h3 class="function"><a id="cupsPutFd">cupsPutFd</a></h3>
 <p class="description">Put a file on the server.</p>
 <p class="code">
@@ -7112,8 +7167,14 @@ C string to a UTF-32 (32-bit encoding of Unicode) string.</p>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description"><code>HTTP_STATUS_CONTINUE</code> if OK or HTTP status on error</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">This function is used after <a href="#cupsSendRequest"><code>cupsSendRequest</code></a> to provide a PPD and
-after <a href="#cupsStartDocument"><code>cupsStartDocument</code></a> to provide a document file.</p>
+<p class="discussion">This function writes a buffer of additional data after an IPP request and is
+used after calling the <a href="#cupsSendRequest"><code>cupsSendRequest</code></a> and/or <a href="#cupsStartDocument"><code>cupsStartDocument</code></a>
+functions, typically to send all or part of a document or file.  Each call
+appends the given buffer of data to the request, allowing an application to
+stream content to the receiving IPP server.<br>
+<br>
+Call the <a href="#cupsGetResponse"><code>cupsGetResponse</code></a> or <a href="#cupsFinishDestDocument"><code>cupsFinishDestDocument</code></a> functions
+to complete the current request and get the corresponding response.</p>
 <h3 class="function"><a id="httpAcceptConnection">httpAcceptConnection</a></h3>
 <p class="description">Accept a new HTTP client connection.</p>
 <p class="code">
@@ -8375,7 +8436,9 @@ ssize_t httpWrite(<a href="#http_t">http_t</a> *http, <span class="reserved">con
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Number of bytes written</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">TODO: Expand this documentation to talk about chunking.</p>
+<p class="discussion">This function writes data to a HTTP connection. When using chunking or
+content coding, specifying a &quot;length&quot; of <code>0</code> will complete the current HTTP
+request/response message.</p>
 <h3 class="function"><a id="httpWriteRequest">httpWriteRequest</a></h3>
 <p class="description">Write a HTTP request.</p>
 <p class="code">

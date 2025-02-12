@@ -1,7 +1,7 @@
 ---
 title: CUPS Programming Manual
 author: Michael R Sweet
-copyright: Copyright © 2021-2024 by OpenPrinting. All Rights Reserved.
+copyright: Copyright © 2021-2025 by OpenPrinting. All Rights Reserved.
 version: 3.0.0
 ...
 
@@ -1161,7 +1161,8 @@ ipp_file_t *file = ippFileNew(parent, attr_cb, error_cb, data);
 The "parent" IPP data file pointer is typically used to support nested files and
 is normally `NULL` for a new file.  The "data" argument supplies your
 application data to the callbacks.  The "attr_cb" callback function is used to
-filter IPP attributes; return `true` to include the attribute and `false` to ignore it:
+filter IPP attributes; return `true` to include the attribute and `false` to
+ignore it:
 
 ```c
 bool
@@ -1208,7 +1209,8 @@ token_cb(ipp_file_t *file, void *cb_data, const char *token)
 }
 ```
 
-The "token" parameter contains the token to be processed.  The callback can use the [`ippFileReadToken`](@@) function to read additional tokens from the file
+The "token" parameter contains the token to be processed.  The callback can use
+the [`ippFileReadToken`](@@) function to read additional tokens from the file
 and the [`ippFileExpandToken`](@@) function to expand any variables in the token
 string.  Return `false` to stop reading the file and `true` to continue.  The
 default `NULL` callback reports an unknown token error through the error
@@ -1256,7 +1258,7 @@ The CUPS 3.x library removes all of the deprecated and obsolete APIs from CUPS
 2.x and earlier and makes other naming changes for consistency.  As a result,
 the CUPS 3.x library is no longer binary compatible with programs compiled
 against the CUPS 2.x library and earlier, and some source code may need minor
-changes to compile with the new library.  This file describes the changes and
+changes to compile with the new library.  This chapter describes the changes and
 how to migrate to the new library.
 
 

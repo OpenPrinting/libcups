@@ -706,8 +706,14 @@ cupsSendRequest(http_t     *http,	// I - Connection to server or `CUPS_HTTP_DEFA
 //
 // 'cupsWriteRequestData()' - Write additional data after an IPP request.
 //
-// This function is used after @link cupsSendRequest@ to provide a PPD and
-// after @link cupsStartDocument@ to provide a document file.
+// This function writes a buffer of additional data after an IPP request and is
+// used after calling the @link cupsSendRequest@ and/or @link cupsStartDocument@
+// functions, typically to send all or part of a document or file.  Each call
+// appends the given buffer of data to the request, allowing an application to
+// stream content to the receiving IPP server.
+//
+// Call the @link cupsGetResponse@ or @link cupsFinishDestDocument@ functions
+// to complete the current request and get the corresponding response.
 //
 
 http_status_t				// O - `HTTP_STATUS_CONTINUE` if OK or HTTP status on error
