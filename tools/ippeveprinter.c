@@ -1,7 +1,7 @@
 //
 // IPP Everywhere printer application for CUPS.
 //
-// Copyright © 2021-2024 by OpenPrinting.
+// Copyright © 2021-2025 by OpenPrinting.
 // Copyright © 2020 by the IEEE-ISTO Printer Working Group.
 // Copyright © 2010-2021 by Apple Inc.
 //
@@ -5466,14 +5466,15 @@ process_job(ippeve_job_t *job)		// I - Job
 
     for (attr = ippGetFirstAttribute(job->printer->attrs); attr && myenvc < (int)(sizeof(myenvp) / sizeof(myenvp[0]) - 1); attr = ippGetNextAttribute(job->printer->attrs))
     {
-      // Convert "attribute-name-default" to "IPP_ATTRIBUTE_NAME_DEFAULT=" and
-      // "pwg-xxx" to "IPP_PWG_XXX", then add the value(s) from the attribute.
+      // Convert "attribute-name-default" to "IPP_ATTRIBUTE_NAME_DEFAULT=",
+      // "pclm-xxx" to "IPP_PCLM_XXX", and "pwg-xxx" to "IPP_PWG_XXX", then add
+      // the value(s) from the attribute.
       const char	*name = ippGetName(attr),
 					// Attribute name
 			*suffix = strstr(name, "-default");
 					// Suffix on attribute name
 
-      if (strncmp(name, "pwg-", 4) && (!suffix || suffix[8]))
+      if (strncmp(name, "pclm-", 5) && strncmp(name, "pwg-", 4) && strcmp(name, "urf-supported") && (!suffix || suffix[8]))
         continue;
 
       valptr = val;

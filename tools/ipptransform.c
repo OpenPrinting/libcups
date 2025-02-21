@@ -1,7 +1,7 @@
 //
 // Utility for converting PDF and JPEG files to raster data or HP PCL.
 //
-// Copyright © 2023-2024 by OpenPrinting.
+// Copyright © 2023-2025 by OpenPrinting.
 // Copyright © 2016-2023 by the Printer Working Group.
 // Copyright © 2016-2019 by Apple Inc.
 //
@@ -125,6 +125,10 @@ struct xform_raster_s			// Raster context
 
   // Set by start_job callback
   cups_raster_t		*ras;		// Raster stream
+  pdfio_file_t		*pclm;		// PCLm file
+  pdfio_rect_t		pclm_media_box;	// PCLm MediaBox value
+  char			pclm_tempfile[1024];
+					// Temporary filename
 
   // Set by start_page callback
   unsigned		left, top, right, bottom;
@@ -136,11 +140,19 @@ struct xform_raster_s			// Raster context
   unsigned char		dither[64][64];	// Dither array
   unsigned char		white;		// White pixel value
 
+  size_t		pclm_num_strip_objs;
+					// Number of strip objects
+  pdfio_obj_t		**pclm_strip_objs;
+					// Strip objects
+  unsigned		pclm_strip_height;
+					// Height of each strip
+  pdfio_stream_t	*pclm_strip_st;	// Current strip stream
+
   // Callbacks
   void			(*end_job)(xform_raster_t *, xform_write_cb_t, void *);
   void			(*end_page)(xform_raster_t *, unsigned, xform_write_cb_t, void *);
-  void			(*start_job)(xform_raster_t *, xform_write_cb_t, void *);
-  void			(*start_page)(xform_raster_t *, unsigned, xform_write_cb_t, void *);
+  bool			(*start_job)(xform_raster_t *, xform_write_cb_t, void *);
+  bool			(*start_page)(xform_raster_t *, unsigned, xform_write_cb_t, void *);
   void			(*write_line)(xform_raster_t *, unsigned, const unsigned char *, xform_write_cb_t, void *);
 };
 
@@ -175,16 +187,23 @@ static bool	page_dict_cb(pdfio_dict_t *dict, const char *key, xform_page_t *outp
 static void	pcl_end_job(xform_raster_t *ras, xform_write_cb_t cb, void *ctx);
 static void	pcl_end_page(xform_raster_t *ras, unsigned page, xform_write_cb_t cb, void *ctx);
 static void	pcl_init(xform_raster_t *ras);
-static void	pcl_start_job(xform_raster_t *ras, xform_write_cb_t cb, void *ctx);
-static void	pcl_start_page(xform_raster_t *ras, unsigned page, xform_write_cb_t cb, void *ctx);
+static bool	pcl_start_job(xform_raster_t *ras, xform_write_cb_t cb, void *ctx);
+static bool	pcl_start_page(xform_raster_t *ras, unsigned page, xform_write_cb_t cb, void *ctx);
 static void	pcl_write_line(xform_raster_t *ras, unsigned y, const unsigned char *line, xform_write_cb_t cb, void *ctx);
-static void	pclps_printf(xform_write_cb_t cb, void *ctx, const char *format, ...) _CUPS_FORMAT(3, 4);
+static void	pclm_end_job(xform_raster_t *ras, xform_write_cb_t cb, void *ctx);
+static void	pclm_end_page(xform_raster_t *ras, unsigned page, xform_write_cb_t cb, void *ctx);
+static bool	pclm_error_cb(pdfio_file_t *pdf, const char *message, void *data);
+static void	pclm_init(xform_raster_t *ras);
+static bool	pclm_start_job(xform_raster_t *ras, xform_write_cb_t cb, void *ctx);
+static bool	pclm_start_page(xform_raster_t *ras, unsigned page, xform_write_cb_t cb, void *ctx);
+static void	pclm_write_line(xform_raster_t *ras, unsigned y, const unsigned char *line, xform_write_cb_t cb, void *ctx);
+static bool	pclps_printf(xform_write_cb_t cb, void *ctx, const char *format, ...) _CUPS_FORMAT(3, 4);
 static int	ps_convert_pdf(const char *filename, xform_write_cb_t cb, void *ctx);
 static void	ps_end_job(xform_raster_t *ras, xform_write_cb_t cb, void *ctx);
 static void	ps_end_page(xform_raster_t *ras, unsigned page, xform_write_cb_t cb, void *ctx);
 static void	ps_init(xform_raster_t *ras);
-static void	ps_start_job(xform_raster_t *ras, xform_write_cb_t cb, void *ctx);
-static void	ps_start_page(xform_raster_t *ras, unsigned page, xform_write_cb_t cb, void *ctx);
+static bool	ps_start_job(xform_raster_t *ras, xform_write_cb_t cb, void *ctx);
+static bool	ps_start_page(xform_raster_t *ras, unsigned page, xform_write_cb_t cb, void *ctx);
 static void	ps_write_line(xform_raster_t *ras, unsigned y, const unsigned char *line, xform_write_cb_t cb, void *ctx);
 static void	pdfio_end_page(xform_prepare_t *p, pdfio_stream_t *st);
 static bool	pdfio_error_cb(pdfio_file_t *pdf, const char *message, void *cb_data);
@@ -197,8 +216,8 @@ static void	prepare_pages(xform_prepare_t *p, size_t num_documents, xform_docume
 static void	raster_end_job(xform_raster_t *ras, xform_write_cb_t cb, void *ctx);
 static void	raster_end_page(xform_raster_t *ras, unsigned page, xform_write_cb_t cb, void *ctx);
 static void	raster_init(xform_raster_t *ras);
-static void	raster_start_job(xform_raster_t *ras, xform_write_cb_t cb, void *ctx);
-static void	raster_start_page(xform_raster_t *ras, unsigned page, xform_write_cb_t cb, void *ctx);
+static bool	raster_start_job(xform_raster_t *ras, xform_write_cb_t cb, void *ctx);
+static bool	raster_start_page(xform_raster_t *ras, unsigned page, xform_write_cb_t cb, void *ctx);
 static void	raster_write_line(xform_raster_t *ras, unsigned y, const unsigned char *line, xform_write_cb_t cb, void *ctx);
 static bool	resource_dict_cb(pdfio_dict_t *dict, const char *key, xform_page_t *outpage);
 static int	usage(FILE *out);
@@ -252,6 +271,11 @@ main(int  argc,				// I - Number of command-line args
   resolutions  = getenv("IPP_PWG_RASTER_DOCUMENT_RESOLUTION_SUPPORTED");
   sheet_back   = getenv("IPP_PWG_RASTER_DOCUMENT_SHEET_BACK");
   types        = getenv("IPP_PWG_RASTER_DOCUMENT_TYPE_SUPPORTED");
+
+  if (!resolutions)
+    resolutions = getenv("IPP_PCLM_SOURCE_RESOLUTION_SUPPORTED");
+  if (!sheet_back)
+    sheet_back = getenv("IPP_PCLM_RASTER_BACK_SIDE");
 
   if ((opt = getenv("SERVER_LOGLEVEL")) != NULL)
   {
@@ -328,6 +352,8 @@ main(int  argc,				// I - Number of command-line args
               {
                 if (!strcasecmp(ext, ".pcl"))
                   output_type = "application/vnd.hp-PCL";
+                else if (!strcasecmp(ext, ".pclm"))
+                  output_type = "application/PCLm";
                 else if (!strcasecmp(ext, ".pdf"))
                   output_type = "application/pdf";
                 else if (!strcasecmp(ext, ".ps"))
@@ -510,7 +536,7 @@ main(int  argc,				// I - Number of command-line args
     cupsLangPrintf(stderr, _("%s: Unknown output format, please specify with '-m' option."), Prefix);
     return (usage(stderr));
   }
-  else if (strcasecmp(output_type, "application/pdf") && strcasecmp(output_type, "application/postscript") && strcasecmp(output_type, "application/vnd.hp-pcl") && strcasecmp(output_type, "image/pwg-raster") && strcasecmp(output_type, "image/urf"))
+  else if (strcasecmp(output_type, "application/pclm") && strcasecmp(output_type, "application/pdf") && strcasecmp(output_type, "application/postscript") && strcasecmp(output_type, "application/vnd.hp-pcl") && strcasecmp(output_type, "image/pwg-raster") && strcasecmp(output_type, "image/urf"))
   {
     cupsLangPrintf(stderr, _("%s: Unsupported output format '%s'."), Prefix, output_type);
     return (usage(stderr));
@@ -707,16 +733,25 @@ main(int  argc,				// I - Number of command-line args
     // Do raster transform...
     if (!resolutions)
     {
-      // By default, use 200dpi for PostScript and 300dpi for others...
+      // By default, use 200dpi for PostScript, 600dpi for PCLm, and 300dpi for others...
       if (!strcasecmp(output_type, "application/postscript"))
         resolutions = "200dpi";
+      else if (!strcasecmp(output_type, "application/PCLm"))
+        resolutions = "600dpi";
       else
         resolutions = "300dpi";
     }
+
     if (!sheet_back)
       sheet_back = "normal";
+
     if (!types)
-      types = "sgray_8";
+    {
+      if (!strcasecmp(output_type, "application/PCLm"))
+        types = "sgray_8,srgb_8";
+      else
+        types = "sgray_8";
+    }
 
     if (!xform_document(pdf_file, pdf_pages, ipp_options, output_type, resolutions, sheet_back, types, write_cb, write_ptr))
       status = 1;
@@ -2201,18 +2236,15 @@ pcl_init(xform_raster_t *ras)		// I - Raster information
 // 'pcl_start_job()' - Start a PCL "job".
 //
 
-static void
+static bool				// O - `true` on success, `false` on error
 pcl_start_job(xform_raster_t   *ras,	// I - Raster information
               xform_write_cb_t cb,	// I - Write callback
               void             *ctx)	// I - Write context
 {
   (void)ras;
 
- /*
-  * Send a PCL reset sequence.
-  */
-
-  (*cb)(ctx, (const unsigned char *)"\033E", 2);
+  // Send a PCL reset sequence.
+  return ((*cb)(ctx, (const unsigned char *)"\033E", 2) > 0);
 }
 
 
@@ -2220,7 +2252,7 @@ pcl_start_job(xform_raster_t   *ras,	// I - Raster information
 // 'pcl_start_page()' - Start a PCL page.
 //
 
-static void
+static bool				// O - `true` on success, `false` on failure
 pcl_start_page(xform_raster_t   *ras,	// I - Raster information
                unsigned         page,	// I - Current page
                xform_write_cb_t cb,	// I - Write callback
@@ -2346,6 +2378,8 @@ pcl_start_page(xform_raster_t   *ras,	// I - Raster information
 
   ras->out_blanks  = 0;
   ras->comp_buffer = malloc((ras->right - ras->left + 7) / 8 * 2 + 2);
+
+  return (ras->comp_buffer != NULL);
 }
 
 
@@ -2439,10 +2473,236 @@ pcl_write_line(
 
 
 //
-// 'pclps_printf()' - Write a formatted string.
+// 'pclm_end_job()' - End a PCLm "job".
 //
 
 static void
+pclm_end_job(xform_raster_t   *ras,	// I - Raster information
+             xform_write_cb_t cb,	// I - Write callback
+             void             *ctx)	// I - Write context
+{
+  int		fd;			// Temporary file
+  char		buffer[16384];		// Copy buffer
+  ssize_t	bytes;			// Bytes to write
+
+
+  // Close the PCLm file and copy it...
+  pdfioFileClose(ras->pclm);
+
+  if ((fd = open(ras->pclm_tempfile, O_RDONLY)) < 0)
+  {
+    fprintf(stderr, "ERROR: Unable to open PCLm file '%s' - %s\n", ras->pclm_tempfile, strerror(errno));
+    return;
+  }
+
+  while ((bytes = read(fd, buffer, sizeof(buffer))) > 0)
+  {
+    if ((*cb)(ctx, buffer, (size_t)bytes) != bytes)
+      break;
+  }
+
+  close(fd);
+
+  // Remove the temporary PCLm file...
+  unlink(ras->pclm_tempfile);
+}
+
+
+//
+// 'pclm_end_page()' - End of PCLm page.
+//
+
+static void
+pclm_end_page(xform_raster_t   *ras,	// I - Raster information
+	      unsigned         page,	// I - Current page
+              xform_write_cb_t cb,	// I - Write callback
+              void             *ctx)	// I - Write context
+{
+  (void)page;
+  (void)cb;
+  (void)ctx;
+
+  fprintf(stderr, "DEBUG: pclm_end_page(page=%u)\n", page);
+
+  free(ras->pclm_strip_objs);
+
+  ras->pclm_strip_objs     = NULL;
+  ras->pclm_num_strip_objs = 0;
+}
+
+
+//
+// 'pclm_error_cb()' - Error callback for PCLm output.
+//
+
+static bool				// O - `false` to stop
+pclm_error_cb(pdfio_file_t *pdf,	// I - PCLm file (not used)
+              const char   *message,	// I - Error message
+              void         *data)	// I - Callback data (not used)
+{
+  (void)pdf;
+  (void)data;
+
+  fprintf(stderr, "ERROR: PCLm Output: %s\n", message);
+
+  return (false);
+}
+
+
+//
+// 'pclm_init()' - Initialize callbacks for PCLm output.
+//
+
+static void
+pclm_init(xform_raster_t *ras)		// I - Raster information
+{
+  ras->end_job    = pclm_end_job;
+  ras->end_page   = pclm_end_page;
+  ras->start_job  = pclm_start_job;
+  ras->start_page = pclm_start_page;
+  ras->write_line = pclm_write_line;
+}
+
+
+//
+// 'pclm_start_job()' - Start a PCLm "job".
+//
+
+static bool				// O - `true` on success, `false` on error
+pclm_start_job(xform_raster_t   *ras,	// I - Raster information
+              xform_write_cb_t cb,	// I - Write callback
+              void             *ctx)	// I - Write context
+{
+  (void)cb;
+  (void)ctx;
+
+  // Create a temporary PCLm file...
+  ras->pclm_media_box.x1 = 0.0;
+  ras->pclm_media_box.y1 = 0.0;
+  ras->pclm_media_box.x2 = ras->header.cupsPageSize[0];
+  ras->pclm_media_box.y2 = ras->header.cupsPageSize[1];
+
+  if ((ras->pclm = pdfioFileCreateTemporary(ras->pclm_tempfile, sizeof(ras->pclm_tempfile), "PCLm-1.0", &ras->pclm_media_box, &ras->pclm_media_box, pclm_error_cb, /*error_cbdata*/NULL)) == NULL)
+    return (false);
+
+  return (true);
+}
+
+
+//
+// 'pclm_start_page()' - Start a PCLm page.
+//
+
+static bool				// O - `true` on success, `false` on failure
+pclm_start_page(xform_raster_t   *ras,	// I - Raster information
+               unsigned         page,	// I - Current page
+               xform_write_cb_t cb,	// I - Write callback
+               void             *ctx)	// I - Write context
+{
+  const char	*value;			// Environment variable value
+  size_t	i;			// Looping var
+  pdfio_dict_t	*dict;			// Page/image dictionary
+  pdfio_stream_t *st;			// Page stream
+  char		image[32];		// Image object name
+
+
+  fprintf(stderr, "DEBUG: pclm_start_page(page=%u)\n", page);
+
+  // Setup margins to be borderless for purposes of the bitmap...
+  ras->left   = 0;
+  ras->top    = 0;
+  ras->right  = ras->header.cupsWidth;
+  ras->bottom = ras->header.cupsHeight;
+
+  // Allocate objects for each of the strips...
+  if ((value = getenv("IPP_PCLM_STRIP_HEIGHT_PREFERRED")) == NULL || (ras->pclm_strip_height = atoi(value)) < 16 || ras->pclm_strip_height > 256)
+    ras->pclm_strip_height = 16;
+
+  ras->pclm_num_strip_objs = ras->header.cupsHeight / ras->pclm_strip_height;
+  if ((ras->pclm_strip_objs = calloc(ras->pclm_num_strip_objs, sizeof(pdfio_obj_t *))) == NULL)
+    return (false);
+
+  fprintf(stderr, "DEBUG: pclm_start_page: num_strips=%u\n", (unsigned)ras->pclm_num_strip_objs);
+
+  // Create an image object for each strip...
+  for (i = 0; i < ras->pclm_num_strip_objs; i ++)
+  {
+    dict = pdfioDictCreate(ras->pclm);
+    pdfioDictSetNumber(dict, "Width", ras->header.cupsWidth);
+    pdfioDictSetNumber(dict, "Height", ras->pclm_strip_height);
+    pdfioDictSetNumber(dict, "BitsPerComponent", 8);
+    pdfioDictSetName(dict, "ColorSpace", ras->header.cupsNumColors == 3 ? "DeviceRGB" : "DeviceGray");
+    pdfioDictSetName(dict, "Filter", "FlateDecode");
+    pdfioDictSetName(dict, "Type", "XObject");
+    pdfioDictSetName(dict, "Subtype", "Image");
+
+    if ((ras->pclm_strip_objs[i] = pdfioFileCreateObj(ras->pclm, dict)) == NULL)
+      return (false);
+  }
+
+  // Create the page object...
+  dict = pdfioDictCreate(ras->pclm);
+  pdfioDictSetRect(dict, "MediaBox", &ras->pclm_media_box);
+  for (i = 0; i < ras->pclm_num_strip_objs; i ++)
+  {
+    snprintf(image, sizeof(image), "Image%u", (unsigned)i);
+    pdfioPageDictAddImage(dict, pdfioStringCreate(ras->pclm, image), ras->pclm_strip_objs[i]);
+  }
+
+  st = pdfioFileCreatePage(ras->pclm, dict);
+
+  pdfioContentMatrixScale(st, 72.0 / ras->header.HWResolution[0], 72.0 / ras->header.HWResolution[1]);
+  for (i = 0; i < ras->pclm_num_strip_objs; i ++)
+  {
+    pdfioStreamPrintf(st, "/P<</MCID 0>>BDC q\n%u 0 0 %u 0 %u cm\n/Image%u Do Q\n", ras->header.cupsWidth, ras->pclm_strip_height, (unsigned)(ras->header.cupsHeight - (i + 1) * ras->pclm_strip_height), (unsigned)i);
+  }
+
+  pdfioStreamClose(st);
+  return (true);
+}
+
+
+//
+// 'pclm_write_line()' - Write a line of raster data.
+//
+
+static void
+pclm_write_line(
+    xform_raster_t      *ras,		// I - Raster information
+    unsigned            y,		// I - Line number
+    const unsigned char *line,		// I - Pixels on line
+    xform_write_cb_t    cb,		// I - Write callback
+    void                *ctx)		// I - Write context
+{
+  size_t	ystrip = y / ras->pclm_strip_height;
+					// Strip
+  unsigned	ymod = y % ras->pclm_strip_height;
+					// Line within strip
+
+
+//  fprintf(stderr, "DEBUG: pclm_write_line(y=%u)\n", y);
+
+  if (ystrip >= ras->pclm_num_strip_objs)
+    return;
+
+  if (ymod == 0)
+    ras->pclm_strip_st = pdfioObjCreateStream(ras->pclm_strip_objs[ystrip], PDFIO_FILTER_FLATE);
+
+  pdfioStreamWrite(ras->pclm_strip_st, line, ras->header.cupsBytesPerLine);
+
+  if (ymod == (ras->pclm_strip_height - 1))
+  {
+    pdfioStreamClose(ras->pclm_strip_st);
+    ras->pclm_strip_st = NULL;
+  }
+}
+
+
+//
+// 'pclps_printf()' - Write a formatted string.
+//
+
+static bool				// O - `true` on success, `false` on error
 pclps_printf(xform_write_cb_t cb,	// I - Write callback
              void             *ctx,	// I - Write context
 	     const char       *format,	// I - Printf-style format string
@@ -2456,7 +2716,7 @@ pclps_printf(xform_write_cb_t cb,	// I - Write callback
   vsnprintf(buffer, sizeof(buffer), format, ap);
   va_end(ap);
 
-  (*cb)(ctx, (const unsigned char *)buffer, strlen(buffer));
+  return ((*cb)(ctx, (const unsigned char *)buffer, strlen(buffer)) > 0);
 }
 
 
@@ -2611,7 +2871,7 @@ ps_init(xform_raster_t *ras)		// I - Raster information
 // 'ps_start_job()' - Start a PCL "job".
 //
 
-static void
+static bool				// O - `true` on success, `false` on failure
 ps_start_job(xform_raster_t   *ras,	// I - Raster information
              xform_write_cb_t cb,	// I - Write callback
              void             *ctx)	// I - Write context
@@ -2642,7 +2902,7 @@ ps_start_job(xform_raster_t   *ras,	// I - Raster information
     pclps_printf(cb, ctx, "%%%%Title: %s\n", job_buffer);
   }
   pclps_printf(cb, ctx, "%%%%Pages: (atend)\n");
-  pclps_printf(cb, ctx, "%%%%EndComments\n");
+  return (pclps_printf(cb, ctx, "%%%%EndComments\n"));
 }
 
 
@@ -2650,7 +2910,7 @@ ps_start_job(xform_raster_t   *ras,	// I - Raster information
 // 'ps_start_page()' - Start a PCL page.
 //
 
-static void
+static bool				// O - `true` on success, `false` on failure
 ps_start_page(xform_raster_t   *ras,	// I - Raster information
               unsigned         page,	// I - Current page
               xform_write_cb_t cb,	// I - Write callback
@@ -2669,12 +2929,12 @@ ps_start_page(xform_raster_t   *ras,	// I - Raster information
   if (ras->header.cupsColorSpace != CUPS_CSPACE_W && ras->header.cupsColorSpace != CUPS_CSPACE_SW && ras->header.cupsColorSpace != CUPS_CSPACE_K && ras->header.cupsColorSpace != CUPS_CSPACE_RGB && ras->header.cupsColorSpace != CUPS_CSPACE_SRGB)
   {
     cupsLangPrintf(stderr, _("%s: Unsupported color space, aborting."), Prefix);
-    return;
+    return (false);
   }
   else if (ras->header.cupsBitsPerColor != 1 && ras->header.cupsBitsPerColor != 8)
   {
     cupsLangPrintf(stderr, _("%s: Unsupported bit depth, aborting."), Prefix);
-    return;
+    return (false);
   }
 
   pclps_printf(cb, ctx, "%%%%Page: (%d) %d\n", page, page);
@@ -2702,7 +2962,7 @@ ps_start_page(xform_raster_t   *ras,	// I - Raster information
 	break;
   }
 
-  pclps_printf(cb, ctx, "gsave /L{grestore gsave 0 exch neg %u add translate <</ImageType 1/Width %u/Height 1/BitsPerComponent %u/ImageMatrix[1 0 0 1 0 0]/DataSource currentfile/ASCII85Decode filter/Decode[%s]>>image}bind def\n", ras->header.cupsHeight - ras->top, ras->right - ras->left, ras->header.cupsBitsPerColor, decode);
+  return (pclps_printf(cb, ctx, "gsave /L{grestore gsave 0 exch neg %u add translate <</ImageType 1/Width %u/Height 1/BitsPerComponent %u/ImageMatrix[1 0 0 1 0 0]/DataSource currentfile/ASCII85Decode filter/Decode[%s]>>image}bind def\n", ras->header.cupsHeight - ras->top, ras->right - ras->left, ras->header.cupsBitsPerColor, decode));
 }
 
 
@@ -3502,12 +3762,14 @@ raster_init(xform_raster_t *ras)	// I - Raster information
 // 'raster_start_job()' - Start a raster "job".
 //
 
-static void
+static bool				// O - `true` on success, `false` on error
 raster_start_job(xform_raster_t   *ras,	// I - Raster information
 		 xform_write_cb_t cb,	// I - Write callback
 		 void             *ctx)	// I - Write context
 {
   ras->ras = cupsRasterOpenIO((cups_raster_cb_t)cb, ctx, !strcmp(ras->format, "image/pwg-raster") ? CUPS_RASTER_WRITE_PWG : CUPS_RASTER_WRITE_APPLE);
+
+  return (ras->ras != NULL);
 }
 
 
@@ -3515,7 +3777,7 @@ raster_start_job(xform_raster_t   *ras,	// I - Raster information
 // 'raster_start_page()' - Start a raster page.
 //
 
-static void
+static bool				// O - `true` on success, `false` on failure
 raster_start_page(xform_raster_t   *ras,// I - Raster information
 		  unsigned         page,// I - Current page
 		  xform_write_cb_t cb,	// I - Write callback
@@ -3530,9 +3792,9 @@ raster_start_page(xform_raster_t   *ras,// I - Raster information
   ras->bottom = ras->header.cupsHeight;
 
   if (ras->header.Duplex && !(page & 1))
-    cupsRasterWriteHeader(ras->ras, &ras->back_header);
+    return (cupsRasterWriteHeader(ras->ras, &ras->back_header));
   else
-    cupsRasterWriteHeader(ras->ras, &ras->header);
+    return (cupsRasterWriteHeader(ras->ras, &ras->header));
 }
 
 
@@ -3935,7 +4197,8 @@ xform_document(
   if (Verbosity > 1)
     fprintf(stderr, "DEBUG: cupsPageSize=[%g %g]\n", ras.header.cupsPageSize[0], ras.header.cupsPageSize[1]);
 
-  (ras.start_job)(&ras, cb, ctx);
+  if (!(ras.start_job)(&ras, cb, ctx))
+    return (false);
 
   // Render pages in the PDF...
   if (options->multiple_document_handling == IPPOPT_HANDLING_UNCOLLATED_COPIES)
@@ -3988,7 +4251,8 @@ xform_document(
       if (Verbosity > 1)
 	fprintf(stderr, "DEBUG: Printing copy %d/%d, page %d/%d, transform=[%g %g %g %g %g %g]\n", copy + 1, options->copies, page, pages, transform.a, transform.b, transform.c, transform.d, transform.tx, transform.ty);
 
-      (ras.start_page)(&ras, page, cb, ctx);
+      if (!(ras.start_page)(&ras, page, cb, ctx))
+        break;
 
       ras.out_length = ((ras.right - ras.left) * ras.header.cupsBitsPerPixel + 7) / 8;
 
@@ -4062,7 +4326,8 @@ xform_document(
 
       memset(ras.band_buffer, 255, ras.header.cupsBytesPerLine);
 
-      (ras.start_page)(&ras, page, cb, ctx);
+      if (!(ras.start_page)(&ras, page, cb, ctx))
+        break;
 
       for (y = ras.top; y < ras.bottom; y ++)
 	(ras.write_line)(&ras, y, ras.band_buffer, cb, ctx);
@@ -4355,7 +4620,8 @@ xform_document(
       // Send the page to the driver...
       page ++;
 
-      (ras.start_page)(&ras, page, cb, ctx);
+      if (!(ras.start_page)(&ras, page, cb, ctx))
+        break;
 
       ras.out_length = ((ras.right - ras.left) * ras.header.cupsBitsPerPixel + 7) / 8;
 
@@ -4558,14 +4824,18 @@ xform_setup(xform_raster_t *ras,	// I - Raster information
 
   ras->format = format;
 
-  if (!strcmp(format, "application/vnd.hp-pcl"))
+  if (!strcasecmp(format, "application/vnd.hp-pcl"))
   {
     type = "black_1";
     pcl_init(ras);
   }
-  else if (!strcmp(format, "application/postscript"))
+  else if (!strcasecmp(format, "application/postscript"))
   {
     ps_init(ras);
+  }
+  else if (!strcasecmp(format, "application/PCLm"))
+  {
+    pclm_init(ras);
   }
   else
   {

@@ -165,7 +165,7 @@ Currently the &quot;application/pdf&quot; (PDF) and &quot;image/jpeg&quot; (JPEG
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-m</strong><em> OUTPUT/FORMAT</em>
 <br>
 Specifies the MIME media type of the output file.
-Currently the &quot;application/pdf&quot; (PDF), &quot;application/postscript&quot; (PostScript), &quot;application/vnd.hp-pcl&quot; (HP PCL), &quot;image/pwg-raster&quot; (PWG Raster), and &quot;image/urf&quot; (Apple Raster) MIME media types are supported.
+Currently the &quot;application/PCLm&quot; (PCLm), &quot;application/pdf&quot; (PDF), &quot;application/postscript&quot; (PostScript), &quot;application/vnd.hp-pcl&quot; (HP PCL), &quot;image/pwg-raster&quot; (PWG Raster), and &quot;image/urf&quot; (Apple Raster) MIME media types are supported.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-o</strong><em> &quot;NAME=VALUE</em><strong>[...</strong><em>NAME=VALUE]&quot;</em>
 <br>
@@ -328,16 +328,31 @@ For example, the &quot;media&quot; Job Template attribute is stored as the &quot
 Specifies the default value of the corresponding &quot;xxx-default&quot; Printer Description attribute, where &quot;xxx&quot; is converted to uppercase.
 For example, the &quot;media-default&quot; Printer Description attribute is stored as the &quot;IPP_MEDIA_DEFAULT&quot; environment variable.
 </p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>IPP_PCLM_RASTER_BACK_SIDE</strong><br>
+Specifies the coordinate system of the back side of duplex sheets.
+The default is 'normal'.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>IPP_PCLM_SOURCE_RESOLUTION_SUPPORTED</strong><br>
+Lists the supported output resolutions.
+The default is 600dpi.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>IPP_PCLM_STRIP_HEIGHT_PREFERRED</strong><br>
+Specifies the preferred strip height for the printer.
+The default is 16.
+</p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>IPP_PWG_RASTER_DOCUMENT_RESOLUTION_SUPPORTED</strong><br>
 Lists the supported output resolutions.
+The default is 300dpi.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>IPP_PWG_RASTER_DOCUMENT_SHEET_BACK</strong><br>
 Specifies the coordinate system of the back side of duplex sheets.
+The default is 'normal'.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>IPP_PWG_RASTER_DOCUMENT_TYPE_SUPPORTED</strong><br>
 Lists the supported output color spaces and bit depths.
+The default is 'sgray_8'.
 </p>
-    <p style="margin-left: 2.5em; text-indent: -2.5em;">IPPTRANSFORM_MAX_RASTER<br>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>IPPTRANSFORM_MAX_RASTER</strong><br>
 Specifies the maximum number of bytes to use when generating raster data.
 The default is 16MB.
 </p>
@@ -371,7 +386,7 @@ Specifies the log level (verbosity) as &quot;error&quot;, &quot;info&quot;, or &
 
 </p>
     <h2 id="ipptransform-1.copyright">Copyright</h2>
-<p>Copyright &copy; 2023 by OpenPrinting.
+<p>Copyright &copy; 2023-2025 by OpenPrinting.
 Copyright &copy; 2016-2019 by the Printer Working Group.
 Copyright &copy; 2016-2019 by Apple Inc.
   </body>
