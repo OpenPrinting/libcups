@@ -1,14 +1,14 @@
 .\"
 .\" ipptransform man page.
 .\"
-.\" Copyright © 2023 by OpenPrinting.
+.\" Copyright © 2023-2025 by OpenPrinting.
 .\" Copyright © 2016-2019 by the Printer Working Group.
 .\" Copyright © 2016-2019 by Apple Inc.
 .\"
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH ipptransform 1 "ippsample" "2023-11-22" "OpenPrinting"
+.TH ipptransform 1 "ippsample" "2025-02-21" "OpenPrinting"
 .SH NAME
 ipptransform \- convert document data to alternate formats
 .br
@@ -72,7 +72,7 @@ Currently the "application/pdf" (PDF) and "image/jpeg" (JPEG) MIME media types a
 .TP 5
 .BI \-m \ OUTPUT/FORMAT
 Specifies the MIME media type of the output file.
-Currently the "application/pdf" (PDF), "application/postscript" (PostScript), "application/vnd.hp-pcl" (HP PCL), "image/pwg-raster" (PWG Raster), and "image/urf" (Apple Raster) MIME media types are supported.
+Currently the "application/PCLm" (PCLm), "application/pdf" (PDF), "application/postscript" (PostScript), "application/vnd.hp-pcl" (HP PCL), "image/pwg-raster" (PWG Raster), and "image/urf" (Apple Raster) MIME media types are supported.
 .TP 5
 .BI \-o \ "NAME=VALUE [... NAME=VALUE]"
 Specifies one or more named options for the conversion.
@@ -227,16 +227,31 @@ For example, the "media" Job Template attribute is stored as the "IPP_MEDIA" env
 Specifies the default value of the corresponding "xxx-default" Printer Description attribute, where "xxx" is converted to uppercase.
 For example, the "media-default" Printer Description attribute is stored as the "IPP_MEDIA_DEFAULT" environment variable.
 .TP 5
+.B IPP_PCLM_RASTER_BACK_SIDE
+Specifies the coordinate system of the back side of duplex sheets.
+The default is 'normal'.
+.TP 5
+.B IPP_PCLM_SOURCE_RESOLUTION_SUPPORTED
+Lists the supported output resolutions.
+The default is 600dpi.
+.TP 5
+.B IPP_PCLM_STRIP_HEIGHT_PREFERRED
+Specifies the preferred strip height for the printer.
+The default is 16.
+.TP 5
 .B IPP_PWG_RASTER_DOCUMENT_RESOLUTION_SUPPORTED
 Lists the supported output resolutions.
+The default is 300dpi.
 .TP 5
 .B IPP_PWG_RASTER_DOCUMENT_SHEET_BACK
 Specifies the coordinate system of the back side of duplex sheets.
+The default is 'normal'.
 .TP 5
 .B IPP_PWG_RASTER_DOCUMENT_TYPE_SUPPORTED
 Lists the supported output color spaces and bit depths.
+The default is 'sgray_8'.
 .TP 5
-IPPTRANSFORM_MAX_RASTER
+.B IPPTRANSFORM_MAX_RASTER
 Specifies the maximum number of bytes to use when generating raster data.
 The default is 16MB.
 .TP 5
@@ -269,6 +284,6 @@ Convert a JPEG file to sRGB PWG Raster at 600dpi:
 .SH SEE ALSO
 .BR ipptool (1),
 .SH COPYRIGHT
-Copyright \[co] 2023 by OpenPrinting.
+Copyright \[co] 2023-2025 by OpenPrinting.
 Copyright \[co] 2016-2019 by the Printer Working Group.
 Copyright \[co] 2016-2019 by Apple Inc.

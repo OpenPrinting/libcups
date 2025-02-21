@@ -272,6 +272,11 @@ main(int  argc,				// I - Number of command-line args
   sheet_back   = getenv("IPP_PWG_RASTER_DOCUMENT_SHEET_BACK");
   types        = getenv("IPP_PWG_RASTER_DOCUMENT_TYPE_SUPPORTED");
 
+  if (!resolutions)
+    resolutions = getenv("IPP_PCLM_SOURCE_RESOLUTION_SUPPORTED");
+  if (!sheet_back)
+    sheet_back = getenv("IPP_PCLM_RASTER_BACK_SIDE");
+
   if ((opt = getenv("SERVER_LOGLEVEL")) != NULL)
   {
     // Use "ERROR" as the prefix for error messages since they will be logged...
@@ -728,16 +733,25 @@ main(int  argc,				// I - Number of command-line args
     // Do raster transform...
     if (!resolutions)
     {
-      // By default, use 200dpi for PostScript and 300dpi for others...
+      // By default, use 200dpi for PostScript, 600dpi for PCLm, and 300dpi for others...
       if (!strcasecmp(output_type, "application/postscript"))
         resolutions = "200dpi";
+      else if (!strcasecmp(output_type, "application/PCLm"))
+        resolutions = "600dpi";
       else
         resolutions = "300dpi";
     }
+
     if (!sheet_back)
       sheet_back = "normal";
+
     if (!types)
-      types = "sgray_8";
+    {
+      if (!strcasecmp(output_type, "application/PCLm"))
+        types = "sgray_8,srgb_8";
+      else
+        types = "sgray_8";
+    }
 
     if (!xform_document(pdf_file, pdf_pages, ipp_options, output_type, resolutions, sheet_back, types, write_cb, write_ptr))
       status = 1;
@@ -2585,6 +2599,7 @@ pclm_start_page(xform_raster_t   *ras,	// I - Raster information
                xform_write_cb_t cb,	// I - Write callback
                void             *ctx)	// I - Write context
 {
+  const char	*value;			// Environment variable value
   size_t	i;			// Looping var
   pdfio_dict_t	*dict;			// Page/image dictionary
   pdfio_stream_t *st;			// Page stream
@@ -2600,11 +2615,9 @@ pclm_start_page(xform_raster_t   *ras,	// I - Raster information
   ras->bottom = ras->header.cupsHeight;
 
   // Allocate objects for each of the strips...
-  // TODO: Get IPP_PCLM_RASTER_BACK_SIDE
-  // TODO: Get IPP_PCLM_SOURCE_RESOLUTION_SUPPORTED
-  // TODO: Get IPP_PCLM_STRIP_HEIGHT_PREFERRED
-  // TODO: Get IPP_PCLM_STRIP_HEIGHT_SUPPORTED
-  ras->pclm_strip_height   = 16;
+  if ((value = getenv("IPP_PCLM_STRIP_HEIGHT_PREFERRED")) == NULL || (ras->pclm_strip_height = atoi(value)) < 16 || ras->pclm_strip_height > 256)
+    ras->pclm_strip_height = 16;
+
   ras->pclm_num_strip_objs = ras->header.cupsHeight / ras->pclm_strip_height;
   if ((ras->pclm_strip_objs = calloc(ras->pclm_num_strip_objs, sizeof(pdfio_obj_t *))) == NULL)
     return (false);
@@ -4823,10 +4836,6 @@ xform_setup(xform_raster_t *ras,	// I - Raster information
   else if (!strcasecmp(format, "application/PCLm"))
   {
     pclm_init(ras);
-
-    options->printer_resolution[0] = 600;
-    options->printer_resolution[1] = 600;
-    types = "srgb_8,sgray_8";
   }
   else
   {

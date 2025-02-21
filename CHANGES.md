@@ -12,6 +12,8 @@ libcups v3.0rc4 (YYYY-MM-DD)
   `--client-name` options.
 - Updated `cupsOAuthGetMetadata` to support Microsoft Azure/Entra OAuth
   servers.
+- Updated `ipptransform` to support generation of PCLm output in addition to PWG
+  Raster data.
 - Fixed handling of finishings/finishings-col and media/media-col in the
   `ippeveprinter` tool (Issue #95)
 - Fixed a duplicate printer reporting bug in `cupsGetDests`.
