@@ -32,7 +32,7 @@ jobs:
         run: sudo apt-get update --fix-missing -y
 
       - name: Install prerequisites
-        run: sudo apt-get install -y avahi-daemon cppcheck libavahi-client-dev libssl-dev libusb-1.0-0-dev zlib1g-dev
+        run: sudo apt-get install -y avahi-daemon cppcheck libavahi-client-dev libpng-dev libssl-dev libusb-1.0-0-dev zlib1g-dev
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v2

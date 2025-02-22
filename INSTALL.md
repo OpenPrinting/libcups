@@ -26,7 +26,7 @@ On a stock Ubuntu install, the following command will install the required
 prerequisites:
 
     sudo apt-get install autoconf build-essential libavahi-client-dev \
-         libgnutls28-dev libnss-mdns zlib1g-dev
+         libnss-mdns libpng-dev libssl-dev zlib1g-dev
 
 
 Configuration
