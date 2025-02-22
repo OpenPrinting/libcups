@@ -178,7 +178,7 @@ AS_IF([$PKGCONFIG --exists pdfio], [
     AC_MSG_RESULT([no, using embedded version])
     CPPFLAGS="$CPPFLAGS -I../pdfio"
     PDFIODIR="pdfio"
-    XFORMLIBS="../pdfio/libpdfio.a $XFORMLIBS"
+    XFORMLIBS="-L../pdfio \`PKG_CONFIG_PATH=../pdfio $PKGCONFIG --libs pdfio\`  $XFORMLIBS"
     AC_CONFIG_SUBDIRS([pdfio])
 ])
 AC_SUBST([PDFIODIR])
