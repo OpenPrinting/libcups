@@ -1986,8 +1986,7 @@ delete_job(ippeve_job_t *job)		// I - Job
 
   ippDelete(job->attrs);
 
-  if (job->message)
-    free(job->message);
+  free(job->message);
 
   if (job->filename)
   {
@@ -2018,22 +2017,14 @@ delete_printer(
 
   cupsDNSSDDelete(printer->dnssd);
 
-  if (printer->dnssd_name)
-    free(printer->dnssd_name);
-  if (printer->name)
-    free(printer->name);
-  if (printer->icons[0])
-    free(printer->icons[0]);
-  if (printer->strings)
-    free(printer->strings);
-  if (printer->command)
-    free(printer->command);
-  if (printer->device_uri)
-    free(printer->device_uri);
-  if (printer->directory)
-    free(printer->directory);
-  if (printer->hostname)
-    free(printer->hostname);
+  free(printer->dnssd_name);
+  free(printer->name);
+  free(printer->icons[0]);
+  free(printer->strings);
+  free(printer->command);
+  free(printer->device_uri);
+  free(printer->directory);
+  free(printer->hostname);
 
   ippDelete(printer->attrs);
   cupsArrayDelete(printer->jobs);

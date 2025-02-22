@@ -6,7 +6,7 @@
 // our own file functions allows us to provide transparent support of
 // different line endings, gzip'd print files, etc.
 //
-// Copyright © 2021-2024 by OpenPrinting.
+// Copyright © 2021-2025 by OpenPrinting.
 // Copyright © 2007-2019 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products, all rights reserved.
 //
@@ -141,9 +141,7 @@ cupsFileClose(cups_file_t *fp)		// I - CUPS file
   fd   = fp->fd;
   mode = fp->mode;
 
-  if (fp->printf_buffer)
-    free(fp->printf_buffer);
-
+  free(fp->printf_buffer);
   free(fp);
 
   // Close the file, returning the close status...
