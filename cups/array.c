@@ -1,7 +1,7 @@
 //
 // Sorted array routines for CUPS.
 //
-// Copyright © 2021-2022 by OpenPrinting.
+// Copyright © 2021-2025 by OpenPrinting.
 // Copyright © 2007-2014 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products.
 //
@@ -112,7 +112,7 @@ cupsArrayAddStrings(cups_array_t *a,	// I - Array
   if (!a)
     return (false);
 
-  if (!a || !s || !*s)
+  if (!a || !s || !*s || !delim)
     return (true);
 
   if (delim == ' ')
