@@ -1155,9 +1155,9 @@ my_get_dests(
 <h3 class="title" id="detailed-destination-information">Detailed Destination Information</h3>
 <p>Once a destination has been chosen, the <a href="#cupsCopyDestInfo"><code>cupsCopyDestInfo</code></a> function can be used to gather detailed information about the destination:</p>
 <pre><code class="language-c">cups_dinfo_t *
-cupsCopyDestInfo(http_t *http, cups_dest_t *dest);
+cupsCopyDestInfo(http_t *http, cups_dest_t *dest, cups_dest_flags_t dflags);
 </code></pre>
-<p>The &quot;http&quot; argument specifies a connection to the CUPS scheduler and is typically the constant <code>CUPS_HTTP_DEFAULT</code>. The &quot;dest&quot; argument specifies the destination to query.</p>
+<p>The &quot;http&quot; argument specifies a connection to the CUPS scheduler and is typically the constant <code>CUPS_HTTP_DEFAULT</code>. The &quot;dest&quot; argument specifies the destination to query. The &quot;dflags&quot; argument specifies whether to get the information from the local spooler (<code>CUPS_DEST_FLAGS_NONE</code>) or from the printer (<code>CUPS_DEST_FLAGS_DEVICE</code>).</p>
 <p>The <code>cups_dinfo_t</code> structure that is returned contains a snapshot of the supported options and their supported, ready, and default values. It also can report constraints between different options and values, and recommend changes to resolve those constraints.</p>
 <h4 id="getting-supported-options-and-values">Getting Supported Options and Values</h4>
 <p>The <a href="#cupsCheckDestSupported"><code>cupsCheckDestSupported</code></a> function can be used to test whether a particular option or option and value is supported:</p>
@@ -1198,7 +1198,8 @@ cupsFindDestSupported(http_t *http, cups_dest_t *dest,
                       <span class="reserved">const</span> <span class="reserved">char</span> *option);
 </code></pre>
 <p>For example, the following code prints the supported finishing processes for a destination, if any, to the standard output:</p>
-<pre><code class="language-c">cups_dinfo_t *info = cupsCopyDestInfo(CUPS_HTTP_DEFAULT, dest);
+<pre><code class="language-c">cups_dinfo_t *info = cupsCopyDestInfo(CUPS_HTTP_DEFAULT, dest,
+                                      CUPS_DEST_FLAGS_NONE);
 
 <span class="reserved">if</span> (cupsCheckDestSupported(CUPS_HTTP_DEFAULT, dest, info,
                            CUPS_FINISHINGS, NULL))

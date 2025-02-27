@@ -316,12 +316,14 @@ used to gather detailed information about the destination:
 
 ```c
 cups_dinfo_t *
-cupsCopyDestInfo(http_t *http, cups_dest_t *dest);
+cupsCopyDestInfo(http_t *http, cups_dest_t *dest, cups_dest_flags_t dflags);
 ```
 
 The "http" argument specifies a connection to the CUPS scheduler and is
 typically the constant `CUPS_HTTP_DEFAULT`.  The "dest" argument specifies the
-destination to query.
+destination to query.  The "dflags" argument specifies whether to get the
+information from the local spooler (`CUPS_DEST_FLAGS_NONE`) or from the printer
+(`CUPS_DEST_FLAGS_DEVICE`).
 
 The `cups_dinfo_t` structure that is returned contains a snapshot of the
 supported options and their supported, ready, and default values.  It also can
@@ -396,7 +398,8 @@ For example, the following code prints the supported finishing processes for a
 destination, if any, to the standard output:
 
 ```c
-cups_dinfo_t *info = cupsCopyDestInfo(CUPS_HTTP_DEFAULT, dest);
+cups_dinfo_t *info = cupsCopyDestInfo(CUPS_HTTP_DEFAULT, dest,
+                                      CUPS_DEST_FLAGS_NONE);
 
 if (cupsCheckDestSupported(CUPS_HTTP_DEFAULT, dest, info,
                            CUPS_FINISHINGS, NULL))
