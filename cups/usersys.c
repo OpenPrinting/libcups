@@ -1022,12 +1022,12 @@ _cupsSetDefaults(void)
       if (!_cups_strcasecmp(ptr, "mono"))
       {
         cg->filter_type      |= CUPS_PTYPE_BW;
-        cg->filter_type_mask |= CUPS_PTYPE_BW | CUPS_PTYPE_COLOR;
+        cg->filter_type_mask |= CUPS_PTYPE_BW;
       }
       else if (!_cups_strcasecmp(ptr, "color"))
       {
         cg->filter_type      |= CUPS_PTYPE_COLOR;
-        cg->filter_type_mask |= CUPS_PTYPE_BW | CUPS_PTYPE_COLOR;
+        cg->filter_type_mask |= CUPS_PTYPE_COLOR;
       }
       else if (!_cups_strcasecmp(ptr, "duplex"))
       {
