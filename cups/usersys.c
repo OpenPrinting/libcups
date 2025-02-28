@@ -958,7 +958,7 @@ _cupsSetDefaults(void)
       if (*ptr == '/')
         *ptr = '\0';			// Strip trailing '/'
 
-      if (regcomp(cg->filter_location_regex, cc.filter_location + 1, REG_EXTENDED))
+      if (regcomp(cg->filter_location_regex, cc.filter_location + 1, REG_EXTENDED | REG_ICASE))
       {
         DEBUG_puts("1_cupsSetDefaults: Bad regular expression in FilterLocation - results not filtered.");
         free(cg->filter_location_regex);
