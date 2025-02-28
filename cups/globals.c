@@ -1,7 +1,7 @@
 //
 // Global variable access routines for CUPS.
 //
-// Copyright © 2021-2022 by OpenPrinting.
+// Copyright © 2021-2025 by OpenPrinting.
 // Copyright © 2007-2019 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products, all rights reserved.
 //
@@ -378,6 +378,14 @@ cups_globals_free(_cups_globals_t *cg)	// I - Pointer to global data
   cupsFileClose(cg->stdio_files[0]);
   cupsFileClose(cg->stdio_files[1]);
   cupsFileClose(cg->stdio_files[2]);
+
+  cupsArrayDelete(cg->browse_domains);
+  cupsArrayDelete(cg->filter_location_array);
+  if (cg->filter_location_regex)
+  {
+    regfree(cg->filter_location_regex);
+    free(cg->filter_location_regex);
+  }
 
   free(cg->userconfig);
   free(cg->raster_error.start);

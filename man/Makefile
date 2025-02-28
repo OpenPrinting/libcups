@@ -1,7 +1,7 @@
 #
 # Man page makefile for libcups.
 #
-# Copyright © 2021-2023 by OpenPrinting.
+# Copyright © 2021-2025 by OpenPrinting.
 # Copyright © 2007-2019 by Apple Inc.
 # Copyright © 1993-2006 by Easy Software Products.
 #
@@ -22,6 +22,7 @@ MAN1	=	\
 		ipptool.1 \
 		ipptransform.1
 MAN5	=	\
+		client.conf.5 \
 		ipptoolfile.5
 
 

@@ -7,6 +7,7 @@ libcups v3.0rc4 (YYYY-MM-DD)
 - Added `cupsCopyCredentialsPublicKey` API.
 - Added `cupsGetClock` API.
 - Added `cupsJWTLoadCredentials` API.
+- Added "client.conf" man page.
 - Updated documentation (Issue #99)
 - Updated the `ipptool` utility to support the `--bearer-token` and
   `--client-name` options.
@@ -14,6 +15,8 @@ libcups v3.0rc4 (YYYY-MM-DD)
   servers.
 - Updated `ipptransform` to support generation of PCLm output in addition to PWG
   Raster data.
+- Updated `cupsEnumDests` and `cupsGetDests` to support printer browsing and
+  filtering options in client.conf (Issue #1180)
 - Fixed handling of finishings/finishings-col and media/media-col in the
   `ippeveprinter` tool (Issue #95)
 - Fixed a duplicate printer reporting bug in `cupsGetDests`.

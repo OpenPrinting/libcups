@@ -1,7 +1,7 @@
 //
 // Private definitions for CUPS.
 //
-// Copyright © 2021-2024 by OpenPrinting.
+// Copyright © 2021-2025 by OpenPrinting.
 // Copyright © 2007-2019 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products, all rights reserved.
 //
@@ -30,6 +30,7 @@ extern "C" {
 #  ifdef _WIN32
 typedef int mode_t;			// Windows doesn't support mode_t type @private@
 #  endif // _WIN32
+#  include <regex.h>
 
 
 //
@@ -144,6 +145,8 @@ typedef struct _cups_globals_s		// CUPS global state data
   char			tempfile[1024];	// cupsTempFd/File buffer
 
   // usersys.c
+  bool			client_conf_loaded;
+					// Has client.conf been loaded?
   _cups_digestoptions_t	digestoptions;	// DigestOptions setting
   _cups_uatokens_t	uatokens;	// UserAgentTokens setting
   http_encryption_t	encryption;	// Encryption setting
@@ -162,6 +165,15 @@ typedef struct _cups_globals_s		// CUPS global state data
 			any_root,	// Allow any (e.g., self-signed) root
 			expired_certs,	// Allow expired certs
 			validate_certs;	// Validate certificates
+
+  cups_array_t		*browse_domains;// BrowseDomains list
+  cups_array_t		*filter_location_array;
+					// FilterLocation list
+  regex_t		*filter_location_regex;
+					// FilterLocation regular expression
+  cups_ptype_t		filter_type;	// FilterType values from client.conf
+  cups_ptype_t		filter_type_mask;
+					// FilterType mask
 
   // util.c
   char			def_printer[256];

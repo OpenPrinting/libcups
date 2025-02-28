@@ -917,7 +917,7 @@ cupsGetCredentialsTrust(
 
   cert = sk_X509_value(certs, 0);
 
-  if (cg->any_root < 0)
+  if (!cg->client_conf_loaded)
   {
     _cupsSetDefaults();
 //    openssl_load_crl();
@@ -1672,6 +1672,7 @@ _httpTLSStart(http_t *http)		// I - Connection to server
   char		hostname[256],		// Hostname
 		cipherlist[256];	// List of cipher suites
   unsigned long	error;			// Error code, if any
+  _cups_globals_t *cg = _cupsGlobals();	// Per-thread globals
   static const uint16_t versions[] =	// SSL/TLS versions
   {
     TLS1_VERSION,			// No more SSL support in OpenSSL
@@ -1690,7 +1691,7 @@ _httpTLSStart(http_t *http)		// I - Connection to server
 
   DEBUG_printf("3_httpTLSStart(http=%p)", http);
 
-  if (tls_options < 0)
+  if (!cg->client_conf_loaded)
   {
     DEBUG_puts("4_httpTLSStart: Setting defaults.");
     _cupsSetDefaults();

@@ -1,7 +1,7 @@
 //
 // User, system, and password routines for CUPS.
 //
-// Copyright © 2021-2024 by OpenPrinting.
+// Copyright © 2021-2025 by OpenPrinting.
 // Copyright © 2007-2019 by Apple Inc.
 // Copyright © 1997-2006 by Easy Software Products.
 //
@@ -75,8 +75,14 @@ typedef struct _cups_client_conf_s	// client.conf config data
 			validate_certs;	// Validate certificates
   http_encryption_t	encryption;	// Encryption setting
   char			user[65],	// User name
-			server_name[256];
+			server_name[256],
 					// Server hostname
+			browse_domains[1024],
+					// Browse domains
+			filter_location[1024],
+					// Filter location(s)
+			filter_type[256];
+					// Filter type(s)
 } _cups_client_conf_t;
 
 
@@ -93,8 +99,11 @@ static void	cups_finalize_client_conf(_cups_client_conf_t *cc);
 static void	cups_init_client_conf(_cups_client_conf_t *cc);
 static void	cups_read_client_conf(cups_file_t *fp, _cups_client_conf_t *cc);
 static void	cups_set_default_ipp_port(_cups_globals_t *cg);
+static void	cups_set_browse_domains(_cups_client_conf_t *cc, const char *value);
 static void	cups_set_digestoptions(_cups_client_conf_t *cc, const char *value);
 static void	cups_set_encryption(_cups_client_conf_t *cc, const char *value);
+static void	cups_set_filter_location(_cups_client_conf_t *cc, const char *value);
+static void	cups_set_filter_type(_cups_client_conf_t *cc, const char *value);
 static void	cups_set_server_name(_cups_client_conf_t *cc, const char *value);
 static void	cups_set_ssl_options(_cups_client_conf_t *cc, const char *value);
 static void	cups_set_uatokens(_cups_client_conf_t *cc, const char *value);
@@ -148,7 +157,7 @@ cupsGetEncryption(void)
   _cups_globals_t *cg = _cupsGlobals();	// Pointer to library globals
 
 
-  if (cg->encryption == (http_encryption_t)-1)
+  if (!cg->client_conf_loaded)
     _cupsSetDefaults();
 
   return (cg->encryption);
@@ -207,7 +216,7 @@ cupsGetServer(void)
   _cups_globals_t *cg = _cupsGlobals();	// Pointer to library globals
 
 
-  if (!cg->server[0])
+  if (!cg->client_conf_loaded)
     _cupsSetDefaults();
 
   return (cg->server);
@@ -594,7 +603,7 @@ cupsGetUser(void)
   _cups_globals_t *cg = _cupsGlobals();	// Pointer to library globals
 
 
-  if (!cg->user[0])
+  if (!cg->client_conf_loaded)
     _cupsSetDefaults();
 
   return (cg->user);
@@ -929,6 +938,179 @@ _cupsSetDefaults(void)
   if (cg->validate_certs < 0)
     cg->validate_certs = cc.validate_certs;
 
+  DEBUG_printf("1_cupsSetDefaults: BrowseDomains %s", cc.browse_domains);
+
+  if (!strcmp(cc.browse_domains, "none"))
+    cg->browse_domains = cupsArrayNewStrings(/*s*/NULL, /*delim*/'\0');
+  else if (strcmp(cc.browse_domains, "all") && cc.browse_domains[0])
+    cg->browse_domains = cupsArrayNewStrings(cc.browse_domains, /*delim*/',');
+
+  DEBUG_printf("1_cupsSetDefaults: FilterLocation %s", cc.filter_location);
+
+  if (cc.filter_location[0] == '/')
+  {
+    // FilterLocation /regex/
+    if ((cg->filter_location_regex = (regex_t *)calloc(1, sizeof(regex_t))) != NULL)
+    {
+      char	*ptr = cc.filter_location + strlen(cc.filter_location) - 1;
+					// Pointer into FilterLocation value
+
+      if (*ptr == '/')
+        *ptr = '\0';			// Strip trailing '/'
+
+      if (regcomp(cg->filter_location_regex, cc.filter_location + 1, REG_EXTENDED))
+      {
+        DEBUG_puts("1_cupsSetDefaults: Bad regular expression in FilterLocation - results not filtered.");
+        free(cg->filter_location_regex);
+        cg->filter_location_regex = NULL;
+      }
+    }
+  }
+  else if (cc.filter_location[0])
+  {
+    // FilterLocation "string"[,...,"string"]
+    // FilterLocation 'string'[,...,'string']
+    // FilterLocation string[,...,string]
+    char	quote,			// Quote character, if any
+		*start,			// Start of value
+	        *ptr;			// Pointer into string
+
+    cg->filter_location_array = cupsArrayNewStrings(/*s*/NULL, /*delim*/'\0');
+
+    // Scan for strings...
+    for (ptr = cc.filter_location; *ptr;)
+    {
+      // Handle quotes...
+      if (*ptr == '\'' || *ptr == '\"')
+        quote = *ptr++;
+      else
+        quote = '\0';
+
+      // Find the end of the string...
+      for (start = ptr; *ptr; ptr ++)
+      {
+        if (quote && *ptr == quote)
+        {
+          *ptr++ = '\0';
+          if (*ptr == ',')
+            *ptr++ = '\0';
+          break;
+	}
+	else if (!quote && *ptr == ',')
+	{
+	  *ptr++ = '\0';
+	  break;
+	}
+      }
+
+      if (*start)
+        cupsArrayAdd(cg->filter_location_array, start);
+    }
+  }
+
+  DEBUG_printf("1_cupsSetDefaults: FilterType %s", cc.filter_type);
+  if (cc.filter_type[0] && strcmp(cc.filter_type, "any"))
+  {
+    char	*ptr,			// Pointer into type value
+		*next;			// Pointer to next value
+
+    for (ptr = cc.filter_type; ptr && *ptr; ptr = next)
+    {
+      if ((next = strchr(ptr, ',')) != NULL)
+        *next++ = '\0';
+
+      if (!_cups_strcasecmp(ptr, "mono"))
+      {
+        cg->filter_type      |= CUPS_PTYPE_BW;
+        cg->filter_type_mask |= CUPS_PTYPE_BW | CUPS_PTYPE_COLOR;
+      }
+      else if (!_cups_strcasecmp(ptr, "color"))
+      {
+        cg->filter_type      |= CUPS_PTYPE_COLOR;
+        cg->filter_type_mask |= CUPS_PTYPE_BW | CUPS_PTYPE_COLOR;
+      }
+      else if (!_cups_strcasecmp(ptr, "duplex"))
+      {
+        if (cg->filter_type_mask & CUPS_PTYPE_DUPLEX)
+        {
+          // Both simplex and duplex
+          cg->filter_type_mask &= (cups_ptype_t)~CUPS_PTYPE_DUPLEX;
+	}
+	else
+	{
+	  // Just duplex
+	  cg->filter_type      |= CUPS_PTYPE_DUPLEX;
+	  cg->filter_type_mask |= CUPS_PTYPE_DUPLEX;
+	}
+      }
+      else if (!_cups_strcasecmp(ptr, "simplex"))
+      {
+        if (cg->filter_type & CUPS_PTYPE_DUPLEX)
+        {
+          // Both simplex and duplex
+          cg->filter_type_mask &= (cups_ptype_t)~CUPS_PTYPE_DUPLEX;
+        }
+        else
+        {
+          // Just simplex
+          cg->filter_type_mask |= CUPS_PTYPE_DUPLEX;
+	}
+      }
+      else if (!_cups_strcasecmp(ptr, "staple"))
+      {
+        cg->filter_type      |= CUPS_PTYPE_STAPLE;
+        cg->filter_type_mask |= CUPS_PTYPE_STAPLE;
+      }
+      else if (!_cups_strcasecmp(ptr, "punch"))
+      {
+        cg->filter_type      |= CUPS_PTYPE_PUNCH;
+        cg->filter_type_mask |= CUPS_PTYPE_PUNCH;
+      }
+      else if (!_cups_strcasecmp(ptr, "cover"))
+      {
+        cg->filter_type      |= CUPS_PTYPE_COVER;
+        cg->filter_type_mask |= CUPS_PTYPE_COVER;
+      }
+      else if (!_cups_strcasecmp(ptr, "bind"))
+      {
+        cg->filter_type      |= CUPS_PTYPE_BIND;
+        cg->filter_type_mask |= CUPS_PTYPE_BIND;
+      }
+      else if (!_cups_strcasecmp(ptr, "sort"))
+      {
+        cg->filter_type      |= CUPS_PTYPE_SORT;
+        cg->filter_type_mask |= CUPS_PTYPE_SORT;
+      }
+      else if (!_cups_strcasecmp(ptr, "small"))
+      {
+        cg->filter_type      |= CUPS_PTYPE_SMALL;
+        cg->filter_type_mask |= CUPS_PTYPE_SMALL;
+      }
+      else if (!_cups_strcasecmp(ptr, "medium"))
+      {
+        cg->filter_type      |= CUPS_PTYPE_MEDIUM;
+        cg->filter_type_mask |= CUPS_PTYPE_MEDIUM;
+      }
+      else if (!_cups_strcasecmp(ptr, "large"))
+      {
+        cg->filter_type      |= CUPS_PTYPE_LARGE;
+        cg->filter_type_mask |= CUPS_PTYPE_LARGE;
+      }
+      else if (!_cups_strcasecmp(ptr, "variable"))
+      {
+        cg->filter_type      |= CUPS_PTYPE_VARIABLE;
+        cg->filter_type_mask |= CUPS_PTYPE_VARIABLE;
+      }
+      else
+      {
+        // Something we don't understand...
+        DEBUG_printf("2_cupsSetDefaults: Unknown FilterType '%s'.", ptr);
+      }
+    }
+  }
+
+  DEBUG_printf("1_cupsSetDefaults: FilterType value 0x%x mask 0x%x", cg->filter_type, cg->filter_type_mask);
+
   DEBUG_printf("1_cupsSetDefaults: AllowAnyRoot %s", cg->any_root ? "Yes" : "No");
   DEBUG_printf("1_cupsSetDefaults: AllowExpiredCerts %s", cg->expired_certs ? "Yes" : "No");
   DEBUG_printf("1_cupsSetDefaults: DigestOptions %s", cg->digestoptions == _CUPS_DIGESTOPTIONS_DENYMD5 ? "DenyMD5" : "None");
@@ -941,6 +1123,8 @@ _cupsSetDefaults(void)
   DEBUG_printf("1_cupsSetDefaults: ValidateCerts %s", cg->validate_certs ? "Yes" : "No");
 
   _httpTLSSetOptions(cc.ssl_options | _HTTP_TLS_SET_DEFAULT, cc.ssl_min_version, cc.ssl_max_version);
+
+  cg->client_conf_loaded = true;
 }
 
 
@@ -1016,6 +1200,15 @@ cups_finalize_client_conf(
 {
   const char	*value;			// Environment variable
 
+
+  if ((value = getenv("CUPS_BROWSE_DOMAINS")) != NULL)
+    cups_set_browse_domains(cc, value);
+
+  if ((value = getenv("CUPS_FILTER_LOCATION")) != NULL)
+    cups_set_filter_location(cc, value);
+
+  if ((value = getenv("CUPS_FILTER_TYPE")) != NULL)
+    cups_set_filter_type(cc, value);
 
   if ((value = getenv("CUPS_TRUSTFIRST")) != NULL)
     cc->trust_first = cups_boolean_value(value);
@@ -1265,10 +1458,16 @@ cups_read_client_conf(
   linenum = 0;
   while (cupsFileGetConf(fp, line, sizeof(line), &value, &linenum))
   {
-    if (!_cups_strcasecmp(line, "DigestOptions") && value)
+    if (!_cups_strcasecmp(line, "BrowseDomains"))
+      cups_set_browse_domains(cc, value);
+    else if (!_cups_strcasecmp(line, "DigestOptions") && value)
       cups_set_digestoptions(cc, value);
     else if (!_cups_strcasecmp(line, "Encryption") && value)
       cups_set_encryption(cc, value);
+    else if (!_cups_strcasecmp(line, "FilterLocation"))
+      cups_set_filter_location(cc, value);
+    else if (!_cups_strcasecmp(line, "FilterType"))
+      cups_set_filter_type(cc, value);
 #ifndef __APPLE__
     // The ServerName directive is not supported on macOS due to app
     // sandboxing restrictions, i.e. not all apps request network access.
@@ -1291,6 +1490,22 @@ cups_read_client_conf(
     else if (!_cups_strcasecmp(line, "SSLOptions") && value)
       cups_set_ssl_options(cc, value);
   }
+}
+
+
+//
+// 'cups_set_browse_domains()' - Set the BrowseDomains value.
+//
+
+static void
+cups_set_browse_domains(
+    _cups_client_conf_t *cc,		// I - client.conf values
+    const char          *value)		// I - Value
+{
+  if (value)
+    cupsCopyString(cc->browse_domains, value, sizeof(cc->browse_domains));
+  else
+    cc->browse_domains[0] = '\0';
 }
 
 
@@ -1352,6 +1567,38 @@ cups_set_encryption(
     cc->encryption = HTTP_ENCRYPTION_REQUIRED;
   else
     cc->encryption = HTTP_ENCRYPTION_IF_REQUESTED;
+}
+
+
+//
+// 'cups_set_filter_location()' - Set the FilterLocation value.
+//
+
+static void
+cups_set_filter_location(
+    _cups_client_conf_t *cc,		// I - client.conf values
+    const char          *value)		// I - Value
+{
+  if (value)
+    cupsCopyString(cc->filter_location, value, sizeof(cc->filter_location));
+  else
+    cc->filter_location[0] = '\0';
+}
+
+
+//
+// 'cups_set_filter_type()' - Set the FilterType value.
+//
+
+static void
+cups_set_filter_type(
+    _cups_client_conf_t *cc,		// I - client.conf values
+    const char          *value)		// I - Value
+{
+  if (value)
+    cupsCopyString(cc->filter_type, value, sizeof(cc->filter_type));
+  else
+    cc->filter_type[0] = '\0';
 }
 
 

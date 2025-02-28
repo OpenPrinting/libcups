@@ -901,7 +901,7 @@ cupsGetCredentialsTrust(
     return (HTTP_TRUST_UNKNOWN);
   }
 
-  if (cg->any_root < 0)
+  if (!cg->client_conf_loaded)
   {
     _cupsSetDefaults();
     gnutls_load_crl();
@@ -1616,7 +1616,7 @@ _httpTLSStart(http_t *http)		// I - Connection to server
 
   DEBUG_printf("3_httpTLSStart(http=%p)", http);
 
-  if (tls_options < 0)
+  if (!cg->client_conf_loaded)
   {
     DEBUG_puts("4_httpTLSStart: Setting defaults.");
     _cupsSetDefaults();

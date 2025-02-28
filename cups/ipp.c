@@ -1,7 +1,7 @@
 //
 // Internet Printing Protocol functions for CUPS.
 //
-// Copyright © 2021-2024 by OpenPrinting.
+// Copyright © 2021-2025 by OpenPrinting.
 // Copyright © 2007-2021 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products, all rights reserved.
 //
@@ -2344,7 +2344,7 @@ ippNew(void)
     // Set default version - usually 2.0...
     DEBUG_printf("4debug_alloc: %p IPP message", (void *)temp);
 
-    if (cg->server_version == 0)
+    if (!cg->client_conf_loaded)
       _cupsSetDefaults();
 
     temp->request.any.version[0] = (ipp_uchar_t)(cg->server_version / 10);

@@ -1,7 +1,7 @@
 //
 // Internet Printing Protocol support functions for CUPS.
 //
-// Copyright © 2022-2024 by OpenPrinting.
+// Copyright © 2022-2025 by OpenPrinting.
 // Copyright © 2007-2018 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products, all rights reserved.
 //
@@ -2365,7 +2365,7 @@ ippGetPort(void)
 
   DEBUG_puts("ippPort()");
 
-  if (!cg->ipp_port)
+  if (!cg->client_conf_loaded)
     _cupsSetDefaults();
 
   DEBUG_printf("1ippPort: Returning %d...", cg->ipp_port);
