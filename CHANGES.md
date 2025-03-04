@@ -8,6 +8,7 @@ libcups v3.0rc4 (YYYY-MM-DD)
 - Added `cupsGetClock` API.
 - Added `cupsJWTLoadCredentials` API.
 - Added "client.conf" man page.
+- Added `cups-oauth` and `cups-x509` utilities (Issue #108)
 - Updated documentation (Issue #99)
 - Updated the `ipptool` utility to support the `--bearer-token` and
   `--client-name` options.

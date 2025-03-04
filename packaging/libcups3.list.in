@@ -1,9 +1,7 @@
 #
 # ESP Package Manager (EPM) file list for libcups.
 #
-# Copyright © 2020-2023 by OpenPrinting
-# Copyright © 2007-2019 by Apple Inc.
-# Copyright © 1997-2007 by Easy Software Products, all rights reserved.
+# Copyright © 2020-2025 by OpenPrinting
 #
 # Licensed under Apache License v2.0.  See the file "LICENSE" for more
 # information.
@@ -11,7 +9,7 @@
 
 # Product information
 %product CUPS Library v3
-%copyright 2020-2023 by OpenPrinting, 2007-2019 by Apple Inc.
+%copyright 2020-2025 by OpenPrinting, 2007-2019 by Apple Inc.
 %vendor OpenPrinting
 #%license LICENSE
 %readme LICENSE
@@ -62,11 +60,14 @@ l 0755 root sys $libdir/libcups3.so libcups3.so.3
 
 # User commands...
 d 0755 root sys $bindir -
-f 0555 root sys $bindir/ippevepcl tools/ippevepcl
+f 0555 root sys $bindir/cups-oauth tools/cups-oauth
+f 0555 root sys $bindir/cups-x509 tools/cups-x509
+l 0555 root sys $bindir/ippevepcl ipptransform
 f 0555 root sys $bindir/ippeveprinter tools/ippeveprinter
-f 0555 root sys $bindir/ippeveps tools/ippeveps
+l 0555 root sys $bindir/ippeveps ipptransform
 f 0555 root sys $bindir/ippfind tools/ippfind
 f 0555 root sys $bindir/ipptool tools/ipptool
+f 0555 root sys $bindir/ipptransform tools/ipptransform
 
 # Data files...
 d 0755 root sys $datadir -
@@ -84,18 +85,28 @@ d 0755 root sys $mandir -
 d 0755 root sys $mandir/man1 -
 f 0444 root sys $mandir/man1/ippevepcl.1 man/ippevepcl.1
 f 0444 root sys $mandir/man1/ippeveprinter.1 man/ippeveprinter.1
-l 0644 root sys $mandir/man1/ippeveps.1 ippevepcl.1
+l 0644 root sys $mandir/man1/ippevepcl.1 ipptransform.1
+l 0644 root sys $mandir/man1/ippeveps.1 ipptransform.1
 f 0444 root sys $mandir/man1/ippfind.1 man/ippfind.1
 f 0444 root sys $mandir/man1/ipptool.1 man/ipptool.1
+f 0444 root sys $mandir/man1/ipptransform.1 man/ipptransform.1
+
+d 0755 root sys $mandir/man3 -
+f 0444 root sys $mandir/man3/libcups.5 man/libcups.3
 
 d 0755 root sys $mandir/man5 -
+f 0444 root sys $mandir/man5/client.conf.5 man/client.conf.5
 f 0444 root sys $mandir/man5/ipptoolfile.5 man/ipptoolfile.5
 
 # Documentation...
 d 0755 root sys $datadir -
 d 0755 root sys $datadir/doc -
 d 0755 root sys $datadir/doc/libcups3 -
+f 0444 root sys $datadir/doc/libcups3 doc/cups-*.html
 f 0444 root sys $datadir/doc/libcups3 doc/ipp*.html
+f 0444 root sys $datadir/doc/libcups3 doc/*.css
+f 0444 root sys $datadir/doc/libcups3 doc/*.png
+f 0444 root sys $datadir/doc/libcups3 doc/*.svg
 
 
 # libcups3-devel subpackage...
@@ -122,10 +133,13 @@ f 0444 root sys $includedir/cups/cups.h cups/cups.h
 f 0444 root sys $includedir/cups/dir.h cups/dir.h
 f 0444 root sys $includedir/cups/dnssd.h cups/dnssd.h
 f 0444 root sys $includedir/cups/file.h cups/file.h
+f 0444 root sys $includedir/cups/form.h cups/form.h
 f 0444 root sys $includedir/cups/http.h cups/http.h
 f 0444 root sys $includedir/cups/ipp.h cups/ipp.h
 f 0444 root sys $includedir/cups/json.h cups/json.h
+f 0444 root sys $includedir/cups/jwt.h cups/jwt.h
 f 0444 root sys $includedir/cups/language.h cups/language.h
+f 0444 root sys $includedir/cups/oauth.h cups/oauth.h
 %system darwin
 f 0444 root sys $includedir/cups/ppd.h cups/ppd.h
 %system all

@@ -1,9 +1,7 @@
 #
 # IPP tools makefile for libcups.
 #
-# Copyright © 2021-2023 by OpenPrinting.
-# Copyright © 2007-2019 by Apple Inc.
-# Copyright © 1997-2006 by Easy Software Products, all rights reserved.
+# Copyright © 2021-2025 by OpenPrinting.
 #
 # Licensed under Apache License v2.0.  See the file "LICENSE" for more
 # information.
@@ -13,18 +11,20 @@ include ../Makedefs
 
 
 OBJS		=	\
+			cups-oauth.o \
+			cups-x509.o \
 			ipp-options.o \
 			ippeveprinter.o \
 			ippfind.o \
 			ipptool.o \
 			ipptransform.o
-IPPTOOLS	=	\
+TARGETS		=	\
+			cups-oauth \
+			cups-x509 \
 			ippeveprinter \
 			ippfind \
 			ipptool \
 			ipptransform
-TARGETS		=	\
-			$(IPPTOOLS)
 
 
 #
@@ -53,7 +53,7 @@ unittests:
 #
 
 clean:
-	$(RM) $(IPPTOOLS) $(OBJS)
+	$(RM) $(TARGETS) $(OBJS)
 	$(RM) test.log test-cups.log
 
 
@@ -72,7 +72,7 @@ depend:
 install:	all
 	echo "Installing IPP tools to $(BUILDROOT)$(bindir)..."
 	$(INSTALL_DIR) $(BUILDROOT)$(bindir)
-	for file in $(IPPTOOLS); do \
+	for file in $(TARGETS); do \
 		$(INSTALL_BIN) $$file $(BUILDROOT)$(bindir); \
 	done
 	for file in ippevepcl ippeveps; do \
@@ -100,7 +100,7 @@ install:	all
 
 uninstall:
 	echo "Uninstalling IPP tools from $(BUILDROOT)$(bindir)..."
-	for file in $(IPPTOOLS) ippevepcl ippeveps; do \
+	for file in $(TARGETS) ippevepcl ippeveps; do \
 		$(RM) $(BUILDROOT)$(bindir)/$$file; \
 	done
 	-$(RMDIR) $(BUILDROOT)$(bindir)
@@ -124,6 +124,26 @@ unittests:	ippeveprinter-static ippfind-static ipptool-static
 
 test:		unittests
 	./run-tests.sh
+
+
+#
+# cups-oauth
+#
+
+cups-oauth:	cups-oauth.o ../cups/$(LIBCUPS)
+	echo Linking $@...
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ cups-oauth.o $(DNSSDLIBS) $(LINKCUPS) $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
+
+
+#
+# cups-x509
+#
+
+cups-x509:	cups-x509.o ../cups/$(LIBCUPS)
+	echo Linking $@...
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ cups-x509.o $(DNSSDLIBS) $(LINKCUPS) $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
 
 
 #

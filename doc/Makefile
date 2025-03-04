@@ -1,7 +1,7 @@
 #
 # Documentation makefile for libcups.
 #
-# Copyright © 2021-2023 by OpenPrinting.
+# Copyright © 2021-2025 by OpenPrinting.
 #
 # Licensed under Apache License v2.0.  See the file "LICENSE" for more
 # information.
@@ -16,6 +16,8 @@ include ../Makedefs
 DOCFILES	=	\
 			cups.png \
 			cups.svg \
+			cups-oauth.html \
+			cups-x509.html \
 			cupspm.epub \
 			cupspm.html \
 			index.html \
@@ -25,6 +27,7 @@ DOCFILES	=	\
 			ipptoolfile.html \
 			ipptransform.html \
 			libcups.css \
+			libcups.html \
 			raster.png \
 			raster-organization.png \
 			sample-image.png \

@@ -29,6 +29,7 @@
 /cups/test.raster
 /cups/testarray
 /cups/testclient
+/cups/testclock
 /cups/testcreds
 /cups/testcups
 /cups/testdest
@@ -52,6 +53,8 @@
 /cups/tlscheck
 /packaging/libcups3.list
 /scratch
+/tools/cups-oauth
+/tools/cups-x509
 /tools/ippeveprinter
 /tools/ippeveprinter-static
 /tools/ippfind
@@ -60,7 +63,6 @@
 /tools/ipptool-static
 /tools/ipptransform
 /tools/ipptransform-static
-/tools/libpdfio.a
 /vcnet/.vs
 /vcnet/packages
 /vcnet/x64

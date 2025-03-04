@@ -17,10 +17,14 @@ include ../Makedefs
 #
 
 MAN1	=	\
+		cups-oauth.1 \
+		cups-x509.1 \
 		ippeveprinter.1 \
 		ippfind.1 \
 		ipptool.1 \
 		ipptransform.1
+MAN3	=	\
+		libcups.3
 MAN5	=	\
 		client.conf.5 \
 		ipptoolfile.5
@@ -68,6 +72,11 @@ install:
 	$(LN) ipptransform.1 $(BUILDROOT)$(mandir)/man1/ippevepcl.1
 	$(RM) $(BUILDROOT)$(mandir)/man1/ippeveps.1
 	$(LN) ipptransform.1 $(BUILDROOT)$(mandir)/man1/ippeveps.1
+	echo "Installing man pages in $(BUILDROOT)$(mandir)/man3..."
+	$(INSTALL_DIR) -m 755 $(BUILDROOT)$(mandir)/man3
+	for file in $(MAN3); do \
+		$(INSTALL_MAN) $$file $(BUILDROOT)$(mandir)/man3; \
+	done
 	echo "Installing man pages in $(BUILDROOT)$(mandir)/man5..."
 	$(INSTALL_DIR) -m 755 $(BUILDROOT)$(mandir)/man5
 	for file in $(MAN5); do \
@@ -108,6 +117,10 @@ html:
 	for file in $(MAN1); do \
 		echo "    $$file..."; \
 		mantohtml --css ../doc/libcups.css $$file >../doc/`basename $$file .1`.html; \
+	done
+	for file in $(MAN3); do \
+		echo "    $$file..."; \
+		mantohtml --css ../doc/libcups.css $$file >../doc/`basename $$file .3`.html; \
 	done
 	for file in $(MAN5); do \
 		echo "    $$file..."; \
