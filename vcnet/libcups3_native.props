@@ -1,17 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="15.0">
   <ItemGroup>
-    <LinkLibrary Include="$(MSBuildThisFileDirectory)\lib\$(Platform)\$(Configuration)\*.lib" />
+    <LinkLibrary Include="$(MSBuildThisFileDirectory)../..//build/native/lib/$(Platform)/$(Configuration)/*.lib" />
   </ItemGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>
-        $(MSBuildThisFileDirectory)\include
-      </AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>HAVE_CUPS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)../..//build/native/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalDependencies>
-        $(LinkLibrary);%(AdditionalDependencies)
+        $(MSBuildThisFileDirectory)../..//build/native/lib/$(Platform)/$(Configuration)/*.lib;%(AdditionalDependencies)
       </AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
