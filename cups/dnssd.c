@@ -25,6 +25,7 @@
 #  endif // _WIN32
 #elif _WIN32
 #  include <windns.h>
+#  pragma comment(lib, "dnsapi.lib")	  // Link in dnsapi library...
 #else // HAVE_AVAHI
 #  include <avahi-client/client.h>
 #  include <avahi-client/lookup.h>
@@ -96,7 +97,7 @@ struct _cups_dnssd_browse_s		// DNS-SD browse request
   size_t		num_browsers;	// Number of browsers
   struct
   {					// Browsers
-    CWSTR		name[256];		// Browse name as a UTF-16 string
+    WCHAR		name[256];		// Browse name as a UTF-16 string
     DNS_SERVICE_BROWSE_REQUEST req;		// Browse request
     DNS_SERVICE_CANCEL	cancel;			// Cancellation structure
   }			browsers[_CUPS_DNSSD_MAX];
@@ -118,7 +119,7 @@ struct _cups_dnssd_query_s		// DNS-SD query request
   DNSServiceRef		ref;		// Query reference
 
 #elif _WIN32
-  CWSTR			fullname[256];	// Query full name as a UTF-16 string
+  WCHAR			fullname[256];	// Query full name as a UTF-16 string
   DNS_QUERY_REQUEST	req;		// Query request
   DNS_QUERY_RESULT	res;		// Query result
   DNS_QUERY_CANCEL	cancel;		// Cancellation structure
@@ -138,7 +139,7 @@ struct _cups_dnssd_resolve_s		// DNS-SD resolve request
   DNSServiceRef		ref;		// Resolve reference
 
 #elif _WIN32
-  CWSTR			fullname[256];	// Full name as a UTF-16 string
+  WCHAR			fullname[256];	// Full name as a UTF-16 string
   DNS_SERVICE_RESOLVE_REQUEST req;	// Resolve request
   DNS_SERVICE_CANCEL	cancel;		// Cancellation structure
 
@@ -152,9 +153,9 @@ struct _win32_srv_s		      // Service
 {
   DNS_SERVICE_REGISTER_REQUEST req;	// Registration request
   DNS_SERVICE_CANCEL	cancel;		// Cancellation structure
-  CWSTR		fullname[256];		// Full service name
-  CWSTR		hostname[256];		// Hostname
-  CWSTR		*txt;			// TXT key/value string buffer
+  WCHAR		fullname[256];		// Full service name
+  WCHAR		hostname[256];		// Hostname
+  WCHAR		*txt;			// TXT key/value string buffer
 };
 #endif // _WIN32
 
@@ -211,7 +212,7 @@ static void		win32_browse_cb(DWORD status, PVOID context, PDNS_RECORD record);
 static void		win32_query_cb(PVOID context, PDNS_QUERY_RESULT result);
 static void		win32_resolve_cb(DWORD status, PVOID context, PDNS_SERVICE_INSTANCE instance);
 static void		win32_service_cb(DWORD status, PVOID context, PDNS_SERVICE_INSTANCE instance);
-static void		win32_wstrcpy(CWSTR *dst, const char *src, size_t dstsize);
+static void		win32_wstrcpy(WCHAR *dst, const char *src, size_t dstsize);
 
 #else // HAVE_AVAHI
 static void		avahi_browse_cb(AvahiServiceBrowser *browser, AvahiIfIndex if_index, AvahiProtocol protocol, AvahiBrowserEvent event, const char *name, const char *type, const char *domain, AvahiLookupResultFlags flags, cups_dnssd_browse_t *browse);
@@ -409,20 +410,21 @@ cupsDNSSDBrowseNew(
     else
       snprintf(typename, sizeof(typename), "%s.local", base);
 
-    browser->browsers[i].req.Version         = DNS_QUERY_REQUEST_VERSION1;
-    browser->browsers[i].req.InterfaceIndex  = if_index;
-    browser->browsers[i].req.pBrowseCallback = win32_browse_cb;
-    browser->browsers[i].req.pQueryContext   = browse;
+    browse->browsers[i].req.Version         = DNS_QUERY_REQUEST_VERSION1;
+    browse->browsers[i].req.InterfaceIndex  = if_index;
+    browse->browsers[i].req.pBrowseCallback = win32_browse_cb;
+    browse->browsers[i].req.pQueryContext   = browse;
+    browse->browsers[i].req.QueryName       = browse->browsers[i].name;
 
-    win32_wstrcpy(browser->browsers[i].req.QueryName, typename, sizeof(browser->browsers[i].req.QueryName));
+    win32_wstrcpy(browse->browsers[i].name, typename, sizeof(browse->browsers[i].name));
 
-    if ((status = DNSServiceBrowse(&browser->browsers[i].req, &browser->browser[i].cancel)) != DNS_REQUEST_PENDING)
+    if ((status = DnsServiceBrowse(&browse->browsers[i].req, &browse->browsers[i].cancel)) != DNS_REQUEST_PENDING)
     {
       report_error(dnssd, "Unable to create browser: %u", status);
       while (i > 0)
       {
         i --;
-        DnsServiceBrowseCancel(browse->browsers[i].cancel);
+        DnsServiceBrowseCancel(&browse->browsers[i].cancel);
       }
       free(browse);
       browse = NULL;
@@ -1028,7 +1030,7 @@ cupsDNSSDQueryNew(
 
   query->req.Version                  = DNS_QUERY_REQUEST_VERSION1;
   query->req.InterfaceIndex           = if_index;
-  query->res.QueryName                = query->fullname;
+  query->req.QueryName                = query->fullname;
   query->req.QueryType                = rrtype;
   query->req.pDnsServerList           = NULL;
   query->req.pQueryCompletionCallback = win32_query_cb;
@@ -1466,11 +1468,12 @@ cupsDNSSDServiceAdd(
   service->num_refs ++;
 
 #elif _WIN32
+  DWORD		status;			// Status of call
   struct _win32_srv_s *srv;		// Service
-  size_t	i, j,			// Looping vars
+  size_t	j,			// Looping var
 		count,			// Number of types
 		length;			// Length of TXT key/value pairs
-  CWSTR		*ptr,			// Pointer into TXT buffer
+  WCHAR		*ptr,			// Pointer into TXT buffer
 		*end,			// End of TXT buffer
 		*keys[256],		// TXT key strings
 		*values[256];		// TXT value strings
@@ -1481,7 +1484,7 @@ cupsDNSSDServiceAdd(
 
   if ((tarray = cupsArrayNewStrings(types, ',')) == NULL)
   {
-    report_error(dnssd, "Unable to create types array: %s", strerror(errno));
+    report_error(service->dnssd, "Unable to create types array: %s", strerror(errno));
     ret = false;
     goto done;
   }
@@ -1511,7 +1514,7 @@ cupsDNSSDServiceAdd(
       goto done;
     }
 
-    src = service->srvs + service->num_srvs;
+    srv = service->srvs + service->num_srvs;
 
     // Initialize values...
     srv->req.Version        = DNS_QUERY_REQUEST_VERSION1;
@@ -1528,15 +1531,15 @@ cupsDNSSDServiceAdd(
 
     if (length > 0)
     {
-      src->txt = calloc(length, sizeof(CWSTR));
+      srv->txt = calloc(length, sizeof(WCHAR));
 
-      for (j = 0, ptr = src->txt, end = src->txt + length; j < num_txt; j ++)
+      for (j = 0, ptr = srv->txt, end = srv->txt + length; j < num_txt; j ++)
       {
-        win32_wstrcpy(ptr, txt[j].name, (size_t)(end - ptr) * sizeof(CWSTR));
+        win32_wstrcpy(ptr, txt[j].name, (size_t)(end - ptr) * sizeof(WCHAR));
         keys[j] = ptr;
         ptr     += strlen(txt[j].name) + 1;
 
-        win32_wstrcpy(ptr, txt[j].value, (size_t)(end - ptr) * sizeof(CWSTR));
+        win32_wstrcpy(ptr, txt[j].value, (size_t)(end - ptr) * sizeof(WCHAR));
         values[j] = ptr;
         ptr     += strlen(txt[j].value) + 1;
       }
@@ -1929,7 +1932,7 @@ delete_browse(
   size_t	i;			// Looping var
 
   for (i = 0; i < browse->num_browsers; i ++)
-    DnsServiceBrowseCancel(browse->browsers[i].cancel);
+    DnsServiceBrowseCancel(&browse->browsers[i].cancel);
 
 #else // HAVE_AVAHI
   size_t	i;			// Looping var
@@ -1954,7 +1957,7 @@ delete_query(
   DNSServiceRefDeallocate(query->ref);
 
 #elif _WIN32
-  DnsServiceQueryCancel(query->cancel);
+  DnsCancelQuery(&query->cancel);
 
 #else // HAVE_AVAHI
   avahi_record_browser_free(query->browser);
@@ -1974,7 +1977,7 @@ delete_resolve(
   DNSServiceRefDeallocate(resolve->ref);
 
 #elif _WIN32
-  DnsServiceResolveCancel(resolve->cancel);
+  DnsServiceResolveCancel(&resolve->cancel);
 
 #else // HAVE_AVAHI
   avahi_service_resolver_free(resolve->resolver);
@@ -2004,7 +2007,7 @@ delete_service(
 
   for (i = 0; i < service->num_srvs; i ++)
   {
-    DnsServiceRegisterCancel(service->srvs[i].cancel);
+    DnsServiceRegisterCancel(&service->srvs[i].cancel);
     DnsServiceFreeInstance(service->srvs[i].req.pServiceInstance);
     free(service->srvs[i].txt);
   }
@@ -2485,7 +2488,7 @@ win32_service_cb(
 //
 
 static void
-win32_wstrcpy(CWSTR      *dst,		// I - Destination string
+win32_wstrcpy(WCHAR      *dst,		// I - Destination string
               const char *src,		// I - Source string
               size_t     dstsize)	// I - Size of destination
 {
@@ -2493,7 +2496,7 @@ win32_wstrcpy(CWSTR      *dst,		// I - Destination string
 
 
   // Adjust size from bytes to words...
-  dstsize /= sizeof(CWSTR);
+  dstsize /= sizeof(WCHAR);
 
   // Loop until we run out of characters or buffer space...
   while (*src && dstsize > 1)
