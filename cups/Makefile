@@ -622,7 +622,7 @@ testoptions:	testoptions.o $(LIBCUPS_STATIC)
 # testpwg (dependency on static CUPS library is intentional)
 #
 
-testpwg:	testpwg.o $(LIBCUPS_STATIC) test.ppd
+testpwg:	testpwg.o $(LIBCUPS_STATIC)
 	echo Linking $@...
 	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testpwg.o $(LIBCUPS_STATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
