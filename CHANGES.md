@@ -23,6 +23,7 @@ libcups v3.0rc4 (YYYY-MM-DD)
 - Fixed a duplicate printer reporting bug in `cupsGetDests`.
 - Fixed handling of `NULL` path in `cupsSaveCredentials` API.
 - Fixed handling of default authorization strings.
+- Fixed validation of dateTime values with time zones more than UTC+11.
 
 
 libcups v3.0rc3 (2024-10-22)
