@@ -6,16 +6,15 @@
 ::
 
 :: Copy DLLs for dependent packages to the debug directory...
-copy packages\libressl_native.redist.4.0.0\build\native\bin\x64\Debug\*.dll %1
-copy packages\libressl_native.redist.4.0.0\build\native\bin\x64\Release\*.dll %1
-copy ..\pdfio\packages\libpng_native.redist.1.6.30\build\native\bin\x64\Debug\*.dll %1
-copy ..\pdfio\packages\libpng_native.redist.1.6.30\build\native\bin\x64\Release\*.dll %1
-copy packages\zlib_native.redist.1.2.11\build\native\bin\x64\Debug\*.dll %1
-copy packages\zlib_native.redist.1.2.11\build\native\bin\x64\Release\*.dll %1
+copy packages\*\build\native\bin\x64\Debug\*.dll %1
+copy packages\*\build\native\bin\x64\Release\*.dll %1
+copy ..\pdfio\packages\*\build\native\bin\x64\Debug\*.dll %1
+copy ..\pdfio\packages\*\build\native\bin\x64\Release\*.dll %1
 
 ;; Run tests from the build directory...
 cd %1
 
+.\testdnssd.exe
 .\testfile.exe
 .\testhttp.exe
 

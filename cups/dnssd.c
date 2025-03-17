@@ -1505,6 +1505,8 @@ cupsDNSSDServiceAdd(
     else
       snprintf(fullname, sizeof(fullname), "%s.%s.%s", service->name, base, domain ? domain : "local");
 
+    DEBUG_printf("cupsDNSSDServiceAdd: Adding fullname=\"%s\"", fullname);
+
     // Get the service...
     if (service->num_srvs >= _CUPS_DNSSD_MAX)
     {
@@ -1528,6 +1530,8 @@ cupsDNSSDServiceAdd(
 
     for (j = 0, length = 0; j < num_txt; j ++)
       length += strlen(txt[j].name) + strlen(txt[j].value) + 2;
+
+    DEBUG_printf("cupsDNSSDServiceAdd: TXT length=%lu", (unsigned long)length);
 
     if (length > 0)
     {
@@ -1556,6 +1560,8 @@ cupsDNSSDServiceAdd(
     srv->req.pRegisterCompletionCallback = win32_service_cb;
     srv->req.pQueryContext               = service;
     srv->req.unicastEnabled              = domain && strcmp(domain, "local") != 0;
+
+    DEBUG_printf("cupsDNSSDServiceAdd: unicastEnabled=%s", srv->req.unicastEnabled ? "true" : "false");
 
     if ((status = DnsServiceRegister(&srv->req, &srv->cancel)) != DNS_REQUEST_PENDING)
     {
