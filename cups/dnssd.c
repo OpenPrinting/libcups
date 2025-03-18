@@ -120,9 +120,9 @@ struct _cups_dnssd_query_s		// DNS-SD query request
 
 #elif _WIN32
   WCHAR			fullname[256];	// Query full name as a UTF-16 string
-  DNS_QUERY_REQUEST	req;		// Query request
+  MDNS_QUERY_REQUEST	req;		// Query request
+  MDNS_QUERY_HANDLE	handle;		// Query handle
   DNS_QUERY_RESULT	res;		// Query result
-  DNS_QUERY_CANCEL	cancel;		// Cancellation structure
 
 #else // HAVE_AVAHI
   AvahiRecordBrowser	*browser;	// Browser
@@ -209,7 +209,7 @@ static cups_dnssd_flags_t mdns_to_cups(DNSServiceFlags flags, DNSServiceErrorTyp
 
 #elif _WIN32
 static void		win32_browse_cb(DWORD status, PVOID context, PDNS_RECORD record);
-static void		win32_query_cb(PVOID context, PDNS_QUERY_RESULT result);
+static void		win32_query_cb(PVOID context, PMDNS_QUERY_HANDLE handle, PDNS_QUERY_RESULT result);
 static void		win32_resolve_cb(DWORD status, PVOID context, PDNS_SERVICE_INSTANCE instance);
 static void		win32_service_cb(DWORD status, PVOID context, PDNS_SERVICE_INSTANCE instance);
 static void		win32_utf8cpy(char *dst, const WCHAR *src, size_t dstsize);
@@ -1050,26 +1050,20 @@ cupsDNSSDQueryNew(
 
   win32_wstrcpy(query->fullname, fullname, sizeof(query->fullname));
 
-  query->req.Version                  = DNS_QUERY_REQUEST_VERSION1;
-  query->req.InterfaceIndex           = if_index;
-  query->req.QueryName                = query->fullname;
-  query->req.QueryType                = rrtype;
-  query->req.pDnsServerList           = NULL;
-  query->req.pQueryCompletionCallback = win32_query_cb;
-  query->req.pQueryContext            = query;
+  query->req.Version        = DNS_QUERY_REQUEST_VERSION1;
+  query->req.InterfaceIndex = if_index;
+  query->req.Query          = query->fullname;
+  query->req.QueryType      = rrtype;
+  query->req.pQueryCallback = win32_query_cb;
+  query->req.pQueryContext  = query;
 
-  query->res.Version = DNS_QUERY_REQUEST_VERSION1;
-
-  // TODO: FIgure out why mDNS queries can't work...
-#  if 0
-  if ((status = DnsQueryEx(&query->req, &query->res, &query->cancel)) != DNS_REQUEST_PENDING)
+  if ((status = DnsStartMulticastQuery(&query->req, &query->handle)) != ERROR_SUCCESS)
   {
-    report_error(dnssd, "Unable to create DNS-SD query request: %d", status);
+    report_error(dnssd, "Unable to start mDNS query request: %d", status);
     free(query);
     query = NULL;
     goto done;
   }
-#  endif // 0
 
 #else // HAVE_AVAHI
   if (!dnssd->in_callback)
@@ -1983,7 +1977,7 @@ delete_query(
   DNSServiceRefDeallocate(query->ref);
 
 #elif _WIN32
-  DnsCancelQuery(&query->cancel);
+  DnsStopMulticastQuery(&query->handle);
 
 #else // HAVE_AVAHI
   avahi_record_browser_free(query->browser);
@@ -2498,8 +2492,9 @@ win32_browse_cb(
 
 static void
 win32_query_cb(
-    PVOID             context,		// I - Pointer to query
-    PDNS_QUERY_RESULT result)		// I - Query result
+    PVOID              context,		// I - Pointer to query
+    PMDNS_QUERY_HANDLE handle,		// I - Query handle
+    PDNS_QUERY_RESULT  result)		// I - Query result
 {
   cups_dnssd_query_t  *query = (cups_dnssd_query_t *)context;
 					// Query
