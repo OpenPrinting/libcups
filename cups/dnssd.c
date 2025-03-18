@@ -54,7 +54,7 @@
 struct _cups_dnssd_s			// DNS-SD context
 {
   cups_rwlock_t		rwlock;		// R/W lock for context
-  size_t		config_changes;	// Number of hostname/network changes
+  size_t			config_changes;	// Number of hostname/network changes
   cups_dnssd_error_cb_t	cb;		// Error callback function
   void			*cb_data;	// Error callback data
   cups_array_t		*browses,	// Browse requests
@@ -66,7 +66,7 @@ struct _cups_dnssd_s			// DNS-SD context
   DNSServiceRef		ref;		// Master service reference
   char			hostname[256];	// Current mDNS hostname
   DNSServiceRef		hostname_ref;	// Hostname monitoring reference
-  cups_thread_t		monitor;	// Monitoring thread
+  cups_thread_t		monitor;		// Monitoring thread
 
 #elif _WIN32
   char			hostname[256];	// Current mDNS hostname
@@ -74,11 +74,11 @@ struct _cups_dnssd_s			// DNS-SD context
 #else // HAVE_AVAHI
   cups_mutex_t		mutex;		// Avahi poll mutex
   bool			in_callback;	// Doing a callback?
-  AvahiClient		*client;	// Avahi client connection
+  AvahiClient		*client;		// Avahi client connection
   AvahiSimplePoll	*poll;		// Avahi poll class
-  cups_thread_t		monitor;	// Monitoring thread
+  cups_thread_t		monitor;		// Monitoring thread
   AvahiDomainBrowser	*dbrowser;	// Domain browser
-  size_t		num_domains;	// Number of domains
+  size_t			num_domains;	// Number of domains
   char			domains[_CUPS_DNSSD_MAX][256];
 					// Domains
 #endif // HAVE_MDNSRESPONDER
@@ -94,7 +94,7 @@ struct _cups_dnssd_browse_s		// DNS-SD browse request
   DNSServiceRef		ref;		// Browse reference
 
 #elif _WIN32
-  size_t		num_browsers;	// Number of browsers
+  size_t			num_browsers;	// Number of browsers
   struct
   {					// Browsers
     WCHAR		name[256];		// Browse name as a UTF-16 string
@@ -103,7 +103,7 @@ struct _cups_dnssd_browse_s		// DNS-SD browse request
   }			browsers[_CUPS_DNSSD_MAX];
 
 #else // HAVE_AVAHI
-  size_t		num_browsers;	// Number of browsers
+  size_t			num_browsers;	// Number of browsers
   AvahiServiceBrowser	*browsers[_CUPS_DNSSD_MAX];
 					// Browsers
 #endif // HAVE_MDNSRESPONDER
@@ -177,7 +177,7 @@ struct _cups_dnssd_service_s		// DNS-SD service registration
 					// Service location records
 
 #elif _WIN32
-  size_t		num_srvs;	// Number of services
+  size_t			num_srvs;	// Number of services
   struct _win32_srv_s	srvs[_CUPS_DNSSD_MAX];
 					// Services
 
@@ -212,6 +212,7 @@ static void		win32_browse_cb(DWORD status, PVOID context, PDNS_RECORD record);
 static void		win32_query_cb(PVOID context, PDNS_QUERY_RESULT result);
 static void		win32_resolve_cb(DWORD status, PVOID context, PDNS_SERVICE_INSTANCE instance);
 static void		win32_service_cb(DWORD status, PVOID context, PDNS_SERVICE_INSTANCE instance);
+static void		win32_utf8cpy(char *dst, const WCHAR *src, size_t dstsize);
 static void		win32_wstrcpy(WCHAR *dst, const char *src, size_t dstsize);
 
 #else // HAVE_AVAHI
@@ -239,7 +240,7 @@ static void		avahi_service_cb(AvahiEntryGroup *srv, AvahiEntryGroupState state, 
 bool					// O - `true` on success, `false` on failure
 cupsDNSSDAssembleFullName(
     char       *fullname,		// I - Buffer for full name
-    size_t     fullsize,		// I - Size of buffer
+    size_t     fullsize,			// I - Size of buffer
     const char *name,			// I - Service instance name
     const char *type,			// I - Registration type
     const char *domain)			// I - Domain
@@ -254,7 +255,28 @@ cupsDNSSDAssembleFullName(
   return (DNSServiceConstructFullName(fullname, name, type, domain) == kDNSServiceErr_NoError);
 
 #elif _WIN32
-  return (snprintf(fullname, fullsize, "%s.%s.%s", name, type, domain ? domain : "local") > 0);
+  char		*fullptr,		// Pointer into full name
+		*fullend;		// End of full name
+
+  for (fullptr = fullname, fullend = fullname + fullsize - 1; *name; name ++)
+  {
+    if (*name == ' ' || *name == '\\' || (*name & 0x80))
+    {
+      if ((fullend - fullptr) < 4)
+        return (false);
+
+      snprintf(fullptr, fullend - fullptr + 1, "\\%03d", *name & 255);
+      fullptr += strlen(fullptr);
+    }
+    else
+    {
+      *fullptr++ = *name;
+    }
+  }
+
+  snprintf(fullptr, fullend - fullptr + 1, ".%s.%s", type, domain ? domain : "local");
+
+  return (true);
 
 #else // HAVE_AVAHI
   return (!avahi_service_name_join(fullname, fullsize, name, type, domain));
@@ -1038,6 +1060,8 @@ cupsDNSSDQueryNew(
 
   query->res.Version = DNS_QUERY_REQUEST_VERSION1;
 
+  // TODO: FIgure out why mDNS queries can't work...
+#  if 0
   if ((status = DnsQueryEx(&query->req, &query->res, &query->cancel)) != DNS_REQUEST_PENDING)
   {
     report_error(dnssd, "Unable to create DNS-SD query request: %d", status);
@@ -1045,6 +1069,7 @@ cupsDNSSDQueryNew(
     query = NULL;
     goto done;
   }
+#  endif // 0
 
 #else // HAVE_AVAHI
   if (!dnssd->in_callback)
@@ -1280,9 +1305,9 @@ bool					// O - `true` on success, `false` on error
 cupsDNSSDSeparateFullName(
     const char *fullname,		// I - Full service name
     char       *name,			// I - Instance name buffer
-    size_t     namesize,		// I - Size of instance name buffer
+    size_t     namesize,			// I - Size of instance name buffer
     char       *type,			// I - Registration type buffer
-    size_t     typesize,		// I - Size of registration type buffer
+    size_t     typesize,			// I - Size of registration type buffer
     char       *domain,			// I - Domain name buffer
     size_t     domainsize)		// I - Size of domain name buffer
 {
@@ -1477,8 +1502,7 @@ cupsDNSSDServiceAdd(
 		*end,			// End of TXT buffer
 		*keys[256],		// TXT key strings
 		*values[256];		// TXT value strings
-  const char	*base,			// Base query name
-		*subtype;		// Subtype
+  const char	*base;			// Base service type
   char		fullname[256];		// Full service instance name
   cups_array_t	*tarray;		// Types array
 
@@ -1492,16 +1516,12 @@ cupsDNSSDServiceAdd(
   base  = (const char *)cupsArrayGetElement(tarray, 0);
   count = cupsArrayGetCount(tarray);
 
-  if (count == 1)
-    count ++;
-
-  for (i = 1; i < count; i ++)
+  // TODO: Figure out how WinDNS wants sub-types registered, yields invalid argument error for sub-type
+  for (i = 0; i < count && i < 1; i ++)
   {
     // Get the fullname...
-    subtype = (const char *)cupsArrayGetElement(tarray, i);
-
-    if (subtype)
-      snprintf(fullname, sizeof(fullname), "%s.%s._sub.%s.%s", service->name, subtype, base, domain ? domain : "local");
+    if (i)
+      snprintf(fullname, sizeof(fullname), "%s.%s._sub.%s.%s", service->name, (const char*)cupsArrayGetElement(tarray, i), base, domain ? domain : "local");
     else
       snprintf(fullname, sizeof(fullname), "%s.%s.%s", service->name, base, domain ? domain : "local");
 
@@ -2445,9 +2465,30 @@ mdns_to_cups(
 static void
 win32_browse_cb(
     DWORD       status,			// I - Status
-    PVOID       context,		// I - Browser
-    PDNS_RECORD record)			// I - New record
+    PVOID       context,			// I - Browser
+    PDNS_RECORD records)			// I - Record list
 {
+  cups_dnssd_browse_t *browse = (cups_dnssd_browse_t *)context;
+  PDNS_RECORD record;			// Current DNS record
+  char	      fullname[256],		// Full service instance name
+	      name[256] = "",		// Service name
+	      type[256] = "",		// Service type
+	      domain[256] = "";		// Domain name
+
+
+  for (record = records; record; record = record->pNext)
+  {
+    if (record->wType == DNS_TYPE_PTR)
+    {
+      win32_utf8cpy(fullname, record->Data.PTR.pNameHost, sizeof(fullname));
+      cupsDNSSDSeparateFullName(fullname, name, sizeof(name), type, sizeof(type), domain, sizeof(domain));
+      break;
+    }
+  }
+
+  (browse->cb)(browse, browse->cb_data, status == ERROR_SUCCESS ? CUPS_DNSSD_FLAGS_NONE : CUPS_DNSSD_FLAGS_ERROR, /*if_index*/0, name, type, domain);
+
+  DnsRecordListFree(records, DnsFreeRecordList);
 }
 
 
@@ -2460,6 +2501,22 @@ win32_query_cb(
     PVOID             context,		// I - Pointer to query
     PDNS_QUERY_RESULT result)		// I - Query result
 {
+  cups_dnssd_query_t  *query = (cups_dnssd_query_t *)context;
+					// Query
+  char		      fullname[256];	// Full instance name of query
+
+
+  win32_utf8cpy(fullname, query->fullname, sizeof(fullname));
+
+  if (result && result->pQueryRecords)
+  {
+    PDNS_RECORD record;			// Current DNS record
+
+    for (record = result->pQueryRecords; record; record = record->pNext)
+      (query->cb)(query, query->cb_data, CUPS_DNSSD_FLAGS_NONE, /*if_index*/0, fullname, record->wType, &record->Data, record->wDataLength);
+
+    DnsRecordListFree(result->pQueryRecords, DnsFreeRecordList);
+  }
 }
 
 
@@ -2473,6 +2530,39 @@ win32_resolve_cb(
     PVOID                 context,	// I - Resolver
     PDNS_SERVICE_INSTANCE instance)	// I - Service instance
 {
+  cups_dnssd_resolve_t	*resolve = (cups_dnssd_resolve_t *)context;
+					// Resolver
+
+
+  if (status == ERROR_SUCCESS)
+  {
+    char			fullname[256],	// Full instance name
+      			hostname[256],	// Hostname
+			txtname[256],	// TXT name
+			txtvalue[256];	// TXT value
+    DWORD		i;		// Looping var
+    size_t		num_txt = 0;	// Number of TXT values
+    cups_option_t	*txt = NULL;	// TXT values
+
+    win32_utf8cpy(fullname, instance->pszInstanceName, sizeof(fullname));
+    win32_utf8cpy(hostname, instance->pszHostName, sizeof(hostname));
+
+    for (i = 0; i < instance->dwPropertyCount; i ++)
+    {
+      win32_utf8cpy(txtname, instance->keys[i], sizeof(txtname));
+      win32_utf8cpy(txtvalue, instance->values[i], sizeof(txtvalue));
+
+      num_txt = cupsAddOption(txtname, txtvalue, num_txt, &txt);
+    }
+
+    (resolve->cb)(resolve, resolve->cb_data, CUPS_DNSSD_FLAGS_NONE, instance->dwInterfaceIndex, fullname, hostname, instance->wPort, num_txt, txt);
+
+    cupsFreeOptions(num_txt, txt);
+  }
+  else
+  {
+    (resolve->cb)(resolve, resolve->cb_data, CUPS_DNSSD_FLAGS_ERROR, /*if_index*/0, /*fullname*/NULL, /*host*/NULL, /*port*/0, /*num_txt*/0, /*txt*/NULL);
+  }
 }
 
 
@@ -2486,6 +2576,66 @@ win32_service_cb(
     PVOID                 context,	// I - Service
     PDNS_SERVICE_INSTANCE instance)	// I - New instance
 {
+  cups_dnssd_service_t *service = (cups_dnssd_service_t *)context;
+					// Service
+
+  (service->cb)(service, service->cb_data, status == ERROR_SUCCESS ? CUPS_DNSSD_FLAGS_NONE : CUPS_DNSSD_FLAGS_ERROR);
+
+  if (instance)
+    DnsServiceFreeInstance(instance);
+}
+
+
+//
+// 'win32_utf8cpy()' - Copy a UTF-16 string to a UTF-8 string.
+//
+
+static void
+win32_utf8cpy(char        *dst,		// I - Destination string
+              const WCHAR *src,		// I - Source string
+	      size_t      dstsize)	// I - Size of destination string
+{
+  int	ch;				// Current character
+
+
+  // Loop until we run out of characters or buffer space...
+  while (*src && dstsize > 4)
+  {
+    // Get the current character...
+    ch = *src++;
+
+    if (ch >= 0xd800 && ch <= 0xdbff && *src >= 0xdc00 && *src <= 0xdfff)
+    {
+      // Convert UTF-16 to unicode...
+      ch = ((ch - 0xd800) << 10) | (*src++ - 0xdc00);
+    }
+
+    if (ch < 0x80)
+    {
+      *dst++ = ch;
+    }
+    else if (ch < 0x800)
+    {
+      *dst++ = 0xc0 | (ch >> 6);
+      *dst++ = 0x80 | (ch & 0x3f);
+    }
+    else if (ch < 0x10000)
+    {
+      *dst++ = 0xe0 | (ch >> 12);
+      *dst++ = 0x80 | ((ch >> 6) & 0x3f);
+      *dst++ = 0x80 | (ch & 0x3f);
+    }
+    else
+    {
+      *dst++ = 0xf0 | (ch >> 18);
+      *dst++ = 0x80 | ((ch >> 12) & 0x3f);
+      *dst++ = 0x80 | ((ch >> 6) & 0x3f);
+      *dst++ = 0x80 | (ch & 0x3f);
+    }
+  }
+
+  // Nul-terminate the destination...
+  *dst = '\0';
 }
 
 
