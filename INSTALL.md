@@ -8,12 +8,16 @@ code.  For more information on libcups see the file called `README.md`.
 Before You Begin
 ----------------
 
-You'll need a C99-compliant C compiler, POSIX make and shell programs, ZLIB 1.2
-or later (<https://www.zlib.net>), and GNU TLS 3.0 or later
-(<https://www.gnutls.org>) on platforms other than macOS® and Windows®.  Besides
-these prerequisites, you'll want Avahi 0.7 or later (<https://www.avahi.org>)
-*or* mDNSResponder (<https://opensource.apple.com/source/mDNSResponder/>) for
-mDNS/DNS-SD support.
+You'll need a C99-compliant C compiler, POSIX make and shell programs, and the
+following libraries:
+
+- Avahi (0.8 or later) or mDNSResponder for mDNS/DNS-SD support
+- GNU TLS (3.0 or later), LibreSSL (3.0 or later), or OpenSSL (1.1 or later)
+  for TLS support
+- LIBPNG (1.6 or later) for PNG image support (optional)
+- LIBPAM for authentication support (optional)
+- LIBUSB (1.0 or later) for USB printing support (optional)
+- ZLIB 1.2 or later for compression support
 
 The GNU compiler tools and Bash work well and we have tested the current CUPS
 code against several versions of Clang and GCC with excellent results.  The
