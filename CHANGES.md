@@ -1,7 +1,7 @@
 Changes in libcups
 ==================
 
-libcups v3.0rc4 (YYYY-MM-DD)
+libcups v3.0rc4 (2025-03-18)
 ----------------------------
 
 - Added `cupsCopyCredentialsPublicKey` API.
