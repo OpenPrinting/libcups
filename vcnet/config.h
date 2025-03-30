@@ -97,7 +97,7 @@ typedef unsigned long useconds_t;
 // Version of software...
 //
 
-#define LIBCUPS_VERSION "3.0rc4"
+#define LIBCUPS_VERSION "3.0.0"
 #define LIBCUPS_VERSION_MAJOR 3
 #define LIBCUPS_VERSION_MINOR 0
 
@@ -222,6 +222,13 @@ typedef unsigned long useconds_t;
 //
 
 // #undef HAVE_TM_GMTOFF
+
+
+//
+// Do we have the timegm function?
+//
+
+// #undef HAVE_TIMEGM
 
 
 //

@@ -1,7 +1,7 @@
 //
 // Configuration file for libcups with Xcode.
 //
-// Copyright © 2020-2024 by OpenPrinting
+// Copyright © 2020-2025 by OpenPrinting
 // Copyright © 2007-2019 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products.
 //
@@ -17,7 +17,7 @@
 // Version of software...
 //
 
-#define LIBCUPS_VERSION "3.0rc4"
+#define LIBCUPS_VERSION "3.0.0"
 #define LIBCUPS_VERSION_MAJOR 3
 #define LIBCUPS_VERSION_MINOR 0
 
@@ -142,6 +142,13 @@
 //
 
 // #undef HAVE_TM_GMTOFF
+
+
+//
+// Do we have the timegm function?
+//
+
+#define HAVE_TIMEGM 1
 
 
 //
