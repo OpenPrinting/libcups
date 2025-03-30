@@ -246,6 +246,13 @@ AC_COMPILE_IFELSE([
     AC_MSG_RESULT([no])
 ])
 
+
+dnl See if we have the timegm function...
+AC_CHECK_FUNC([timegm], [
+    AC_DEFINE([HAVE_TIMEGM], [1], [Do we have the timegm function?])
+])
+
+
 dnl Check for "long long" support...
 AC_CACHE_CHECK([for long long int], [ac_cv_c_long_long], [
     AS_IF([test "$GCC" = yes], [
