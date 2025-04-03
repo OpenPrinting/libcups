@@ -5,6 +5,7 @@ libcups v3.0.0 (YYYY-MM-DD)
 ---------------------------
 
 - Fixed return values of `ippDateToTime` when the timezone isn't GMT.
+- Fixed a potential timing issue with `cupsEnumDests`.
 
 
 libcups v3.0rc4 (2025-03-18)
