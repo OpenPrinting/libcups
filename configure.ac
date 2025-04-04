@@ -247,9 +247,22 @@ AC_COMPILE_IFELSE([
 ])
 
 
-dnl See if we have the timegm function...
+dnl Test date/time functionality...
 AC_CHECK_FUNC([timegm], [
     AC_DEFINE([HAVE_TIMEGM], [1], [Do we have the timegm function?])
+])
+
+AC_MSG_CHECKING([for tm_gmtoff member in tm structure])
+AC_COMPILE_IFELSE([
+    AC_LANG_PROGRAM([[#include <time.h>]], [[
+        struct tm t;
+	int o = t.tm_gmtoff;
+    ]])
+], [
+    AC_MSG_RESULT([yes])
+    AC_DEFINE([HAVE_TM_GMTOFF], [1], [Have tm_gmtoff member in struct tm?])
+], [
+    AC_MSG_RESULT([no])
 ])
 
 
