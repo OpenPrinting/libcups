@@ -3,7 +3,7 @@
 // commands such as IPP and Bonjour conformance tests.  This tool is
 // inspired by the UNIX "find" command, thus its name.
 //
-// Copyright © 2021-2023 by OpenPrinting.
+// Copyright © 2021-2025 by OpenPrinting.
 // Copyright © 2020 by the IEEE-ISTO Printer Working Group
 // Copyright © 2008-2018 by Apple Inc.
 //
@@ -118,6 +118,7 @@ static int	address_family = AF_UNSPEC;
 static bool	bonjour_error = false;	// Error browsing/resolving?
 static double	bonjour_timeout = 1.0;	// Timeout in seconds
 static int	ipp_version = 20;	// IPP version for LIST
+static double	last_update = 0.0;	// Last update time
 
 
 //
@@ -129,7 +130,6 @@ static int		compare_services(ippfind_srv_t *a, ippfind_srv_t *b);
 static int		eval_expr(ippfind_srv_t *service, ippfind_expr_t *expressions);
 static int		exec_program(ippfind_srv_t *service, size_t num_args, char **args);
 static ippfind_srv_t	*get_service(ippfind_srvs_t *services, const char *serviceName, const char *regtype, const char *replyDomain) _CUPS_NONNULL(1,2,3,4);
-static double		get_time(void);
 static int		list_service(ippfind_srv_t *service);
 static ippfind_expr_t	*new_expr(ippfind_op_t op, bool invert, const char *value, const char *regex, char **args);
 static void		resolve_callback(cups_dnssd_resolve_t *resolve, void *context, cups_dnssd_flags_t flags, uint32_t if_index, const char *fullName, const char *hostTarget, uint16_t port, size_t num_txt, cups_option_t *txt);
@@ -962,11 +962,11 @@ main(int  argc,				// I - Number of command-line args
 
   // Process browse/resolve requests...
   if (bonjour_timeout > 1.0)
-    endtime = get_time() + bonjour_timeout;
+    endtime = cupsGetClock() + bonjour_timeout;
   else
-    endtime = get_time() + 300.0;
+    endtime = cupsGetClock() + 300.0;
 
-  while (get_time() < endtime)
+  while (cupsGetClock() < endtime)
   {
     // Process any services that we have found...
     size_t	j,			// Looping var
@@ -1022,7 +1022,7 @@ main(int  argc,				// I - Number of command-line args
     if (getenv("IPPFIND_DEBUG"))
       fprintf(stderr, "STATUS processed=%u, resolved=%u, count=%u\n", (unsigned)processed, (unsigned)resolved, (unsigned)count);
 
-    if (processed > 0 && processed == cupsArrayGetCount(services.services) && bonjour_timeout <= 1.0)
+    if (processed > 0 && (processed == cupsArrayGetCount(services.services) || (cupsGetClock() - last_update) >= 2.5) && bonjour_timeout <= 1.0)
       break;
 
     // Give the browsers/resolvers some time...
@@ -1052,6 +1052,8 @@ browse_callback(
 {
   ippfind_srv_t	*service;		// Service
 
+
+  last_update = cupsGetClock();
 
   if (getenv("IPPFIND_DEBUG"))
     fprintf(stderr, "B flags=0x%04X, if_index=%u, serviceName=\"%s\", regtype=\"%s\", replyDomain=\"%s\"\n", flags, if_index, serviceName, regtype, replyDomain);
@@ -1506,31 +1508,6 @@ get_service(ippfind_srvs_t *services,	// I - Service array
 
 
 //
-// 'get_time()' - Get the current time-of-day in seconds.
-//
-
-static double
-get_time(void)
-{
-#ifdef _WIN32
-  struct _timeb curtime;		// Current Windows time
-
-  _ftime(&curtime);
-
-  return (curtime.time + 0.001 * curtime.millitm);
-
-#else
-  struct timeval	curtime;	// Current UNIX time
-
-  if (gettimeofday(&curtime, NULL))
-    return (0.0);
-  else
-    return (curtime.tv_sec + 0.000001 * curtime.tv_usec);
-#endif // _WIN32
-}
-
-
-//
 // 'list_service()' - List the contents of a service.
 //
 
@@ -1808,6 +1785,8 @@ resolve_callback(
   size_t		i;		// Looping var
   char			*value;		// Pointer into value
 
+
+  last_update = cupsGetClock();
 
   if (getenv("IPPFIND_DEBUG"))
     fprintf(stderr, "R flags=0x%04X, if_index=%u, fullName=\"%s\", hostTarget=\"%s\", port=%u, num_txt=%u, txt=%p\n", flags, if_index, fullName, hostTarget, port, (unsigned)num_txt, txt);

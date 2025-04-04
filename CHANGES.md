@@ -4,8 +4,10 @@ Changes in libcups
 libcups v3.0.0 (YYYY-MM-DD)
 ---------------------------
 
+- Updated `ippfind` to use `cupsGetClock` API.
 - Fixed return values of `ippDateToTime` when the timezone isn't GMT.
 - Fixed a potential timing issue with `cupsEnumDests`.
+- Fixed a bug in the Avahi implementation of `cupsDNSSDBrowseNew`.
 
 
 libcups v3.0rc4 (2025-03-18)
