@@ -1,7 +1,7 @@
 //
 // Hyper-Text Transport Protocol definitions for CUPS.
 //
-// Copyright © 2021-2024 by OpenPrinting.
+// Copyright © 2021-2025 by OpenPrinting.
 // Copyright © 2007-2018 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products, all rights reserved.
 //
@@ -469,6 +469,7 @@ extern off_t		httpGetLength(http_t *http) _CUPS_PUBLIC;
 extern size_t		httpGetPending(http_t *http) _CUPS_PUBLIC;
 extern size_t		httpGetReady(http_t *http) _CUPS_PUBLIC;
 extern size_t		httpGetRemaining(http_t *http) _CUPS_PUBLIC;
+extern const char	*httpGetSecurity(http_t *http, char *buffer, size_t bufsize) _CUPS_PUBLIC;
 extern http_state_t	httpGetState(http_t *http) _CUPS_PUBLIC;
 extern http_status_t	httpGetStatus(http_t *http) _CUPS_PUBLIC;
 extern char		*httpGetSubField(http_t *http, http_field_t field, const char *name, char *value, size_t valuelen) _CUPS_PUBLIC;

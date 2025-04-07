@@ -619,6 +619,7 @@ span.string {
 <li><a href="#httpGetPending">httpGetPending</a></li>
 <li><a href="#httpGetReady">httpGetReady</a></li>
 <li><a href="#httpGetRemaining">httpGetRemaining</a></li>
+<li><a href="#httpGetSecurity">httpGetSecurity</a></li>
 <li><a href="#httpGetState">httpGetState</a></li>
 <li><a href="#httpGetStatus">httpGetStatus</a></li>
 <li><a href="#httpGetSubField">httpGetSubField</a></li>
@@ -7940,6 +7941,26 @@ size_t httpGetRemaining(<a href="#http_t">http_t</a> *http);</p>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">The <a href="#httpIsChunked"><code>httpIsChunked</code></a> function can be used to determine whether the
 message body is chunked or fixed-length.</p>
+<h3 class="function"><a id="httpGetSecurity">httpGetSecurity</a></h3>
+<p class="description">Get the TLS version and cipher suite used by a connection.</p>
+<p class="code">
+<span class="reserved">const</span> <span class="reserved">char</span> *httpGetSecurity(<a href="#http_t">http_t</a> *http, <span class="reserved">char</span> *buffer, size_t bufsize);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>http</th>
+<td class="description">HTTP connection</td></tr>
+<tr><th>buffer</th>
+<td class="description">String buffer</td></tr>
+<tr><th>bufsize</th>
+<td class="description">Size of buffer</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Security information or <code>NULL</code> if not encrypted</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function gets the TLS version and cipher suite being used by a
+connection, if any.  The string is copied to &quot;buffer&quot; and is of the form
+&quot;TLS/major.minor CipherSuite&quot;.  If not encrypted, the buffer is cleared to
+the empty string.</p>
 <h3 class="function"><a id="httpGetState">httpGetState</a></h3>
 <p class="description">Get the current state of the HTTP request.</p>
 <p class="code">
