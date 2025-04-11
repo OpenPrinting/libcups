@@ -273,6 +273,9 @@ httpClearFields(http_t *http)		// I - HTTP connection
 void
 httpClose(http_t *http)			// I - HTTP connection
 {
+  http_field_t	field;			// Current field
+
+
   DEBUG_printf("httpClose(http=%p)", (void *)http);
 
   // Range check input...
@@ -285,9 +288,12 @@ httpClose(http_t *http)			// I - HTTP connection
   // Free memory used...
   httpAddrFreeList(http->hostlist);
 
-  httpClearFields(http);
+  for (field = HTTP_FIELD_ACCEPT; field < HTTP_FIELD_MAX; field ++)
+  {
+    free(http->default_fields[field]);
+    free(http->fields[field]);
+  }
 
-  free(http->fields[HTTP_FIELD_HOST]);
   free(http->authstring);
   free(http->cookie);
 
