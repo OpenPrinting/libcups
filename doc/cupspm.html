@@ -521,6 +521,7 @@ span.string {
 <li><a href="#cupsOAuthCopyUserId">cupsOAuthCopyUserId</a></li>
 <li><a href="#cupsOAuthGetAuthorizationCode">cupsOAuthGetAuthorizationCode</a></li>
 <li><a href="#cupsOAuthGetClientId">cupsOAuthGetClientId</a></li>
+<li><a href="#cupsOAuthGetJWKS">cupsOAuthGetJWKS</a></li>
 <li><a href="#cupsOAuthGetMetadata">cupsOAuthGetMetadata</a></li>
 <li><a href="#cupsOAuthGetTokens">cupsOAuthGetTokens</a></li>
 <li><a href="#cupsOAuthMakeAuthorizationURL">cupsOAuthMakeAuthorizationURL</a></li>
@@ -6117,6 +6118,28 @@ The returned &quot;client_id&quot; string must be freed using the <code>free</co
 <em>Note</em>: This function should only be used to register WWW applications. The
 <a href="#cupsOAuthGetAuthorizationCode"><code>cupsOAuthGetAuthorizationCode</code></a> function handles registration of
 local/&quot;native&quot; applications for you.</p>
+<h3 class="function"><a id="cupsOAuthGetJWKS">cupsOAuthGetJWKS</a></h3>
+<p class="description">Get the JWT key set for an Authorization Server.</p>
+<p class="code">
+<a href="#cups_json_t">cups_json_t</a> *cupsOAuthGetJWKS(<span class="reserved">const</span> <span class="reserved">char</span> *auth_uri, <a href="#cups_json_t">cups_json_t</a> *metadata);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>auth_uri</th>
+<td class="description">Authorization server URI</td></tr>
+<tr><th>metadata</th>
+<td class="description">Server metadata</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">JWKS or <code>NULL</code> on error</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function gets the JWT key set for the specified Authorization Server
+&quot;auth_uri&quot;.  The &quot;metadata&quot; value is obtained using the
+<a href="#cupsOAuthGetMetadata"><code>cupsOAuthGetMetadata</code></a> function.  The returned key set is cached
+per-user for better performance and must be freed using the
+<a href="#cupsJSONDelete"><code>cupsJSONDelete</code></a> function.<br>
+<br>
+The key set is typically used to validate JWT bearer tokens using the
+<a href="#cupsJWTHasValidSignature"><code>cupsJWTHasValidSignature</code></a> function.</p>
 <h3 class="function"><a id="cupsOAuthGetMetadata">cupsOAuthGetMetadata</a></h3>
 <p class="description">Get the metadata for an Authorization Server.</p>
 <p class="code">
@@ -6129,10 +6152,11 @@ local/&quot;native&quot; applications for you.</p>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">JSON metadata or <code>NULL</code> on error</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">This function gets the metadata for the specified Authorization Server URI
-&quot;auth_uri&quot;. Metadata is cached per-user for better performance.<br>
+<p class="discussion">This function gets the RFC 8414 or Open ID Connect metadata for the specified
+OAuth Authorization Server URI &quot;auth_uri&quot;.<br>
 <br>
-The returned metadata must be freed using the <a href="#cupsJSONDelete"><code>cupsJSONDelete</code></a> function.</p>
+The returned metadata is cached per-user for better performance and must be
+freed using the <a href="#cupsJSONDelete"><code>cupsJSONDelete</code></a> function.</p>
 <h3 class="function"><a id="cupsOAuthGetTokens">cupsOAuthGetTokens</a></h3>
 <p class="description">Obtain access and refresh tokens.</p>
 <p class="code">
