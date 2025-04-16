@@ -1797,9 +1797,13 @@ _httpTLSStart(http_t *http)		// I - Connection to server
 
     context = SSL_CTX_new(TLS_server_method());
 
+    // Find the TLS certificate...
+    cupsMutexLock(&tls_mutex);
+
     if (!tls_common_name)
     {
-      // Find the TLS certificate...
+      cupsMutexUnlock(&tls_mutex);
+
       if (http->fields[HTTP_FIELD_HOST])
       {
 	// Use hostname for TLS upgrade...
@@ -1836,9 +1840,9 @@ _httpTLSStart(http_t *http)		// I - Connection to server
 
       if (hostname[0])
 	cn = hostname;
-    }
 
-    cupsMutexLock(&tls_mutex);
+      cupsMutexLock(&tls_mutex);
+    }
 
     if (!cn)
       cn = tls_common_name;
