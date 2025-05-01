@@ -840,11 +840,11 @@ httpGetContentEncoding(http_t *http)	// I - HTTP connection
 
 
 //
-// 'httpGetCookie()' - Get "Cookie:" data from the HTTP connection.
+// 'httpGetCookie()' - Get cookie data from the HTTP connection.
 //
-// This function returns any HTTP "Cookie:" header data for the given HTTP
-// connection as described in RFC 6265.  Use the @link httpGetCookieValue@ to
-// get the value of a named cookie.
+// This function returns any HTTP "Set-Cookie:" or "Cookie:" header data for the
+// given HTTP connection as described in RFC 6265.  Use the
+// @link httpGetCookieValue@ to get the value of a named "Cookie:" value.
 //
 
 const char *				// O - Cookie data or `NULL`
@@ -2205,22 +2205,46 @@ httpSetBlocking(http_t *http,		// I - HTTP connection
 
 
 //
-// 'httpSetCookie()' - Set the cookie value(s).
+// 'httpSetCookie()' - Add Set-Cookie value(s).
+//
+// This function adds one or more Set-Cookie header values that will be sent to
+// the client with the @link httpWriteResponse@ function.  Each value conforms
+// to the format defined in RFC 6265.  Multiple values can be passed in the
+// "cookie" string separated by a newline character.
+//
+// Call the @link httpClearCookies@ function to clear all Set-Cookie values.
 //
 
 void
 httpSetCookie(http_t     *http,		// I - Connection
               const char *cookie)	// I - Cookie string
 {
-  if (!http)
+  // Range check input...
+  if (!http || !cookie)
     return;
 
-  free(http->cookie);
+  // Set or append the Set-Cookie value....
+  if (http->cookie)
+  {
+    // Append with a newline between values...
+    size_t	clen,			// Length of cookie string
+		ctotal;			// Total length of cookies
+    char	*temp;			// Temporary value
 
-  if (cookie)
-    http->cookie = strdup(cookie);
+    clen   = strlen(http->cookie);
+    ctotal = clen + strlen(cookie) + 2;
+
+    if ((temp = realloc(http->cookie, ctotal)) == NULL)
+      return;
+
+    temp[clen] = '\n';
+    cupsCopyString(temp + clen + 1, cookie, ctotal - clen - 1);
+  }
   else
-    http->cookie = NULL;
+  {
+    // Just copy/set this cookie...
+    http->cookie = strdup(cookie);
+  }
 }
 
 
@@ -3050,26 +3074,35 @@ httpWriteResponse(http_t        *http,	// I - HTTP connection
 
     if (http->cookie)
     {
-      if (strchr(http->cookie, ';'))
+      char	*start,			// Start of cookie
+		*ptr;			// Pointer into cookie
+
+      for (start = http->cookie; start; start = ptr)
       {
-        if (httpPrintf(http, "Set-Cookie: %s\r\n", http->cookie) < 1)
+        if ((ptr = strchr(start, '\n')) != NULL)
+          *ptr = '\0';
+
+	if (strchr(start, ';'))
+	{
+	  if (httpPrintf(http, "Set-Cookie: %s\r\n", start) < 1)
+	  {
+	    http->status = HTTP_STATUS_ERROR;
+	    if (ptr)
+	      *ptr = '\n';
+	    return (false);
+	  }
+	}
+	else if (httpPrintf(http, "Set-Cookie: %s; path=/; httponly;%s\r\n", http->cookie, http->tls ? " secure;" : "") < 1)
 	{
 	  http->status = HTTP_STATUS_ERROR;
+	  if (ptr)
+	    *ptr = '\n';
 	  return (false);
 	}
-      }
-      else if (httpPrintf(http, "Set-Cookie: %s; path=/; httponly;%s\r\n", http->cookie, http->tls ? " secure;" : "") < 1)
-      {
-	http->status = HTTP_STATUS_ERROR;
-	return (false);
-      }
-    }
 
-    // "Click-jacking" defense...
-    if (httpPrintf(http, "X-Frame-Options: DENY\r\nContent-Security-Policy: frame-ancestors 'none'\r\n") < 1)
-    {
-      http->status = HTTP_STATUS_ERROR;
-      return (false);
+	if (ptr)
+	  *ptr++ = '\n';
+      }
     }
   }
 

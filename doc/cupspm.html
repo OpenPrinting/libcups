@@ -7782,7 +7782,7 @@ called after receiving a response from the server or a request from the
 client.  The value returned can be use in subsequent requests (for clients)
 or in the response (for servers) in order to compress the content stream.</p>
 <h3 class="function"><a id="httpGetCookie">httpGetCookie</a></h3>
-<p class="description">Get &quot;Cookie:&quot; data from the HTTP connection.</p>
+<p class="description">Get cookie data from the HTTP connection.</p>
 <p class="code">
 <span class="reserved">const</span> <span class="reserved">char</span> *httpGetCookie(<a href="#http_t">http_t</a> *http);</p>
 <h4 class="parameters">Parameters</h4>
@@ -7793,9 +7793,9 @@ or in the response (for servers) in order to compress the content stream.</p>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Cookie data or <code>NULL</code></p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">This function returns any HTTP &quot;Cookie:&quot; header data for the given HTTP
-connection as described in RFC 6265.  Use the <a href="#httpGetCookieValue"><code>httpGetCookieValue</code></a> to
-get the value of a named cookie.</p>
+<p class="discussion">This function returns any HTTP &quot;Set-Cookie:&quot; or &quot;Cookie:&quot; header data for the
+given HTTP connection as described in RFC 6265.  Use the
+<a href="#httpGetCookieValue"><code>httpGetCookieValue</code></a> to get the value of a named &quot;Cookie:&quot; value.</p>
 <h3 class="function"><a id="httpGetCookieValue">httpGetCookieValue</a></h3>
 <p class="description">Get the value of a named cookie from the HTTP connection.</p>
 <p class="code">
@@ -8295,7 +8295,7 @@ connection object.  You must still call <a href="#httpSetField"><code>httpSetFie
 or writing data.  The &quot;http&quot; argument specifies the HTTP connection and the
 &quot;blocking&quot; argument specifies whether to use blocking behavior.</p>
 <h3 class="function"><a id="httpSetCookie">httpSetCookie</a></h3>
-<p class="description">Set the cookie value(s).</p>
+<p class="description">Add Set-Cookie value(s).</p>
 <p class="code">
 <span class="reserved">void</span> httpSetCookie(<a href="#http_t">http_t</a> *http, <span class="reserved">const</span> <span class="reserved">char</span> *cookie);</p>
 <h4 class="parameters">Parameters</h4>
@@ -8305,6 +8305,13 @@ or writing data.  The &quot;http&quot; argument specifies the HTTP connection an
 <tr><th>cookie</th>
 <td class="description">Cookie string</td></tr>
 </tbody></table>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function adds one or more Set-Cookie header values that will be sent to
+the client with the <a href="#httpWriteResponse"><code>httpWriteResponse</code></a> function.  Each value conforms
+to the format defined in RFC 6265.  Multiple values can be passed in the
+&quot;cookie&quot; string separated by a newline character.<br>
+<br>
+Call the <a href="#httpClearCookies"><code>httpClearCookies</code></a> function to clear all Set-Cookie values.</p>
 <h3 class="function"><a id="httpSetDefaultField">httpSetDefaultField</a></h3>
 <p class="description">Set the default value of a HTTP header.</p>
 <p class="code">
