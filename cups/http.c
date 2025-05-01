@@ -225,11 +225,8 @@ httpClearCookie(http_t *http)		// I - HTTP connection
   if (!http)
     return;
 
-  if (http->cookie)
-  {
-    free(http->cookie);
-    http->cookie = NULL;
-  }
+  free(http->cookie);
+  http->cookie = NULL;
 }
 
 
@@ -2237,7 +2234,8 @@ httpSetCookie(http_t     *http,		// I - Connection
     if ((temp = realloc(http->cookie, ctotal)) == NULL)
       return;
 
-    temp[clen] = '\n';
+    http->cookie = temp;
+    temp[clen]   = '\n';
     cupsCopyString(temp + clen + 1, cookie, ctotal - clen - 1);
   }
   else
@@ -3092,7 +3090,7 @@ httpWriteResponse(http_t        *http,	// I - HTTP connection
 	    return (false);
 	  }
 	}
-	else if (httpPrintf(http, "Set-Cookie: %s; path=/; httponly;%s\r\n", http->cookie, http->tls ? " secure;" : "") < 1)
+	else if (httpPrintf(http, "Set-Cookie: %s; path=/; httponly;%s\r\n", start, http->tls ? " secure;" : "") < 1)
 	{
 	  http->status = HTTP_STATUS_ERROR;
 	  if (ptr)
