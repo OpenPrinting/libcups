@@ -1,6 +1,13 @@
 LIBRARY libcups3
 VERSION 3.0
 EXPORTS
+_cups_debug_set
+_cups_gettimeofday
+_cups_hstrerror
+_cups_strcasecmp
+_cups_strcpy
+_cups_strcpy
+_cups_strncasecmp
 _cupsBufferGet
 _cupsBufferRelease
 _cupsConnect
@@ -13,8 +20,8 @@ _cupsGetDests
 _cupsGetPassword
 _cupsGetUserDefault
 _cupsGlobalLock
-_cupsGlobalUnlock
 _cupsGlobals
+_cupsGlobalUnlock
 _cupsJSONDelete
 _cupsMD5Append
 _cupsMD5Finish
@@ -33,13 +40,6 @@ _cupsStrFree
 _cupsStrRetain
 _cupsStrScand
 _cupsStrStatistics
-_cups_debug_set
-_cups_gettimeofday
-_cups_hstrerror
-_cups_strcasecmp
-_cups_strcpy
-_cups_strcpy
-_cups_strncasecmp
 _httpCreateCredentials
 _httpDecodeURI
 _httpDisconnect
@@ -99,6 +99,7 @@ cupsCondWait
 cupsConnectDest
 cupsCopyCredentials
 cupsCopyCredentialsKey
+cupsCopyCredentialsPublicKey
 cupsCopyCredentialsRequest
 cupsCopyDest
 cupsCopyDestConflicts
@@ -109,6 +110,10 @@ cupsCreateCredentialsRequest
 cupsCreateDestJob
 cupsCreateTempFd
 cupsCreateTempFile
+cupsDirClose
+cupsDirOpen
+cupsDirRead
+cupsDirRewind
 cupsDNSSDAssembleFullName
 cupsDNSSDBrowseDelete
 cupsDNSSDBrowseGetContext
@@ -133,10 +138,6 @@ cupsDNSSDServiceGetName
 cupsDNSSDServiceNew
 cupsDNSSDServicePublish
 cupsDNSSDServiceSetLocation
-cupsDirClose
-cupsDirOpen
-cupsDirRead
-cupsDirRewind
 cupsDoAuthentication
 cupsDoFileRequest
 cupsDoIORequest
@@ -177,10 +178,10 @@ cupsFindDestDefault
 cupsFindDestReady
 cupsFindDestSupported
 cupsFinishDestDocument
-cupsFormDecode
-cupsFormEncode
 cupsFormatString
 cupsFormatStringv
+cupsFormDecode
+cupsFormEncode
 cupsFreeDestInfo
 cupsFreeDests
 cupsFreeJobs
@@ -196,8 +197,8 @@ cupsGetDestMediaByName
 cupsGetDestMediaBySize
 cupsGetDestMediaCount
 cupsGetDestMediaDefault
-cupsGetDestWithURI
 cupsGetDests
+cupsGetDestWithURI
 cupsGetEncryption
 cupsGetError
 cupsGetErrorString
@@ -213,9 +214,9 @@ cupsGetResponse
 cupsGetServer
 cupsGetUser
 cupsGetUserAgent
-cupsHMACData
 cupsHashData
 cupsHashString
+cupsHMACData
 cupsJSONAdd
 cupsJSONDelete
 cupsJSONExportFile
@@ -240,17 +241,18 @@ cupsJWTDelete
 cupsJWTExportString
 cupsJWTGetAlgorithm
 cupsJWTGetClaimNumber
+cupsJWTGetClaims
 cupsJWTGetClaimString
 cupsJWTGetClaimType
 cupsJWTGetClaimValue
-cupsJWTGetClaims
 cupsJWTGetHeaderNumber
+cupsJWTGetHeaders
 cupsJWTGetHeaderString
 cupsJWTGetHeaderType
 cupsJWTGetHeaderValue
-cupsJWTGetHeaders
 cupsJWTHasValidSignature
 cupsJWTImportString
+cupsJWTLoadCredentials
 cupsJWTMakePrivateKey
 cupsJWTMakePublicKey
 cupsJWTNew
@@ -289,6 +291,7 @@ cupsOAuthCopyRefreshToken
 cupsOAuthCopyUserId
 cupsOAuthGetAuthorizationCode
 cupsOAuthGetClientId
+cupsOAuthGetJWKS
 cupsOAuthGetMetadata
 cupsOAuthGetTokens
 cupsOAuthMakeAuthorizationURL
@@ -298,11 +301,6 @@ cupsOAuthSaveTokens
 cupsParseOptions
 cupsPutFd
 cupsPutFile
-cupsRWDestroy
-cupsRWInit
-cupsRWLockRead
-cupsRWLockWrite
-cupsRWUnlock
 cupsRasterClose
 cupsRasterGetErrorString
 cupsRasterInitHeader
@@ -315,6 +313,11 @@ cupsRasterWritePixels
 cupsReadResponseData
 cupsRemoveDest
 cupsRemoveOption
+cupsRWDestroy
+cupsRWInit
+cupsRWLockRead
+cupsRWLockWrite
+cupsRWUnlock
 cupsSaveCredentials
 cupsSendRequest
 cupsSetClientCredentials
@@ -374,6 +377,7 @@ httpGetAuthString
 httpGetBlocking
 httpGetContentEncoding
 httpGetCookie
+httpGetCookieValue
 httpGetDateString
 httpGetDateTime
 httpGetEncryption
@@ -387,12 +391,12 @@ httpGetLength
 httpGetPending
 httpGetReady
 httpGetRemaining
+httpGets
 httpGetSecurity
 httpGetState
 httpGetStatus
 httpGetSubField
 httpGetVersion
-httpGets
 httpInitialize
 httpIsChunked
 httpIsEncrypted
@@ -416,8 +420,8 @@ httpSetTimeout
 httpShutdown
 httpStateString
 httpStatusString
-httpURIStatusString
 httpUpdate
+httpURIStatusString
 httpWait
 httpWrite
 httpWriteRequest

@@ -5,7 +5,7 @@ libcups v3.0.0 (YYYY-MM-DD)
 ---------------------------
 
 - Added `cupsOAuthGetJWKS` API.
-- Added `httpGetSecurity` API.
+- Added `httpGetCookieValue` and `httpGetSecurity` APIs.
 - Updated `ippfind` to use `cupsGetClock` API.
 - Fixed return values of `ippDateToTime` when the timezone isn't GMT.
 - Fixed a potential timing issue with `cupsEnumDests`.

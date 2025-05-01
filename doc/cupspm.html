@@ -607,6 +607,7 @@ span.string {
 <li><a href="#httpGetBlocking">httpGetBlocking</a></li>
 <li><a href="#httpGetContentEncoding">httpGetContentEncoding</a></li>
 <li><a href="#httpGetCookie">httpGetCookie</a></li>
+<li><a href="#httpGetCookieValue">httpGetCookieValue</a></li>
 <li><a href="#httpGetDateString">httpGetDateString</a></li>
 <li><a href="#httpGetDateTime">httpGetDateTime</a></li>
 <li><a href="#httpGetEncryption">httpGetEncryption</a></li>
@@ -7781,7 +7782,7 @@ called after receiving a response from the server or a request from the
 client.  The value returned can be use in subsequent requests (for clients)
 or in the response (for servers) in order to compress the content stream.</p>
 <h3 class="function"><a id="httpGetCookie">httpGetCookie</a></h3>
-<p class="description">Get any cookie data from the response.</p>
+<p class="description">Get &quot;Cookie:&quot; data from the HTTP connection.</p>
 <p class="code">
 <span class="reserved">const</span> <span class="reserved">char</span> *httpGetCookie(<a href="#http_t">http_t</a> *http);</p>
 <h4 class="parameters">Parameters</h4>
@@ -7791,6 +7792,31 @@ or in the response (for servers) in order to compress the content stream.</p>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Cookie data or <code>NULL</code></p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function returns any HTTP &quot;Cookie:&quot; header data for the given HTTP
+connection as described in RFC 6265.  Use the <a href="#httpGetCookieValue"><code>httpGetCookieValue</code></a> to
+get the value of a named cookie.</p>
+<h3 class="function"><a id="httpGetCookieValue">httpGetCookieValue</a></h3>
+<p class="description">Get the value of a named cookie from the HTTP connection.</p>
+<p class="code">
+<span class="reserved">char</span> *httpGetCookieValue(<a href="#http_t">http_t</a> *http, <span class="reserved">const</span> <span class="reserved">char</span> *name, <span class="reserved">char</span> *buffer, size_t bufsize);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>http</th>
+<td class="description">HTTP connection</td></tr>
+<tr><th>name</th>
+<td class="description">Cookie name</td></tr>
+<tr><th>buffer</th>
+<td class="description">Value buffer</td></tr>
+<tr><th>bufsize</th>
+<td class="description">Size of value buffer</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Cookie value or <code>NULL</code> if not present</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function copies the value of a named cookie in the HTTP &quot;Cookie:&quot; header
+for the given HTTP connection as described in RFC 6265.  Use the
+<a href="#httpGetCookie"><code>httpGetCookie</code></a> function to get the original &quot;Cookie:&quot; string.</p>
 <h3 class="function"><a id="httpGetDateString">httpGetDateString</a></h3>
 <p class="description">Get a formatted date/time string from a time value.</p>
 <p class="code">
