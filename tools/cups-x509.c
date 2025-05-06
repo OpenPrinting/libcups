@@ -67,7 +67,7 @@
 
 static int	do_ca(const char *common_name, const char *csrfile, const char *root_name, int days);
 static int	do_cert(bool ca_cert, cups_credpurpose_t purpose, cups_credtype_t type, cups_credusage_t keyusage, const char *organization, const char *org_unit, const char *locality, const char *state, const char *country, const char *root_name, const char *common_name, size_t num_alt_names, const char **alt_names, int days);
-static int	do_client(const char *uri);
+static int	do_client(const char *uri, bool pin, bool require_ca);
 static int	do_csr(cups_credpurpose_t purpose, cups_credtype_t type, cups_credusage_t keyusage, const char *organization, const char *org_unit, const char *locality, const char *state, const char *country, const char *common_name, size_t num_alt_names, const char **alt_names);
 static int	do_server(const char *host_port);
 static int	do_show(const char *common_name);
@@ -94,6 +94,8 @@ main(int  argc,				// I - Number of command-line arguments
 		*state = NULL,		// State/province
 		*country = NULL,	// Country
 		*alt_names[100];	// Subject alternate names
+  bool		pin = false,		// Pin client cert?
+		require_ca = false;	// Require a CA-signed cert?
   size_t	num_alt_names = 0;
   int		days = 365;		// Days until expiration
   cups_credpurpose_t purpose = CUPS_CREDPURPOSE_SERVER_AUTH;
@@ -110,6 +112,14 @@ main(int  argc,				// I - Number of command-line arguments
     if (!strcmp(argv[i], "--help"))
     {
       return (usage(stdout));
+    }
+    else if (!strcmp(argv[i], "--pin"))
+    {
+      pin = true;
+    }
+    else if (!strcmp(argv[i], "--require-ca"))
+    {
+      require_ca = true;
     }
     else if (!strcmp(argv[i], "--version"))
     {
@@ -355,7 +365,7 @@ main(int  argc,				// I - Number of command-line arguments
 
   if (!command || !arg)
   {
-    cupsLangPuts(stderr, _("cups-x509: Missing command argument."));
+    cupsLangPuts(stderr, _("cups-x509: Missing sub-command argument."));
     return (usage(stderr));
   }
 
@@ -374,7 +384,7 @@ main(int  argc,				// I - Number of command-line arguments
   }
   else if (!strcmp(command, "client"))
   {
-    return (do_client(arg));
+    return (do_client(arg, pin, require_ca));
   }
   else if (!strcmp(command, "csr"))
   {
@@ -539,7 +549,9 @@ do_cert(
 //
 
 static int				// O - Exit status
-do_client(const char *uri)		// I - URI
+do_client(const char *uri,		// I - URI
+          bool       pin,		// I - Pin the cert?
+          bool       require_ca)	// I - Require a CA-signed cert?
 {
   http_t	*http;			// HTTP connection
   char		scheme[HTTP_MAX_URI],	// Scheme from URI
@@ -556,26 +568,19 @@ do_client(const char *uri)		// I - URI
 
 
   // Connect to the host and validate credentials...
-  if (httpSeparateURI(HTTP_URI_CODING_MOST, uri, scheme, sizeof(scheme), username, sizeof(username), hostname, sizeof(hostname), &port, resource, sizeof(resource)) < HTTP_URI_STATUS_OK)
+  if ((http = httpConnectURI(uri, hostname, sizeof(hostname), &port, resource, sizeof(resource), /*blocking*/true, /*msec*/30000, /*cancel*/NULL, require_ca)) == NULL)
   {
-    cupsLangPrintf(stderr, _("cups-x509: Bad URI '%s'."), uri);
-    return (1);
-  }
-
-  if ((http = httpConnect(hostname, port, NULL, AF_UNSPEC, HTTP_ENCRYPTION_ALWAYS, 1, 30000, NULL)) == NULL)
-  {
-    cupsLangPrintf(stderr, _("cups-x509: Unable to connect to '%s' on port %d: %s"), hostname, port, cupsGetErrorString());
+    cupsLangPrintf(stderr, _("cups-x509: Unable to connect to '%s': %s"), uri, cupsGetErrorString());
     return (1);
   }
 
   puts("TLS Server Credentials:");
   if ((hcreds = httpCopyPeerCredentials(http)) != NULL)
   {
-    trust = cupsGetCredentialsTrust(/*path*/NULL, hostname, hcreds, /*require_ca*/false);
+    trust = cupsGetCredentialsTrust(/*path*/NULL, hostname, hcreds, require_ca);
 
     cupsGetCredentialsInfo(hcreds, hinfo, sizeof(hinfo));
 
-//    printf("    Certificate Count: %u\n", (unsigned)cupsArrayGetCount(hcreds));
     if (trust == HTTP_TRUST_OK)
       puts("    Trust: OK");
     else
@@ -583,6 +588,9 @@ do_client(const char *uri)		// I - URI
     printf("    Expiration: %s\n", httpGetDateString(cupsGetCredentialsExpiration(hcreds), datestr, sizeof(datestr)));
     printf("     ValidName: %s\n", cupsAreCredentialsValidForName(hostname, hcreds) ? "true" : "false");
     printf("          Info: \"%s\"\n", hinfo);
+
+    if (pin)
+      cupsSaveCredentials(/*path*/NULL, hostname, hcreds, /*key*/NULL);
 
     free(hcreds);
   }
@@ -835,9 +843,9 @@ do_show(const char *common_name)	// I - Common name
 static int				// O - Exit code
 usage(FILE *out)			// I - Output file (stdout or stderr)
 {
-  cupsLangPuts(out, _("Usage: cups-x509 [OPTIONS] [COMMAND] [ARGUMENT]"));
+  cupsLangPuts(out, _("Usage: cups-x509 [OPTIONS] [SUB-COMMAND] [ARGUMENT]"));
   cupsLangPuts(out, "");
-  cupsLangPuts(out, _("Commands:"));
+  cupsLangPuts(out, _("Sub-Commands:"));
   cupsLangPuts(out, "");
   cupsLangPuts(out, _("ca COMMON-NAME             Sign a CSR to produce a certificate."));
   cupsLangPuts(out, _("cacert COMMON-NAME         Create a CA certificate."));
