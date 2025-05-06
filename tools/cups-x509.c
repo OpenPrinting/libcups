@@ -554,9 +554,7 @@ do_client(const char *uri,		// I - URI
           bool       require_ca)	// I - Require a CA-signed cert?
 {
   http_t	*http;			// HTTP connection
-  char		scheme[HTTP_MAX_URI],	// Scheme from URI
-		hostname[HTTP_MAX_URI],	// Hostname from URI
-		username[HTTP_MAX_URI],	// Username:password from URI
+  char		hostname[HTTP_MAX_URI],	// Hostname from URI
 		resource[HTTP_MAX_URI];	// Resource from URI
   int		port;			// Port number from URI
   http_trust_t	trust;			// Trust evaluation for connection
