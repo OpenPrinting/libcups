@@ -153,7 +153,9 @@ DllMain(HINSTANCE hinst,		// I - DLL module handle
 static _cups_globals_t *		// O - Pointer to global data
 cups_globals_alloc(void)
 {
-  _cups_globals_t *cg = malloc(sizeof(_cups_globals_t));
+  const char	*cups_userconfig = getenv("CUPS_USERCONFIG");
+					// Location of user config files
+  _cups_globals_t *cg = calloc(1, sizeof(_cups_globals_t));
 					// Pointer to global data
 #ifdef _WIN32
   HKEY		key;			// Registry key
@@ -231,7 +233,9 @@ cups_globals_alloc(void)
 
   DEBUG_printf("cups_globals_alloc: USERPROFILE=\"%s\"", userprofile);
 
-  if (userprofile)
+  if (cups_userconfig)
+    cupsCopyString(userconfig, cups_userconfig, sizeof(userconfig));
+  else if (userprofile)
     snprintf(userconfig, sizeof(userconfig), "%s/AppData/Local/cups", userprofile);
   else
     cupsCopyString(userconfig, "C:/cups", sizeof(userconfig));
@@ -267,6 +271,8 @@ cups_globals_alloc(void)
     // the system directories...
     cg->datadir   = CUPS_DATADIR;
     cg->sysconfig = CUPS_SERVERROOT;
+
+    cups_userconfig = NULL;
   }
   else
   {
@@ -274,8 +280,11 @@ cups_globals_alloc(void)
     if ((cg->datadir = getenv("CUPS_DATADIR")) == NULL)
       cg->datadir = CUPS_DATADIR;
 
-    if ((cg->sysconfig = getenv("CUPS_SERVERROOT")) == NULL)
-      cg->sysconfig = CUPS_SERVERROOT;
+    if ((cg->sysconfig = getenv("CUPS_SYSCONFIG")) == NULL)
+    {
+      if ((cg->sysconfig = getenv("CUPS_SERVERROOT")) == NULL)
+	cg->sysconfig = CUPS_SERVERROOT;
+    }
   }
 
   if (!getuid())
@@ -284,7 +293,14 @@ cups_globals_alloc(void)
     cg->userconfig = strdup(cg->sysconfig);
     return (cg);
   }
+  else if (cups_userconfig)
+  {
+    // Use the value of the CUPS_USERCONFIG environment variable...
+    cg->userconfig = strdup(cups_userconfig);
+    return (cg);
+  }
 
+  // Find the user configuration directory relative to the home directory...
 #  ifdef __APPLE__
   if (!home)
 #else
