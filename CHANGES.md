@@ -6,12 +6,13 @@ libcups v3.0.0 (YYYY-MM-DD)
 
 - Added `cupsOAuthGetJWKS` and `cupsOAuthGetUserId` APIs.
 - Added `httpGetCookieValue` and `httpGetSecurity` APIs.
+- Updated documentation (Issue #113)
 - Updated the `cupsOAuth` APIs to support sharing of some OAuth values between
   the system (root) and per-user cache values.
 - Updated the `cupsJWTNew` API to accept an optional JSON claims object.
 - Updated the `httpSetCookie` API to support multiple "Set-Cookie:" header
   values.
-- Updated `ippfind` to use `cupsGetClock` API.
+- Updated `ippfind` to use the `cupsGetClock` API.
 - Fixed return values of `ippDateToTime` when the timezone isn't GMT.
 - Fixed a potential timing issue with `cupsEnumDests`.
 - Fixed a bug in the Avahi implementation of `cupsDNSSDBrowseNew`.

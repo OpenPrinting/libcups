@@ -524,6 +524,7 @@ span.string {
 <li><a href="#cupsOAuthGetJWKS">cupsOAuthGetJWKS</a></li>
 <li><a href="#cupsOAuthGetMetadata">cupsOAuthGetMetadata</a></li>
 <li><a href="#cupsOAuthGetTokens">cupsOAuthGetTokens</a></li>
+<li><a href="#cupsOAuthGetUserId">cupsOAuthGetUserId</a></li>
 <li><a href="#cupsOAuthMakeAuthorizationURL">cupsOAuthMakeAuthorizationURL</a></li>
 <li><a href="#cupsOAuthMakeBase64Random">cupsOAuthMakeBase64Random</a></li>
 <li><a href="#cupsOAuthSaveClientData">cupsOAuthSaveClientData</a></li>
@@ -1982,7 +1983,7 @@ If the named destination already exists, the destination list is
 returned unchanged.  Adding a new instance of a destination creates
 a copy of that destination's options.<br>
 <br>
-Use the <a href="#cupsSaveDests"><code>cupsSaveDests</code></a> function to save the updated list of
+Use the <a href="#cupsSetDests"><code>cupsSetDests</code></a> function to save the updated list of
 destinations to the user's lpoptions file.</p>
 <h3 class="function"><a id="cupsAddDestMediaOptions">cupsAddDestMediaOptions</a></h3>
 <p class="description">Add the option corresponding to the specified media size.</p>
@@ -5559,11 +5560,13 @@ JWK suitable for use when decrypting or verifying a JWE/JWS message.</p>
 <h3 class="function"><a id="cupsJWTNew">cupsJWTNew</a></h3>
 <p class="description">Create a new, empty JSON Web Token.</p>
 <p class="code">
-<a href="#cups_jwt_t">cups_jwt_t</a> *cupsJWTNew(<span class="reserved">const</span> <span class="reserved">char</span> *type);</p>
+<a href="#cups_jwt_t">cups_jwt_t</a> *cupsJWTNew(<span class="reserved">const</span> <span class="reserved">char</span> *type, <a href="#cups_json_t">cups_json_t</a> *claims);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>type</th>
 <td class="description">JWT type or <code>NULL</code> for default (&quot;JWT&quot;)</td></tr>
+<tr><th>claims</th>
+<td class="description">JSON claims or <code>NULL</code> for empty</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">JWT object</p>
@@ -6213,6 +6216,27 @@ access token must be freed using the <code>free</code> function. The new refresh
 and any user ID information can be obtained using the
 <a href="#cupsOAuthCopyRefreshToken"><code>cupsOAuthCopyRefreshToken</code></a> and <a href="#cupsOAuthCopyUserId"><code>cupsOAuthCopyUserId</code></a> functions
 respectively.</p>
+<h3 class="function"><span class="info">&#160;CUPS 2.5&#160;</span><a id="cupsOAuthGetUserId">cupsOAuthGetUserId</a></h3>
+<p class="description">Get the user ID token associated with the given access token.</p>
+<p class="code">
+<a href="#cups_jwt_t">cups_jwt_t</a> *cupsOAuthGetUserId(<span class="reserved">const</span> <span class="reserved">char</span> *auth_uri, <a href="#cups_json_t">cups_json_t</a> *metadata, <span class="reserved">const</span> <span class="reserved">char</span> *access_token);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>auth_uri</th>
+<td class="description">Authorization Server URL</td></tr>
+<tr><th>metadata</th>
+<td class="description">Authorization Server metadata</td></tr>
+<tr><th>access_token</th>
+<td class="description">Access (Bearer) token</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Identification information or <code>NULL</code> if none</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function retrieves the user ID token associated with a given access
+token.  The user ID information is cached until the token expires to minimize
+the overhead of communicating with the Authorization Server.
+
+</p>
 <h3 class="function"><a id="cupsOAuthMakeAuthorizationURL">cupsOAuthMakeAuthorizationURL</a></h3>
 <p class="description">Make an authorization URL.</p>
 <p class="code">
