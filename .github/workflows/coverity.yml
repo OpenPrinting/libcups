@@ -8,7 +8,7 @@ jobs:
     environment: Coverity
     steps:
       - name: Checkout libcups
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: recursive
       - name: Update Build Environment
