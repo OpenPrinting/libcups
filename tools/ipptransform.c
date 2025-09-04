@@ -2600,11 +2600,15 @@ pclm_start_page(xform_raster_t   *ras,	// I - Raster information
                void             *ctx)	// I - Write context
 {
   const char	*value;			// Environment variable value
+  int		temp;			// Temporary value
   size_t	i;			// Looping var
   pdfio_dict_t	*dict;			// Page/image dictionary
   pdfio_stream_t *st;			// Page stream
   char		image[32];		// Image object name
 
+
+  (void)cb;
+  (void)ctx;
 
   fprintf(stderr, "DEBUG: pclm_start_page(page=%u)\n", page);
 
@@ -2615,8 +2619,10 @@ pclm_start_page(xform_raster_t   *ras,	// I - Raster information
   ras->bottom = ras->header.cupsHeight;
 
   // Allocate objects for each of the strips...
-  if ((value = getenv("IPP_PCLM_STRIP_HEIGHT_PREFERRED")) == NULL || (ras->pclm_strip_height = atoi(value)) < 16 || ras->pclm_strip_height > 256)
+  if ((value = getenv("IPP_PCLM_STRIP_HEIGHT_PREFERRED")) == NULL || (temp = atoi(value)) < 16 || temp > 256)
     ras->pclm_strip_height = 16;
+  else
+    ras->pclm_strip_height = (unsigned)temp;
 
   ras->pclm_num_strip_objs = ras->header.cupsHeight / ras->pclm_strip_height;
   if ((ras->pclm_strip_objs = calloc(ras->pclm_num_strip_objs, sizeof(pdfio_obj_t *))) == NULL)
@@ -2679,6 +2685,9 @@ pclm_write_line(
   unsigned	ymod = y % ras->pclm_strip_height;
 					// Line within strip
 
+
+  (void)cb;
+  (void)ctx;
 
 //  fprintf(stderr, "DEBUG: pclm_write_line(y=%u)\n", y);
 

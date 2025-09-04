@@ -102,7 +102,7 @@ cupsDoAuthentication(
       if (cg->oauth_cb)
       {
         // Try callback...
-	char	scope[HTTP_MAX_VALUE];	// scope="xyz" string
+	char	scope[_HTTP_MAX_VALUE];	// scope="xyz" string
 
 	cups_auth_param(schemedata, "realm", http->realm, sizeof(http->realm));
 
@@ -136,7 +136,7 @@ cupsDoAuthentication(
     if (http->digest_tries > 1 || !http->userpass[0])
     {
       // Nope - get a new password from the user...
-      char default_username[HTTP_MAX_VALUE];
+      char default_username[_HTTP_MAX_VALUE];
 					// Default username
 
       if (!cg->lang_default)
@@ -186,7 +186,7 @@ cupsDoAuthentication(
     else if (!_cups_strcasecmp(scheme, "Digest"))
     {
       // Digest authentication...
-      char nonce[HTTP_MAX_VALUE];	// nonce="xyz" string
+      char nonce[_HTTP_MAX_VALUE];	// nonce="xyz" string
 
       cups_auth_param(schemedata, "algorithm", http->algorithm, sizeof(http->algorithm));
       cups_auth_param(schemedata, "nonce", nonce, sizeof(nonce));

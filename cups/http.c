@@ -778,7 +778,7 @@ httpGetContentEncoding(http_t *http)	// I - HTTP connection
   if (http && http->fields[HTTP_FIELD_ACCEPT_ENCODING])
   {
     int		i;			// Looping var
-    char	temp[HTTP_MAX_VALUE],	// Copy of Accepts-Encoding value
+    char	temp[_HTTP_MAX_VALUE],	// Copy of Accepts-Encoding value
 		*start,			// Start of coding value
 		*end;			// End of coding value
     double	qvalue;			// "qvalue" for coding
@@ -1190,7 +1190,7 @@ httpGets(http_t *http,			// I - HTTP connection
         return (NULL);
       }
 
-      bytes = http_read(http, http->buffer + http->used, (size_t)(HTTP_MAX_BUFFER - http->used));
+      bytes = http_read(http, http->buffer + http->used, (size_t)(_HTTP_MAX_BUFFER - http->used));
 
       DEBUG_printf("4httpGets: read " CUPS_LLFMT " bytes.", CUPS_LLCAST bytes);
 
@@ -1331,7 +1331,7 @@ httpGetSubField(http_t       *http,	// I - HTTP connection
 		size_t       valuelen)	// I - Size of value buffer
 {
   const char	*fptr;			// Pointer into field
-  char		temp[HTTP_MAX_VALUE],	// Temporary buffer for name
+  char		temp[_HTTP_MAX_VALUE],	// Temporary buffer for name
 		*ptr,			// Pointer into string buffer
 		*end;			// End of value buffer
 
@@ -1629,9 +1629,9 @@ httpPeek(http_t *http,			// I - HTTP connection
 
     memset(&stream, 0, sizeof(stream));
 
-    if (http->used > 0 && ((z_stream *)http->stream)->avail_in < HTTP_MAX_BUFFER)
+    if (http->used > 0 && ((z_stream *)http->stream)->avail_in < _HTTP_MAX_BUFFER)
     {
-      size_t buflen = HTTP_MAX_BUFFER - ((z_stream *)http->stream)->avail_in;
+      size_t buflen = _HTTP_MAX_BUFFER - ((z_stream *)http->stream)->avail_in;
 					// Number of bytes to copy
 
       if (((z_stream *)http->stream)->avail_in > 0 && ((z_stream *)http->stream)->next_in > http->sbuffer)
@@ -1830,7 +1830,7 @@ httpRead(http_t *http,			// I - HTTP connection
 
       if (bytes == 0)
       {
-        ssize_t buflen = HTTP_MAX_BUFFER - (ssize_t)((z_stream *)http->stream)->avail_in;
+        ssize_t buflen = _HTTP_MAX_BUFFER - (ssize_t)((z_stream *)http->stream)->avail_in;
 					// Additional bytes for buffer
 
         if (buflen > 0)
@@ -2464,13 +2464,37 @@ bool					// O - `true` to continue, `false` to stop
 _httpUpdate(http_t        *http,	// I - HTTP connection
             http_status_t *status)	// O - Current HTTP status
 {
-  char		line[32768],		// Line from connection...
+  char		line[_HTTP_MAX_BUFFER],	// Line from connection...
 		*value;			// Pointer to value on line
   http_field_t	field;			// Field index
   int		major, minor;		// HTTP version numbers
 
 
   DEBUG_printf("_httpUpdate(http=%p, status=%p), state=%s", (void *)http, (void *)status, httpStateString(http->state));
+
+  // When doing non-blocking I/O, make sure we have a whole line...
+  if (!http->blocking)
+  {
+    ssize_t	bytes;			// Bytes "peeked" from connection
+
+    // Peek at the incoming data...
+    if ((bytes = httpPeek(http, line, sizeof(line) - 1)) < 0)
+    {
+      // Unable to peek, return an error...
+      *status = HTTP_STATUS_ERROR;
+      return (0);
+    }
+
+    // Nul-terminate the data and see if we have a newline...
+    line[bytes] = '\0';
+
+    if (!strchr(line, '\n'))
+    {
+      // Don't have a full line, tell the reader to try again when there is more data...
+      *status = HTTP_STATUS_CONTINUE;
+      return (0);
+    }
+  }
 
   // Grab a single line from the connection...
   if (!httpGets(http, line, sizeof(line)))
@@ -4088,15 +4112,15 @@ http_set_timeout(int    fd,		// I - File descriptor
 static void
 http_set_wait(http_t *http)		// I - HTTP connection
 {
-  if (http->blocking)
-  {
-    http->wait_value = (int)(http->timeout_value * 1000);
+  http->wait_value = (int)(http->timeout_value * 1000);
 
-    if (http->wait_value <= 0)
+  if (http->wait_value <= 0)
+  {
+    if (http->blocking)
       http->wait_value = 60000;
+    else
+      http->wait_value = 1000;
   }
-  else
-    http->wait_value = 10000;
 }
 
 

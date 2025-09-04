@@ -1129,7 +1129,7 @@ cupsJSONImportURL(
   char		resource[1024];		// URL resource path
   http_status_t	status;			// HTTP request status
   http_state_t	initial_state;		// Initial HTTP state
-  char		if_modified_since[HTTP_MAX_VALUE];
+  char		if_modified_since[_HTTP_MAX_VALUE];
 					// If-Modified-Since header
   bool		new_auth = false,	// Using new auth information?
 		digest;			// Are we using Digest authentication?

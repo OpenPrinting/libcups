@@ -2182,11 +2182,14 @@ http_bio_read(BIO  *h,			// I - BIO data
   http = (http_t *)BIO_get_data(h);
   DEBUG_printf("9http_bio_read: http=%p", (void *)http);
 
-  if (!http->blocking)
+  if (!http->blocking || http->timeout_value > 0.0)
   {
     // Make sure we have data before we read...
-    if (!_httpWait(http, 10000, 0))
+    while (!_httpWait(http, http->wait_value, 0))
     {
+      if (http->timeout_cb && (*http->timeout_cb)(http, http->timeout_data))
+	continue;
+
 #ifdef WIN32
       http->error = WSAETIMEDOUT;
 #else

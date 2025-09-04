@@ -136,7 +136,7 @@ static const char * const ippeve_preason_strings[] =
 #if HAVE_LIBPAM
 typedef struct ippeve_authdata_s	// Authentication data
 {
-  char	username[HTTP_MAX_VALUE],	// Username string
+  char	username[256],	// Username string
 	*password;			// Password string
 } ippeve_authdata_t;
 #endif // HAVE_LIBPAM
@@ -213,13 +213,11 @@ typedef struct ippeve_client_s		// Client data
   ipp_op_t		operation_id;	// IPP operation-id
   char			uri[1024],	// Request URI
 			*options,	// URI options
-			host_field[HTTP_MAX_VALUE];
-					// Host: header
+			host_field[256];// Host: header
   int			host_port;	// Port number from Host: header
   http_addr_t		addr;		// Client address
   char			hostname[256],	// Client hostname
-			username[HTTP_MAX_VALUE];
-					// Authenticated username, if any
+			username[256];	// Authenticated username, if any
   ippeve_printer_t	*printer;	// Printer
   ippeve_job_t		*job;		// Current job, if any
 } ippeve_client_t;

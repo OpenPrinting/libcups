@@ -77,8 +77,6 @@ extern "C" {
 
 #  define HTTP_MAX_URI		1024	// Max length of URI string
 #  define HTTP_MAX_HOST		256	// Max length of hostname string
-#  define HTTP_MAX_BUFFER	2048	// Max length of data buffer
-#  define HTTP_MAX_VALUE	256	// Max header field value length
 
 
 //

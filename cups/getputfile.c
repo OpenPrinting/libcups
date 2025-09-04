@@ -33,7 +33,7 @@ cupsGetFd(http_t     *http,		// I - Connection to server or @code CUPS_HTTP_DEFA
   ssize_t	bytes;			// Number of bytes read
   char		buffer[8192];		// Buffer for file
   http_status_t	status;			// HTTP status from server
-  char		if_modified_since[HTTP_MAX_VALUE];
+  char		if_modified_since[_HTTP_MAX_VALUE];
 					// If-Modified-Since header
   int		new_auth = 0;		// Using new auth information?
   int		digest;			// Are we using Digest authentication?

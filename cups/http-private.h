@@ -50,7 +50,9 @@ extern "C" {
 // Constants...
 //
 
+#  define _HTTP_MAX_BUFFER	32768	// Max length of data buffer
 #  define _HTTP_MAX_SBUFFER	65536	// Size of (de)compression buffer
+#  define _HTTP_MAX_VALUE	256	// Max header field value length
 
 #  define _HTTP_TLS_NONE	0	// No TLS options
 #  define _HTTP_TLS_ALLOW_RC4	1	// Allow RC4 cipher suites
@@ -127,31 +129,31 @@ struct _http_s				// HTTP connection structure
   http_keepalive_t	keep_alive;	// Keep-alive supported?
   unsigned		nonce_count;	// Nonce count
   int			digest_tries;	// Number of tries for digest auth
-  char			userpass[HTTP_MAX_VALUE];
+  char			userpass[_HTTP_MAX_VALUE];
 					// Username:password string
   char			*data;		// Pointer to data buffer
   http_encoding_t	data_encoding;	// Chunked or not
   off_t			data_remaining;	// Number of bytes left
   int			used;		// Number of bytes used in buffer
-  char			buffer[HTTP_MAX_BUFFER];
+  char			buffer[_HTTP_MAX_BUFFER];
 					// Buffer for incoming data
   char			algorithm[65],	// Algorithm from WWW-Authenticate
-			nextnonce[HTTP_MAX_VALUE],
+			nextnonce[_HTTP_MAX_VALUE],
 					// Next nonce value from Authentication-Info
-			nonce[HTTP_MAX_VALUE],
+			nonce[_HTTP_MAX_VALUE],
 					// Nonce value
-			opaque[HTTP_MAX_VALUE],
+			opaque[_HTTP_MAX_VALUE],
 					// Opaque value from WWW-Authenticate
-			qop[HTTP_MAX_VALUE],
+			qop[_HTTP_MAX_VALUE],
 					// Quality of Protection (qop) value from WWW-Authenticate
-			realm[HTTP_MAX_VALUE];
+			realm[_HTTP_MAX_VALUE];
 					// Realm from WWW-Authenticate
   http_encryption_t	encryption;	// Encryption requirements
   _http_tls_t		tls;		// TLS state information
   _http_tls_credentials_t *tls_credentials;
 					// TLS credentials
   bool			tls_upgrade;	// `true` if we are doing an upgrade
-  char			wbuffer[HTTP_MAX_BUFFER];
+  char			wbuffer[_HTTP_MAX_BUFFER];
 					// Buffer for outgoing data
   int			wused;		// Write buffer bytes used
 					// TLS credentials

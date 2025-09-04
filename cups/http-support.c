@@ -993,7 +993,7 @@ _httpSetDigestAuthString(
   char		kd[65],			// Final MD5/SHA-256 digest
 		ha1[65],		// Hash of username:realm:password
 		ha2[65],		// Hash of method:request-uri
-		username[HTTP_MAX_VALUE],
+		username[_HTTP_MAX_VALUE],
 					// username:password
 		*password,		// Pointer to password
 		temp[1024],		// Temporary string

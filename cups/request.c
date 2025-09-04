@@ -752,7 +752,7 @@ cupsWriteRequestData(
   }
 
   // Finally, check if we have any pending data from the server...
-  if (length >= HTTP_MAX_BUFFER || http->wused < wused || (wused > 0 && (size_t)http->wused == length))
+  if (length >= _HTTP_MAX_BUFFER || http->wused < wused || (wused > 0 && (size_t)http->wused == length))
   {
     // We've written something to the server, so check for response data...
     if (_httpWait(http, 0, 1))
