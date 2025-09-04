@@ -1273,7 +1273,10 @@ cupsOAuthGetUserId(
     }
 
     // Get the response...
-    while ((status = httpUpdate(http)) == HTTP_STATUS_CONTINUE);
+    do
+    {
+      status = httpUpdate(http);
+    } while (status == HTTP_STATUS_CONTINUE);
 
     user_id_value  = oauth_copy_response(http);
     user_id_claims = cupsJSONImportString(user_id_value);

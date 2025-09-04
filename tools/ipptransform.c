@@ -4207,7 +4207,11 @@ xform_document(
     fprintf(stderr, "DEBUG: cupsPageSize=[%g %g]\n", ras.header.cupsPageSize[0], ras.header.cupsPageSize[1]);
 
   if (!(ras.start_job)(&ras, cb, ctx))
+  {
+    CGPDFDocumentRelease(document);
+    CGContextRelease(context);
     return (false);
+  }
 
   // Render pages in the PDF...
   if (options->multiple_document_handling == IPPOPT_HANDLING_UNCOLLATED_COPIES)

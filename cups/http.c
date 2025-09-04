@@ -2477,23 +2477,32 @@ _httpUpdate(http_t        *http,	// I - HTTP connection
   {
     ssize_t	bytes;			// Bytes "peeked" from connection
 
-    // Peek at the incoming data...
-    if ((bytes = httpPeek(http, line, sizeof(line) - 1)) < 0)
+    // See whether our read buffer is full...
+    DEBUG_printf("2_httpUpdate: used=%d", http->used);
+
+    if (http->used > 0 && !memchr(http->buffer, '\n', (size_t)http->used) && (size_t)http->used < sizeof(http->buffer))
     {
-      // Unable to peek, return an error...
-      *status = HTTP_STATUS_ERROR;
-      return (0);
+      // No, try filling in more data...
+      if ((bytes = http_read(http, http->buffer + http->used, sizeof(http->buffer) - (size_t)http->used)) > 0)
+      {
+        DEBUG_printf("2_httpUpdate: Read %d bytes.", (int)bytes);
+        http->used += (int)bytes;
+      }
     }
 
-    // Nul-terminate the data and see if we have a newline...
-    line[bytes] = '\0';
-
-    if (!strchr(line, '\n'))
+    // Peek at the incoming data...
+    if (!http->used || !memchr(http->buffer, '\n', (size_t)http->used))
     {
       // Don't have a full line, tell the reader to try again when there is more data...
-      *status = HTTP_STATUS_CONTINUE;
+      DEBUG_puts("1_htttpUpdate: No newline in buffer yet.");
+      if ((size_t)http->used == sizeof(http->buffer))
+        *status = HTTP_STATUS_ERROR;
+      else
+        *status = HTTP_STATUS_CONTINUE;
       return (0);
     }
+
+    DEBUG_puts("2_httpUpdate: Found newline in buffer.");
   }
 
   // Grab a single line from the connection...
@@ -3672,7 +3681,7 @@ http_read(http_t *http,			// I - HTTP connection
 
   if (!http->blocking || http->timeout_value > 0.0)
   {
-    while (!httpWait(http, http->wait_value))
+    while (!_httpWait(http, http->wait_value, true))
     {
       if (http->timeout_cb && (*http->timeout_cb)(http, http->timeout_data))
 	continue;
