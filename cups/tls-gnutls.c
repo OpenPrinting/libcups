@@ -1830,10 +1830,9 @@ _httpTLSStart(http_t *http)		// I - Connection to server
 
       if (!cupsCreateCredentials(tls_keypath, false, CUPS_CREDPURPOSE_SERVER_AUTH, CUPS_CREDTYPE_DEFAULT, CUPS_CREDUSAGE_DEFAULT_TLS, NULL, NULL, NULL, NULL, NULL, cn, /*email*/NULL, 0, NULL, NULL, time(NULL) + 3650 * 86400))
       {
-	DEBUG_puts("4_httpTLSStart: cupsCreateCredentials failed.");
+	DEBUG_printf("4_httpTLSStart: cupsCreateCredentials failed: %s", cupsGetErrorString());
 	http->error  = errno = EINVAL;
 	http->status = HTTP_STATUS_ERROR;
-	_cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create server credentials."), true);
 	cupsMutexUnlock(&tls_mutex);
 
 	return (false);

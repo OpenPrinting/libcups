@@ -1891,10 +1891,9 @@ _httpTLSStart(http_t *http)		// I - Connection to server
 
       if (!cupsCreateCredentials(tls_keypath, false, CUPS_CREDPURPOSE_SERVER_AUTH, CUPS_CREDTYPE_DEFAULT, CUPS_CREDUSAGE_DEFAULT_TLS, NULL, NULL, NULL, NULL, NULL, cn, NULL, 0, NULL, NULL, time(NULL) + 3650 * 86400))
       {
-	DEBUG_puts("4_httpTLSStart: cupsCreateCredentials failed.");
+	DEBUG_printf("4_httpTLSStart: cupsCreateCredentials failed: %s", cupsGetErrorString());
 	http->error  = errno = EINVAL;
 	http->status = HTTP_STATUS_ERROR;
-	_cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create server credentials."), true);
 	SSL_CTX_free(context);
         cupsMutexUnlock(&tls_mutex);
 
@@ -2185,7 +2184,7 @@ http_bio_read(BIO  *h,			// I - BIO data
   if (!http->blocking || http->timeout_value > 0.0)
   {
     // Make sure we have data before we read...
-    while (!_httpWait(http, http->wait_value, 0))
+    while (!_httpWait(http, http->wait_value, false))
     {
       if (http->timeout_cb && (*http->timeout_cb)(http, http->timeout_data))
 	continue;

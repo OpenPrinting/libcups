@@ -34,7 +34,7 @@ static http_t		*http_create(const char *host, int port, http_addrlist_t *addrlis
 #ifdef DEBUG
 static void		http_debug_hex(const char *prefix, const char *buffer, int bytes);
 #endif // DEBUG
-static ssize_t		http_read(http_t *http, char *buffer, size_t length);
+static ssize_t		http_read(http_t *http, char *buffer, size_t length, int timeout);
 static ssize_t		http_read_buffered(http_t *http, char *buffer, size_t length);
 static ssize_t		http_read_chunk(http_t *http, char *buffer, size_t length);
 static bool		http_send(http_t *http, http_state_t request, const char *uri);
@@ -1190,7 +1190,7 @@ httpGets(http_t *http,			// I - HTTP connection
         return (NULL);
       }
 
-      bytes = http_read(http, http->buffer + http->used, (size_t)(_HTTP_MAX_BUFFER - http->used));
+      bytes = http_read(http, http->buffer + http->used, (size_t)(_HTTP_MAX_BUFFER - http->used), http->wait_value);
 
       DEBUG_printf("4httpGets: read " CUPS_LLFMT " bytes.", CUPS_LLCAST bytes);
 
@@ -1609,7 +1609,7 @@ httpPeek(http_t *http,			// I - HTTP connection
       buflen = (ssize_t)http->data_remaining;
 
     DEBUG_printf("2httpPeek: Reading %d bytes into buffer.", (int)buflen);
-    bytes = http_read(http, http->buffer, (size_t)buflen);
+    bytes = http_read(http, http->buffer, (size_t)buflen, http->wait_value);
 
     DEBUG_printf("2httpPeek: Read " CUPS_LLFMT " bytes into buffer.", CUPS_LLCAST bytes);
     if (bytes > 0)
@@ -2483,7 +2483,7 @@ _httpUpdate(http_t        *http,	// I - HTTP connection
     if (http->used > 0 && !memchr(http->buffer, '\n', (size_t)http->used) && (size_t)http->used < sizeof(http->buffer))
     {
       // No, try filling in more data...
-      if ((bytes = http_read(http, http->buffer + http->used, sizeof(http->buffer) - (size_t)http->used)) > 0)
+      if ((bytes = http_read(http, http->buffer + http->used, sizeof(http->buffer) - (size_t)http->used, 0)) > 0)
       {
         DEBUG_printf("2_httpUpdate: Read %d bytes.", (int)bytes);
         http->used += (int)bytes;
@@ -2508,6 +2508,7 @@ _httpUpdate(http_t        *http,	// I - HTTP connection
   // Grab a single line from the connection...
   if (!httpGets(http, line, sizeof(line)))
   {
+    DEBUG_puts("1_httpUpdate: Error reading request line.");
     *status = HTTP_STATUS_ERROR;
     return (false);
   }
@@ -3672,12 +3673,13 @@ http_debug_hex(const char *prefix,	// I - Prefix for line
 static ssize_t				// O - Number of bytes read or -1 on error
 http_read(http_t *http,			// I - HTTP connection
           char   *buffer,		// I - Buffer
-          size_t length)		// I - Maximum bytes to read
+          size_t length,		// I - Maximum bytes to read
+          int    timeout)		// I - Timeout
 {
   ssize_t	bytes;			// Bytes read
 
 
-  DEBUG_printf("7http_read(http=%p, buffer=%p, length=" CUPS_LLFMT ")", (void *)http, (void *)buffer, CUPS_LLCAST length);
+  DEBUG_printf("7http_read(http=%p, buffer=%p, length=" CUPS_LLFMT ", timeout=%d)", (void *)http, (void *)buffer, CUPS_LLCAST length, timeout);
 
   if (!http->blocking || http->timeout_value > 0.0)
   {
@@ -3782,7 +3784,7 @@ http_read_buffered(http_t *http,	// I - HTTP connection
     else
       bytes = (ssize_t)length;
 
-    DEBUG_printf("8http_read: Grabbing %d bytes from input buffer.", (int)bytes);
+    DEBUG_printf("8http_read_buffered: Grabbing %d bytes from input buffer.", (int)bytes);
 
     memcpy(buffer, http->buffer, (size_t)bytes);
     http->used -= (int)bytes;
@@ -3791,7 +3793,9 @@ http_read_buffered(http_t *http,	// I - HTTP connection
       memmove(http->buffer, http->buffer + bytes, (size_t)http->used);
   }
   else
-    bytes = http_read(http, buffer, length);
+  {
+    bytes = http_read(http, buffer, length, http->wait_value);
+  }
 
   return (bytes);
 }
