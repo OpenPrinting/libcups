@@ -4,7 +4,8 @@ Changes in libcups
 libcups v3.0.0 (YYYY-MM-DD)
 ---------------------------
 
-- Added `cupsOAuthGetJWKS` and `cupsOAuthGetUserId` APIs.
+- Added `cupsOAuthGetDeviceGrant`, `cupsOAuthGetJWKS`, and `cupsOAuthGetUserId`
+  APIs.
 - Added `httpGetCookieValue` and `httpGetSecurity` APIs.
 - Updated documentation (Issue #113)
 - Updated the `cupsOAuth` APIs to support sharing of some OAuth values between
@@ -18,6 +19,7 @@ libcups v3.0.0 (YYYY-MM-DD)
 - Fixed a bug in the Avahi implementation of `cupsDNSSDBrowseNew`.
 - Fixed a memory leak in `httpClose`.
 - Fixed some Coverity-detected issues.
+- Fixed support for device authorization grants.
 
 
 libcups v3.0rc4 (2025-03-18)
