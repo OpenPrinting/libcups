@@ -144,6 +144,26 @@ blockquote {
 [
 <strong>-a</strong>
 <em>OAUTH-URI</em>
+] [
+<strong>-s</strong>
+<em>SCOPE(S)</em>
+]
+<strong>get-device-grant</strong>
+<em>[RESOURCE]</em>
+<br>
+<strong>cups-oauth</strong>
+[
+<strong>-a</strong>
+<em>OAUTH-URI</em>
+]
+<strong>get-device-token</strong>
+<em>[RESOURCE]</em>
+<em>DEVICE-CODE</em>
+<br>
+<strong>cups-oauth</strong>
+[
+<strong>-a</strong>
+<em>OAUTH-URI</em>
 ]
 <strong>get-metadata</strong>
 <em>[NAME]</em>
@@ -212,6 +232,12 @@ The access token is send to the standard output on success.
 </p>
     <h3 id="cups-oauth-1.sub-commands.get-client-id">Get-Client-Id</h3>
 <p>Output the client ID string, if any, to the standard output.
+</p>
+    <h3 id="cups-oauth-1.sub-commands.get-device-grant">Get-Device-Grant</h3>
+<p>Gets a device authorization grant and outputs the device code, user code, and web page to the standard output.
+</p>
+    <h3 id="cups-oauth-1.sub-commands.get-device-token">Get-Device-Token</h3>
+<p>Waits for device authorization to complete and outputs the device access token to the standard output.
 </p>
     <h3 id="cups-oauth-1.sub-commands.get-metadata">Get-Metadata</h3>
 <p>Get the OAuth/OpenID authorization server metadata and send it to the standard output.
