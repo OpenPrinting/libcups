@@ -891,9 +891,9 @@ cupsOAuthGetDeviceGrant(
     {
       // Make sure we have any optional values in the returned JSON...
       const char *user_code = cupsJSONGetString(cupsJSONFind(grant, CUPS_ODEVGRANT_USER_CODE));
-      const char *verification_url = cupsJSONGetString(cupsJSONFind(grant, CUPS_ODEVGRANT_VERIFICATION_URL));
+      const char *verification_url = cupsJSONGetString(cupsJSONFind(grant, CUPS_ODEVGRANT_VERIFICATION_URI));
 
-      if (!cupsJSONFind(grant, CUPS_ODEVGRANT_DEVICE_CODE) && !cupsJSONFind(grant, CUPS_ODEVGRANT_EXPIRES_IN) && !user_code && !verification_url)
+      if (!cupsJSONFind(grant, CUPS_ODEVGRANT_DEVICE_CODE) || !cupsJSONFind(grant, CUPS_ODEVGRANT_EXPIRES_IN) || !user_code || !verification_url)
       {
         // Missing required bits, treat this as an error...
         _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), false);
@@ -907,7 +907,7 @@ cupsOAuthGetDeviceGrant(
           cupsJSONNewNumber(grant, cupsJSONNewKey(grant, /*after*/NULL, CUPS_ODEVGRANT_INTERVAL), 5.0);
 
         // Add complete verification URL based on base URL
-        if (!cupsJSONFind(grant, CUPS_ODEVGRANT_VERIFICATION_URL_COMPLETE))
+        if (!cupsJSONFind(grant, CUPS_ODEVGRANT_VERIFICATION_URI_COMPLETE))
         {
           char *complete_url;		// Complete verification URL
 
@@ -917,7 +917,7 @@ cupsOAuthGetDeviceGrant(
 
           if ((complete_url = cupsFormEncode(verification_url, num_form, form)) != NULL)
           {
-            cupsJSONNewString(grant, cupsJSONNewKey(grant, /*after*/NULL, CUPS_ODEVGRANT_VERIFICATION_URL_COMPLETE), complete_url);
+            cupsJSONNewString(grant, cupsJSONNewKey(grant, /*after*/NULL, CUPS_ODEVGRANT_VERIFICATION_URI_COMPLETE), complete_url);
             free(complete_url);
           }
         }

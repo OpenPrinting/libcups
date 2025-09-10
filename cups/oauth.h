@@ -30,9 +30,9 @@ extern "C" {
 					// The requested number of seconds between token calls
 #  define CUPS_ODEVGRANT_USER_CODE	"user_code"
 					// The user code string for authorization
-#  define CUPS_ODEVGRANT_VERIFICATION_URL "verification_url"
+#  define CUPS_ODEVGRANT_VERIFICATION_URI "verification_uri"
 					// The URL for the verification web page
-#  define CUPS_ODEVGRANT_VERIFICATION_URL_COMPLETE "verification_url_complete"
+#  define CUPS_ODEVGRANT_VERIFICATION_URI_COMPLETE "verification_uri_complete"
 					// The URL for the verifiction web page with the user code filled in
 
 

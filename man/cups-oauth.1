@@ -6,7 +6,7 @@
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH cups-oauth 1 "CUPS" "2025-05-05" "OpenPrinting"
+.TH cups-oauth 1 "CUPS" "2025-09-10" "OpenPrinting"
 .SH NAME
 cups-oauth \- interact with an oauth/openid authorization server
 .SH SYNOPSIS
@@ -49,6 +49,26 @@ cups-oauth \- interact with an oauth/openid authorization server
 .I OAUTH-URI
 ]
 .B get-client-id
+.br
+.B cups-oauth
+[
+.B \-a
+.I OAUTH-URI
+] [
+.B \-s
+.I SCOPE(S)
+]
+.B get-device-grant
+.I [RESOURCE]
+.br
+.B cups-oauth
+[
+.B \-a
+.I OAUTH-URI
+]
+.B get-device-token
+.I [RESOURCE]
+.I DEVICE-CODE
 .br
 .B cups-oauth
 [
@@ -116,6 +136,10 @@ Clears any authorization for the specified resource or for all resources if no r
 Output the current, unexpired access token, if any, to the standard output.
 .SS get-client-id
 Output the client ID string, if any, to the standard output.
+.SS get-device-grant
+Gets a device authorization grant and outputs the device code, user code, and web page to the standard output.
+.SS get-device-token
+Waits for device authorization to complete and outputs the device access token to the standard output.
 .SS get-metadata
 Get the OAuth/OpenID authorization server metadata and send it to the standard output.
 If a name is specified, the output is just the value for the specified metadata.
