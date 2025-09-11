@@ -71,7 +71,7 @@ depend:
 # Install everything...
 #
 
-install:
+install:	all
 	echo "Installing $(CUPS_PC) file to $(BUILDROOT)$(libdir)/pkgconfig..."
 	$(INSTALL_DIR) $(BUILDROOT)$(libdir)/pkgconfig
 	$(INSTALL_DATA) cups3.pc $(BUILDROOT)$(libdir)/pkgconfig/cups3.pc

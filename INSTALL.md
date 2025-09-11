@@ -91,10 +91,12 @@ test suite:
 Installing the Software
 -----------------------
 
+> Note: Build the software before you try to install it.
+
 Once you have built the software you need to install it.  The "install" target
 provides a quick way to install the software on your local system:
 
-    make install
+    sudo make install
 
 Use the `BUILDROOT` variable to install to an alternate root directory:
 
