@@ -97,6 +97,7 @@
 "%s: Missing timeout after '-T'." = "%s: Missing timeout after '-T'.";
 "%s: Missing token after '--bearer-token'." = "%s: Missing token after '--bearer-token'.";
 "%s: Missing type list after '-t'." = "%s: Missing type list after '-t'.";
+"%s: Missing user agent after '--user-agent'." = "%s: Missing user agent after '--user-agent'.";
 "%s: Missing version after '-V'." = "%s: Missing version after '-V'.";
 "%s: No job-id for created print job." = "%s: No job-id for created print job.";
 "%s: No supported raster types are available." = "%s: No supported raster types are available.";
@@ -164,6 +165,7 @@
 "--txt KEY                      True if the TXT record contains the key" = "--txt KEY                      True if the TXT record contains the key";
 "--txt-* REGEX                  Match TXT record key to regular expression" = "--txt-* REGEX                  Match TXT record key to regular expression";
 "--uri REGEX                    Match URI to regular expression" = "--uri REGEX                    Match URI to regular expression";
+"--user-agent USER-AGENT        Set the HTTP User-Agent string" = "--user-agent USER-AGENT        Set the HTTP User-Agent string";
 "--version                      Show the program version" = "--version                      Show the program version";
 "-2                             Set 2-sided printing support (default=1-sided)" = "-2                             Set 2-sided printing support (default=1-sided)";
 "-4                             Connect using IPv4" = "-4                             Connect using IPv4";
@@ -2471,9 +2473,7 @@
 "{service_regtype}              DNS-SD registration type" = "{service_regtype}              DNS-SD registration type";
 "{service_scheme}               URI scheme" = "{service_scheme}               URI scheme";
 "{service_uri}                  URI" = "{service_uri}                  URI";
-"{service_uri}           URI" = "{service_uri}           URI";
 "{txt_*}                        Value of TXT record key" = "{txt_*}                        Value of TXT record key";
-"{txt_*}                 Value of TXT record key" = "{txt_*}                 Value of TXT record key";
 "{}                             URI" = "{}                             URI";
 "{}                      URI" = "{}                      URI";
 "~/.../lpoptions file names default destination that does not exist." = "~/.../lpoptions file names default destination that does not exist.";
