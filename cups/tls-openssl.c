@@ -1028,7 +1028,7 @@ cupsGetCredentialsTrust(
 
     DEBUG_printf("1cupsGetCredentialsTrust: curtime=%ld, notBefore=%ld, notAfter=%ld", (long)curtime, (long)openssl_get_date(cert, 0), (long)openssl_get_date(cert, 1));
 
-    if (curtime < openssl_get_date(cert, 0) || curtime > openssl_get_date(cert, 1))
+    if ((curtime + 86400) < openssl_get_date(cert, 0) || curtime > openssl_get_date(cert, 1))
     {
       _cupsSetError(IPP_STATUS_ERROR_CUPS_PKI, _("Credentials have expired."), true);
       trust = HTTP_TRUST_EXPIRED;
