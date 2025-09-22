@@ -2729,7 +2729,7 @@ _httpWait(http_t *http,			// I - HTTP connection
   }
 
   // Check the SSL/TLS buffers for data first...
-  if (http->tls && _httpTLSPending(http))
+  if (usessl && http->tls && _httpTLSPending(http))
   {
     DEBUG_puts("5_httpWait: Return 1 since there is pending TLS data.");
     return (true);
