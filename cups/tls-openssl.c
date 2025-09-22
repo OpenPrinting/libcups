@@ -898,6 +898,8 @@ cupsGetCredentialsTrust(
   _cups_globals_t *cg = _cupsGlobals();	// Per-thread globals
 
 
+  DEBUG_printf("cupsGetCredentialsTrust(path=\"%s\", common_name=\"%s\", credentials=%p, require_ca=%s)", path, common_name, (void *)credentials, require_ca ? "true" : "false");
+
   // Range check input...
   if (!path)
     path = http_default_path(defpath, sizeof(defpath));
@@ -905,6 +907,7 @@ cupsGetCredentialsTrust(
   if (!path || !credentials || !common_name)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), false);
+    DEBUG_printf("1cupsGetCredentialsTrust: Returning %d.", HTTP_TRUST_UNKNOWN);
     return (HTTP_TRUST_UNKNOWN);
   }
 
@@ -912,6 +915,7 @@ cupsGetCredentialsTrust(
   if ((certs = openssl_load_x509(credentials)) == NULL)
   {
     _cupsSetError(IPP_STATUS_ERROR_CUPS_PKI, _("Unable to import credentials."), true);
+    DEBUG_printf("1cupsGetCredentialsTrust: Returning %d.", HTTP_TRUST_UNKNOWN);
     return (HTTP_TRUST_UNKNOWN);
   }
 
@@ -1021,6 +1025,9 @@ cupsGetCredentialsTrust(
     time_t	curtime;		// Current date/time
 
     time(&curtime);
+
+    DEBUG_printf("1cupsGetCredentialsTrust: curtime=%ld, notBefore=%ld, notAfter=%ld", (long)curtime, (long)openssl_get_date(cert, 0), (long)openssl_get_date(cert, 1));
+
     if (curtime < openssl_get_date(cert, 0) || curtime > openssl_get_date(cert, 1))
     {
       _cupsSetError(IPP_STATUS_ERROR_CUPS_PKI, _("Credentials have expired."), true);
@@ -1029,6 +1036,8 @@ cupsGetCredentialsTrust(
   }
 
   sk_X509_free(certs);
+
+  DEBUG_printf("1cupsGetCredentialsTrust: Returning %d.", trust);
 
   return (trust);
 }
