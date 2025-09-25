@@ -1468,6 +1468,14 @@ cupsDNSSDServiceAdd(
   char		fullname[256];		// Full service instance name
   cups_array_t	*tarray;		// Types array
 
+  if (port == 0)
+  {
+    // Windows DNS-SD support doesn't allow for so-called "flagship naming",
+    // just ignore services on port 0 for now...
+    // TODO: Report bug to Microsoft about lack of support for services on port 0.
+    return (true);
+  }
+
   if ((tarray = cupsArrayNewStrings(types, ',')) == NULL)
   {
     report_error(service->dnssd, "Unable to create types array: %s", strerror(errno));
@@ -1533,7 +1541,7 @@ cupsDNSSDServiceAdd(
 
     if ((srv->req.pServiceInstance = DnsServiceConstructInstance(srv->fullname, srv->hostname, /*pIp4*/NULL, /*pIp6*/NULL, port, 0, 0, (DWORD)num_txt, keys, values)) == NULL)
     {
-      report_error(service->dnssd, "Unable to allocate memory for '%s'.", fullname);
+      report_error(service->dnssd, "Unable to allocate memory for '%s' for host '%s', port %d.", fullname, host ? host : service->dnssd->hostname, port);
       ret = false;
       cupsArrayDelete(tarray);
       goto done;
