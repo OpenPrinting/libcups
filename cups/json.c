@@ -1,7 +1,7 @@
 //
 // JSON API implementation for CUPS.
 //
-// Copyright © 2022-2024 by OpenPrinting.
+// Copyright © 2022-2025 by OpenPrinting.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
 // information.
@@ -1326,11 +1326,11 @@ cupsJSONNew(cups_json_t  *parent,	// I - Parent JSON node or `NULL` for a root n
 
 cups_json_t *				// O - JSON node
 cupsJSONNewKey(cups_json_t *parent,	// I - Parent JSON node or `NULL` for a root node
-	       cups_json_t  *after,	// I - Previous sibling node or `NULL` to append to the end
-               const char  *value)	// I - Key string
+	       cups_json_t *after,	// I - Previous sibling node or `NULL` to append to the end
+               const char  *key)	// I - Key string
 {
   cups_json_t	*node;			// JSON node
-  char		*s = strdup(value);	// Key string
+  char		*s = strdup(key);	// Key string
 
 
   if (!s)
