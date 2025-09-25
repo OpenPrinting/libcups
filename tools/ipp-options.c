@@ -1,7 +1,7 @@
 //
 // Option support functions for the IPP tools.
 //
-// Copyright © 2023-2024 by OpenPrinting.
+// Copyright © 2023-2025 by OpenPrinting.
 // Copyright © 2022-2023 by the Printer Working Group.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
@@ -11,8 +11,7 @@
 #include "ipp-options.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
+#include <cups/string-private.h>
 
 
 //
@@ -522,7 +521,7 @@ ippOptionsNew(size_t        num_options,// I - Number of command-line options
     // Parse "overrides" collection value(s)...
     ippopt_override_t override;		// overrides value
 
-    ippo->overrides = cupsArrayNew((cups_array_cb_t)compare_overrides, NULL, NULL, 0, (cups_acopy_cb_t)copy_override, (cups_afree_cb_t)free);
+    ippo->overrides = cupsArrayNew((cups_array_cb_t)compare_overrides, NULL, NULL, 0, (cups_acopy_cb_t)copy_override, _cupsArrayFree);
 
     for (nextcol = value; nextcol && *nextcol;)
     {
