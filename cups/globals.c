@@ -231,8 +231,6 @@ cups_globals_alloc(void)
   if ((cg->sysconfig = getenv("CUPS_SERVERROOT")) == NULL)
     cg->sysconfig = sysconfig;
 
-  DEBUG_printf("cups_globals_alloc: USERPROFILE=\"%s\"", userprofile);
-
   if (cups_userconfig)
     cupsCopyString(userconfig, cups_userconfig, sizeof(userconfig));
   else if (userprofile)
@@ -246,8 +244,6 @@ cups_globals_alloc(void)
     if (*userptr == '\\')
       *userptr = '/';
   }
-
-  DEBUG_printf("cups_globals_alloc: userconfig=\"%s\"", userconfig);
 
   cg->userconfig = strdup(userconfig);
 
