@@ -386,6 +386,20 @@ cupsArrayGetCount(cups_array_t *a)	// I - Array
 
 
 //
+// '_cupsArrayFree()' - Free a string in an array.
+//
+
+void
+_cupsArrayFree(void *s,			// I - String to free
+               void *data)		// I - Callback data (unused)
+{
+  (void)data;
+
+  free(s);
+}
+
+
+//
 // 'cupsArrayGetCurrent()' - Return the current element in an array.
 //
 // This function returns the current element in an array.  The current element
@@ -679,7 +693,7 @@ cupsArrayNewStrings(const char *s,	// I - Delimited strings or `NULL` to create 
   cups_array_t	*a;			// Array
 
 
-  if ((a = cupsArrayNew((cups_array_cb_t)strcmp, NULL, NULL, 0, (cups_acopy_cb_t)_cupsStrAlloc, (cups_afree_cb_t)_cupsStrFree)) != NULL)
+  if ((a = cupsArrayNew(_cupsArrayStrcmp, NULL, NULL, 0, _cupsArrayStrdup, _cupsArrayFree)) != NULL)
     cupsArrayAddStrings(a, s, delim);
 
   return (a);
@@ -788,6 +802,35 @@ cupsArraySave(cups_array_t *a)		// I - Array
   a->num_saved ++;
 
   return (true);
+}
+
+
+//
+// '_cupsArrayStrcmp()' - Compare two strings in an array.
+//
+
+int					// O - Result of comparison
+_cupsArrayStrcmp(void *s,		// I - first string to compare
+	         void *t,		// I - second string to compare
+                 void *data)		// I - Callback data (unused)
+{
+  (void)data;
+
+  return (strcmp((const char *)s, (const char *)t));
+}
+
+
+//
+// '_cupsArrayStrdup()' - Copy a string in an array.
+//
+
+void *					// O - Copy of string
+_cupsArrayStrdup(void *s,		// I - String to copy
+                 void *data)		// I - Callback data (unused)
+{
+  (void)data;
+
+  return (strdup((const char *)s));
 }
 
 

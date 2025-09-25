@@ -860,7 +860,7 @@ alloc_data(void)
   data->family       = AF_UNSPEC;
   data->def_transfer = IPPTOOL_TRANSFER_AUTO;
   data->def_version  = 20;
-  data->errors       = cupsArrayNew(NULL, NULL, NULL, 0, (cups_acopy_cb_t)strdup, (cups_afree_cb_t)free);
+  data->errors       = cupsArrayNew(NULL, NULL, NULL, 0, _cupsArrayStrdup, _cupsArrayFree);
   data->pass         = true;
   data->prev_pass    = true;
   data->request_id   = (cupsGetRand() % 1000) * 137;

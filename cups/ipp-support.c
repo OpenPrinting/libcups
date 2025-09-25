@@ -1999,7 +1999,7 @@ ippCreateRequestedArray(ipp_t *request)	// I - IPP request
     // "all"...
     if (op == IPP_OP_GET_JOBS)
     {
-      ra = cupsArrayNew((cups_array_cb_t)strcmp, NULL, NULL, 0, NULL, NULL);
+      ra = cupsArrayNew(_cupsArrayStrcmp, NULL, NULL, 0, NULL, NULL);
       cupsArrayAdd(ra, "job-id");
       cupsArrayAdd(ra, "job-uri");
 
@@ -2007,7 +2007,7 @@ ippCreateRequestedArray(ipp_t *request)	// I - IPP request
     }
     else if (op == IPP_OP_GET_DOCUMENTS)
     {
-      ra = cupsArrayNew((cups_array_cb_t)strcmp, NULL, NULL, 0, NULL, NULL);
+      ra = cupsArrayNew(_cupsArrayStrcmp, NULL, NULL, 0, NULL, NULL);
       cupsArrayAdd(ra, "document-number");
 
       return (ra);
@@ -2024,7 +2024,7 @@ ippCreateRequestedArray(ipp_t *request)	// I - IPP request
     return (NULL);
 
   // Create an array using "strcmp" as the comparison function...
-  ra = cupsArrayNew((cups_array_cb_t)strcmp, NULL, NULL, 0, NULL, NULL);
+  ra = cupsArrayNew(_cupsArrayStrcmp, NULL, NULL, 0, NULL, NULL);
 
   for (i = 0; i < count; i ++)
   {

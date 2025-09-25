@@ -3187,7 +3187,7 @@ prepare_documents(
   // Initialize data for preparing input files for transform...
   memset(&p, 0, sizeof(p));
   p.options = options;
-  p.errors  = cupsArrayNew(NULL, NULL, NULL, 0, (cups_acopy_cb_t)strdup, (cups_afree_cb_t)free);
+  p.errors  = cupsArrayNew(NULL, NULL, NULL, 0, _cupsArrayStrdup, _cupsArrayFree);
 
   media_to_rect(&options->media, &p.media, &p.crop);
   prepare_number_up(&p);
