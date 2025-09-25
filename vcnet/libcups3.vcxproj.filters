@@ -126,6 +126,24 @@
     <ClCompile Include="..\cups\rand.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\cups\clock.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\cups\dnssd.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\cups\form.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\cups\json.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\cups\jwt.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\cups\oauth.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\cups\libcups3.def">
@@ -133,9 +151,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\cups\adminutil.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\cups\array.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -160,9 +175,6 @@
     <ClInclude Include="..\cups\file.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\cups\globals.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\cups\http-private.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -176,9 +188,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\cups\language.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\cups\ppd-private.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\cups\ppd.h">
@@ -202,16 +211,37 @@
     <ClInclude Include="..\cups\raster-private.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\cups\versioning.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\cups\language-private.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\cups\md5-private.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\cups\pwg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\cups\base.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\cups\debug-internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\cups\dnssd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\cups\form.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\cups\json.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\cups\json-private.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\cups\jwt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\cups\md5-internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\cups\oauth.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\cups\raster-testpage.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
