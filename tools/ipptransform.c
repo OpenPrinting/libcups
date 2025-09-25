@@ -2763,7 +2763,7 @@ ps_convert_pdf(
   if (pipe(stdout_pipe))
   {
     cupsLangPrintf(stderr, _("%s: Unable to create pipe for stdout: %s"), Prefix, strerror(errno));
-    stdout_pipe[0] = stdout_pipe[1] = -1;
+    return (1);
   }
 
   if ((pdftops_pid = fork()) == 0)
@@ -2771,6 +2771,7 @@ ps_convert_pdf(
     // Child comes here...
     close(1);
     dup2(stdout_pipe[1], 1);
+
     close(stdout_pipe[0]);
     close(stdout_pipe[1]);
 
