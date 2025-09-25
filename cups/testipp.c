@@ -767,6 +767,11 @@ main(int  argc,				// I - Number of command-line arguments
     {
       testEnd(true);
     }
+    else if (!dv)
+    {
+      testEndMessage(false, "got NULL");
+      status = 1;
+    }
     else
     {
       testEndMessage(false, "got %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X, expected %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X", dv[0], dv[1], dv[2], dv[3], dv[4], dv[5], dv[6], dv[7], dv[8], dv[9], dv[10], buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], buffer[5], buffer[6], buffer[7], buffer[8], buffer[9], buffer[10]);

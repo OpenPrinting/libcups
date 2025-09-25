@@ -656,7 +656,7 @@ cupsFileOpen(const char *filename,	// I - Name of file
 	break;
 
     case 'w' : // Write file
-        fd = cups_open(filename, O_WRONLY | O_LARGEFILE | O_BINARY, perm);
+        fd    = cups_open(filename, O_WRONLY | O_LARGEFILE | O_BINARY, perm);
 	if (fd < 0 && errno == ENOENT)
 	{
 	  fd = cups_open(filename, O_WRONLY | O_CREAT | O_EXCL | O_LARGEFILE | O_BINARY, perm);
@@ -1790,7 +1790,9 @@ cups_open(const char *filename,		// I - Filename
   // Then verify that the file descriptor doesn't point to a directory or hard-linked file.
   if (fstat(fd, &fileinfo))
   {
+    int temp = errno;
     close(fd);
+    errno = temp;
     return (-1);
   }
 
@@ -1816,7 +1818,9 @@ cups_open(const char *filename,		// I - Filename
   // Then use lstat to determine whether the filename is a symlink...
   if (lstat(filename, &linkinfo))
   {
+    int temp = errno;
     close(fd);
+    errno = temp;
     return (-1);
   }
 

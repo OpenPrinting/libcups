@@ -1,7 +1,7 @@
 //
 // Private string definitions for CUPS.
 //
-// Copyright © 2021-2023 by OpenPrinting.
+// Copyright © 2021-2025 by OpenPrinting.
 // Copyright © 2007-2018 by Apple Inc.
 // Copyright © 1997-2006 by Easy Software Products.
 //
@@ -119,6 +119,10 @@ extern ssize_t	_cups_safe_vsnprintf(char *buffer, size_t bufsize, const char *fo
 extern void	_cups_strcpy(char *dst, const char *src) _CUPS_PRIVATE;
 extern int	_cups_strcasecmp(const char *, const char *) _CUPS_PRIVATE;
 extern int	_cups_strncasecmp(const char *, const char *, size_t n) _CUPS_PRIVATE;
+
+extern void	_cupsArrayFree(void *s, void *data) _CUPS_PRIVATE;
+extern int	_cupsArrayStrcmp(void *s, void *t, void *data) _CUPS_PRIVATE;
+extern void	*_cupsArrayStrdup(void *s, void *data) _CUPS_PRIVATE;
 
 extern char	*_cupsStrAlloc(const char *s) _CUPS_PRIVATE;
 extern void	_cupsStrFlush(void) _CUPS_PRIVATE;

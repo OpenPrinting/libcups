@@ -2763,7 +2763,7 @@ ps_convert_pdf(
   if (pipe(stdout_pipe))
   {
     cupsLangPrintf(stderr, _("%s: Unable to create pipe for stdout: %s"), Prefix, strerror(errno));
-    stdout_pipe[0] = stdout_pipe[1] = -1;
+    return (1);
   }
 
   if ((pdftops_pid = fork()) == 0)
@@ -2771,6 +2771,7 @@ ps_convert_pdf(
     // Child comes here...
     close(1);
     dup2(stdout_pipe[1], 1);
+
     close(stdout_pipe[0]);
     close(stdout_pipe[1]);
 
@@ -3186,7 +3187,7 @@ prepare_documents(
   // Initialize data for preparing input files for transform...
   memset(&p, 0, sizeof(p));
   p.options = options;
-  p.errors  = cupsArrayNew(NULL, NULL, NULL, 0, (cups_acopy_cb_t)strdup, (cups_afree_cb_t)free);
+  p.errors  = cupsArrayNew(NULL, NULL, NULL, 0, _cupsArrayStrdup, _cupsArrayFree);
 
   media_to_rect(&options->media, &p.media, &p.crop);
   prepare_number_up(&p);

@@ -8,6 +8,9 @@ _cups_strcasecmp
 _cups_strcpy
 _cups_strcpy
 _cups_strncasecmp
+_cupsArrayFree
+_cupsArrayStrcmp
+_cupsArrayStrdup
 _cupsBufferGet
 _cupsBufferRelease
 _cupsConnect
@@ -291,9 +294,11 @@ cupsOAuthCopyRefreshToken
 cupsOAuthCopyUserId
 cupsOAuthGetAuthorizationCode
 cupsOAuthGetClientId
+cupsOAuthGetDeviceGrant
 cupsOAuthGetJWKS
 cupsOAuthGetMetadata
 cupsOAuthGetTokens
+cupsOAuthGetUserId
 cupsOAuthMakeAuthorizationURL
 cupsOAuthMakeBase64Random
 cupsOAuthSaveClientData

@@ -1,7 +1,7 @@
 //
 // IPP data file functions.
 //
-// Copyright © 2021-2024 by OpenPrinting.
+// Copyright © 2021-2025 by OpenPrinting.
 // Copyright © 2007-2019 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products.
 //
@@ -33,7 +33,6 @@ struct _ipp_file_s			// IPP data file
   cups_option_t		*vars;		// Variables
   ipp_fattr_cb_t	attr_cb;	// Attribute (filter) callback
   ipp_ferror_cb_t	error_cb;	// Error reporting callback
-  ipp_ftoken_cb_t	token_cb;	// Token processing callback
   void			*cb_data;	// Callback data
   char			*buffer;	// Output buffer
   size_t		alloc_buffer;	// Size of output buffer
