@@ -1,7 +1,7 @@
 //
 // I18N/language support for CUPS.
 //
-// Copyright © 2022 by OpenPrinting.
+// Copyright © 2022-2025 by OpenPrinting.
 // Copyright © 2007-2017 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products.
 //
@@ -197,6 +197,26 @@ cupsLangGetString(cups_lang_t *lang,	// I - Language
   cupsRWUnlock(&lang->rwlock);
 
   return (text);
+}
+
+
+//
+// 'cupsLangIsRTL()' - Get the writing direction.
+//
+// This function gets the writing direction for the specified language.
+//
+
+bool					// O - `true` if right-to-left, `false` if left-to-right
+cupsLangIsRTL(cups_lang_t *lang)	// I - Language
+{
+  // Range check input...
+  if (!lang)
+    return (false);
+
+  // The following languages are written from right to left: Arabic, Aramaic,
+  // Azeri, Divehi, Fulah, Hebrew, Kurdish, N'ko, Persian, Rohingya, Syriac, and
+  // Urdu.  Not all of these have language codes...
+  return (!strncmp(lang->language, "ar", 2) || !strncmp(lang->language, "dv", 2) || !strncmp(lang->language, "ff", 2) || !strncmp(lang->language, "he", 2) || !strncmp(lang->language, "ku", 2) || !strncmp(lang->language, "fa", 2) || !strncmp(lang->language, "ur", 2));
 }
 
 
