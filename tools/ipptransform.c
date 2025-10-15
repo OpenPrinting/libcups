@@ -220,6 +220,8 @@ static bool	raster_start_job(xform_raster_t *ras, xform_write_cb_t cb, void *ctx
 static bool	raster_start_page(xform_raster_t *ras, unsigned page, xform_write_cb_t cb, void *ctx);
 static void	raster_write_line(xform_raster_t *ras, unsigned y, const unsigned char *line, xform_write_cb_t cb, void *ctx);
 static bool	resource_dict_cb(pdfio_dict_t *dict, const char *key, xform_page_t *outpage);
+static bool	show_aligned(pdfio_stream_t *st, pdfio_obj_t *font, double fsize, bool unicode, double x, double y, int align, const char *s);
+static bool	show_label_and_value(pdfio_stream_t *st, pdfio_obj_t *font, double fsize, bool unicode, double x, double y, cups_lang_t *lang, bool rtl, const char *label, const char *value);
 static int	usage(FILE *out);
 static ssize_t	write_fd(int *fd, const unsigned char *buffer, size_t bytes);
 static bool	xform_document(const char *filename, unsigned pages, ipp_options_t *options, const char *outformat, const char *resolutions, const char *sheet_back, const char *types, xform_write_cb_t cb, void *ctx);
@@ -1114,7 +1116,7 @@ convert_text(
   pdfio_file_t	*pdf;			// Temporary PDF file
   pdfio_stream_t *st = NULL;		// Page stream
   char		fontfile[1024];		// Monospace font filename
-  pdfio_obj_t	*font;			// Monospace font
+  pdfio_obj_t	*font;			// Text font
   bool		unicode;		// Doing Unicode text?
   pdfio_dict_t	*dict;			// Page dictionary
   cups_file_t	*fp;			// File
@@ -1692,22 +1694,35 @@ dither_gray(xform_raster_t *ras,	// I - Raster info
 
 static bool				// O - `true` on success, `false` on failure
 generate_job_error_sheet(
-    xform_prepare_t  *p)		// I - Preparation data
+    xform_prepare_t *p)			// I - Preparation data
 {
   pdfio_stream_t *st;			// Page stream
-  pdfio_obj_t	*courier;		// Courier font
+  char		fontfile[1024];		// NotoSans font filename
+  pdfio_obj_t	*font;			// Text font
+  bool		unicode;		// Doing Unicode text?
   pdfio_dict_t	*dict;			// Page dictionary
   size_t	i,			// Looping var
 		count;			// Number of pages
   const char	*msg;			// Current message
   size_t	mcount;			// Number of messages
+  cups_lang_t	*lang;			// Current language
+  _cups_globals_t *cg = _cupsGlobals();	// Global data
 
 
-  // Create a page dictionary with the Courier font...
-  courier = pdfioFileCreateFontObjFromBase(p->pdf, "Courier");
-  dict    = pdfioDictCreate(p->pdf);
+  // Localize this page...
+  lang = cupsLangDefault();
 
-  pdfioPageDictAddFont(dict, "F1", courier);
+  // Create font and page dictionaries...
+  snprintf(fontfile, sizeof(fontfile), "%s/fonts/NotoSans-Regular.ttf", cg->datadir);
+  unicode = !access(fontfile, 0);
+  if (unicode)
+    font = pdfioFileCreateFontObjFromFile(p->pdf, fontfile, true);
+  else
+    font = pdfioFileCreateFontObjFromBase(p->pdf, "Helvetica");
+
+  dict = pdfioDictCreate(p->pdf);
+
+  pdfioPageDictAddFont(dict, "F1", font);
 
   // Figure out how many impressions to produce...
   if (!strcmp(p->options->sides, "one-sided"))
@@ -1734,7 +1749,7 @@ generate_job_error_sheet(
     pdfioContentTextMoveTo(st, p->crop.x1, p->crop.y2 - 2.0 * XFORM_TEXT_SIZE);
     pdfioContentSetTextFont(st, "F1", 2.0 * XFORM_TEXT_SIZE);
     pdfioContentSetTextLeading(st, 2.0 * XFORM_TEXT_HEIGHT);
-    pdfioContentTextShow(st, false, "Errors:\n");
+    pdfioContentTextShow(st, unicode, cupsLangGetString(lang, _("Errors:\n")));
 
     pdfioContentSetTextFont(st, "F1", XFORM_TEXT_SIZE);
     pdfioContentSetTextLeading(st, XFORM_TEXT_HEIGHT);
@@ -1743,18 +1758,18 @@ generate_job_error_sheet(
     {
       if (*msg == 'E')
       {
-	pdfioContentTextShowf(st, false, "  %s\n", msg + 1);
+	pdfioContentTextShowf(st, unicode, "  %s\n", msg + 1);
 	mcount ++;
       }
     }
 
     if (mcount == 0)
-      pdfioContentTextShow(st, false, "  No Errors\n");
+      pdfioContentTextShow(st, unicode, cupsLangGetString(lang, _("  No Errors\n")));
 
     pdfioContentSetTextFont(st, "F1", 2.0 * XFORM_TEXT_SIZE);
     pdfioContentSetTextLeading(st, 2.0 * XFORM_TEXT_HEIGHT);
-    pdfioContentTextShow(st, false, "\n");
-    pdfioContentTextShow(st, false, "Warnings:\n");
+    pdfioContentTextShow(st, unicode, "\n");
+    pdfioContentTextShow(st, unicode, cupsLangGetString(lang, _("Warnings:\n")));
 
     pdfioContentSetTextFont(st, "F1", XFORM_TEXT_SIZE);
     pdfioContentSetTextLeading(st, XFORM_TEXT_HEIGHT);
@@ -1763,13 +1778,13 @@ generate_job_error_sheet(
     {
       if (*msg == 'I')
       {
-	pdfioContentTextShowf(st, false, "  %s\n", msg + 1);
+	pdfioContentTextShowf(st, unicode, "  %s\n", msg + 1);
 	mcount ++;
       }
     }
 
     if (mcount == 0)
-      pdfioContentTextShow(st, false, "  No Warnings\n");
+      pdfioContentTextShow(st, unicode, cupsLangGetString(lang, _("  No Warnings\n")));
 
     pdfioContentTextEnd(st);
     pdfio_end_page(p, st);
@@ -1785,19 +1800,37 @@ generate_job_error_sheet(
 
 static bool				// O - `true` on success, `false` on failure
 generate_job_sheets(
-    xform_prepare_t  *p)		// I - Preparation data
+    xform_prepare_t *p)			// I - Preparation data
 {
   pdfio_stream_t *st;			// Page stream
-  pdfio_obj_t	*courier;		// Courier font
+  char		fontfile[1024];		// NotoSans font filename
+  pdfio_obj_t	*font;			// Text font
+  bool		unicode;		// Doing Unicode text?
   pdfio_dict_t	*dict;			// Page dictionary
   size_t	i,			// Looping var
 		count;			// Number of pages
+  cups_lang_t	*lang;			// Current language
+  bool		rtl;			// Format for right-to-left text?
+  double	x, y;			// Position on page
+  char		pages[256];		// Number of pages as a string
+  _cups_globals_t *cg = _cupsGlobals();	// Global data
 
-  // Create a page dictionary with the Courier font...
-  courier = pdfioFileCreateFontObjFromBase(p->pdf, "Courier");
-  dict    = pdfioDictCreate(p->pdf);
 
-  pdfioPageDictAddFont(dict, "F1", courier);
+  // Localize this page...
+  lang = cupsLangDefault();
+  rtl  = cupsLangIsRTL(lang);
+
+  // Create font and page dictionaries...
+  snprintf(fontfile, sizeof(fontfile), "%s/fonts/NotoSans-Regular.ttf", cg->datadir);
+  unicode = !access(fontfile, 0);
+  if (unicode)
+    font = pdfioFileCreateFontObjFromFile(p->pdf, fontfile, true);
+  else
+    font = pdfioFileCreateFontObjFromBase(p->pdf, "Helvetica");
+
+  dict = pdfioDictCreate(p->pdf);
+
+  pdfioPageDictAddFont(dict, "F1", font);
 
   // Figure out how many impressions to produce...
   if (!strcmp(p->options->sides, "one-sided"))
@@ -1812,24 +1845,43 @@ generate_job_sheets(
 
     // The job sheet is a banner with the following information:
     //
+    //        job-sheets value
+    //
     //     Title: job-title
     //      User: job-originating-user-name
     //     Pages: job-media-sheets
     //   Message: job-sheet-message
+    //
+    //        job-sheets value
 
-    pdfioContentTextBegin(st);
     pdfioContentSetTextFont(st, "F1", 2.0 * XFORM_TEXT_SIZE);
     pdfioContentSetTextLeading(st, 2.0 * XFORM_TEXT_HEIGHT);
-    pdfioContentTextMoveTo(st, p->media.x2 / 8.0, p->media.y2 / 2.0 + 2 * (XFORM_TEXT_HEIGHT + XFORM_TEXT_SIZE));
     pdfioContentSetFillColorDeviceGray(st, 0.0);
 
-    pdfioContentTextShowf(st, false, "  Title: %s\n", p->options->job_name);
-    pdfioContentTextShowf(st, false, "   User: %s\n", p->options->job_originating_user_name);
-    pdfioContentTextShowf(st, false, "  Pages: %u\n", (unsigned)(p->num_outpages / count));
-    if (p->options->job_sheet_message[0])
-      pdfioContentTextShowf(st, false, "Message: %s\n", p->options->job_sheet_message);
+    x = (rtl ? 3.0 : 1.0) * p->media.x2 / 4.0;
+    y = p->media.y2 / 2.0 + 2.0 * (XFORM_TEXT_HEIGHT + XFORM_TEXT_SIZE);
 
-    pdfioContentTextEnd(st);
+    show_label_and_value(st, font, 2.0 * XFORM_TEXT_SIZE, unicode, x, y, lang, rtl, _("Title:"), p->options->job_name);
+    y -= 2.0 * XFORM_TEXT_HEIGHT;
+
+    show_label_and_value(st, font, 2.0 * XFORM_TEXT_SIZE, unicode, x, y, lang, rtl, _("User:"), p->options->job_originating_user_name);
+    y -= 2.0 * XFORM_TEXT_HEIGHT;
+
+    snprintf(pages, sizeof(pages), "%u", (unsigned)(p->num_outpages / count));
+    show_label_and_value(st, font, 2.0 * XFORM_TEXT_SIZE, unicode, x, y, lang, rtl, _("Pages:"), pages);
+    y -= 2.0 * XFORM_TEXT_HEIGHT;
+
+    if (p->options->job_sheet_message[0])
+    {
+      show_label_and_value(st, font, 2.0 * XFORM_TEXT_SIZE, unicode, x, y, lang, rtl, _("Message:"), p->options->job_sheet_message);
+      y -= 2.0 * XFORM_TEXT_HEIGHT;
+    }
+
+    // Show top/bottom banner title...
+    pdfioContentSetTextFont(st, "F1", 3.0 * XFORM_TEXT_SIZE);
+    show_aligned(st, font, 3.0 * XFORM_TEXT_SIZE, unicode, 0.5 * p->media.x2, p->crop.y2 - 3.0 * XFORM_TEXT_SIZE, 0, cupsLangGetString(lang, p->options->job_sheets));
+    show_aligned(st, font, 3.0 * XFORM_TEXT_SIZE, unicode, 0.5 * p->media.x2, p->crop.y1 + 3.0 * (XFORM_TEXT_HEIGHT - XFORM_TEXT_SIZE), 0, cupsLangGetString(lang, p->options->job_sheets));
+
     pdfio_end_page(p, st);
   }
 
@@ -3923,6 +3975,62 @@ resource_dict_cb(
 
 
 //
+// 'show_aligned()' - Show a string that is left, center, or right aligned.
+//
+
+static bool				// O - `true` on success, `false` on error
+show_aligned(
+    pdfio_stream_t *st,			// I - Page stream
+    pdfio_obj_t    *font,		// I - Font
+    double         fsize,		// I - Font size
+    bool           unicode,		// I - Unicode font?
+    double         x,			// I - X position on page
+    double         y,			// I - Y position on page
+    int            align,		// I - Alignment: -1 for right, 0 for center, 1 for left
+    const char     *s)			// I - String to show
+{
+  // Adjust X for alignment...
+  if (align <= 0)
+  {
+    double width = pdfioContentTextMeasure(font, s, fsize);
+					// Width of string
+
+    if (align < 0)
+      x -= width;
+    else
+      x -= 0.5 * width;
+  }
+
+  return (pdfioContentTextBegin(st) && pdfioContentTextMoveTo(st, x, y) && pdfioContentTextShow(st, unicode, s) && pdfioContentTextEnd(st));
+}
+
+
+//
+// 'show_label_and_value()' - Show a label and value aligned along a given central point.
+//
+
+static bool				// O - `true` on success, `false` on error
+show_label_and_value(
+    pdfio_stream_t *st,			// I - Page stream
+    pdfio_obj_t    *font,		// I - Font
+    double         fsize,		// I - Font size
+    bool           unicode,		// I - Unicode font?
+    double         x,			// I - Center X position on page
+    double         y,			// I - Y position on page
+    cups_lang_t    *lang,		// I - Language
+    bool           rtl,			// I - `true` for right-to-left presentation
+    const char     *label,		// I - Label string
+    const char     *value)		// I - Value string
+{
+  // Get the localized string for the label...
+  label = cupsLangGetString(lang, label);
+
+  // Draw the left/right strings and return...
+  return (show_aligned(st, font, fsize, unicode, x - fsize / 3.0, y, -1, rtl ? value : label) && show_aligned(st, font, fsize, unicode, x + fsize / 3.0, y, 1, rtl ? label : value));
+}
+
+
+//
 // 'usage()' - Show program usage.
 //
 
@@ -3930,6 +4038,7 @@ static int				// O - Exit status
 usage(FILE *out)			// I - Output file
 {
   cupsLangPuts(out, _("Usage: ipptransform [OPTIONS] FILENAME [ ... FILENAME]"));
+  fputs("\n", out);
   cupsLangPuts(out, _("Options:"));
   cupsLangPuts(out, _("--help                         Show this help"));
   cupsLangPuts(out, _("--version                      Show the program version"));
@@ -3942,26 +4051,26 @@ usage(FILE *out)			// I - Output file
   cupsLangPuts(out, _("-s SHEET-BACK                  Specify back side transform"));
   cupsLangPuts(out, _("-t TYPE[,...]                  Specify color spaces and bit depths"));
   cupsLangPuts(out, _("-v                             Be verbose"));
-
+  fputs("\n", out);
   cupsLangPuts(out, _("Device URIs:"));
   cupsLangPuts(out, _("socket://ADDRESS[:PORT]        Use JetDirect/AppSocket protocol"));
   cupsLangPuts(out, _("ipp://ADDRESS[:PORT]/RESOURCE  Use Internet Printing Protocol"));
   cupsLangPuts(out, _("ipps://ADDRESS[:PORT]/RESOURCE Use Internet Printing Protocol over HTTPS"));
-
+  fputs("\n", out);
   cupsLangPuts(out, _("Input Formats:"));
   cupsLangPuts(out, _("application/pdf                Portable Document Format (PDF) document"));
   cupsLangPuts(out, _("image/jpeg                     Joint Photographic Experts Group (JPEG) image"));
   cupsLangPuts(out, _("image/png                      Portable Network Graphics (PNG) image"));
   cupsLangPuts(out, _("image/pwg-raster               PWG Raster Format document"));
   cupsLangPuts(out, _("text/plain                     Plain text document"));
-
+  fputs("\n", out);
   cupsLangPuts(out, _("Output Formats:"));
   cupsLangPuts(out, _("application/pdf                Portable Document Format (PDF) document"));
   cupsLangPuts(out, _("applications/postscript        Adobe PostScript document"));
   cupsLangPuts(out, _("application/vnd.hp-pcl         HP Page Control Language (PCL) document"));
   cupsLangPuts(out, _("image/pwg-raster               PWG Raster Format document"));
   cupsLangPuts(out, _("image/urf                      Apple raster document"));
-
+  fputs("\n", out);
   cupsLangPuts(out, _("Name-Values:"));
   cupsLangPuts(out, _("copies=N                       Set number of copies"));
   cupsLangPuts(out, _("force-front-side=PAGE-LIST     Force numbered pages to begin on a front side"));
@@ -4001,17 +4110,17 @@ usage(FILE *out)			// I - Output file
   cupsLangPuts(out, _("y-image-shift=OFFSET           Set relative vertical offset"));
   cupsLangPuts(out, _("y-side1-image-shift=OFFSET     Set relative vertical offset for front sides"));
   cupsLangPuts(out, _("y-side2-image-shift=OFFSET     Set relative vertical offset for back sides"));
-
+  fputs("\n", out);
   cupsLangPuts(out, _("Resolutions:"));
   cupsLangPuts(out, _("NNNdpi                         Symmetric resolution in dots-per-inch"));
   cupsLangPuts(out, _("NNNxNNNdpi                     Asymmetric resolution in dots-per-inch"));
-
+  fputs("\n", out);
   cupsLangPuts(out, _("Sheet Backs:"));
   cupsLangPuts(out, _("flipped                        Flip back side horizontally or vertically"));
   cupsLangPuts(out, _("manual-tumble                  Rotate back side for short-edge duplex"));
   cupsLangPuts(out, _("normal                         Do not transform back side"));
   cupsLangPuts(out, _("rotated                        Rotate back side for long-edge duplex"));
-
+  fputs("\n", out);
   cupsLangPuts(out, _("Types:"));
 #ifdef HAVE_COREGRAPHICS_H
   cupsLangPuts(out, _("adobe-rgb_8                    24-bit AdobeRGB"));
