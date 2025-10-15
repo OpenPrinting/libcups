@@ -1,4 +1,6 @@
 "" = "";
+"  No Errors\n" = "  No Errors\n";
+"  No Warnings\n" = "  No Warnings\n";
 "! EXPRESSION                   Unary NOT of expression" = "! EXPRESSION                   Unary NOT of expression";
 "\"%s\": Bad URI value \"%s\" - %s (RFC 8011 section 5.1.6)." = "“%s”：无效的 URI 值“%s”— %s (RFC 8011 章节 5.1.6)。";
 "\"%s\": Bad URI value \"%s\" - bad length %d (RFC 8011 section 5.1.6)." = "“%s”：无效的 URI 值“%s”— 无效长度 %d (RFC 8011 章节 5.1.6)。";
@@ -281,6 +283,7 @@
 "EXPRESSION EXPRESSION          Logical AND" = "EXPRESSION EXPRESSION          Logical AND";
 "Encryption is not supported." = "不支持加密。";
 "Environment Variables:" = "环境变量：";
+"Errors:\n" = "Errors:\n";
 "Expectation Failed" = "未满足期望";
 "Expressions:" = "表达式：";
 "Failed Dependency" = "Failed Dependency";
@@ -337,6 +340,7 @@
 "Listening on port %d." = "Listening on port %d.";
 "Locked" = "Locked";
 "Loop Detected" = "Loop Detected";
+"Message:" = "Message:";
 "Method Now Allowed" = "Method Now Allowed";
 "Misdirected Request" = "Misdirected Request";
 "Missing media or media-col." = "缺少 media 或 media-col。";
@@ -376,6 +380,7 @@
 "Other Tray" = "其他托盘";
 "Output Formats:" = "Output Formats:";
 "PRINTER environment variable names default destination that does not exist." = "PRINTER 环境变量所指定的默认目标不存在。";
+"Pages:" = "Pages:";
 "Partial Content" = "Partial Content";
 "Password for %s on %s? " = "请输入 %2$s 上 %1$s 的密码 ";
 "Payment Required" = "Payment Required";
@@ -403,6 +408,7 @@
 "Temporary Redirect" = "Temporary Redirect";
 "The client ID is not configured for this server." = "The client ID is not configured for this server.";
 "The printer or class does not exist." = "打印机或类不存在。";
+"Title:" = "Title:";
 "Too Early" = "Too Early";
 "Too Many Requests" = "Too Many Requests";
 "Trust on first use is disabled." = "初次使用信任已禁用。";
@@ -455,8 +461,10 @@
 "Usage: ipptransform [OPTIONS] FILENAME [ ... FILENAME]" = "Usage: ipptransform [OPTIONS] FILENAME [ ... FILENAME]";
 "Use Proxy" = "Use Proxy";
 "User Code: %s" = "User Code: %s";
+"User:" = "User:";
 "Using spool directory '%s'." = "Using spool directory '%s'.";
 "Validation of subjectAltName in X.509 certificate request failed." = "Validation of subjectAltName in X.509 certificate request failed.";
+"Warnings:\n" = "Warnings:\n";
 "Web Page: %s" = "Web Page: %s";
 "aborted" = "已中止";
 "adobe-rgb_16                   48-bit AdobeRGB" = "adobe-rgb_16                   48-bit AdobeRGB";
@@ -975,12 +983,15 @@
 "job-sheets" = "Banner Pages";
 "job-sheets-col" = "Banner Pages";
 "job-sheets-col={SPEC}          Enable banner pages" = "job-sheets-col={SPEC}          Enable banner pages";
+"job-sheets.classified" = "Classified Print Job Cover Page";
+"job-sheets.confidential" = "Confidential Print Job Cover Page";
 "job-sheets.first-print-stream-page" = "First page in document";
 "job-sheets.job-both-sheet" = "Start and end sheets";
 "job-sheets.job-end-sheet" = "End sheet";
 "job-sheets.job-start-sheet" = "Start sheet";
 "job-sheets.none" = "None";
-"job-sheets.standard" = "Standard";
+"job-sheets.standard" = "Print Job Cover Page";
+"job-sheets.unclassified" = "Unclassified Print Job Cover Page";
 "job-sheets=NAME                Enable banner pages" = "job-sheets=NAME                Enable banner pages";
 "job-state-reasons.aborted-by-system" = "Stopping.";
 "job-state-reasons.compression-error" = "Decompression error.";
@@ -2475,5 +2486,4 @@
 "{service_uri}                  URI" = "{service_uri}                  URI";
 "{txt_*}                        Value of TXT record key" = "{txt_*}                        Value of TXT record key";
 "{}                             URI" = "{}                             URI";
-"{}                      URI" = "{}                      URI";
 "~/.../lpoptions file names default destination that does not exist." = "~/.../lpoptions file names default destination that does not exist.";

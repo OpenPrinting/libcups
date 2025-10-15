@@ -1813,6 +1813,8 @@ generate_job_sheets(
   bool		rtl;			// Format for right-to-left text?
   double	x, y;			// Position on page
   char		pages[256];		// Number of pages as a string
+  char		job_sheets[256];	// job-sheets keyword
+  const char	*loc_job_sheets;	// Localized job-sheets string
   _cups_globals_t *cg = _cupsGlobals();	// Global data
 
 
@@ -1878,9 +1880,13 @@ generate_job_sheets(
     }
 
     // Show top/bottom banner title...
+    snprintf(job_sheets, sizeof(job_sheets), "job-sheets.%s", p->options->job_sheets);
+    if ((loc_job_sheets = cupsLangGetString(lang, job_sheets)) == job_sheets)
+      loc_job_sheets = p->options->job_sheets;
+
     pdfioContentSetTextFont(st, "F1", 3.0 * XFORM_TEXT_SIZE);
-    show_aligned(st, font, 3.0 * XFORM_TEXT_SIZE, unicode, 0.5 * p->media.x2, p->crop.y2 - 3.0 * XFORM_TEXT_SIZE, 0, cupsLangGetString(lang, p->options->job_sheets));
-    show_aligned(st, font, 3.0 * XFORM_TEXT_SIZE, unicode, 0.5 * p->media.x2, p->crop.y1 + 3.0 * (XFORM_TEXT_HEIGHT - XFORM_TEXT_SIZE), 0, cupsLangGetString(lang, p->options->job_sheets));
+    show_aligned(st, font, 3.0 * XFORM_TEXT_SIZE, unicode, 0.5 * p->media.x2, p->crop.y2 - 3.0 * XFORM_TEXT_SIZE, 0, loc_job_sheets);
+    show_aligned(st, font, 3.0 * XFORM_TEXT_SIZE, unicode, 0.5 * p->media.x2, p->crop.y1 + 3.0 * (XFORM_TEXT_HEIGHT - XFORM_TEXT_SIZE), 0, loc_job_sheets);
 
     pdfio_end_page(p, st);
   }
