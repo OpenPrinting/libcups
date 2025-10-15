@@ -94,13 +94,16 @@ blockquote :first-child {
   margin-bottom: 0;
 }
 p code, li code, p.code, pre, ul.code li {
+  background: rgba(127,127,127,0.25);
+  border: thin dotted gray;
   font-family: monospace;
   hyphens: manual;
   -webkit-hyphens: manual;
 }
+p code, li code {
+  padding: 0 5px;
+}
 p.code, pre, ul.code li {
-  background: rgba(127,127,127,0.25);
-  border: thin dotted gray;
   padding: 10px;
   page-break-inside: avoid;
 }
@@ -218,6 +221,21 @@ span.string {
   }
   a:link:hover, a:visited:hover, a:active {
     color: #f06;
+  }
+  span.comment {
+    color: #7c7;
+  }
+  span.directive {
+    color: red;
+  }
+  span.number {
+    color: #c64;
+  }
+  span.reserved {
+    color: #77f;
+  }
+  span.string {
+    color: #f7f;
   }
 }
 /* Show contents on left side in web browser */
@@ -500,6 +518,7 @@ span.string {
 <li><a href="#cupsLangGetEncoding">cupsLangGetEncoding</a></li>
 <li><a href="#cupsLangGetName">cupsLangGetName</a></li>
 <li><a href="#cupsLangGetString">cupsLangGetString</a></li>
+<li><a href="#cupsLangIsRTL">cupsLangIsRTL</a></li>
 <li><a href="#cupsLangLoadStrings">cupsLangLoadStrings</a></li>
 <li><a href="#cupsLangPrintf">cupsLangPrintf</a></li>
 <li><a href="#cupsLangPuts">cupsLangPuts</a></li>
@@ -521,6 +540,7 @@ span.string {
 <li><a href="#cupsOAuthCopyUserId">cupsOAuthCopyUserId</a></li>
 <li><a href="#cupsOAuthGetAuthorizationCode">cupsOAuthGetAuthorizationCode</a></li>
 <li><a href="#cupsOAuthGetClientId">cupsOAuthGetClientId</a></li>
+<li><a href="#cupsOAuthGetDeviceGrant">cupsOAuthGetDeviceGrant</a></li>
 <li><a href="#cupsOAuthGetJWKS">cupsOAuthGetJWKS</a></li>
 <li><a href="#cupsOAuthGetMetadata">cupsOAuthGetMetadata</a></li>
 <li><a href="#cupsOAuthGetTokens">cupsOAuthGetTokens</a></li>
@@ -5281,14 +5301,14 @@ or a suitable <code>IPP_STATUS_ERROR_</code> value if an error occurred.</p>
 <h3 class="function"><a id="cupsJSONNewKey">cupsJSONNewKey</a></h3>
 <p class="description">Create a new JSON key node.</p>
 <p class="code">
-<a href="#cups_json_t">cups_json_t</a> *cupsJSONNewKey(<a href="#cups_json_t">cups_json_t</a> *parent, <a href="#cups_json_t">cups_json_t</a> *after, <span class="reserved">const</span> <span class="reserved">char</span> *value);</p>
+<a href="#cups_json_t">cups_json_t</a> *cupsJSONNewKey(<a href="#cups_json_t">cups_json_t</a> *parent, <a href="#cups_json_t">cups_json_t</a> *after, <span class="reserved">const</span> <span class="reserved">char</span> *key);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>parent</th>
 <td class="description">Parent JSON node or <code>NULL</code> for a root node</td></tr>
 <tr><th>after</th>
 <td class="description">Previous sibling node or <code>NULL</code> to append to the end</td></tr>
-<tr><th>value</th>
+<tr><th>key</th>
 <td class="description">Key string</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
@@ -5676,6 +5696,9 @@ JWK suitable for use when decrypting or verifying a JWE/JWS message.</p>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description"><code>true</code> on success, <code>false</code> on failure</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function adds strings for the specified language.  It is equivalent to
+calling <a href="#cupsLangFind"><code>cupsLangFind</code></a> followed by <a href="#cupsLangLoadStrings"><code>cupsLangLoadStrings</code></a>.</p>
 <h3 class="function"><a id="cupsLangDefault">cupsLangDefault</a></h3>
 <p class="description">Return the default language.</p>
 <p class="code">
@@ -5689,10 +5712,13 @@ JWK suitable for use when decrypting or verifying a JWE/JWS message.</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>language</th>
-<td class="description">Language or locale name</td></tr>
+<td class="description">Language or locale name, <code>NULL</code> for the current locale</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Language data</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function finds the localization information for the specified language
+or locale name.</p>
 <h3 class="function"><a id="cupsLangFormatString">cupsLangFormatString</a></h3>
 <p class="description">Create a localized formatted string.</p>
 <p class="code">
@@ -5712,6 +5738,9 @@ JWK suitable for use when decrypting or verifying a JWE/JWS message.</p>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Formatted string</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function formats a string using the localized version of the &quot;format&quot;
+string argument, which supports all of the <code>printf</code> format specifiers.</p>
 <h3 class="function"><a id="cupsLangGetEncoding">cupsLangGetEncoding</a></h3>
 <p class="description">Get the default encoding for the current locale.</p>
 <p class="code">
@@ -5746,6 +5775,19 @@ cups_encoding_t cupsLangGetEncoding(<span class="reserved">void</span>);</p>
 <p class="discussion">This function gets a localized UTF-8 message string for the specified
 language.  If the message is not localized, the original message pointer is
 returned.</p>
+<h3 class="function"><a id="cupsLangIsRTL">cupsLangIsRTL</a></h3>
+<p class="description">Get the writing direction.</p>
+<p class="code">
+<span class="reserved">bool</span> cupsLangIsRTL(<a href="#cups_lang_t">cups_lang_t</a> *lang);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>lang</th>
+<td class="description">Language</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description"><code>true</code> if right-to-left, <code>false</code> if left-to-right</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function gets the writing direction for the specified language.</p>
 <h3 class="function"><a id="cupsLangLoadStrings">cupsLangLoadStrings</a></h3>
 <p class="description">Load a message catalog for a language.</p>
 <p class="code">
@@ -5755,12 +5797,23 @@ returned.</p>
 <tr><th>lang</th>
 <td class="description">Language data</td></tr>
 <tr><th>filename</th>
-<td class="description">Filename of <code>NULL</code> for none</td></tr>
+<td class="description">Filename or <code>NULL</code> for none</td></tr>
 <tr><th>strings</th>
 <td class="description">Strings or <code>NULL</code> for none</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description"><code>true</code> on success, <code>false</code> on failure</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function loads a message catalog for a language.  The catalog must be in
+the Apple .strings format.  For example, the following translates the strings
+&quot;Yes&quot;, &quot;No&quot;, and &quot;Welcome, %s.&quot; to French:
+
+<pre>
+&quot;Yes&quot; = &quot;Oui&quot;;
+&quot;No&quot; = &quot;Non&quot;;
+&quot;Welcome, %s.&quot; = &quot;Bievenue, %s.&quot;;
+</pre>
+</p>
 <h3 class="function"><a id="cupsLangPrintf">cupsLangPrintf</a></h3>
 <p class="description">Print a formatted message string to a file.</p>
 <p class="code">
@@ -5790,7 +5843,7 @@ ssize_t cupsLangPuts(FILE *fp, <span class="reserved">const</span> <span class="
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Number of bytes written</p>
 <h3 class="function"><a id="cupsLangSetDirectory">cupsLangSetDirectory</a></h3>
-<p class="description">Set a directory containing localizations.</p>
+<p class="description">Set the directory containing localizations.</p>
 <p class="code">
 <span class="reserved">void</span> cupsLangSetDirectory(<span class="reserved">const</span> <span class="reserved">char</span> *d);</p>
 <h4 class="parameters">Parameters</h4>
@@ -5798,6 +5851,10 @@ ssize_t cupsLangPuts(FILE *fp, <span class="reserved">const</span> <span class="
 <tr><th>d</th>
 <td class="description">Directory name</td></tr>
 </tbody></table>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function sets the directory where .strings files can be found.  The
+files are named &quot;LOCALE.string&quot; where &quot;LOCALE&quot; is the locale name, for
+example &quot;fr&quot; for generic French and &quot;fr-CA&quot; for Canadian French.</p>
 <h3 class="function"><a id="cupsLangSetLocale">cupsLangSetLocale</a></h3>
 <p class="description">Set the current locale and transcode the command-line.</p>
 <p class="code">
@@ -6122,6 +6179,76 @@ The returned &quot;client_id&quot; string must be freed using the <code>free</co
 <em>Note</em>: This function should only be used to register WWW applications. The
 <a href="#cupsOAuthGetAuthorizationCode"><code>cupsOAuthGetAuthorizationCode</code></a> function handles registration of
 local/&quot;native&quot; applications for you.</p>
+<h3 class="function"><a id="cupsOAuthGetDeviceGrant">cupsOAuthGetDeviceGrant</a></h3>
+<p class="description">Get a device authorization grant for the specified resource and scope(s).</p>
+<p class="code">
+<a href="#cups_json_t">cups_json_t</a> *cupsOAuthGetDeviceGrant(<span class="reserved">const</span> <span class="reserved">char</span> *auth_uri, <a href="#cups_json_t">cups_json_t</a> *metadata, <span class="reserved">const</span> <span class="reserved">char</span> *resource_uri, <span class="reserved">const</span> <span class="reserved">char</span> *scopes);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>auth_uri</th>
+<td class="description">Authorization Server URI</td></tr>
+<tr><th>metadata</th>
+<td class="description">Authorization Server metadata</td></tr>
+<tr><th>resource_uri</th>
+<td class="description">Resource URI</td></tr>
+<tr><th>scopes</th>
+<td class="description">Space-delimited scopes</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description">Grant data or <code>NULL</code> on error</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function requests a device authorization grant for the specified
+resource and scope(s).  Device authorization grants allow a user to open a
+web page on any device to authorize access to the resource.<br>
+<br>
+The &quot;auth_uri&quot; parameter specifies the URI for the OAuth Authorization
+Server.  The &quot;metadata&quot; parameter specifies the Authorization Server metadata
+as obtained using <a href="#cupsOAuthCopyMetadata"><code>cupsOAuthCopyMetadata</code></a> and/or
+<a href="#cupsOAuthGetMetadata"><code>cupsOAuthGetMetadata</code></a>.<br>
+<br>
+The &quot;resource_uri&quot; parameter specifies the URI for a resource (printer, web
+file, etc.) that you which to access.<br>
+<br>
+The &quot;scopes&quot; parameter specifies zero or more whitespace-delimited scope
+names to request during authorization.  The list of supported scope names are
+available from the Authorization Server metadata, for example:
+
+<pre>
+cups_json_t *metadata = cupsOAuthGetMetadata(auth_uri);
+cups_json_t *scopes_supported = cupsJSONFind(metadata, &quot;scopes_supported&quot;);
+</pre>
+
+The returned JSON object must be freed using the <a href="#cupsJSONDelete"><code>cupsJSONDelete</code></a>
+function and contains the following information:
+
+</p><ul>
+<li><code>CUPS_ODEVGRANT_DEVICE_CODE</code>: The device code string to be used in
+  subsequent <a href="#cupsOAuthGetTokens"><code>cupsOAuthGetTokens</code></a> calls.
+</li>
+<li><code>CUPS_ODEVGRANT_EXPIRES_IN</code>: The expiration date/time as a number of
+  seconds since the Unix epoch.
+</li>
+<li><code>CUPS_ODEVGRANT_INTERVAL</code>: The number of seconds to wait between calls to
+  <a href="#cupsOAuthGetTokens"><code>cupsOAuthGetTokens</code></a>.
+</li>
+<li><code>CUPS_ODEVGRANT_USER_CODE</code>: The user code to enter on the verification
+  web page.
+</li>
+<li><code>CUPS_ODEVGRANT_VERIFICATION_URL</code>: The URL for the verification web page.
+</li>
+<li><code>CUPS_ODEVGRANT_VERIFICATION_URL_COMPLETE</code>: The URL for the verification
+  web page with the user code filled in.</li>
+</ul>
+<p class="discussion">The values can be obtained using the <a href="#cupsJSONFind"><code>cupsJSONFind</code></a>,
+@cupsJSONGetNumber@, and @cupsJSONGetString@ functions, for example:
+
+<pre>
+cups_json_t *grant = cupsOAuthGetDeviceGrant(...);
+
+const char *verification_url = cupsJSONGetString(cupsJSONFind(grant, CUPS_ODEVGRANT_VERIFICATION_URL));
+double interval = cupsJSONGetNumber(cupsJSONFind(grant, CUPS_ODEVGRANT_INTERVAL));
+</pre>
+</p>
 <h3 class="function"><a id="cupsOAuthGetJWKS">cupsOAuthGetJWKS</a></h3>
 <p class="description">Get the JWT key set for an Authorization Server.</p>
 <p class="code">
@@ -6174,11 +6301,11 @@ freed using the <a href="#cupsJSONDelete"><code>cupsJSONDelete</code></a> functi
 <tr><th>resource_uri</th>
 <td class="description">Resource URI</td></tr>
 <tr><th>grant_code</th>
-<td class="description">Authorization code or refresh token</td></tr>
+<td class="description">Authorization code, device code, or refresh token</td></tr>
 <tr><th>grant_type</th>
 <td class="description">Grant code type</td></tr>
 <tr><th>redirect_uri</th>
-<td class="description">Redirect URI</td></tr>
+<td class="description">Redirect URI or <code>NULL</code> for device grants</td></tr>
 <tr><th>access_expires</th>
 <td class="description">Expiration time for access token</td></tr>
 </tbody></table>
@@ -6215,7 +6342,12 @@ When successful, the access token and expiration time are returned. The
 access token must be freed using the <code>free</code> function. The new refresh token
 and any user ID information can be obtained using the
 <a href="#cupsOAuthCopyRefreshToken"><code>cupsOAuthCopyRefreshToken</code></a> and <a href="#cupsOAuthCopyUserId"><code>cupsOAuthCopyUserId</code></a> functions
-respectively.</p>
+respectively.<br>
+<br>
+When authorizing using a device code (<code>CUPS_OGRANT_DEVICE_CODE</code>) and a device
+access token is not yet ready, a <code>NULL</code> access token is returned with the
+expiration time set to the next recommended query time.  If the
+&quot;access_expires&quot; value is set to <code>0</code> then the device authorization failed.</p>
 <h3 class="function"><span class="info">&#160;CUPS 2.5&#160;</span><a id="cupsOAuthGetUserId">cupsOAuthGetUserId</a></h3>
 <p class="description">Get the user ID token associated with the given access token.</p>
 <p class="code">
@@ -9557,7 +9689,7 @@ state.</p>
 <p class="discussion">This function returns the value of an IPP data file variable.  <code>NULL</code> is
 returned if the variable is not set.</p>
 <h3 class="function"><a id="ippFileNew">ippFileNew</a></h3>
-<p class="description">Create a new IPP data file object for reading or writing.</p>
+<p class="description">Create a new IPP data file object in preparation for reading or writing.</p>
 <p class="code">
 <a href="#ipp_file_t">ipp_file_t</a> *ippFileNew(<a href="#ipp_file_t">ipp_file_t</a> *parent, <a href="#ipp_fattr_cb_t">ipp_fattr_cb_t</a> attr_cb, <a href="#ipp_ferror_cb_t">ipp_ferror_cb_t</a> error_cb, <span class="reserved">void</span> *cb_data);</p>
 <h4 class="parameters">Parameters</h4>
@@ -9574,9 +9706,11 @@ returned if the variable is not set.</p>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">IPP data file</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">This function opens an IPP data file for reading (mode=&quot;r&quot;) or writing
-(mode=&quot;w&quot;).  If the &quot;parent&quot; argument is not <code>NULL</code>, all variables from the
-parent data file are copied to the new file.</p>
+<p class="discussion">This function creates a new IPP data file object.  If the &quot;parent&quot; argument
+is not <code>NULL</code>, all variables from the parent data file are copied to the new
+object.<br>
+<br>
+Call the <a href="#ippFileOpen"><code>ippFileOpen</code></a> function to open the IPP data file.</p>
 <h3 class="function"><a id="ippFileOpen">ippFileOpen</a></h3>
 <p class="description">Open an IPP data file for reading or writing.</p>
 <p class="code">
@@ -9593,9 +9727,8 @@ parent data file are copied to the new file.</p>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description"><code>true</code> on success, <code>false</code> on error</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">This function opens an IPP data file for reading (mode=&quot;r&quot;) or writing
-(mode=&quot;w&quot;).  If the &quot;parent&quot; argument is not <code>NULL</code>, all variables from the
-parent data file are copied to the new file.</p>
+<p class="discussion">This function opens the IPP data file specified by the &quot;filename&quot; argument
+for reading (&quot;mode&quot; is &quot;r&quot;) or writing (&quot;mode&quot; is &quot;w&quot;).</p>
 <h3 class="function"><a id="ippFileRead">ippFileRead</a></h3>
 <p class="description">Read an IPP data file.</p>
 <p class="code">
@@ -9611,6 +9744,14 @@ parent data file are copied to the new file.</p>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description"><code>true</code> on success, <code>false</code> on error</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function reads tokens from an IPP data file, processes standard
+directives that define attributes and values, and passes on unknown tokens
+to the token callback &quot;token_cb&quot; for processing.<br>
+<br>
+If the &quot;with_groups&quot; argument is <code>true</code> then the &quot;GROUP&quot; directive will be
+supported for specifying the attribute group(s) associated with any
+defined attributes.</p>
 <h3 class="function"><a id="ippFileReadCollection">ippFileReadCollection</a></h3>
 <p class="description">Read a collection from an IPP data file.</p>
 <p class="code">
