@@ -1,7 +1,7 @@
 //
 // Language localization definitions for CUPS.
 //
-// Copyright © 2021-2022 by OpenPrinting.
+// Copyright © 2021-2025 by OpenPrinting.
 // Copyright © 2007-2011 by Apple Inc.
 // Copyright © 1997-2006 by Easy Software Products.
 //
@@ -38,6 +38,7 @@ extern const char	*cupsLangFormatString(cups_lang_t *lang, char *buffer, size_t 
 extern cups_encoding_t	cupsLangGetEncoding(void) _CUPS_PUBLIC;
 extern const char	*cupsLangGetName(cups_lang_t *lang) _CUPS_PUBLIC;
 extern const char	*cupsLangGetString(cups_lang_t *lang, const char *s) _CUPS_PUBLIC;
+extern bool		cupsLangIsRTL(cups_lang_t *lang) _CUPS_PUBLIC;
 extern bool		cupsLangLoadStrings(cups_lang_t *lang, const char *filename, const char *strings);
 extern ssize_t		cupsLangPrintf(FILE *fp, const char *format, ...) _CUPS_FORMAT(2, 3) _CUPS_PUBLIC;
 extern ssize_t		cupsLangPuts(FILE *fp, const char *message) _CUPS_PUBLIC;

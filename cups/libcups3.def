@@ -273,6 +273,7 @@ cupsLangFormatString
 cupsLangGetEncoding
 cupsLangGetName
 cupsLangGetString
+cupsLangIsRTL
 cupsLangLoadStrings
 cupsLangPrintf
 cupsLangPuts

@@ -420,12 +420,15 @@
 "job-retain-until.none" = "Never";
 "job-sheets" = "Banner Pages";
 "job-sheets-col" = "Banner Pages";
+"job-sheets.classified" = "Classified Print Job Cover Page";
+"job-sheets.confidential" = "Confidential Print Job Cover Page";
 "job-sheets.first-print-stream-page" = "First page in document";
 "job-sheets.job-both-sheet" = "Start and end sheets";
 "job-sheets.job-end-sheet" = "End sheet";
 "job-sheets.job-start-sheet" = "Start sheet";
 "job-sheets.none" = "None";
-"job-sheets.standard" = "Standard";
+"job-sheets.standard" = "Print Job Cover Page";
+"job-sheets.unclassified" = "Unclassified Print Job Cover Page";
 "job-state.3" = "Pending";
 "job-state.4" = "Held";
 "job-state.5" = "Processing";

@@ -81,7 +81,7 @@ install:	all
 	done
 	echo "Installing fonts to $(BUILDROOT)$(CUPS_DATADIR)/fonts..."
 	$(INSTALL_DIR) $(BUILDROOT)$(CUPS_DATADIR)/fonts
-	for file in NotoSansMono-License.txt NotoSansMono-Regular.ttf; do \
+	for file in NotoSans-License.txt NotoSans-Regular.ttf NotoSansMono-Regular.ttf; do \
 		$(INSTALL_DATA) $$file $(BUILDROOT)$(CUPS_DATADIR)/fonts; \
 	done
 	if test "x$(SYMROOT)" != "x"; then \
@@ -105,7 +105,7 @@ uninstall:
 	done
 	-$(RMDIR) $(BUILDROOT)$(bindir)
 	echo "Uninstalling fonts from $(BUILDROOT)$(CUPS_DATADIR)/fonts..."
-	for file in NotoSansMono-License.txt NotoSansMono-Regular.ttf; do \
+	for file in NotoSans-License.txt NotoSans-Regular.ttf NotoSansMono-Regular.ttf; do \
 		$(RM) $(BUILDROOT)$(CUPS_DATADIR)/fonts/$$file; \
 	done
 	-$(RMDIR) $(BUILDROOT)$(CUPS_DATADIR)/fonts

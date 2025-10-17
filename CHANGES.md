@@ -4,6 +4,7 @@ Changes in libcups
 libcups v3.0.0 (YYYY-MM-DD)
 ---------------------------
 
+- Added `cupsLangIsRTL` API.
 - Added `cupsOAuthGetDeviceGrant`, `cupsOAuthGetJWKS`, and `cupsOAuthGetUserId`
   APIs.
 - Added `httpGetCookieValue` and `httpGetSecurity` APIs.

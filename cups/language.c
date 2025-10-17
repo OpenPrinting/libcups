@@ -1,7 +1,7 @@
 //
 // I18N/language support for CUPS.
 //
-// Copyright © 2022 by OpenPrinting.
+// Copyright © 2022-2025 by OpenPrinting.
 // Copyright © 2007-2017 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products.
 //
@@ -75,6 +75,9 @@ static int		cups_message_compare(_cups_message_t *m1, _cups_message_t *m2);
 //
 // 'cupsLangAddStrings()' - Add strings for the specified language.
 //
+// This function adds strings for the specified language.  It is equivalent to
+// calling @link cupsLangFind@ followed by @link cupsLangLoadStrings@.
+//
 
 bool					// O - `true` on success, `false` on failure
 cupsLangAddStrings(
@@ -94,9 +97,12 @@ cupsLangAddStrings(
 //
 // 'cupsLangFind()' - Find a language localization.
 //
+// This function finds the localization information for the specified language
+// or locale name.
+//
 
 cups_lang_t *				// O - Language data
-cupsLangFind(const char *language)	// I - Language or locale name
+cupsLangFind(const char *language)	// I - Language or locale name, `NULL` for the current locale
 {
   char		langname[16];		// Requested language name
   cups_lang_t	*lang;			// Current language...
@@ -133,6 +139,9 @@ cupsLangFind(const char *language)	// I - Language or locale name
 
 //
 // 'cupsLangFormatString()' - Create a localized formatted string.
+//
+// This function formats a string using the localized version of the "format"
+// string argument, which supports all of the `printf` format specifiers.
 //
 
 const char *				// O - Formatted string
@@ -201,13 +210,43 @@ cupsLangGetString(cups_lang_t *lang,	// I - Language
 
 
 //
+// 'cupsLangIsRTL()' - Get the writing direction.
+//
+// This function gets the writing direction for the specified language.
+//
+
+bool					// O - `true` if right-to-left, `false` if left-to-right
+cupsLangIsRTL(cups_lang_t *lang)	// I - Language
+{
+  // Range check input...
+  if (!lang)
+    return (false);
+
+  // The following languages are written from right to left: Arabic, Aramaic,
+  // Azeri, Divehi, Fulah, Hebrew, Kurdish, N'ko, Persian, Rohingya, Syriac, and
+  // Urdu.  Not all of these have language codes...
+  return (!strncmp(lang->language, "ar", 2) || !strncmp(lang->language, "dv", 2) || !strncmp(lang->language, "ff", 2) || !strncmp(lang->language, "he", 2) || !strncmp(lang->language, "ku", 2) || !strncmp(lang->language, "fa", 2) || !strncmp(lang->language, "ur", 2));
+}
+
+
+//
 // 'cupsLangLoadStrings()' - Load a message catalog for a language.
+//
+// This function loads a message catalog for a language.  The catalog must be in
+// the Apple .strings format.  For example, the following translates the strings
+// "Yes", "No", and "Welcome, %s." to French:
+//
+// ```
+// "Yes" = "Oui";
+// "No" = "Non";
+// "Welcome, %s." = "Bievenue, %s.";
+// ```
 //
 
 bool				// O - `true` on success, `false` on failure
 cupsLangLoadStrings(
     cups_lang_t *lang,			// I - Language data
-    const char  *filename,		// I - Filename of `NULL` for none
+    const char  *filename,		// I - Filename or `NULL` for none
     const char  *strings)		// I - Strings or `NULL` for none
 {
   bool		ret = true;		// Return value
@@ -540,7 +579,11 @@ cupsLangLoadStrings(
 
 
 //
-// 'cupsLangSetDirectory()' - Set a directory containing localizations.
+// 'cupsLangSetDirectory()' - Set the directory containing localizations.
+//
+// This function sets the directory where .strings files can be found.  The
+// files are named "LOCALE.string" where "LOCALE" is the locale name, for
+// example "fr" for generic French and "fr-CA" for Canadian French.
 //
 
 void

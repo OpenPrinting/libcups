@@ -103,7 +103,7 @@ typedef struct ipp_options_s		// All IPP options in one structure
 					// "job-originating-user-name" value
   int		job_pages_per_set;	// "job-pages-per-set" value
   char		job_sheet_message[1024];// "job-sheet-message" value
-  char		job_sheets[128];	// "job-sheets" value
+  char		job_sheets[256];	// "job-sheets" value
   cups_media_t	job_sheets_media;	// "job-sheets-col" "media" or "media-col" value
   cups_media_t	media;			// "media" or "media-col" value
   ippopt_handling_t multiple_document_handling;

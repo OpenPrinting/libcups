@@ -310,11 +310,13 @@ ippFileGetVar(ipp_file_t *file,		// I - IPP data file
 
 
 //
-// 'ippFileNew()' - Create a new IPP data file object for reading or writing.
+// 'ippFileNew()' - Create a new IPP data file object in preparation for reading or writing.
 //
-// This function opens an IPP data file for reading (mode="r") or writing
-// (mode="w").  If the "parent" argument is not `NULL`, all variables from the
-// parent data file are copied to the new file.
+// This function creates a new IPP data file object.  If the "parent" argument
+// is not `NULL`, all variables from the parent data file are copied to the new
+// object.
+//
+// Call the @link ippFileOpen@ function to open the IPP data file.
 //
 
 ipp_file_t *				// O - IPP data file
@@ -343,9 +345,8 @@ ippFileNew(ipp_file_t      *parent,	// I - Parent data file or `NULL` for none
 //
 // 'ippFileOpen()' - Open an IPP data file for reading or writing.
 //
-// This function opens an IPP data file for reading (mode="r") or writing
-// (mode="w").  If the "parent" argument is not `NULL`, all variables from the
-// parent data file are copied to the new file.
+// This function opens the IPP data file specified by the "filename" argument
+// for reading ("mode" is "r") or writing ("mode" is "w").
 //
 
 bool					// O - `true` on success, `false` on error
@@ -388,6 +389,14 @@ ippFileOpen(ipp_file_t *file,		// I - IPP data file
 
 //
 // 'ippFileRead()' - Read an IPP data file.
+//
+// This function reads tokens from an IPP data file, processes standard
+// directives that define attributes and values, and passes on unknown tokens
+// to the token callback "token_cb" for processing.
+//
+// If the "with_groups" argument is `true` then the "GROUP" directive will be
+// supported for specifying the attribute group(s) associated with any
+// defined attributes.
 //
 
 bool					// O - `true` on success, `false` on error
