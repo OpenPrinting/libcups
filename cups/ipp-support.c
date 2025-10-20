@@ -834,7 +834,7 @@ ippAttributeString(
 // registered values are supported in addition to the CUPS IPP extension
 // attributes.
 //
-// The "request" parameter specifies the request message that was read from
+// The "request" argument specifies the request message that was read from
 // the client.
 //
 // `NULL` is returned if all attributes should be returned.  Otherwise, the

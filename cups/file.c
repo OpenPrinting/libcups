@@ -604,7 +604,7 @@ cupsFileNumber(cups_file_t *fp)		// I - CUPS file
 //
 // The "filename" argument is a filename or socket address.
 //
-// The "mode" parameter can be "r" to read, "w" to write, overwriting any
+// The "mode" argument can be "r" to read, "w" to write, overwriting any
 // existing file, "a" to append to an existing file or create a new file,
 // or "s" to open a socket connection.
 //

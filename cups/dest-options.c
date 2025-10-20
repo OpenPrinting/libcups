@@ -826,7 +826,7 @@ cupsFreeDestInfo(cups_dinfo_t *dinfo)	// I - Destination information
 // 'cupsGetDestMediaByIndex()' - Get a media name, dimension, and margins for a
 //                               specific size.
 //
-// The "flags" parameter determines which set of media are indexed.  For
+// The "flags" argument determines which set of media are indexed.  For
 // example, passing `CUPS_MEDIA_FLAGS_BORDERLESS` will get the Nth borderless
 // size supported by the printer.
 //
@@ -1023,7 +1023,7 @@ cupsGetDestMediaBySize(
 // 'cupsGetDestMediaCount()' - Get the number of sizes supported by a
 //                             destination.
 //
-// The "flags" parameter determines the set of media sizes that are counted.
+// The "flags" argument determines the set of media sizes that are counted.
 // For example, passing `CUPS_MEDIA_FLAGS_BORDERLESS` will return the number of
 // borderless sizes.
 //
@@ -1060,7 +1060,7 @@ cupsGetDestMediaCount(
 //
 // 'cupsGetDestMediaDefault()' - Get the default size for a destination.
 //
-// The "flags" parameter determines which default size is returned.  For
+// The "flags" argument determines which default size is returned.  For
 // example, passing `CUPS_MEDIA_FLAGS_BORDERLESS` will return the default
 // borderless size, typically US Letter or A4, but sometimes 4x6 photo media.
 //

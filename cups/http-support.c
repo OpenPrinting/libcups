@@ -536,7 +536,7 @@ httpDecode64(char       *out,		// I  - String to write to
 // 'httpEncode64()' - Base64-encode a string.
 //
 // This function encodes a Base64 string as defined by RFC 4648.  The "url"
-// parameter controls whether the original Base64 ("url" = `false`) or the
+// argument controls whether the original Base64 ("url" = `false`) or the
 // Base64url ("url" = `true`) alphabet is used.
 //
 
@@ -1485,13 +1485,13 @@ _httpEncodeURI(char       *dst,		// I - Destination buffer
 //
 // This function resolves a DNS-SD URI of the form
 // "scheme://service-instance-name._protocol._tcp.domain/...".  The "options"
-// parameter specifies a bitfield of resolution options including:
+// argument specifies a bitfield of resolution options including:
 //
 // - `HTTP_RESOLVE_DEFAULT`: Use default options
 // - `HTTP_RESOLVE_FQDN`: Resolve the fully-qualified domain name instead of an IP address
 // - `HTTP_RESOLVE_FAXOUT`: Resolve the FaxOut service instead of Print (IPP/IPPS)
 //
-// The "cb" parameter specifies a callback that allows resolution to be
+// The "cb" argument specifies a callback that allows resolution to be
 // terminated.  The callback is provided the "cb_data" value and returns a
 // `bool` value that is `true` to continue and `false` to stop.  If no callback
 // is specified ("cb" is `NULL`), then this function will block up to 90 seconds

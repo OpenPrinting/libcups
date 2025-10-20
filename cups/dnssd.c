@@ -548,9 +548,9 @@ cupsDNSSDBrowseNew(
 // 'cupsDNSSDCopyComputerName()' - Copy the current human-readable name for the system.
 //
 // This function copies the current human-readable name ("My Computer") to the
-// provided buffer.  The "dnssd" parameter is a DNS-SD context created with
-// @link cupsDNSSDNew@.  The "buffer" parameter points to a character array of
-// at least 128 bytes and the "bufsize" parameter specifies the actual size of
+// provided buffer.  The "dnssd" argument is a DNS-SD context created with
+// @link cupsDNSSDNew@.  The "buffer" argument points to a character array of
+// at least 128 bytes and the "bufsize" argument specifies the actual size of
 // the array.
 //
 
@@ -618,9 +618,9 @@ cupsDNSSDCopyComputerName(
 // 'cupsDNSSDCopyHostName()' - Copy the current mDNS hostname for the system.
 //
 // This function copies the current mDNS hostname ("hostname.local") to the
-// provided buffer.  The "dnssd" parameter is a DNS-SD context created with
-// @link cupsDNSSDNew@.  The "buffer" parameter points to a character array of
-// at least 70 bytes and the "bufsize" parameter specifies the actual size of
+// provided buffer.  The "dnssd" argument is a DNS-SD context created with
+// @link cupsDNSSDNew@.  The "buffer" argument points to a character array of
+// at least 70 bytes and the "bufsize" argument specifies the actual size of
 // the array.
 //
 
@@ -956,7 +956,7 @@ cupsDNSSDQueryGetContext(
 // 'cupsDNSSDQueryNew()' - Create a new query request.
 //
 // This function creates a new DNS-SD query request for the specified full
-// service name and DNS record type.  The "fullname" parameter specifies the
+// service name and DNS record type.  The "fullname" argument specifies the
 // full DNS name of the service (instance name, type, and domain) being queried.
 // Responses to the query are reported using the required query callback
 // function with the "flags" argument set to `CUPS_DNSSD_FLAGS_NONE` on success
@@ -2347,7 +2347,7 @@ mdns_strerror(
         return ("Out of memory");
 
     case kDNSServiceErr_BadParam :
-        return ("Bad parameter");
+        return ("Bad argument");
 
     case kDNSServiceErr_BadReference :
         return ("Bad service reference");

@@ -2955,8 +2955,8 @@ httpWrite(http_t     *http,		// I - HTTP connection
 // 'httpWriteRequest()' - Write a HTTP request.
 //
 // This function writes a HTTP request to the specified connection.  The
-// "method" parameter specifies the HTTP method ("GET", "POST", "PUT", etc)
-// while the "uri" parameter specifies the request URI.  All fields must be
+// "method" argument specifies the HTTP method ("GET", "POST", "PUT", etc)
+// while the "uri" argument specifies the request URI.  All fields must be
 // set using the @link httpSetCookie@, @link httpSetField@, and
 // @link httpSetLength@ functions prior to writing the request.
 //

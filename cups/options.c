@@ -24,7 +24,7 @@ static size_t	cups_find_option(const char *name, size_t num_options, cups_option
 // 'cupsAddIntegerOption()' - Add an integer option to an option array.
 //
 // New option arrays can be initialized simply by passing 0 for the
-// "num_options" parameter.
+// "num_options" argument.
 //
 
 size_t					// O  - Number of options
@@ -47,7 +47,7 @@ cupsAddIntegerOption(
 // 'cupsAddOption()' - Add an option to an option array.
 //
 // New option arrays can be initialized simply by passing 0 for the
-// "num_options" parameter.
+// "num_options" argument.
 //
 
 size_t					// O  - Number of options

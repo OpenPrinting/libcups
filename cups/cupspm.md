@@ -925,7 +925,7 @@ ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI,
 > **Note:**
 >
 > If we wanted to query the scheduler instead of the device, we would look
-> up the "printer-uri-supported" option instead of the "device-uri" value.
+> up the "printer-uri-supported" option instead of the "device-uri" option.
 
 The [`ippAddString`](@@) function adds the "printer-uri" attribute the the IPP
 request.  The `IPP_TAG_OPERATION` argument specifies that the attribute is part
@@ -947,15 +947,15 @@ static const char * const requested_attributes[] =
 };
 
 ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD,
-              "requested-attributes", 3, NULL,
+              "requested-attributes", /*num_values*/3, /*language*/NULL,
               requested_attributes);
 ```
 
 The [`ippAddStrings`](@@) function adds an attribute with one or more strings,
 in this case three.  The `IPP_TAG_KEYWORD` argument specifies that the strings
 are keyword values, which are used for attribute names.  All strings use the
-same language (`NULL`), and the attribute will contain the three strings in the
-array `requested_attributes`.
+same language (`NULL`), and the attribute will contain the three strings from
+the array `requested_attributes`.
 
 CUPS provides many functions to adding attributes of different types:
 
@@ -1106,18 +1106,32 @@ Once you are done using the IPP response message, free it using the
     ippDelete(response);
 
 
-## Authentication
+# Authentication and Authorization
 
-CUPS normally handles authentication through the console.  GUI applications
-should set a password callback using the [`cupsSetPasswordCB`](@@) function:
+CUPS supports authentication and authorization using HTTP Basic, HTTP Digest,
+peer credentials when communicating over domain sockets, and OAuth/OpenID
+Connect.
+
+Peer credential authorization happens automatically when connected over a
+domain socket.  Other types of authentication requires the application to
+handle `HTTP_STATUS_UNAUTHORIZED` responses beyond simply calling
+[`cupsDoAuthentication`](@@).
+
+
+## Authentication Using Passwords
+
+When you call [`cupsDoAuthentication`](@@), CUPS normally requests a password
+from the console.  GUI applications should set a password callback using the
+[`cupsSetPasswordCB`](@@) function:
 
 ```c
 void
 cupsSetPasswordCB(cups_password_cb_t cb, void *cb_data);
 ```
 
-The password callback will be called when needed and is responsible for setting
-the current user name using [`cupsSetUser`](@@) and returning a string:
+The password callback is called when needed and is responsible for setting
+the current user name using [`cupsSetUser`](@@) and returning a (password)
+string:
 
 ```c
 const char *
@@ -1141,6 +1155,189 @@ The "resource" argument specifies the path used for the request.
 
 The "cb_data" argument provides the user data pointer from the
 [`cupsSetPasswordCB`](@@) call.
+
+
+## Authorization using OAuth/OpenID Connect
+
+CUPS provides a generic OAuth/OpenID client for authorizing access to printers
+and other network resources.  The following functions are provided:
+
+- [`cupsOAuthClearTokens`](@@): Clear all cached tokens.
+- [`cupsOAuthCopyAccessToken`](@@): Copy the cached access token.
+- [`cupsOAuthCopyClientId`](@@): Copy the cached client ID.
+- [`cupsOAuthCopyRefreshToken`](@@): Copy the cached refresh token.
+- [`cupsOAuthCopyUserId`](@@): Copy the cached user ID.
+- [`cupsOAuthGetAuthorizationCode`](@@): Get an authorization code using a web
+  browser.
+- [`cupsOAuthGetClientId`](@@): Get a client ID using dynamic client
+  registration.
+- [`cupsOAuthGetDeviceGrant`](@@): Get a device authorization grant code.
+- [`cupsOAuthGetJWKS`](@@): Get the key set for an authorization server.
+- [`cupsOAuthGetMetadata`](@@): Get the metadata for an authorization server.
+- [`cupsOAuthGetTokens`](@@): Get access and refresh tokens for an
+  authorization/grant code.
+- [`cupsOAuthGetUserId`](@@): Get the user ID associated with an access token.
+- [`cupsOAuthMakeAuthorizationURL`](@@): Make the URL for web browser
+  authorization.
+- [`cupsOAuthMakeBase64Random`](@@): Make a Base64-encoded string of random
+  bytes.
+- [`cupsOAuthSaveClientData`](@@): Save a client ID and secret for an
+  authorization server.
+- [`cupsOAuthSaveTokens`](@@): Save access and refresh tokens for an
+  authorization server.
+
+Once you have an access token you use the [`httpSetAuthString`](@@) function to
+use it for a HTTP connection:
+
+```c
+http_t *http;
+char   *access_token;
+
+httpSetAuthString(http, "Bearer", access_token);
+```
+
+
+### Authorizing Using a Web Browser
+
+Users can authorize using their preferred web browser via the
+[`cupsOAuthGetAuthorizationCode`](@@) function, which returns an authorization
+grant code string.  The following code gets the authorization server metadata,
+authorizes access through the web browser, and then obtains a HTTP Bearer access
+token:
+
+```c
+http_t      *http;           // HTTP connection
+const char  *auth_uri;       // Base URL for Authorization Server
+cups_json_t *metadata;       // Authorization Server metadata
+const char  *printer_uri;    // Printer URI
+char        *auth_code;      // Authorization grant code
+char        *access_token;   // Access token
+time_t      access_expires;  // Date/time when access token expires
+
+// Get the metadata for the authorization server.
+metadata = cupsOAuthGetMetadata(auth_uri);
+
+if (metadata == NULL)
+{
+  // Handle error getting metadata from authorization server.
+}
+
+// Bring up the web browser to authorize and get an authorization code.
+auth_code = cupsOAuthGetAuthorizationCode(auth_uri, metadata, printer_uri,
+                                          /*scopes*/NULL,
+                                          /*redirect_uri*/NULL);
+
+if (auth_code == NULL)
+{
+  // Unable to authorize.
+}
+
+// Get the access code from the authorization code.
+access_token = cupsOAuthGetTokens(auth_uri, metadata, printer_uri, auth_code,
+                                  CUPS_OGRANT_AUTHORIZATION_CODE,
+                                  /*redirect_uri*/NULL, &access_expires);
+
+if (access_token == NULL)
+{
+  // Unable to get access token.
+}
+
+// Set the Bearer token for authorization.
+httpSetAuthString(http, "Bearer", access_token);
+```
+
+
+### Authorizing Using a Mobile Device
+
+Users can authorize using a mobile device via the
+[`cupsOAuthGetDeviceGrant`](@@) function, which returns a JSON object with the
+mobile authorization URLs, user (verification) code string, and device grant
+code.  The following code gets the authorization server metadata, gets the
+mobile device authorization information, and then obtains a HTTP Bearer access
+token:
+
+```c
+http_t      *http;           // HTTP connection
+const char  *auth_uri;       // Base URL for Authorization Server
+cups_json_t *metadata;       // Authorization Server metadata
+const char  *printer_uri;    // Printer URI
+cups_json_t *device_grant;   // Device authorization grant object
+const char  *device_code;    // Device grant code
+const char  *verify_url;     // Mobile device URL
+const char  *verify_urlc;    // Mobile device URL with user code
+const char  *user_code;      // User code
+char        *access_token;   // Access token
+time_t      access_expires;  // Date/time when access token expires
+
+// Get the metadata for the authorization server.
+metadata = cupsOAuthGetMetadata(auth_uri);
+
+if (metadata == NULL)
+{
+  // Handle error getting metadata from authorization server.
+}
+
+// Get a device authorization grant for mobile authorization.
+device_grant = cupsOAuthGetDeviceGrant(auth_uri, metadata, printer_uri,
+                                       /*scopes*/NULL);
+
+device_code = cupsJSONGetString(
+                  cupsJSONFind(device_grant, CUPS_ODEVGRANT_DEVICE_CODE));
+verify_url  = cupsJSONGetString(
+                  cupsJSONFind(device_grant, CUPS_ODEVGRANT_VERIFICATION_URI));
+verify_urlc = cupsJSONGetString(
+                  cupsJSONFind(device_grant, CUPS_ODEVGRANT_VERIFICATION_URI_COMPLETE));
+user_code   = cupsJSONGetString(
+                  cupsJSONFind(device_grant, CUPS_ODEVGRANT_USER_CODE));
+
+if (device_code == NULL || verify_url == NULL || verify_urlc == NULL ||
+    user_code == NULL)
+{
+  // Unable to authorize.
+}
+
+// Show the URLs and user code to the user (links and/or QR codes).
+printf("Open this URL: %s\n", verify_urlc);
+
+// Get the access code from the authorization code.
+do
+{
+  // Delay check for several seconds.
+  sleep(5);
+
+  // Try getting an access token.
+  access_token = cupsOAuthGetTokens(auth_uri, metadata, printer_uri, device_code,
+                                    CUPS_OGRANT_DEVICE_CODE,
+                                    /*redirect_uri*/NULL, &access_expires);
+}
+while (access_token == NULL && access_expires > 0);
+       // Continue checking until we have an access token or
+       // the device code has expired.
+
+if (access_token == NULL)
+{
+  // Unable to get access token.
+}
+
+// Set the Bearer token for authorization.
+httpSetAuthString(http, "Bearer", access_token);
+```
+
+
+### Supported OAuth Standards
+
+The following standards are supported:
+
+- [OpenID Connect Core v1.0](https://openid.net/specs/openid-connect-core-1_0.html)
+- [RFC 6749: The OAuth 2.0 Authorization Framework](https://datatracker.ietf.org/doc/html/rfc6749)
+- [RFC 6750: The OAuth 2.0 Authorization Framework: Bearer Token Usage](https://datatracker.ietf.org/doc/html/rfc6750)
+- [RFC 7591: OAuth 2.0 Dynamic Client Registration Protocol](https://datatracker.ietf.org/doc/html/rfc7591)
+- [RFC 7636: Proof Key for Code Exchange by OAuth Public Clients](https://datatracker.ietf.org/doc/html/rfc7636)
+- [RFC 8252: OAuth 2.0 for Native Apps](https://datatracker.ietf.org/doc/html/rfc8252)
+- [RFC 8414: OAuth 2.0 Authorization Server Metadata](https://datatracker.ietf.org/doc/html/rfc8414)
+- [RFC 8628: OAuth 2.0 Device Authorization Grant](https://datatracker.ietf.org/doc/html/rfc8628)
+- [RFC 8693: OAuth 2.0 Token Exchange](https://datatracker.ietf.org/doc/html/rfc8693)
+- [RFC 9068: JSON Web Token (JWT) Profile for OAuth 2.0 Access Tokens](https://datatracker.ietf.org/doc/html/rfc9068)
 
 
 # IPP Data File API
