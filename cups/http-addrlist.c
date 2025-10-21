@@ -1,7 +1,7 @@
 //
 // HTTP address list routines for CUPS.
 //
-// Copyright © 2021-2023 by OpenPrinting.
+// Copyright © 2021-2025 by OpenPrinting.
 // Copyright © 2007-2021 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products, all rights reserved.
 //
@@ -16,8 +16,8 @@
 #ifdef _WIN32
 #  define poll WSAPoll
 #else
-#  include <fcntl.h>
 #  include <poll.h>
+#  include <fcntl.h>
 #endif // _WIN32
 
 
@@ -285,18 +285,6 @@ httpAddrConnect(
 	}
 	else if (pfds[i].revents & (POLLERR | POLLHUP))
         {
-#  ifdef __sun
-          // Solaris incorrectly returns errors when you poll() a socket that is
-          // still connecting.  This check prevents us from removing the socket
-          // from the pool if the "error" is EINPROGRESS...
-          int		sockerr;	// Current error on socket
-          socklen_t	socklen = sizeof(sockerr);
-					// Size of error variable
-
-          if (!getsockopt(fds[i], SOL_SOCKET, SO_ERROR, &sockerr, &socklen) && (!sockerr || sockerr == EINPROGRESS))
-            continue;			// Not an error
-#  endif // __sun
-
           // Error on socket, remove from the "pool"...
 	  httpAddrClose(NULL, fds[i]);
           nfds --;

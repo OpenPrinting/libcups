@@ -597,7 +597,7 @@ ippAddOutOfBand(ipp_t      *ipp,	// I - IPP message
 // (`IPP_TAG_OPERATION`), printer (`IPP_TAG_PRINTER`), subscription
 // (`IPP_TAG_SUBSCRIPTION`), or unsupported (`IPP_TAG_UNSUPPORTED_GROUP`).
 //
-// The "lower` argument must be less than or equal to the `upper" argument.
+// The "lower" argument must be less than or equal to the `upper" argument.
 //
 
 ipp_attribute_t *			// O - New attribute
@@ -1452,6 +1452,12 @@ ippCopyAttribute(
 	    {
 	      ipp_t *col = ippNew();	// Copy of collection
 
+              if (!col)
+              {
+                ippDeleteAttribute(dst, dstattr);
+                return (NULL);
+              }
+
 	      ippCopyAttributes(col, srcval->collection, false, /*cb*/NULL, /*cb_data*/NULL);
 
 	      if (dstattr)
@@ -1501,7 +1507,8 @@ ippCopyAttribute(
 // The "cb" and "cb_data" arguments provide a generic way to "filter" the
 // attributes that are copied - the function must return `true` to copy the
 // attribute or `false` to skip it.  The function may also choose to do a
-// partial copy of the source attribute itself.
+// partial copy of the source attribute itself and return `false` to tell this
+// function to skip it.
 //
 
 bool					// O - `true` on success, `false` on error
@@ -1911,7 +1918,7 @@ ippFindNextAttribute(ipp_t      *ipp,	// I - IPP message
     attr = ipp->attrs;
   }
 
-  for (; attr != NULL; attr = attr->next)
+  for (; attr != NULL; ipp->prev = attr, attr = attr->next)
   {
     DEBUG_printf("4ippFindAttribute: attr=%p, name=\"%s\"", (void *)attr, attr->name);
 
@@ -1953,7 +1960,7 @@ ippFindNextAttribute(ipp_t      *ipp,	// I - IPP message
 // 'ippGetBoolean()' - Get a boolean value for an attribute.
 //
 // The "element" argument specifies which value to get from `0` to
-// `ippGetCount(attr)` - 1.
+// `ippGetCount(attr) - 1`.
 //
 
 bool					// O - Boolean value or `false` on error
@@ -1973,7 +1980,7 @@ ippGetBoolean(ipp_attribute_t *attr,	// I - IPP attribute
 // 'ippGetCollection()' - Get a collection value for an attribute.
 //
 // The "element" argument specifies which value to get from `0` to
-// `ippGetCount(attr)` - 1.
+// `ippGetCount(attr) - 1`.
 //
 
 ipp_t *					// O - Collection value or `NULL` on error
@@ -2010,7 +2017,7 @@ ippGetCount(ipp_attribute_t *attr)	// I - IPP attribute
 // 'ippGetDate()' - Get a dateTime value for an attribute.
 //
 // The "element" argument specifies which value to get from `0` to
-// `ippGetCount(attr)` - 1.
+// `ippGetCount(attr) - 1`.
 //
 
 const ipp_uchar_t *			// O - dateTime value or `NULL`
@@ -2069,7 +2076,7 @@ ippGetGroupTag(ipp_attribute_t *attr)	// I - IPP attribute
 // 'ippGetInteger()' - Get the integer/enum value for an attribute.
 //
 // The "element" argument specifies which value to get from `0` to
-// `ippGetCount(attr)` - 1.
+// `ippGetCount(attr) - 1`.
 //
 
 int					// O - Value or `0` on error
@@ -2135,7 +2142,7 @@ ippGetNextAttribute(ipp_t *ipp)		// I - IPP message
 // 'ippGetOctetString()' - Get an octetString value from an IPP attribute.
 //
 // The "element" argument specifies which value to get from '0' to
-// `ippGetCount(attr)` - 1.
+// `ippGetCount(attr) - 1`.
 //
 
 void *					// O - Pointer to octetString data
@@ -2181,7 +2188,7 @@ ippGetOperation(ipp_t *ipp)		// I - IPP request message
 // 'ippGetRange()' - Get a rangeOfInteger value from an attribute.
 //
 // The "element" argument specifies which value to get from `0` to
-// `ippGetCount(attr)` - 1.
+// `ippGetCount(attr) - 1`.
 //
 
 int					// O - Lower value of range or 0
@@ -2226,7 +2233,7 @@ ippGetRequestId(ipp_t *ipp)		// I - IPP message
 // 'ippGetResolution()' - Get a resolution value for an attribute.
 //
 // The "element" argument specifies which value to get from `0` to
-// `ippGetCount(attr)` - 1.
+// `ippGetCount(attr) - 1`.
 //
 
 int					// O - Horizontal/cross feed resolution or 0
@@ -2870,7 +2877,9 @@ ippSetOctetString(
 	  value->unknown.length = datalen;
 	}
 	else
+	{
 	  return (false);
+	}
       }
     }
   }
@@ -2952,9 +2961,9 @@ bool					// O  - `true` on success, `false` on failure
 ippSetRequestId(ipp_t *ipp,		// I - IPP message
                 int   request_id)	// I - Request ID
 {
-  // Range check input; not checking request_id values since ipptool wants to send
-  // invalid values for conformance testing and a bad request_id does not affect the
-  // encoding of a message...
+  // Range check input; not checking request_id values since ipptool wants to
+  // send invalid values for conformance testing and a bad request_id does not
+  // affect the encoding of a message...
   if (!ipp)
     return (false);
 
@@ -3286,12 +3295,12 @@ ippSetStringfv(ipp_t           *ipp,	// I  - IPP message
 // (`IPP_TAG_NAME`) or nameWithLanguage (`IPP_TAG_NAMELANG`) values, text
 // (`IPP_TAG_TEXT`) values can be promoted to textWithLanguage
 // (`IPP_TAG_TEXTLANG`) values, and all values can be demoted to the various
-// out-of-band value tags such as no-value (`IPP_TAG_NOVALUE`). All other changes
-// will be rejected.
+// out-of-band value tags such as no-value (`IPP_TAG_NOVALUE`). All other
+// changes will be rejected.
 //
-// Promoting a string attribute to nameWithLanguage or textWithLanguage adds the language
-// code in the "attributes-natural-language" attribute or, if not present, the language
-// code for the current locale.
+// Promoting a string attribute to nameWithLanguage or textWithLanguage adds the
+// language code in the "attributes-natural-language" attribute or, if not
+// present, the language code for the current locale.
 //
 
 bool					// O  - `true` on success, `false` on failure
@@ -5002,7 +5011,9 @@ ipp_lang_code(const char *locale,	// I - Locale string
     return (buffer);
   }
   else
+  {
     return (ipp_get_code(locale, buffer, bufsize));
+  }
 }
 
 
@@ -5915,8 +5926,8 @@ ipp_set_value(ipp_t           *ipp,	// IO - IPP message
     return (temp->values + element);
   }
 
-  // Otherwise re-allocate the attribute - we allocate in groups of IPP_MAX_VALUE
-  // values when num_values > 1.
+  // Otherwise re-allocate the attribute - we allocate in groups of
+  // IPP_MAX_VALUE values when num_values > 1.
   if (alloc_values < IPP_MAX_VALUES)
     alloc_values = IPP_MAX_VALUES;
   else

@@ -91,7 +91,8 @@ static const char * const ipp_status_1000s[] =
 {					// CUPS internal errors
   "cups-authentication-canceled",
   "cups-pki-error",
-  "cups-upgrade-required"
+  "cups-upgrade-required",
+  "cups-oauth"
 };
 static const char * const ipp_std_ops[] =
 {
@@ -158,12 +159,12 @@ static const char * const ipp_std_ops[] =
   "Get-Documents",			// IPP DocObject
   "Delete-Document",			// IPP DocObject
   "Set-Document-Attributes",		// IPP DocObject
-  "Cancel-Jobs",			// IPP Job Extensions
-  "Cancel-My-Jobs",			// IPP Job Extensions
-  "Resubmit-Job",			// IPP Job Extensions
-  "Close-Job",				// IPP Job Extensions
-  "Identify-Printer",			// IPP Driverless
-  "Validate-Document",			// IPP Driverless
+  "Cancel-Jobs",			// IPP JobExt
+  "Cancel-My-Jobs",			// IPP JobExt
+  "Resubmit-Job",			// IPP JobExt
+  "Close-Job",				// IPP JobExt
+  "Identify-Printer",			// IPP NODRIVER
+  "Validate-Document",			// IPP NODRIVER
   "Add-Document-Images",		// IPP Scan
   "Acknowledge-Document",		// IPP INFRA
 
@@ -211,7 +212,7 @@ static const char * const ipp_std_ops[] =
   "Shutdown-All-Printers",		// IPP System
   "Startup-All-Printers",		// IPP System
   "Get-Printer-Resources",		// IPP System
-  "Get-User-Printer-Attributes",	// IPP Enterprise
+  "Get-User-Printer-Attributes",	// IPP EPX
   "Restart-One-Printer",		// IPP System
   "Acknowledge-Encrypted-Job-Attributes",
 					// IPP TRUSTNOONE
@@ -259,78 +260,78 @@ static const char * const ipp_tag_names[] =
   "0x0d",				// 0x0d
   "0x0e",				// 0x0e
   "0x0f",				// 0x0f
-  "unsupported",		// 0x10
-  "default",			// 0x11
-  "unknown",			// 0x12
-  "no-value",			// 0x13
-  "0x14",			// 0x14
-  "not-settable",		// 0x15 - RFC 3380
-  "delete-attribute",		// 0x16 - RFC 3380
-  "admin-define",		// 0x17 - RFC 3380
-  "0x18",			// 0x18
-  "0x19",			// 0x19
-  "0x1a",			// 0x1a
-  "0x1b",			// 0x1b
-  "0x1c",			// 0x1c
-  "0x1d",			// 0x1d
-  "0x1e",			// 0x1e
-  "0x1f",			// 0x1f
-  "0x20",			// 0x20
-  "integer",			// 0x21
-  "boolean",			// 0x22
-  "enum",			// 0x23
-  "0x24",			// 0x24
-  "0x25",			// 0x25
-  "0x26",			// 0x26
-  "0x27",			// 0x27
-  "0x28",			// 0x28
-  "0x29",			// 0x29
-  "0x2a",			// 0x2a
-  "0x2b",			// 0x2b
-  "0x2c",			// 0x2c
-  "0x2d",			// 0x2d
-  "0x2e",			// 0x2e
-  "0x2f",			// 0x2f
-  "octetString",		// 0x30
-  "dateTime",			// 0x31
-  "resolution",			// 0x32
-  "rangeOfInteger",		// 0x33
-  "collection",			// 0x34
-  "textWithLanguage",		// 0x35
-  "nameWithLanguage",		// 0x36
-  "endCollection",		// 0x37
-  "0x38",			// 0x38
-  "0x39",			// 0x39
-  "0x3a",			// 0x3a
-  "0x3b",			// 0x3b
-  "0x3c",			// 0x3c
-  "0x3d",			// 0x3d
-  "0x3e",			// 0x3e
-  "0x3f",			// 0x3f
-  "0x40",			// 0x40
-  "textWithoutLanguage",	// 0x41
-  "nameWithoutLanguage",	// 0x42
-  "0x43",			// 0x43
-  "keyword",			// 0x44
-  "uri",			// 0x45
-  "uriScheme",			// 0x46
-  "charset",			// 0x47
-  "naturalLanguage",		// 0x48
-  "mimeMediaType",		// 0x49
-  "memberAttrName"		// 0x4a
+  "unsupported",			// 0x10
+  "default",				// 0x11
+  "unknown",				// 0x12
+  "no-value",				// 0x13
+  "0x14",				// 0x14
+  "not-settable",			// 0x15 - RFC 3380
+  "delete-attribute",			// 0x16 - RFC 3380
+  "admin-define",			// 0x17 - RFC 3380
+  "0x18",				// 0x18
+  "0x19",				// 0x19
+  "0x1a",				// 0x1a
+  "0x1b",				// 0x1b
+  "0x1c",				// 0x1c
+  "0x1d",				// 0x1d
+  "0x1e",				// 0x1e
+  "0x1f",				// 0x1f
+  "0x20",				// 0x20
+  "integer",				// 0x21
+  "boolean",				// 0x22
+  "enum",				// 0x23
+  "0x24",				// 0x24
+  "0x25",				// 0x25
+  "0x26",				// 0x26
+  "0x27",				// 0x27
+  "0x28",				// 0x28
+  "0x29",				// 0x29
+  "0x2a",				// 0x2a
+  "0x2b",				// 0x2b
+  "0x2c",				// 0x2c
+  "0x2d",				// 0x2d
+  "0x2e",				// 0x2e
+  "0x2f",				// 0x2f
+  "octetString",			// 0x30
+  "dateTime",				// 0x31
+  "resolution",				// 0x32
+  "rangeOfInteger",			// 0x33
+  "collection",				// 0x34
+  "textWithLanguage",			// 0x35
+  "nameWithLanguage",			// 0x36
+  "endCollection",			// 0x37
+  "0x38",				// 0x38
+  "0x39",				// 0x39
+  "0x3a",				// 0x3a
+  "0x3b",				// 0x3b
+  "0x3c",				// 0x3c
+  "0x3d",				// 0x3d
+  "0x3e",				// 0x3e
+  "0x3f",				// 0x3f
+  "0x40",				// 0x40
+  "textWithoutLanguage",		// 0x41
+  "nameWithoutLanguage",		// 0x42
+  "0x43",				// 0x43
+  "keyword",				// 0x44
+  "uri",				// 0x45
+  "uriScheme",				// 0x46
+  "charset",				// 0x47
+  "naturalLanguage",			// 0x48
+  "mimeMediaType",			// 0x49
+  "memberAttrName"			// 0x4a
 };
 static const char * const ipp_document_states[] =
-{				// document-state-enums
+{					// document-state-enums
   "pending",
   "4",
   "processing",
-  "processing-stopped",		// IPP INFRA
+  "processing-stopped",			// IPP INFRA
   "canceled",
   "aborted",
   "completed"
 };
 static const char * const ipp_finishings[] =
-{			// finishings enums
+{					// finishings enums
   "none",
   "staple",
   "punch",
@@ -343,27 +344,27 @@ static const char * const ipp_finishings[] =
   "bale",
   "booklet-maker",
   "jog-offset",
-  "coat",		// IPP Finishings 2.0
-  "laminate",		// IPP Finishings 2.0
+  "coat",				// IPP FIN
+  "laminate",				// IPP FIN
   "17",
   "18",
   "19",
-  "staple-top-left",
-  "staple-bottom-left",
-  "staple-top-right",
-  "staple-bottom-right",
-  "edge-stitch-left",
-  "edge-stitch-top",
-  "edge-stitch-right",
-  "edge-stitch-bottom",
-  "staple-dual-left",
-  "staple-dual-top",
-  "staple-dual-right",
-  "staple-dual-bottom",
-  "staple-triple-left",	// IPP Finishings 2.0
-  "staple-triple-top",	// IPP Finishings 2.0
-  "staple-triple-right",// IPP Finishings 2.0
-  "staple-triple-bottom",// IPP Finishings 2.0
+  "staple-top-left",			// IPP FIN
+  "staple-bottom-left",			// IPP FIN
+  "staple-top-right",			// IPP FIN
+  "staple-bottom-right",		// IPP FIN
+  "edge-stitch-left",			// IPP FIN
+  "edge-stitch-top",			// IPP FIN
+  "edge-stitch-right",			// IPP FIN
+  "edge-stitch-bottom",			// IPP FIN
+  "staple-dual-left",			// IPP FIN
+  "staple-dual-top",			// IPP FIN
+  "staple-dual-right",			// IPP FIN
+  "staple-dual-bottom",			// IPP FIN
+  "staple-triple-left",			// IPP FIN
+  "staple-triple-top",			// IPP FIN
+  "staple-triple-right",		// IPP FIN
+  "staple-triple-bottom",		// IPP FIN
   "36",
   "37",
   "38",
@@ -378,58 +379,58 @@ static const char * const ipp_finishings[] =
   "47",
   "48",
   "49",
-  "bind-left",
-  "bind-top",
-  "bind-right",
-  "bind-bottom",
+  "bind-left",				// IPP FIN
+  "bind-top",				// IPP FIN
+  "bind-right",				// IPP FIN
+  "bind-bottom",			// IPP FIN
   "54",
   "55",
   "56",
   "57",
   "58",
   "59",
-  "trim-after-pages",
-  "trim-after-documents",
-  "trim-after-copies",
-  "trim-after-job",
+  "trim-after-pages",			// IPP FIN
+  "trim-after-documents",		// IPP FIN
+  "trim-after-copies",			// IPP FIN
+  "trim-after-job",			// IPP FIN
   "64",
   "65",
   "66",
   "67",
   "68",
   "69",
-  "punch-top-left",	// IPP Finishings 2.0
-  "punch-bottom-left",	// IPP Finishings 2.0
-  "punch-top-right",	// IPP Finishings 2.0
-  "punch-bottom-right",	// IPP Finishings 2.0
-  "punch-dual-left",	// IPP Finishings 2.0
-  "punch-dual-top",	// IPP Finishings 2.0
-  "punch-dual-right",	// IPP Finishings 2.0
-  "punch-dual-bottom",	// IPP Finishings 2.0
-  "punch-triple-left",	// IPP Finishings 2.0
-  "punch-triple-top",	// IPP Finishings 2.0
-  "punch-triple-right",	// IPP Finishings 2.0
-  "punch-triple-bottom",// IPP Finishings 2.0
-  "punch-quad-left",	// IPP Finishings 2.0
-  "punch-quad-top",	// IPP Finishings 2.0
-  "punch-quad-right",	// IPP Finishings 2.0
-  "punch-quad-bottom",	// IPP Finishings 2.0
-  "punch-multiple-left",// IPP Finishings 2.1/Canon
-  "punch-multiple-top",	// IPP Finishings 2.1/Canon
-  "punch-multiple-right",// IPP Finishings 2.1/Canon
-  "punch-multiple-bottom",// IPP Finishings 2.1/Canon
-  "fold-accordion",	// IPP Finishings 2.0
-  "fold-double-gate",	// IPP Finishings 2.0
-  "fold-gate",		// IPP Finishings 2.0
-  "fold-half",		// IPP Finishings 2.0
-  "fold-half-z",	// IPP Finishings 2.0
-  "fold-left-gate",	// IPP Finishings 2.0
-  "fold-letter",	// IPP Finishings 2.0
-  "fold-parallel",	// IPP Finishings 2.0
-  "fold-poster",	// IPP Finishings 2.0
-  "fold-right-gate",	// IPP Finishings 2.0
-  "fold-z",		// IPP Finishings 2.0
-  "fold-engineering-z"	// IPP Finishings 2.1
+  "punch-top-left",			// IPP FIN
+  "punch-bottom-left",			// IPP FIN
+  "punch-top-right",			// IPP FIN
+  "punch-bottom-right",			// IPP FIN
+  "punch-dual-left",			// IPP FIN
+  "punch-dual-top",			// IPP FIN
+  "punch-dual-right",			// IPP FIN
+  "punch-dual-bottom",			// IPP FIN
+  "punch-triple-left",			// IPP FIN
+  "punch-triple-top",			// IPP FIN
+  "punch-triple-right",			// IPP FIN
+  "punch-triple-bottom",		// IPP FIN
+  "punch-quad-left",			// IPP FIN
+  "punch-quad-top",			// IPP FIN
+  "punch-quad-right",			// IPP FIN
+  "punch-quad-bottom",			// IPP FIN
+  "punch-multiple-left",		// IPP FIN
+  "punch-multiple-top",			// IPP FIN
+  "punch-multiple-right",		// IPP FIN
+  "punch-multiple-bottom",		// IPP FIN
+  "fold-accordion",			// IPP FIN
+  "fold-double-gate",			// IPP FIN
+  "fold-gate",				// IPP FIN
+  "fold-half",				// IPP FIN
+  "fold-half-z",			// IPP FIN
+  "fold-left-gate",			// IPP FIN
+  "fold-letter",			// IPP FIN
+  "fold-parallel",			// IPP FIN
+  "fold-poster",			// IPP FIN
+  "fold-right-gate",			// IPP FIN
+  "fold-z",				// IPP FIN
+  "fold-engineering-z"			// IPP FIN
 };
 static const char * const ipp_finishings_vendor[] =
 {
@@ -508,45 +509,39 @@ static const char * const ipp_finishings_vendor[] =
   "0x40000043",
   "0x40000044",
   "0x40000045",
-  "cups-punch-top-left",
-  "cups-punch-bottom-left",
-  "cups-punch-top-right",
-  "cups-punch-bottom-right",
-  "cups-punch-dual-left",
-  "cups-punch-dual-top",
-  "cups-punch-dual-right",
-  "cups-punch-dual-bottom",
-  "cups-punch-triple-left",
-  "cups-punch-triple-top",
+  "cups-punch-top-left",		// AirPrint
+  "cups-punch-bottom-left",		// AirPrint
+  "cups-punch-top-right",		// AirPrint
+  "cups-punch-bottom-right",		// AirPrint
+  "cups-punch-dual-left",		// AirPrint
+  "cups-punch-dual-top",		// AirPrint
+  "cups-punch-dual-right",		// AirPrint
+  "cups-punch-dual-bottom",		// AirPrint
+  "cups-punch-triple-left",		// AirPrint
+  "cups-punch-triple-top",		// AirPrint
   // 0x40000050 - 0x4000005F
-  "cups-punch-triple-right",
-  "cups-punch-triple-bottom",
-  "cups-punch-quad-left",
-  "cups-punch-quad-top",
-  "cups-punch-quad-right",
-  "cups-punch-quad-bottom",
+  "cups-punch-triple-right",		// AirPrint
+  "cups-punch-triple-bottom",		// AirPrint
+  "cups-punch-quad-left",		// AirPrint
+  "cups-punch-quad-top",		// AirPrint
+  "cups-punch-quad-right",		// AirPrint
+  "cups-punch-quad-bottom",		// AirPrint
   "0x40000056",
   "0x40000057",
   "0x40000058",
   "0x40000059",
-  "cups-fold-accordion",
-  "cups-fold-double-gate",
-  "cups-fold-gate",
-  "cups-fold-half",
-  "cups-fold-half-z",
-  "cups-fold-left-gate",
+  "cups-fold-accordion",		// AirPrint
+  "cups-fold-double-gate",		// AirPrint
+  "cups-fold-gate",			// AirPrint
+  "cups-fold-half",			// AirPrint
+  "cups-fold-half-z",			// AirPrint
+  "cups-fold-left-gate",		// AirPrint
   // 0x40000060 - 0x40000064
-  "cups-fold-letter",
-  "cups-fold-parallel",
-  "cups-fold-poster",
-  "cups-fold-right-gate",
-  "cups-fold-z"
-};
-static const char * const ipp_job_collation_types[] =
-{					// job-collation-type enums
-  "uncollated-sheets",
-  "collated-documents",
-  "uncollated-documents"
+  "cups-fold-letter",			// AirPrint
+  "cups-fold-parallel",			// AirPrint
+  "cups-fold-poster",			// AirPrint
+  "cups-fold-right-gate",		// AirPrint
+  "cups-fold-z"				// AirPrint
 };
 static const char * const ipp_job_states[] =
 {					// job-state enums
@@ -613,7 +608,7 @@ static size_t	ipp_col_string(ipp_t *col, char *buffer, size_t bufsize);
 size_t					// O - Number of bytes less `nul`
 ippAttributeString(
     ipp_attribute_t *attr,		// I - Attribute
-    char            *buffer,		// I - String buffer or NULL
+    char            *buffer,		// I - String buffer or `NULL`
     size_t          bufsize)		// I - Size of string buffer
 {
   int		i;			// Looping var
@@ -702,7 +697,7 @@ ippAttributeString(
           {
             unsigned year;		// Year
 
-            year = ((unsigned)val->date[0] << 8) + (unsigned)val->date[1];
+            year = ((unsigned)val->date[0] << 8) | (unsigned)val->date[1];
 
 	    if (val->date[9] == 0 && val->date[10] == 0)
 	      snprintf(temp, sizeof(temp), "%04u-%02u-%02uT%02u:%02u:%02uZ",
@@ -839,8 +834,8 @@ ippAttributeString(
 //
 // `NULL` is returned if all attributes should be returned.  Otherwise, the
 // result is a sorted array of attribute names, where
-// `cupsArrayFind(array, "attribute-name")` will return a non-NULL pointer.  The
-// array must be freed using @link cupsArrayDelete@.
+// `cupsArrayFind(array, "attribute-name")` will return a non-`NULL` pointer.
+// The array must be freed using @link cupsArrayDelete@.
 //
 
 cups_array_t *				// O - CUPS array or `NULL` if all
@@ -882,7 +877,7 @@ ippCreateRequestedArray(ipp_t *request)	// I - IPP request
     "document-state-message",
     "document-state-reasons",
     "document-uri",
-    "document-uuid",			// IPP JPS3
+    "document-uuid",			// IPP NODRIVER
     "errors-count",			// IPP JobExt
     "finishings-actual",
     "finishings-col-actual",
@@ -1119,11 +1114,11 @@ ippCreateRequestedArray(ipp_t *request)	// I - IPP request
     "printer-resolution",
     "printer-resolution-default",
     "printer-resolution-supported",
-    "punching-hold-diameter-configured",// IPP FIN
+    "punching-hole-diameter-configured",// IPP FIN
     "punching-locations-supported",	// IPP FIN
     "punching-offset-supported",	// IPP FIN
     "punching-reference-edge-supported",// IPP FIN
-    "separator-sheets",		// IPP PPX
+    "separator-sheets",			// IPP PPX
     "separator-sheets-default",		// IPP PPX
     "separator-sheets-supported",	// IPP PPX
     "separator-sheets-type-supported",	// IPP PPX
@@ -1197,16 +1192,9 @@ ippCreateRequestedArray(ipp_t *request)	// I - IPP request
     "job-accounting-user-id-actual",
     "job-attribute-fidelity",
     "job-charge-info",			// CUPS extension
-    "job-collation-type",
-    "job-collation-type-actual",
-    "job-copies-actual",
-    "job-cover-back-actual",
-    "job-cover-front-actual",
     "job-detailed-status-message",
     "job-document-access-errors",
     "job-error-sheet-actual",
-    "job-finishings-actual",
-    "job-finishings-col-actual",
     "job-hold-until-actual",
     "job-id",
     "job-impressions",
@@ -1226,7 +1214,7 @@ ippCreateRequestedArray(ipp_t *request)	// I - IPP request
     "job-name",
     "job-originating-host-name",	// CUPS extension
     "job-originating-user-name",
-    "job-originating-user-uri",		// IPP JPS3
+    "job-originating-user-uri",		// IPP NODRIVER
     "job-pages",
     "job-pages-col",
     "job-pages-completed",
@@ -1247,7 +1235,7 @@ ippCreateRequestedArray(ipp_t *request)	// I - IPP request
     "job-state-reasons",
     "job-storage",			// IPP EPX
     "job-uri",
-    "job-uuid",				// IPP JPS3
+    "job-uuid",				// IPP NODRIVER
     "materials-col-actual",		// IPP 3D
     "media-actual",
     "media-col-actual",
@@ -1293,7 +1281,7 @@ ippCreateRequestedArray(ipp_t *request)	// I - IPP request
     "time-at-creation",
     "time-at-processing",
     "time-at-processing-estimated",	// IPP PPX
-    "warnings-count",
+    "warnings-count",			// IPP JobExt
     "x-image-position-actual",
     "x-image-shift-actual",
     "x-side1-image-shift-actual",
@@ -1563,7 +1551,7 @@ ippCreateRequestedArray(ipp_t *request)	// I - IPP request
     "proof-print",			// IPP EPX
     "proof-print-default",		// IPP EPX
     "proof-print-supported"		// IPP EPX
-    "punching-hold-diameter-configured",// IPP FIN
+    "punching-hole-diameter-configured",// IPP FIN
     "punching-locations-supported",	// IPP FIN
     "punching-offset-supported",	// IPP FIN
     "punching-reference-edge-supported",// IPP FIN
@@ -1664,25 +1652,26 @@ ippCreateRequestedArray(ipp_t *request)	// I - IPP request
 					// IPP EPX
     "job-password-repertoire-supported",// IPP EPX
     "job-password-supported",		// IPP EPX
-    "job-presets-supported",		// IPP Presets
+    "job-presets-supported",		// IPP NODRIVER
     "job-privacy-attributes",		// IPP Privacy Attributes
     "job-privacy-scope",		// IPP Privacy Attributes
     "job-quota-period",			// CUPS extension
     "job-release-action-default",	// IPP EPX
     "job-release-action-supported",	// IPP EPX
     "job-resolvers-supported",		// IPP NODRIVER
-    "job-settable-attributes-supported",
+    "job-settable-attributes-supported",// RFC 3380
     "job-spooling-supported",		// IPP JobExt
     "job-storage-access-supported",	// IPP EPX
     "job-storage-disposition-supported",// IPP EPX
     "job-storage-group-supported",	// IPP EPX
     "job-storage-supported",		// IPP EPX
-    "job-triggers-supported",		// IPP Presets
-    "jpeg-k-octets-supported",		// CUPS extension
-    "jpeg-x-dimension-supported",	// CUPS extension
-    "jpeg-y-dimension-supported",	// CUPS extension
+    "job-triggers-supported",		// IPP NODRIVER
+    "jpeg-features-supported",		// IPP NODRIVER
+    "jpeg-k-octets-supported",		// IPP NODRIVER
+    "jpeg-x-dimension-supported",	// IPP NODRIVER
+    "jpeg-y-dimension-supported",	// IPP NODRIVER
     "landscape-orientation-requested-preferred",
-					// CUPS extension
+					// AirPrint extension
     "marker-change-time",		// CUPS extension
     "marker-colors",			// CUPS extension
     "marker-high-levels",		// CUPS extension
@@ -1694,7 +1683,8 @@ ippCreateRequestedArray(ipp_t *request)	// I - IPP request
     "member-names",			// CUPS extension
     "member-uris",			// CUPS extension
     "mopria-certified",			// Mopria extension
-    "multiple-destination-uris-supported",// IPP FaxOut
+    "multiple-destination-uris-supported",
+					// IPP FaxOut
     "multiple-document-jobs-supported",
     "multiple-operation-time-out",
     "multiple-operation-time-out-action",
@@ -1747,7 +1737,7 @@ ippCreateRequestedArray(ipp_t *request)	// I - IPP request
     "printer-icons",
     "printer-id",			// IPP System
     "printer-info",
-    "printer-input-tray",		// IPP JPS3
+    "printer-input-tray",		// IPP NODRIVER
     "printer-is-accepting-jobs",
     "printer-is-shared",		// CUPS extension
     "printer-is-temporary",		// CUPS extension
@@ -1761,10 +1751,9 @@ ippCreateRequestedArray(ipp_t *request)	// I - IPP request
     "printer-more-info",
     "printer-more-info-manufacturer",
     "printer-name",
-    "printer-native-formats",
     "printer-organization",
     "printer-organizational-unit",
-    "printer-output-tray",		// IPP JPS3
+    "printer-output-tray",		// IPP NODRIVER
     "printer-pkcs7-public-key",		// IPP TRUSTNOONE
     "printer-pkcs7-repertoire-configured",
 					// IPP TRUSTNOONE
@@ -1772,6 +1761,7 @@ ippCreateRequestedArray(ipp_t *request)	// I - IPP request
 					// IPP TRUSTNOONE
     "printer-service-type",		// IPP System
     "printer-settable-attributes-supported",
+					// RFC 3380
     "printer-service-contact-col",	// IPP EPX
     "printer-state",
     "printer-state-change-date-time",
@@ -1781,8 +1771,8 @@ ippCreateRequestedArray(ipp_t *request)	// I - IPP request
     "printer-storage",			// IPP EPX
     "printer-storage-description",	// IPP EPX
     "printer-strings-languages-supported",
-					// IPP JPS3
-    "printer-strings-uri",		// IPP JPS3
+					// IPP NODRIVER
+    "printer-strings-uri",		// IPP NODRIVER
     "printer-supply",
     "printer-supply-description",
     "printer-supply-info-uri",
@@ -1874,7 +1864,7 @@ ippCreateRequestedArray(ipp_t *request)	// I - IPP request
     "notify-subscriber-user-name",
     "notify-subscriber-user-uri",
     "notify-subscription-id",
-    "notify-subscription-uuid"		// IPP JPS3
+    "notify-subscription-uuid"		// IPP NODRIVER
   };
   static const char * const subscription_template[] =
   {					// subscription-template group
@@ -2156,8 +2146,6 @@ ippEnumString(const char *attrname,	// I - Attribute name
     else if (enumvalue >= 0x40000000 && enumvalue < (0x40000000 + (int)(sizeof(ipp_finishings_vendor) / sizeof(ipp_finishings_vendor[0]))))
       return (ipp_finishings_vendor[enumvalue - 0x40000000]);
   }
-  else if ((!strcmp(attrname, "job-collation-type") || !strcmp(attrname, "job-collation-type-actual")) && enumvalue >= 3 && enumvalue < (3 + (int)(sizeof(ipp_job_collation_types) / sizeof(ipp_job_collation_types[0]))))
-    return (ipp_job_collation_types[enumvalue - 3]);
   else if (!strcmp(attrname, "job-state") && enumvalue >= IPP_JSTATE_PENDING && enumvalue <= IPP_JSTATE_COMPLETED)
     return (ipp_job_states[enumvalue - IPP_JSTATE_PENDING]);
   else if (!strcmp(attrname, "operations-supported"))
@@ -2216,12 +2204,6 @@ ippEnumValue(const char *attrname,	// I - Attribute name
 
     num_strings = sizeof(ipp_finishings) / sizeof(ipp_finishings[0]);
     strings     = ipp_finishings;
-  }
-  else if (!strcmp(attrname, "job-collation-type") ||
-           !strcmp(attrname, "job-collation-type-actual"))
-  {
-    num_strings = sizeof(ipp_job_collation_types) / sizeof(ipp_job_collation_types[0]);
-    strings     = ipp_job_collation_types;
   }
   else if (!strcmp(attrname, "job-state"))
   {
@@ -2299,7 +2281,7 @@ ippErrorString(ipp_status_t error)	// I - Error status
     return (ipp_status_400s[error - IPP_STATUS_ERROR_BAD_REQUEST]);
   else if (error >= IPP_STATUS_ERROR_INTERNAL && error <= IPP_STATUS_ERROR_TOO_MANY_DOCUMENTS)
     return (ipp_status_500s[error - IPP_STATUS_ERROR_INTERNAL]);
-  else if (error >= IPP_STATUS_ERROR_CUPS_AUTHENTICATION_CANCELED && error <= IPP_STATUS_ERROR_CUPS_UPGRADE_REQUIRED)
+  else if (error >= IPP_STATUS_ERROR_CUPS_AUTHENTICATION_CANCELED && error <= IPP_STATUS_ERROR_CUPS_OAUTH)
     return (ipp_status_1000s[error - IPP_STATUS_ERROR_CUPS_AUTHENTICATION_CANCELED]);
 
   // No, build an "0xxxxx" error string...
@@ -2482,7 +2464,7 @@ ippStateString(ipp_state_t state)	// I - State value
 // 'ippTagString()' - Return the tag name corresponding to a tag value.
 //
 // The returned names are defined in RFC 8011 and the IANA IPP Registry.
-///
+//
 
 const char *				// O - Tag name
 ippTagString(ipp_tag_t tag)		// I - Tag value

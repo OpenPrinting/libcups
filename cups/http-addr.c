@@ -349,8 +349,9 @@ addr->un.sun_path, strerror(errno));
       mask = umask(0);
 
       // Bind the domain socket...
-      status = bind(fd, (struct sockaddr *)addr, (socklen_t)httpAddrGetLength(addr));
-
+      if ((status = bind(fd, (struct sockaddr *)addr, (socklen_t)httpAddrGetLength(addr))) < 0)
+	DEBUG_printf("1httpAddrListen: Unable to bind domain socket \"%s\": %s", addr->un.sun_path, strerror(errno));
+ 
       // Restore the umask and fix permissions...
       umask(mask);
     }
@@ -360,7 +361,8 @@ addr->un.sun_path, strerror(errno));
   {
     httpAddrSetPort(addr, port);
 
-    status = bind(fd, (struct sockaddr *)addr, (socklen_t)httpAddrGetLength(addr));
+    if ((status = bind(fd, (struct sockaddr *)addr, (socklen_t)httpAddrGetLength(addr))) < 0)
+      DEBUG_printf("1httpAddrListen: Unable to bind network socket: %s", strerror(errno));
   }
 
   if (status)
@@ -375,6 +377,7 @@ addr->un.sun_path, strerror(errno));
   // Listen...
   if (listen(fd, INT_MAX))
   {
+    DEBUG_printf("1httpAddrListen: Unable to listen on socket: %s", strerror(errno));
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), false);
 
     close(fd);
@@ -498,9 +501,13 @@ httpGetHostname(http_t *http,		// I - HTTP connection or NULL
 	return (http->hostname);
     }
     else if (http->hostname[0] == '/')
+    {
       cupsCopyString(s, "localhost", (size_t)slen);
+    }
     else
+    {
       cupsCopyString(s, http->hostname, (size_t)slen);
+    }
   }
   else
   {
@@ -511,23 +518,24 @@ httpGetHostname(http_t *http,		// I - HTTP connection or NULL
     if (gethostname(s, (size_t)slen) < 0)
       cupsCopyString(s, "localhost", (size_t)slen);
 
+    DEBUG_printf("1httpGetHostname: gethostname() returned \"%s\".", s);
+
     if (!strchr(s, '.'))
     {
 #ifdef HAVE_SCDYNAMICSTORECOPYCOMPUTERNAME
       // The hostname is not a FQDN, so use the local hostname from the
       // SystemConfiguration framework...
-      SCDynamicStoreRef	sc = SCDynamicStoreCreate(kCFAllocatorDefault,
-                                                  CFSTR("libcups"), NULL, NULL);
+      SCDynamicStoreRef	sc = SCDynamicStoreCreate(kCFAllocatorDefault, CFSTR("libcups"), NULL, NULL);
 					// System configuration data
       CFStringRef	local = sc ? SCDynamicStoreCopyLocalHostName(sc) : NULL;
 					// Local host name
       char		localStr[1024];	// Local host name C string
 
-      if (local && CFStringGetCString(local, localStr, sizeof(localStr),
-                                      kCFStringEncodingUTF8))
+      if (local && CFStringGetCString(local, localStr, sizeof(localStr), kCFStringEncodingUTF8))
       {
         // Append ".local." to the hostname we get...
         snprintf(s, (size_t)slen, "%s.local.", localStr);
+        DEBUG_printf("1httpGetHostname: SCDynamicStoreCopyLocalHostName() returned \"%s\".", s);
       }
 
       if (local)
@@ -543,6 +551,7 @@ httpGetHostname(http_t *http,		// I - HTTP connection or NULL
       {
         // Use the resolved hostname...
 	cupsCopyString(s, host->h_name, (size_t)slen);
+        DEBUG_printf("1httpGetHostname: gethostbyname() returned \"%s\".", s);
       }
 #endif // HAVE_SCDYNAMICSTORECOPYCOMPUTERNAME
     }
@@ -573,7 +582,7 @@ httpGetHostname(http_t *http,		// I - HTTP connection or NULL
 
 const char *				// O - Resolved hostname or `NULL`
 httpResolveHostname(http_t *http,	// I - HTTP connection
-                    char   *buffer,	// I - Hostname buffer
+                    char   *buffer,	// I - Hostname buffer or `NULL` to use HTTP buffer
                     size_t bufsize)	// I - Size of buffer
 {
   if (!http)
@@ -599,9 +608,13 @@ httpResolveHostname(http_t *http,	// I - HTTP connection
     return (buffer);
   }
   else if (http->hostname[0] == '/')
+  {
     return ("localhost");
+  }
   else
+  {
     return (http->hostname);
+  }
 }
 
 

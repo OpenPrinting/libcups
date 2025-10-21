@@ -1,7 +1,7 @@
 //
 // HTTP support routines for CUPS.
 //
-// Copyright © 2020-2023 by OpenPrinting
+// Copyright © 2020-2025 by OpenPrinting
 // Copyright © 2007-2019 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products, all rights reserved.
 //
@@ -163,7 +163,9 @@ httpAssembleURI(
       *ptr++ = '/';
     }
     else
+    {
       goto assemble_overflow;
+    }
   }
 
   // Next the username and hostname, if any...
@@ -215,7 +217,9 @@ httpAssembleURI(
 	  *ptr++ = '.';
 	}
 	else
-          goto assemble_overflow;
+	{
+	  goto assemble_overflow;
+	}
       }
       else
       {
@@ -242,12 +246,16 @@ httpAssembleURI(
             *ptr++ = '5';
           }
           else
+          {
 	    *ptr++ = '+';
+	  }
 
 	  host ++;
 	}
 	else
+	{
 	  *ptr++ = *host++;
+	}
       }
 
       if (*host)
@@ -668,8 +676,10 @@ httpGetDateTime(const char *s)		// I - Date/time string
 
   // Convert the month name to a number from 0 to 11.
   for (i = 0; i < 12; i ++)
+  {
     if (!_cups_strcasecmp(mon, http_months[i]))
       break;
+  }
 
   if (i >= 12)
     return (0);
@@ -1015,7 +1025,9 @@ _httpSetDigestAuthString(
     http->nonce_count = 1;
   }
   else
+  {
     http->nonce_count ++;
+  }
 
   cupsCopyString(username, http->userpass, sizeof(username));
   if ((password = strchr(username, ':')) != NULL)
@@ -1094,6 +1106,13 @@ _httpSetDigestAuthString(
   else
   {
     // Use old RFC 2069 Digest method...
+    if (cg->digestoptions == _CUPS_DIGESTOPTIONS_DENYMD5)
+    {
+      DEBUG_puts("3_httpSetDigestAuthString: MD5 Digest is disabled.");
+      return (0);
+    }
+
+    DEBUG_puts("3_httpSetDigestAuthString: Use old RFC 2069 Digest method...");
 
     // H(A1) = H(username:realm:password)
     snprintf(temp, sizeof(temp), "%s:%s:%s", username, http->realm, password);

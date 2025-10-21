@@ -956,15 +956,15 @@ usage(FILE *out)			// I - Output file (stdout or stderr)
   cupsLangPuts(out, "");
   cupsLangPuts(out, _("Sub-Commands:"));
   cupsLangPuts(out, "");
-  cupsLangPuts(out, _("ca COMMON-NAME                 Sign a CSR to produce a certificate."));
-  cupsLangPuts(out, _("cacert COMMON-NAME             Create a CA certificate."));
-  cupsLangPuts(out, _("cert COMMON-NAME               Create a certificate."));
-  cupsLangPuts(out, _("client URI                     Connect to URI."));
-  cupsLangPuts(out, _("csr COMMON-NAME                Create a certificate signing request."));
+  cupsLangPuts(out, _("ca COMMON-NAME             Sign a CSR to produce a certificate."));
+  cupsLangPuts(out, _("cacert COMMON-NAME         Create a CA certificate."));
+  cupsLangPuts(out, _("cert COMMON-NAME           Create a certificate."));
+  cupsLangPuts(out, _("client URI                 Connect to URI."));
+  cupsLangPuts(out, _("csr COMMON-NAME            Create a certificate signing request."));
   cupsLangPuts(out, _("install COMMON-NAME FILENAME.crt [FILENAME.key]\n"
-                      "                               Install a certificate and (optional) private key."));
-  cupsLangPuts(out, _("server COMMON-NAME[:PORT]      Run a HTTPS server (default port 8NNN.)"));
-  cupsLangPuts(out, _("show COMMON-NAME               Show stored credentials for COMMON-NAME."));
+                      "                           Install a certificate and (optional) private key."));
+  cupsLangPuts(out, _("server COMMON-NAME[:PORT]  Run a HTTPS server (default port 8NNN.)"));
+  cupsLangPuts(out, _("show COMMON-NAME           Show stored credentials for COMMON-NAME."));
   cupsLangPuts(out, "");
   cupsLangPuts(out, _("Options:"));
   cupsLangPuts(out, _(""));
