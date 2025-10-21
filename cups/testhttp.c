@@ -570,7 +570,12 @@ main(int  argc,				// I - Number of command-line arguments
       if (i >= argc)
         break;
 
-      out = fopen(argv[i], "wb");
+      if ((out = fopen(argv[i], "wb")) == NULL)
+      {
+        perror(argv[i]);
+        return (1);
+      }
+
       continue;
     }
 

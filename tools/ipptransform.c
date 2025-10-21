@@ -1862,21 +1862,19 @@ generate_job_sheets(
 
     x = (rtl ? 3.0 : 1.0) * p->media.x2 / 4.0;
     y = p->media.y2 / 2.0 + 2.0 * (XFORM_TEXT_HEIGHT + XFORM_TEXT_SIZE);
-
     show_label_and_value(st, font, 2.0 * XFORM_TEXT_SIZE, unicode, x, y, lang, rtl, _("Title:"), p->options->job_name);
-    y -= 2.0 * XFORM_TEXT_HEIGHT;
 
-    show_label_and_value(st, font, 2.0 * XFORM_TEXT_SIZE, unicode, x, y, lang, rtl, _("User:"), p->options->job_originating_user_name);
     y -= 2.0 * XFORM_TEXT_HEIGHT;
+    show_label_and_value(st, font, 2.0 * XFORM_TEXT_SIZE, unicode, x, y, lang, rtl, _("User:"), p->options->job_originating_user_name);
 
     snprintf(pages, sizeof(pages), "%u", (unsigned)(p->num_outpages / count));
-    show_label_and_value(st, font, 2.0 * XFORM_TEXT_SIZE, unicode, x, y, lang, rtl, _("Pages:"), pages);
     y -= 2.0 * XFORM_TEXT_HEIGHT;
+    show_label_and_value(st, font, 2.0 * XFORM_TEXT_SIZE, unicode, x, y, lang, rtl, _("Pages:"), pages);
 
     if (p->options->job_sheet_message[0])
     {
-      show_label_and_value(st, font, 2.0 * XFORM_TEXT_SIZE, unicode, x, y, lang, rtl, _("Message:"), p->options->job_sheet_message);
       y -= 2.0 * XFORM_TEXT_HEIGHT;
+      show_label_and_value(st, font, 2.0 * XFORM_TEXT_SIZE, unicode, x, y, lang, rtl, _("Message:"), p->options->job_sheet_message);
     }
 
     // Show top/bottom banner title...
