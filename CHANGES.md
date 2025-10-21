@@ -8,6 +8,7 @@ libcups v3.0.0 (YYYY-MM-DD)
 - Added `cupsOAuthGetDeviceGrant`, `cupsOAuthGetJWKS`, and `cupsOAuthGetUserId`
   APIs.
 - Added `httpGetCookieValue` and `httpGetSecurity` APIs.
+- Added an "install" sub-command to the `cups-x509` command.
 - Added a "--user-agent" option to the `ipptool` command.
 - Updated documentation (Issue #113)
 - Updated the `cupsOAuth` APIs to support sharing of some OAuth values between
