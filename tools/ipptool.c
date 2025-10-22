@@ -85,15 +85,15 @@ typedef struct ipptool_expect_s		// Expected attribute info
 		expect_all;		// Expect all attributes to match/not match
   char		*name,			// Attribute name
 		*of_type,		// Type name
-		*same_count_as,		// Parallel attribute name
-		*with_value,		// Attribute must include this value
+		*same_count_as;		// Parallel attribute name
+  cups_array_t	*if_defined,		// Only required if variable(s) defined
+		*if_not_defined;	// Only required if variable(s) are not defined
+  char		*with_value,		// Attribute must include this value
 		*with_value_from,	// Attribute must have one of the values in this attribute
 		*define_match,		// Variable to define on match
 		*define_no_match,	// Variable to define on no-match
 		*define_value,		// Variable to define with value
 		*display_match;		// Message to display on a match
-  cups_array_t	*if_defined,		// Only required if variable(s) defined
-		*if_not_defined;	// Only required if variable(s) are not defined
   ipptool_content_t with_content;	// WITH-*-CONTENT value
   cups_array_t	*with_mime_types;	// WITH-*-MIME-TYPES value(s)
   char		*save_filespec;		// SAVE-*-CONTENT filespec
@@ -605,7 +605,7 @@ main(int  argc,				// I - Number of command-line args
               }
 
               if (data->outfile != cupsFileStdout())
-                return (usage(stderr));
+		return (usage(stderr));
 
               if ((data->outfile = cupsFileOpen(argv[i], "w")) == NULL)
               {
@@ -714,7 +714,7 @@ main(int  argc,				// I - Number of command-line args
       {
         cupsLangPuts(stderr, _("ipptool: May only specify a single URI."));
 	free_data(data);
-        return (usage(stderr));
+	return (usage(stderr));
       }
 
       if (!strncmp(argv[i], "ipps://", 7) || !strncmp(argv[i], "https://", 8))
@@ -764,7 +764,9 @@ main(int  argc,				// I - Number of command-line args
         status = 1;
       }
       else if (!do_tests(testfile, data))
+      {
         status = 1;
+      }
     }
   }
 
@@ -1058,7 +1060,7 @@ connect_printer(ipptool_test_t *data)	// I - Test data
   else
     encryption = data->encryption;
 
-  if ((http = httpConnect(hostname, atoi(port), NULL, data->family, encryption, 1, 30000, NULL)) == NULL)
+  if ((http = httpConnect(hostname, atoi(port), /*addrlist*/NULL, data->family, encryption, /*blocking*/true, /*msec*/30000, /*cancel*/NULL)) == NULL)
   {
     print_fatal_error(data, "Unable to connect to \"%s\" on port %s: %s", hostname, port, cupsGetErrorString());
     return (NULL);
@@ -1256,7 +1258,7 @@ do_monitor_printer_state(
   else
     encryption = data->encryption;
 
-  if ((http = httpConnect(host, port, NULL, data->family, encryption, 1, 30000, NULL)) == NULL)
+  if ((http = httpConnect(host, port, /*addrlist*/NULL, data->family, encryption, /*blocking*/true, /*msec*/30000, /*cancel*/NULL)) == NULL)
   {
     print_fatal_error(data, "Unable to connect to \"%s\" on port %d: %s", host, port, cupsGetErrorString());
     return (0);
@@ -1313,7 +1315,7 @@ do_monitor_printer_state(
 	httpGetError(data->http) != ETIMEDOUT)
 #endif // _WIN32
     {
-      if (!httpConnectAgain(http, 30000, NULL))
+      if (!httpConnectAgain(http, /*msec*/30000, /*cancel*/NULL))
 	break;
     }
     else if (status == HTTP_STATUS_ERROR || status == HTTP_STATUS_CUPS_AUTHORIZATION_CANCELED)
@@ -1691,7 +1693,7 @@ do_test(ipp_file_t     *f,		// I - IPP data file
 	    httpGetError(data->http) != ETIMEDOUT)
 #endif // _WIN32
 	{
-	  if (!httpConnectAgain(data->http, 30000, NULL))
+	  if (!httpConnectAgain(data->http, /*msec*/30000, /*cancel*/NULL))
 	    data->prev_pass = false;
 	}
 	else if (status == HTTP_STATUS_ERROR || status == HTTP_STATUS_CUPS_AUTHORIZATION_CANCELED)
@@ -1718,13 +1720,13 @@ do_test(ipp_file_t     *f,		// I - IPP data file
 	httpGetError(data->http) != ETIMEDOUT)
 #endif // _WIN32
     {
-      if (!httpConnectAgain(data->http, 30000, NULL))
+      if (!httpConnectAgain(data->http, /*msec*/30000, /*cancel*/NULL))
 	data->prev_pass = false;
     }
     else if (status == HTTP_STATUS_ERROR)
     {
       if (!Cancel)
-	httpConnectAgain(data->http, 30000, NULL);
+	httpConnectAgain(data->http, /*msec*/30000, /*cancel*/NULL);
 
       data->prev_pass = false;
     }
@@ -6832,7 +6834,7 @@ with_content(
 
     encryption = (!strcmp(scheme, "https") || !strcmp(scheme, "ipps") || port == 443) ? HTTP_ENCRYPTION_ALWAYS : HTTP_ENCRYPTION_IF_REQUESTED;
 
-    if ((http = httpConnect(host, port, NULL, AF_UNSPEC, encryption, 1, 30000, NULL)) == NULL)
+    if ((http = httpConnect(host, port, /*addrlist*/NULL, AF_UNSPEC, encryption, /*blocking*/true, /*msec*/30000, /*cancel*/NULL)) == NULL)
     {
       add_stringf(errors, "Unable to connect to \"%s\" on port %d: %s", host, port, cupsGetErrorString());
       ret = false;
