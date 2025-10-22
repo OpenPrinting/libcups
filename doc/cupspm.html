@@ -1729,7 +1729,7 @@ ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD,
 <p>CUPS supports authentication and authorization using HTTP Basic, HTTP Digest, peer credentials when communicating over domain sockets, and OAuth/OpenID Connect.</p>
 <p>Peer credential authorization happens automatically when connected over a domain socket. Other types of authentication requires the application to handle <code>HTTP_STATUS_UNAUTHORIZED</code> responses beyond simply calling <a href="#cupsDoAuthentication"><code>cupsDoAuthentication</code></a>.</p>
 <h3 class="title" id="authentication-using-passwords">Authentication Using Passwords</h3>
-<p>When you call <a href="#cupsDoAuthentication"><code>cupsDoAuthentication</code></a>, CUPS normally requests a password from the console. GUI applications should set a password callback using the <a href="#cupsSetPasswordCB"><code>cupsSetPasswordCB</code></a> function:</p>
+<p>When you call <a href="#cupsDoAuthentication"><code>cupsDoAuthentication</code></a> and the HTTP server requires the &quot;Basic&quot; or &quot;Digest&quot; authentication schemes, CUPS normally requests a password from the console. GUI applications should set a password callback using the <a href="#cupsSetPasswordCB"><code>cupsSetPasswordCB</code></a> function:</p>
 <pre><code class="language-c"><span class="reserved">void</span>
 cupsSetPasswordCB(cups_password_cb_t cb, <span class="reserved">void</span> *cb_data);
 </code></pre>
@@ -1741,10 +1741,24 @@ cups_password_cb(<span class="reserved">const</span> <span class="reserved">char
 </code></pre>
 <p>The &quot;prompt&quot; argument is a string from CUPS that should be displayed to the user.</p>
 <p>The &quot;http&quot; argument is the connection hosting the request that is being authenticated. The password callback can call the <a href="#httpGetField"><code>httpGetField</code></a> and <a href="#httpGetSubField"><code>httpGetSubField</code></a> functions to look for additional details concerning the authentication challenge.</p>
-<p>The &quot;method&quot; argument specifies the HTTP method used for the request and is typically &quot;POST&quot;.</p>
-<p>The &quot;resource&quot; argument specifies the path used for the request.</p>
-<p>The &quot;cb_data&quot; argument provides the user data pointer from the <a href="#cupsSetPasswordCB"><code>cupsSetPasswordCB</code></a> call.</p>
+<p>The &quot;method&quot; argument specifies the HTTP method used for the request and is typically &quot;GET&quot;, &quot;POST&quot;, or &quot;PUT&quot;.</p>
+<p>The &quot;resource&quot; argument specifies the path or URI used for the request.</p>
+<p>The &quot;cb_data&quot; argument provides the data pointer from the <a href="#cupsSetPasswordCB"><code>cupsSetPasswordCB</code></a> call.</p>
 <h3 class="title" id="authorization-using-oauthopenid-connect">Authorization using OAuth/OpenID Connect</h3>
+<p>When you call <a href="#cupsDoAuthentication"><code>cupsDoAuthentication</code></a> and the HTTP server requires the &quot;Bearer&quot; authentication scheme, CUPS will call an OAuth callback that you register using the <a href="#cupsSetOAuthCB"><code>cupsSetOAuthCB</code></a> function:</p>
+<pre><code class="language-c"><span class="reserved">void</span>
+cupsSetOAuthCB(cups_oauth_cb_t cb, <span class="reserved">void</span> *cb_data);
+</code></pre>
+<p>The OAuth callback is called when needed and is responsible for performing any necessary authorization and returning an access token string:</p>
+<pre><code class="language-c"><span class="reserved">const</span> <span class="reserved">char</span> *
+cups_oauth_cb(http_t *http, <span class="reserved">const</span> <span class="reserved">char</span> *realm, <span class="reserved">const</span> <span class="reserved">char</span> *scope,
+              <span class="reserved">const</span> <span class="reserved">char</span> *resource, <span class="reserved">void</span> *cb_data);
+</code></pre>
+<p>The &quot;http&quot; argument is the connection hosting the request that is being authenticated. The OAuth callback can call the <a href="#httpGetField"><code>httpGetField</code></a> and <a href="#httpGetSubField"><code>httpGetSubField</code></a> functions to look for additional details concerning the authentication challenge.</p>
+<p>The &quot;realm&quot; and &quot;scope&quot; arguments provide the &quot;realm&quot; and &quot;scope&quot; parameters, if any, from the &quot;WWW-Authenticate&quot; header.</p>
+<p>The &quot;resource&quot; argument specifies the path or URI used for the request.</p>
+<p>The &quot;cb_data&quot; argument provides the data pointer from the <a href="#cupsSetOAuthCB"><code>cupsSetOAuthCB</code></a> call.</p>
+<h4 id="oauth-client-functions">OAuth Client Functions</h4>
 <p>CUPS provides a generic OAuth/OpenID client for authorizing access to printers and other network resources. The following functions are provided:</p>
 <ul>
 <li><p><a href="#cupsOAuthClearTokens"><code>cupsOAuthClearTokens</code></a>: Clear all cached tokens.</p>
@@ -1826,6 +1840,7 @@ access_token = cupsOAuthGetTokens(auth_uri, metadata, printer_uri, auth_code,
 
 <span class="comment">// Set the Bearer token for authorization.</span>
 httpSetAuthString(http, <span class="string">&quot;Bearer&quot;</span>, access_token);
+free(access_token);
 </code></pre>
 <h4 id="authorizing-using-a-mobile-device">Authorizing Using a Mobile Device</h4>
 <p>Users can authorize using a mobile device via the <a href="#cupsOAuthGetDeviceGrant"><code>cupsOAuthGetDeviceGrant</code></a> function, which returns a JSON object with the mobile authorization URLs, user (verification) code string, and device grant code. The following code gets the authorization server metadata, gets the mobile device authorization information, and then obtains a HTTP Bearer access token:</p>
@@ -1893,6 +1908,7 @@ printf(<span class="string">&quot;Open this URL: %s\n&quot;</span>, verify_urlc)
 
 <span class="comment">// Set the Bearer token for authorization.</span>
 httpSetAuthString(http, <span class="string">&quot;Bearer&quot;</span>, access_token);
+free(access_token);
 </code></pre>
 <h4 id="supported-oauth-standards">Supported OAuth Standards</h4>
 <p>The following standards are supported:</p>
@@ -7167,18 +7183,17 @@ so in each thread for the same setting to be used.</p>
 <h3 class="function"><a id="cupsSetOAuthCB">cupsSetOAuthCB</a></h3>
 <p class="description">Set the OAuth 2.0 callback for CUPS.</p>
 <p class="code">
-<span class="reserved">void</span> cupsSetOAuthCB(<a href="#cups_oauth_cb_t">cups_oauth_cb_t</a> cb, <span class="reserved">void</span> *user_data);</p>
+<span class="reserved">void</span> cupsSetOAuthCB(<a href="#cups_oauth_cb_t">cups_oauth_cb_t</a> cb, <span class="reserved">void</span> *cb_data);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>cb</th>
 <td class="description">Callback function</td></tr>
-<tr><th>user_data</th>
-<td class="description">User data pointer</td></tr>
+<tr><th>cb_data</th>
+<td class="description">Callback data pointer</td></tr>
 </tbody></table>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">This function sets the OAuth 2.0 callback for the various CUPS APIs that
-send HTTP requests. Pass <code>NULL</code> to restore the default (console-based)
-callback.<br>
+send HTTP requests.  Pass <code>NULL</code> to disable OAuth authorization.<br>
 <br>
 The OAuth callback receives the HTTP connection, realm name, scope name (if
 any), resource path, and the &quot;user_data&quot; pointer for each request that
@@ -7196,13 +7211,13 @@ each thread for the same callback to be used.</p>
 <h3 class="function"><a id="cupsSetPasswordCB">cupsSetPasswordCB</a></h3>
 <p class="description">Set the password callback for CUPS.</p>
 <p class="code">
-<span class="reserved">void</span> cupsSetPasswordCB(<a href="#cups_password_cb_t">cups_password_cb_t</a> cb, <span class="reserved">void</span> *user_data);</p>
+<span class="reserved">void</span> cupsSetPasswordCB(<a href="#cups_password_cb_t">cups_password_cb_t</a> cb, <span class="reserved">void</span> *cb_data);</p>
 <h4 class="parameters">Parameters</h4>
 <table class="list"><tbody>
 <tr><th>cb</th>
 <td class="description">Callback function</td></tr>
-<tr><th>user_data</th>
-<td class="description">User data pointer</td></tr>
+<tr><th>cb_data</th>
+<td class="description">Callback data pointer</td></tr>
 </tbody></table>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">Pass <code>NULL</code> to restore the default (console) password callback, which
@@ -8522,7 +8537,7 @@ ssize_t httpRead(<a href="#http_t">http_t</a> *http, <span class="reserved">char
 <tr><th>http</th>
 <td class="description">HTTP connection</td></tr>
 <tr><th>buffer</th>
-<td class="description">Hostname buffer</td></tr>
+<td class="description">Hostname buffer or <code>NULL</code> to use HTTP buffer</td></tr>
 <tr><th>bufsize</th>
 <td class="description">Size of buffer</td></tr>
 </tbody></table>
@@ -9222,7 +9237,7 @@ event notification (<code>IPP_TAG_EVENT_NOTIFICATION</code>), operation
 (<code>IPP_TAG_OPERATION</code>), printer (<code>IPP_TAG_PRINTER</code>), subscription
 (<code>IPP_TAG_SUBSCRIPTION</code>), or unsupported (<code>IPP_TAG_UNSUPPORTED_GROUP</code>).<br>
 <br>
-The &quot;lower<code> argument must be less than or equal to the </code>upper&quot; argument.</p>
+The &quot;lower&quot; argument must be less than or equal to the <code>upper" argument.</code></p>
 <h3 class="function"><a id="ippAddRanges">ippAddRanges</a></h3>
 <p class="description">Add ranges of values to an IPP message.</p>
 <p class="code">
@@ -9518,7 +9533,7 @@ size_t ippAttributeString(<a href="#ipp_attribute_t">ipp_attribute_t</a> *attr, 
 <tr><th>attr</th>
 <td class="description">Attribute</td></tr>
 <tr><th>buffer</th>
-<td class="description">String buffer or NULL</td></tr>
+<td class="description">String buffer or <code>NULL</code></td></tr>
 <tr><th>bufsize</th>
 <td class="description">Size of string buffer</td></tr>
 </tbody></table>
@@ -9613,7 +9628,8 @@ destination.<br>
 The &quot;cb&quot; and &quot;cb_data&quot; arguments provide a generic way to &quot;filter&quot; the
 attributes that are copied - the function must return <code>true</code> to copy the
 attribute or <code>false</code> to skip it.  The function may also choose to do a
-partial copy of the source attribute itself.</p>
+partial copy of the source attribute itself and return <code>false</code> to tell this
+function to skip it.</p>
 <h3 class="function"><a id="ippCopyCredentialsString">ippCopyCredentialsString</a></h3>
 <p class="description">Copy a credentials value from an IPP attribute.</p>
 <p class="code">
@@ -9652,8 +9668,8 @@ the client.<br>
 <br>
 <code>NULL</code> is returned if all attributes should be returned.  Otherwise, the
 result is a sorted array of attribute names, where
-<code>cupsArrayFind(array, "attribute-name")</code> will return a non-NULL pointer.  The
-array must be freed using <a href="#cupsArrayDelete"><code>cupsArrayDelete</code></a>.</p>
+<code>cupsArrayFind(array, "attribute-name")</code> will return a non-<code>NULL</code> pointer.
+The array must be freed using <a href="#cupsArrayDelete"><code>cupsArrayDelete</code></a>.</p>
 <h3 class="function"><a id="ippDateToTime">ippDateToTime</a></h3>
 <p class="description">Convert from RFC 2579 Date/Time format to time in
                     seconds.</p>
@@ -10206,7 +10222,7 @@ separated by slashes, for example &quot;media-col/media-size&quot;.</p>
 <p class="description">Boolean value or <code>false</code> on error</p>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">The &quot;element&quot; argument specifies which value to get from <code>0</code> to
-<code>ippGetCount(attr)</code> - 1.</p>
+<code>ippGetCount(attr) - 1</code>.</p>
 <h3 class="function"><a id="ippGetCollection">ippGetCollection</a></h3>
 <p class="description">Get a collection value for an attribute.</p>
 <p class="code">
@@ -10222,7 +10238,7 @@ separated by slashes, for example &quot;media-col/media-size&quot;.</p>
 <p class="description">Collection value or <code>NULL</code> on error</p>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">The &quot;element&quot; argument specifies which value to get from <code>0</code> to
-<code>ippGetCount(attr)</code> - 1.</p>
+<code>ippGetCount(attr) - 1</code>.</p>
 <h3 class="function"><a id="ippGetCount">ippGetCount</a></h3>
 <p class="description">Get the number of values in an attribute.</p>
 <p class="code">
@@ -10249,7 +10265,7 @@ size_t ippGetCount(<a href="#ipp_attribute_t">ipp_attribute_t</a> *attr);</p>
 <p class="description">dateTime value or <code>NULL</code></p>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">The &quot;element&quot; argument specifies which value to get from <code>0</code> to
-<code>ippGetCount(attr)</code> - 1.</p>
+<code>ippGetCount(attr) - 1</code>.</p>
 <h3 class="function"><a id="ippGetFirstAttribute">ippGetFirstAttribute</a></h3>
 <p class="description">Return the first attribute in the message.</p>
 <p class="code">
@@ -10287,7 +10303,7 @@ ipp_tag_t ippGetGroupTag(<a href="#ipp_attribute_t">ipp_attribute_t</a> *attr);<
 <p class="description">Value or <code>0</code> on error</p>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">The &quot;element&quot; argument specifies which value to get from <code>0</code> to
-<code>ippGetCount(attr)</code> - 1.</p>
+<code>ippGetCount(attr) - 1</code>.</p>
 <h3 class="function"><a id="ippGetLength">ippGetLength</a></h3>
 <p class="description">Compute the length of an IPP message.</p>
 <p class="code">
@@ -10338,7 +10354,7 @@ size_t ippGetLength(<a href="#ipp_t">ipp_t</a> *ipp);</p>
 <p class="description">Pointer to octetString data</p>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">The &quot;element&quot; argument specifies which value to get from '0' to
-<code>ippGetCount(attr)</code> - 1.</p>
+<code>ippGetCount(attr) - 1</code>.</p>
 <h3 class="function"><a id="ippGetOperation">ippGetOperation</a></h3>
 <p class="description">Get the operation ID in an IPP message.</p>
 <p class="code">
@@ -10373,7 +10389,7 @@ size_t ippGetLength(<a href="#ipp_t">ipp_t</a> *ipp);</p>
 <p class="description">Lower value of range or 0</p>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">The &quot;element&quot; argument specifies which value to get from <code>0</code> to
-<code>ippGetCount(attr)</code> - 1.</p>
+<code>ippGetCount(attr) - 1</code>.</p>
 <h3 class="function"><a id="ippGetRequestId">ippGetRequestId</a></h3>
 <p class="description">Get the request ID from an IPP message.</p>
 <p class="code">
@@ -10404,7 +10420,7 @@ size_t ippGetLength(<a href="#ipp_t">ipp_t</a> *ipp);</p>
 <p class="description">Horizontal/cross feed resolution or 0</p>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">The &quot;element&quot; argument specifies which value to get from <code>0</code> to
-<code>ippGetCount(attr)</code> - 1.</p>
+<code>ippGetCount(attr) - 1</code>.</p>
 <h3 class="function"><a id="ippGetState">ippGetState</a></h3>
 <p class="description">Get the IPP message state.</p>
 <p class="code">
@@ -11008,12 +11024,12 @@ Integer (<code>IPP_TAG_INTEGER</code>) values can be promoted to rangeOfInteger
 (<code>IPP_TAG_NAME</code>) or nameWithLanguage (<code>IPP_TAG_NAMELANG</code>) values, text
 (<code>IPP_TAG_TEXT</code>) values can be promoted to textWithLanguage
 (<code>IPP_TAG_TEXTLANG</code>) values, and all values can be demoted to the various
-out-of-band value tags such as no-value (<code>IPP_TAG_NOVALUE</code>). All other changes
-will be rejected.<br>
+out-of-band value tags such as no-value (<code>IPP_TAG_NOVALUE</code>). All other
+changes will be rejected.<br>
 <br>
-Promoting a string attribute to nameWithLanguage or textWithLanguage adds the language
-code in the &quot;attributes-natural-language&quot; attribute or, if not present, the language
-code for the current locale.</p>
+Promoting a string attribute to nameWithLanguage or textWithLanguage adds the
+language code in the &quot;attributes-natural-language&quot; attribute or, if not
+present, the language code for the current locale.</p>
 <h3 class="function"><a id="ippSetVersion">ippSetVersion</a></h3>
 <p class="description">Set the version number in an IPP message.</p>
 <p class="code">
@@ -11057,8 +11073,7 @@ The valid version numbers are currently 1.0, 1.1, 2.0, 2.1, and 2.2.</p>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Tag name</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">The returned names are defined in RFC 8011 and the IANA IPP Registry.
-/</p>
+<p class="discussion">The returned names are defined in RFC 8011 and the IANA IPP Registry.</p>
 <h3 class="function"><a id="ippTagValue">ippTagValue</a></h3>
 <p class="description">Return the tag value corresponding to a tag name.</p>
 <p class="code">
@@ -11526,7 +11541,7 @@ typedef pthread_mutex_t cups_mutex_t;
 <h3 class="typedef"><a id="cups_oauth_cb_t">cups_oauth_cb_t</a></h3>
 <p class="description">OAuth callback</p>
 <p class="code">
-typedef const char *(*)(http_t *http, const char *realm, const char *scope, const char *resource, void *user_data)cups_oauth_cb_t;
+typedef const char *(*)(http_t *http, const char *realm, const char *scope, const char *resource, void *cb_data)cups_oauth_cb_t;
 </p>
 <h3 class="typedef"><a id="cups_ogrant_t">cups_ogrant_t</a></h3>
 <p class="description">OAuth Grant Types</p>
@@ -11556,7 +11571,7 @@ typedef struct <a href="#cups_page_header_s">cups_page_header_s</a> cups_page_he
 <h3 class="typedef"><a id="cups_password_cb_t">cups_password_cb_t</a></h3>
 <p class="description">New password callback</p>
 <p class="code">
-typedef const char *(*)(const char *prompt, <a href="#http_t">http_t</a> *http, const char *method, const char *resource, void *user_data)cups_password_cb_t;
+typedef const char *(*)(const char *prompt, <a href="#http_t">http_t</a> *http, const char *method, const char *resource, void *cb_data)cups_password_cb_t;
 </p>
 <h3 class="typedef"><a id="cups_ptype_t">cups_ptype_t</a></h3>
 <p class="description">Combined printer type/capability flags</p>

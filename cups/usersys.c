@@ -279,8 +279,7 @@ cupsSetEncryption(http_encryption_t e)	// I - New encryption preference
 // 'cupsSetOAuthCB()' - Set the OAuth 2.0 callback for CUPS.
 //
 // This function sets the OAuth 2.0 callback for the various CUPS APIs that
-// send HTTP requests. Pass `NULL` to restore the default (console-based)
-// callback.
+// send HTTP requests.  Pass `NULL` to disable OAuth authorization.
 //
 // The OAuth callback receives the HTTP connection, realm name, scope name (if
 // any), resource path, and the "user_data" pointer for each request that
@@ -296,19 +295,17 @@ cupsSetEncryption(http_encryption_t e)	// I - New encryption preference
 // program. Multi-threaded programs that override the callback need to do so in
 // each thread for the same callback to be used.
 //
-//
-//
 
 void
 cupsSetOAuthCB(
     cups_oauth_cb_t cb,			// I - Callback function
-    void            *user_data)		// I - User data pointer
+    void            *cb_data)		// I - Callback data pointer
 {
   _cups_globals_t *cg = _cupsGlobals();	// Pointer to library globals
 
 
   cg->oauth_cb   = cb;
-  cg->oauth_data = user_data;
+  cg->oauth_data = cb_data;
 }
 
 
@@ -326,7 +323,7 @@ cupsSetOAuthCB(
 void
 cupsSetPasswordCB(
     cups_password_cb_t cb,		// I - Callback function
-    void               *user_data)	// I - User data pointer
+    void               *cb_data)	// I - Callback data pointer
 {
   _cups_globals_t *cg = _cupsGlobals();	// Pointer to library globals
 
@@ -336,7 +333,7 @@ cupsSetPasswordCB(
   else
     cg->password_cb = cb;
 
-  cg->password_data = user_data;
+  cg->password_data = cb_data;
 }
 
 

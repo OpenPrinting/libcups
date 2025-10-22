@@ -1120,7 +1120,8 @@ handle `HTTP_STATUS_UNAUTHORIZED` responses beyond simply calling
 
 ## Authentication Using Passwords
 
-When you call [`cupsDoAuthentication`](@@), CUPS normally requests a password
+When you call [`cupsDoAuthentication`](@@) and the HTTP server requires the
+"Basic" or "Digest" authentication schemes, CUPS normally requests a password
 from the console.  GUI applications should set a password callback using the
 [`cupsSetPasswordCB`](@@) function:
 
@@ -1149,15 +1150,49 @@ authenticated.  The password callback can call the [`httpGetField`](@@) and
 authentication challenge.
 
 The "method" argument specifies the HTTP method used for the request and is
-typically "POST".
+typically "GET", "POST", or "PUT".
 
-The "resource" argument specifies the path used for the request.
+The "resource" argument specifies the path or URI used for the request.
 
-The "cb_data" argument provides the user data pointer from the
+The "cb_data" argument provides the data pointer from the
 [`cupsSetPasswordCB`](@@) call.
 
 
 ## Authorization using OAuth/OpenID Connect
+
+When you call [`cupsDoAuthentication`](@@) and the HTTP server requires the
+"Bearer" authentication scheme, CUPS will call an OAuth callback that you
+register using the [`cupsSetOAuthCB`](@@) function:
+
+```c
+void
+cupsSetOAuthCB(cups_oauth_cb_t cb, void *cb_data);
+```
+
+The OAuth callback is called when needed and is responsible for performing any
+necessary authorization and returning an access token string:
+
+```c
+const char *
+cups_oauth_cb(http_t *http, const char *realm, const char *scope,
+              const char *resource, void *cb_data);
+```
+
+The "http" argument is the connection hosting the request that is being
+authenticated.  The OAuth callback can call the [`httpGetField`](@@) and
+[`httpGetSubField`](@@) functions to look for additional details concerning the
+authentication challenge.
+
+The "realm" and "scope" arguments provide the "realm" and "scope" parameters, if
+any, from the "WWW-Authenticate" header.
+
+The "resource" argument specifies the path or URI used for the request.
+
+The "cb_data" argument provides the data pointer from the
+[`cupsSetOAuthCB`](@@) call.
+
+
+### OAuth Client Functions
 
 CUPS provides a generic OAuth/OpenID client for authorizing access to printers
 and other network resources.  The following functions are provided:
@@ -1244,6 +1279,7 @@ if (access_token == NULL)
 
 // Set the Bearer token for authorization.
 httpSetAuthString(http, "Bearer", access_token);
+free(access_token);
 ```
 
 
@@ -1321,6 +1357,7 @@ if (access_token == NULL)
 
 // Set the Bearer token for authorization.
 httpSetAuthString(http, "Bearer", access_token);
+free(access_token);
 ```
 
 
