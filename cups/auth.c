@@ -83,10 +83,7 @@ cupsDoAuthentication(
     }
   }
 
-  //
   // Nope, loop through the authentication schemes to find the first we support.
-  //
-
   www_auth = httpGetField(http, HTTP_FIELD_WWW_AUTHENTICATE);
 
   for (schemedata = cups_auth_scheme(www_auth, scheme, sizeof(scheme)); schemedata; schemedata = cups_auth_scheme(schemedata + strlen(scheme), scheme, sizeof(scheme)))
@@ -147,8 +144,8 @@ cupsDoAuthentication(
 
       cupsLangFormatString(cg->lang_default, prompt, sizeof(prompt), _("Password for %s on %s? "), cupsGetUser(), http->hostname[0] == '/' ? "localhost" : http->hostname);
 
-      http->digest_tries  = _cups_strncasecmp(scheme, "Digest", 6) != 0;
-      http->userpass[0]   = '\0';
+      http->digest_tries = _cups_strncasecmp(scheme, "Digest", 6) != 0;
+      http->userpass[0]  = '\0';
 
       if ((password = cupsGetPassword(prompt, http, method, resource)) == NULL)
       {
@@ -358,7 +355,8 @@ cups_auth_param(const char *scheme,		// I - Pointer to auth data
       scheme ++;
     }
 
-    // If this wasn't a parameter, we are at the end of this scheme's parameters...
+    // If this wasn't a parameter, we are at the end of this scheme's
+    // parameters...
     if (!param)
       break;
   }
@@ -374,7 +372,7 @@ cups_auth_param(const char *scheme,		// I - Pointer to auth data
 //
 // 'cups_auth_scheme()' - Get the (next) WWW-Authenticate scheme.
 //
-// The "www_authenticate" parameter points to the current position in the header.
+// The "www_authenticate" argument points to the current position in the header.
 //
 // Returns `NULL` if there are no (more) auth schemes present.
 //
@@ -390,7 +388,7 @@ cups_auth_scheme(const char *www_authenticate,	// I - Pointer into WWW-Authentic
   bool		param;				// Is this a parameter?
 
 
-  DEBUG_printf("8cups_auth_scheme(www_authenticate=\"%s\", scheme=%p, schemesize=%d)", www_authenticate, (void *)scheme, (int)schemesize);
+  DEBUG_printf("8cups_auth_scheme(www_authenticate=\"%s\", scheme=%p, schemesize=%u)", www_authenticate, (void *)scheme, (unsigned)schemesize);
 
   while (*www_authenticate)
   {
@@ -439,7 +437,7 @@ cups_auth_scheme(const char *www_authenticate,	// I - Pointer into WWW-Authentic
 
 
 //
-// 'cups_do_local_auth()' - Use local peer credentials if available/applicable.
+// 'cups_do_local_auth()' - Use local credentials if available/applicable.
 //
 
 static bool				// O - `true` if authorized, `false` otherwise

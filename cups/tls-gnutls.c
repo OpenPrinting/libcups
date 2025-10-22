@@ -1876,7 +1876,12 @@ _httpTLSStart(http_t *http)		// I - Connection to server
     return (false);
   }
 
-  cupsCopyString(priority_string, "NORMAL", sizeof(priority_string));
+  if (tls_options & _HTTP_TLS_NO_SYSTEM)
+    priority_string[0] = '\0';
+  else
+    cupsCopyString(priority_string, "@SYSTEM,", sizeof(priority_string));
+
+  cupsConcatString(priority_string, "NORMAL", sizeof(priority_string));
 
   if (tls_max_version < _HTTP_TLS_MAX)
   {
@@ -1984,7 +1989,7 @@ _httpTLSStop(http_t *http)		// I - Connection to server
   int	error;				// Error code
 
 
-  error = gnutls_bye(http->tls, http->mode == _HTTP_MODE_CLIENT ? GNUTLS_SHUT_RDWR : GNUTLS_SHUT_WR);
+  error = gnutls_bye(http->tls, GNUTLS_SHUT_RDWR);
   if (error != GNUTLS_E_SUCCESS)
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, gnutls_strerror(errno), 0);
 

@@ -284,7 +284,7 @@ cupsCreateCredentials(
   cups_credusage_t usage_bit;		// Current usage
 
 
-  DEBUG_printf("cupsCreateCredentials(path=\"%s\", ca_cert=%s, purpose=0x%x, type=%d, usage=0x%x, organization=\"%s\", org_unit=\"%s\", locality=\"%s\", state_province=\"%s\", country=\"%s\", common_name=\"%s\", num_alt_names=%u, alt_names=%p, root_name=\"%s\", expiration_date=%ld)", path, ca_cert ? "true" : "false", purpose, type, usage, organization, org_unit, locality, state_province, country, common_name, (unsigned)num_alt_names, alt_names, root_name, (long)expiration_date);
+  DEBUG_printf("cupsCreateCredentials(path=\"%s\", ca_cert=%s, purpose=0x%x, type=%d, usage=0x%x, organization=\"%s\", org_unit=\"%s\", locality=\"%s\", state_province=\"%s\", country=\"%s\", common_name=\"%s\", num_alt_names=%u, alt_names=%p, root_name=\"%s\", expiration_date=%ld)", path, ca_cert ? "true" : "false", purpose, type, usage, organization, org_unit, locality, state_province, country, common_name, (unsigned)num_alt_names, (void *)alt_names, root_name, (long)expiration_date);
 
   // Filenames...
   if (!path)
@@ -600,7 +600,7 @@ cupsCreateCredentialsRequest(
   cups_credusage_t usage_bit;		// Current usage
 
 
-  DEBUG_printf("cupsCreateCredentialsRequest(path=\"%s\", purpose=0x%x, type=%d, usage=0x%x, organization=\"%s\", org_unit=\"%s\", locality=\"%s\", state_province=\"%s\", country=\"%s\", common_name=\"%s\", num_alt_names=%u, alt_names=%p)", path, purpose, type, usage, organization, org_unit, locality, state_province, country, common_name, (unsigned)num_alt_names, alt_names);
+  DEBUG_printf("cupsCreateCredentialsRequest(path=\"%s\", purpose=0x%x, type=%d, usage=0x%x, organization=\"%s\", org_unit=\"%s\", locality=\"%s\", state_province=\"%s\", country=\"%s\", common_name=\"%s\", num_alt_names=%u, alt_names=%p)", path, purpose, type, usage, organization, org_unit, locality, state_province, country, common_name, (unsigned)num_alt_names, (void *)alt_names);
 
   // Filenames...
   if (!path)
@@ -777,7 +777,7 @@ cupsGetCredentialsInfo(
 
 
   // Range check input...
-  DEBUG_printf("cupsGetCredentialsInfo(credentials=%p, buffer=%p, bufsize=" CUPS_LLFMT ")", credentials, buffer, CUPS_LLCAST bufsize);
+  DEBUG_printf("cupsGetCredentialsInfo(credentials=%p, buffer=%p, bufsize=" CUPS_LLFMT ")", credentials, (void *)buffer, CUPS_LLCAST bufsize);
 
   if (buffer)
     *buffer = '\0';
@@ -898,7 +898,7 @@ cupsGetCredentialsTrust(
   _cups_globals_t *cg = _cupsGlobals();	// Per-thread globals
 
 
-  DEBUG_printf("cupsGetCredentialsTrust(path=\"%s\", common_name=\"%s\", credentials=%p, require_ca=%s)", path, common_name, (void *)credentials, require_ca ? "true" : "false");
+  DEBUG_printf("cupsGetCredentialsTrust(path=\"%s\", common_name=\"%s\", credentials=\"%lu bytes\", require_ca=%s)", path, common_name, (unsigned long)(credentials ? strlen(credentials) : 0), require_ca ? "true" : "false");
 
   // Range check input...
   if (!path)
@@ -1135,7 +1135,7 @@ cupsSignCredentialsRequest(
 		saw_san = false;	// Saw NID_subject_alt_name?
 
 
-  DEBUG_printf("cupsSignCredentialsRequest(path=\"%s\", common_name=\"%s\", request=\"%s\", root_name=\"%s\", allowed_purpose=0x%x, allowed_usage=0x%x, cb=%p, cb_data=%p, expiration_date=%ld)", path, common_name, request, root_name, allowed_purpose, allowed_usage, cb, cb_data, (long)expiration_date);
+  DEBUG_printf("cupsSignCredentialsRequest(path=\"%s\", common_name=\"%s\", request=\"%s\", root_name=\"%s\", allowed_purpose=0x%x, allowed_usage=0x%x, cb=%p, cb_data=%p, expiration_date=%ld)", path, common_name, request, root_name, allowed_purpose, allowed_usage, (void *)cb, cb_data, (long)expiration_date);
 
   // Filenames...
   if (!path)
@@ -1482,14 +1482,14 @@ httpCopyPeerCredentials(http_t *http)	// I - Connection to server
   STACK_OF(X509) *chain;		// Certificate chain
 
 
-  DEBUG_printf("httpCopyPeerCredentials(http=%p)", http);
+  DEBUG_printf("httpCopyPeerCredentials(http=%p)", (void *)http);
 
   if (http && http->tls)
   {
     // Get the chain of certificates for the remote end...
     chain = SSL_get_peer_cert_chain(http->tls);
 
-    DEBUG_printf("1httpCopyPeerCredentials: chain=%p", chain);
+    DEBUG_printf("1httpCopyPeerCredentials: chain=%p", (void *)chain);
 
     if (chain)
     {
@@ -1504,7 +1504,7 @@ httpCopyPeerCredentials(http_t *http)	// I - Connection to server
 	BIO	*bio = BIO_new(BIO_s_mem());
 					  // Memory buffer for cert
 
-        DEBUG_printf("1httpCopyPeerCredentials: chain[%d/%d]=%p", i + 1, count, cert);
+        DEBUG_printf("1httpCopyPeerCredentials: chain[%d/%d]=%p", i + 1, count, (void *)cert);
 
 #ifdef DEBUG
 	char subjectName[256], issuerName[256];
@@ -1514,7 +1514,7 @@ httpCopyPeerCredentials(http_t *http)	// I - Connection to server
 
 	STACK_OF(GENERAL_NAME) *names;	// subjectAltName values
 	names = X509_get_ext_d2i(cert, NID_subject_alt_name, /*crit*/NULL, /*idx*/NULL);
-	DEBUG_printf("1httpCopyPeerCredentials: subjectAltNames=%p(%d)", names, names ? sk_GENERAL_NAME_num(names) : 0);
+	DEBUG_printf("1httpCopyPeerCredentials: subjectAltNames=%p(%d)", (void *)names, names ? sk_GENERAL_NAME_num(names) : 0);
         if (names)
           GENERAL_NAMES_free(names);
 #endif // DEBUG
@@ -1600,7 +1600,7 @@ _httpCreateCredentials(
     }
   }
 
-  DEBUG_printf("1_httpCreateCredentials: Returning %p.", hcreds);
+  DEBUG_printf("1_httpCreateCredentials: Returning %p.", (void *)hcreds);
 
   return (hcreds);
 }
@@ -1754,7 +1754,7 @@ _httpTLSStart(http_t *http)		// I - Connection to server
   };
 
 
-  DEBUG_printf("3_httpTLSStart(http=%p)", http);
+  DEBUG_printf("3_httpTLSStart(http=%p)", (void *)http);
 
   if (!cg->client_conf_loaded)
   {
@@ -1822,7 +1822,7 @@ _httpTLSStart(http_t *http)		// I - Connection to server
       {
 	// Resolve hostname from connection address...
 	http_addr_t	addr;		// Connection address
-	socklen_t		addrlen;	// Length of address
+	socklen_t	addrlen;	// Length of address
 
 	addrlen = sizeof(addr);
 	if (getsockname(http->fd, (struct sockaddr *)&addr, &addrlen))
