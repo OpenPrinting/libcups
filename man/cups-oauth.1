@@ -126,29 +126,43 @@ Specifies the OAuth/OpenID authorization server URL.
 Specifies a space-delimited list of scope names to use when authorizing access.
 The default is to request authorization for all supported OpenID scopes.
 .SH SUB-COMMANDS
-.SS authorize
+.TP 5
+\fBauthorize\fR [\fIRESOURCE\fR]
 Starts an authorization workflow with the default web browser.
 If a resource URI is specified, the authorization is specific to that resource.
 The access token is send to the standard output on success.
-.SS clear
+.TP 5
+\fBclear\fR [\fIRESOURCE\fR]
 Clears any authorization for the specified resource or for all resources if no resource URI is supplied.
-.SS get-access-token
+.TP 5
+\fBget-access-token\fR [\fIRESOURCE\fR]
 Output the current, unexpired access token, if any, to the standard output.
-.SS get-client-id
+.TP 5
+.B get-client-id
 Output the client ID string, if any, to the standard output.
-.SS get-device-grant
+.TP 5
+\fBget-device-grant\fR [\fIRESOURCE\fR]
 Gets a device authorization grant and outputs the device code, user code, and web page to the standard output.
-.SS get-device-token
+.TP 5
+\fBget-device-token\fR [\fIRESOURCE\fR] \fIDEVICE-CODE\fR
 Waits for device authorization to complete and outputs the device access token to the standard output.
-.SS get-metadata
+.TP 5
+\fBget-metadata\fR [\fINAME\fR]
 Get the OAuth/OpenID authorization server metadata and send it to the standard output.
-If a name is specified, the output is just the value for the specified metadata.
-.SS get-user-id
+If
+.I NAME
+is specified, the output is just the value for the named metadata.
+.TP 5
+\fBget-user-id\fR [\fIRESOURCE\fR] [\fINAME\fR]
 Get the OpenID user ID information and send it to the standard output.
-If a name is specified, the output is just the named claim from the user ID.
-.SS set-access-token
+If
+.I NAME
+is specified, the output is just the named claim from the user ID.
+.TP 5
+\fBset-access-token\fR [\fIRESOURCE\fR] \fITOKEN\fR
 Set the access token (which is sometimes also called an API key) for the specified resource or for all resources.
-.SS set-client-data
+.TP 5
+\fBset-client-data\fR \fICLIENT-ID\fR \fICLIENT-SECRET\fR
 Set the client ID string and secret for an OAuth/OpenID authorization server.
 .SH ENVIRONMENT VARIABLES
 The

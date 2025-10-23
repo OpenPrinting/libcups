@@ -1,5 +1,5 @@
 ---
-title: CUPS Programming Manual
+title: CUPS 3.0 Programming Manual
 author: Michael R Sweet
 copyright: Copyright © 2021-2025 by OpenPrinting. All Rights Reserved.
 version: 3.0.0
@@ -11,8 +11,8 @@ version: 3.0.0
 
 # Introduction
 
-CUPS provides the "cups" library to talk to the different parts of CUPS and with
-Internet Printing Protocol (IPP) printers. The "cups" library functions are
+CUPS 3.0 provides the "cups3" library to talk to the different parts of CUPS and
+with Internet Printing Protocol (IPP) printers. The "cups" library functions are
 accessed by including the `<cups/cups.h>` header.
 
 CUPS is based on the Internet Printing Protocol ("IPP"), which allows clients
@@ -20,7 +20,7 @@ CUPS is based on the Internet Printing Protocol ("IPP"), which allows clients
 get a list of destinations, send print jobs, and so forth.  You identify which
 server you want to communicate with using a pointer to the opaque structure
 `http_t`.  The `CUPS_HTTP_DEFAULT` constant can be used when you want to talk to
-the CUPS scheduler.
+the default CUPS spooler.
 
 
 ## Guidelines

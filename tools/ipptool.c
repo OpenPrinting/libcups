@@ -7253,13 +7253,13 @@ with_value(ipptool_test_t  *data,	// I - Test data
           valptr = value;
 
 	  while (isspace(*valptr & 255) || isdigit(*valptr & 255) ||
-		 *valptr == '-' || *valptr == ',' || *valptr == '<' ||
+		 *valptr == '-' || *valptr == ',' || *valptr == '!' || *valptr == '<' ||
 		 *valptr == '=' || *valptr == '>')
 	  {
 	    op = '=';
 	    while (*valptr && !isdigit(*valptr & 255) && *valptr != '-')
 	    {
-	      if (*valptr == '<' || *valptr == '>' || *valptr == '=')
+	      if (*valptr == '<' || *valptr == '>' || *valptr == '=' || *valptr == '!')
 		op = *valptr;
 	      valptr ++;
 	    }
@@ -7273,6 +7273,7 @@ with_value(ipptool_test_t  *data,	// I - Test data
 	    valptr = nextptr;
 
             if ((op == '=' && attrvalue == intvalue) ||
+                (op == '!' && attrvalue != intvalue) ||
                 (op == '<' && attrvalue < intvalue) ||
                 (op == '>' && attrvalue > intvalue))
 	    {
@@ -7321,12 +7322,12 @@ with_value(ipptool_test_t  *data,	// I - Test data
 
 	  while (isspace(*valptr & 255) || isdigit(*valptr & 255) ||
 		 *valptr == '-' || *valptr == ',' || *valptr == '<' ||
-		 *valptr == '=' || *valptr == '>')
+		 *valptr == '=' || *valptr == '>' || *valptr == '!')
 	  {
 	    op = '=';
 	    while (*valptr && !isdigit(*valptr & 255) && *valptr != '-')
 	    {
-	      if (*valptr == '<' || *valptr == '>' || *valptr == '=')
+	      if (*valptr == '<' || *valptr == '>' || *valptr == '=' || *valptr == '!')
 		op = *valptr;
 	      valptr ++;
 	    }
@@ -7339,7 +7340,8 @@ with_value(ipptool_test_t  *data,	// I - Test data
 	      break;
 	    valptr = nextptr;
 
-            if ((op == '=' && (lower == intvalue || upper == intvalue)) ||
+            if ((op == '=' && lower <= intvalue && upper >= intvalue) ||
+		(op == '!' && (lower > intvalue || upper < intvalue)) ||
 		(op == '<' && upper < intvalue) ||
 		(op == '>' && upper > intvalue))
 	    {

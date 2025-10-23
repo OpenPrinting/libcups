@@ -6,11 +6,80 @@
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH libcups 3 "CUPS" "2025-03-04" "OpenPrinting"
+.TH libcups 3 "CUPS" "2025-10-23" "OpenPrinting"
 .SH NAME
 libcups \- cups api library
+.SH LIBRARY
+.B pkg-config
+.B \-\-cflags
+.B cups3
+.br
+.B pkg-config
+.B \-\-libs
+.B cups3
+.SH SYNOPSIS
+.I #include
+.I <cups/cups.h>
 .SH DESCRIPTION
+CUPS 3.0 provides the "cups3" library to talk to the different parts of CUPS and with Internet Printing Protocol (IPP) printers. The "cups" library functions are accessed by including the
+.I <cups/cups.h>
+header.
+.PP
+CUPS is based on the Internet Printing Protocol ("IPP"), which allows clients (applications) to communicate with a server (the scheduler, printers, etc.) to get a list of destinations, send print jobs, and so forth.
+You identify which server you want to communicate with using a pointer to the opaque structure
+.BR http_t .
+The
+.B CUPS_HTTP_DEFAULT
+constant can be used when you want to talk to the default CUPS spooler.
+.PP
+Printers are represented as destinations using the
+.B cups_dest_t
+structure which defines the local name as well as status and identification information such as the printer's Univeral Resource Identifier (URI), location, and model.
+The
+.B cupsEnumDests
+and
+.B cupsGetDests
+functions can be used to get a list of available destinations while the
+.B cupsGetNamedDest
+function can be used to get a single named destination.
+.PP
+Capability and localization information for a destination is separately contained in the
+.B cups_dinfo_t
+structure and is queried using the
+.B cupsCopyDestInfo
+function.
+The
+.B cupsCreateDestJob
+function creates a print job on a destination and the
+.BR cupsStartDestDocument , cupsWriteRequestData ,
+and
+.B cupsFinishDestDocument
+functions add a document to the print job.
+.SH EXAMPLE
+The following simple program lists the available destinations:
+.nf
+#include <stdio.h>
+#include <cups/cups.h>
+
+bool print_dest(void *cb_data, unsigned flags, cups_dest_t *dest)
+{
+  if (dest->instance)
+    printf("%s/%s\\n", dest->name, dest->instance);
+  else
+    puts(dest->name);
+
+  return (true);
+}
+
+int main(void)
+{
+  cupsEnumDests(CUPS_DEST_FLAGS_NONE, 1000, NULL, 0, 0, print_dest, NULL);
+
+  return (0);
+}
+.fi
 .SH SEE ALSO
-.BR cups (1)
+.BR cups (1),
+CUPS 3.0 Programming Manual
 .SH COPYRIGHT
 Copyright \[co] 2025 by OpenPrinting.

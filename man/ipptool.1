@@ -7,7 +7,7 @@
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH ipptool 1 "CUPS" "2025-09-18" "OpenPrinting"
+.TH ipptool 1 "CUPS" "2025-10-23" "OpenPrinting"
 .SH NAME
 ipptool \- perform internet printing protocol requests
 .SH SYNOPSIS
@@ -90,14 +90,14 @@ ipptool \- perform internet printing protocol requests
 .SH DESCRIPTION
 .B ipptool
 sends IPP requests to the specified
-.I printer-uri
+.I PRINTER-URI
 and tests and/or displays the results.
 Each named
-.I testfile
+.I TESTFILE
 defines one or more requests, including the expected response status, attributes, and values.
 Output is either a plain text, formatted text, CSV, JSON, or XML report on the standard output, with a non-zero exit status indicating that one or more tests have failed.
 The
-.I testfile
+.I TESTFILE
 format is described in
 .BR ipptoolfile (5).
 .SH OPTIONS
@@ -249,10 +249,10 @@ The following standard test files are available:
     get\-subscriptions.test            - Get a list of subscriptions
     identify\-printer.test             - Identify a printer
     identify\-printer\-display.test     - Identify a printer via the display
-    ipp\-1.1.test                      - Run IPP/1.1 conformance tests
-    ipp\-2.0.test                      - Run IPP/2.0 conformance tests
-    ipp\-2.1.test                      - Run IPP/2.1 conformance tests
-    ipp\-2.2.test                      - Run IPP/2.2 conformance tests
+    ipp\-1.1.test                      - IPP/1.1 tests
+    ipp\-2.0.test                      - IPP/2.0 tests
+    ipp\-2.1.test                      - IPP/2.1 tests
+    ipp\-2.2.test                      - IPP/2.2 tests
     print\-job.test                    - Print a file
     print\-job\-and\-wait.test           - Print a file and wait for completion
     print\-job\-deflate.test            - Print a file with deflate compression
@@ -265,19 +265,22 @@ The following standard test files are available:
     print\-job\-password.test           - Print a file with a password/PIN
     print\-job\-raster.test             - Print a generated raster file
     print\-uri.test                    - Print a URI/URL
-    pwg5100.1.test                    - Test PWG 5100.1 (Finishings) conformance
-    pwg5100.2.test                    - Test PWG 5100.2 (output-bin) conformance
-    pwg5100.3.test                    - Test PWG 5100.3 (Production) conformance
-    pwg5100.5.test                    - Test PWG 5100.5 (Document Object) conformance
-    pwg5100.6.test                    - Test PWG 5100.6 (Page Overrides) conformance
-    pwg5100.7.test                    - Test PWG 5100.7 (Job Extensions) conformance
-    pwg5100.8.test                    - Test PWG 5100.8 (-actuals) conformance
-    pwg5100.9.test                    - Test PWG 5100.9 (Alerts) conformance
-    pwg5100.11.test                   - Test PWG 5100.11 (Enterprise) conformance
-    rfc3380.test                      - Test RFC 3380 (Job and Printer Set) conformance
-    rfc3995-3996.test                 - Test RFC 3995/3996 (Notifications) conformance
-    rfc3998.test                      - Test RFC 3998 (Admin) conformance
+    pwg5100.1.test                    - PWG 5100.1 (IPP Finishings) tests
+    pwg5100.2.test                    - PWG 5100.2 (IPP "output-bin" Attribute) tests
+    pwg5100.3.test                    - PWG 5100.3 (IPP Production Printing Extensions) tests
+    pwg5100.5.test                    - PWG 5100.5 (IPP Document Object) tests
+    pwg5100.6.test                    - PWG 5100.6 (IPP Page Overrides) tests
+    pwg5100.7.test                    - PWG 5100.7 (IPP Job Extensions) tests
+    pwg5100.8.test                    - PWG 5100.8 (IPP "-actuals" Attributes) tests
+    pwg5100.9.test                    - PWG 5100.9 (IPP Printer Alerts) tests
+    pwg5100.11.test                   - PWG 5100.11 (IPP Enterprise Printing Extensions) tests
+    pwg5100.13.test                   - PWG 5100.13 (IPP Driver Replacement Extensions) tests
+    pwg5101.1.test                    - PWG 5101.1 (PWG Media Standardized Names) tests
+    rfc3380.test                      - RFC 3380 (IPP Job and Printer Set Operations) tests
+    rfc3995-3996.test                 - RFC 3995/3996 (IPP Event Notifications and Subscriptions) tests
+    rfc3998.test                      - RFC 3998 (IPP Job and Printer Adminstrative Operations) tests
     set\-attrs\-hold.test               - Test setting job-hold-until to hold a job
+    test\-resources.test               - Test and download printer resources
     validate\-job.test                 - Validate a job ticket
     validate\-resources.test           - Validate printer resource files and web pages
 .fi
@@ -300,6 +303,7 @@ The following standard document files are available:
     testfile.jpg                      - A color photo collage
     testfile.pcl                      - A HP-PCL homage to "The Shining"
     testfile.pdf                      - A historical CUPS PDF document
+    testfile-password.pdf             - A historical CUPS PDF document with password "test"
     testfile.ps                       - A historical CUPS PostScript document
     testfile.txt                      - A plain text homage to "The Shining"
 .fi

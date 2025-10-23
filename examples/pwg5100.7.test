@@ -5,6 +5,9 @@
 #
 # Copyright © 2018-2024 by OpenPrinting.
 #
+# Licensed under Apache License v2.0.  See the file "LICENSE" for more
+# information.
+#
 # Usage:
 #
 #   ./ipptool [OPTIONS] -f FILENAME -t PRINTER-URI pwg5100.7.test
@@ -223,6 +226,51 @@
     EXPECT ?which-jobs-supported OF-TYPE keyword IN-GROUP printer-attributes-tag
 }
 
+{
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_CLIENT_INFO
+
+    NAME "Print-Job with client-info"
+    OPERATION Print-Job
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR name requesting-user-name $user
+    ATTR name job-name "client-info test"
+    ATTR mimeMediaType document-format $filetype
+    ATTR collection client-info {
+        MEMBER name client-name "ipptool"
+        MEMBER text client-patches ""
+        MEMBER text client-string-version "3.0.1.2"
+        MEMBER octetString client-version <0003000000010002>
+    }
+    FILE $filename
+
+    STATUS successful-ok
+}
+
+{
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_CLIENT_INFO
+
+    NAME "Get-Job-Attributes for client-info"
+    OPERATION Get-Job-Attributes
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR name requesting-user-name $user
+
+    STATUS successful-ok
+
+    EXPECT client-info OF-TYPE collection COUNT 1;
+    EXPECT client-info/client-name OF-TYPE name COUNT 1 WITH-VALUE "ipptool"
+    EXPECT client-info/client-patches OF-TYPE text COUNT 1 WITH-VALUE ""
+    EXPECT client-info/client-string-version OF-TYPE text COUNT 1 WITH-VALUE "3.0.1.2"
+    EXPECT client-info/client-version OF-TYPE octetString COUNT 1 WITH-VALUE <0003000000010002>
+}
 
 # TODO: Finish updating the rest of 5100.7 tests...
 # {

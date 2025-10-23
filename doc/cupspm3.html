@@ -2,7 +2,7 @@
 <html lang="en-US">
 <!-- SECTION: Programming -->
 <head>
-<title>CUPS Programming Manual</title>
+<title>CUPS 3.0 Programming Manual</title>
 <meta name="keywords" content="Programming">
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
 <meta name="generator" content="codedoc v3.8">
@@ -270,7 +270,7 @@ span.string {
 </head>
 <body>
 <div class="header">
-<h1 class="title">CUPS Programming Manual</h1>
+<h1 class="title">CUPS 3.0 Programming Manual</h1>
 <p>Michael R Sweet</p>
 <p>Copyright © 2021-2025 by OpenPrinting. All Rights Reserved.</p>
 </div>
@@ -969,8 +969,8 @@ span.string {
 <p>Please <a href="https://github.com/openprinting/libcups/issues">file issues on Github</a> to provide feedback on this document.</p>
 </blockquote>
 <h2 class="title" id="introduction">Introduction</h2>
-<p>CUPS provides the &quot;cups&quot; library to talk to the different parts of CUPS and with Internet Printing Protocol (IPP) printers. The &quot;cups&quot; library functions are accessed by including the <code>&lt;cups/cups.h&gt;</code> header.</p>
-<p>CUPS is based on the Internet Printing Protocol (&quot;IPP&quot;), which allows clients (applications) to communicate with a server (the scheduler, printers, etc.) to get a list of destinations, send print jobs, and so forth. You identify which server you want to communicate with using a pointer to the opaque structure <code>http_t</code>. The <code>CUPS_HTTP_DEFAULT</code> constant can be used when you want to talk to the CUPS scheduler.</p>
+<p>CUPS 3.0 provides the &quot;cups3&quot; library to talk to the different parts of CUPS and with Internet Printing Protocol (IPP) printers. The &quot;cups&quot; library functions are accessed by including the <code>&lt;cups/cups.h&gt;</code> header.</p>
+<p>CUPS is based on the Internet Printing Protocol (&quot;IPP&quot;), which allows clients (applications) to communicate with a server (the scheduler, printers, etc.) to get a list of destinations, send print jobs, and so forth. You identify which server you want to communicate with using a pointer to the opaque structure <code>http_t</code>. The <code>CUPS_HTTP_DEFAULT</code> constant can be used when you want to talk to the default CUPS spooler.</p>
 <h3 class="title" id="guidelines">Guidelines</h3>
 <p>When writing software that uses the &quot;cups&quot; library:</p>
 <ul>

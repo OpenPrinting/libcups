@@ -18,8 +18,8 @@ DOCFILES	=	\
 			cups.svg \
 			cups-oauth.html \
 			cups-x509.html \
-			cupspm.epub \
-			cupspm.html \
+			cupspm3.epub \
+			cupspm3.html \
 			index.html \
 			ippeveprinter.html \
 			ippfind.html \

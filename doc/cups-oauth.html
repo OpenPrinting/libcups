@@ -219,39 +219,43 @@ Specifies a space-delimited list of scope names to use when authorizing access.
 The default is to request authorization for all supported OpenID scopes.
 </p>
     <h2 id="cups-oauth-1.sub-commands">Sub-Commands</h2>
-    <h3 id="cups-oauth-1.sub-commands.authorize">Authorize</h3>
-<p>Starts an authorization workflow with the default web browser.
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>authorize</strong> [<em>RESOURCE</em>]<br>
+Starts an authorization workflow with the default web browser.
 If a resource URI is specified, the authorization is specific to that resource.
 The access token is send to the standard output on success.
 </p>
-    <h3 id="cups-oauth-1.sub-commands.clear">Clear</h3>
-<p>Clears any authorization for the specified resource or for all resources if no resource URI is supplied.
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>clear</strong> [<em>RESOURCE</em>]<br>
+Clears any authorization for the specified resource or for all resources if no resource URI is supplied.
 </p>
-    <h3 id="cups-oauth-1.sub-commands.get-access-token">Get-Access-Token</h3>
-<p>Output the current, unexpired access token, if any, to the standard output.
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>get-access-token</strong> [<em>RESOURCE</em>]<br>
+Output the current, unexpired access token, if any, to the standard output.
 </p>
-    <h3 id="cups-oauth-1.sub-commands.get-client-id">Get-Client-Id</h3>
-<p>Output the client ID string, if any, to the standard output.
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>get-client-id</strong><br>
+Output the client ID string, if any, to the standard output.
 </p>
-    <h3 id="cups-oauth-1.sub-commands.get-device-grant">Get-Device-Grant</h3>
-<p>Gets a device authorization grant and outputs the device code, user code, and web page to the standard output.
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>get-device-grant</strong> [<em>RESOURCE</em>]<br>
+Gets a device authorization grant and outputs the device code, user code, and web page to the standard output.
 </p>
-    <h3 id="cups-oauth-1.sub-commands.get-device-token">Get-Device-Token</h3>
-<p>Waits for device authorization to complete and outputs the device access token to the standard output.
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>get-device-token</strong> [<em>RESOURCE</em>] <em>DEVICE-CODE</em><br>
+Waits for device authorization to complete and outputs the device access token to the standard output.
 </p>
-    <h3 id="cups-oauth-1.sub-commands.get-metadata">Get-Metadata</h3>
-<p>Get the OAuth/OpenID authorization server metadata and send it to the standard output.
-If a name is specified, the output is just the value for the specified metadata.
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>get-metadata</strong> [<em>NAME</em>]<br>
+Get the OAuth/OpenID authorization server metadata and send it to the standard output.
+If
+<em>NAME</em>
+is specified, the output is just the value for the named metadata.
 </p>
-    <h3 id="cups-oauth-1.sub-commands.get-user-id">Get-User-Id</h3>
-<p>Get the OpenID user ID information and send it to the standard output.
-If a name is specified, the output is just the named claim from the user ID.
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>get-user-id</strong> [<em>RESOURCE</em>] [<em>NAME</em>]<br>
+Get the OpenID user ID information and send it to the standard output.
+If
+<em>NAME</em>
+is specified, the output is just the named claim from the user ID.
 </p>
-    <h3 id="cups-oauth-1.sub-commands.set-access-token">Set-Access-Token</h3>
-<p>Set the access token (which is sometimes also called an API key) for the specified resource or for all resources.
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>set-access-token</strong> [<em>RESOURCE</em>] <em>TOKEN</em><br>
+Set the access token (which is sometimes also called an API key) for the specified resource or for all resources.
 </p>
-    <h3 id="cups-oauth-1.sub-commands.set-client-data">Set-Client-Data</h3>
-<p>Set the client ID string and secret for an OAuth/OpenID authorization server.
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>set-client-data</strong> <em>CLIENT-ID</em> <em>CLIENT-SECRET</em><br>
+Set the client ID string and secret for an OAuth/OpenID authorization server.
 </p>
     <h2 id="cups-oauth-1.environment-variables">Environment Variables</h2>
 <p>The

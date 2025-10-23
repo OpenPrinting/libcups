@@ -7,6 +7,9 @@
 #
 # Copyright © 2024 by OpenPrinting.
 #
+# Licensed under Apache License v2.0.  See the file "LICENSE" for more
+# information.
+#
 # Usage:
 #
 #   ./ipptool [OPTIONS] -f FILENAME -t PRINTER-URI rfc3995-3996.test

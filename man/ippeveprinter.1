@@ -1,13 +1,13 @@
 .\"
 .\" ippeveprinter man page for CUPS.
 .\"
-.\" Copyright © 2021-2023 by OpenPrinting.
+.\" Copyright © 2021-2025 by OpenPrinting.
 .\" Copyright © 2014-2019 by Apple Inc.
 .\"
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH ippeveprinter 1 "CUPS" "2023-11-22" "OpenPrinting"
+.TH ippeveprinter 1 "CUPS" "2025-10-23" "OpenPrinting"
 .SH NAME
 ippeveprinter \- an ipp everywhere printer application for cups
 .SH SYNOPSIS
@@ -39,10 +39,10 @@ ippeveprinter \- an ipp everywhere printer application for cups
 .I DEVICE-URI
 ] [
 .B \-f
-.I TYPE/SUBTYPE[,...]
+.I INPUT-TYPE/SUBTYPE[,...]
 ] [
 .B \-F
-.I TYPE/SUBTYPE
+.I OUTPUT-TYPE/SUBTYPE
 ] [
 .B \-i
 .I ICONFILE.png[,...]
@@ -95,9 +95,10 @@ Show program usage.
 .B \-\-no\-web\-forms
 Disable the web interface forms used to update the media and supply levels.
 .TP 5
-\fB\-\-pam\-service \fIservice\fR
+\fB\-\-pam\-service \fISERVICE\fR
 Set the PAM service name.
-The default service is "cups".
+The default service is
+.IR cups .
 .TP 5
 .B \-\-version
 Show the CUPS version.
@@ -118,27 +119,31 @@ Enable authentication for the created printer.
 .B ippeveprinter
 uses PAM to authenticate HTTP Basic credentials.
 .TP 5
-\fB\-c \fIcommand\fR
+\fB\-c \fICOMMAND\fR
 Run the specified command for each document that is printed.
 .TP 5
-\fB\-d \fIspool-directory\fR
+\fB\-d \fISPOOL-DIRECTORY\fR
 Specifies the directory that will hold the print files.
 The default is a directory under the user's current temporary directory.
 .TP 5
 \fB\-D \fIDEVICE-URI\fR
 Set the device URI for print output.
-The URI can be a filename, directory, or a network socket URI of the form "socket://ADDRESS[:PORT]" (where the default port number is 9100).
+The URI can be a filename, directory, or a network socket URI of the form \fIsocket://ADDRESS\fR[:\fIPORT\fR] where the default port number is 9100.
 When specifying a directory,
 .B ippeveprinter
 will create an output file using the job ID and name.
 .TP 5
-\fB\-f \fITYPE/SUBTYPE[,...]\fR
+\fB\-f \fIINPUT-TYPE/SUBTYPE[,...]\fR
 Specifies a list of MIME media types that the server will accept.
 The default depends on the type of printer created.
 .TP 5
-\fB\-F \fIoutput-type/subtype[,...]\fR
+\fB\-F \fIOUTPUT-TYPE/SUBTYPE[,...]\fR
 Specifies the output MIME media type.
-The default is "application/postscript" when the \fB\-P\fR option is specified.
+The default is
+.I application/postscript
+when the
+.B \-P
+option is specified.
 .TP 5
 \fB\-i \fIICONFILE.png[,...]\fR
 Specifies the printer icon file for the server.
@@ -148,17 +153,22 @@ The default is an internally-provided PNG image.
 .B \-k
 Keeps the print documents in the spool directory rather than deleting them.
 .TP 5
+\fB\-K \fIKEYSTORE\fR
+Specifies the location of X.509 certificates.
+.TP 5
 \fB\-l \fILOCATION\fR
 Specifies the human-readable location string that is reported by the server.
 The default is the empty string.
 .TP 5
 \fB\-m \fIMODEL\fR
 Specifies the model name of the printer.
-The default is "Printer".
+The default is
+.IR Printer .
 .TP 5
 \fB\-M \fIMANUFACTURER\fR
 Set the manufacturer of the printer.
-The default is "Example".
+The default is
+.IR Example .
 .TP 5
 \fB\-n \fIHOSTNAME\fR
 Specifies the hostname that is reported by the server.
@@ -166,7 +176,7 @@ The default is the name returned by the
 .BR hostname (1)
 command.
 .TP 5
-\fB\-p \fIPORt\fR
+\fB\-p \fIPORT\fR
 Specifies the port number to listen on.
 The default is a user-specific number from 8000 to 8999.
 .TP 5
@@ -176,12 +186,14 @@ Turns off DNS-SD service advertisements entirely.
 \fB\-r \fISUBTYPE[,...]\fR
 Specifies the DNS-SD subtype(s) to advertise.
 Separate multiple subtypes with a comma.
-The default is "_print".
+The default is
+.IR _print .
 .TP 5
 \fB\-s \fISPEED[,COLOR-SPEED]\fR
 Specifies the printer speed in pages per minute.
 If two numbers are specified and the second number is greater than zero, the server will report support for color printing.
-The default is "10,0".
+The default is
+.IR 10,0 .
 .TP 5
 \fB\-S \fIFILENAME.strings\fR
 Specifies a strings file for localization.
@@ -193,7 +205,8 @@ Be (very) verbose when logging activity to standard error.
 .TP 5
 \fB\-V 2.0\fR
 Specifies the maximum IPP version to report.
-2.0 is the default.
+.B 2.0
+is the default.
 .SH EXIT STATUS
 The
 .B ippeveprinter
@@ -274,4 +287,4 @@ Make a copy of a real printer's attributes and simulate it locally:
 .BR ipptool (1),
 PWG Internet Printing Protocol Workgroup (http://www.pwg.org/ipp)
 .SH COPYRIGHT
-Copyright \[co] 2021-2023 by OpenPrinting.
+Copyright \[co] 2021-2025 by OpenPrinting.

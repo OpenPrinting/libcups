@@ -35,7 +35,8 @@ DATAFILES	=	\
 			testfile.pcl \
 			testfile.pdf \
 			testfile.ps \
-			testfile.txt
+			testfile.txt \
+			testfile-password.pdf
 TESTFILES	=	\
 			cancel-current-job.test \
 			create-job.test \
@@ -80,11 +81,13 @@ TESTFILES	=	\
 			pwg5100.8.test \
 			pwg5100.9.test \
 			pwg5100.11.test \
+			pwg5100.13.test \
 			pwg5101.1.test \
 			rfc3380.test \
 			rfc3995-3996.test \
 			rfc3998.test \
 			set-attrs-hold.test \
+			test-resources.test \
 			validate-job.test \
 			validate-resources.test
 

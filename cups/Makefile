@@ -674,13 +674,13 @@ tlscheck:	tlscheck.o $(LIBCUPS_STATIC)
 
 doc:
 	echo "Generating CUPS Programming Manual..."
-	$(RM) cupspm.xml
-	codedoc --section "Programming" --body cupspm.md cupspm.xml \
-		$(LIBOBJS:.o=.c) tls-openssl.c $(HEADERS) --coverimage cupspm.png \
-		--epub ../doc/cupspm.epub
-	codedoc --section "Programming" --body cupspm.md \
-		cupspm.xml > ../doc/cupspm.html
-	$(RM) cupspm.xml
+	$(RM) cupspm3.xml
+	codedoc --section "Programming" --body cupspm3.md cupspm3.xml \
+		$(LIBOBJS:.o=.c) tls-openssl.c $(HEADERS) --coverimage cupspm3.png \
+		--epub ../doc/cupspm3.epub
+	codedoc --section "Programming" --body cupspm3.md \
+		cupspm3.xml > ../doc/cupspm3.html
+	$(RM) cupspm3.xml
 
 
 #
