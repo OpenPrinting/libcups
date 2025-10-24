@@ -62,38 +62,37 @@ Shows program help.
 .B \-\-version
 Shows program version.
 .TP 5
-.BI \-d \ DEVICE-URI
+\fB\-d \fIDEVICE-URI\fR
 Specifies an output device as a URI.
 Currently only the "ipp", "ipps", and "socket" URI schemes are supported, for example "socket://10.0.1.42" to send print data to an AppSocket printer at IP address 10.0.1.42.
 .TP 5
-.BI \-i \ INPUT/FORMAT
+\fB\-i \fIINPUT/FORMAT\fR
 Specifies the MIME media type of the input file.
-Currently the "application/pdf" (PDF) and "image/jpeg" (JPEG) MIME media types are supported.
+Currently the "application/pdf" (PDF), "image/jpeg" (JPEG), and "text/plain" MIME media types are supported.
 .TP 5
-.BI \-m \ OUTPUT/FORMAT
+\fB\-m \fIOUTPUT/FORMAT\fR
 Specifies the MIME media type of the output file.
 Currently the "application/PCLm" (PCLm), "application/pdf" (PDF), "application/postscript" (PostScript), "application/vnd.hp-pcl" (HP PCL), "image/pwg-raster" (PWG Raster), and "image/urf" (Apple Raster) MIME media types are supported.
 .TP 5
-.BI \-o \ "NAME=VALUE [... NAME=VALUE]"
+\fB\-o "\fINAME=VALUE \fR[... \fINAME=VALUE\fR]\fB"\fR
 Specifies one or more named options for the conversion.
-Currently the "copies", "force-front-side", "image-orientation", "imposition-template", "job-error-sheet", "job-pages-per-set", "job-sheet-message", "job-sheets", "job-sheets-col", "media", "media-col", "multiple-document-handling", "number-up", "orientation-requested", "overrides", "page-delivery", "page-ranges", "print-color-mode", "print-quality", "print-scaling", "printer-resolution", "separator-sheets", "sides", "x-image-position", "x-image-shift", "x-side1-image-shift", "x-side2-image-shift", "y-image-position", "y-image-shift", "y-side1-image-shift", and "y-side2-image-shift" options are supported.
-See the NAMED OPTIONS section for more information.
+See the "NAMED OPTIONS" section for more information.
 .TP 5
-.BI \-r \ RESOLUTION[,...]
+\fB\-r \fIRESOLUTION\fR[,...\fIRESOLUTION\fR]
 Specifies the supported resolutions.
 Resolutions are of the form "NNNdpi" or "NNNxNNNdpi", for example "300dpi" or "600x300dpi".
 HP PCL output only supports resolutions of "300dpi" and "600dpi".
 .TP 5
-.BR \-s \ {flipped|manual-tumble|normal|rotated}
+.BR \-s \ { flipped | manual\-tumble | normal | rotated }
 Specifies the coordinate system for the back side of duplex sheets.
 .TP 5
-.BR \-t \ type[,...]
+\fB\-t \fITYPE\fR[,...,\fITYPE\fR]
 Specifies the output color spaces and bit depths, separated by commas.
 Types include "adobe-rgb_8" and "adobe-rgb_16" for 8-bit and 16-bit AdobeRGB, "black_1" and "black_8" for 1-bit and 8-bit black, "cmyk_8" for 8-bit CMYK, "sgray_1" and "sgray_8" for 1-bit and 8-bit grayscale with a 2.2 gamma correction, and "srgb_8" for 8-bit sRGB color.
 Run
 .B ipptransform
 with the
-.I \-\-help
+.B \-\-help
 option to see the list of supported color spaces and bit depths.
 .TP 5
 .B \-v
