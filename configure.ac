@@ -1,7 +1,7 @@
 dnl
 dnl Configuration script for libcups.
 dnl
-dnl Copyright © 2020-2024 by OpenPrinting
+dnl Copyright © 2020-2025 by OpenPrinting
 dnl Copyright © 2007-2020 by Apple Inc.
 dnl Copyright © 1997-2007 by Easy Software Products, all rights reserved.
 dnl
@@ -672,9 +672,6 @@ AS_IF([test "$prefix" = NONE], [
     realprefix="$prefix"
 ])
 
-#echo "prefix='$prefix'"
-#echo "realprefix='$realprefix'"
-#echo "BEFORE datarootdir='$datarootdir'"
 AS_IF([test "$datarootdir" = "\${prefix}/share"], [
     AS_IF([test "$prefix" = "/"], [
 	datarootdir="/usr/share"
@@ -682,9 +679,7 @@ AS_IF([test "$datarootdir" = "\${prefix}/share"], [
 	datarootdir="$realprefix/share"
     ])
 ])
-#echo "AFTER datarootdir='$datarootdir'"
 
-#echo "BEFORE datadir='$datadir'"
 AS_IF([test "$datadir" = "\${prefix}/share"], [
     AS_IF([test "$prefix" = "/"], [
 	datadir="/usr/share"
@@ -694,18 +689,14 @@ AS_IF([test "$datadir" = "\${prefix}/share"], [
 ], [test "$datadir" = "\${datarootdir}"], [
     datadir="$datarootdir"
 ])
-#echo "AFTER datadir='$datadir'"
 
-#echo "BEFORE includedir='$includedir'"
 AS_IF([test "$includedir" = NONE -o "$includedir" = "\${prefix}/include"], [
     includedir="\${prefix}/include$INCLUDE_PREFIX"
 ])
 AS_IF([test "$includedir" != "/usr/include" -a "$includedir" != "/usr/local/include"], [
     PKGCONFIG_CFLAGS="-I\${includedir} $PKGCONFIG_CFLAGS"
 ])
-#echo "AFTER includedir='$includedir'"
 
-#echo "BEFORE sysconfdir='$sysconfdir'"
 AS_IF([test "$sysconfdir" = "\${prefix}/etc"], [
     AS_IF([test "$prefix" = "/"], [
 	AS_IF([test "$host_os_name" = darwin], [
@@ -717,7 +708,6 @@ AS_IF([test "$sysconfdir" = "\${prefix}/etc"], [
 	sysconfdir="$realprefix/etc"
     ])
 ])
-#echo "AFTER sysconfdir='$sysconfdir'"
 
 
 dnl CUPS_DATADIR and CUPS_SERVERROOT
