@@ -4,12 +4,13 @@ Copyright © 2020-2025 by OpenPrinting
 Copyright © 2007-2019 by Apple Inc.
 Copyright © 1997-2007 by Easy Software Products.
 
-CUPS and the CUPS logo are trademarks of Apple Inc.
+CUPS is a trademark of Apple Inc.
 
 The MD5 Digest code is Copyright 1999 Aladdin Enterprises.
 
 
--- CUPS Exceptions to the Apache 2.0 License --
+(Optional) Exceptions to the Apache 2.0 License:
+================================================
 
 As an exception, if, as a result of your compiling your source code, portions
 of this Software are embedded into an Object form of such source code, you

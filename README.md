@@ -7,7 +7,7 @@ The CUPS Library v3 (libcups)
 [![Coverity Scan](https://img.shields.io/coverity/scan/24180)](https://scan.coverity.com/projects/michaelrsweet-libcups)
 
 > *Note:* This is a major release update of the CUPS library that breaks both
-> binary and source compatibility with prior releases of CUPS.
+> binary and source compatibility with the 1.x and 2.x releases of CUPS.
 
 The CUPS library (libcups) provides a common C API for HTTP/HTTPS and IPP
 communications on Unix®-like operating systems and Microsoft Windows®.  It is
@@ -21,8 +21,8 @@ See the file `doc/cupspm.html` for a description of the changes and how to
 migrate your code to the new library.
 
 The CUPS library is licensed under the Apache License Version 2.0 with an
-exception to allow linking against GNU GPL2-only software.  See the files
-`LICENSE` and `NOTICE` for more information.
+(optional) exception to allow linking against GNU GPL2-only software.  See the
+files `LICENSE` and `NOTICE` for more information.
 
 
 Getting the Code
@@ -66,6 +66,7 @@ Initial documentation to get you started is provided in the root directory of
 the CUPS sources:
 
 - `CHANGES.md`: A list of changes for each release of libcups.
+- `CODE_OF_CONDUCT.md`: Code of conduct for the project.
 - `CONTRIBUTING.md`: Guidelines for contributing to the CUPS project.
 - `CREDITS.md`: A list of past contributors to the CUPS project.
 - `DEVELOPING.md`: Guidelines for developing code for the CUPS project.
@@ -73,9 +74,10 @@ the CUPS sources:
 - `LICENSE`: The CUPS license agreement (Apache 2.0).
 - `NOTICE`: Copyright notices and exceptions to the CUPS license agreement.
 - `README.md`: This file.
+- `SECURITY.md`: How to report security issues.
 
 You will find the CUPS Programing Guide in HTML and EPUB formats as well as man
-pages in the `doc` directory.
+pages and other documentation in the `doc` directory.
 
 *Please read the documentation before asking questions.*
 
@@ -90,8 +92,9 @@ Copyright © 2007-2020 by Apple Inc.
 Copyright © 1997-2007 by Easy Software Products.
 
 CUPS is provided under the terms of the Apache License, Version 2.0 with
-exceptions for GPL2/LGPL2 software.  A copy of this license can be found in the
-file `LICENSE`.  Additional legal information is provided in the file `NOTICE`.
+(optional) exceptions for GPL2/LGPL2 software.  A copy of this license can be
+found in the file `LICENSE`.  Additional legal information is provided in the
+file `NOTICE`.
 
 Unless required by applicable law or agreed to in writing, software distributed
 under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR

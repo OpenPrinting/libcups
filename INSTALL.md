@@ -15,8 +15,8 @@ following libraries:
 - GNU TLS (3.0 or later), LibreSSL (3.0 or later), or OpenSSL (1.1 or later)
   for TLS support
 - LIBPNG (1.6 or later) for PNG image support (optional)
-- LIBPAM for authentication support (optional)
-- LIBUSB (1.0 or later) for USB printing support (optional)
+- LIBPAM for authentication support in ippeveprinter (optional)
+- PDFio (1.6 or later) for PDF support (optional, also included with libcups)
 - ZLIB 1.2 or later for compression support
 
 The GNU compiler tools and Bash work well and we have tested the current CUPS
@@ -42,6 +42,9 @@ type:
 
     ./configure
 
+> Note: Do not run autoheader, automake, or libtoolize.  This will render your
+> copy of the CUPS source unbuildable and you will need to start over.
+
 The default installation will put the CUPS library under the `/usr/local`
 directory on your system.  Use the `--prefix` option to install the CUPS library
 in another location:
@@ -54,7 +57,8 @@ To see a complete list of configuration options, use the `--help` option:
 
 The `--enable-debug` option compiles CUPS with debugging information and logging
 enabled.  Debug logging is enabled using the `CUPS_DEBUG_xxx` environment
-variables at run-time - see "Enabling Debug Logging" below.
+variables at run-time - see ["Enabling Debug Logging"](#enabling-debug-logging)
+below.
 
 Once you have configured things, just type the following to build the software:
 
@@ -64,9 +68,9 @@ Once you have configured things, just type the following to build the software:
 Enabling Debug Logging
 ----------------------
 
-When configured with the `--enable-debug-printfs` option, libcups includes
-additional debug logging support.  The following environment variables are used
-to enable and control debug logging:
+When configured with the `--enable-debug` option, libcups includes additional
+debug logging support.  The following environment variables are used to enable
+and control debug logging:
 
 - `CUPS_DEBUG_FILTER`: Specifies a POSIX regular expression to control which
   messages are logged.
@@ -101,3 +105,6 @@ provides a quick way to install the software on your local system:
 Use the `BUILDROOT` variable to install to an alternate root directory:
 
     make BUILDROOT=/some/other/root/directory install
+
+> Note: libcups also supports the GNU `DSTROOT` and Apple/Darwin `DESTDIR`
+> variables to specify an alternate root directory.

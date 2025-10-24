@@ -51,4 +51,4 @@ to thank the following individuals for their contributions:
     Yugami                         - LDAP browsing support.
 
 If we've missed someone, please let us know by filing an issue at
-<https://github.com/openprinting/cups/issues>.
+<https://github.com/openprinting/libcups/issues>.
