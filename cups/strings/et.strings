@@ -1,1 +1,14 @@
-
+"  No Errors\n" = "  Vigu pole\n";
+"  No Warnings\n" = "  Hoiatusi pole\n";
+"job-state-reasons.document-format-error" = "Dokumendi vormingu viga";
+"job-state-reasons.document-password-error" = "Dokumendi salasõna viga";
+"job-state-reasons.document-permission-error" = "Dokumendi õiguste viga";
+"job-state-reasons.document-unprintable-error" = "Viga, kus dokument pole prinditav";
+"job-state-reasons.errors-detected" = "Tuvastasin vigu";
+"job-state-reasons.job-canceled-at-device" = "Trükitöö on seadmes katkestatud";
+"job-state.3" = "Ootel";
+"job-state.5" = "Töötlemisel";
+"job-state.6" = "Peatatud";
+"job-state.7" = "Tühistatud";
+"job-state.8" = "Katkestatud";
+"job-state.9" = "Lõpetatud";
