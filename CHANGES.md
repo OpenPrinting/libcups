@@ -17,6 +17,8 @@ libcups v3.0.0 (YYYY-MM-DD)
 - Updated the `httpSetCookie` API to support multiple "Set-Cookie:" header
   values.
 - Updated `ippfind` to use the `cupsGetClock` API.
+- Fixed input checks for `cupsCreateCredentials` and
+  `cupsCreateCredentialsRequest` APIs (Issue #125)
 - Fixed return values of `ippDateToTime` when the timezone isn't GMT.
 - Fixed a potential timing issue with `cupsEnumDests`.
 - Fixed a bug in the Avahi implementation of `cupsDNSSDBrowseNew`.
