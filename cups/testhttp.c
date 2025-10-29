@@ -207,6 +207,13 @@ static const char * const base64_tests[][2] =
 
 
 //
+// Local functions...
+//
+
+static bool	test_date(time_t t);
+
+
+//
 // 'main()' - Main entry.
 //
 
@@ -260,27 +267,14 @@ main(int  argc,				// I - Number of command-line arguments
     failures = 0;
 
     // httpGetDateString()/httpGetDateTime()
-    testBegin("httpGetDateString()/httpGetDateTime()");
-
-    start = time(NULL);
-    httpGetDateString(start, buffer, sizeof(buffer));
-    current = httpGetDateTime(buffer);
-
-    i = (int)(current - start);
-    if (i < 0)
-      i = -i;
-
-    if (!i)
-      testEnd(true);
-    else
-    {
+    if (!test_date(0))
       failures ++;
-      testEnd(false);
-      testError("Difference is %d seconds, %02d:%02d:%02d.", i, i / 3600, (i / 60) % 60, i % 60);
-      testError("httpGetDateString(%d) returned \"%s\"", (int)start, buffer);
-      testError("httpGetDateTime(\"%s\") returned %d", buffer, (int)current);
-      testError("httpGetDateString(%d) returned \"%s\"", (int)current, httpGetDateString(current, buffer, sizeof(buffer)));
-    }
+    if (!test_date(time(NULL)))
+      failures ++;
+    if (!test_date(INT_MAX))
+      failures ++;
+    if (!test_date(UINT_MAX))
+      failures ++;
 
     // httpDecode64()/httpEncode64()
     testBegin("httpDecode64()/httpEncode64()");
@@ -871,4 +865,40 @@ main(int  argc,				// I - Number of command-line arguments
     fclose(out);
 
   return (0);
+}
+
+
+//
+// 'test_date()' - Test the date/time functions for a specific time.
+//
+
+static bool				// O - `true` on success, `false` on failure
+test_date(time_t t)			// I - Time in seconds since Jan 1, 1970
+{
+  char		dateval[256];		// Date string
+  time_t	timeval;		// Time value
+
+
+  testBegin("httpGetDateString(%ld)", (long)t);
+  if (httpGetDateString(t, dateval, sizeof(dateval)))
+  {
+    testEndMessage(true, dateval);
+  }
+  else
+  {
+    testEnd(false);
+    return (false);
+  }
+
+  testBegin("httpGetDateTime(\"%s\")", dateval);
+  if ((timeval = httpGetDateTime(dateval)) == t)
+  {
+    testEnd(true);
+    return (true);
+  }
+  else
+  {
+    testEndMessage(false, "got %ld, expected %ld", timeval, t);
+    return (false);
+  }
 }
