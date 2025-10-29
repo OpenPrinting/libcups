@@ -350,10 +350,18 @@ strings:
 		stringsutil -f strings/$$file -c merge base.strings; \
 	done
 
+.PHONY: stringsh
 stringsh:
 	echo Generating localization headers...
 	for file in $(STRINGS); do \
 		stringsutil -f strings/$$file export strings/`basename $$file .strings`_strings.h; \
+	done
+
+.PHONY: stringscheck
+stringscheck:
+	echo Checking localization headers...
+	for file in $(STRINGS); do \
+		stringsutil -f base.strings report strings/$$file; \
 	done
 
 
