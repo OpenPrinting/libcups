@@ -257,7 +257,7 @@ DEFINE UUID_URI_REGEX "/^urn:uuid:.+$$/"
 }
 
 {
-    SKIP-IF-DEFINED "NOPRINT"
+    SKIP-IF-DEFINED NOPRINT
 
     NAME "Print-Job with requesting-user-uri"
     OPERATION Print-Job
@@ -281,7 +281,7 @@ DEFINE UUID_URI_REGEX "/^urn:uuid:.+$$/"
 }
 
 {
-    SKIP-IF-DEFINED "NOPRINT"
+    SKIP-IF-DEFINED NOPRINT
     SKIP-IF-NOT-DEFINED job-id
 
     NAME "Get-Job-Attributes for job-originating-user-uri and job-uuid"
@@ -300,7 +300,7 @@ DEFINE UUID_URI_REGEX "/^urn:uuid:.+$$/"
 }
 
 {
-    SKIP-IF-DEFINED "NOPRINT"
+    SKIP-IF-DEFINED NOPRINT
     SKIP-IF-NOT-DEFINED job-id
 
     NAME "Get-Job-Attributes Until Job Complete"
@@ -319,7 +319,7 @@ DEFINE UUID_URI_REGEX "/^urn:uuid:.+$$/"
 }
 
 {
-    SKIP-IF-DEFINED "NOPRINT"
+    SKIP-IF-DEFINED NOPRINT
 
     NAME "Print-Job with document-metadata"
     OPERATION Print-Job
@@ -338,7 +338,7 @@ DEFINE UUID_URI_REGEX "/^urn:uuid:.+$$/"
 }
 
 {
-    SKIP-IF-DEFINED "NOPRINT"
+    SKIP-IF-DEFINED NOPRINT
 
     NAME "Get-Job-Attributes for document-metadata"
     OPERATION Get-Job-Attributes
@@ -355,7 +355,7 @@ DEFINE UUID_URI_REGEX "/^urn:uuid:.+$$/"
 }
 
 {
-    SKIP-IF-DEFINED "NOPRINT"
+    SKIP-IF-DEFINED NOPRINT
     SKIP-IF-NOT-DEFINED job-id
 
     NAME "Get-Job-Attributes Until Job Complete"
@@ -374,7 +374,7 @@ DEFINE UUID_URI_REGEX "/^urn:uuid:.+$$/"
 }
 
 {
-    SKIP-IF-DEFINED "NOPRINT"
+    SKIP-IF-DEFINED NOPRINT
     SKIP-IF-NOT-DEFINED REQUIRE_NODRIVER
 
     NAME "Get-Jobs which-jobs=completed"
@@ -395,7 +395,8 @@ DEFINE UUID_URI_REGEX "/^urn:uuid:.+$$/"
 }
 
 {
-    SKIP-IF-DEFINED "NOPRINT"
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED job-id
     SKIP-IF-NOT-DEFINED REQUIRE_NODRIVER
 
     NAME "Get-Jobs first-index=2, which-jobs=completed"
@@ -454,7 +455,7 @@ DEFINE UUID_URI_REGEX "/^urn:uuid:.+$$/"
 }
 
 {
-    SKIP-IF-DEFINED "NOPRINT"
+    SKIP-IF-DEFINED NOPRINT
     SKIP-IF-NOT-DEFINED PRINTER_HAS_DOCUMENT_PASSWORD
 
     NAME "Print-Job with document-password"
@@ -474,7 +475,7 @@ DEFINE UUID_URI_REGEX "/^urn:uuid:.+$$/"
 }
 
 {
-    SKIP-IF-DEFINED "NOPRINT"
+    SKIP-IF-DEFINED NOPRINT
     SKIP-IF-NOT-DEFINED PRINTER_HAS_DOCUMENT_PASSWORD
     SKIP-IF-NOT-DEFINED job-id
 
