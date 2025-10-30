@@ -226,7 +226,9 @@
     EXPECT ?which-jobs-supported OF-TYPE keyword IN-GROUP printer-attributes-tag
 }
 
+# client-info
 {
+    SKIP-IF-DEFINED NOPRINT
     SKIP-IF-NOT-DEFINED PRINTER_HAS_CLIENT_INFO
 
     NAME "Print-Job with client-info"
@@ -251,6 +253,7 @@
 }
 
 {
+    SKIP-IF-DEFINED NOPRINT
     SKIP-IF-NOT-DEFINED PRINTER_HAS_CLIENT_INFO
 
     NAME "Get-Job-Attributes for client-info"
@@ -265,15 +268,17 @@
 
     STATUS successful-ok
 
-    EXPECT client-info OF-TYPE collection COUNT 1;
+    EXPECT client-info IN-GROUP job-attributes-tag OF-TYPE collection COUNT 1
     EXPECT client-info/client-name OF-TYPE name COUNT 1 WITH-VALUE "ipptool"
     EXPECT client-info/client-patches OF-TYPE text COUNT 1 WITH-VALUE ""
     EXPECT client-info/client-string-version OF-TYPE text COUNT 1 WITH-VALUE "3.0.1.2"
     EXPECT client-info/client-version OF-TYPE octetString COUNT 1 WITH-VALUE <0003000000010002>
+
+    DISPLAY client-info
 }
 
 {
-    SKIP-IF-DEFINED "NOPRINT"
+    SKIP-IF-DEFINED NOPRINT
     SKIP-IF-NOT-DEFINED job-id
 
     NAME "Get-Job-Attributes Until Job Complete"
@@ -290,6 +295,146 @@
     EXPECT job-state IN-GROUP job-attributes-tag OF-TYPE enum COUNT 1 WITH-VALUE >6 REPEAT-NO-MATCH REPEAT-LIMIT 30
     DISPLAY job-state
 }
+
+# media-col
+{
+    SKIP-IF-DEFINED NOPRINT
+
+    NAME "Print-Job with media-col"
+    OPERATION Print-Job
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR name requesting-user-name $user
+    ATTR name job-name "media-col test"
+    ATTR mimeMediaType document-format $filetype
+
+    GROUP job-attributes-tag
+    ATTR collection media-col {
+        MEMBER collection media-size {
+            MEMBER integer x-dimension 21000
+            MEMBER integer y-dimension 29700
+        }
+    }
+    FILE $filename
+
+    STATUS successful-ok
+    EXPECT job-id IN-GROUP job-attributes-tag OF-TYPE integer COUNT 1 WITH-VALUE >0
+}
+
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED job-id
+
+    NAME "Get-Job-Attributes for media-col"
+    OPERATION Get-Job-Attributes
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR name requesting-user-name $user
+
+    STATUS successful-ok
+
+    EXPECT media-col IN-GROUP job-attributes-tag OF-TYPE collection COUNT 1
+    EXPECT media-col/media-size OF-TYPE collection COUNT 1
+    EXPECT media-col/media-size/x-dimension OF-TYPE integer COUNT 1 WITH-VALUE 21000
+    EXPECT media-col/media-size/y-dimension OF-TYPE integer COUNT 1 WITH-VALUE 29700
+
+    DISPLAY media-col
+}
+
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED job-id
+
+    NAME "Get-Job-Attributes Until Job Complete"
+    OPERATION Get-Job-Attributes
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR name requesting-user-name $user
+
+    STATUS successful-ok
+    EXPECT job-state IN-GROUP job-attributes-tag OF-TYPE enum COUNT 1 WITH-VALUE >6 REPEAT-NO-MATCH REPEAT-LIMIT 30
+    DISPLAY job-state
+}
+
+# print-content-optimize
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_PRINT_CONTENT_OPTIMIZE
+
+    NAME "Print-Job with print-content-optimize"
+    OPERATION Print-Job
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR name requesting-user-name $user
+    ATTR name job-name "print-content-optimize test"
+    ATTR mimeMediaType document-format $filetype
+
+    GROUP job-attributes-tag
+    ATTR keyword print-content-optimize auto
+    FILE $filename
+
+    STATUS successful-ok
+    EXPECT job-id IN-GROUP job-attributes-tag OF-TYPE integer COUNT 1 WITH-VALUE >0
+}
+
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED job-id
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_PRINT_CONTENT_OPTIMIZE
+
+    NAME "Get-Job-Attributes for print-content-optimize"
+    OPERATION Get-Job-Attributes
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR name requesting-user-name $user
+
+    STATUS successful-ok
+
+    EXPECT print-content-optimize IN-GROUP job-attributes-tag OF-TYPE keyword COUNT 1 WITH-VALUE auto
+
+    DISPLAY print-content-optimize
+}
+
+{
+    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-NOT-DEFINED job-id
+    SKIP-IF-NOT-DEFINED PRINTER_HAS_PRINT_CONTENT_OPTIMIZE
+
+    NAME "Get-Job-Attributes Until Job Complete"
+    OPERATION Get-Job-Attributes
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR name requesting-user-name $user
+
+    STATUS successful-ok
+    EXPECT job-state IN-GROUP job-attributes-tag OF-TYPE enum COUNT 1 WITH-VALUE >6 REPEAT-NO-MATCH REPEAT-LIMIT 30
+    DISPLAY job-state
+}
+
+
+
 
 # TODO: Finish updating the rest of 5100.7 tests...
 # {

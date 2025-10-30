@@ -257,7 +257,7 @@ static bool		html_footer(ippeve_client_t *client);
 static bool		html_header(ippeve_client_t *client, const char *title, int refresh);
 static bool		html_printf(ippeve_client_t *client, const char *format, ...) _CUPS_FORMAT(2, 3);
 static void		ipp_cancel_job(ippeve_client_t *client);
-static void		ipp_cancel_my_jobs(ippeve_client_t *client);
+static void		ipp_cancel_jobs(ippeve_client_t *client);
 static void		ipp_close_job(ippeve_client_t *client);
 static void		ipp_create_job(ippeve_client_t *client);
 static void		ipp_get_job_attributes(ippeve_client_t *client);
@@ -1455,6 +1455,7 @@ create_printer(
     IPP_OP_GET_JOB_ATTRIBUTES,
     IPP_OP_GET_JOBS,
     IPP_OP_GET_PRINTER_ATTRIBUTES,
+    IPP_OP_CANCEL_JOBS,
     IPP_OP_CANCEL_MY_JOBS,
     IPP_OP_CLOSE_JOB,
     IPP_OP_IDENTIFY_PRINTER
@@ -1539,6 +1540,23 @@ create_printer(
     "y-image-shift",
     "y-side1-image-shift",
     "y-side2-image-shift"
+  };
+  static const char * const job_history[] =
+  {					// job-history-attributes-configured/supported
+    "date-time-at-creation",
+    "date-time-at-processing",
+    "date-time-at-completed",
+    "job-id",
+    "job-name",
+    "job-originating-user-name",
+    "job-originating-user-uri",
+    "job-printer-uri",
+    "job-state",
+    "job-state-reasons",
+    "job-uri",
+    "time-at-creation",
+    "time-at-processing",
+    "time-at-completed"
   };
   static const char * const media_col_supported[] =
   {					// media-col-supported values
@@ -1854,11 +1872,26 @@ create_printer(
   // job-creation-attributes-supported
   ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "job-creation-attributes-supported", num_sup_attrs, NULL, sup_attrs);
 
+  // job-history-attributes-configured
+  ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "job-history-attributes-configured", sizeof(job_history) / sizeof(job_history[0]), /*language*/NULL, job_history);
+
+  // job-history-attributes-supported
+  ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "job-history-attributes-supported", sizeof(job_history) / sizeof(job_history[0]), /*language*/NULL, job_history);
+
+  // job-history-interval-configured
+  ippAddInteger(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "job-history-interval-configured", 60);
+
+  // job-history-interval-supported
+  ippAddRange(printer->attrs, IPP_TAG_PRINTER, "job-history-interval-supported", 0, 3600);
+
   // job-ids-supported
   ippAddBoolean(printer->attrs, IPP_TAG_PRINTER, "job-ids-supported", 1);
 
   // job-k-octets-supported
   ippAddRange(printer->attrs, IPP_TAG_PRINTER, "job-k-octets-supported", 0, k_supported);
+
+  // job-mandatory-attributes-supported
+  ippAddBoolean(printer->attrs, IPP_TAG_PRINTER, "job-mandatory-attributes-supported", true);
 
   // job-priority-default
   ippAddInteger(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "job-priority-default", 50);
@@ -1871,6 +1904,9 @@ create_printer(
 
   // job-sheets-supported
 //  ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_NAME), "job-sheets-supported", NULL, "none");
+
+  // job-spooling-supported
+  ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "job-spooling-supported", /*language*/NULL, "stream");
 
   if (has_jpeg)
   {
@@ -3071,14 +3107,14 @@ ipp_cancel_job(ippeve_client_t *client)	// I - Client
 
 
 //
-// 'ipp_cancel_my_jobs()' - Cancel all jobs.
+// 'ipp_cancel_jobs()' - Cancel all jobs.
 //
 // Note: Since ippeveprinter doesn't do spooling, this really just cancels the
 // current job.
 //
 
 static void
-ipp_cancel_my_jobs(
+ipp_cancel_jobs(
     ippeve_client_t *client)		// I - Client
 {
   ippeve_job_t		*job;		// Job information
@@ -5489,8 +5525,9 @@ process_ipp(ippeve_client_t *client)	// I - Client
 		ipp_cancel_job(client);
 		break;
 
+	    case IPP_OP_CANCEL_JOBS :
 	    case IPP_OP_CANCEL_MY_JOBS :
-		ipp_cancel_my_jobs(client);
+		ipp_cancel_jobs(client);
 		break;
 
 	    case IPP_OP_GET_JOB_ATTRIBUTES :
