@@ -54,158 +54,158 @@ DEFINE UUID_URI_REGEX "/^urn:uuid:.+$$/"
 
     # Operations
     EXPECT operations-supported WITH-VALUE 0x003c DEFINE-MATCH PRINTER_HAS_IDENTIFY_PRINTER
-    EXPECT operations-supported WITH-VALUE 0x003c IF-NOT-DEFINED IS_LOGICAL_DEVICE IF-DEFINED REQUIRE_NODRIVER
+    EXPECT operations-supported WITH-VALUE 0x003c IF-NOT-DEFINED IS_LOGICAL_DEVICE IF-DEFINED "REQUIRE_NODRIVER"
 
     EXPECT operations-supported WITH-VALUE 0x003d DEFINE-MATCH PRINTER_HAS_VALIDATE_DOCUMENT
-    EXPECT operations-supported WITH-VALUE 0x003d IF-DEFINED PRINTER_HAS_DOCOBJECT,REQUIRE_NODRIVER
+    EXPECT operations-supported WITH-VALUE 0x003d IF-DEFINED "PRINTER_HAS_DOCOBJECT,REQUIRE_NODRIVER"
 
     # Printer Description attributes
     EXPECT ?document-password-supported IN-GROUP printer-attributes-tag OF-TYPE integer(0:1023) COUNT 1
     EXPECT document-password-supported DEFINE-MATCH PRINTER_HAS_DOCUMENT_PASSWORD
-    EXPECT document-password-supported IF-DEFINED PRINTER_HAS_PDF,REQUIRE_NODRIVER
+    EXPECT document-password-supported IF-DEFINED "PRINTER_HAS_PDF,REQUIRE_NODRIVER"
 
     EXPECT ?identify-actions-default IN-GROUP printer-attributes-tag OF-TYPE keyword WITH-ALL-VALUES-FROM identify-actions-supported
-    EXPECT identify-actions-default IF-DEFINED PRINTER_HAS_IDENTIFY_PRINTER,REQUIRE_NODRIVER
+    EXPECT identify-actions-default IF-DEFINED "PRINTER_HAS_IDENTIFY_PRINTER,REQUIRE_NODRIVER"
     EXPECT ?identify-actions-supported IN-GROUP printer-attributes-tag OF-TYPE keyword
-    EXPECT identify-actions-supported IF-DEFINED PRINTER_HAS_IDENTIFY_PRINTER,REQUIRE_NODRIVER
+    EXPECT identify-actions-supported IF-DEFINED "PRINTER_HAS_IDENTIFY_PRINTER,REQUIRE_NODRIVER"
 
     EXPECT ?ipp-features-supported IN-GROUP printer-attributes-tag OF-TYPE keyword
-    EXPECT ipp-features-supported IF-DEFINED REQUIRE_NODRIVER
+    EXPECT ipp-features-supported IF-DEFINED "REQUIRE_NODRIVER"
 
     EXPECT ?job-constraints-supported IN-GROUP printer-attributes-tag OF-TYPE collection
     EXPECT job-constraints-supported DEFINE-MATCH PRINTER_HAS_JOB_CONSTRAINTS
     EXPECT ?job-resolvers-supported IN-GROUP printer-attributes-tag OF-TYPE collection
     EXPECT job-resolvers-supported DEFINE-MATCH PRINTER_HAS_JOB_CONSTRAINTS
-    EXPECT job-constraints-supported IF-DEFINED PRINTER_HAS_JOB_CONSTRAINTS
-    EXPECT job-constraints-supported/resolver-name OF-TYPE name COUNT 1 IF-DEFINED PRINTER_HAS_JOB_CONSTRAINTS
-    EXPECT job-resolvers-supported IF-DEFINED PRINTER_HAS_JOB_CONSTRAINTS
-    EXPECT job-resolvers-supported/resolver-name OF-TYPE name COUNT 1 IF-DEFINED PRINTER_HAS_JOB_CONSTRAINTS
+    EXPECT job-constraints-supported IF-DEFINED "PRINTER_HAS_JOB_CONSTRAINTS"
+    EXPECT job-constraints-supported/resolver-name OF-TYPE name COUNT 1 IF-DEFINED "PRINTER_HAS_JOB_CONSTRAINTS"
+    EXPECT job-resolvers-supported IF-DEFINED "PRINTER_HAS_JOB_CONSTRAINTS"
+    EXPECT job-resolvers-supported/resolver-name OF-TYPE name COUNT 1 IF-DEFINED "PRINTER_HAS_JOB_CONSTRAINTS"
 
     EXPECT ?job-error-action-default IN-GROUP printer-attributes-tag OF-TYPE keyword COUNT 1 WITH-VALUE-FROM job-error-action-supported
     EXPECT job-error-action-default DEFINE-MATCH PRINTER_HAS_JOB_ERROR_ACTION
     EXPECT ?job-error-action-supported IN-GROUP printer-attributes-tag OF-TYPE keyword
     EXPECT job-error-action-supported DEFINE-MATCH PRINTER_HAS_JOB_ERROR_ACTION
-    EXPECT job-error-action-default IF-DEFINED PRINTER_HAS_JOB_ERROR_ACTION
-    EXPECT job-error-action-supported IF-DEFINED PRINTER_HAS_JOB_ERROR_ACTION
+    EXPECT job-error-action-default IF-DEFINED "PRINTER_HAS_JOB_ERROR_ACTION"
+    EXPECT job-error-action-supported IF-DEFINED "PRINTER_HAS_JOB_ERROR_ACTION"
 
     EXPECT ?job-presets-supported IN-GROUP printer-attributes-tag OF-TYPE collection
     EXPECT job-presets-supported DEFINE-MATCH PRINTER_HAS_JOB_PRESETS
-    EXPECT job-presets-supported/preset-name OF-TYPE name IF-DEFINED PRINTER_HAS_JOB_PRESETS
+    EXPECT job-presets-supported/preset-name OF-TYPE name IF-DEFINED "PRINTER_HAS_JOB_PRESETS"
     EXPECT ?job-presets-supported/preset-category OF-TYPE keyword
 
     EXPECT ?job-triggers-supported IN-GROUP printer-attributes-tag OF-TYPE collection
     EXPECT job-triggers-supported DEFINE-MATCH PRINTER_HAS_JOB_TRIGGERS
-    EXPECT job-triggers-supported/preset-name OF-TYPE name IF-DEFINED PRINTER_HAS_JOB_TRIGGERS
+    EXPECT job-triggers-supported/preset-name OF-TYPE name IF-DEFINED "PRINTER_HAS_JOB_TRIGGERS"
 
     EXPECT ?jpeg-features-supported IN-GROUP printer-attributes-tag OF-TYPE keyword
-    EXPECT jpeg-features-supported IF-DEFINED PRINTER_HAS_JPEG,REQUIRE_NODRIVER
+    EXPECT jpeg-features-supported IF-DEFINED "PRINTER_HAS_JPEG,REQUIRE_NODRIVER"
     EXPECT ?jpeg-k-octets-supported IN-GROUP printer-attributes-tag OF-TYPE rangeOfInteger
-    EXPECT jpeg-k-octets-supported IF-DEFINED PRINTER_HAS_JPEG,REQUIRE_NODRIVER
+    EXPECT jpeg-k-octets-supported IF-DEFINED "PRINTER_HAS_JPEG,REQUIRE_NODRIVER"
     EXPECT ?jpeg-x-dimension-supported IN-GROUP printer-attributes-tag OF-TYPE rangeOfInteger(0:65535)
-    EXPECT jpeg-x-dimension-supported IF-DEFINED PRINTER_HAS_JPEG,REQUIRE_NODRIVER
+    EXPECT jpeg-x-dimension-supported IF-DEFINED "PRINTER_HAS_JPEG,REQUIRE_NODRIVER"
     EXPECT ?jpeg-y-dimension-supported IN-GROUP printer-attributes-tag OF-TYPE rangeOfInteger(1:65535)
-    EXPECT jpeg-y-dimension-supported IF-DEFINED PRINTER_HAS_JPEG,REQUIRE_NODRIVER
+    EXPECT jpeg-y-dimension-supported IF-DEFINED "PRINTER_HAS_JPEG,REQUIRE_NODRIVER"
 
     EXPECT ?media-overprint-supported IN-GROUP printer-attributes-tag OF-TYPE keyword
-    EXPECT media-overprint-supported IF-DEFINED PRINTER_HAS_MEDIA_OVERPRINT
-    EXPECT media-overprint-supported WITH-VALUE media-overprint-distance IF-DEFINED PRINTER_HAS_MEDIA_OVERPRINT,REQUIRE_NODRIVER
-    EXPECT media-overprint-supported WITH-VALUE media-overprint-method IF-DEFINED PRINTER_HAS_MEDIA_OVERPRINT,REQUIRE_NODRIVER
+    EXPECT media-overprint-supported IF-DEFINED "PRINTER_HAS_MEDIA_OVERPRINT"
+    EXPECT media-overprint-supported WITH-VALUE media-overprint-distance IF-DEFINED "PRINTER_HAS_MEDIA_OVERPRINT,REQUIRE_NODRIVER"
+    EXPECT media-overprint-supported WITH-VALUE media-overprint-method IF-DEFINED "PRINTER_HAS_MEDIA_OVERPRINT,REQUIRE_NODRIVER"
 
     EXPECT ?media-overprint-default IN-GROUP printer-attributes-tag OF-TYPE collection|no-value COUNT 1
-    EXPECT media-overprint-default IF-DEFINED PRINTER_HAS_MEDIA_OVERPRINT
+    EXPECT media-overprint-default IF-DEFINED "PRINTER_HAS_MEDIA_OVERPRINT"
 
     EXPECT ?media-overprint-distance-supported IN-GROUP printer-attributes-tag OF-TYPE integer(0:MAX)
-    EXPECT media-overprint-distance-supported IF-DEFINED PRINTER_HAS_MEDIA_OVERPRINT
+    EXPECT media-overprint-distance-supported IF-DEFINED "PRINTER_HAS_MEDIA_OVERPRINT"
 
     EXPECT ?media-overprint-method-supported IN-GROUP printer-attributes-tag OF-TYPE keyword
-    EXPECT media-overprint-method-supported IF-DEFINED PRINTER_HAS_MEDIA_OVERPRINT
-    EXPECT media-overprint-method-supported WITH-VALUE "/^(extend|scale)$$/" IF-DEFINED PRINTER_HAS_MEDIA_OVERPRINT,REQUIRE_NODRIVER
+    EXPECT media-overprint-method-supported IF-DEFINED "PRINTER_HAS_MEDIA_OVERPRINT"
+    EXPECT media-overprint-method-supported WITH-VALUE "/^(extend|scale)$$/" IF-DEFINED "PRINTER_HAS_MEDIA_OVERPRINT,REQUIRE_NODRIVER"
 
     EXPECT ?multiple-operation-time-out-action IN-GROUP printer-attributes-tag OF-TYPE keyword COUNT 1
-    EXPECT multiple-operation-time-out-action WITH-VALUE "/^(abort-job|hold-job|process-job)$$/" IF-DEFINED PRINTER_HAS_CREATE_JOB,REQUIRE_NODRIVER
+    EXPECT multiple-operation-time-out-action WITH-VALUE "/^(abort-job|hold-job|process-job)$$/" IF-DEFINED "PRINTER_HAS_CREATE_JOB,REQUIRE_NODRIVER"
 
     EXPECT ?pdf-k-octets-supported IN-GROUP printer-attributes-tag OF-TYPE rangeOfInteger(0:MAX)
-    EXPECT pdf-k-octets-supported IF-DEFINED PRINTER_HAS_PDF,REQUIRE_NODRIVER
+    EXPECT pdf-k-octets-supported IF-DEFINED "PRINTER_HAS_PDF,REQUIRE_NODRIVER"
 
     EXPECT ?pdf-versions-supported IN-GROUP printer-attributes-tag OF-TYPE keyword
-    EXPECT pdf-versions-supported IF-DEFINED PRINTER_HAS_PDF,REQUIRE_NODRIVER
+    EXPECT pdf-versions-supported IF-DEFINED "PRINTER_HAS_PDF,REQUIRE_NODRIVER"
 
     EXPECT ?preferred-attributes-supported IN-GROUP printer-attributes-tag OF-TYPE boolean COUNT 1
 
     EXPECT ?print-color-mode-default IN-GROUP printer-attributes-tag OF-TYPE keyword COUNT 1 WITH-VALUE-FROM print-color-mode-supported
-    EXPECT print-color-mode-default IF-DEFINED REQUIRE_NODRIVER
+    EXPECT print-color-mode-default IF-DEFINED "REQUIRE_NODRIVER"
 
     EXPECT ?print-color-mode-supported IN-GROUP printer-attributes-tag OF-TYPE keyword
-    EXPECT print-color-mode-supported IF-DEFINED REQUIRE_NODRIVER
+    EXPECT print-color-mode-supported IF-DEFINED "REQUIRE_NODRIVER"
 
     EXPECT ?print-color-mode-icc-profiles IN-GROUP printer-attributes-tag OF-TYPE collection
     EXPECT print-color-mode-icc-profiles DEFINE-MATCH PRINTER_HAS_PRINT_COLOR_MODE_ICC
-    EXPECT print-color-mode-icc-profiles/print-color-mode OF-TYPE keyword WITH-VALUE-FROM print-color-mode-supported IF-DEFINED PRINTER_HAS_PRINT_COLOR_MODE_ICC
-    EXPECT print-color-mode-icc-profiles/profile-uri OF-TYPE uri WITH-VALUE $HTTP_URI_REGEX IF-DEFINED PRINTER_HAS_PRINT_COLOR_MODE_ICC
+    EXPECT print-color-mode-icc-profiles/print-color-mode OF-TYPE keyword WITH-VALUE-FROM print-color-mode-supported IF-DEFINED "PRINTER_HAS_PRINT_COLOR_MODE_ICC"
+    EXPECT print-color-mode-icc-profiles/profile-uri OF-TYPE uri WITH-VALUE $HTTP_URI_REGEX IF-DEFINED "PRINTER_HAS_PRINT_COLOR_MODE_ICC"
 
     EXPECT ?print-rendering-intent-default IN-GROUP printer-attributes-tag OF-TYPE keyword COUNT 1 WITH-VALUE-FROM print-rendering-intent-supported
     EXPECT print-rendering-intent-default DEFINE-MATCH PRINTER_HAS_PRINT_RENDERING_INTENT
     EXPECT ?print-rendering-intent-supported IN-GROUP printer-attributes-tag OF-TYPE keyword
-    EXPECT print-rendering-intent-supported IF-DEFINED PRINTER_HAS_PRINT_RENDERING_INTENT
-    EXPECT print-rendering-intent-supported WITH-VALUE relative IF-DEFINED PRINTER_HAS_PRINT_RENDERING_INTENT,REQUIRE_NODRIVER
-    EXPECT print-rendering-intent-supported WITH-VALUE relative-bpc IF-DEFINED PRINTER_HAS_PRINT_RENDERING_INTENT,REQUIRE_NODRIVER
+    EXPECT print-rendering-intent-supported IF-DEFINED "PRINTER_HAS_PRINT_RENDERING_INTENT"
+    EXPECT print-rendering-intent-supported WITH-VALUE relative IF-DEFINED "PRINTER_HAS_PRINT_RENDERING_INTENT,REQUIRE_NODRIVER"
+    EXPECT print-rendering-intent-supported WITH-VALUE relative-bpc IF-DEFINED "PRINTER_HAS_PRINT_RENDERING_INTENT,REQUIRE_NODRIVER"
 
     EXPECT ?print-processing-attributes-supported IN-GROUP printer-attributes-tag OF-TYPE keyword
-    EXPECT print-processing-attributes-supported IF-DEFINED REQUIRE_NODRIVER
-    EXPECT print-processing-attributes-supported WITH-VALUE media-overprint IF-DEFINED PRINTER_HAS_MEDIA_OVERPRINT,REQUIRE_NODRIVER
-    EXPECT print-processing-attributes-supported WITH-VALUE print-color-mode IF-DEFINED REQUIRE_NODRIVER
+    EXPECT print-processing-attributes-supported IF-DEFINED "REQUIRE_NODRIVER"
+    EXPECT print-processing-attributes-supported WITH-VALUE media-overprint IF-DEFINED "PRINTER_HAS_MEDIA_OVERPRINT,REQUIRE_NODRIVER"
+    EXPECT print-processing-attributes-supported WITH-VALUE print-color-mode IF-DEFINED "REQUIRE_NODRIVER"
     EXPECT print-content-optimize-supported IN-GROUP printer-attributes-tag OF-TYPE keyword DEFINE-MATCH PRINTER_HAS_PRINT_CONTENT_OPTIMIZE
-    EXPECT print-processing-attributes-supported WITH-VALUE print-content-optimize IF-DEFINED PRINTER_HAS_PRINT_CONTENT_OPTIMIZE,REQUIRE_NODRIVER
+    EXPECT print-processing-attributes-supported WITH-VALUE print-content-optimize IF-DEFINED "PRINTER_HAS_PRINT_CONTENT_OPTIMIZE,REQUIRE_NODRIVER"
     EXPECT print-darkness-supported IN-GROUP printer-attributes-tag OF-TYPE integer(1:100) COUNT 1 DEFINE-MATCH PRINTER_HAS_PRINT_DARKNESS
-    EXPECT print-processing-attributes-supported WITH-VALUE print-darkness IF-DEFINED PRINTER_HAS_PRINT_DARKNESS,REQUIRE_NODRIVER
-    EXPECT print-processing-attributes-supported WITH-VALUE print-rendering-intent IF-DEFINED PRINTER_HAS_PRINT_RENDERING_INTENT,REQUIRE_NODRIVER
+    EXPECT print-processing-attributes-supported WITH-VALUE print-darkness IF-DEFINED "PRINTER_HAS_PRINT_DARKNESS,REQUIRE_NODRIVER"
+    EXPECT print-processing-attributes-supported WITH-VALUE print-rendering-intent IF-DEFINED "PRINTER_HAS_PRINT_RENDERING_INTENT,REQUIRE_NODRIVER"
     EXPECT print-speed-supported IN-GROUP printer-attributes-tag OF-TYPE integer(1:MAX)|rangeOfInteger(1:MAX) DEFINE-MATCH PRINTER_HAS_PRINT_SPEED
-    EXPECT print-processing-attributes-supported WITH-VALUE print-speed IF-DEFINED PRINTER_HAS_PRINT_SPEED,REQUIRE_NODRIVER
+    EXPECT print-processing-attributes-supported WITH-VALUE print-speed IF-DEFINED "PRINTER_HAS_PRINT_SPEED,REQUIRE_NODRIVER"
     EXPECT printer-resolution-supported IN-GROUP printer-attributes-tag OF-TYPE resolution DEFINE-MATCH PRINTER_HAS_PRINTER_RESOLUTION
-    EXPECT print-processing-attributes-supported WITH-VALUE printer-resolution IF-DEFINED PRINTER_HAS_PRINTER_RESOLUTION,REQUIRE_NODRIVER
+    EXPECT print-processing-attributes-supported WITH-VALUE printer-resolution IF-DEFINED "PRINTER_HAS_PRINTER_RESOLUTION,REQUIRE_NODRIVER"
 
     EXPECT ?print-scaling-default IN-GROUP printer-attributes-tag OF-TYPE keyword COUNT 1 WITH-VALUE-FROM print-scaling-supported
-    EXPECT print-scaling-default IF-DEFINED REQUIRE_NODRIVER
+    EXPECT print-scaling-default IF-DEFINED "REQUIRE_NODRIVER"
     EXPECT ?print-scaling-supported IN-GROUP printer-attributes-tag OF-TYPE keyword
-    EXPECT print-scaling-supported IF-DEFINED REQUIRE_NODRIVER
+    EXPECT print-scaling-supported IF-DEFINED "REQUIRE_NODRIVER"
 
     EXPECT ?printer-dns-sd-name IN-GROUP printer-attributes-tag OF-TYPE name(63) COUNT 1
-    EXPECT printer-dns-sd-name IF-DEFINED REQUIRE_NODRIVER
+    EXPECT printer-dns-sd-name IF-DEFINED "REQUIRE_NODRIVER"
 
     EXPECT ?printer-geo-location IN-GROUP printer-attributes-tag OF-TYPE uri|unknown COUNT 1
 
     EXPECT ?printer-get-attributes-supported IN-GROUP printer-attributes-tag OF-TYPE keyword
-    EXPECT printer-get-attributes-supported WITH-VALUE document-format IF-DEFINED REQUIRE_NODRIVER
+    EXPECT printer-get-attributes-supported WITH-VALUE document-format IF-DEFINED "REQUIRE_NODRIVER"
 
     EXPECT ?printer-icc-profiles IN-GROUP printer-attributes-tag OF-TYPE collection
     EXPECT printer-icc-profiles DEFINE-MATCH PRINTER_HAS_PRINTER_ICC_PROFILES
-    EXPECT printer-icc-profiles/profile-name OF-TYPE name COUNT 1 IF-DEFINED PRINTER_HAS_PRINTER_ICC_PROFILES
-    EXPECT printer-icc-profiles/profile-uri OF-TYPE uri COUNT 1 WITH-VALUE $HTTP_URI_REGEX IF-DEFINED PRINTER_HAS_PRINTER_ICC_PROFILES
+    EXPECT printer-icc-profiles/profile-name OF-TYPE name COUNT 1 IF-DEFINED "PRINTER_HAS_PRINTER_ICC_PROFILES"
+    EXPECT printer-icc-profiles/profile-uri OF-TYPE uri COUNT 1 WITH-VALUE $HTTP_URI_REGEX IF-DEFINED "PRINTER_HAS_PRINTER_ICC_PROFILES"
 
     EXPECT ?printer-icons IN-GROUP printer-attributes-tag OF-TYPE uri WITH-VALUE $HTTP_URI_REGEX
-    EXPECT printer-icons IF-DEFINED REQUIRE_NODRIVER
+    EXPECT printer-icons IF-DEFINED "REQUIRE_NODRIVER"
 
     EXPECT ?printer-kind IN-GROUP printer-attributes-tag OF-TYPE keyword
-    EXPECT printer-kind IF-DEFINED REQUIRE_NODRIVER
+    EXPECT printer-kind IF-DEFINED "REQUIRE_NODRIVER"
 
     EXPECT ?printer-mandatory-job-attributes IN-GROUP printer-attributes-tag OF-TYPE keyword
 
     EXPECT ?printer-organization IN-GROUP printer-attributes-tag OF-TYPE text COUNT 1
-    EXPECT printer-organization IF-DEFINED REQUIRE_NODRIVER
+    EXPECT printer-organization IF-DEFINED "REQUIRE_NODRIVER"
 
     EXPECT ?printer-organizational-unit IN-GROUP printer-attributes-tag OF-TYPE text COUNT 1
-    EXPECT printer-organizational-unit IF-DEFINED REQUIRE_NODRIVER
+    EXPECT printer-organizational-unit IF-DEFINED "REQUIRE_NODRIVER"
 
     EXPECT ?printer-strings-uri IN-GROUP printer-attributes-tag OF-TYPE uri WITH-VALUE $HTTP_REGEX COUNT 1
     EXPECT printer-strings-uri DEFINE-MATCH PRINTER_HAS_PRINTER_STRINGS
-    EXPECT printer-strings-uri IF-DEFINED REQUIRE_NODRIVER
+    EXPECT printer-strings-uri IF-DEFINED "REQUIRE_NODRIVER"
 
     EXPECT ?printer-strings-languages-supported IN-GROUP printer-attributes-tag OF-TYPE naturalLanguage
-    EXPECT printer-strings-languages-supported IF-DEFINED PRINTER_HAS_PRINTER_STRINGS
-    EXPECT printer-strings-languages-supported IF-DEFINED REQUIRE_NODRIVER
+    EXPECT printer-strings-languages-supported IF-DEFINED "PRINTER_HAS_PRINTER_STRINGS"
+    EXPECT printer-strings-languages-supported IF-DEFINED "REQUIRE_NODRIVER"
 
     EXPECT ?requesting-user-uri-supported IN-GROUP printer-attributes-tag OF-TYPE boolean COUNT 1
-    EXPECT requesting-user-uri-supported WITH-VALUE true IF-DEFINED REQUIRE_NODRIVER
+    EXPECT requesting-user-uri-supported WITH-VALUE true IF-DEFINED "REQUIRE_NODRIVER"
 
     EXPECT ?requesting-user-uri-schemes-supported IN-GROUP printer-attributes-tag OF-TYPE uriScheme
 
@@ -213,51 +213,51 @@ DEFINE UUID_URI_REGEX "/^urn:uuid:.+$$/"
     EXPECT ?device-service-count IN-GROUP printer-attributes-tag OF-TYPE integer(1:MAX) COUNT 1
 
     EXPECT ?device-uuid IN-GROUP printer-attributes-tag OF-TYPE uri COUNT 1 WITH-VALUE $UUID_REGEX
-    EXPECT device-uuid IF-DEFINED REQUIRE_NODRIVER
+    EXPECT device-uuid IF-DEFINED "REQUIRE_NODRIVER"
 
     EXPECT ?printer-config-change-date-time IN-GROUP printer-attributes-tag OF-TYPE dateTime|unknown COUNT 1
-    EXPECT printer-config-change-date-time IF-DEFINED REQUIRE_NODRIVER
+    EXPECT printer-config-change-date-time IF-DEFINED "REQUIRE_NODRIVER"
 
-    EXPECT ?printer-config-change-time IN-GROUP printer-attributes-tag OF-TYPE integer(1:MAX) COUNT 1
-    EXPECT printer-config-change-time IF-DEFINED REQUIRE_NODRIVER
+    EXPECT ?printer-config-change-time IN-GROUP printer-attributes-tag OF-TYPE integer(0:MAX) COUNT 1
+    EXPECT printer-config-change-time IF-DEFINED "REQUIRE_NODRIVER"
 
     EXPECT ?printer-firmware-name IN-GROUP printer-attributes-tag OF-TYPE name
     EXPECT printer-firmware-name DEFINE-MATCH PRINTER_HAS_PRINTER_FIRMWARE_XXX
 
     EXPECT ?printer-firmware-patches IN-GROUP printer-attributes-tag OF-TYPE text SAME-COUNT-AS printer-firmware-name
-    EXPECT printer-firmware-patches IF-DEFINED PRINTER_HAS_PRINTER_FIRMWARE_XXX
+    EXPECT printer-firmware-patches IF-DEFINED "PRINTER_HAS_PRINTER_FIRMWARE_XXX"
 
     EXPECT ?printer-firmware-string-version IN-GROUP printer-attributes-tag OF-TYPE text SAME-COUNT-AS printer-firmware-name
-    EXPECT printer-firmware-string-version IF-DEFINED PRINTER_HAS_PRINTER_FIRMWARE_XXX
+    EXPECT printer-firmware-string-version IF-DEFINED "PRINTER_HAS_PRINTER_FIRMWARE_XXX"
 
     EXPECT ?printer-firmware-version IN-GROUP printer-attributes-tag OF-TYPE octetString SAME-COUNT-AS printer-firmware-name
-    EXPECT printer-firmware-version IF-DEFINED PRINTER_HAS_PRINTER_FIRMWARE_XXX
+    EXPECT printer-firmware-version IF-DEFINED "PRINTER_HAS_PRINTER_FIRMWARE_XXX"
 
     EXPECT media-source-supported DEFINE-MATCH PRINTER_HAS_MEDIA_SOURCE
     EXPECT ?printer-input-tray IN-GROUP printer-attributes-tag OF-TYPE octetString SAME-COUNT-AS media-source-supported
-    EXPECT printer-input-tray IF-DEFINED PRINTER_HAS_MEDIA_SOURCE,REQUIRE_NODRIVER
+    EXPECT printer-input-tray IF-DEFINED "PRINTER_HAS_MEDIA_SOURCE,REQUIRE_NODRIVER"
 
     EXPECT output-bin-supported DEFINE-MATCH PRINTER_HAS_OUTPUT_BIN
     EXPECT ?printer-output-tray IN-GROUP printer-attributes-tag OF-TYPE octetString SAME-COUNT-AS output-bin-supported
-    EXPECT printer-output-tray IF-DEFINED PRINTER_HAS_OUTPUT_BIN,REQUIRE_NODRIVER
+    EXPECT printer-output-tray IF-DEFINED "PRINTER_HAS_OUTPUT_BIN,REQUIRE_NODRIVER"
 
     EXPECT ?printer-supply IN-GROUP printer-attributes-tag OF-TYPE octetString SAME-COUNT-AS printer-supply
     EXPECT printer-supply DEFINE-MATCH PRINTER_HAS_PRINTER_SUPPLY
-    EXPECT printer-supply IF-DEFINED HAS_SUPPLIES,REQUIRE_NODRIVER
+    EXPECT printer-supply IF-DEFINED "HAS_SUPPLIES,REQUIRE_NODRIVER"
 
     EXPECT ?printer-supply-description IN-GROUP printer-attributes-tag OF-TYPE text SAME-COUNT-AS printer-supply
-    EXPECT printer-supply-description IF-DEFINED PRINTER_HAS_PRINTER_SUPPLY
-    EXPECT printer-supply-description IF-DEFINED HAS_SUPPLIES,REQUIRE_NODRIVER
+    EXPECT printer-supply-description IF-DEFINED "PRINTER_HAS_PRINTER_SUPPLY"
+    EXPECT printer-supply-description IF-DEFINED "HAS_SUPPLIES,REQUIRE_NODRIVER"
 
     EXPECT ?printer-supply-info-uri IN-GROUP printer-attributes-tag OF-TYPE uri COUNT 1 WITH-VALUE $HTTP_REGEX
-    EXPECT printer-supply-info-uri IF-DEFINED HAS_SUPPLIES,REQUIRE_NODRIVER
+    EXPECT printer-supply-info-uri IF-DEFINED "HAS_SUPPLIES,REQUIRE_NODRIVER"
 
     EXPECT ?printer-uuid IN-GROUP printer-attributes-tag OF-TYPE uri COUNT 1 WITH-VALUE $UUID_REGEX
-    EXPECT printer-uuid IF-DEFINED REQUIRE_NODRIVER
+    EXPECT printer-uuid IF-DEFINED "REQUIRE_NODRIVER"
 }
 
 {
-    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-DEFINED "NOPRINT"
 
     NAME "Print-Job with requesting-user-uri"
     OPERATION Print-Job
@@ -275,15 +275,51 @@ DEFINE UUID_URI_REGEX "/^urn:uuid:.+$$/"
 
     STATUS successful-ok
     EXPECT job-id IN-GROUP job-attributes-tag OF-TYPE integer(1:MAX) COUNT 1
-    EXPECT job-printer-uri IN-GROUP job-attributes-tag OF-TYPE uri COUNT 1 WITH-VALUE $uri
     EXPECT job-state IN-GROUP job-attributes-tag OF-TYPE enum COUNT 1
     EXPECT job-state-reasons IN-GROUP job-attributes-tag OF-TYPE keyword
     EXPECT job-uri IN-GROUP job-attributes-tag OF-TYPE uri COUNT 1 WITH-VALUE $IPP_REGEX
+}
+
+{
+    SKIP-IF-DEFINED "NOPRINT"
+    SKIP-IF-NOT-DEFINED job-id
+
+    NAME "Get-Job-Attributes for job-originating-user-uri and job-uuid"
+    OPERATION Get-Job-Attributes
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR name requesting-user-name $user
+
+    STATUS successful-ok
+    EXPECT job-originating-user-uri IN-GROUP job-attributes-tag OF-TYPE uri COUNT 1 WITH-VALUE "mailto:$user@example.com"
     EXPECT job-uuid IN-GROUP job-attributes-tag OF-TYPE uri COUNT 1 WITH-VALUE $UUID_REGEX
 }
 
 {
-    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-DEFINED "NOPRINT"
+    SKIP-IF-NOT-DEFINED job-id
+
+    NAME "Get-Job-Attributes Until Job Complete"
+    OPERATION Get-Job-Attributes
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR name requesting-user-name $user
+
+    STATUS successful-ok
+    EXPECT job-state IN-GROUP job-attributes-tag OF-TYPE enum COUNT 1 WITH-VALUE >6 REPEAT-NO-MATCH REPEAT-LIMIT 30
+    DISPLAY job-state
+}
+
+{
+    SKIP-IF-DEFINED "NOPRINT"
 
     NAME "Print-Job with document-metadata"
     OPERATION Print-Job
@@ -302,7 +338,7 @@ DEFINE UUID_URI_REGEX "/^urn:uuid:.+$$/"
 }
 
 {
-    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-DEFINED "NOPRINT"
 
     NAME "Get-Job-Attributes for document-metadata"
     OPERATION Get-Job-Attributes
@@ -319,7 +355,26 @@ DEFINE UUID_URI_REGEX "/^urn:uuid:.+$$/"
 }
 
 {
-    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-DEFINED "NOPRINT"
+    SKIP-IF-NOT-DEFINED job-id
+
+    NAME "Get-Job-Attributes Until Job Complete"
+    OPERATION Get-Job-Attributes
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR name requesting-user-name $user
+
+    STATUS successful-ok
+    EXPECT job-state IN-GROUP job-attributes-tag OF-TYPE enum COUNT 1 WITH-VALUE >6 REPEAT-NO-MATCH REPEAT-LIMIT 30
+    DISPLAY job-state
+}
+
+{
+    SKIP-IF-DEFINED "NOPRINT"
     SKIP-IF-NOT-DEFINED REQUIRE_NODRIVER
 
     NAME "Get-Jobs which-jobs=completed"
@@ -335,10 +390,12 @@ DEFINE UUID_URI_REGEX "/^urn:uuid:.+$$/"
     STATUS successful-ok
     EXPECT job-id IN-GROUP job-attributes-tag OF-TYPE integer(1:MAX)
     EXPECT job-id DEFINE-VALUE FIRST_JOB_ID
+
+    DISPLAY job-id
 }
 
 {
-    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-DEFINED "NOPRINT"
     SKIP-IF-NOT-DEFINED REQUIRE_NODRIVER
 
     NAME "Get-Jobs first-index=2, which-jobs=completed"
@@ -354,7 +411,9 @@ DEFINE UUID_URI_REGEX "/^urn:uuid:.+$$/"
 
     STATUS successful-ok
     EXPECT job-id IN-GROUP job-attributes-tag OF-TYPE integer(1:MAX)
-    EXPECT job-id WITH-VALUE !$FIRST_JOB_ID
+    EXPECT job-id WITH-VALUE !$job-id
+
+    DISPLAY job-id
 }
 
 {
@@ -395,7 +454,7 @@ DEFINE UUID_URI_REGEX "/^urn:uuid:.+$$/"
 }
 
 {
-    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-DEFINED "NOPRINT"
     SKIP-IF-NOT-DEFINED PRINTER_HAS_DOCUMENT_PASSWORD
 
     NAME "Print-Job with document-password"
@@ -415,11 +474,11 @@ DEFINE UUID_URI_REGEX "/^urn:uuid:.+$$/"
 }
 
 {
-    SKIP-IF-DEFINED NOPRINT
+    SKIP-IF-DEFINED "NOPRINT"
     SKIP-IF-NOT-DEFINED PRINTER_HAS_DOCUMENT_PASSWORD
     SKIP-IF-NOT-DEFINED job-id
 
-    NAME "Get-Job-Attributes for document-password Until Job Complete"
+    NAME "Get-Job-Attributes Until Job Complete"
     OPERATION Get-Job-Attributes
 
     GROUP operation-attributes-tag

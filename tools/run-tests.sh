@@ -2,7 +2,7 @@
 #
 # Script to test ippfind, ipptool, and ippeveprinter end-to-end.
 #
-# Copyright © 2022-2024 by OpenPrinting.
+# Copyright © 2022-2025 by OpenPrinting.
 #
 # Licensed under Apache License v2.0.  See the file "LICENSE" for more
 # information.
@@ -20,7 +20,7 @@ ippeveprinter=$!
 
 # Test the instance...
 echo "Running ippfind + ipptool..."
-tools/ippfind-static -T 30 --literal-name "$name" --exec tools/ipptool-static -V 2.0 -tIf examples/document-letter.pdf '{}' examples/ipp-2.0.test \; || status=1
+tools/ippfind-static -T 30 --literal-name "$name" --exec tools/ipptool-static -V 2.0 -tIf examples/document-letter.pdf '{}' examples/ipp-2.0.test examples/pwg5100.1.test examples/pwg5100.2.test examples/pwg5100.7.test examples/pwg5100.13.test \; || status=1
 
 if test $status = 1; then
     echo "Unable to find test printer."

@@ -272,6 +272,25 @@
     EXPECT client-info/client-version OF-TYPE octetString COUNT 1 WITH-VALUE <0003000000010002>
 }
 
+{
+    SKIP-IF-DEFINED "NOPRINT"
+    SKIP-IF-NOT-DEFINED job-id
+
+    NAME "Get-Job-Attributes Until Job Complete"
+    OPERATION Get-Job-Attributes
+
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR name requesting-user-name $user
+
+    STATUS successful-ok
+    EXPECT job-state IN-GROUP job-attributes-tag OF-TYPE enum COUNT 1 WITH-VALUE >6 REPEAT-NO-MATCH REPEAT-LIMIT 30
+    DISPLAY job-state
+}
+
 # TODO: Finish updating the rest of 5100.7 tests...
 # {
 # 	NAME "Print-job operation to pass the media-col attribute along with the request"
