@@ -32,7 +32,7 @@ jobs:
     - name: Test libcups
       env:
         ASAN_OPTIONS: leak_check_at_exit=false
-        CUPS_DEBUG_LOG: +test-debug.log
+        CUPS_DEBUG_LOG: test-debug.log
         CUPS_DEBUG_LEVEL: 4
       run: make test || (cat cups/test*.log; test tools/test.log && cat tools/test*.log; exit 1)
 
@@ -60,7 +60,7 @@ jobs:
     - name: Test libcups
       env:
         ASAN_OPTIONS: leak_check_at_exit=false
-        CUPS_DEBUG_LOG: +test-debug.log
+        CUPS_DEBUG_LOG: test-debug.log
         CUPS_DEBUG_LEVEL: 4
       run: make test || (cat cups/test*.log; test tools/test.log && cat tools/test*.log; exit 1)
 
@@ -79,7 +79,7 @@ jobs:
       run: make
     - name: Test libcups
       env:
-        CUPS_DEBUG_LOG: +test-debug.log
+        CUPS_DEBUG_LOG: test-debug.log
         CUPS_DEBUG_LEVEL: 4
       run: make test || (cat cups/test*.log; test tools/test.log && cat tools/test*.log; exit 1)
 
