@@ -882,6 +882,7 @@ span.string {
 <li><a href="#http_trust_t">http_trust_t</a></li>
 <li><a href="#http_uri_coding_t">http_uri_coding_t</a></li>
 <li><a href="#http_uri_status_t">http_uri_status_t</a></li>
+<li><a href="#http_version_t">http_version_t</a></li>
 <li><a href="#ipp_attribute_t">ipp_attribute_t</a></li>
 <li><a href="#ipp_copy_cb_t">ipp_copy_cb_t</a></li>
 <li><a href="#ipp_dstate_t">ipp_dstate_t</a></li>
@@ -948,6 +949,7 @@ span.string {
 <li><a href="#http_trust_e">http_trust_e</a></li>
 <li><a href="#http_uri_coding_e">http_uri_coding_e</a></li>
 <li><a href="#http_uri_status_e">http_uri_status_e</a></li>
+<li><a href="#http_version_e">http_version_e</a></li>
 <li><a href="#ipp_dstate_e">ipp_dstate_e</a></li>
 <li><a href="#ipp_finishings_e">ipp_finishings_e</a></li>
 <li><a href="#ipp_jstate_e">ipp_jstate_e</a></li>
@@ -2851,7 +2853,7 @@ the connection is made to the CUPS scheduler associated with the destination.</p
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Copy the X.509 certificate chain to a string.</p>
 <h3 class="function"><a id="cupsCopyCredentialsKey">cupsCopyCredentialsKey</a></h3>
-<p class="description"></p>
+<p class="description">Copy the private key to a string.</p>
 <p class="code">
 <span class="reserved">char</span> *cupsCopyCredentialsKey(<span class="reserved">const</span> <span class="reserved">char</span> *path, <span class="reserved">const</span> <span class="reserved">char</span> *common_name);</p>
 <h4 class="parameters">Parameters</h4>
@@ -2862,7 +2864,7 @@ the connection is made to the CUPS scheduler associated with the destination.</p
 <td class="description">Common name</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">Copy the private key to a string.</p>
+<p class="description">PEM-encoded private key</p>
 <h3 class="function"><a id="cupsCopyCredentialsPublicKey">cupsCopyCredentialsPublicKey</a></h3>
 <p class="description">Copy the public key for a X.509 certificate request.</p>
 <p class="code">
@@ -11688,6 +11690,11 @@ typedef enum <a href="#http_uri_coding_e">http_uri_coding_e</a> http_uri_coding_
 <p class="code">
 typedef enum <a href="#http_uri_status_e">http_uri_status_e</a> http_uri_status_t;
 </p>
+<h3 class="typedef"><a id="http_version_t">http_version_t</a></h3>
+<p class="description">HTTP version numbers</p>
+<p class="code">
+typedef enum <a href="#http_version_e">http_version_e</a> http_version_t;
+</p>
 <h3 class="typedef"><a id="ipp_attribute_t">ipp_attribute_t</a></h3>
 <p class="description">IPP attribute</p>
 <p class="code">
@@ -12755,6 +12762,14 @@ factor not applied)</td></tr>
 <tr><th>HTTP_URI_STATUS_OK </th><td class="description">URI decoded OK</td></tr>
 <tr><th>HTTP_URI_STATUS_OVERFLOW </th><td class="description">URI buffer for httpAssembleURI is too small</td></tr>
 <tr><th>HTTP_URI_STATUS_UNKNOWN_SCHEME </th><td class="description">Unknown scheme in URI (warning)</td></tr>
+</tbody></table>
+<h3 class="enumeration"><a id="http_version_e">http_version_e</a></h3>
+<p class="description">HTTP version numbers</p>
+<h4 class="constants">Constants</h4>
+<table class="list"><tbody>
+<tr><th>HTTP_VERSION_0_9 </th><td class="description">HTTP/0.9</td></tr>
+<tr><th>HTTP_VERSION_1_0 </th><td class="description">HTTP/1.0</td></tr>
+<tr><th>HTTP_VERSION_1_1 </th><td class="description">HTTP/1.1</td></tr>
 </tbody></table>
 <h3 class="enumeration"><a id="ipp_dstate_e">ipp_dstate_e</a></h3>
 <p class="description">&quot;document-state&quot; values</p>

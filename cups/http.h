@@ -374,7 +374,7 @@ typedef enum http_uri_coding_e		// URI en/decode flags
   HTTP_URI_CODING_RFC6874 = 16		// Use RFC 6874 address format
 } http_uri_coding_t;
 
-typedef enum http_version_e		// HTTP version numbers @exclude all@
+typedef enum http_version_e		// HTTP version numbers
 {
   HTTP_VERSION_0_9 = 9,			// HTTP/0.9
   HTTP_VERSION_1_0 = 100,		// HTTP/1.0
