@@ -1,7 +1,7 @@
 //
 // Raster file routines for CUPS.
 //
-// Copyright © 2022-2024 by OpenPrinting.
+// Copyright © 2022-2025 by OpenPrinting.
 // Copyright © 2007-2019 by Apple Inc.
 // Copyright © 1997-2006 by Easy Software Products.
 //
@@ -1430,7 +1430,7 @@ cups_raster_read(cups_raster_t *r,	// I - Raster stream
 		total;			// Total bytes read
 
 
-  DEBUG_printf("4cups_raster_read(r=%p, buf=%p, bytes=" CUPS_LLFMT "), offset=" CUPS_LLFMT, (void *)r, (void *)buf, CUPS_LLCAST bytes, CUPS_LLCAST (r->iostart + r->bufptr - r->buffer));
+  DEBUG_printf("5cups_raster_read(r=%p, buf=%p, bytes=" CUPS_LLFMT "), offset=" CUPS_LLFMT, (void *)r, (void *)buf, CUPS_LLCAST bytes, CUPS_LLCAST (r->iostart + r->bufptr - r->buffer));
 
   if (!r->compressed)
     return (cups_raster_io(r, buf, bytes));
@@ -1466,7 +1466,7 @@ cups_raster_read(cups_raster_t *r,	// I - Raster stream
   {
     count = (ssize_t)bytes - total;
 
-    DEBUG_printf("5cups_raster_read: count=" CUPS_LLFMT ", remaining=" CUPS_LLFMT ", buf=%p, bufptr=%p, bufend=%p", CUPS_LLCAST count, CUPS_LLCAST remaining, (void *)buf, (void *)r->bufptr, (void *)r->bufend);
+    DEBUG_printf("6cups_raster_read: count=" CUPS_LLFMT ", remaining=" CUPS_LLFMT ", buf=%p, bufptr=%p, bufend=%p", CUPS_LLCAST count, CUPS_LLCAST remaining, (void *)buf, (void *)r->bufptr, (void *)r->bufend);
 
     if (remaining == 0)
     {
@@ -1538,7 +1538,7 @@ cups_raster_read(cups_raster_t *r,	// I - Raster stream
     }
   }
 
-  DEBUG_printf("5cups_raster_read: Returning %ld", (long)total);
+  DEBUG_printf("6cups_raster_read: Returning %ld", (long)total);
 
   return (total);
 }
@@ -1639,13 +1639,13 @@ cups_raster_update(cups_raster_t *r)	// I - Raster stream
           break;
     }
 
-    DEBUG_printf("4cups_raster_update: cupsNumColors=%u", r->header.cupsNumColors);
+    DEBUG_printf("6cups_raster_update: cupsNumColors=%u", r->header.cupsNumColors);
   }
 
   // Set the number of bytes per pixel/color...
-  DEBUG_printf("4cups_raster_update: cupsColorOrder=%u", r->header.cupsColorOrder);
-  DEBUG_printf("4cups_raster_update: cupsBitsPerPixel=%u", r->header.cupsBitsPerPixel);
-  DEBUG_printf("4cups_raster_update: cupsBitsPerColor=%u", r->header.cupsBitsPerColor);
+  DEBUG_printf("6cups_raster_update: cupsColorOrder=%u", r->header.cupsColorOrder);
+  DEBUG_printf("6cups_raster_update: cupsBitsPerPixel=%u", r->header.cupsBitsPerPixel);
+  DEBUG_printf("6cups_raster_update: cupsBitsPerColor=%u", r->header.cupsBitsPerColor);
 
   if (r->header.cupsColorOrder == CUPS_ORDER_CHUNKED)
     r->bpp = (r->header.cupsBitsPerPixel + 7) / 8;
@@ -1655,7 +1655,7 @@ cups_raster_update(cups_raster_t *r)	// I - Raster stream
   if (r->bpp == 0)
     r->bpp = 1;
 
-  DEBUG_printf("4cups_raster_update: bpp=%u", r->bpp);
+  DEBUG_printf("6cups_raster_update: bpp=%u", r->bpp);
 
   if (r->bpp > 30)
     return (false);			// Something went wrong!
@@ -1666,7 +1666,7 @@ cups_raster_update(cups_raster_t *r)	// I - Raster stream
   else
     r->remaining = r->header.cupsHeight;
 
-  DEBUG_printf("4cups_raster_update: remaining=%u", r->remaining);
+  DEBUG_printf("6cups_raster_update: remaining=%u", r->remaining);
 
   // Validate the page header...
   if (r->header.cupsBytesPerLine == 0)
@@ -1729,7 +1729,7 @@ cups_raster_update(cups_raster_t *r)	// I - Raster stream
       r->pend     = r->pixels + r->header.cupsBytesPerLine;
       r->count    = 0;
 
-      DEBUG_printf("4cups_raster_update: Allocated %u bytes at %p.", r->header.cupsBytesPerLine, r->pixels);
+      DEBUG_printf("6cups_raster_update: Allocated %u bytes at %p.", r->header.cupsBytesPerLine, r->pixels);
     }
   }
 
@@ -1756,13 +1756,13 @@ cups_raster_write(
   _cups_copyfunc_t	cf;		// Copy function
 
 
-  DEBUG_printf("3cups_raster_write(r=%p, pixels=%p)", (void *)r, (void *)pixels);
-  DEBUG_printf("4cups_raster_write: cupsBytesPerLine=%u", r->header.cupsBytesPerLine);
+  DEBUG_printf("5cups_raster_write(r=%p, pixels=%p)", (void *)r, (void *)pixels);
+  DEBUG_printf("6cups_raster_write: cupsBytesPerLine=%u", r->header.cupsBytesPerLine);
 
   // Determine whether we need to swap bytes...
   if (r->swapped && (r->header.cupsBitsPerColor == 16 || r->header.cupsBitsPerPixel == 12 || r->header.cupsBitsPerPixel == 16))
   {
-    DEBUG_puts("4cups_raster_write: Swapping bytes when writing.");
+    DEBUG_puts("6cups_raster_write: Swapping bytes when writing.");
     cf = (_cups_copyfunc_t)cups_swap_copy;
   }
   else
@@ -1782,7 +1782,7 @@ cups_raster_write(
 
     if (!wptr)
     {
-      DEBUG_printf("4cups_raster_write: Unable to allocate " CUPS_LLFMT " bytes for raster buffer: %s", CUPS_LLCAST count, strerror(errno));
+      DEBUG_printf("6cups_raster_write: Unable to allocate " CUPS_LLFMT " bytes for raster buffer: %s", CUPS_LLCAST count, strerror(errno));
       return (-1);
     }
 
@@ -1797,7 +1797,7 @@ cups_raster_write(
   wptr    = r->buffer;
   *wptr++ = (unsigned char)(r->count - 1);
 
-  DEBUG_printf("4cups_raster_write: bpp=%u, pend=%ld, plast=%ld, wptr=%ld", bpp, pend - pixels, plast - pixels, wptr - r->buffer);
+  DEBUG_printf("6cups_raster_write: bpp=%u, pend=%ld, plast=%ld, wptr=%ld", bpp, pend - pixels, plast - pixels, wptr - r->buffer);
 
   // Write using a modified PackBits compression...
   for (ptr = pixels; ptr < pend;)
@@ -1808,7 +1808,7 @@ cups_raster_write(
     if (ptr >= pend)
     {
       // Encode a single pixel at the end...
-      DEBUG_printf("4cups_raster_write: SINGLE-END - ptr=%ld, pend=%ld, plast=%ld, start=%ld, wptr=%ld", ptr - pixels, pend - pixels, plast - pixels, start - pixels, wptr - r->buffer);
+      DEBUG_printf("6cups_raster_write: SINGLE-END - ptr=%ld, pend=%ld, plast=%ld, start=%ld, wptr=%ld", ptr - pixels, pend - pixels, plast - pixels, start - pixels, wptr - r->buffer);
 
       *wptr++ = 0;
       (*cf)(wptr, start, bpp);
@@ -1851,7 +1851,7 @@ cups_raster_write(
     }
   }
 
-  DEBUG_printf("4cups_raster_write: Writing " CUPS_LLFMT " bytes.", CUPS_LLCAST (wptr - r->buffer));
+  DEBUG_printf("6cups_raster_write: Writing " CUPS_LLFMT " bytes.", CUPS_LLCAST (wptr - r->buffer));
 
   return (cups_raster_io(r, r->buffer, (size_t)(wptr - r->buffer)));
 }

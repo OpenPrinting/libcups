@@ -20,7 +20,7 @@ jobs:
     - name: Update Build Environment
       run: sudo apt-get update --fix-missing -y
     - name: Install Prerequisites
-      run: sudo apt-get install -y avahi-daemon libavahi-client-dev libpng-dev libssl-dev libpam-dev libusb-1.0-0-dev zlib1g-dev
+      run: sudo apt-get install -y avahi-daemon libavahi-client-dev libpam-dev libpng-dev libssl-dev libusb-1.0-0-dev zlib1g-dev
     - name: Start Avahi
       run: sudo systemctl start avahi-daemon
     - name: Configure libcups
@@ -34,7 +34,7 @@ jobs:
         ASAN_OPTIONS: leak_check_at_exit=false
         CUPS_DEBUG_LOG: test-debug.log
         CUPS_DEBUG_LEVEL: 4
-      run: make test || (cat cups/test*.log; test tools/test.log && cat tools/test*.log; exit 1)
+      run: make test || (test cups/test.log && cat cups/test*.log; test tools/test.log && cat tools/test*.log; exit 1)
 
   build-linux-gnutls:
 
@@ -62,7 +62,7 @@ jobs:
         ASAN_OPTIONS: leak_check_at_exit=false
         CUPS_DEBUG_LOG: test-debug.log
         CUPS_DEBUG_LEVEL: 4
-      run: make test || (cat cups/test*.log; test tools/test.log && cat tools/test*.log; exit 1)
+      run: make test || (test cups/test.log && cat cups/test*.log; test tools/test.log && cat tools/test*.log; exit 1)
 
   build-macos:
 
@@ -81,7 +81,7 @@ jobs:
       env:
         CUPS_DEBUG_LOG: test-debug.log
         CUPS_DEBUG_LEVEL: 4
-      run: make test || (cat cups/test*.log; test tools/test.log && cat tools/test*.log; exit 1)
+      run: make test || (test cups/test.log && cat cups/test*.log; test tools/test.log && cat tools/test*.log; exit 1)
 
   build-windows:
 

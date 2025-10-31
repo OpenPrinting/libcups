@@ -190,7 +190,7 @@ all:		$(TARGETS)
 #
 
 test:		$(UNITTARGETS)
-	rm -ff test.log test-debug.log .testssl
+	rm -rf test.log test-debug.log .testssl
 	date >test.log
 	echo Running array API tests...
 	./testarray 2>>test.log
@@ -240,6 +240,7 @@ test:		$(UNITTARGETS)
 	echo Running raster API tests...
 	./testraster 2>>test.log
 	./testtestpage 2>>test.log
+	rm -rf test.log test-debug.log .testssl
 
 fuzz:		$(UNITTARGETS)
 	echo Fuzzing IPP API...
