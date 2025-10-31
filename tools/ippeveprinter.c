@@ -1407,7 +1407,7 @@ create_printer(
     ipp_t        *attrs)		// I - Capability attributes
 {
   ippeve_printer_t	*printer;	// Printer
-  int			i;		// Looping var
+  size_t		i;		// Looping var
   ipp_attribute_t	*attr;		// Current attribute
 #ifndef _WIN32
   char			path[1024];	// Full path to command
@@ -1838,8 +1838,6 @@ create_printer(
 
   if (docformats)
   {
-    ipp_attribute_t	*attr;		// Attribute
-
     // document-format-default
     if (!ippFindAttribute(printer->attrs, "document-format-default", IPP_TAG_MIMETYPE))
       ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_MIMETYPE), "document-format-default", NULL, "application/octet-stream");
