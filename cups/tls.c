@@ -93,12 +93,18 @@ cupsCopyCredentials(
 // 'cupsCopyCredentialsKey()' - Copy the private key to a string.
 //
 
-char *
+char *					// O - PEM-encoded private key
 cupsCopyCredentialsKey(
     const char *path,			// I - Directory path for certificate/key store or `NULL` for default
     const char *common_name)		// I - Common name
 {
-  return (http_copy_file(path, common_name, "key"));
+  char	*key = http_copy_file(path, common_name, "key");
+					// Private key
+
+  if (!key)
+    key = http_copy_file(path, common_name, "ktm");
+
+  return (key);
 }
 
 

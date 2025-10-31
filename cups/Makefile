@@ -190,7 +190,7 @@ all:		$(TARGETS)
 #
 
 test:		$(UNITTARGETS)
-	rm -f test.log test-debug.log
+	rm -ff test.log test-debug.log .testssl
 	date >test.log
 	echo Running array API tests...
 	./testarray 2>>test.log
