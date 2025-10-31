@@ -26,11 +26,15 @@ jobs:
     - name: Configure libcups
       env:
         CC: /usr/bin/gcc
-      run: ./configure --enable-debug --enable-debug-printfs --enable-maintainer --with-tls=openssl || (cat config.log; pkg-config --list-all; exit 1)
+      run: ./configure --enable-debug --enable-maintainer --with-tls=openssl --with-sanitizer=address || (cat config.log; pkg-config --list-all; exit 1)
     - name: Make libcups
       run: make
     - name: Test libcups
-      run: make test || cat cups/test.log && exit 1
+      env:
+        ASAN_OPTIONS: leak_check_at_exit=false
+        CUPS_DEBUG_LOG: +test-debug.log
+        CUPS_DEBUG_LEVEL: 4
+      run: make test || (cat cups/test*.log; test tools/test.log && cat tools/test*.log; exit 1)
 
   build-linux-gnutls:
 
@@ -50,11 +54,15 @@ jobs:
     - name: Configure libcups
       env:
         CC: /usr/bin/gcc
-      run: ./configure --enable-debug --enable-debug-printfs --enable-maintainer --with-tls=gnutls || (cat config.log; pkg-config --list-all; exit 1)
+      run: ./configure --enable-debug --enable-maintainer --with-tls=gnutls --with-sanitizer=address || (cat config.log; pkg-config --list-all; exit 1)
     - name: Make libcups
       run: make
     - name: Test libcups
-      run: make test || cat cups/test.log && exit 1
+      env:
+        ASAN_OPTIONS: leak_check_at_exit=false
+        CUPS_DEBUG_LOG: +test-debug.log
+        CUPS_DEBUG_LEVEL: 4
+      run: make test || (cat cups/test*.log; test tools/test.log && cat tools/test*.log; exit 1)
 
   build-macos:
 
@@ -66,11 +74,14 @@ jobs:
       with:
         submodules: recursive
     - name: Configure libcups
-      run: ./configure --enable-debug --enable-debug-printfs --enable-maintainer || (cat config.log; pkg-config --list-all; exit 1)
+      run: ./configure --enable-debug --enable-maintainer --with-sanitizer=address || (cat config.log; pkg-config --list-all; exit 1)
     - name: Make libcups
       run: make
     - name: Test libcups
-      run: make test || cat cups/test.log && exit 1
+      env:
+        CUPS_DEBUG_LOG: +test-debug.log
+        CUPS_DEBUG_LEVEL: 4
+      run: make test || (cat cups/test*.log; test tools/test.log && cat tools/test*.log; exit 1)
 
   build-windows:
 
