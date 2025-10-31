@@ -194,10 +194,6 @@ test:		$(UNITTARGETS)
 	date >test.log
 	echo Running array API tests...
 	./testarray 2>>test.log
-#	if test `uname` != Darwin; then \
-#		echo Running CUPS API tests...; \
-#		./testcups 2>>test.log; \
-#	fi
 	echo ""
 	echo Running clock API tests...
 	./testclock 2>>test.log
@@ -213,9 +209,6 @@ test:		$(UNITTARGETS)
 	echo ""
 	echo Running form API tests...
 	./testform 2>>test.log
-#	echo ""
-#	echo Running cupsGetDests API tests...
-#	./testgetdests 2>>test.log
 	echo ""
 	echo Running hash API tests...
 	./testhash 2>>test.log

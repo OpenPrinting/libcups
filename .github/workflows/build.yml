@@ -30,7 +30,7 @@ jobs:
     - name: Make libcups
       run: make
     - name: Test libcups
-      run: make test || cat cups/test.log
+      run: make test || cat cups/test.log && exit 1
 
   build-linux-gnutls:
 
@@ -54,7 +54,7 @@ jobs:
     - name: Make libcups
       run: make
     - name: Test libcups
-      run: make test || cat cups/test.log
+      run: make test || cat cups/test.log && exit 1
 
   build-macos:
 
@@ -70,7 +70,7 @@ jobs:
     - name: Make libcups
       run: make
     - name: Test libcups
-      run: make test || cat cups/test.log
+      run: make test || cat cups/test.log && exit 1
 
   build-windows:
 
@@ -87,3 +87,5 @@ jobs:
       run: cd vcnet; nuget restore libcups.sln; cd ../pdfio; nuget restore
     - name: Build libcups
       run: cd vcnet; msbuild libcups.sln
+    - name: Test libcups
+      run: cd vcnet; ./runtests.bat
