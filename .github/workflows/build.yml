@@ -99,4 +99,4 @@ jobs:
     - name: Build libcups
       run: cd vcnet; msbuild libcups.sln
     - name: Test libcups
-      run: cd vcnet; ./runtests.bat
+      run: cd vcnet; ./runtests.bat x64\Debug
