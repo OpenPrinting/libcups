@@ -790,7 +790,7 @@ cupsGetCredentialsInfo(
   gnutls_x509_crt_t	certs[16];	// Certificates
 
 
-  DEBUG_printf("httpCredentialsString(credentials=%p, buffer=%p, bufsize=" CUPS_LLFMT ")", credentials, buffer, CUPS_LLCAST bufsize);
+  DEBUG_printf("cupsGetCredentialsInfo(credentials=%p, buffer=%p, bufsize=" CUPS_LLFMT ")", credentials, buffer, CUPS_LLCAST bufsize);
 
   if (buffer)
     *buffer = '\0';
@@ -884,6 +884,8 @@ cupsGetCredentialsTrust(
 					// Per-thread globals
 
 
+  DEBUG_printf("cupsGetCredentialsTrust(path=\"%s\", common_name=\"%s\", credentials=\"%lu bytes...\", require_ca=%s)", path, common_name, (unsigned long)(credentials ? strlen(credentials) : 0), require_ca ? "true" : "false");
+
   // Range check input...
   if (!path)
     path = http_default_path(defpath, sizeof(defpath));
@@ -898,6 +900,7 @@ cupsGetCredentialsTrust(
   if (!gnutls_import_certs(credentials, &num_certs, certs))
   {
     _cupsSetError(IPP_STATUS_ERROR_CUPS_PKI, _("Unable to import credentials."), true);
+    DEBUG_printf("1cupsGetCredentialsTrust: Returning %d.", HTTP_TRUST_UNKNOWN);
     return (HTTP_TRUST_UNKNOWN);
   }
 
@@ -1013,6 +1016,8 @@ cupsGetCredentialsTrust(
   }
 
   gnutls_free_certs(num_certs, certs);
+
+  DEBUG_printf("1cupsGetCredentialsTrust: Returning %d.", trust);
 
   return (trust);
 }

@@ -508,6 +508,8 @@ http_copy_file(const char *path,	// I - Directory
   struct stat	fileinfo;		// File information
 
 
+  DEBUG_printf("3http_copy_file(path=\"%s\", common_name=\"%s\", ext=\"%s\")", path, common_name, ext);
+
   if (!common_name)
     return (NULL);
 
@@ -515,10 +517,18 @@ http_copy_file(const char *path,	// I - Directory
     path = http_default_path(defpath, sizeof(defpath));
 
   if ((fd = open(http_make_path(filename, sizeof(filename), path, common_name, ext), O_RDONLY)) < 0)
+  {
+    DEBUG_printf("4http_copy_file: open() failed: %s", strerror(errno));
     return (NULL);
+  }
 
   if (fstat(fd, &fileinfo))
+  {
+    DEBUG_printf("4http_copy_file: fstat() failed: %s", strerror(errno));
     goto done;
+  }
+
+  DEBUG_printf("4http_copy_file: st_size=%lu", (unsigned long)fileinfo.st_size);
 
   if (fileinfo.st_size > 65536)
   {
@@ -528,12 +538,14 @@ http_copy_file(const char *path,	// I - Directory
 
   if ((s = calloc(1, (size_t)fileinfo.st_size + 1)) == NULL)
   {
+    DEBUG_printf("4http_copy_file: calloc() failed: %s", strerror(errno));
     close(fd);
     return (NULL);
   }
 
   if (read(fd, s, (size_t)fileinfo.st_size) < 0)
   {
+    DEBUG_printf("4http_copy_file: read() failed: %s", strerror(errno));
     free(s);
     s = NULL;
   }
@@ -541,6 +553,8 @@ http_copy_file(const char *path,	// I - Directory
   done:
 
   close(fd);
+
+  DEBUG_printf("4http_copy_file: Returning \"%s\"", s);
 
   return (s);
 }
@@ -565,7 +579,7 @@ http_default_path(
 
     if (!_cupsDirCreate(buffer, 0700))
     {
-      DEBUG_printf("1http_default_path: Failed to make directory '%s': %s", buffer, strerror(errno));
+      DEBUG_printf("4http_default_path: Failed to make directory '%s': %s", buffer, strerror(errno));
       return (NULL);
     }
   }
@@ -575,12 +589,12 @@ http_default_path(
 
     if (!_cupsDirCreate(buffer, 0700))
     {
-      DEBUG_printf("1http_default_path: Failed to make directory '%s': %s", buffer, strerror(errno));
+      DEBUG_printf("4http_default_path: Failed to make directory '%s': %s", buffer, strerror(errno));
       return (NULL);
     }
   }
 
-  DEBUG_printf("1http_default_path: Using default path \"%s\".", buffer);
+  DEBUG_printf("4http_default_path: Using default path \"%s\".", buffer);
 
   return (buffer);
 }
@@ -701,6 +715,8 @@ http_make_path(
 	*bufend = buffer + bufsize - 1;	// End of buffer
 
 
+  DEBUG_printf("3http_make_path(buffer=%p, bufsize=%u, dirname=\"%s\", filename=\"%s\", ext=\"%s\")", (void *)buffer, (unsigned)bufsize, dirname, filename, ext);
+
   snprintf(buffer, bufsize, "%s/", dirname);
   bufptr = buffer + strlen(buffer);
 
@@ -718,6 +734,8 @@ http_make_path(
     *bufptr++ = '.';
 
   cupsCopyString(bufptr, ext, (size_t)(bufend - bufptr + 1));
+
+  DEBUG_printf("4http_make_path: Returning \"%s\".", buffer);
 
   return (buffer);
 }
