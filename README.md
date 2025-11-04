@@ -82,6 +82,22 @@ pages and other documentation in the `doc` directory.
 *Please read the documentation before asking questions.*
 
 
+Contributing Code and Translations
+----------------------------------
+
+Code contributions should be submitted as pull requests on the Github site:
+
+    http://github.com/OpenPrinting/libcups/pulls
+
+See the file `CONTRIBUTING.md` for more details.
+
+CUPS uses [Weblate][WL] to manage the localization of the command-line programs
+and common IPP attributes and values, and those likewise end up as pull requests
+on Github.
+
+[WL]: https://hosted.weblate.org
+
+
 Legal Stuff
 -----------
 
