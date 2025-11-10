@@ -4927,6 +4927,8 @@
 					.,
 					..,
 					/usr/local/include,
+					/opt/local/include,
+					/opt/homebrew/include,
 				);
 				LIBRARY_SEARCH_PATHS = /usr/local/lib;
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
@@ -4998,6 +5000,8 @@
 					.,
 					..,
 					/usr/local/include,
+					/opt/local/include,
+					/opt/homebrew/include,
 				);
 				LIBRARY_SEARCH_PATHS = /usr/local/lib;
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
