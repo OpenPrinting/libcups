@@ -3923,6 +3923,12 @@
 				DEAD_CODE_STRIPPING = YES;
 				INSTALL_PATH = /usr/bin;
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				OTHER_LDFLAGS = (
+					"-L/usr/local/lib",
+					"-L/opt/local/lib",
+					"-L/opt/homebrew/lib",
+					"-lpng16",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -3935,6 +3941,12 @@
 				DEAD_CODE_STRIPPING = YES;
 				INSTALL_PATH = /usr/bin;
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				OTHER_LDFLAGS = (
+					"-L/usr/local/lib",
+					"-L/opt/local/lib",
+					"-L/opt/homebrew/lib",
+					"-lpng16",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -4169,6 +4181,12 @@
 				DEAD_CODE_STRIPPING = YES;
 				INSTALL_PATH = /usr/bin;
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				OTHER_LDFLAGS = (
+					"-L/usr/local/lib",
+					"-L/opt/local/lib",
+					"-L/opt/homebrew/lib",
+					"-lpng16",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -4181,6 +4199,12 @@
 				DEAD_CODE_STRIPPING = YES;
 				INSTALL_PATH = /usr/bin;
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				OTHER_LDFLAGS = (
+					"-L/usr/local/lib",
+					"-L/opt/local/lib",
+					"-L/opt/homebrew/lib",
+					"-lpng16",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
