@@ -889,7 +889,7 @@ cupsFilePrintf(cups_file_t *fp,		// I - CUPS file
     // Expand the printf buffer...
     char	*temp;			// Temporary buffer pointer
 
-    if (bytes > 65535)
+    if (bytes > 1048576)
     {
       va_end(ap);
       return (-1);
@@ -908,6 +908,9 @@ cupsFilePrintf(cups_file_t *fp,		// I - CUPS file
   }
 
   va_end(ap);
+
+  if (bytes < 0)
+    return (-1);
 
   if (fp->mode == 's')
   {
