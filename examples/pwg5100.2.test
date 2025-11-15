@@ -16,7 +16,7 @@
 # Options:
 #
 #   -d NOPRINT=1              Disable the print tests.
-#   -d REQUIRE_OUTPUT_BIN=1   Require support for the output-bin attribute.
+#   -d REQUIRE_OUTPUTBIN=1    Require support for the output-bin attribute.
 #
 
 # Determine whether the Printer supports the output-bin attribute...
@@ -34,8 +34,8 @@
 
     STATUS successful-ok
 
-    EXPECT output-bin-default OF-TYPE keyword|name IN-GROUP printer-attributes-tag COUNT 1 IF-DEFINED REQUIRE_OUTPUT_BIN
-    EXPECT output-bin-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag IF-DEFINED REQUIRE_OUTPUT_BIN
+    EXPECT output-bin-default OF-TYPE keyword|name IN-GROUP printer-attributes-tag COUNT 1 IF-DEFINED REQUIRE_OUTPUTBIN
+    EXPECT output-bin-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag IF-DEFINED REQUIRE_OUTPUTBIN
     EXPECT output-bin-supported OF-TYPE keyword|name IN-GROUP printer-attributes-tag DEFINE-MATCH PRINTER_HAS_OUTPUT_BIN
 
     EXPECT output-bin-default OF-TYPE keyword|name IN-GROUP printer-attributes-tag COUNT 1 WITH-VALUE-FROM output-bin-supported IF-DEFINED PRINTER_HAS_OUTPUT_BIN
