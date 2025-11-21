@@ -130,4 +130,4 @@ jobs:
       with:
         name: windows-test-results
         path: |
-          vcnet/test*.log
+          vcnet/x64/Debug/test*.log
