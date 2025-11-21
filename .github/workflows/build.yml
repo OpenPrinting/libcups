@@ -34,7 +34,15 @@ jobs:
         ASAN_OPTIONS: leak_check_at_exit=false
         CUPS_DEBUG_LOG: test-debug.log
         CUPS_DEBUG_LEVEL: 4
-      run: make test || (test cups/test.log && cat cups/test*.log; test tools/test.log && cat tools/test*.log; exit 1)
+      run: make test
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v4
+      if: ${{ !cancelled() }}
+      with:
+        name: ubuntu-openssl-test-results
+        path: |
+          cups/test*.log
+          tools/test*.log
 
   build-linux-gnutls:
 
@@ -62,7 +70,15 @@ jobs:
         ASAN_OPTIONS: leak_check_at_exit=false
         CUPS_DEBUG_LOG: test-debug.log
         CUPS_DEBUG_LEVEL: 4
-      run: make test || (test cups/test.log && cat cups/test*.log; test tools/test.log && cat tools/test*.log; exit 1)
+      run: make test
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v4
+      if: ${{ !cancelled() }}
+      with:
+        name: ubuntu-gnutls-test-results
+        path: |
+          cups/test*.log
+          tools/test*.log
 
   build-macos:
 
@@ -81,7 +97,15 @@ jobs:
       env:
         CUPS_DEBUG_LOG: test-debug.log
         CUPS_DEBUG_LEVEL: 4
-      run: make test || (test cups/test.log && cat cups/test*.log; test tools/test.log && cat tools/test*.log; exit 1)
+      run: make test
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v4
+      if: ${{ !cancelled() }}
+      with:
+        name: macos-test-results
+        path: |
+          cups/test*.log
+          tools/test*.log
 
   build-windows:
 
@@ -100,3 +124,10 @@ jobs:
       run: cd vcnet; msbuild libcups.sln
     - name: Test libcups
       run: cd vcnet; ./runtests.bat x64\Debug
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v4
+      if: ${{ !cancelled() }}
+      with:
+        name: windows-test-results
+        path: |
+          vcnet/test*.log
