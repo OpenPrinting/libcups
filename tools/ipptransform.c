@@ -4066,9 +4066,11 @@ usage(FILE *out)			// I - Output file
   cupsLangPuts(out, _("image/jpeg                     Joint Photographic Experts Group (JPEG) image"));
   cupsLangPuts(out, _("image/png                      Portable Network Graphics (PNG) image"));
   cupsLangPuts(out, _("image/pwg-raster               PWG Raster Format document"));
+  cupsLangPuts(out, _("image/urf                      Apple raster document"));
   cupsLangPuts(out, _("text/plain                     Plain text document"));
   fputs("\n", out);
   cupsLangPuts(out, _("Output Formats:"));
+  cupsLangPuts(out, _("application/PCLm               PCLm (raster subset of PDF) document"));
   cupsLangPuts(out, _("application/pdf                Portable Document Format (PDF) document"));
   cupsLangPuts(out, _("applications/postscript        Adobe PostScript document"));
   cupsLangPuts(out, _("application/vnd.hp-pcl         HP Page Control Language (PCL) document"));

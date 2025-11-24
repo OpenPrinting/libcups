@@ -53,6 +53,7 @@
 "%s: Bad resolution value '%s'." = "%s: Bad resolution value '%s'.";
 "%s: Cannot use '--and' after '--or'." = "%s: Cannot use '--and' after '--or'.";
 "%s: Cannot use '-a' with '-2', '-f', '-m', '-M', or '-s'." = "%s: Cannot use '-a' with '-2', '-f', '-m', '-M', or '-s'.";
+"%s: File '%s' is too large to load in memory." = "%s: File '%s' is too large to load in memory.";
 "%s: Input Document %d: %s" = "%s: Input Document %d: %s";
 "%s: Invalid device URI '%s'." = "%s: Invalid device URI '%s'.";
 "%s: Invalid seconds \"%s\" for '-i'." = "%s: Invalid seconds \"%s\" for '-i'.";
@@ -106,6 +107,8 @@
 "%s: Out of memory." = "%s: Out of memory.";
 "%s: Too many files." = "%s: Too many files.";
 "%s: Too many parenthesis." = "%s: Too many parenthesis.";
+"%s: Unable to access '%s': %s" = "%s: Unable to access '%s': %s";
+"%s: Unable to allocate memory for '%s': %s" = "%s: Unable to allocate memory for '%s': %s";
 "%s: Unable to connect to \"%s\" on port %d: %s" = "%s: Unable to connect to \"%s\" on port %d: %s";
 "%s: Unable to create CFPDFDocument for file." = "%s: Unable to create CFPDFDocument for file.";
 "%s: Unable to create CFURL for file." = "%s: Unable to create CFURL for file.";
@@ -121,6 +124,7 @@
 "%s: Unable to initialize separator raster context: %s" = "%s: Unable to initialize separator raster context: %s";
 "%s: Unable to lookup device URI host \"%s\": %s" = "%s: Unable to lookup device URI host \"%s\": %s";
 "%s: Unable to open '%s': %s" = "%s: Unable to open '%s': %s";
+"%s: Unable to read '%s': %s" = "%s: Unable to read '%s': %s";
 "%s: Unable to run pdftoppm command: %s" = "%s: Unable to run pdftoppm command: %s";
 "%s: Unable to send data." = "%s: Unable to send data.";
 "%s: Unable to send print data: %s" = "%s: Unable to send print data: %s";
@@ -469,6 +473,7 @@
 "aborted" = "已中止";
 "adobe-rgb_16                   48-bit AdobeRGB" = "adobe-rgb_16                   48-bit AdobeRGB";
 "adobe-rgb_8                    24-bit AdobeRGB" = "adobe-rgb_8                    24-bit AdobeRGB";
+"application/PCLm               PCLm (raster subset of PDF) document" = "application/PCLm               PCLm (raster subset of PDF) document";
 "application/pdf                Portable Document Format (PDF) document" = "application/pdf                Portable Document Format (PDF) document";
 "application/vnd.hp-pcl         HP Page Control Language (PCL) document" = "application/vnd.hp-pcl         HP Page Control Language (PCL) document";
 "applications/postscript        Adobe PostScript document" = "applications/postscript        Adobe PostScript document";
@@ -935,6 +940,7 @@
 "input-source.adf" = "Automatic Document Feeder";
 "input-source.film-reader" = "Film reader";
 "input-source.platen" = "Platen";
+"install COMMON-NAME FILENAME.crt [FILENAME.key]\n" = "install COMMON-NAME FILENAME.crt [FILENAME.key]\n";
 "ipp://ADDRESS[:PORT]/RESOURCE  Use Internet Printing Protocol" = "ipp://ADDRESS[:PORT]/RESOURCE  Use Internet Printing Protocol";
 "ipps://ADDRESS[:PORT]/RESOURCE Use Internet Printing Protocol over HTTPS" = "ipps://ADDRESS[:PORT]/RESOURCE Use Internet Printing Protocol over HTTPS";
 "ipptool: Bad URI '%s'." = "ipptool: Bad URI '%s'.";

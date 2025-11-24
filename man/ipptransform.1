@@ -8,7 +8,7 @@
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH ipptransform 1 "ippsample" "2025-02-21" "OpenPrinting"
+.TH ipptransform 1 "ippsample" "2025-11-24" "OpenPrinting"
 .SH NAME
 ipptransform \- convert document data to alternate formats
 .br
@@ -68,7 +68,7 @@ Currently only the "ipp", "ipps", and "socket" URI schemes are supported, for ex
 .TP 5
 \fB\-i \fIINPUT/FORMAT\fR
 Specifies the MIME media type of the input file.
-Currently the "application/pdf" (PDF), "image/jpeg" (JPEG), and "text/plain" MIME media types are supported.
+Currently the "application/pdf" (PDF), "image/jpeg" (JPEG), "image/png" (PNG), "image/pwg-raster" (PWG Raster), and "text/plain" MIME media types are supported.
 .TP 5
 \fB\-m \fIOUTPUT/FORMAT\fR
 Specifies the MIME media type of the output file.
@@ -251,7 +251,7 @@ Lists the supported output color spaces and bit depths.
 The default is 'sgray_8'.
 .TP 5
 .B IPPTRANSFORM_MAX_RASTER
-Specifies the maximum number of bytes to use when generating raster data.
+Specifies the maximum number of bytes of memory to use when generating raster data.
 The default is 16MB.
 .TP 5
 .B OUTPUT_TYPE
