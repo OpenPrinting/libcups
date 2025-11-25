@@ -574,7 +574,7 @@ _cupsRasterNew(
     // Open for read - get sync word...
     if (cups_raster_io(r, (unsigned char *)&(r->sync), sizeof(r->sync)) != sizeof(r->sync))
     {
-      _cupsRasterAddError("Unable to read header from raster stream: %s", strerror(errno));
+      _cupsRasterAddError("Unable to read sync word from raster stream.");
       free(r);
       DEBUG_puts("1_cupsRasterNew: Unable to read header, returning NULL.");
       return (NULL);
@@ -603,7 +603,7 @@ _cupsRasterNew(
       if (cups_raster_io(r, (unsigned char *)header, sizeof(header)) !=
 	      sizeof(header))
       {
-	_cupsRasterAddError("Unable to read header from raster stream: %s", strerror(errno));
+	_cupsRasterAddError("Unable to read Apple Raster file header from raster stream.");
 	free(r);
 	DEBUG_puts("1_cupsRasterNew: Unable to read header, returning NULL.");
 	return (NULL);
