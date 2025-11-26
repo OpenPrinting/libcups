@@ -1,12 +1,23 @@
 //
 // HTTP test program for CUPS.
 //
-// Copyright © 2021-2024 by OpenPrinting.
+// Copyright © 2021-2025 by OpenPrinting.
 // Copyright © 2007-2018 by Apple Inc.
 // Copyright © 1997-2006 by Easy Software Products.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
 // information.
+//
+// Usage:
+//
+//   ./testhttp				Run unit tests
+//   ./testhttp DNS-SD-FULLNAME		Resolve DNS-SD full name to URI
+//   ./testhttp [-o FILENAME] URL	Get contents of URL
+//   ./testhttp -d BASE64TEXT >TEXT	Decode test using Base64(URL)
+//   ./testhttp -e TEXT >BASE64TEXT	Encode test using Base64
+//   ./testhttp -E TEXT >BASE64URLTEXT	Encode test using Base64URL
+//   ./testhttp -l HOSTNAME		Lookup hostname and show addresses
+//   ./testhttp -u URI			Separate URI into components
 //
 
 #include "cups-private.h"
@@ -535,6 +546,29 @@ main(int  argc,				// I - Number of command-line arguments
     }
 
     return (1);
+  }
+  else if (!strcmp(argv[1], "-l") && argc == 3)
+  {
+    // Test address lookup...
+    if ((addrlist = httpAddrGetList(argv[2], AF_UNSPEC, NULL)) != NULL)
+    {
+      printf("%s:\n", argv[2]);
+
+      for (i = 0, addr = addrlist; addr; i ++, addr = addr->next)
+      {
+        char	numeric[1024];		// Numeric IP address
+
+        printf("    %s\n", httpAddrGetString(&(addr->addr), numeric, sizeof(numeric)));
+      }
+
+      httpAddrFreeList(addrlist);
+      return (0);
+    }
+    else
+    {
+      printf("%s: %s\n", argv[2], cupsGetErrorString());
+      return (1);
+    }
   }
   else if (!strcmp(argv[1], "-u") && argc == 3)
   {
