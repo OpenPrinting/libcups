@@ -1,7 +1,7 @@
 //
 // Transcoding support for CUPS.
 //
-// Copyright © 2022 by OpenPrinting.
+// Copyright © 2020-2025 by OpenPrinting.
 // Copyright © 2007-2014 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products.
 //
@@ -156,7 +156,6 @@ cupsCharsetToUTF8(
     int		ch;			// Character from string
     char	*destend;		// End of UTF-8 buffer
 
-
     destend = dest + maxout - 2;
 
     while (*src && destptr < destend)
@@ -169,7 +168,9 @@ cupsCharsetToUTF8(
 	*destptr++ = (char)(0x80 | (ch & 0x3f));
       }
       else
+      {
 	*destptr++ = (char)ch;
+      }
     }
 
     *destptr = '\0';
@@ -311,8 +312,9 @@ cupsUTF8ToCharset(
     {
       ch = *src++;
 
-      if ((ch & 0xe0) == 0xc0)
+      if ((ch & 0xe0) == 0xc0 && (*src & 0xc0) == 0x80)
       {
+        // 2-byte UTF-8
 	ch = ((ch & 0x1f) << 6) | (*src++ & 0x3f);
 
 	if (ch < maxch)
@@ -322,10 +324,12 @@ cupsUTF8ToCharset(
       }
       else if ((ch & 0xf0) == 0xe0 || (ch & 0xf8) == 0xf0)
       {
+        // 3-byte or 4-byte UTF-8
         *destptr++ = '?';
       }
       else if (!(ch & 0x80))
       {
+        // ASCII
 	*destptr++ = (char)ch;
       }
     }
