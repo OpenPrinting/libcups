@@ -17,6 +17,7 @@ libcups v3.0.0 (YYYY-MM-DD)
 - Updated the `httpSetCookie` API to support multiple "Set-Cookie:" header
   values.
 - Updated `ippfind` to use the `cupsGetClock` API.
+- Fixed `cupsJSONExport` functions with empty arrays or objects.
 - Fixed `httpGetDateTime` for dates in the far future (Issue #124)
 - Fixed input checks for `cupsCreateCredentials` and
   `cupsCreateCredentialsRequest` APIs (Issue #125)
