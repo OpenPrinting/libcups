@@ -370,7 +370,26 @@ cups_lang_default(void)
 
     // See if the locale has been set; if it is still "C" or "POSIX", use the
     // environment to get the default...
-#  ifdef LC_MESSAGES
+#  ifdef _WIN32
+    WCHAR	wlocname[32];		// Locale name as wide chars
+    char	locname[32];		// Locale name
+
+    if (GetUserDefaultLocaleName(wlocname, sizeof(wlocname)) > 0)
+    {
+      size_t  i;			// Looping var
+
+      for (i = 0; i < (sizeof(locname) / sizeof(locname[0]) - 1); i ++)
+        locname[i] = (char)wlocname[i];
+
+      locname[i] = '\0';
+      lang       = locname;
+    }
+    else
+    {
+      lang = "en";
+    }
+
+#  elif defined(LC_MESSAGES)
     lang = setlocale(LC_MESSAGES, NULL);
 #  else
     lang = setlocale(LC_ALL, NULL);

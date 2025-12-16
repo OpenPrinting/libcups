@@ -3849,6 +3849,7 @@ ippfile_attr_cb(
     "job-settable-attributes-supported",
     "job-sheets-default",
     "job-sheets-supported",
+    "max-page-ranges-supported",
     "media-col-supported",
     "multiple-document-handling-supported",
     "multiple-document-jobs-supported",
@@ -3863,6 +3864,8 @@ ippfile_attr_cb(
     "notify-max-events-supported",
     "notify-pull-method-supported",
     "operations-supported",
+    "overrides-supported",
+    "page-ranges-supported",
     "pdl-override-supported",
     "preferred-attributes-supported",
     "printer-alert",
@@ -4343,6 +4346,10 @@ load_legacy_attributes(
 
   // finishings-supported
   ippAddInteger(attrs, IPP_TAG_PRINTER, IPP_TAG_ENUM, "finishings-supported", IPP_FINISHINGS_NONE);
+
+  // max-page-ranges-supported
+  if (!ippFindAttribute(attrs, "max-page-ranges-supported", IPP_TAG_ZERO) && cupsArrayFind(docformats, (void *)"application/pdf"))
+    ippAddInteger(attrs, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "max-page-ranges-supported", 1);
 
   // media-bottom-margin-supported
   if (ppm_color > 0)
@@ -6208,15 +6215,23 @@ register_printer(
   if (!cupsDNSSDServiceAdd(printer->services, "_http._tcp,_printer", /*domain*/NULL, printer->hostname, (uint16_t)printer->port, num_txt, txt))
     goto error;
 
+  // Commit it...
+  if (!cupsDNSSDServicePublish(printer->services))
+    goto error;
+
+  fprintf(stderr, "Registered printer '%s' for discovery using DNS-SD.\n", printer->dnssd_name);
+
   cupsFreeOptions(num_txt, txt);
 
-  // Commit it...
-  return (cupsDNSSDServicePublish(printer->services));
+  return (true);
 
   // If we get here there was a problem...
   error:
 
+  fprintf(stderr, "Unable to register printer '%s' for discovery using DNS-SD: %s\n", printer->dnssd_name, cupsGetErrorString());
+
   cupsFreeOptions(num_txt, txt);
+
   return (false);
 }
 
