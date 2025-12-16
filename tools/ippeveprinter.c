@@ -230,7 +230,7 @@ typedef struct ippeve_client_s		// Client data
 
 static http_status_t	authenticate_request(ippeve_client_t *client);
 static void		clean_jobs(ippeve_printer_t *printer);
-static int		compare_jobs(ippeve_job_t *a, ippeve_job_t *b);
+static int		compare_jobs(ippeve_job_t *a, ippeve_job_t *b, void *data);
 static void		copy_attributes(ipp_t *to, ipp_t *from, cups_array_t *ra, ipp_tag_t group_tag, bool quickcopy);
 static void		copy_job_attributes(ippeve_client_t *client, ippeve_job_t *job, cups_array_t *ra);
 static ippeve_client_t	*create_client(ippeve_printer_t *printer, int sock);
@@ -269,7 +269,7 @@ static void		ipp_print_uri(ippeve_client_t *client);
 static void		ipp_send_document(ippeve_client_t *client);
 static void		ipp_send_uri(ippeve_client_t *client);
 static void		ipp_validate_job(ippeve_client_t *client);
-static ipp_t		*load_ippserver_attributes(const char *servername, int serverport, const char *filename, cups_array_t *docformats);
+static ipp_t		*load_ippfile_attributes(const char *servername, int serverport, const char *filename, cups_array_t *docformats);
 static ipp_t		*load_legacy_attributes(const char *make, const char *model, int ppm, int ppm_color, int duplex, cups_array_t *docformats);
 #if HAVE_LIBPAM
 static int		pam_func(int, const struct pam_message **, struct pam_response **, void *);
@@ -674,7 +674,7 @@ main(int  argc,				// I - Number of command-line args
 
   // Create the printer...
   if (attrfile)
-    attrs = load_ippserver_attributes(servername, serverport, attrfile, docformats);
+    attrs = load_ippfile_attributes(servername, serverport, attrfile, docformats);
   else
     attrs = load_legacy_attributes(make, model, ppm, ppm_color, duplex, docformats);
 
@@ -827,8 +827,11 @@ clean_jobs(ippeve_printer_t *printer)	// I - Printer
 
 static int				// O - Result of comparison
 compare_jobs(ippeve_job_t *a,		// I - First job
-             ippeve_job_t *b)		// I - Second job
+             ippeve_job_t *b,		// I - Second job
+             void         *data)	// I - Callback data (unused)
 {
+  (void)data;
+
   return (b->id - a->id);
 }
 
@@ -1883,7 +1886,7 @@ create_printer(
   ippAddRange(printer->attrs, IPP_TAG_PRINTER, "job-history-interval-supported", 0, 3600);
 
   // job-ids-supported
-  ippAddBoolean(printer->attrs, IPP_TAG_PRINTER, "job-ids-supported", 1);
+  ippAddBoolean(printer->attrs, IPP_TAG_PRINTER, "job-ids-supported", true);
 
   // job-k-octets-supported
   ippAddRange(printer->attrs, IPP_TAG_PRINTER, "job-k-octets-supported", 0, k_supported);
@@ -1929,13 +1932,14 @@ create_printer(
   ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "media-col-supported", (int)(sizeof(media_col_supported) / sizeof(media_col_supported[0])), NULL, media_col_supported);
 
   // multiple-document-handling-default
-  ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "multiple-document-handling-default", NULL, "separate-documents-collated-copies");
+  if (!ippFindAttribute(printer->attrs, "multiple-document-handling-default", IPP_TAG_ZERO))
+    ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "multiple-document-handling-default", NULL, "separate-documents-collated-copies");
 
   // multiple-document-handling-supported
   ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "multiple-document-handling-supported", sizeof(multiple_document_handling) / sizeof(multiple_document_handling[0]), NULL, multiple_document_handling);
 
   // multiple-document-jobs-supported
-  ippAddBoolean(printer->attrs, IPP_TAG_PRINTER, "multiple-document-jobs-supported", 0);
+  ippAddBoolean(printer->attrs, IPP_TAG_PRINTER, "multiple-document-jobs-supported", false);
 
   // multiple-operation-time-out
   ippAddInteger(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "multiple-operation-time-out", 60);
@@ -1968,7 +1972,7 @@ create_printer(
   ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "pdl-override-supported", NULL, "attempted");
 
   // preferred-attributes-supported
-  ippAddBoolean(printer->attrs, IPP_TAG_PRINTER, "preferred-attributes-supported", 0);
+  ippAddBoolean(printer->attrs, IPP_TAG_PRINTER, "preferred-attributes-supported", false);
 
   // print-processing-attributes-supported
   if (!ippFindAttribute(printer->attrs, "print-processing-attributes-supported", IPP_TAG_ZERO))
@@ -2010,7 +2014,7 @@ create_printer(
   ippAddOutOfBand(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_UNKNOWN, "printer-geo-location");
 
   // printer-is-accepting-jobs
-  ippAddBoolean(printer->attrs, IPP_TAG_PRINTER, "printer-is-accepting-jobs", 1);
+  ippAddBoolean(printer->attrs, IPP_TAG_PRINTER, "printer-is-accepting-jobs", true);
 
   // printer-info
   ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_TEXT, "printer-info", NULL, name);
@@ -2037,7 +2041,7 @@ create_printer(
   // printer-uuid
   ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_URI, "printer-uuid", NULL, uuid);
 
-  // reference-uri-scheme-supported
+  // reference-uri-schemes-supported
   ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_URISCHEME), "reference-uri-schemes-supported", (int)(sizeof(reference_uri_schemes_supported) / sizeof(reference_uri_schemes_supported[0])), NULL, reference_uri_schemes_supported);
 
   // requesting-user-uri-supported
@@ -2310,7 +2314,6 @@ finish_document_data(
   if ((job->fd = create_job_file(job, filename, sizeof(filename), client->printer->directory, NULL)) < 0)
   {
     respond_ipp(client, IPP_STATUS_ERROR_INTERNAL, "Unable to create print file: %s", strerror(errno));
-
     goto abort_job;
   }
 
@@ -2321,43 +2324,24 @@ finish_document_data(
   {
     if (write(job->fd, buffer, (size_t)bytes) < bytes)
     {
-      int error = errno;		// Write error
-
-      close(job->fd);
-      job->fd = -1;
-
-      unlink(filename);
-
-      respond_ipp(client, IPP_STATUS_ERROR_INTERNAL, "Unable to write print file: %s", strerror(error));
-
-      goto abort_job;
+      respond_ipp(client, IPP_STATUS_ERROR_INTERNAL, "Unable to write print file: %s", strerror(errno));
+      goto cleanup_and_abort;
     }
   }
 
   if (bytes < 0)
   {
     // Got an error while reading the print data, so abort this job.
-    close(job->fd);
-    job->fd = -1;
-
-    unlink(filename);
-
     respond_ipp(client, IPP_STATUS_ERROR_INTERNAL, "Unable to read print file.");
-
-    goto abort_job;
+    goto cleanup_and_abort;
   }
 
+  // Close the file descriptor
   if (close(job->fd))
   {
-    int error = errno;			// Write error
-
     job->fd = -1;
-
-    unlink(filename);
-
-    respond_ipp(client, IPP_STATUS_ERROR_INTERNAL, "Unable to write print file: %s", strerror(error));
-
-    goto abort_job;
+    respond_ipp(client, IPP_STATUS_ERROR_INTERNAL, "Unable to close print file: %s", strerror(errno));
+    goto cleanup_and_abort;
   }
 
   job->fd       = -1;
@@ -2390,6 +2374,17 @@ finish_document_data(
   copy_job_attributes(client, job, ra);
   cupsArrayDelete(ra);
   return;
+
+  // Cleanup file on error, then abort job...
+  cleanup_and_abort:
+
+  if (job->fd >= 0)
+  {
+    close(job->fd);
+    job->fd = -1;
+  }
+
+  unlink(filename);
 
   // If we get here we had to abort the job...
   abort_job:
@@ -2459,11 +2454,7 @@ finish_document_uri(
     goto abort_job;
   }
 
-  uri_status = httpSeparateURI(HTTP_URI_CODING_ALL, ippGetString(uri, 0, NULL),
-                               scheme, sizeof(scheme), userpass,
-                               sizeof(userpass), hostname, sizeof(hostname),
-                               &port, resource, sizeof(resource));
-  if (uri_status < HTTP_URI_STATUS_OK)
+  if ((uri_status = httpSeparateURI(HTTP_URI_CODING_ALL, ippGetString(uri, 0, NULL), scheme, sizeof(scheme), userpass, sizeof(userpass), hostname, sizeof(hostname), &port, resource, sizeof(resource))) < HTTP_URI_STATUS_OK)
   {
     respond_ipp(client, IPP_STATUS_ERROR_BAD_REQUEST, "Bad document-uri: %s", httpURIStatusString(uri_status));
 
@@ -2472,7 +2463,7 @@ finish_document_uri(
 
   if (strcmp(scheme, "file") && strcmp(scheme, "https") && strcmp(scheme, "http"))
   {
-    respond_ipp(client, IPP_STATUS_ERROR_URI_SCHEME, "URI scheme \"%s\" not supported.", scheme);
+    respond_ipp(client, IPP_STATUS_ERROR_URI_SCHEME, "URI scheme '%s' not supported.", scheme);
 
     goto abort_job;
   }
@@ -2501,31 +2492,23 @@ finish_document_uri(
   {
     if ((infile = open(resource, O_RDONLY | O_BINARY)) < 0)
     {
-      respond_ipp(client, IPP_STATUS_ERROR_DOCUMENT_ACCESS, "Unable to access URI: %s", strerror(errno));
+      respond_ipp(client, IPP_STATUS_ERROR_DOCUMENT_ACCESS, "Unable to access URI '%s': %s", ippGetString(uri, 0, NULL), strerror(errno));
 
       goto abort_job;
     }
 
     do
     {
-      if ((bytes = read(infile, buffer, sizeof(buffer))) < 0 &&
-          (errno == EAGAIN || errno == EINTR))
+      if ((bytes = read(infile, buffer, sizeof(buffer))) < 0 && (errno == EAGAIN || errno == EINTR))
       {
         bytes = 1;
       }
       else if (bytes > 0 && write(job->fd, buffer, (size_t)bytes) < bytes)
       {
-	int error = errno;		// Write error
-
-	close(job->fd);
-	job->fd = -1;
-
-	unlink(filename);
+	respond_ipp(client, IPP_STATUS_ERROR_INTERNAL, "Unable to write print file: %s", strerror(errno));
 	close(infile);
 
-	respond_ipp(client, IPP_STATUS_ERROR_INTERNAL, "Unable to write print file: %s", strerror(error));
-
-        goto abort_job;
+        goto cleanup_and_abort;
       }
     }
     while (bytes > 0);
@@ -2541,14 +2524,8 @@ finish_document_uri(
 
     if ((http = httpConnect(hostname, port, NULL, AF_UNSPEC, encryption, 1, 30000, NULL)) == NULL)
     {
-      respond_ipp(client, IPP_STATUS_ERROR_DOCUMENT_ACCESS, "Unable to connect to \"%s\" on port %d: %s", hostname, port, cupsGetErrorString());
-
-      close(job->fd);
-      job->fd = -1;
-
-      unlink(filename);
-
-      goto abort_job;
+      respond_ipp(client, IPP_STATUS_ERROR_DOCUMENT_ACCESS, "Unable to connect to '%s' on port %d: %s", hostname, port, cupsGetErrorString());
+      goto cleanup_and_abort;
     }
 
     httpClearFields(http);
@@ -2556,14 +2533,9 @@ finish_document_uri(
     if (!httpWriteRequest(http, "GET", resource))
     {
       respond_ipp(client, IPP_STATUS_ERROR_DOCUMENT_ACCESS, "Unable to GET URI: %s", strerror(errno));
-
-      close(job->fd);
-      job->fd = -1;
-
-      unlink(filename);
       httpClose(http);
 
-      goto abort_job;
+      goto cleanup_and_abort;
     }
 
     while ((status = httpUpdate(http)) == HTTP_STATUS_CONTINUE);
@@ -2571,32 +2543,19 @@ finish_document_uri(
     if (status != HTTP_STATUS_OK)
     {
       respond_ipp(client, IPP_STATUS_ERROR_DOCUMENT_ACCESS, "Unable to GET URI: %s", httpStatusString(status));
-
-      close(job->fd);
-      job->fd = -1;
-
-      unlink(filename);
       httpClose(http);
 
-      goto abort_job;
+      goto cleanup_and_abort;
     }
 
     while ((bytes = httpRead(http, buffer, sizeof(buffer))) > 0)
     {
       if (write(job->fd, buffer, (size_t)bytes) < bytes)
       {
-	int error = errno;		// Write error
-
-	close(job->fd);
-	job->fd = -1;
-
-	unlink(filename);
+	respond_ipp(client, IPP_STATUS_ERROR_INTERNAL, "Unable to write print file: %s", strerror(errno));
 	httpClose(http);
 
-	respond_ipp(client, IPP_STATUS_ERROR_INTERNAL,
-		    "Unable to write print file: %s", strerror(error));
-
-        goto abort_job;
+        goto cleanup_and_abort;
       }
     }
 
@@ -2605,15 +2564,9 @@ finish_document_uri(
 
   if (close(job->fd))
   {
-    int error = errno;		// Write error
-
     job->fd = -1;
-
-    unlink(filename);
-
-    respond_ipp(client, IPP_STATUS_ERROR_INTERNAL, "Unable to write print file: %s", strerror(error));
-
-    goto abort_job;
+    respond_ipp(client, IPP_STATUS_ERROR_INTERNAL, "Unable to close print file: %s", strerror(errno));
+    goto cleanup_and_abort;
   }
 
   cupsRWLockWrite(&(client->printer->rwlock));
@@ -2639,6 +2592,17 @@ finish_document_uri(
   copy_job_attributes(client, job, ra);
   cupsArrayDelete(ra);
   return;
+
+  // Cleanup and then abort...
+  cleanup_and_abort:
+
+  if (job->fd >= 0)
+  {
+    close(job->fd);
+    job->fd = -1;
+  }
+
+  unlink(filename);
 
   // If we get here we had to abort the job...
   abort_job:
@@ -3276,10 +3240,12 @@ ipp_get_jobs(ippeve_client_t *client)	// I - Client
 					// which-jobs values
   int			job_comparison;	// Job comparison
   ipp_jstate_t		job_state;	// job-state value
-  int			cur_index,	// Current job index
-			first_index,	// First job index
+  int			first_index,	// First job index (1-based)
 			limit,		// Maximum number of jobs to return
-			count;		// Number of jobs that match
+			matches;	// Number of jobs that match
+  size_t		i,		// Current job index
+			first_i,	// First job index (0-based)
+			count;		// Number of jobs
   const char		*username;	// Username
   ippeve_job_t		*job;		// Current job pointer
   cups_array_t		*ra;		// Requested attributes array
@@ -3358,15 +3324,15 @@ ipp_get_jobs(ippeve_client_t *client)	// I - Client
     limit = 0;
   }
 
-  if ((attr = ippFindAttribute(client->request, "first-index", IPP_TAG_INTEGER)) != NULL)
+  if ((attr = ippFindAttribute(client->request, "first-index", IPP_TAG_INTEGER)) != NULL && (first_index = ippGetInteger(attr, 0)) >= 1)
   {
-    first_index = ippGetInteger(attr, 0);
+    first_i = (size_t)first_index - 1;
 
     fprintf(stderr, "%s Get-Jobs first-index=%d", client->hostname, first_index);
   }
   else
   {
-    first_index = 1;
+    first_i = 0;
   }
 
   // See if we only want to see jobs for a specific user...
@@ -3399,20 +3365,22 @@ ipp_get_jobs(ippeve_client_t *client)	// I - Client
 
   cupsRWLockRead(&(client->printer->rwlock));
 
-  for (cur_index = 1, count = 0, job = (ippeve_job_t *)cupsArrayGetFirst(client->printer->jobs); (limit <= 0 || count < limit) && job; job = (ippeve_job_t *)cupsArrayGetNext(client->printer->jobs), cur_index ++)
+  for (i = 0, count = cupsArrayGetCount(client->printer->jobs), matches = 0; i < count && (limit <= 0 || matches < limit); i ++)
   {
     // Filter out jobs that don't match...
+    job = (ippeve_job_t *)cupsArrayGetElement(client->printer->jobs, i);
+
     if ((job_comparison < 0 && job->state > job_state) ||
 	(job_comparison == 0 && job->state != job_state) ||
 	(job_comparison > 0 && job->state < job_state) ||
-	cur_index < first_index ||
+	i < first_i ||
 	(username && job->username && strcasecmp(username, job->username)))
       continue;
 
-    if (count > 0)
+    if (matches > 0)
       ippAddSeparator(client->response);
 
-    count ++;
+    matches ++;
     copy_job_attributes(client, job, ra);
   }
 
@@ -3846,17 +3814,16 @@ ipp_validate_job(ippeve_client_t *client)	// I - Client
 
 
 //
-// 'ippserver_attr_cb()' - Determine whether an attribute should be loaded.
+// 'ippfile_attr_cb()' - Determine whether an attribute should be loaded.
 //
 
 static bool				// O - `true` to use, `false` to ignore
-ippserver_attr_cb(
+ippfile_attr_cb(
     ipp_file_t *f,			// I - IPP file
     void       *user_data,		// I - User data pointer (unused)
     const char *attr)			// I - Attribute name
 {
-  int		i,			// Current element
-		result;			// Result of comparison
+  size_t	i;			// Current element
   static const char * const ignored[] =
   {					// Ignored attributes
     "attributes-charset",
@@ -3870,14 +3837,20 @@ ippserver_attr_cb(
     "identify-actions-default",
     "identify-actions-supported",
     "ipp-features-supported",
-    "ipp-versions-supproted",
+    "ipp-versions-supported",
     "ippget-event-life",
+    "job-creation-attributes-supported",
     "job-hold-until-supported",
     "job-hold-until-time-supported",
     "job-ids-supported",
     "job-k-octets-supported",
+    "job-priority-default",
+    "job-priority-supported",
     "job-settable-attributes-supported",
+    "job-sheets-default",
+    "job-sheets-supported",
     "media-col-supported",
+    "multiple-document-handling-supported",
     "multiple-document-jobs-supported",
     "multiple-operation-time-out",
     "multiple-operation-time-out-action",
@@ -3890,6 +3863,8 @@ ippserver_attr_cb(
     "notify-max-events-supported",
     "notify-pull-method-supported",
     "operations-supported",
+    "pdl-override-supported",
+    "preferred-attributes-supported",
     "printer-alert",
     "printer-alert-description",
     "printer-camera-image-uri",
@@ -3901,18 +3876,25 @@ ippserver_attr_cb(
     "printer-detailed-status-messages",
     "printer-dns-sd-name",
     "printer-fax-log-uri",
+    "printer-geo-location",
     "printer-get-attributes-supported",
     "printer-icons",
     "printer-id",
     "printer-info",
     "printer-is-accepting-jobs",
+    "printer-location",
     "printer-message-date-time",
     "printer-message-from-operator",
     "printer-message-time",
     "printer-more-info",
+    "printer-name",
+    "printer-organization",
+    "printer-organizational-unit",
     "printer-service-type",
     "printer-settable-attributes-supported",
     "printer-state",
+    "printer-state-change-date-time",
+    "printer-state-change-time",
     "printer-state-message",
     "printer-state-reasons",
     "printer-static-resource-directory-uri",
@@ -3923,9 +3905,11 @@ ippserver_attr_cb(
     "printer-supply-info-uri",
     "printer-up-time",
     "printer-uri-supported",
+    "printer-uuid",
     "printer-xri-supported",
     "queued-job-count",
-    "reference-uri-scheme-supported",
+    "reference-uri-schemes-supported",
+    "requesting-user-uri-supported",
     "uri-authentication-supported",
     "uri-security-supported",
     "which-jobs-supported",
@@ -3938,22 +3922,22 @@ ippserver_attr_cb(
   (void)f;
   (void)user_data;
 
-  for (i = 0, result = 1; i < (int)(sizeof(ignored) / sizeof(ignored[0])); i ++)
+  for (i = 0; i < (sizeof(ignored) / sizeof(ignored[0])); i ++)
   {
-    if ((result = strcmp(attr, ignored[i])) <= 0)
-      break;
+    if (!strcmp(attr, ignored[i]))
+      return (false);
   }
 
-  return (result != 0);
+  return (true);
 }
 
 
 //
-// 'ippserver_error_cb()' - Log an error message.
+// 'ippfile_error_cb()' - Log an error message.
 //
 
 static bool				// O - `true` to continue, `false` to stop
-ippserver_error_cb(
+ippfile_error_cb(
     ipp_file_t *f,			// I - IPP file data
     void       *user_data,		// I - User data pointer (unused)
     const char *error)			// I - Error message
@@ -3968,11 +3952,11 @@ ippserver_error_cb(
 
 
 //
-// 'load_ippserver_attributes()' - Load IPP attributes from an ippserver file.
+// 'load_ippfile_attributes()' - Load IPP attributes from an ippserver file.
 //
 
 static ipp_t *				// O - IPP attributes or `NULL` on error
-load_ippserver_attributes(
+load_ippfile_attributes(
     const char   *servername,		// I - Server name or `NULL` for default
     int          serverport,		// I - Server port number
     const char   *filename,		// I - ippserver attribute filename
@@ -3992,7 +3976,7 @@ load_ippserver_attributes(
   // - SERVERNAME: The host name of the server.
   // - SERVERPORT: The default port of the server.
   attrs = ippNew();
-  file  = ippFileNew(NULL, (ipp_fattr_cb_t)ippserver_attr_cb, (ipp_ferror_cb_t)ippserver_error_cb, NULL);
+  file  = ippFileNew(NULL, (ipp_fattr_cb_t)ippfile_attr_cb, (ipp_ferror_cb_t)ippfile_error_cb, NULL);
 
   ippFileSetAttributes(file, attrs);
   ippFileSetGroupTag(file, IPP_TAG_PRINTER);
@@ -4373,7 +4357,8 @@ load_legacy_attributes(
 		right, top;
     const char	*source;		// media-source, if any
 
-    pwg = pwgMediaForPWG(media[i]);
+    if ((pwg = pwgMediaForPWG(media[i])) == NULL)
+      continue;
 
     if (pwg->width < 21000 && pwg->length < 21000)
     {
@@ -4415,7 +4400,8 @@ load_legacy_attributes(
       ipp_t		*media_size;	// media-size member attribute
 
       i ++;
-      pwg2 = pwgMediaForPWG(media[i]);
+      if ((pwg2 = pwgMediaForPWG(media[i])) == NULL)
+        continue;
 
       media_size = ippNew();
       ippAddRange(media_size, IPP_TAG_ZERO, "x-dimension", pwg->width, pwg2->width);
@@ -4438,27 +4424,28 @@ load_legacy_attributes(
   }
 
   // media-col-default
-  pwg = pwgMediaForPWG(ready[0]);
+  if ((pwg = pwgMediaForPWG(ready[0])) != NULL)
+  {
+    if (pwg->width == 21000)
+      col = create_media_col(ready[0], "main", "stationery", create_media_size(pwg->width, pwg->length), ppm_color > 0 ? media_bottom_margin_supported_color[1] : media_bottom_margin_supported[0], media_lr_margin_supported[0], media_lr_margin_supported[0], ppm_color > 0 ? media_top_margin_supported_color[1] : media_top_margin_supported[0]);
+    else
+      col = create_media_col(ready[0], "main", "stationery", create_media_size(pwg->width, pwg->length), ppm_color > 0 ? media_bottom_margin_supported_color[1] : media_bottom_margin_supported[0], media_lr_margin_supported[1], media_lr_margin_supported[1], ppm_color > 0 ? media_top_margin_supported_color[1] : media_top_margin_supported[0]);
 
-  if (pwg->width == 21000)
-    col = create_media_col(ready[0], "main", "stationery", create_media_size(pwg->width, pwg->length), ppm_color > 0 ? media_bottom_margin_supported_color[1] : media_bottom_margin_supported[0], media_lr_margin_supported[0], media_lr_margin_supported[0], ppm_color > 0 ? media_top_margin_supported_color[1] : media_top_margin_supported[0]);
-  else
-    col = create_media_col(ready[0], "main", "stationery", create_media_size(pwg->width, pwg->length), ppm_color > 0 ? media_bottom_margin_supported_color[1] : media_bottom_margin_supported[0], media_lr_margin_supported[1], media_lr_margin_supported[1], ppm_color > 0 ? media_top_margin_supported_color[1] : media_top_margin_supported[0]);
+    ippAddCollection(attrs, IPP_TAG_PRINTER, "media-col-default", col);
 
-  ippAddCollection(attrs, IPP_TAG_PRINTER, "media-col-default", col);
-
-  ippDelete(col);
+    ippDelete(col);
+  }
 
   // media-col-ready
-  attr = ippAddCollections(attrs, IPP_TAG_PRINTER, "media-col-ready", num_ready, NULL);
-  for (i = 0; i < num_ready; i ++)
+  for (i = 0, attr = NULL; i < num_ready; i ++)
   {
     int		bottom, left,		// media-xxx-margins
 		right, top;
     const char	*source,		// media-source
 		*type;			// media-type
 
-    pwg = pwgMediaForPWG(ready[i]);
+    if ((pwg = pwgMediaForPWG(ready[i])) == NULL)
+      continue;
 
     if (pwg->width < 21000 && pwg->length < 21000)
     {
@@ -4498,7 +4485,12 @@ load_legacy_attributes(
     }
 
     col = create_media_col(ready[i], source, type, create_media_size(pwg->width, pwg->length), bottom, left, right, top);
-    ippSetCollection(attrs, &attr, i, col);
+
+    if (attr)
+      ippSetCollection(attrs, &attr, ippGetCount(attr), col);
+    else
+      attr = ippAddCollection(attrs, IPP_TAG_PRINTER, "media-col-ready", col);
+
     ippDelete(col);
   }
 
@@ -4526,7 +4518,8 @@ load_legacy_attributes(
   // media-size-supported
   for (i = 0, attr = NULL; i < num_media; i ++)
   {
-    pwg = pwgMediaForPWG(media[i]);
+    if ((pwg = pwgMediaForPWG(media[i])) == NULL)
+      continue;
 
     if (!strncmp(media[i], "roll_min_", 9) && i < (num_media - 1))
     {
@@ -4534,7 +4527,8 @@ load_legacy_attributes(
       pwg_media_t	*pwg2;		// Max size
 
       i ++;
-      pwg2 = pwgMediaForPWG(media[i]);
+      if ((pwg2 = pwgMediaForPWG(media[i])) == NULL)
+        continue;
 
       col = create_media_size_range(pwg->width, pwg2->width, pwg->length, pwg2->length);
     }
@@ -4937,7 +4931,7 @@ process_client(ippeve_client_t *client)	// I - Client
 	  break;
         }
 
-        fprintf(stderr, "%s Connection now encrypted (%s).\n", client->hostname, httpGetSecurity(client->http, security, sizeof(security)));
+	fprintf(stderr, "%s Connection now encrypted (%s).\n", client->hostname, httpGetSecurity(client->http, security, sizeof(security)));
       }
 
       first_time = false;
@@ -5736,7 +5730,7 @@ process_job(ippeve_job_t *job)		// I - Job
 
       if (httpSeparateURI(HTTP_URI_CODING_ALL, job->printer->device_uri, scheme, sizeof(scheme), userpass, sizeof(userpass), host, sizeof(host), &port, resource, sizeof(resource)) < HTTP_URI_STATUS_OK)
       {
-        fprintf(stderr, "[Job %d] Bad device URI \"%s\".\n", job->id, job->printer->device_uri);
+        fprintf(stderr, "[Job %d] Bad device URI '%s'.\n", job->id, job->printer->device_uri);
       }
       else if (!strcmp(scheme, "file"))
       {
@@ -5747,31 +5741,37 @@ process_job(ippeve_job_t *job)		// I - Job
           if (errno == ENOENT)
           {
             if ((mystdout = open(resource, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0666)) >= 0)
-	      fprintf(stderr, "[Job %d] Saving print command output to \"%s\".\n", job->id, resource);
+	      fprintf(stderr, "[Job %d] Saving print command output to '%s'.\n", job->id, resource);
 	    else
-	      fprintf(stderr, "[Job %d] Unable to create \"%s\": %s\n", job->id, resource, strerror(errno));
+	      fprintf(stderr, "[Job %d] Unable to create '%s': %s\n", job->id, resource, strerror(errno));
           }
           else
-            fprintf(stderr, "[Job %d] Unable to access \"%s\": %s\n", job->id, resource, strerror(errno));
+          {
+            fprintf(stderr, "[Job %d] Unable to access '%s': %s\n", job->id, resource, strerror(errno));
+          }
         }
         else if (S_ISDIR(fileinfo.st_mode))
         {
           if ((mystdout = create_job_file(job, line, sizeof(line), resource, "prn")) >= 0)
-	    fprintf(stderr, "[Job %d] Saving print command output to \"%s\".\n", job->id, line);
+	    fprintf(stderr, "[Job %d] Saving print command output to '%s'.\n", job->id, line);
           else
-            fprintf(stderr, "[Job %d] Unable to create \"%s\": %s\n", job->id, line, strerror(errno));
+            fprintf(stderr, "[Job %d] Unable to create '%s': %s\n", job->id, line, strerror(errno));
         }
 	else if (!S_ISREG(fileinfo.st_mode))
 	{
 	  if ((mystdout = open(resource, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0666)) >= 0)
-	    fprintf(stderr, "[Job %d] Saving print command output to \"%s\".\n", job->id, resource);
+	    fprintf(stderr, "[Job %d] Saving print command output to '%s'.\n", job->id, resource);
 	  else
-            fprintf(stderr, "[Job %d] Unable to create \"%s\": %s\n", job->id, resource, strerror(errno));
+            fprintf(stderr, "[Job %d] Unable to create '%s': %s\n", job->id, resource, strerror(errno));
 	}
         else if ((mystdout = open(resource, O_WRONLY | O_BINARY)) >= 0)
-	  fprintf(stderr, "[Job %d] Saving print command output to \"%s\".\n", job->id, resource);
+        {
+	  fprintf(stderr, "[Job %d] Saving print command output to '%s'.\n", job->id, resource);
+	}
 	else
-	  fprintf(stderr, "[Job %d] Unable to open \"%s\": %s\n", job->id, resource, strerror(errno));
+	{
+	  fprintf(stderr, "[Job %d] Unable to open '%s': %s\n", job->id, resource, strerror(errno));
+	}
       }
       else if (!strcmp(scheme, "socket"))
       {
@@ -5781,20 +5781,20 @@ process_job(ippeve_job_t *job)		// I - Job
         snprintf(service, sizeof(service), "%d", port);
 
         if ((addrlist = httpAddrGetList(host, AF_UNSPEC, service)) == NULL)
-          fprintf(stderr, "[Job %d] Unable to find \"%s\": %s\n", job->id, host, cupsGetErrorString());
+          fprintf(stderr, "[Job %d] Unable to find '%s': %s\n", job->id, host, cupsGetErrorString());
         else if (!httpAddrConnect(addrlist, &mystdout, 30000, &(job->cancel)))
-          fprintf(stderr, "[Job %d] Unable to connect to \"%s\" on port %d: %s\n", job->id, host, port, cupsGetErrorString());
+          fprintf(stderr, "[Job %d] Unable to connect to '%s' on port %d: %s\n", job->id, host, port, cupsGetErrorString());
 
         httpAddrFreeList(addrlist);
       }
       else
       {
-        fprintf(stderr, "[Job %d] Unsupported device URI scheme \"%s\".\n", job->id, scheme);
+        fprintf(stderr, "[Job %d] Unsupported device URI scheme '%s'.\n", job->id, scheme);
       }
     }
     else if ((mystdout = create_job_file(job, line, sizeof(line), job->printer->directory, "prn")) >= 0)
     {
-      fprintf(stderr, "[Job %d] Saving print command output to \"%s\".\n", job->id, line);
+      fprintf(stderr, "[Job %d] Saving print command output to '%s'.\n", job->id, line);
     }
 
     if (mystdout < 0)
