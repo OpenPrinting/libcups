@@ -1,4 +1,3 @@
-
 "  No Errors\n" = "  Без ошибок\n";
 "  No Warnings\n" = "  Нет предупреждений\n";
 "! EXPRESSION                   Unary NOT of expression" = "! ВЫРАЖЕНИЕ                     не является унарным";
@@ -483,22 +482,22 @@
 "baling-type" = "Используемый способ укладки в стопу";
 "baling-type.band" = "Band";
 "baling-type.shrink-wrap" = "Shrink wrap";
-"baling-type.wrap" = "Wrap";
-"baling-when" = "Bale After";
-"baling-when.after-job" = "Job";
-"baling-when.after-sets" = "Sets";
+"baling-type.wrap" = "Обмотка";
+"baling-when" = "Обвязать после";
+"baling-when.after-job" = "После задания";
+"baling-when.after-sets" = "После наборов";
 "binding" = "Bind Output";
 "binding-reference-edge" = "Bind Edge";
 "binding-reference-edge.bottom" = "Bottom";
 "binding-reference-edge.left" = "Left";
 "binding-reference-edge.right" = "Right";
 "binding-reference-edge.top" = "Top";
-"binding-type" = "Binder Type";
-"binding-type.adhesive" = "Adhesive";
-"binding-type.comb" = "Comb";
-"binding-type.flat" = "Flat";
-"binding-type.padding" = "Padding";
-"binding-type.perfect" = "Perfect";
+"binding-type" = "Тип переплета";
+"binding-type.adhesive" = "Клеевой переплёт";
+"binding-type.comb" = "Гребёнчатый переплёт";
+"binding-type.flat" = "Без переплёта";
+"binding-type.padding" = "Склейка";
+"binding-type.perfect" = "Бесшвейный клеевой переплёт";
 "binding-type.spiral" = "Спираль";
 "binding-type.tape" = "Лента";
 "binding-type.velo" = "Переплёт VeloBind";
