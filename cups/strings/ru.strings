@@ -1,3 +1,4 @@
+"" = "";
 "  No Errors\n" = "  Без ошибок\n";
 "  No Warnings\n" = "  Нет предупреждений\n";
 "! EXPRESSION                   Unary NOT of expression" = "! ВЫРАЖЕНИЕ                     не является унарным";
@@ -21,7 +22,7 @@
 "\"%s\": Bad keyword value \"%s\" - bad length %d (RFC 8011 section 5.1.4)." = "\"%s\": Неверное значение ключевого слова \"%s\" — неверная длина %d (RFC 8011, раздел 5.1.4).";
 "\"%s\": Bad keyword value \"%s\" - invalid character (RFC 8011 section 5.1.4)." = "\"%s\": Неверное значение ключевого слова \"%s\" — недопустимый символ (RFC 8011, раздел 5.1.4).";
 "\"%s\": Bad mimeMediaType value \"%s\" - bad characters (RFC 8011 section 5.1.10)." = "\"%s\": Неверное значение \"%s\" mimeMediaType — неверные символы (RFC 8011, раздел 5.1.10).";
-"\"%s\": Bad mimeMediaType value \"%s\" - bad length %d (RFC 8011 section 5.1.10)." = "\"%s\": Неверное значение \"%s\" mimeMediaType — неверная длина (RFC 8011, раздел 5.1.10).";
+"\"%s\": Bad mimeMediaType value \"%s\" - bad length %d (RFC 8011 section 5.1.10)." = "\"%s\": Неверное значение \"%s\" mimeMediaType — %d неверная длина (RFC 8011, раздел 5.1.10).";
 "\"%s\": Bad name value \"%s\" - bad UTF-8 sequence (RFC 8011 section 5.1.3)." = "\"%s\": Неверное значение имени \"%s\" — неправильная последовательность UTF-8 (RFC 8011, раздел 5.1.3).";
 "\"%s\": Bad name value \"%s\" - bad control character (PWG 5100.14 section 8.1)." = "\"%s\": Неверное значение имени \"%s\" — неправильный управляющий символ (PWG 5100.14, раздел 8.1).";
 "\"%s\": Bad name value \"%s\" - bad length %d (RFC 8011 section 5.1.3)." = "\"%s\": Неверное значение имени \"%s\" — неправильная длина %d (RFC 8011, раздел 5.1.3).";
