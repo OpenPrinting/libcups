@@ -2495,7 +2495,7 @@ win32_browse_cb(
     }
   }
 
-  (browse->cb)(browse, browse->cb_data, status == ERROR_SUCCESS ? CUPS_DNSSD_FLAGS_NONE : CUPS_DNSSD_FLAGS_ERROR, /*if_index*/0, name, type, domain);
+  (browse->cb)(browse, browse->cb_data, status == ERROR_SUCCESS ? CUPS_DNSSD_FLAGS_ADD : CUPS_DNSSD_FLAGS_ERROR, /*if_index*/0, name, type, domain);
 
   DnsRecordListFree(records, DnsFreeRecordList);
 }
@@ -2523,7 +2523,7 @@ win32_query_cb(
     PDNS_RECORD record;			// Current DNS record
 
     for (record = result->pQueryRecords; record; record = record->pNext)
-      (query->cb)(query, query->cb_data, CUPS_DNSSD_FLAGS_NONE, /*if_index*/0, fullname, record->wType, &record->Data, record->wDataLength);
+      (query->cb)(query, query->cb_data, CUPS_DNSSD_FLAGS_ADD, /*if_index*/0, fullname, record->wType, &record->Data, record->wDataLength);
 
     DnsRecordListFree(result->pQueryRecords, DnsFreeRecordList);
   }
@@ -2565,7 +2565,7 @@ win32_resolve_cb(
       num_txt = cupsAddOption(txtname, txtvalue, num_txt, &txt);
     }
 
-    (resolve->cb)(resolve, resolve->cb_data, CUPS_DNSSD_FLAGS_NONE, instance->dwInterfaceIndex, fullname, hostname, instance->wPort, num_txt, txt);
+    (resolve->cb)(resolve, resolve->cb_data, CUPS_DNSSD_FLAGS_ADD, instance->dwInterfaceIndex, fullname, hostname, instance->wPort, num_txt, txt);
 
     cupsFreeOptions(num_txt, txt);
   }
@@ -2589,7 +2589,7 @@ win32_service_cb(
   cups_dnssd_service_t *service = (cups_dnssd_service_t *)context;
 					// Service
 
-  (service->cb)(service, service->cb_data, status == ERROR_SUCCESS ? CUPS_DNSSD_FLAGS_NONE : CUPS_DNSSD_FLAGS_ERROR);
+  (service->cb)(service, service->cb_data, status == ERROR_SUCCESS ? CUPS_DNSSD_FLAGS_ADD : CUPS_DNSSD_FLAGS_ERROR);
 
   if (instance)
     DnsServiceFreeInstance(instance);
