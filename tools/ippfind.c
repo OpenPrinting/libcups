@@ -1098,6 +1098,7 @@ eval_expr(ippfind_srv_t  *service,	// I - Service
   ippfind_expr_t	*expression;	// Current expression
   const char		*val;		// TXT value
 
+
   // Loop through the expressions...
   if (expressions && expressions->parent)
     logic = expressions->parent->op;
@@ -1169,11 +1170,11 @@ eval_expr(ippfind_srv_t  *service,	// I - Service
           result = list_service(service);
           break;
       case IPPFIND_OP_PRINT_NAME :
-          cupsLangPuts(stdout, service->name);
+          puts(service->name);
           result = 1;
           break;
       case IPPFIND_OP_PRINT_URI :
-          cupsLangPuts(stdout, service->uri);
+          puts(service->uri);
           result = 1;
           break;
       case IPPFIND_OP_QUIET :
@@ -1522,7 +1523,7 @@ list_service(ippfind_srv_t *service)	// I - Service
 
   if ((addrlist = httpAddrGetList(service->host, address_family, port)) == NULL)
   {
-    cupsLangPrintf(stdout, "%s unreachable", service->uri);
+    printf("%s unreachable\n", service->uri);
     return (0);
   }
 
@@ -1555,7 +1556,7 @@ list_service(ippfind_srv_t *service)	// I - Service
 
     if (!http)
     {
-      cupsLangPrintf(stdout, "%s unavailable", service->uri);
+      printf("%s unavailable\n", service->uri);
       return (0);
     }
 
@@ -1581,7 +1582,7 @@ list_service(ippfind_srv_t *service)	// I - Service
     // Show results...
     if (cupsGetError() > IPP_STATUS_OK_EVENTS_COMPLETE)
     {
-      cupsLangPrintf(stdout, "%s unavailable", service->uri);
+      printf("%s unavailable\n", service->uri);
       return (0);
     }
 
@@ -1613,7 +1614,7 @@ list_service(ippfind_srv_t *service)	// I - Service
     ippDelete(response);
     httpClose(http);
 
-    cupsLangPrintf(stdout, "%s %s %s %s", service->uri, ippEnumString("printer-state", (int)pstate), paccepting ? "accepting-jobs" : "not-accepting-jobs", preasons);
+    printf("%s %s %s %s\n", service->uri, ippEnumString("printer-state", (int)pstate), paccepting ? "accepting-jobs" : "not-accepting-jobs", preasons);
   }
   else if (!strncmp(service->regtype, "_http._tcp", 10) || !strncmp(service->regtype, "_https._tcp", 11))
   {
@@ -1628,13 +1629,13 @@ list_service(ippfind_srv_t *service)	// I - Service
 
     if (!http)
     {
-      cupsLangPrintf(stdout, "%s unavailable", service->uri);
+      printf("%s unavailable\n", service->uri);
       return (0);
     }
 
     if (!httpWriteRequest(http, "GET", service->resource))
     {
-      cupsLangPrintf(stdout, "%s unavailable", service->uri);
+      printf("%s unavailable\n", service->uri);
       return (0);
     }
 
@@ -1649,11 +1650,11 @@ list_service(ippfind_srv_t *service)	// I - Service
 
     if (status >= HTTP_STATUS_BAD_REQUEST)
     {
-      cupsLangPrintf(stdout, "%s unavailable", service->uri);
+      printf("%s unavailable\n", service->uri);
       return (0);
     }
 
-    cupsLangPrintf(stdout, "%s available", service->uri);
+    printf("%s available\n", service->uri);
   }
   else if (!strncmp(service->regtype, "_printer._tcp", 13))
   {
@@ -1662,19 +1663,19 @@ list_service(ippfind_srv_t *service)	// I - Service
 
     if (!httpAddrConnect(addrlist, &sock, 30000, NULL))
     {
-      cupsLangPrintf(stdout, "%s unavailable", service->uri);
+      printf("%s unavailable\n", service->uri);
       httpAddrFreeList(addrlist);
       return (0);
     }
 
-    cupsLangPrintf(stdout, "%s available", service->uri);
+    printf("%s available\n", service->uri);
     httpAddrFreeList(addrlist);
 
     httpAddrClose(NULL, sock);
   }
   else
   {
-    cupsLangPrintf(stdout, "%s unsupported", service->uri);
+    printf("%s unsupported\n", service->uri);
     httpAddrFreeList(addrlist);
     return (0);
   }
