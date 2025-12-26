@@ -1,4 +1,4 @@
 [submodule "pdfio"]
 	path = pdfio
 	url = https://github.com/michaelrsweet/pdfio.git
-	branch = master
+	branch = v1.6.x
