@@ -715,6 +715,8 @@ main(int  argc,				// I - Number of command-line args
       perror(logfile);
       return (1);
     }
+
+    setbuf(fp, NULL);
   }
 
   // Run the print service...

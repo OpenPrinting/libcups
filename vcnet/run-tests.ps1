@@ -21,15 +21,14 @@ cd $path
 .\testfile.exe
 .\testhttp.exe
 
-$env:CUPS_DEBUG_LOG="test-debug.log"
-$env:CUPS_DEBUG_LEVEL="4"
-$env:CUPS_DEBUG_FILTER="^(http|_http|ipp|_ipp|cupsDNSSD|cupsCreate|cupsDo|cupsGet|cupsSend)"
+#$env:CUPS_DEBUG_LOG="test-debug%d.log"
+#$env:CUPS_DEBUG_LEVEL="4"
+#$env:CUPS_DEBUG_FILTER="^(http|_http|ipp|_ipp|cupsDNSSD|cupsCreate|cupsDo|cupsGet|cupsSend)"
 
-$eve = Start-Job -NoNewWindow -FilePath .\ippeveprinter.exe -ArgumentList "-vvv -a ../../../tools/test.conf -n localhost 'Test Printer'"  >test.log"
+#Start-Process -FilePath ".\ippeveprinter.exe" -ArgumentList "-vvv","-a","../../../tools/test.conf","-L","test.log","'Test Printer'"
 
-Remove-Variable $env:CUPS_DEBUG_LOG
+#.\ippfind.exe -T 30 --literal-name "Test Printer" --exec ipptool.exe -V 2.0 -tIf ../../../examples/document-letter.pdf '{}' ../../../examples/ipp-2.0.test ../../../examples/pwg5100.1.test ../../../examples/pwg5100.2.test ../../../examples/pwg5100.7.test ../../../examples/pwg5100.13.test ";"
 
-.\ippfind.exe -T 30 --literal-name "Test Printer" --exec ipptool.exe -V 2.0 -tIf ../../../examples/document-letter.pdf '{}' ../../../examples/ipp-2.0.test ../../../examples/pwg5100.1.test ../../../examples/pwg5100.2.test ../../../examples/pwg5100.7.test ../../../examples/pwg5100.13.test ";"
+#Stop-Process -Name .\ippeveprinter.exe
 
-Stop-Job $eve
-
+cd ..\..
