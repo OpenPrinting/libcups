@@ -144,6 +144,9 @@ blockquote {
 <strong>-l</strong>
 <em>LOCATION</em>
 ] [
+<strong>-L</strong>
+<em>LOGFILE</em>
+] [
 <strong>-m</strong>
 <em>MODEL</em>
 ] [
@@ -252,6 +255,11 @@ Specifies the location of X.509 certificates.
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-l </strong><em>LOCATION</em><br>
 Specifies the human-readable location string that is reported by the server.
 The default is the empty string.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-L </strong><em>LOGFILE</em><br>
+Specifies the file that is used for log messages.
+If the filename starts with a plus (&quot;+&quot;), log messages are appended to the specified file.
+The default is to send log messages to the standard error.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-m </strong><em>MODEL</em><br>
 Specifies the model name of the printer.

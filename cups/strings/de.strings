@@ -70,6 +70,7 @@
 "%s: Missing expression before '--and'." = "%s: Missing expression before '--and'.";
 "%s: Missing expression before '--or'." = "%s: Missing expression before '--or'.";
 "%s: Missing filename after '%s'." = "%s: Missing filename after '%s'.";
+"%s: Missing filename after '-L'." = "%s: Missing filename after '-L'.";
 "%s: Missing format list after '-f'." = "%s: Missing format list after '-f'.";
 "%s: Missing icon file(s) after '-i'." = "%s: Missing icon file(s) after '-i'.";
 "%s: Missing input MIME media type after '-i'." = "%s: Missing input MIME media type after '-i'.";
@@ -186,6 +187,7 @@
 "-K KEYSTORE                    Set location of server X.509 certificates and keys." = "-K KEYSTORE                    Set location of server X.509 certificates and keys.";
 "-L                             Send requests using content-length" = "-L                             Send requests using content-length";
 "-L LOCALITY                    Set locality name." = "-L LOCALITY                    Set locality name.";
+"-L LOGFILE                     Set log file (start with '+' to append)" = "-L LOGFILE                     Set log file (start with '+' to append)";
 "-M MANUFACTURER                Set manufacturer name (default=Test)" = "-M MANUFACTURER                Set manufacturer name (default=Test)";
 "-N NAME                        Match service name to literal name value" = "-N NAME                        Match service name to literal name value";
 "-O ORGANIZATION                Set organization name." = "-O ORGANIZATION                Set organization name.";

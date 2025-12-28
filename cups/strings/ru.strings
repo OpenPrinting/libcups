@@ -70,6 +70,7 @@
 "%s: Missing expression before '--and'." = "%s: Отсутствует выражение перед '--and'.";
 "%s: Missing expression before '--or'." = "%s: Отсутствует выражение перед '--or'.";
 "%s: Missing filename after '%s'." = "%s: Отсутствует имя файла после '%s'.";
+"%s: Missing filename after '-L'." = "%s: Missing filename after '-L'.";
 "%s: Missing format list after '-f'." = "%s: Отсутствует список форматов после '-f'.";
 "%s: Missing icon file(s) after '-i'." = "%s: Отсутствуют файлы иконок после '-i'.";
 "%s: Missing input MIME media type after '-i'." = "%s: Отсутствует указание входного MIME-типа после '-i'.";
@@ -186,6 +187,7 @@
 "-K KEYSTORE                    Set location of server X.509 certificates and keys." = "-K KEYSTORE                    Установите местоположение сертификатов и ключей сервера X.509.";
 "-L                             Send requests using content-length" = "-L                             Отправлять запросы с указанием content-length";
 "-L LOCALITY                    Set locality name." = "-L LOCALITY                    Задать местоположение.";
+"-L LOGFILE                     Set log file (start with '+' to append)" = "-L LOGFILE                     Set log file (start with '+' to append)";
 "-M MANUFACTURER                Set manufacturer name (default=Test)" = "-M MANUFACTURER                Укажите производителя (по умолчанию = Test)";
 "-N NAME                        Match service name to literal name value" = "-N NAME                        Сопоставление имени службы со значением буквального имени";
 "-O ORGANIZATION                Set organization name." = "-O ORGANIZATION                Задайте название организации.";

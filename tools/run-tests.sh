@@ -17,7 +17,7 @@ status=0
 rm -f tools/test.log tools/test-debug.log
 
 echo "Running ippeveprinter..."
-CUPS_DEBUG_LOG=tools/test-debug.log CUPS_DEBUG_LEVEL=4 CUPS_DEBUG_FILTER='^(http|_http|ipp|_ipp|cupsDNSSD|cupsCreate|cupsDo|cupsGet|cupsSend)' tools/ippeveprinter-static -vvv -a tools/test.conf -n localhost "$name" 2>tools/test.log &
+CUPS_DEBUG_LOG=tools/test-debug.log CUPS_DEBUG_LEVEL=4 CUPS_DEBUG_FILTER='^(http|_http|ipp|_ipp|cupsDNSSD|cupsCreate|cupsDo|cupsGet|cupsSend)' tools/ippeveprinter-static -vvv -a tools/test.conf -n localhost -L tools/test.log "$name" &
 ippeveprinter=$!
 
 # Test the instance...

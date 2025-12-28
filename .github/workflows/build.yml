@@ -123,7 +123,7 @@ jobs:
     - name: Build libcups
       run: cd vcnet; msbuild libcups.sln
     - name: Test libcups
-      run: cd vcnet; ./runtests.bat x64\Debug
+      run: cd vcnet; ./run-tests.ps1 x64\Debug
     - name: Upload Test Results
       uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}

@@ -332,6 +332,7 @@ main(int  argc,				// I - Number of command-line args
 		*icon = NULL,		// Icon file
 		*keypath = NULL,	// Keychain path
 		*location = "",		// Location of printer
+		*logfile = NULL,	// Log file
 		*make = "Example",	// Manufacturer
 		*model = "Printer",	// Model
 		*name = NULL,		// Printer name
@@ -492,7 +493,7 @@ main(int  argc,				// I - Number of command-line args
 	      keypath = argv[i];
 	      break;
 
-	  case 'l' : // -l location
+	  case 'l' : // -l LOCATION
 	      i ++;
 	      if (i >= argc)
 	      {
@@ -501,6 +502,17 @@ main(int  argc,				// I - Number of command-line args
 	      }
 
 	      location = argv[i];
+	      break;
+
+	  case 'L' : // -L LOGFILE
+	      i ++;
+	      if (i >= argc)
+	      {
+	        cupsLangPrintf(stderr, _("%s: Missing filename after '-L'."), "ippeveprinter");
+	        return (usage(stderr));
+	      }
+
+	      logfile = argv[i];
 	      break;
 
 	  case 'm' : // -m model
@@ -687,6 +699,23 @@ main(int  argc,				// I - Number of command-line args
   printer->web_forms = web_forms;
 
   cupsSetServerCredentials(keypath, printer->hostname, true);
+
+  // If a log file is set, redirect stderr to the file now...
+  if (logfile)
+  {
+    FILE *fp;				// New stderr, if any
+
+    if (*logfile == '+')
+      fp = freopen(logfile + 1, "a", stderr);
+    else
+      fp = freopen(logfile, "w", stderr);
+
+    if (!fp)
+    {
+      perror(logfile);
+      return (1);
+    }
+  }
 
   // Run the print service...
   run_printer(printer);
@@ -7150,6 +7179,7 @@ usage(FILE *out)			// I - Output file
   cupsLangPuts(out, _("-k                             Keep job spool files"));
   cupsLangPuts(out, _("-K KEYSTORE                    Set location of server X.509 certificates and keys."));
   cupsLangPuts(out, _("-l LOCATION                    Set location of printer"));
+  cupsLangPuts(out, _("-L LOGFILE                     Set log file (start with '+' to append)"));
   cupsLangPuts(out, _("-m MODEL                       Set model name (default=Printer)"));
   cupsLangPuts(out, _("-M MANUFACTURER                Set manufacturer name (default=Test)"));
   cupsLangPuts(out, _("-n HOSTNAME                    Set hostname for printer"));
