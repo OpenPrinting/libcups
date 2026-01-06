@@ -1,7 +1,7 @@
 ---
 title: CUPS 3.0 Programming Manual
 author: Michael R Sweet
-copyright: Copyright © 2021-2025 by OpenPrinting. All Rights Reserved.
+copyright: Copyright © 2021-2026 by OpenPrinting. All Rights Reserved.
 version: 3.0.0
 ...
 

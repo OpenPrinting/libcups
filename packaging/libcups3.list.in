@@ -1,7 +1,7 @@
 #
 # ESP Package Manager (EPM) file list for libcups.
 #
-# Copyright © 2020-2025 by OpenPrinting
+# Copyright © 2020-2026 by OpenPrinting
 #
 # Licensed under Apache License v2.0.  See the file "LICENSE" for more
 # information.
@@ -9,7 +9,7 @@
 
 # Product information
 %product CUPS Library v3
-%copyright 2020-2025 by OpenPrinting, 2007-2019 by Apple Inc.
+%copyright 2020-2026 by OpenPrinting, 2007-2019 by Apple Inc.
 %vendor OpenPrinting
 #%license LICENSE
 %readme LICENSE

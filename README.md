@@ -101,7 +101,7 @@ on Github.
 Legal Stuff
 -----------
 
-Copyright © 2020-2025 by OpenPrinting.
+Copyright © 2020-2026 by OpenPrinting.
 
 Copyright © 2007-2020 by Apple Inc.
 
