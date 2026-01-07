@@ -1,13 +1,13 @@
 .\"
 .\" ippeveprinter man page for CUPS.
 .\"
-.\" Copyright © 2021-2025 by OpenPrinting.
+.\" Copyright © 2021-2026 by OpenPrinting.
 .\" Copyright © 2014-2019 by Apple Inc.
 .\"
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH ippeveprinter 1 "CUPS" "2025-12-28" "OpenPrinting"
+.TH ippeveprinter 1 "CUPS" "2026-01-07" "OpenPrinting"
 .SH NAME
 ippeveprinter \- an ipp everywhere printer application for cups
 .SH SYNOPSIS
@@ -231,7 +231,7 @@ program is unique to CUPS and conforms to the IPP Everywhere (PWG 5100.14) speci
 adds environment variables starting with "IPP_" for all IPP Job attributes in the print request.
 For example, when executing a command for an IPP Job containing the "media" Job Template attribute, the "IPP_MEDIA" environment variable will be set to the value of that attribute.
 .LP
-In addition, all IPP "xxx-default" and "pwg-xxx" Printer Description attributes are added to the environment.
+In addition, all IPP "xxx-default", "xxx-ready", and "xxx-supported" Printer Description attributes are added to the environment.
 For example, the "IPP_MEDIA_DEFAULT" environment variable will be set to the default value for the "media" Job Template attribute.
 .LP
 Enumerated values are converted to their keyword equivalents.
@@ -295,4 +295,4 @@ Make a copy of a real printer's attributes and simulate it locally:
 .BR ipptool (1),
 PWG Internet Printing Protocol Workgroup (http://www.pwg.org/ipp)
 .SH COPYRIGHT
-Copyright \[co] 2021-2025 by OpenPrinting.
+Copyright \[co] 2021-2026 by OpenPrinting.
