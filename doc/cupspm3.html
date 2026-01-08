@@ -8,7 +8,7 @@
 <meta name="generator" content="codedoc v3.8">
 <meta name="author" content="Michael R Sweet">
 <meta name="language" content="en-US">
-<meta name="copyright" content="Copyright © 2021-2025 by OpenPrinting. All Rights Reserved.">
+<meta name="copyright" content="Copyright © 2021-2026 by OpenPrinting. All Rights Reserved.">
 <meta name="version" content="3.0.0">
 <style type="text/css"><!--
 body {
@@ -272,7 +272,7 @@ span.string {
 <div class="header">
 <h1 class="title">CUPS 3.0 Programming Manual</h1>
 <p>Michael R Sweet</p>
-<p>Copyright © 2021-2025 by OpenPrinting. All Rights Reserved.</p>
+<p>Copyright © 2021-2026 by OpenPrinting. All Rights Reserved.</p>
 </div>
 <div class="contents">
 <h2 class="title">Contents</h2>
@@ -9824,9 +9824,13 @@ size_t ippFileExpandVars(<a href="#ipp_file_t">ipp_file_t</a> *file, <span class
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Required size for expanded variables</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">This function expands IPP data file variables of the form &quot;$name&quot; and
-environment variables of the form &quot;$ENV[name]&quot; in the source string to the
-destination string.  The</p>
+<p class="discussion">This function expands IPP data file variables in &quot;src&quot; of the form &quot;$name&quot; or
+&quot;${name}&quot; and environment variables of the form &quot;$ENV[name]&quot; in the source
+string to the destination buffer.  The destination buffer &quot;dst&quot; is filled up
+to &quot;dstsize - 1&quot; bytes to allow for a trailing NUL character.<br>
+<br>
+The return value is the actual required size for all expansions regardless of
+the value of &quot;dstsize&quot;.</p>
 <h3 class="function"><a id="ippFileGetAttribute">ippFileGetAttribute</a></h3>
 <p class="description">Get a single named attribute from an IPP data file.</p>
 <p class="code">
@@ -9844,9 +9848,7 @@ destination string.  The</p>
 <p class="description">Attribute or <code>NULL</code> if none</p>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">This function finds the first occurence of a named attribute in the current
-IPP attributes in the specified data file.  Unlike
-<a href="#ippFileGetAttributes"><code>ippFileGetAttributes</code></a>, this function does not clear the attribute
-state.</p>
+IPP attributes in the specified data file.</p>
 <h3 class="function"><a id="ippFileGetAttributes">ippFileGetAttributes</a></h3>
 <p class="description">Get the current set of attributes from an IPP data file.</p>
 <p class="code">
