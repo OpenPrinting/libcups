@@ -1,7 +1,7 @@
 Changes in libcups
 ==================
 
-libcups v3.0.0 (YYYY-MM-DD)
+libcups v3.0.0 (2026-01-08)
 ---------------------------
 
 - Added `cupsLangIsRTL` API.
