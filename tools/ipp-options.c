@@ -1,7 +1,7 @@
 //
 // Option support functions for the IPP tools.
 //
-// Copyright © 2023-2025 by OpenPrinting.
+// Copyright © 2023-2026 by OpenPrinting.
 // Copyright © 2022-2023 by the Printer Working Group.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
@@ -34,7 +34,7 @@
 
 static int			compare_overrides(ippopt_override_t *a, ippopt_override_t *b);
 static ippopt_override_t	*copy_override(ippopt_override_t *is);
-static const char		*get_option(const char *name, size_t num_options, cups_option_t *options);
+static const char		*get_option(const char *name, size_t num_options, cups_option_t *options, bool *specified);
 static bool			parse_media(const char *value, cups_media_t *media);
 
 
@@ -182,6 +182,7 @@ ippOptionsNew(size_t        num_options,// I - Number of command-line options
   size_t	num_col;		// Number of collection values
   cups_option_t	*col;			// Collection values
   const char	*nextcol;		// Next collection value
+  bool		specified;		// Was the option specified?
 
 
   // Allocate memory and set defaults...
@@ -199,15 +200,11 @@ ippOptionsNew(size_t        num_options,// I - Number of command-line options
   cupsCopyString(ippo->job_sheets, "none", sizeof(ippo->job_sheets));
   cupsCopyString(ippo->sides, "one-sided", sizeof(ippo->sides));
 
-  // "media" and "media-col" needs to be handled specially to make sure that
-  // "media" can override "media-col-default"...
-  if ((value = cupsGetOption("media", num_options, options)) == NULL)
-    value = getenv("IPP_MEDIA");
-  if (!value)
-  {
-    if ((value = get_option("media-col", num_options, options)) == NULL)
-      value = get_option("media", num_options, options);
-  }
+  if ((value = get_option("media-col", num_options, options, &specified)) == NULL)
+    value = get_option("media", num_options, options, &specified);
+
+  ippo->media_specified = specified;
+
   if (value)
     parse_media(value, &ippo->media);
   else
@@ -218,10 +215,10 @@ ippOptionsNew(size_t        num_options,// I - Number of command-line options
   ippo->separator_media       = ippo->media;
 
   // Set the rest of the options...
-  if ((value = get_option("copies", num_options, options)) != NULL && (intvalue = atoi(value)) >= 1 && intvalue <= 999)
+  if ((value = get_option("copies", num_options, options, &specified)) != NULL && (intvalue = atoi(value)) >= 1 && intvalue <= 999)
     ippo->copies = intvalue;
 
-  if ((value = get_option("force-front-side", num_options, options)) != NULL)
+  if ((value = get_option("force-front-side", num_options, options, &specified)) != NULL)
   {
     const char	*ptr;			// Pointer into value
 
@@ -235,13 +232,13 @@ ippOptionsNew(size_t        num_options,// I - Number of command-line options
     }
   }
 
-  if ((value = get_option("image-orientation", num_options, options)) != NULL && (intvalue = atoi(value)) >= IPP_ORIENT_PORTRAIT && intvalue <= IPP_ORIENT_NONE)
+  if ((value = get_option("image-orientation", num_options, options, &specified)) != NULL && (intvalue = atoi(value)) >= IPP_ORIENT_PORTRAIT && intvalue <= IPP_ORIENT_NONE)
     ippo->image_orientation = (ipp_orient_t)intvalue;
 
-  if ((value = get_option("imposition-template", num_options, options)) != NULL)
+  if ((value = get_option("imposition-template", num_options, options, &specified)) != NULL)
     cupsCopyString(ippo->imposition_template, value, sizeof(ippo->imposition_template));
 
-  if ((value = get_option("job-error-sheet", num_options, options)) != NULL)
+  if ((value = get_option("job-error-sheet", num_options, options, &specified)) != NULL)
   {
     // Parse job-error-sheet collection value...
     num_col = cupsParseOptions(value, /*end*/NULL, 0, &col);
@@ -257,19 +254,19 @@ ippOptionsNew(size_t        num_options,// I - Number of command-line options
     cupsFreeOptions(num_col, col);
   }
 
-  if ((value = get_option("job-name", num_options, options)) != NULL)
+  if ((value = get_option("job-name", num_options, options, &specified)) != NULL)
     cupsCopyString(ippo->job_name, value, sizeof(ippo->job_name));
 
-  if ((value = get_option("job-originating-user-name", num_options, options)) != NULL)
+  if ((value = get_option("job-originating-user-name", num_options, options, &specified)) != NULL)
     cupsCopyString(ippo->job_originating_user_name, value, sizeof(ippo->job_originating_user_name));
 
-  if ((value = get_option("job-pages-per-set", num_options, options)) != NULL && (intvalue = atoi(value)) >= 1)
+  if ((value = get_option("job-pages-per-set", num_options, options, &specified)) != NULL && (intvalue = atoi(value)) >= 1)
     ippo->job_pages_per_set = intvalue;
 
-  if ((value = get_option("job-sheet-message", num_options, options)) != NULL)
+  if ((value = get_option("job-sheet-message", num_options, options, &specified)) != NULL)
     cupsCopyString(ippo->job_sheet_message, value, sizeof(ippo->job_sheet_message));
 
-  if ((value = get_option("job-sheets-col", num_options, options)) != NULL)
+  if ((value = get_option("job-sheets-col", num_options, options, &specified)) != NULL)
   {
     // Parse "job-sheets-col" collection value...
     num_col = cupsParseOptions(value, /*end*/NULL, 0, &col);
@@ -280,18 +277,18 @@ ippOptionsNew(size_t        num_options,// I - Number of command-line options
     if (value)
       parse_media(value, &ippo->job_sheets_media);
 
-    if ((value = get_option("job-sheets", num_col, col)) == NULL)
+    if ((value = get_option("job-sheets", num_col, col, &specified)) == NULL)
       value = "standard";
 
     cupsCopyString(ippo->job_sheets, value, sizeof(ippo->job_sheets));
     cupsFreeOptions(num_col, col);
   }
-  else if ((value = get_option("job-sheets", num_options, options)) != NULL)
+  else if ((value = get_option("job-sheets", num_options, options, &specified)) != NULL)
   {
     cupsCopyString(ippo->job_sheets, value, sizeof(ippo->job_sheets));
   }
 
-  if ((value = get_option("multiple-document-handling", num_options, options)) != NULL)
+  if ((value = get_option("multiple-document-handling", num_options, options, &specified)) != NULL)
   {
     static const char * const handlings[] =
     {					// "multiple-document-handling" values
@@ -311,16 +308,16 @@ ippOptionsNew(size_t        num_options,// I - Number of command-line options
     }
   }
 
-  if ((value = get_option("number-up", num_options, options)) != NULL && (intvalue = atoi(value)) >= 1)
+  if ((value = get_option("number-up", num_options, options, &specified)) != NULL && (intvalue = atoi(value)) >= 1)
     ippo->number_up = intvalue;
 
-  if ((value = get_option("orientation-requested", num_options, options)) != NULL && (intvalue = atoi(value)) >= IPP_ORIENT_PORTRAIT && intvalue <= IPP_ORIENT_NONE)
+  if ((value = get_option("orientation-requested", num_options, options, &specified)) != NULL && (intvalue = atoi(value)) >= IPP_ORIENT_PORTRAIT && intvalue <= IPP_ORIENT_NONE)
     ippo->orientation_requested = (ipp_orient_t)intvalue;
 
-  if ((value = get_option("output-bin", num_options, options)) != NULL)
+  if ((value = get_option("output-bin", num_options, options, &specified)) != NULL)
     cupsCopyString(ippo->output_bin, value, sizeof(ippo->output_bin));
 
-  if ((value = get_option("page-delivery", num_options, options)) != NULL)
+  if ((value = get_option("page-delivery", num_options, options, &specified)) != NULL)
   {
     static const char * const deliveries[] =
     {					// "page-delivery" values
@@ -340,7 +337,7 @@ ippOptionsNew(size_t        num_options,// I - Number of command-line options
     }
   }
 
-  if ((value = get_option("page-ranges", num_options, options)) != NULL)
+  if ((value = get_option("page-ranges", num_options, options, &specified)) != NULL)
   {
     // Parse comma-delimited page ranges...
     const char	*ptr;			// Pointer into value
@@ -368,19 +365,19 @@ ippOptionsNew(size_t        num_options,// I - Number of command-line options
     }
   }
 
-  if ((value = get_option("print-color-mode", num_options, options)) != NULL)
+  if ((value = get_option("print-color-mode", num_options, options, &specified)) != NULL)
     cupsCopyString(ippo->print_color_mode, value, sizeof(ippo->print_color_mode));
 
-  if ((value = get_option("print-content-optimize", num_options, options)) != NULL)
+  if ((value = get_option("print-content-optimize", num_options, options, &specified)) != NULL)
     cupsCopyString(ippo->print_content_optimize, value, sizeof(ippo->print_content_optimize));
 
-  if ((value = get_option("print-quality", num_options, options)) != NULL && (intvalue = atoi(value)) >= IPP_QUALITY_DRAFT && intvalue <= IPP_QUALITY_HIGH)
+  if ((value = get_option("print-quality", num_options, options, &specified)) != NULL && (intvalue = atoi(value)) >= IPP_QUALITY_DRAFT && intvalue <= IPP_QUALITY_HIGH)
     ippo->print_quality = (ipp_quality_t)intvalue;
 
-  if ((value = get_option("print-rendering-intent", num_options, options)) != NULL)
+  if ((value = get_option("print-rendering-intent", num_options, options, &specified)) != NULL)
     cupsCopyString(ippo->print_rendering_intent, value, sizeof(ippo->print_rendering_intent));
 
-  if ((value = get_option("print-scaling", num_options, options)) != NULL)
+  if ((value = get_option("print-scaling", num_options, options, &specified)) != NULL)
   {
     static const char * const scalings[] =
     {					// "print-scaling" values
@@ -401,7 +398,7 @@ ippOptionsNew(size_t        num_options,// I - Number of command-line options
     }
   }
 
-  if ((value = get_option("printer-resolution", num_options, options)) != NULL)
+  if ((value = get_option("printer-resolution", num_options, options, &specified)) != NULL)
   {
     int	xdpi, ydpi;			// X/Y resolution values
 
@@ -420,7 +417,7 @@ ippOptionsNew(size_t        num_options,// I - Number of command-line options
     }
   }
 
-  if ((value = get_option("separator-sheets", num_options, options)) != NULL)
+  if ((value = get_option("separator-sheets", num_options, options, &specified)) != NULL)
   {
     // Parse separator-sheets collection value...
     num_col = cupsParseOptions(value, /*end*/NULL, 0, &col);
@@ -431,7 +428,7 @@ ippOptionsNew(size_t        num_options,// I - Number of command-line options
     if (value)
       parse_media(value, &ippo->separator_media);
 
-    if ((value = get_option("separator-sheets-type", num_col, col)) != NULL)
+    if ((value = get_option("separator-sheets-type", num_col, col, &specified)) != NULL)
     {
       static const char * const types[] =
       {					// "separator-sheets-type" values
@@ -455,10 +452,10 @@ ippOptionsNew(size_t        num_options,// I - Number of command-line options
     cupsFreeOptions(num_col, col);
   }
 
-  if ((value = get_option("sides", num_options, options)) != NULL)
+  if ((value = get_option("sides", num_options, options, &specified)) != NULL)
     cupsCopyString(ippo->sides, value, sizeof(ippo->sides));
 
-  if ((value = get_option("x-image-position", num_options, options)) != NULL)
+  if ((value = get_option("x-image-position", num_options, options, &specified)) != NULL)
   {
     static const char * const positions[] =
     {					// "x-image-position" values
@@ -478,16 +475,16 @@ ippOptionsNew(size_t        num_options,// I - Number of command-line options
     }
   }
 
-  if ((value = get_option("x-image-shift", num_options, options)) != NULL)
+  if ((value = get_option("x-image-shift", num_options, options, &specified)) != NULL)
     ippo->x_side1_image_shift = ippo->x_side2_image_shift = atoi(value);
 
-  if ((value = get_option("x-side1-image-shift", num_options, options)) != NULL)
+  if ((value = get_option("x-side1-image-shift", num_options, options, &specified)) != NULL)
     ippo->x_side1_image_shift = atoi(value);
 
-  if ((value = get_option("x-side2-image-shift", num_options, options)) != NULL)
+  if ((value = get_option("x-side2-image-shift", num_options, options, &specified)) != NULL)
     ippo->x_side2_image_shift = atoi(value);
 
-  if ((value = get_option("y-image-position", num_options, options)) != NULL)
+  if ((value = get_option("y-image-position", num_options, options, &specified)) != NULL)
   {
     static const char * const positions[] =
     {					// "y-image-position" values
@@ -507,16 +504,16 @@ ippOptionsNew(size_t        num_options,// I - Number of command-line options
     }
   }
 
-  if ((value = get_option("y-image-shift", num_options, options)) != NULL)
+  if ((value = get_option("y-image-shift", num_options, options, &specified)) != NULL)
     ippo->y_side1_image_shift = ippo->y_side2_image_shift = atoi(value);
 
-  if ((value = get_option("y-side1-image-shift", num_options, options)) != NULL)
+  if ((value = get_option("y-side1-image-shift", num_options, options, &specified)) != NULL)
     ippo->y_side1_image_shift = atoi(value);
 
-  if ((value = get_option("y-side2-image-shift", num_options, options)) != NULL)
+  if ((value = get_option("y-side2-image-shift", num_options, options, &specified)) != NULL)
     ippo->y_side2_image_shift = atoi(value);
 
-  if ((value = get_option("overrides", num_options, options)) != NULL && *value == '{')
+  if ((value = get_option("overrides", num_options, options, &specified)) != NULL && *value == '{')
   {
     // Parse "overrides" collection value(s)...
     ippopt_override_t override;		// overrides value
@@ -569,8 +566,8 @@ ippOptionsNew(size_t        num_options,// I - Number of command-line options
         }
       }
 
-      if ((value = cupsGetOption("media", num_col, col)) == NULL)
-        value = cupsGetOption("media-col", num_col, col);
+      if ((value = cupsGetOption("media-col", num_col, col)) == NULL)
+        value = cupsGetOption("media", num_col, col);
       if (value)
         parse_media(value, &override.media);
 
@@ -639,12 +636,15 @@ copy_override(ippopt_override_t *ov)	// I - "overrides" value
 static const char *			// O - Value or `NULL` if not set
 get_option(const char    *name,		// I - Attribute name
            size_t        num_options,	// I - Number of command-line options
-           cups_option_t *options)	// I - Command-line options
+           cups_option_t *options,	// I - Command-line options
+           bool          *specified)	// O - Was the option specified?
 {
   char		temp[1024],		// Temporary environment variable name
 		*ptr;			// Pointer into temporary name
   const char	*value;			// Value
 
+
+  *specified = true;
 
   if ((value = cupsGetOption(name, num_options, options)) == NULL)
   {
@@ -661,6 +661,8 @@ get_option(const char    *name,		// I - Attribute name
     if ((value = getenv(temp)) == NULL)
     {
       // Nope, try "IPP_NAME_DEFAULT" in the environment...
+      *specified = false;
+
       cupsConcatString(temp, "_DEFAULT", sizeof(temp));
       value = getenv(temp);
     }

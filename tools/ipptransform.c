@@ -1,7 +1,7 @@
 //
 // Utility for converting PDF and JPEG files to raster data or HP PCL.
 //
-// Copyright © 2023-2025 by OpenPrinting.
+// Copyright © 2023-2026 by OpenPrinting.
 // Copyright © 2016-2023 by the Printer Working Group.
 // Copyright © 2016-2019 by Apple Inc.
 //
@@ -83,6 +83,7 @@ typedef struct xform_page_s		// Output page
 					// Input page objects
   pdfio_dict_t	*pagedict;		// Page dictionary
   pdfio_dict_t	*resdict;		// Resource dictionary
+  pdfio_array_t	*annots;		// Annots array
   pdfio_dict_t	*resmap[XFORM_MAX_LAYOUT];
 					// Resource name map
   pdfio_dict_t	*restype;		// Current resource type dictionary
@@ -3396,16 +3397,82 @@ prepare_documents(
       outdir  = 1;
     }
 
-    if (p.num_layout == 1 && options->print_scaling == IPPOPT_SCALING_NONE && strcasecmp(outformat, "image/pwg-raster") && strcasecmp(outformat, "image/urf"))
+    if (p.num_layout == 1 && strcasecmp(outformat, "image/pwg-raster") && strcasecmp(outformat, "image/urf"))
     {
-      // Simple path - no layout/scaling/rotation of pages so we can just copy the pages quickly.
+      // Simple path - no layout of pages so we can usually just copy the pages quickly.
       if (Verbosity)
 	fputs("DEBUG: Doing fast copy of pages.\n", stderr);
 
       for (i = p.num_outpages; i > 0; i --, outpage += outdir)
       {
 	if (outpage->input[0])
-	  pdfioPageCopy(p.pdf, outpage->input[0]);
+	{
+          ippopt_scaling_t scaling = options->print_scaling;
+					// Scaling needed, if any
+
+          if (scaling == IPPOPT_SCALING_AUTO || scaling == IPPOPT_SCALING_AUTO_FIT)
+          {
+            // Default to no scaling for "auto" and "auto-fit"...
+            scaling = IPPOPT_SCALING_NONE;
+
+	    if (options->media_specified)
+	    {
+	      // When media is specified, see if this page needs to be scaled...
+	      pdfio_rect_t media_box;	// MediaBox for the page
+	      int	media_width,	// Media width in hundredths of millimeters
+			media_length;	// Media length in hundredths of millimeters
+
+	      if (pdfioDictGetRect(pdfioObjGetDict(outpage->input[0]), "MediaBox", &media_box))
+	      {
+		// Got the MediaBox so get the portrait dimensions and compare...
+		if (media_box.x2 > media_box.y2)
+		{
+		  media_width  = (int)(2540.0 * media_box.y2 / 72.0);
+		  media_length = (int)(2540.0 * media_box.x2 / 72.0);
+		}
+		else
+		{
+		  media_width  = (int)(2540.0 * media_box.x2 / 72.0);
+		  media_length = (int)(2540.0 * media_box.y2 / 72.0);
+		}
+
+		if (media_width != options->media.width || media_length != options->media.length)
+		  scaling = IPPOPT_SCALING_FIT;
+	      }
+	    }
+	  }
+
+	  if (scaling == IPPOPT_SCALING_NONE)
+	  {
+	    // Do a fast copy of the page with the original media size...
+	    pdfioPageCopy(p.pdf, outpage->input[0]);
+	  }
+	  else
+	  {
+	    // Scale to fit/fill...
+	    if (Verbosity)
+	      fprintf(stderr, "DEBUG: Scaling page %u/%u.\n", (unsigned)(outpage - p.outpages + 1), (unsigned)p.num_outpages);
+
+	    // Create the page dictionary using the source page's resources...
+	    outpage->pagedict = pdfioDictCreate(p.pdf);
+	    outpage->resdict  = pdfioDictCopy(p.pdf, pdfioDictGetDict(pdfioObjGetDict(outpage->input[0]), "Resources"));
+	    outpage->annots   = pdfioArrayCopy(p.pdf, pdfioDictGetArray(pdfioObjGetDict(outpage->input[0]), "Annots"));
+
+	    pdfioDictSetRect(outpage->pagedict, "CropBox", &p.media);
+	    pdfioDictSetRect(outpage->pagedict, "MediaBox", &p.media);
+	    pdfioDictSetDict(outpage->pagedict, "Resources", outpage->resdict);
+	    pdfioDictSetArray(outpage->pagedict, "Annots", outpage->annots);
+	    pdfioDictSetName(outpage->pagedict, "Type", "Page");
+
+	    // Now copy the content stream to build the page...
+	    outpage->output = pdfio_start_page(&p, outpage->pagedict);
+
+	    copy_page(&p, outpage, /*layout*/0);
+
+	    pdfio_end_page(&p, outpage->output);
+	    outpage->output = NULL;
+	  }
+	}
       }
     }
     else

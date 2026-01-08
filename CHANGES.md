@@ -19,6 +19,8 @@ libcups v3.0.0 (YYYY-MM-DD)
 - Updated `ippfind` to use the `cupsGetClock` API.
 - Updated `ippeveprinter` to include all ready and supported attributes and
   values in the environment when processing a job.
+- Fixed `ipptransform` media handling to preserve input document dimensions when
+  "media" or "media-col" are not specified (Issue #102)
 - Fixed `cupsJSONExport` functions with empty arrays or objects.
 - Fixed `httpGetDateTime` for dates in the far future (Issue #124)
 - Fixed input checks for `cupsCreateCredentials` and

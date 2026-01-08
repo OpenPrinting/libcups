@@ -1,7 +1,7 @@
 //
 // Option support definitions for the IPP tools.
 //
-// Copyright © 2023 by OpenPrinting.
+// Copyright © 2023-2026 by OpenPrinting.
 // Copyright © 2022 by the Printer Working Group.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
@@ -106,6 +106,7 @@ typedef struct ipp_options_s		// All IPP options in one structure
   char		job_sheets[256];	// "job-sheets" value
   cups_media_t	job_sheets_media;	// "job-sheets-col" "media" or "media-col" value
   cups_media_t	media;			// "media" or "media-col" value
+  bool		media_specified;	// Was "media" or "media-col" specified?
   ippopt_handling_t multiple_document_handling;
 					// "multiple-document-handling" value
   int		number_up;		// "number-up" value

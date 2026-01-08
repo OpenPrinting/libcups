@@ -316,17 +316,29 @@ Specifies the title of the input file.
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>IPP_xxx</strong><br>
 Specifies the value of the &quot;xxx&quot; Job Template attribute, where &quot;xxx&quot; is converted to uppercase.
 For example, the &quot;media&quot; Job Template attribute is stored as the &quot;IPP_MEDIA&quot; environment variable.
+When the source attribute contains multiple values, they are separated by commas in the environment variable string.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>IPP_xxx_DEFAULT</strong><br>
 Specifies the default value of the corresponding &quot;xxx-default&quot; Printer Description attribute, where &quot;xxx&quot; is converted to uppercase.
 For example, the &quot;media-default&quot; Printer Description attribute is stored as the &quot;IPP_MEDIA_DEFAULT&quot; environment variable.
+When the source attribute contains multiple values, they are separated by commas in the environment variable string.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>IPP_xxx_READY</strong><br>
+Specifies the loaded value(s) of the corresponding &quot;xxx-ready&quot; Printer Status attribute, where &quot;xxx&quot; is converted to uppercase.
+For example, the &quot;media-ready&quot; Printer Status attribute is stored as the &quot;IPP_MEDIA_READY&quot; environment variable.
+When the source attribute contains multiple values, they are separated by commas in the environment variable string.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>IPP_xxx_SUPPORTED</strong><br>
+Specifies the supported value(s) of the corresponding &quot;xxx-supported&quot; Printer Description attribute, where &quot;xxx&quot; is converted to uppercase.
+For example, the &quot;media-supported&quot; Printer Description attribute is stored as the &quot;IPP_MEDIA_SUPPORTED&quot; environment variable.
+When the source attribute contains multiple values, they are separated by commas in the environment variable string.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>IPP_PCLM_RASTER_BACK_SIDE</strong><br>
 Specifies the coordinate system of the back side of duplex sheets.
 The default is 'normal'.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>IPP_PCLM_SOURCE_RESOLUTION_SUPPORTED</strong><br>
-Lists the supported output resolutions.
+Lists the supported output resolutions, separated by commas.
 The default is 600dpi.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>IPP_PCLM_STRIP_HEIGHT_PREFERRED</strong><br>
@@ -334,7 +346,7 @@ Specifies the preferred strip height for the printer.
 The default is 16.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>IPP_PWG_RASTER_DOCUMENT_RESOLUTION_SUPPORTED</strong><br>
-Lists the supported output resolutions.
+Lists the supported output resolutions, separated by commas.
 The default is 300dpi.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>IPP_PWG_RASTER_DOCUMENT_SHEET_BACK</strong><br>
@@ -342,7 +354,7 @@ Specifies the coordinate system of the back side of duplex sheets.
 The default is 'normal'.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>IPP_PWG_RASTER_DOCUMENT_TYPE_SUPPORTED</strong><br>
-Lists the supported output color spaces and bit depths.
+Lists the supported output color spaces and bit depths, separated by commas.
 The default is 'sgray_8'.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>IPPTRANSFORM_MAX_RASTER</strong><br>
@@ -379,7 +391,7 @@ Specifies the log level (verbosity) as &quot;error&quot;, &quot;info&quot;, or &
 
 </p>
     <h2 id="ipptransform-1.copyright">Copyright</h2>
-<p>Copyright &copy; 2023-2025 by OpenPrinting.
+<p>Copyright &copy; 2023-2026 by OpenPrinting.
 Copyright &copy; 2016-2019 by the Printer Working Group.
 Copyright &copy; 2016-2019 by Apple Inc.
   </body>
