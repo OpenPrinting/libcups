@@ -72,19 +72,19 @@ else
 	fi
 
         semversion="$(echo $version | sed -E -e '1,$s/^([0-9]\.[0-9]+)([a-z1-9]+)$/\1.0-\2/')"
-	temp="$(grep '<version>' vcnet/libcups3_native.nuspec | sed -e '1,$s/^[ \t]*<version>//' -e '1,$s/<\/version>$//')"
+	temp="$(grep '<version>' vcnet/libcups3_native.nuspec | sed -e '1,$s/^[ \t]*<version>//' -e '1,$s/<\/version>$//' | awk -F. '{print $1 "." $2 "." $3}')"
 	if test "v$temp" != "v$semversion"; then
 	    echo "Still need to update <version> to $semversion in vcnet/libcups3_native.nuspec (saw $temp)"
 	    exit 1
 	fi
 
-	temp="$(grep 'libcups3_native.redist' vcnet/libcups3_native.nuspec | awk -F\" '{print $4}')"
+	temp="$(grep 'libcups3_native.redist' vcnet/libcups3_native.nuspec | awk -F\" '{print $4}' | awk -F. '{print $1 "." $2 "." $3}')"
 	if test "v$temp" != "v$semversion"; then
 	    echo "Still need to update libcups3_native.redist version to $semversion in vcnet/libcups3_native.nuspec (saw $temp)"
 	    exit 1
 	fi
 
-	temp="$(grep '<version>' vcnet/libcups3_native.redist.nuspec | sed -e '1,$s/^[ \t]*<version>//' -e '1,$s/<\/version>$//')"
+	temp="$(grep '<version>' vcnet/libcups3_native.redist.nuspec | sed -e '1,$s/^[ \t]*<version>//' -e '1,$s/<\/version>$//' | awk -F. '{print $1 "." $2 "." $3}')"
 	if test "v$temp" != "v$semversion"; then
 	    echo "Still need to update <version> to $semversion in vcnet/libcups3_native.redist.nuspec (saw $temp)"
 	    exit 1
