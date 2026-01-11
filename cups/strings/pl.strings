@@ -1,1 +1,13 @@
-
+"  No Errors\n" = "  Brak błędów\n";
+"  No Warnings\n" = "  Brak ostrzeżeń\n";
+"%s (Borderless)" = "%s (Bez obramowania)";
+"%s (Borderless, %s)" = "%s (Bez obramowania, %s)";
+"%s (Borderless, %s, %s)" = "%s (Bez obramowania, %s, %s)";
+"Invalid media size." = "Nieprawidłowy rozmiar nośnika.";
+"Missing media-size in media-col." = "Brak rozmiaru nośnika w kolumnie nośnika.";
+"Missing x-dimension in media-size." = "Brak wymiaru x w rozmiarze nośnika.";
+"Missing y-dimension in media-size." = "Brak wymiaru y w rozmiarze nośnika.";
+"Unknown media size name." = "Nieznana nazwa rozmiaru nośnika.";
+"media-size" = "Wymiary nośnika";
+"media-size-name" = "Nazwa nośnika";
+"media.choice_iso_a4_210x297mm_na_letter_8.5x11in" = "A4 lub US Letter";
