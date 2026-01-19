@@ -1,8 +1,15 @@
 Changes in libcups
 ==================
 
-libcups v3.0.0 (2026-01-08)
----------------------------
+v3.0.1 - YYYY-MM-DD
+-------------------
+
+- Fixed a bug when then `ippFindXxx` and `ippSetXxx` functions were mixed
+  (Issue #138)
+
+
+v3.0.0 - 2026-01-08
+-------------------
 
 - Added `cupsLangIsRTL` API.
 - Added `cupsOAuthGetDeviceGrant`, `cupsOAuthGetJWKS`, and `cupsOAuthGetUserId`
@@ -33,8 +40,8 @@ libcups v3.0.0 (2026-01-08)
 - Fixed support for device authorization grants.
 
 
-libcups v3.0rc4 (2025-03-18)
-----------------------------
+v3.0rc4 - 2025-03-18
+--------------------
 
 - Added `cupsCopyCredentialsPublicKey` API.
 - Added `cupsGetClock` API.
@@ -58,8 +65,8 @@ libcups v3.0rc4 (2025-03-18)
 - Fixed validation of dateTime values with time zones more than UTC+11.
 
 
-libcups v3.0rc3 (2024-10-22)
-----------------------------
+v3.0rc3 - 2024-10-22
+--------------------
 
 - Updated `cupsCreateCertificateRequest` to store the new private key
   separately.
@@ -71,8 +78,8 @@ libcups v3.0rc3 (2024-10-22)
 - Fixed a crash bug on Windows.
 
 
-libcups v3.0rc2 (2024-10-15)
-----------------------------
+v3.0rc2 - 2024-10-15
+--------------------
 
 - Updated `httpConnectAgain` to re-validate the server's X.509 certificate
   (Issue #90)
@@ -83,8 +90,8 @@ libcups v3.0rc2 (2024-10-15)
 - Fixed a recursion issue in `ippReadIO`.
 
 
-libcups v3.0rc1 (2024-09-20)
-----------------------------
+v3.0rc1 - 2024-09-20
+--------------------
 
 - Added `cupsFormatString` and `cupsFormatStringv` APIs to safely format UTF-8
   strings.
@@ -125,8 +132,8 @@ libcups v3.0rc1 (2024-09-20)
 - Fixed how `ippeveprinter` responds to an unsupported request character set.
 
 
-libcups v3.0b2 (2023-10-05)
----------------------------
+v3.0b2 - 2023-10-05
+-------------------
 
 - Added the `ipptransform` command to replace/upgrade the `ippevepcl` and
   `ippeveps` commands (Issue #65)
@@ -148,8 +155,8 @@ libcups v3.0b2 (2023-10-05)
 - Fixed `CUPS_DNSSD_IF_INDEX_LOCAL` when using Avahi.
 
 
-libcups v3.0b1 (2023-02-09)
----------------------------
+v3.0b1 - 2023-02-09
+-------------------
 
 - Documentation updates (Issue #32)
 - Split out libcups and tools from CUPS 2.x.

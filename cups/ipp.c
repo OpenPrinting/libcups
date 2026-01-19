@@ -1,7 +1,7 @@
 //
 // Internet Printing Protocol functions for CUPS.
 //
-// Copyright © 2021-2025 by OpenPrinting.
+// Copyright © 2021-2026 by OpenPrinting.
 // Copyright © 2007-2021 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products, all rights reserved.
 //
@@ -5954,7 +5954,7 @@ ipp_set_value(ipp_t           *ipp,	// IO - IPP message
 #endif // !__clang_analyzer__
     DEBUG_printf("4debug_alloc: %p %s %s%s (%u)", (void *)temp, temp->name, temp->num_values > 1 ? "1setOf " : "", ippTagString(temp->value_tag), (unsigned)temp->num_values);
 
-    if (ipp->current == *attr && ipp->prev)
+    if (ipp->current == *attr && ipp->prev && ipp->prev->next == *attr)
     {
       // Use current "previous" pointer...
       prev = ipp->prev;
