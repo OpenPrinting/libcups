@@ -5954,17 +5954,25 @@ ipp_set_value(ipp_t           *ipp,	// IO - IPP message
 #endif // !__clang_analyzer__
     DEBUG_printf("4debug_alloc: %p %s %s%s (%u)", (void *)temp, temp->name, temp->num_values > 1 ? "1setOf " : "", ippTagString(temp->value_tag), (unsigned)temp->num_values);
 
-    // Find this attribute in the linked list...
-    for (prev = NULL, current = ipp->attrs; current && current != *attr; prev = current, current = current->next)
-      ;				// Loop until we find the attribute
-
-    if (!current)
+    if (ipp->current == *attr && ipp->prev)
     {
-      // This is a serious error!
-      *attr = temp;
-      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("IPP attribute is not a member of the message."), true);
-      DEBUG_puts("4ipp_set_value: Unable to find attribute in message.");
-      return (NULL);
+      // Use current "previous" pointer...
+      prev = ipp->prev;
+    }
+    else
+    {
+      // Find this attribute in the linked list...
+      for (prev = NULL, current = ipp->attrs; current && current != *attr; prev = current, current = current->next)
+        ;				// Loop until we find the attribute
+
+      if (!current)
+      {
+	// This is a serious error!
+	*attr = temp;
+	_cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("IPP attribute is not a member of the message."), true);
+	DEBUG_puts("4ipp_set_value: Unable to find attribute in message.");
+	return (NULL);
+      }
     }
 
     if (prev)
