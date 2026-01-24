@@ -1,7 +1,7 @@
 //
 // IPP utilities for CUPS.
 //
-// Copyright © 2021-2025 by OpenPrinting.
+// Copyright © 2021-2026 by OpenPrinting.
 // Copyright © 2007-2018 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products.
 //
@@ -381,7 +381,7 @@ cupsGetResponse(http_t     *http,	// I - Connection to server or `CUPS_HTTP_DEFA
 
     DEBUG_printf("1cupsGetResponse: status-code=%s, status-message=\"%s\"", ippErrorString(response->request.status.status_code), attr ? attr->values[0].string.text : "");
 
-    _cupsSetError(response->request.status.status_code, attr ? attr->values[0].string.text : ippErrorString(response->request.status.status_code), false);
+    _cupsSetError((ipp_status_t)response->request.op_status, attr ? attr->values[0].string.text : ippErrorString((ipp_status_t)response->request.op_status), false);
   }
 
   return (response);

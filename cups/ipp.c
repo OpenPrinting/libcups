@@ -2180,7 +2180,7 @@ ippGetOperation(ipp_t *ipp)		// I - IPP request message
     return ((ipp_op_t)0);
 
   // Return the value...
-  return (ipp->request.op.operation_id);
+  return ((ipp_op_t)ipp->request.op_status);
 }
 
 
@@ -2225,7 +2225,7 @@ ippGetRequestId(ipp_t *ipp)		// I - IPP message
     return (0);
 
   // Return the request ID...
-  return (ipp->request.any.request_id);
+  return (ipp->request.request_id);
 }
 
 
@@ -2294,7 +2294,7 @@ ippGetStatusCode(ipp_t *ipp)		// I - IPP response or event message
     return (IPP_STATUS_ERROR_INTERNAL);
 
   // Return the value...
-  return (ipp->request.status.status_code);
+  return ((ipp_status_t)ipp->request.op_status);
 }
 
 
@@ -2362,9 +2362,9 @@ ippGetVersion(ipp_t *ipp,		// I - IPP message
 
   // Return the value...
   if (minor)
-    *minor = ipp->request.any.version[1];
+    *minor = ipp->request.version[1];
 
-  return (ipp->request.any.version[0]);
+  return (ipp->request.version[0]);
 }
 
 
@@ -2390,10 +2390,10 @@ ippNew(void)
     if (!cg->client_conf_loaded)
       _cupsSetDefaults();
 
-    temp->request.any.version[0] = (ipp_uchar_t)(cg->server_version / 10);
-    temp->request.any.version[1] = (ipp_uchar_t)(cg->server_version % 10);
-    temp->use                    = 1;
-    temp->find                   = temp->fstack;
+    temp->request.version[0] = (ipp_uchar_t)(cg->server_version / 10);
+    temp->request.version[1] = (ipp_uchar_t)(cg->server_version % 10);
+    temp->use                = 1;
+    temp->find               = temp->fstack;
   }
 
   DEBUG_printf("1ippNew: Returning %p", (void *)temp);
@@ -2429,8 +2429,8 @@ ippNewRequest(ipp_op_t op)		// I - Operation code
   // Set the operation and request ID...
   cupsMutexLock(&request_mutex);
 
-  request->request.op.operation_id = op;
-  request->request.op.request_id   = ++request_id;
+  request->request.op_status  = op;
+  request->request.request_id = ++request_id;
 
   cupsMutexUnlock(&request_mutex);
 
@@ -2474,9 +2474,9 @@ ippNewResponse(ipp_t *request)		// I - IPP request message
     return (NULL);
 
   // Copy the request values over to the response...
-  response->request.status.version[0] = request->request.op.version[0];
-  response->request.status.version[1] = request->request.op.version[1];
-  response->request.status.request_id = request->request.op.request_id;
+  response->request.version[0] = request->request.version[0];
+  response->request.version[1] = request->request.version[1];
+  response->request.request_id = request->request.request_id;
 
   // The first attribute MUST be attributes-charset...
   attr = request->attrs;
@@ -2904,7 +2904,7 @@ ippSetOperation(ipp_t    *ipp,		// I - IPP request message
     return (false);
 
   // Set the operation and return...
-  ipp->request.op.operation_id = op;
+  ipp->request.op_status = op;
 
   return (true);
 }
@@ -2968,7 +2968,7 @@ ippSetRequestId(ipp_t *ipp,		// I - IPP message
     return (false);
 
   // Set the request ID and return...
-  ipp->request.any.request_id = request_id;
+  ipp->request.request_id = request_id;
 
   return (true);
 }
@@ -3051,7 +3051,7 @@ ippSetStatusCode(ipp_t        *ipp,	// I - IPP response or event message
     return (false);
 
   // Set the status code and return...
-  ipp->request.status.status_code = status;
+  ipp->request.op_status = status;
 
   return (true);
 }
@@ -3472,8 +3472,8 @@ ippSetVersion(ipp_t *ipp,		// I - IPP message
     return (false);
 
   // Set the version number...
-  ipp->request.any.version[0] = (ipp_uchar_t)major;
-  ipp->request.any.version[1] = (ipp_uchar_t)minor;
+  ipp->request.version[0] = (ipp_uchar_t)major;
+  ipp->request.version[1] = (ipp_uchar_t)minor;
 
   return (true);
 }
@@ -4132,18 +4132,18 @@ ippWriteIO(void        *dst,		// I - Destination
 	  //                   Total = 8 bytes
           bufptr = buffer;
 
-	  *bufptr++ = ipp->request.any.version[0];
-	  *bufptr++ = ipp->request.any.version[1];
-	  *bufptr++ = (ipp_uchar_t)(ipp->request.any.op_status >> 8);
-	  *bufptr++ = (ipp_uchar_t)ipp->request.any.op_status;
-	  *bufptr++ = (ipp_uchar_t)(ipp->request.any.request_id >> 24);
-	  *bufptr++ = (ipp_uchar_t)(ipp->request.any.request_id >> 16);
-	  *bufptr++ = (ipp_uchar_t)(ipp->request.any.request_id >> 8);
-	  *bufptr++ = (ipp_uchar_t)ipp->request.any.request_id;
+	  *bufptr++ = ipp->request.version[0];
+	  *bufptr++ = ipp->request.version[1];
+	  *bufptr++ = (ipp_uchar_t)(ipp->request.op_status >> 8);
+	  *bufptr++ = (ipp_uchar_t)ipp->request.op_status;
+	  *bufptr++ = (ipp_uchar_t)(ipp->request.request_id >> 24);
+	  *bufptr++ = (ipp_uchar_t)(ipp->request.request_id >> 16);
+	  *bufptr++ = (ipp_uchar_t)(ipp->request.request_id >> 8);
+	  *bufptr++ = (ipp_uchar_t)ipp->request.request_id;
 
 	  DEBUG_printf("2ippWriteIO: version=%d.%d", buffer[0], buffer[1]);
-	  DEBUG_printf("2ippWriteIO: op_status=%04x", ipp->request.any.op_status);
-	  DEBUG_printf("2ippWriteIO: request_id=%d", ipp->request.any.request_id);
+	  DEBUG_printf("2ippWriteIO: op_status=%04x", ipp->request.op_status);
+	  DEBUG_printf("2ippWriteIO: request_id=%d", ipp->request.request_id);
 
           if ((*cb)(dst, buffer, (size_t)(bufptr - buffer)) < 0)
 	  {
@@ -5305,14 +5305,14 @@ ipp_read_io(void        *src,		// I - Data source
 	  }
 
           // Then copy the request header over...
-          ipp->request.any.version[0]  = buffer[0];
-          ipp->request.any.version[1]  = buffer[1];
-          ipp->request.any.op_status   = (buffer[2] << 8) | buffer[3];
-          ipp->request.any.request_id  = (buffer[4] << 24) | (buffer[5] << 16) | (buffer[6] << 8) | buffer[7];
+          ipp->request.version[0]  = buffer[0];
+          ipp->request.version[1]  = buffer[1];
+          ipp->request.op_status   = (buffer[2] << 8) | buffer[3];
+          ipp->request.request_id  = (buffer[4] << 24) | (buffer[5] << 16) | (buffer[6] << 8) | buffer[7];
 
           DEBUG_printf("2ipp_read_io: version=%d.%d", buffer[0], buffer[1]);
-	  DEBUG_printf("2ipp_read_io: op_status=%04x", ipp->request.any.op_status);
-	  DEBUG_printf("2ipp_read_io: request_id=%d", ipp->request.any.request_id);
+	  DEBUG_printf("2ipp_read_io: op_status=%04x", ipp->request.op_status);
+	  DEBUG_printf("2ipp_read_io: request_id=%d", ipp->request.request_id);
         }
 
         ipp->state   = IPP_STATE_ATTRIBUTE;

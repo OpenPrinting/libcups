@@ -4,6 +4,8 @@ Changes in libcups
 v3.0.1 - YYYY-MM-DD
 -------------------
 
+- Updated the internal implementation of `ipp_t` to avoid issues on some
+  embedded platforms (Issue #141)
 - Fixed a bug when then `ippFindXxx` and `ippSetXxx` functions were mixed
   (Issue #138)
 

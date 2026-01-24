@@ -1,7 +1,7 @@
 //
 // IPP unit test program for libcups.
 //
-// Copyright © 2021-2025 by OpenPrinting.
+// Copyright © 2021-2026 by OpenPrinting.
 // Copyright © 2007-2019 by Apple Inc.
 // Copyright © 1997-2005 by Easy Software Products.
 //
@@ -327,10 +327,10 @@ main(int  argc,				// I - Number of command-line arguments
     testBegin("Create Sample Request");
 
     request = ippNew();
-    request->request.op.version[0]   = 0x01;
-    request->request.op.version[1]   = 0x01;
-    request->request.op.operation_id = IPP_OP_PRINT_JOB;
-    request->request.op.request_id   = 1;
+    request->request.version[0] = 0x01;
+    request->request.version[1] = 0x01;
+    request->request.op_status  = IPP_OP_PRINT_JOB;
+    request->request.request_id = 1;
 
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_CHARSET, "attributes-charset", NULL, "utf-8");
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_LANGUAGE, "attributes-natural-language", NULL, "en");
