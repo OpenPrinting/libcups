@@ -2429,7 +2429,7 @@ ippNewRequest(ipp_op_t op)		// I - Operation code
   // Set the operation and request ID...
   cupsMutexLock(&request_mutex);
 
-  request->request.op_status  = op;
+  request->request.op_status  = (short)op;
   request->request.request_id = ++request_id;
 
   cupsMutexUnlock(&request_mutex);
@@ -2904,7 +2904,7 @@ ippSetOperation(ipp_t    *ipp,		// I - IPP request message
     return (false);
 
   // Set the operation and return...
-  ipp->request.op_status = op;
+  ipp->request.op_status = (short)op;
 
   return (true);
 }
@@ -3051,7 +3051,7 @@ ippSetStatusCode(ipp_t        *ipp,	// I - IPP response or event message
     return (false);
 
   // Set the status code and return...
-  ipp->request.op_status = status;
+  ipp->request.op_status = (short)status;
 
   return (true);
 }
@@ -5307,7 +5307,7 @@ ipp_read_io(void        *src,		// I - Data source
           // Then copy the request header over...
           ipp->request.version[0]  = buffer[0];
           ipp->request.version[1]  = buffer[1];
-          ipp->request.op_status   = (buffer[2] << 8) | buffer[3];
+          ipp->request.op_status   = (short)((buffer[2] << 8) | buffer[3]);
           ipp->request.request_id  = (buffer[4] << 24) | (buffer[5] << 16) | (buffer[6] << 8) | buffer[7];
 
           DEBUG_printf("2ipp_read_io: version=%d.%d", buffer[0], buffer[1]);

@@ -91,7 +91,7 @@ main(int  argc,			// I - Number of command-line arguments
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD, "job-password-encryption", NULL, "none");
     ippAddString(request, IPP_TAG_JOB, IPP_TAG_KEYWORD, "print-color-mode", NULL, "color");
     ippAddInteger(request, IPP_TAG_JOB, IPP_TAG_ENUM, "print-quality", IPP_QUALITY_HIGH);
-    ippAddResolution(request, IPP_TAG_JOB, "printer-resolution", 1200, 1200, IPP_RES_PER_INCH);
+    ippAddResolution(request, IPP_TAG_JOB, "printer-resolution", IPP_RES_PER_INCH, 1200, 1200);
     ippAddInteger(request, IPP_TAG_JOB, IPP_TAG_INTEGER, "copies", 42);
     ippAddBoolean(request, IPP_TAG_JOB, "some-boolean-option", 1);
     ippAddString(request, IPP_TAG_JOB, IPP_TAG_URISCHEME, "some-uri-scheme", NULL, "mailto");
