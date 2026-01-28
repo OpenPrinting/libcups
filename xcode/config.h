@@ -1,7 +1,7 @@
 //
 // Configuration file for libcups with Xcode.
 //
-// Copyright © 2020-2025 by OpenPrinting
+// Copyright © 2020-2026 by OpenPrinting
 // Copyright © 2007-2019 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products.
 //
@@ -17,7 +17,7 @@
 // Version of software...
 //
 
-#define LIBCUPS_VERSION "3.0.0"
+#define LIBCUPS_VERSION "3.0.1"
 #define LIBCUPS_VERSION_MAJOR 3
 #define LIBCUPS_VERSION_MINOR 0
 

@@ -1,7 +1,7 @@
 dnl
 dnl Configuration script for libcups.
 dnl
-dnl Copyright © 2020-2025 by OpenPrinting
+dnl Copyright © 2020-2026 by OpenPrinting
 dnl Copyright © 2007-2020 by Apple Inc.
 dnl Copyright © 1997-2007 by Easy Software Products, all rights reserved.
 dnl
@@ -13,7 +13,7 @@ dnl We need at least autoconf 2.71...
 AC_PREREQ([2.71])
 
 dnl Package name and version...
-AC_INIT([libcups],[3.0.0],[https://github.com/OpenPrinting/libcups/issues],[cups],[https://openprinting.github.io/cups])
+AC_INIT([libcups],[3.0.1],[https://github.com/OpenPrinting/libcups/issues],[cups],[https://openprinting.github.io/cups])
 AC_CONFIG_HEADERS([config.h])
 
 LIBCUPS_VERSION="AC_PACKAGE_VERSION"

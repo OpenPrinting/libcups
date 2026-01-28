@@ -1,7 +1,7 @@
 //
 // API definitions for CUPS.
 //
-// Copyright © 2021-2024 by OpenPrinting.
+// Copyright © 2021-2026 by OpenPrinting.
 // Copyright © 2007-2020 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products.
 //
@@ -25,10 +25,10 @@ extern "C" {
 // Constants...
 //
 
-#  define CUPS_VERSION			3.0000
+#  define CUPS_VERSION			3.0001
 #  define CUPS_VERSION_MAJOR		3
 #  define CUPS_VERSION_MINOR		0
-#  define CUPS_VERSION_PATCH		0
+#  define CUPS_VERSION_PATCH		1
 
 #  define CUPS_DATE_ANY			(time_t)-1
 #  define CUPS_FORMAT_AUTO		"application/octet-stream"
