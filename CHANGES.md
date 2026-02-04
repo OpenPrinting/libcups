@@ -6,6 +6,8 @@ v3.0.1 - YYYY-MM-DD
 
 - Updated the internal implementation of `ipp_t` to avoid issues on some
   embedded platforms (Issue #141)
+- Updated `httpAddrLookup` to return a numeric address when the resolver
+  returns "localhost" for a non-loopback address.
 - Fixed a bug when the `ippFindXxx` and `ippSetXxx` functions were mixed
   (Issue #138)
 

@@ -1,7 +1,7 @@
 //
 // HTTP address routines for CUPS.
 //
-// Copyright © 2021-2024 by OpenPrinting.
+// Copyright © 2021-2026 by OpenPrinting.
 // Copyright © 2007-2021 by Apple Inc.
 // Copyright © 1997-2006 by Easy Software Products, all rights reserved.
 //
@@ -351,7 +351,7 @@ addr->un.sun_path, strerror(errno));
       // Bind the domain socket...
       if ((status = bind(fd, (struct sockaddr *)addr, (socklen_t)httpAddrGetLength(addr))) < 0)
 	DEBUG_printf("1httpAddrListen: Unable to bind domain socket \"%s\": %s", addr->un.sun_path, strerror(errno));
- 
+
       // Restore the umask and fix permissions...
       umask(mask);
     }
@@ -461,12 +461,12 @@ httpAddrLookup(
   // Fall back on httpAddrGetString if getnameinfo fails...
   int error = getnameinfo(&addr->addr, (socklen_t)httpAddrGetLength(addr), name, (socklen_t)namelen, NULL, 0, 0);
 
-  if (error)
+  if (error || !strcasecmp(name, "localhost"))
   {
     if (error == EAI_FAIL)
       cg->need_res_init = 1;
 
-    return (httpAddrGetString(addr, name, namelen));
+    httpAddrGetString(addr, name, namelen);
   }
 
   DEBUG_printf("2httpAddrLookup: returning \"%s\"...", name);
