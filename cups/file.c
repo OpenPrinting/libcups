@@ -6,7 +6,7 @@
 // our own file functions allows us to provide transparent support of
 // different line endings, gzip'd print files, etc.
 //
-// Copyright © 2021-2025 by OpenPrinting.
+// Copyright © 2021-2026 by OpenPrinting.
 // Copyright © 2007-2019 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products, all rights reserved.
 //
@@ -325,8 +325,7 @@ cupsFileGetConf(cups_file_t *fp,	// I  - CUPS file
 
 
   // Range check input...
-  if (!fp || (fp->mode != 'r' && fp->mode != 's') ||
-      !buf || buflen < 2 || !value)
+  if (!fp || (fp->mode != 'r' && fp->mode != 's') || !buf || buflen < 2 || !value)
   {
     if (value)
       *value = NULL;
@@ -341,31 +340,33 @@ cupsFileGetConf(cups_file_t *fp,	// I  - CUPS file
   {
     (*linenum) ++;
 
-    // Strip any comments...
-    if ((ptr = strchr(buf, '#')) != NULL)
+    // Handle escaped characters and strip any comments...
+    for (ptr = buf; *ptr; ptr ++)
     {
-      if (ptr > buf && ptr[-1] == '\\')
+      if (*ptr == '#')
       {
-        // Unquote the #...
-	_cups_strcpy(ptr - 1, ptr);
+        // Strip comment text...
+        *ptr = '\0';
+        break;
       }
-      else
+      else if (*ptr == '\\' && (ptr[1] == '\\' || ptr[1] == '#' || ptr[1] == 'n' || ptr[1] == 'r'))
       {
-        // Strip the comment and any trailing whitespace...
-	while (ptr > buf)
-	{
-	  if (!_cups_isspace(ptr[-1]))
-	    break;
+	// \\, \#, \n, or \r, remove backslash and update the escaped char as needed...
+	_cups_strcpy(ptr, ptr + 1);
 
-	  ptr --;
-	}
-
-	*ptr = '\0';
+	if (*ptr == 'n')
+	  *ptr = '\n';
+	else if (*ptr == 'r')
+	  *ptr = '\r';
       }
     }
 
     // Strip leading whitespace...
-    for (ptr = buf; _cups_isspace(*ptr); ptr ++);
+    for (ptr = buf; *ptr; ptr ++)
+    {
+      if (!_cups_isspace(*ptr))
+        break;
+    }
 
     if (ptr > buf)
       _cups_strcpy(buf, ptr);
@@ -993,43 +994,72 @@ cupsFilePutChar(cups_file_t *fp,	// I - CUPS file
 //
 // 'cupsFilePutConf()' - Write a configuration line.
 //
-// This function handles any comment escaping of the value.
+// This function handles any escaping of the value.
 //
 
 bool					// O - `true` on success, `false` on error
 cupsFilePutConf(cups_file_t *fp,	// I - CUPS file
-                const char *directive,	// I - Directive
-		const char *value)	// I - Value
+                const char  *directive,	// I - Directive
+		const char  *value)	// I - Value
 {
-  const char	*ptr;			// Pointer into value
-
-
   if (!fp || !directive || !*directive)
     return (false);
 
   if (!cupsFilePuts(fp, directive))
     return (false);
 
-  if (!cupsFilePutChar(fp, ' '))
-    return (false);
-
   if (value && *value)
   {
-    if ((ptr = strchr(value, '#')) != NULL)
-    {
-      // Need to quote the first # in the info string...
-      if (!cupsFileWrite(fp, value, (size_t)(ptr - value)))
-        return (false);
+    const char	*start,			// Start of current fragment
+		*ptr;			// Pointer into value
 
-      if (!cupsFilePutChar(fp, '\\'))
-        return (false);
-
-      if (!cupsFilePuts(fp, ptr))
-        return (false);
-    }
-    else if (!cupsFilePuts(fp, value))
-    {
+    if (!cupsFilePutChar(fp, ' '))
       return (false);
+
+    for (start = ptr = value; *ptr; ptr ++)
+    {
+      if (strchr("#\\\n\r", *ptr) != NULL)
+      {
+        // Character that needs to be escaped...
+        if (ptr > start)
+        {
+          // Write unescaped portion...
+	  if (!cupsFileWrite(fp, start, (size_t)(ptr - start)))
+	    return (false);
+        }
+
+        start = ptr + 1;
+
+        if (*ptr == '\\')
+        {
+          // "\" (for escaping)
+          if (!cupsFilePuts(fp, "\\\\"))
+            return (false);
+        }
+        else if (*ptr == '#')
+        {
+          // "#" (for comment)
+          if (!cupsFilePuts(fp, "\\#"))
+            return (false);
+        }
+        else if (*ptr == '\n')
+        {
+          // LF
+          if (!cupsFilePuts(fp, "\\n"))
+            return (false);
+        }
+        else if (!cupsFilePuts(fp, "\\r"))
+        {
+	  return (false);
+	}
+      }
+    }
+
+    if (ptr > start)
+    {
+      // Write remaining unescaped portion...
+      if (!cupsFileWrite(fp, start, (size_t)(ptr - start)))
+	return (false);
     }
   }
 
