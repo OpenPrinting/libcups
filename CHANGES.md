@@ -9,6 +9,7 @@ v3.0.1 - YYYY-MM-DD
 - Updated `httpAddrLookup` to return a numeric address when the resolver
   returns "localhost" for a non-loopback address.
 - Updated `cupsFileGetConf` and `cupsFilePutConf` to escape more characters.
+- Updated `cupsRasterReadHeader` to validate more of the page header values.
 - Fixed a bug when the `ippFindXxx` and `ippSetXxx` functions were mixed
   (Issue #138)
 
