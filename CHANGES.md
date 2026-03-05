@@ -12,6 +12,7 @@ v3.0.1 - YYYY-MM-DD
 - Updated `cupsRasterReadHeader` to validate more of the page header values.
 - Fixed a bug when the `ippFindXxx` and `ippSetXxx` functions were mixed
   (Issue #138)
+- Fixed error handling in the low-level TLS read/write functions.
 
 
 v3.0.0 - 2026-01-08

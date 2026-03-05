@@ -1291,7 +1291,7 @@
 		273BF6C61333B5370022CAAB /* testcups.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = testcups.c; path = ../cups/testcups.c; sourceTree = "<group>"; };
 		274265BC2C08EC5200510CD4 /* oauth.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = oauth.c; path = ../cups/oauth.c; sourceTree = "<group>"; };
 		274265BD2C08EC5200510CD4 /* oauth.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = oauth.h; path = ../cups/oauth.h; sourceTree = "<group>"; };
-		274561471F545B2E000378E4 /* cupspm.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = cupspm.md; path = ../cups/cupspm.md; sourceTree = "<group>"; };
+		274561471F545B2E000378E4 /* cupspm3.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = cupspm3.md; path = ../cups/cupspm3.md; sourceTree = "<group>"; };
 		2746EBD429DCD74E006A82B1 /* testhash */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = testhash; sourceTree = BUILT_PRODUCTS_DIR; };
 		2746EBD729DCD79A006A82B1 /* testhash.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = testhash.c; path = ../cups/testhash.c; sourceTree = "<group>"; };
 		274770E02345342B0089BC31 /* testthreads */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = testthreads; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -2182,7 +2182,7 @@
 			children = (
 				72E65BDE18DCA35700097E89 /* CHANGES.md */,
 				72E65BDF18DCA35700097E89 /* CREDITS.md */,
-				274561471F545B2E000378E4 /* cupspm.md */,
+				274561471F545B2E000378E4 /* cupspm3.md */,
 				72E65BB918DC7A3600097E89 /* doc */,
 				72E65BE018DCA35700097E89 /* INSTALL.md */,
 				72E65BE218DCA35700097E89 /* LICENSE */,
