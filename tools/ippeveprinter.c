@@ -17,6 +17,7 @@
 //
 
 #include <cups/cups-private.h>
+#include <cups/form.h>
 #include <cups/dnssd.h>
 
 #include <limits.h>
@@ -175,6 +176,8 @@ typedef struct ippeve_printer_s		// Printer data
   time_t		config_time;	// printer-config-change-time
   ipp_pstate_t		state;		// printer-state value
   ippeve_preason_t	state_reasons;	// printer-state-reasons values
+  char			state_keywords[8][128];
+					// Extra printer-state-reasons keywords
   time_t		state_time;	// printer-state-change-time
   cups_array_t		*jobs;		// Jobs
   ippeve_job_t		*active_job;	// Current active/pending job
@@ -280,7 +283,7 @@ static void		*process_client(ippeve_client_t *client);
 static int		process_http(ippeve_client_t *client);
 static int		process_ipp(ippeve_client_t *client);
 static void		*process_job(ippeve_job_t *job);
-static void		process_state_message(ippeve_job_t *job, char *message);
+static void		process_state_message(ippeve_printer_t *printer, const char *message);
 static bool		register_printer(ippeve_printer_t *printer);
 static bool		respond_http(ippeve_client_t *client, http_status_t code, const char *content_coding, const char *type, size_t length);
 static void		respond_ignored(ippeve_client_t *client, ipp_attribute_t *attr);
@@ -3498,29 +3501,36 @@ ipp_get_printer_attributes(
 
   if (!ra || cupsArrayFind(ra, "printer-state-reasons"))
   {
-    if (printer->state_reasons == IPPEVE_PREASON_NONE)
-    {
-      ippAddString(client->response, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "printer-state-reasons", NULL, "none");
-    }
-    else
-    {
-      ipp_attribute_t	*attr = NULL;		// printer-state-reasons
-      ippeve_preason_t	bit;			// Reason bit
-      int		i;			// Looping var
-      char		reason[32];		// Reason string
+    ipp_attribute_t	*attr = NULL;		// printer-state-reasons
+    ippeve_preason_t	bit;			// Reason bit
+    int			i;			// Looping var
+    char		reason[128];		// Reason string
 
-      for (i = 0, bit = 1; i < (int)(sizeof(ippeve_preason_strings) / sizeof(ippeve_preason_strings[0])); i ++, bit *= 2)
+    for (i = 0, bit = 1; i < (int)(sizeof(ippeve_preason_strings) / sizeof(ippeve_preason_strings[0])); i ++, bit *= 2)
+    {
+      if (printer->state_reasons & bit)
       {
-        if (printer->state_reasons & bit)
-	{
-	  snprintf(reason, sizeof(reason), "%s-%s", ippeve_preason_strings[i], printer->state == IPP_PSTATE_IDLE ? "report" : printer->state == IPP_PSTATE_PROCESSING ? "warning" : "error");
-	  if (attr)
-	    ippSetString(client->response, &attr, ippGetCount(attr), reason);
-	  else
-	    attr = ippAddString(client->response, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "printer-state-reasons", NULL, reason);
-	}
+	snprintf(reason, sizeof(reason), "%s-%s", ippeve_preason_strings[i], printer->state == IPP_PSTATE_IDLE ? "report" : printer->state == IPP_PSTATE_PROCESSING ? "warning" : "error");
+	if (attr)
+	  ippSetString(client->response, &attr, ippGetCount(attr), reason);
+	else
+	  attr = ippAddString(client->response, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "printer-state-reasons", NULL, reason);
       }
     }
+    for (i = 0; i < (int)(sizeof(printer->state_keywords) / sizeof(printer->state_keywords[0])); i ++)
+    {
+      if (!printer->state_keywords[i][0])
+        continue;
+
+      snprintf(reason, sizeof(reason), "%s-%s", printer->state_keywords[i], printer->state == IPP_PSTATE_IDLE ? "report" : printer->state == IPP_PSTATE_PROCESSING ? "warning" : "error");
+      if (attr)
+	ippSetString(client->response, &attr, ippGetCount(attr), reason);
+      else
+	attr = ippAddString(client->response, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "printer-state-reasons", NULL, reason);
+    }
+
+    if (!attr)
+      ippAddString(client->response, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "printer-state-reasons", NULL, "none");
   }
 
   if (!ra || cupsArrayFind(ra, "printer-strings-uri"))
@@ -4861,27 +4871,9 @@ static size_t				// O - Number of options
 parse_options(ippeve_client_t *client,	// I - Client
               cups_option_t   **options)// O - Options
 {
-  char		*name,			// Name
-		*value,			// Value
-		*next;			// Next name=value pair
-  size_t	num_options = 0;	// Number of options
-
-
   *options = NULL;
 
-  for (name = client->options; name && *name; name = next)
-  {
-    if ((value = strchr(name, '=')) == NULL)
-      break;
-
-    *value++ = '\0';
-    if ((next = strchr(value, '&')) != NULL)
-      *next++ = '\0';
-
-    num_options = cupsAddOption(name, value, num_options, options);
-  }
-
-  return (num_options);
+  return (cupsFormDecode(client->options, options));
 }
 
 
@@ -5950,7 +5942,7 @@ process_job(ippeve_job_t *job)		// I - Job
 	    else if (!strncmp(line, "STATE:", 6))
 	    {
 	      // Process printer-state-reasons keywords.
-	      process_state_message(job, line);
+	      process_state_message(job->printer, line);
 	    }
 
 	    if (Verbosity >= level)
@@ -6025,22 +6017,25 @@ process_job(ippeve_job_t *job)		// I - Job
 
 static void
 process_state_message(
-    ippeve_job_t *job,			// I - Job
-    char       *message)		// I - Message
+    ippeve_printer_t *printer,		// I - Printer
+    const char       *message)		// I - Message
 {
   int		i;			// Looping var
-  ippeve_preason_t state_reasons,		// printer-state-reasons values
+  ippeve_preason_t state_reasons,	// printer-state-reasons values
 		bit;			// Current reason bit
-  char		*ptr,			// Pointer into message
-		*next;			// Next keyword in message
+  char		keyword[128],		// Current keyword
+		*keyptr;		// Pointer into keyword
   int		remove;			// Non-zero if we are removing keywords
 
 
   // Skip leading "STATE:" and any whitespace...
-  for (message += 6; *message; message ++)
+  if (!strncmp(message, "STATE:", 6))
   {
-    if (*message != ' ' && *message != '\t')
-      break;
+    for (message += 6; *message; message ++)
+    {
+      if (*message != ' ' && *message != '\t')
+	break;
+    }
   }
 
   // Support the following forms of message:
@@ -6056,51 +6051,92 @@ process_state_message(
   if (*message == '-')
   {
     remove        = 1;
-    state_reasons = job->printer->state_reasons;
+    state_reasons = printer->state_reasons;
     message ++;
   }
   else if (*message == '+')
   {
     remove        = 0;
-    state_reasons = job->printer->state_reasons;
+    state_reasons = printer->state_reasons;
     message ++;
   }
   else
   {
     remove        = 0;
     state_reasons = IPPEVE_PREASON_NONE;
+
+    memset(printer->state_keywords, 0, sizeof(printer->state_keywords));
   }
 
   while (*message)
   {
-    if ((next = strchr(message, ',')) != NULL)
-      *next++ = '\0';
+    for (keyptr = keyword; *message && *message != ','; message ++)
+    {
+      if (keyptr < (keyword + sizeof(keyword) - 1))
+        *keyptr++ = *message;
+    }
+    *keyptr = '\0';
 
-    if ((ptr = strstr(message, "-error")) != NULL)
-      *ptr = '\0';
-    else if ((ptr = strstr(message, "-report")) != NULL)
-      *ptr = '\0';
-    else if ((ptr = strstr(message, "-warning")) != NULL)
-      *ptr = '\0';
+    if (*message == ',')
+      message ++;
 
+    if ((keyptr = strstr(keyword, "-error")) != NULL)
+      *keyptr = '\0';
+    else if ((keyptr = strstr(keyword, "-report")) != NULL)
+      *keyptr = '\0';
+    else if ((keyptr = strstr(keyword, "-warning")) != NULL)
+      *keyptr = '\0';
+
+    if (!strcmp(keyword, "none"))
+      continue;
+
+    // Lookup standard keywords...
     for (i = 0, bit = 1; i < (int)(sizeof(ippeve_preason_strings) / sizeof(ippeve_preason_strings[0])); i ++, bit *= 2)
     {
-      if (!strcmp(message, ippeve_preason_strings[i]))
+      if (!strcmp(keyword, ippeve_preason_strings[i]))
       {
-        if (remove)
+	if (remove)
 	  state_reasons &= ~bit;
 	else
 	  state_reasons |= bit;
+
+	break;
       }
     }
 
-    if (next)
-      message = next;
-    else
-      break;
+    if (i >= (int)(sizeof(ippeve_preason_strings) / sizeof(ippeve_preason_strings[0])))
+    {
+      // Look at custom state keywords...
+      for (i = 0; i < (int)(sizeof(printer->state_keywords) / sizeof(printer->state_keywords[0])); i ++)
+      {
+	if (!strcmp(keyword, printer->state_keywords[i]))
+	{
+	  if (remove)
+	  {
+	    // Remove custom keyword...
+	    printer->state_keywords[i][0] = '\0';
+	  }
+
+	  break;
+	}
+      }
+
+      if (i >= (int)(sizeof(printer->state_keywords) / sizeof(printer->state_keywords[0])) && !remove)
+      {
+	for (i = 0; i < (int)(sizeof(printer->state_keywords) / sizeof(printer->state_keywords[0])); i ++)
+	{
+	  if (!printer->state_keywords[i][0])
+	  {
+	    // Add this keyword to the empty slot...
+	    cupsCopyString(printer->state_keywords[i], keyword, sizeof(printer->state_keywords[i]));
+	    break;
+	  }
+	}
+      }
+    }
   }
 
-  job->printer->state_reasons = state_reasons;
+  printer->state_reasons = state_reasons;
 }
 
 
@@ -6884,6 +6920,29 @@ show_status(ippeve_client_t  *client)	// I - Client connection
   };
 
 
+  // Process form data if present...
+  if (printer->web_forms)
+  {
+    size_t		num_options = 0;// Number of form options
+    cups_option_t	*options = NULL;// Form options
+    const char		*reasons;	// Reasons string
+
+    num_options = parse_options(client, &options);
+
+    if ((reasons = cupsGetOption("reasons", num_options, options)) != NULL)
+    {
+      // WARNING: A real printer/server implementation MUST NOT implement
+      // state updates via a GET request - GET requests are supposed to be
+      // idempotent (without side-effects) and we obviously are not
+      // authenticating access here.  This form is provided solely to
+      // enable testing and development!
+
+      process_state_message(printer, reasons);
+    }
+
+    cupsFreeOptions(num_options, options);
+  }
+
   if (!respond_http(client, HTTP_STATUS_OK, NULL, "text/html", 0))
     return (0);
 
@@ -6891,8 +6950,15 @@ show_status(ippeve_client_t  *client)	// I - Client connection
   html_printf(client, "<h1><img style=\"background: %s; border-radius: 10px; float: left; margin-right: 10px; padding: 10px;\" src=\"/icon.png\" width=\"64\" height=\"64\">%s Jobs</h1>\n", state_colors[printer->state - IPP_PSTATE_IDLE], printer->name);
   html_printf(client, "<p>%s, %u job(s).", printer->state == IPP_PSTATE_IDLE ? "Idle" : printer->state == IPP_PSTATE_PROCESSING ? "Printing" : "Stopped", (unsigned)cupsArrayGetCount(printer->jobs));
   for (i = 0, reason = 1; i < (sizeof(reasons) / sizeof(reasons[0])); i ++, reason <<= 1)
+  {
     if (printer->state_reasons & reason)
       html_printf(client, "\n<br>&nbsp;&nbsp;&nbsp;&nbsp;%s", reasons[i]);
+  }
+  for (i = 0; i < (sizeof(printer->state_keywords) / sizeof(printer->state_keywords[0])); i ++)
+  {
+    if (printer->state_keywords[i][0])
+      html_printf(client, "\n<br>&nbsp;&nbsp;&nbsp;&nbsp;%s", printer->state_keywords[i]);
+  }
   html_printf(client, "</p>\n");
 
   if (cupsArrayGetCount(printer->jobs) > 0)

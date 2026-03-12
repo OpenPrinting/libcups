@@ -7,7 +7,7 @@
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH ippeveprinter 1 "CUPS" "2026-01-07" "OpenPrinting"
+.TH ippeveprinter 1 "CUPS" "2026-03-11" "OpenPrinting"
 .SH NAME
 ippeveprinter \- an ipp everywhere printer application for cups
 .SH SYNOPSIS
@@ -96,7 +96,8 @@ The following options are recognized by
 Show program usage.
 .TP 5
 .B \-\-no\-web\-forms
-Disable the web interface forms used to update the media and supply levels.
+Disable the web interface forms used to update the media, state, and supply levels.
+See the "WEB INTERFACE FORMS" section for more information.
 .TP 5
 \fB\-\-pam\-service \fISERVICE\fR
 Set the PAM service name.
@@ -267,6 +268,28 @@ Removes the listed keywords from the printer's "printer-state-reasons" attribute
 .TP 5
 \fBSTATE: +\fIkeyword[,keyword,...]\fR
 Adds the listed keywords to the printer's "printer-state-reasons" attribute.
+.SH WEB INTERFACE FORMS
+.B ippeveprinter
+provides a simple web interface with forms for updating the current media, state, and supply levels of the printer.
+Since these forms offer no security restrictions, they can be disabled using the
+.B \-\-no\-web\-forms
+option.
+HTTP "GET" requests can be used to update printer values programmatically:
+.TP 5
+\fBGET /?reasons=\fIKEYWORD[,...,KEYWORD]\fR
+.TP 5
+\fBGET /?reasons=+\fIKEYWORD[,...,KEYWORD]\fR
+.TP 5
+\fBGET /?reasons=-\fIKEYWORD[,...,KEYWORD]\fR
+Set, add, or remove the specified "printer-state-reasons" keywords.
+.TP 5
+\fBGET /media?sizeN=\fISIZE-NAME\fB&typeN=\fITYPE-NAME\fB&levelN=\fINUM-SHEETS\fR
+Update the media size, type, and number of sheets for source N (starting at 0).
+Multiple sources can be updated in a single request by adding more sets of form values.
+.TP 5
+\fBGET /supplies?supplyN=\fIPERCENT\fR
+Update the current level of supply N (starting at 0).
+Multiple supplies can be updated in a single request by adding more form values.
 .SH EXAMPLES
 Run
 .B ippeveprinter

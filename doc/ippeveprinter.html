@@ -187,7 +187,8 @@ is a simple Internet Printing Protocol (IPP) server conforming to the IPP Everyw
 Show program usage.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>--no-web-forms</strong><br>
-Disable the web interface forms used to update the media and supply levels.
+Disable the web interface forms used to update the media, state, and supply levels.
+See the &quot;WEB INTERFACE FORMS&quot; section for more information.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>--pam-service </strong><em>SERVICE</em><br>
 Set the PAM service name.
@@ -369,6 +370,29 @@ Removes the listed keywords from the printer's &quot;printer-state-reasons&quot;
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>STATE: +</strong><em>keyword[,keyword,...]</em><br>
 Adds the listed keywords to the printer's &quot;printer-state-reasons&quot; attribute.
+</p>
+    <h2 id="ippeveprinter-1.web-interface-forms">Web Interface Forms</h2>
+<p><strong>ippeveprinter</strong>
+provides a simple web interface with forms for updating the current media, state, and supply levels of the printer.
+Since these forms offer no security restrictions, they can be disabled using the
+<strong>--no-web-forms</strong>
+option.
+HTTP &quot;GET&quot; requests can be used to update printer values programmatically:
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>GET /?reasons=</strong><em>KEYWORD[,...,KEYWORD]</em><br>
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>GET /?reasons=+</strong><em>KEYWORD[,...,KEYWORD]</em><br>
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>GET /?reasons=-</strong><em>KEYWORD[,...,KEYWORD]</em><br>
+Set, add, or remove the specified &quot;printer-state-reasons&quot; keywords.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>GET /media?sizeN=</strong><em>SIZE-NAME</em><strong>&amp;typeN=</strong><em>TYPE-NAME</em><strong>&amp;levelN=</strong><em>NUM-SHEETS</em><br>
+Update the media size, type, and number of sheets for source N (starting at 0).
+Multiple sources can be updated in a single request by adding more sets of form values.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>GET /supplies?supplyN=</strong><em>PERCENT</em><br>
+Update the current level of supply N (starting at 0).
+Multiple supplies can be updated in a single request by adding more form values.
 </p>
     <h2 id="ippeveprinter-1.examples">Examples</h2>
 <p>Run
