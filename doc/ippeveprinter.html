@@ -381,10 +381,10 @@ HTTP &quot;GET&quot; requests can be used to update printer values programmatica
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>GET /?reasons=</strong><em>KEYWORD[,...,KEYWORD]</em><br>
 </p>
-    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>GET /?reasons=+</strong><em>KEYWORD[,...,KEYWORD]</em><br>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>GET /?reasons=~</strong><em>KEYWORD[,...,KEYWORD]</em><br>
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>GET /?reasons=-</strong><em>KEYWORD[,...,KEYWORD]</em><br>
-Set, add, or remove the specified &quot;printer-state-reasons&quot; keywords.
+Set, add (~), or remove (-) the specified &quot;printer-state-reasons&quot; keywords.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>GET /media?sizeN=</strong><em>SIZE-NAME</em><strong>&amp;typeN=</strong><em>TYPE-NAME</em><strong>&amp;levelN=</strong><em>NUM-SHEETS</em><br>
 Update the media size, type, and number of sheets for source N (starting at 0).

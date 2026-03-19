@@ -7,7 +7,7 @@
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH ippeveprinter 1 "CUPS" "2026-03-11" "OpenPrinting"
+.TH ippeveprinter 1 "CUPS" "2026-03-18" "OpenPrinting"
 .SH NAME
 ippeveprinter \- an ipp everywhere printer application for cups
 .SH SYNOPSIS
@@ -278,10 +278,10 @@ HTTP "GET" requests can be used to update printer values programmatically:
 .TP 5
 \fBGET /?reasons=\fIKEYWORD[,...,KEYWORD]\fR
 .TP 5
-\fBGET /?reasons=+\fIKEYWORD[,...,KEYWORD]\fR
+\fBGET /?reasons=~\fIKEYWORD[,...,KEYWORD]\fR
 .TP 5
-\fBGET /?reasons=-\fIKEYWORD[,...,KEYWORD]\fR
-Set, add, or remove the specified "printer-state-reasons" keywords.
+\fBGET /?reasons=\-\fIKEYWORD[,...,KEYWORD]\fR
+Set, add (~), or remove (\-) the specified "printer-state-reasons" keywords.
 .TP 5
 \fBGET /media?sizeN=\fISIZE-NAME\fB&typeN=\fITYPE-NAME\fB&levelN=\fINUM-SHEETS\fR
 Update the media size, type, and number of sheets for source N (starting at 0).

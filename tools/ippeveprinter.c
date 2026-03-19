@@ -6044,7 +6044,7 @@ process_state_message(
   //
   // "-keyword[,keyword,...]" to remove keywords.
   //
-  // "+keyword[,keyword,...]" to add keywords.
+  // "+keyword[,keyword,...]" or "~keyword[,keyword,...]" to add keywords.
   //
   // Keywords may or may not have a suffix (-report, -warning, -error) per
   // RFC 8011.
@@ -6054,7 +6054,7 @@ process_state_message(
     state_reasons = printer->state_reasons;
     message ++;
   }
-  else if (*message == '+')
+  else if (*message == '+' || *message == '~')
   {
     remove        = 0;
     state_reasons = printer->state_reasons;
