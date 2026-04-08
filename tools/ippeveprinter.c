@@ -6925,11 +6925,11 @@ show_status(ippeve_client_t  *client)	// I - Client connection
   {
     size_t		num_options = 0;// Number of form options
     cups_option_t	*options = NULL;// Form options
-    const char		*reasons;	// Reasons string
+    const char		*oreasons;	// Reasons string
 
     num_options = parse_options(client, &options);
 
-    if ((reasons = cupsGetOption("reasons", num_options, options)) != NULL)
+    if ((oreasons = cupsGetOption("reasons", num_options, options)) != NULL)
     {
       // WARNING: A real printer/server implementation MUST NOT implement
       // state updates via a GET request - GET requests are supposed to be
@@ -6937,7 +6937,7 @@ show_status(ippeve_client_t  *client)	// I - Client connection
       // authenticating access here.  This form is provided solely to
       // enable testing and development!
 
-      process_state_message(printer, reasons);
+      process_state_message(printer, oreasons);
     }
 
     cupsFreeOptions(num_options, options);
