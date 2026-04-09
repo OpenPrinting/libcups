@@ -913,7 +913,7 @@ test_date(time_t t)			// I - Time in seconds since Jan 1, 1970
   time_t	timeval;		// Time value
 
 
-  testBegin("httpGetDateString(%ld)", (long)t);
+  testBegin("httpGetDateString(%lu)", (unsigned long)t);
   if (httpGetDateString(t, dateval, sizeof(dateval)))
   {
     testEndMessage(true, dateval);
@@ -925,14 +925,14 @@ test_date(time_t t)			// I - Time in seconds since Jan 1, 1970
   }
 
   testBegin("httpGetDateTime(\"%s\")", dateval);
-  if ((timeval = httpGetDateTime(dateval)) == t)
+  if ((unsigned long)(timeval = httpGetDateTime(dateval)) == (unsigned long)t)
   {
     testEnd(true);
     return (true);
   }
   else
   {
-    testEndMessage(false, "got %ld, expected %ld", timeval, t);
+    testEndMessage(false, "got %lu, expected %lu", (unsigned long)timeval, (unsigned long)t);
     return (false);
   }
 }
