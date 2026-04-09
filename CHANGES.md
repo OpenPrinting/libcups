@@ -1,7 +1,7 @@
 Changes in libcups
 ==================
 
-v3.0.1 - YYYY-MM-DD
+v3.0.1 - 2026-04-09
 -------------------
 
 - Updated the internal implementation of `ipp_t` to avoid issues on some
