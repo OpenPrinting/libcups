@@ -8,6 +8,7 @@ v3.0.2 - YYYY-MM-DD
   generated test page content from 1 to 9600dpi.
 - Fixed a recursion issue with encoding of nested collections.
 - Fixed a potential margin issue when generating A4 PCL from `ipptransform`.
+- Fixed exporting of JSON with very large numbers.
 
 
 v3.0.1 - 2026-04-09
