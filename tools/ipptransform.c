@@ -2320,7 +2320,7 @@ pcl_start_page(xform_raster_t   *ras,	// I - Raster information
   ras->top    = ras->header.HWResolution[1] / 6;
   ras->bottom = ras->header.cupsHeight - ras->header.HWResolution[1] / 6;
 
-  if (ras->header.PageSize[1] == 841 || ras->header.PageSize[1] == 842)
+  if ((ras->header.PageSize[1] == 841 || ras->header.PageSize[1] == 842) && ras->header.cupsWidth >= (8 * ras->header.HWResolution[0]))
   {
     // A4 gets special side margins to expose an 8" print area
     ras->left  = (ras->header.cupsWidth - 8 * ras->header.HWResolution[0]) / 2;
