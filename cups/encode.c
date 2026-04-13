@@ -1,7 +1,7 @@
 //
 // Option encoding routines for CUPS.
 //
-// Copyright © 2021-2025 by OpenPrinting.
+// Copyright © 2021-2026 by OpenPrinting.
 // Copyright © 2007-2019 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products.
 //
@@ -278,6 +278,7 @@ static const _ipp_option_t ipp_options[] =
 //
 
 static int	compare_ipp_options(_ipp_option_t *a, _ipp_option_t *b);
+static void	encode_options(ipp_t *ipp, size_t num_options, cups_option_t *options, ipp_tag_t group_tag, int depth);
 
 
 //
@@ -290,7 +291,8 @@ _cupsEncodeOption(
     ipp_tag_t     group_tag,		// I - Group tag
     _ipp_option_t *map,			// I - Option mapping, if any
     const char    *name,		// I - Attribute name
-    const char    *value)		// I - Value
+    const char    *value,		// I - Value
+    int           depth)		// I - Depth of values
 {
   size_t		i,		// Looping var
 			count;		// Number of values
@@ -498,6 +500,16 @@ _cupsEncodeOption(
 
       case IPP_TAG_BEGIN_COLLECTION :
 	  // Collection value
+	  if (depth >= _CUPS_MAX_OPTION_DEPTH)
+	  {
+	    // Don't allow "infinite" recursion of collection values...
+	    if (copy)
+	      free(copy);
+
+	    ippDeleteAttribute(ipp, attr);
+	    return (NULL);
+	  }
+
 	  num_cols = cupsParseOptions(val, /*end*/NULL, 0, &cols);
 	  if ((collection = ippNew()) == NULL)
 	  {
@@ -510,8 +522,9 @@ _cupsEncodeOption(
 	  }
 
 	  ippSetCollection(ipp, &attr, i, collection);
-	  cupsEncodeOptions(collection, num_cols, cols, IPP_TAG_JOB);
+	  encode_options(collection, num_cols, cols, IPP_TAG_JOB, depth + 1);
 	  cupsFreeOptions(num_cols, cols);
+	  ippDelete(collection);
 	  break;
 
       default :
@@ -538,7 +551,7 @@ cupsEncodeOption(ipp_t      *ipp,	// I - IPP request/response
                  const char *name,	// I - Option name
                  const char *value)	// I - Option string value
 {
-  return (_cupsEncodeOption(ipp, group_tag, _ippFindOption(name), name, value));
+  return (_cupsEncodeOption(ipp, group_tag, _ippFindOption(name), name, value, /*depth*/0));
 }
 
 
@@ -556,11 +569,8 @@ cupsEncodeOptions(
     cups_option_t *options,		// I - Options
     ipp_tag_t     group_tag)		// I - Group to encode
 {
-  size_t			i;		// Looping var
   char			*val;		// Pointer to option value
-  cups_option_t		*option;	// Current option
   ipp_op_t		op;		// Operation for this request
-  const ipp_op_t	*ops;		// List of allowed operations
 
 
   DEBUG_printf("cupsEncodeOptions(ipp=%p(%s), num_options=%u, options=%p, group_tag=%x)", (void *)ipp, ipp ? ippOpString(ippGetOperation(ipp)) : "", (unsigned)num_options, (void *)options, group_tag);
@@ -583,92 +593,8 @@ cupsEncodeOptions(
       ippAddString(ipp, IPP_TAG_OPERATION, IPP_TAG_MIMETYPE, "document-format", NULL, "application/octet-stream");
   }
 
-  // Then loop through the options...
-  for (i = num_options, option = options; i > 0; i --, option ++)
-  {
-    _ipp_option_t	*match;		// Matching attribute
-
-    // Skip document format options that are handled above...
-    if (!_cups_strcasecmp(option->name, "raw") || !_cups_strcasecmp(option->name, "document-format") || !option->name[0])
-      continue;
-
-    // Figure out the proper value and group tags for this option...
-    if ((match = _ippFindOption(option->name)) != NULL)
-    {
-      if (match->group_tag != group_tag && match->alt_group_tag != group_tag)
-        continue;
-
-      if (match->operations)
-      {
-        ops = match->operations;
-      }
-      else if (group_tag == IPP_TAG_JOB)
-      {
-        ops = ipp_job_creation;
-      }
-      else if (group_tag == IPP_TAG_DOCUMENT)
-      {
-        ops = ipp_doc_creation;
-      }
-      else if (group_tag == IPP_TAG_SUBSCRIPTION)
-      {
-        ops = ipp_sub_creation;
-      }
-      else if (group_tag == IPP_TAG_PRINTER)
-      {
-        ops = ipp_set_printer;
-      }
-      else
-      {
-	DEBUG_printf("2cupsEncodeOptions: Skipping \"%s\".", option->name);
-        continue;
-      }
-    }
-    else
-    {
-      int	namelen;		// Length of name
-
-      namelen = (int)strlen(option->name);
-
-      if (namelen < 10 || (strcmp(option->name + namelen - 8, "-default") && strcmp(option->name + namelen - 10, "-supported")))
-      {
-	if (group_tag != IPP_TAG_JOB && group_tag != IPP_TAG_DOCUMENT)
-	{
-	  DEBUG_printf("2cupsEncodeOptions: Skipping \"%s\".", option->name);
-          continue;
-        }
-      }
-      else if (group_tag != IPP_TAG_PRINTER)
-      {
-	DEBUG_printf("2cupsEncodeOptions: Skipping \"%s\".", option->name);
-        continue;
-      }
-
-      if (group_tag == IPP_TAG_JOB)
-        ops = ipp_job_creation;
-      else if (group_tag == IPP_TAG_DOCUMENT)
-        ops = ipp_doc_creation;
-      else
-        ops = ipp_set_printer;
-    }
-
-    // Verify that we send this attribute for this operation...
-    while (*ops != IPP_OP_CUPS_NONE)
-    {
-      if (op == *ops)
-        break;
-      else
-        ops ++;
-    }
-
-    if (*ops == IPP_OP_CUPS_NONE && op != IPP_OP_CUPS_NONE)
-    {
-      DEBUG_printf("2cupsEncodeOptions: Skipping \"%s\".", option->name);
-      continue;
-    }
-
-    _cupsEncodeOption(ipp, group_tag, match, option->name, option->value);
-  }
+  // Then encode the options...
+  encode_options(ipp, num_options, options, group_tag, /*depth*/0);
 }
 
 
@@ -722,4 +648,104 @@ compare_ipp_options(_ipp_option_t *a,	// I - First option
                     _ipp_option_t *b)	// I - Second option
 {
   return (strcmp(a->name, b->name));
+}
+
+
+/*
+ * 'encode_options()' - Encode options to the specified depth.
+ */
+
+void
+encode_options(
+    ipp_t         *ipp,			/* I - IPP request/response */
+    size_t        num_options,		/* I - Number of options */
+    cups_option_t *options,		/* I - Options */
+    ipp_tag_t     group_tag,		/* I - Group to encode */
+    int           depth)		/* I - Depth of options/collections */
+{
+  size_t		i;		/* Looping var */
+  cups_option_t		*option;	/* Current option */
+  ipp_op_t		op = ippGetOperation(ipp);
+					/* Operation for this request */
+  const ipp_op_t	*ops;		/* List of allowed operations */
+
+
+  DEBUG_printf("4encode_options(ipp=%p(%s), num_options=%u, options=%p, group_tag=%x, depth=%d)", (void *)ipp, ipp ? ippOpString(ippGetOperation(ipp)) : "", (unsigned)num_options, (void *)options, group_tag, depth);
+
+  // Loop through the options...
+  for (i = num_options, option = options; i > 0; i --, option ++)
+  {
+    _ipp_option_t	*match;		/* Matching attribute */
+
+    // Skip document format options that are handled in cupsEncodeOptions2...
+    if (!_cups_strcasecmp(option->name, "raw") || !_cups_strcasecmp(option->name, "document-format") || !option->name[0])
+      continue;
+
+    // Figure out the proper value and group tags for this option...
+    if ((match = _ippFindOption(option->name)) != NULL)
+    {
+      if (match->group_tag != group_tag && match->alt_group_tag != group_tag)
+        continue;
+
+      if (match->operations)
+        ops = match->operations;
+      else if (group_tag == IPP_TAG_JOB)
+        ops = ipp_job_creation;
+      else if (group_tag == IPP_TAG_DOCUMENT)
+        ops = ipp_doc_creation;
+      else if (group_tag == IPP_TAG_SUBSCRIPTION)
+        ops = ipp_sub_creation;
+      else if (group_tag == IPP_TAG_PRINTER)
+        ops = ipp_set_printer;
+      else
+      {
+	DEBUG_printf("5encode_options: Skipping \"%s\".", option->name);
+        continue;
+      }
+    }
+    else
+    {
+      int	namelen;		/* Length of name */
+
+      namelen = (int)strlen(option->name);
+
+      if (namelen < 10 || (strcmp(option->name + namelen - 8, "-default") && strcmp(option->name + namelen - 10, "-supported")))
+      {
+	if (group_tag != IPP_TAG_JOB && group_tag != IPP_TAG_DOCUMENT)
+	{
+	  DEBUG_printf("5encode_options: Skipping \"%s\".", option->name);
+          continue;
+        }
+      }
+      else if (group_tag != IPP_TAG_PRINTER)
+      {
+	DEBUG_printf("5encode_options: Skipping \"%s\".", option->name);
+        continue;
+      }
+
+      if (group_tag == IPP_TAG_JOB)
+        ops = ipp_job_creation;
+      else if (group_tag == IPP_TAG_DOCUMENT)
+        ops = ipp_doc_creation;
+      else
+        ops = ipp_set_printer;
+    }
+
+    // Verify that we send this attribute for this operation...
+    while (*ops != IPP_OP_CUPS_NONE)
+    {
+      if (op == *ops)
+        break;
+      else
+        ops ++;
+    }
+
+    if (*ops == IPP_OP_CUPS_NONE && op != IPP_OP_CUPS_NONE)
+    {
+      DEBUG_printf("5encode_options: Skipping \"%s\".", option->name);
+      continue;
+    }
+
+    _cupsEncodeOption(ipp, group_tag, match, option->name, option->value, depth);
+  }
 }

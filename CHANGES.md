@@ -1,6 +1,12 @@
 Changes in libcups
 ==================
 
+v3.0.2 - YYYY-MM-DD
+-------------------
+
+- Fixed a recursion issue with encoding of nested collections.
+
+
 v3.0.1 - 2026-04-09
 -------------------
 
