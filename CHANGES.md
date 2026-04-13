@@ -4,6 +4,8 @@ Changes in libcups
 v3.0.2 - YYYY-MM-DD
 -------------------
 
+- Updated `ipptool` to limit the range of supported raster resolutions for the
+  generated test page content from 1 to 9600dpi.
 - Fixed a recursion issue with encoding of nested collections.
 
 

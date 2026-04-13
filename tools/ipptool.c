@@ -3294,7 +3294,7 @@ parse_generate_file(
           }
 	}
 
-	if (!params->xdpi || !params->ydpi)
+	if (params->xdpi <= 0 || params->xdpi > 9600 || params->ydpi <= 0 || params->ydpi > 9600)
 	{
 	  print_fatal_error(data, "Printer does not report a supported RESOLUTION on line %d of '%s'.", ippFileGetLineNumber(f), ippFileGetFilename(f));
 	  goto fail;
@@ -3608,7 +3608,7 @@ parse_generate_file(
 	  params->xdpi = params->ydpi = 0;
       }
 
-      if (strcmp(value, "default") && (params->xdpi <= 0 || params->ydpi <= 0))
+      if (strcmp(value, "default") && (params->xdpi <= 0 || params->xdpi > 9600 || params->ydpi <= 0 || params->ydpi > 9600))
       {
 	print_fatal_error(data, "Bad RESOLUTION \"%s\" on line %d of '%s'.", value, ippFileGetLineNumber(f), ippFileGetFilename(f));
 	goto fail;
