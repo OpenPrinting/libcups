@@ -97,7 +97,7 @@ typedef unsigned long useconds_t;
 // Version of software...
 //
 
-#define LIBCUPS_VERSION "3.0.1"
+#define LIBCUPS_VERSION "3.0.2"
 #define LIBCUPS_VERSION_MAJOR 3
 #define LIBCUPS_VERSION_MINOR 0
 

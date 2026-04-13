@@ -25,10 +25,10 @@ extern "C" {
 // Constants...
 //
 
-#  define CUPS_VERSION			3.0001
+#  define CUPS_VERSION			3.0002
 #  define CUPS_VERSION_MAJOR		3
 #  define CUPS_VERSION_MINOR		0
-#  define CUPS_VERSION_PATCH		1
+#  define CUPS_VERSION_PATCH		2
 
 #  define CUPS_DATE_ANY			(time_t)-1
 #  define CUPS_FORMAT_AUTO		"application/octet-stream"
