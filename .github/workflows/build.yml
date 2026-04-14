@@ -36,7 +36,7 @@ jobs:
         CUPS_DEBUG_LEVEL: 4
       run: make test
     - name: Upload Test Results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: ${{ !cancelled() }}
       with:
         name: ubuntu-openssl-test-results
@@ -72,7 +72,7 @@ jobs:
         CUPS_DEBUG_LEVEL: 4
       run: make test
     - name: Upload Test Results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: ${{ !cancelled() }}
       with:
         name: ubuntu-gnutls-test-results
@@ -99,7 +99,7 @@ jobs:
         CUPS_DEBUG_LEVEL: 4
       run: make test
     - name: Upload Test Results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: ${{ !cancelled() }}
       with:
         name: macos-test-results
@@ -117,7 +117,7 @@ jobs:
       with:
         submodules: recursive
     - name: Setup msbuild
-      uses: microsoft/setup-msbuild@v2.0.0
+      uses: microsoft/setup-msbuild@v3.0.0
     - name: Install Prerequisites
       run: cd vcnet; nuget restore libcups.sln; cd ../pdfio; nuget restore
     - name: Build libcups
@@ -125,7 +125,7 @@ jobs:
     - name: Test libcups
       run: cd vcnet; ./run-tests.ps1 x64\Debug
     - name: Upload Test Results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: ${{ !cancelled() }}
       with:
         name: windows-test-results
