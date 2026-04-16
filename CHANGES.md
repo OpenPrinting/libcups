@@ -9,6 +9,8 @@ v3.0.2 - YYYY-MM-DD
 - Fixed a recursion issue with encoding of nested collections.
 - Fixed a potential margin issue when generating A4 PCL from `ipptransform`.
 - Fixed exporting of JSON with very large numbers.
+- Fixed page header validation in `cupsRasterReadHeader` and
+  `cupsRasterWriteHeader` for banded raster data.
 
 
 v3.0.1 - 2026-04-09

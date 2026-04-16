@@ -1557,7 +1557,8 @@ cups_raster_read(cups_raster_t *r,	// I - Raster stream
 static bool				// O - `true` on success, `false` on failure
 cups_raster_update(cups_raster_t *r)	// I - Raster stream
 {
-  bool	ret = true;			// Return value
+  bool		ret = true;		// Return value
+  unsigned	bytesPerLine;		// Expected bytes per line
 
 
   if (r->sync == CUPS_RASTER_SYNCv1 || r->sync == CUPS_RASTER_REVSYNCv1 ||
@@ -1686,6 +1687,10 @@ cups_raster_update(cups_raster_t *r)	// I - Raster stream
     ret = false;
   }
 
+  bytesPerLine = (r->header.cupsWidth * r->header.cupsBitsPerPixel + 7) / 8;
+  if (r->header.cupsColorOrder == CUPS_ORDER_BANDED)
+    bytesPerLine *= r->header.cupsNumColors;
+
   if (r->header.cupsBytesPerLine == 0)
   {
     _cupsRasterAddError("Invalid raster line length 0.");
@@ -1701,7 +1706,7 @@ cups_raster_update(cups_raster_t *r)	// I - Raster stream
     _cupsRasterAddError("Raster line length %u is not a multiple of the pixel size (%d).", r->header.cupsBytesPerLine, r->bpp);
     ret = false;
   }
-  else if (r->header.cupsBytesPerLine != ((r->header.cupsWidth * r->header.cupsBitsPerPixel + 7) / 8))
+  else if (r->header.cupsBytesPerLine != bytesPerLine)
   {
     _cupsRasterAddError("Raster line length %u does not match width (%u) and bits per pixel (%u).", r->header.cupsBytesPerLine, r->header.cupsWidth, r->header.cupsBitsPerPixel);
     ret = false;
