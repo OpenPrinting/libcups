@@ -11,6 +11,7 @@ v3.0.2 - YYYY-MM-DD
 - Fixed exporting of JSON with very large numbers.
 - Fixed page header validation in `cupsRasterReadHeader` and
   `cupsRasterWriteHeader` for banded raster data.
+- Fixed potential crash bug in `cupsCheckDestSupported` function.
 
 
 v3.0.1 - 2026-04-09
