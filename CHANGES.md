@@ -12,6 +12,7 @@ v3.0.2 - YYYY-MM-DD
 - Fixed page header validation in `cupsRasterReadHeader` and
   `cupsRasterWriteHeader` for banded raster data.
 - Fixed potential crash bug in `cupsCheckDestSupported` function.
+- Fixed a duplicate printer bug in `cupsEnumDests` and `cupsGetDests`.
 
 
 v3.0.1 - 2026-04-09
