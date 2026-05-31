@@ -5,6 +5,41 @@ Please see the [Contributing to CUPS](CONTRIBUTING.md) file for information on
 contributing to the CUPS project.
 
 
+Contents
+--------
+
+- [How To Contact The Developers](#how-to-contact-the-developers)
+- [Interfaces](#interfaces)
+- [Build System](#build-system)
+- [Version Numbering](#version-numbering)
+- [Coding Guidelines](#coding-guidelines)
+  - [Using Coding AI Tools](#using-ai-coding-tools)
+  - [Source Files](#source-files)
+  - [Header Files](#header-files)
+  - [Comments](#comments)
+  - [Indentation](#indentation)
+  - [Spacing](#spacing)
+  - [Return Values](#return-values)
+  - [Functions](#functions)
+  - [Variables](#variables)
+  - [Types](#types)
+  - [Structures](#structures)
+  - [Constants](#constants)
+- [Shell Script Guidelines](#shell-script-guidelines)
+- [Makefile Guidelines](#makefile-guidelines)
+  - [General Organization](#general-organization)
+  - [Makefile Documentation](#makefile-documentation)
+  - [Portable Makefile Construction](#portable-makefile-construction)
+  - [Standard Variables](#standard-variables)
+  - [Standard Targets](#standard-targets)
+  - [Object Files](#object-files)
+  - [Programs](#programs)
+  - [Static Libraries](#static-libraries)
+  - [Shared Libraries](#shared-libraries)
+  - [Dependencies](#dependencies)
+  - [Install/Uninstall Support](#installuninstall-support)
+
+
 How To Contact The Developers
 -----------------------------
 
@@ -117,6 +152,21 @@ to the same guidelines as allowed by the language.
 Source code comments provide the reference content of the CUPS Programming
 Manual, which is generated using the [codedoc](https://www.msweet.org/codedoc)
 software.
+
+
+### Using AI Coding Tools
+
+The use of AI coding tools must be disclosed when you submit an issue or pull
+request.  In the interest of standardization, please include the Linux Kernel
+["Assisted-by"](https://docs.kernel.org/process/coding-assistants.html) tag in
+the description:
+
+    Assisted-by: AGENT_NAME:MODEL_VERSION [TOOL1] [TOOL2]
+
+> *Note:* Purely AI-generated code cannot be accepted for legal and ethical
+> reasons.  AI code contributions must be manually reviewed and submitted by
+> a person with the legal capacity to provide such code under the terms of the
+> libcups license.
 
 
 ### Source Files
@@ -399,7 +449,18 @@ typedef enum cups_tray_e  // Tray enumerations
 ```
 
 
-## Makefile Guidelines
+Shell Script Guidelines
+-----------------------
+
+All shell scripts in libcups must conform to the [POSIX shell][POSIX-SHELL]
+command language and should restrict their dependence on non-POSIX utility
+commands.
+
+[POSIX-SHELL]: https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18
+
+
+Makefile Guidelines
+-------------------
 
 The following is a guide to the POSIX makefile-based build system used by CUPS.
 These guidelines have been developed over the years to allow CUPS to be built on
