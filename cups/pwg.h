@@ -11,7 +11,6 @@
 #ifndef _CUPS_PWG_H_
 #  define _CUPS_PWG_H_
 #  include "base.h"
-#  include "ipp.h"
 #  ifdef __cplusplus
 extern "C" {
 #  endif /* __cplusplus */
