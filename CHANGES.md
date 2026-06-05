@@ -1,7 +1,7 @@
 Changes in libcups
 ==================
 
-v3.0.2 - YYYY-MM-DD
+v3.0.2 - 2026-06-05
 -------------------
 
 - Updated `ipptool` to limit the range of supported raster resolutions for the
