@@ -1,7 +1,7 @@
 //
 // API versioning definitions for CUPS.
 //
-// Copyright © 2021-2023 by OpenPrinting.
+// Copyright © 2021-2026 by OpenPrinting.
 // Copyright © 2007-2019 by Apple Inc.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
@@ -154,10 +154,12 @@ typedef int64_t ssize_t;			// @private@
 #    define _CUPS_NORETURN
 #  endif // _CUPS_HAS_NORETURN
 
+
 //
 // Forward declare the ipp_t type that is shared accross headers
 //
 
 typedef struct _ipp_s ipp_t;		// IPP request/response data
+
 
 #endif // !_CUPS_BASE_H_
