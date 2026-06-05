@@ -503,9 +503,7 @@ _cupsEncodeOption(
 	  if (depth >= _CUPS_MAX_OPTION_DEPTH)
 	  {
 	    // Don't allow "infinite" recursion of collection values...
-	    if (copy)
-	      free(copy);
-
+	    free(copy);
 	    ippDeleteAttribute(ipp, attr);
 	    return (NULL);
 	  }
@@ -514,9 +512,7 @@ _cupsEncodeOption(
 	  if ((collection = ippNew()) == NULL)
 	  {
 	    cupsFreeOptions(num_cols, cols);
-
 	    free(copy);
-
 	    ippDeleteAttribute(ipp, attr);
 	    return (NULL);
 	  }
