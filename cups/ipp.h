@@ -493,7 +493,6 @@ typedef enum ipp_tag_e			// Value and group tag values for attributes
 } ipp_tag_t;
 
 typedef unsigned char ipp_uchar_t;	// Unsigned 8-bit integer/character
-typedef struct _ipp_s ipp_t;		// IPP request/response data
 typedef struct _ipp_attribute_s ipp_attribute_t;
 					// IPP attribute
 

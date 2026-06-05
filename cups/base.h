@@ -153,4 +153,11 @@ typedef int64_t ssize_t;			// @private@
 #  else
 #    define _CUPS_NORETURN
 #  endif // _CUPS_HAS_NORETURN
+
+//
+// Forward declare the ipp_t type that is shared accross headers
+//
+
+typedef struct _ipp_s ipp_t;		// IPP request/response data
+
 #endif // !_CUPS_BASE_H_
