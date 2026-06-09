@@ -4,6 +4,7 @@ Changes in libcups
 v3.0.3 - YYYY-MM-DD
 -------------------
 
+- Now run `ldconfig` on Linux after installing the shared library (Issue #148)
 - Fixed a potential buffer overflow in `cupsFormEncode`.
 
 

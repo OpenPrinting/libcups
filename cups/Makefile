@@ -1,7 +1,7 @@
 #
 # Library Makefile for libcups.
 #
-# Copyright © 2021-2025 by OpenPrinting.
+# Copyright © 2021-2026 by OpenPrinting.
 #
 # Licensed under Apache License v2.0.  See the file "LICENSE" for more
 # information.
@@ -290,6 +290,7 @@ install:	all $(INSTALL_STATIC)
 	if test $(LIBCUPS) = "libcups.so.3" -o $(LIBCUPS) = "libcups3.so.3"; then \
 		$(RM) $(BUILDROOT)$(libdir)/`basename $(LIBCUPS) .3`; \
 		$(LN) $(LIBCUPS) $(BUILDROOT)$(libdir)/`basename $(LIBCUPS) .3`; \
+		test -x /usr/sbin/ldconfig && /usr/sbin/ldconfig; \
 	fi
 	if test $(LIBCUPS) = "libcups.3.dylib" -o $(LIBCUPS) = "libcups3.3.dylib"; then \
 		$(RM) $(BUILDROOT)$(libdir)/`basename $(LIBCUPS) .3.dylib`.dylib; \
