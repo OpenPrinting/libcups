@@ -298,9 +298,9 @@ encode_string(const char *s,            // I - String to encode
     {
       // Space is encoded as '+'
       if (bufptr < bufend)
-        *bufptr++ = '+';
+	*bufptr++ = '+';
       else
-        bufptr ++;
+	bufptr ++;
     }
     else if (*s == '\n')
     {
@@ -308,27 +308,27 @@ encode_string(const char *s,            // I - String to encode
       if (bufptr < bufend)
 	*bufptr++ = '%';
       else
-        bufptr ++;
+	bufptr ++;
       if (bufptr < bufend)
-        *bufptr++ = '0';
+	*bufptr++ = '0';
       else
-        bufptr ++;
+	bufptr ++;
       if (bufptr < bufend)
-        *bufptr++ = 'D';
+	*bufptr++ = 'D';
       else
-        bufptr ++;
+	bufptr ++;
       if (bufptr < bufend)
-        *bufptr++ = '%';
+	*bufptr++ = '%';
       else
-        bufptr ++;
+	bufptr ++;
       if (bufptr < bufend)
-        *bufptr++ = '0';
+	*bufptr++ = '0';
       else
-        bufptr ++;
+	bufptr ++;
       if (bufptr < bufend)
-        *bufptr++ = 'A';
+	*bufptr++ = 'A';
       else
-        bufptr ++;
+	bufptr ++;
     }
     else if (!isalnum(*s & 255))
     {
@@ -336,15 +336,15 @@ encode_string(const char *s,            // I - String to encode
       if (bufptr < bufend)
 	*bufptr++ = '%';
       else
-        bufptr ++;
+	bufptr ++;
       if (bufptr < bufend)
-        *bufptr++ = hex[(*s >> 4) & 15];
+	*bufptr++ = hex[(*s >> 4) & 15];
       else
-        bufptr ++;
+	bufptr ++;
       if (bufptr < bufend)
-        *bufptr++ = hex[*s & 15];
+	*bufptr++ = hex[*s & 15];
       else
-        bufptr ++;
+	bufptr ++;
     }
     else if (bufptr < bufend)
     {
