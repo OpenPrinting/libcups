@@ -7,6 +7,7 @@ v3.0.3 - YYYY-MM-DD
 - Now run `ldconfig` on Linux after installing the shared library (Issue #148)
 - Fixed a potential buffer overflow in `cupsFormEncode`.
 - Fixed long number string error handling in `cupsJSONImportXxx`.
+- Fixed the example RPM spec file (Issue #150)
 
 
 v3.0.2 - 2026-06-05

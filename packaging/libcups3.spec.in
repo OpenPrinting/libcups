@@ -1,7 +1,7 @@
 #
 # RPM "spec" file for CUPS Library v3.
 #
-# Copyright © 2020-2025 by OpenPrinting
+# Copyright © 2020-2026 by OpenPrinting
 #
 # Licensed under Apache License v2.0.  See the file "LICENSE" for more
 # information.
@@ -12,8 +12,7 @@ Name: libcups3
 Version: @CUPS_VERSION@
 Release: 0
 Epoch: 1
-License: GPL
-Group: System Environment/Daemons
+License: Apache 2.0
 Source: https://github.com/OpenPrinting/libcups/releases/download/v%{version}/libcups-%{version}-source.tar.gz
 Url: https://openprinting.github.io/cups
 Packager: Anonymous <anonymous@example.com>
@@ -27,7 +26,6 @@ BuildRoot: /tmp/%{name}-root
 
 %package devel
 Summary: CUPS Library v3 - development environment
-Group: Development/Libraries
 Requires: %{name} = %{epoch}:%{version}
 
 %description
