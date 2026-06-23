@@ -28,6 +28,7 @@
 //
 
 static void		http_add_field(http_t *http, http_field_t field, const char *value, bool append);
+static void		http_advance_state(http_t *http);
 static void		http_content_coding_finish(http_t *http);
 static void		http_content_coding_start(http_t *http, const char *value);
 static http_t		*http_create(const char *host, int port, http_addrlist_t *addrlist, int family, http_encryption_t encryption, bool blocking, _http_mode_t mode);
@@ -1934,12 +1935,7 @@ httpRead(http_t *http,			// I - HTTP connection
     if (http->coding >= _HTTP_CODING_GUNZIP)
       http_content_coding_finish(http);
 
-    if (http->state == HTTP_STATE_LOCK_RECV || http->state == HTTP_STATE_POST_RECV || http->state == HTTP_STATE_PROPFIND_RECV || http->state == HTTP_STATE_PROPPATCH_RECV)
-      http->state ++;
-    else if (http->state == HTTP_STATE_COPY_SEND || http->state == HTTP_STATE_DELETE_SEND || http->state == HTTP_STATE_GET_SEND || http->state == HTTP_STATE_LOCK_SEND || http->state == HTTP_STATE_MOVE_SEND || http->state == HTTP_STATE_POST_SEND || http->state == HTTP_STATE_PROPFIND_SEND || http->state == HTTP_STATE_PROPPATCH_SEND)
-      http->state = HTTP_STATE_WAITING;
-    else
-      http->state = HTTP_STATE_STATUS;
+    http_advance_state(http);
 
     DEBUG_printf("1httpRead: End of content, set state to %s.", httpStateString(http->state));
   }
@@ -2571,6 +2567,7 @@ _httpUpdate(http_t        *http,	// I - HTTP connection
 	  http->state ++;
 
 	  DEBUG_printf("1_httpUpdate: Set state to %s.", httpStateString(http->state));
+	  break;
 
       case HTTP_STATE_CONNECT :
       case HTTP_STATE_HEAD :
@@ -2590,9 +2587,17 @@ _httpUpdate(http_t        *http,	// I - HTTP connection
 	  break;
     }
 
-    DEBUG_puts("1_httpUpdate: Calling http_content_coding_start.");
-    http_content_coding_start(http,
-                              httpGetField(http, HTTP_FIELD_CONTENT_ENCODING));
+    if (http->data_encoding == HTTP_ENCODING_LENGTH && http->data_remaining == 0)
+    {
+      // POST/PUT/etc. with empty message body...
+      http_advance_state(http);
+    }
+    else
+    {
+      // Non-empty message body...
+      DEBUG_puts("1_httpUpdate: Calling http_content_coding_start.");
+      http_content_coding_start(http, httpGetField(http, HTTP_FIELD_CONTENT_ENCODING));
+    }
 
     *status = http->status;
     return (false);
@@ -2934,13 +2939,7 @@ httpWrite(http_t     *http,		// I - HTTP connection
       http->data_remaining = 0;
     }
 
-    if (http->state == HTTP_STATE_LOCK_RECV || http->state == HTTP_STATE_POST_RECV || http->state == HTTP_STATE_PROPFIND_RECV || http->state == HTTP_STATE_PROPPATCH_RECV)
-      http->state ++;
-    else if (http->state == HTTP_STATE_COPY_SEND || http->state == HTTP_STATE_DELETE_SEND || http->state == HTTP_STATE_GET_SEND || http->state ==  HTTP_STATE_LOCK_SEND || http->state == HTTP_STATE_MOVE_SEND || http->state == HTTP_STATE_POST_SEND || http->state == HTTP_STATE_PROPFIND_SEND || http->state == HTTP_STATE_PROPPATCH_SEND)
-      http->state = HTTP_STATE_WAITING;
-    else
-      http->state = HTTP_STATE_STATUS;
-
+    http_advance_state(http);
     DEBUG_printf("2httpWrite: Changed state to %s.", httpStateString(http->state));
   }
 
@@ -3279,6 +3278,26 @@ http_add_field(http_t       *http,	// I - HTTP connection
     DEBUG_puts("1http_add_field: Calling http_content_coding_start.");
     http_content_coding_start(http, value);
   }
+}
+
+
+//
+// 'http_advance_state()' - Advance to the next HTTP state.
+//
+
+static void
+http_advance_state(http_t *http)	// I - HTTP connection
+{
+  DEBUG_printf("4http_advance_state(http=%p(%s)", http, httpStateString(http->state));
+
+  if (http->state == HTTP_STATE_LOCK_RECV || http->state == HTTP_STATE_POST_RECV || http->state == HTTP_STATE_PROPFIND_RECV || http->state == HTTP_STATE_PROPPATCH_RECV)
+    http->state ++;
+  else if (http->state == HTTP_STATE_COPY_SEND || http->state == HTTP_STATE_DELETE_SEND || http->state == HTTP_STATE_GET_SEND || http->state == HTTP_STATE_LOCK_SEND || http->state == HTTP_STATE_MOVE_SEND || http->state == HTTP_STATE_POST_SEND || http->state == HTTP_STATE_PROPFIND_SEND || http->state == HTTP_STATE_PROPPATCH_SEND)
+    http->state = HTTP_STATE_WAITING;
+  else
+    http->state = HTTP_STATE_STATUS;
+
+  DEBUG_printf("5http_advance_state: Set state to %s.", httpStateString(http->state));
 }
 
 
@@ -4013,7 +4032,7 @@ http_send(http_t       *http,		// I - HTTP connection
     }
   }
 
-  DEBUG_printf("5http_send: expect=%d, mode=%d, state=%d", http->expect, http->mode, http->state);
+  DEBUG_printf("5http_send: expect=%d, mode=%d, state=%s", http->expect, http->mode, httpStateString(http->state));
 
   if (http->expect == HTTP_STATUS_CONTINUE && http->mode == _HTTP_MODE_CLIENT && (http->state == HTTP_STATE_LOCK_RECV || http->state == HTTP_STATE_POST_RECV || http->state == HTTP_STATE_PROPFIND_RECV || http->state == HTTP_STATE_PROPPATCH_RECV || http->state == HTTP_STATE_PUT_RECV))
   {
