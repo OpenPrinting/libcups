@@ -1,7 +1,7 @@
 //
 // Printing utilities for CUPS.
 //
-// Copyright © 2021-2023 by OpenPrinting.
+// Copyright © 2021-2026 by OpenPrinting.
 // Copyright © 2007-2018 by Apple Inc.
 // Copyright © 1997-2006 by Easy Software Products.
 //
@@ -148,6 +148,9 @@ cupsGetJobs(http_t           *http,	// I - Connection to server or `CUPS_HTTP_DE
   char		uri[HTTP_MAX_URI];	// URI for jobs
   static const char * const attrs[] =	// Requested attributes
 		{
+		  "date-time-at-completed",
+		  "date-time-at-creation",
+		  "date-time-at-processing",
 		  "document-format",
 		  "job-id",
 		  "job-k-octets",
@@ -155,10 +158,7 @@ cupsGetJobs(http_t           *http,	// I - Connection to server or `CUPS_HTTP_DE
 		  "job-originating-user-name",
 		  "job-printer-uri",
 		  "job-priority",
-		  "job-state",
-		  "time-at-completed",
-		  "time-at-creation",
-		  "time-at-processing"
+		  "job-state"
 		};
 
 
@@ -266,17 +266,17 @@ cupsGetJobs(http_t           *http,	// I - Connection to server or `CUPS_HTTP_DE
 	{
 	  size = attr->values[0].integer;
         }
-        else if (!strcmp(attr->name, "time-at-completed") && attr->value_tag == IPP_TAG_INTEGER)
+        else if (!strcmp(attr->name, "date-time-at-completed") && attr->value_tag == IPP_TAG_INTEGER)
 	{
-	  completed_time = attr->values[0].integer;
+	  completed_time = ippDateToTime(ippGetDate(attr, 0));
         }
-        else if (!strcmp(attr->name, "time-at-creation") && attr->value_tag == IPP_TAG_INTEGER)
+        else if (!strcmp(attr->name, "date-time-at-creation") && attr->value_tag == IPP_TAG_INTEGER)
 	{
-	  creation_time = attr->values[0].integer;
+	  creation_time = ippDateToTime(ippGetDate(attr, 0));
         }
-        else if (!strcmp(attr->name, "time-at-processing") && attr->value_tag == IPP_TAG_INTEGER)
+        else if (!strcmp(attr->name, "date-time-at-processing") && attr->value_tag == IPP_TAG_INTEGER)
 	{
-	  processing_time = attr->values[0].integer;
+	  processing_time = ippDateToTime(ippGetDate(attr, 0));
         }
         else if (!strcmp(attr->name, "job-printer-uri") && attr->value_tag == IPP_TAG_URI)
 	{
