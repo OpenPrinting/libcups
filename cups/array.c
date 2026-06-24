@@ -58,6 +58,18 @@ struct _cups_array_s			// CUPS array structure
 static bool	cups_array_add(cups_array_t *a, void *e, bool insert);
 static size_t	cups_array_find(cups_array_t *a, void *e, size_t prev, int *rdiff);
 
+static bool	cups_array_multiply(size_t count, size_t size, size_t *bytes);
+
+
+static bool	cups_array_multiply(size_t count, size_t size, size_t *bytes)
+{
+  if (count > SIZE_MAX / size)
+    return (false);
+
+  *bytes = count * size;
+  return (true);
+}
+
 
 //
 // 'cupsArrayAdd()' - Add an element to an array.
@@ -280,8 +292,10 @@ cupsArrayDup(cups_array_t *a)		// I - Array
   if (a->num_elements)
   {
     // Allocate memory for the elements...
-    da->elements = malloc((size_t)a->num_elements * sizeof(void *));
-    if (!da->elements)
+    size_t bytes;
+
+    if (!cups_array_multiply(a->num_elements, sizeof(void *), &bytes) ||
+        (da->elements = malloc(bytes)) == NULL)
     {
       free(da);
       return (NULL);
@@ -304,6 +318,23 @@ cupsArrayDup(cups_array_t *a)		// I - Array
 
     da->num_elements   = a->num_elements;
     da->alloc_elements = a->num_elements;
+  }
+
+  /* Copy hash table if present so duplicated arrays preserve hashed lookups */
+  if (a->hash)
+  {
+    size_t bytes;
+
+    da->hashsize = a->hashsize;
+    if (!cups_array_multiply(da->hashsize, sizeof(size_t), &bytes) ||
+        (da->hash = malloc(bytes)) == NULL)
+    {
+      if (da->elements)
+        free(da->elements);
+      free(da);
+      return (NULL);
+    }
+    memcpy(da->hash, a->hash, bytes);
   }
 
   // Return the new array...
@@ -653,17 +684,18 @@ cupsArrayNew(cups_array_cb_t  f,	// I - Comparison callback function or `NULL` f
 
   if (hsize > 0 && hf)
   {
+    size_t bytes;
+
     a->hashfunc  = hf;
     a->hashsize  = hsize;
-    a->hash      = malloc((size_t)hsize * sizeof(size_t));
-
-    if (!a->hash)
+    if (!cups_array_multiply(hsize, sizeof(size_t), &bytes) ||
+        (a->hash = malloc(bytes)) == NULL)
     {
       free(a);
       return (NULL);
     }
 
-    memset(a->hash, -1, (size_t)hsize * sizeof(size_t));
+    memset(a->hash, -1, bytes);
   }
 
   a->copyfunc = cf;
@@ -863,7 +895,10 @@ cups_array_add(cups_array_t *a,		// I - Array
     else
       count = a->alloc_elements + 1024;
 
-    if ((temp = realloc(a->elements, count * sizeof(void *))) == NULL)
+    size_t bytes;
+
+    if (!cups_array_multiply(count, sizeof(void *), &bytes) ||
+        (temp = realloc(a->elements, bytes)) == NULL)
       return (false);
 
     a->alloc_elements = count;
