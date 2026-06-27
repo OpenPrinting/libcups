@@ -19,6 +19,7 @@
 //
 
 #define _CUPS_MAXSAVE	32		// Maximum number of saves
+#define _CUPS_ARRAY_MAX_ELEM	0x1fffffff	// Maximum number of elements
 
 
 //
@@ -63,7 +64,10 @@ static bool	cups_array_multiply(size_t count, size_t size, size_t *bytes);
 
 static bool	cups_array_multiply(size_t count, size_t size, size_t *bytes)
 {
-  if (count > SIZE_MAX / size)
+  if (count > _CUPS_ARRAY_MAX_ELEM || size > SIZE_MAX / _CUPS_ARRAY_MAX_ELEM)
+    return (false);
+
+  if (count > (SIZE_MAX / size))
     return (false);
 
   *bytes = count * size;
