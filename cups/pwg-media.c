@@ -266,6 +266,14 @@ static pwg_media_t const cups_pwg_media[] =
   _PWG_MEDIA_MM("prc_6_120x320mm", NULL, NULL, 120, 320),
   _PWG_MEDIA_MM("prc_7_160x230mm", NULL, "EnvPRC7", 160, 230),
   // prc_10 is iso_c3_324x458mm.
+  _PWG_MEDIA_MM("prc_d0_764x1064mm", NULL, "PRCD0", 764, 1064),
+  _PWG_MEDIA_MM("prc_d1_532x760mm", NULL, "PRCD1", 532, 760),
+  _PWG_MEDIA_MM("prc_d2_380x528mm", NULL, "PRCD2", 380, 528),
+  _PWG_MEDIA_MM("prc_d3_264x376mm", NULL, "PRCD3", 264, 376),
+  _PWG_MEDIA_MM("prc_d4_188x260mm", NULL, "PRCD4", 188, 260),
+  _PWG_MEDIA_MM("prc_d5_130x184mm", NULL, "PRCD5", 130, 184),
+  _PWG_MEDIA_MM("prc_d6_92x126mm", NULL, "PRCD6", 92, 126),
+  _PWG_MEDIA_MM("prc_zl_120x230mm", NULL, "PRCZL", 120, 230),
 
   // Chinese Standard Sheet Media Inch Sizes
   _PWG_MEDIA_IN("roc_16k_7.75x10.75in", NULL, "roc16k", 7.75, 10.75),
