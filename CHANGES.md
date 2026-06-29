@@ -6,12 +6,12 @@ v3.0.3 - YYYY-MM-DD
 
 - Now run `ldconfig` on Linux after installing the shared library (Issue #148)
 - Now use dateTime variants of Job attributes.
+- Added Chinese media sizes (Issue #1635)
 - Fixed a potential buffer overflow in `cupsFormEncode`.
 - Fixed long number string error handling in `cupsJSONImportXxx`.
 - Fixed HTTP state for POST/PUT with an empty message body (Issue #149)
 - Fixed the example RPM spec file (Issue #150)
 - Fixed potential buffer overflow in `cupsCopyDestConflicts`.
-- Added new PWG media sizes.
 
 
 v3.0.2 - 2026-06-05
