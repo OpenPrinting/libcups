@@ -15,6 +15,8 @@
 #include "dir.h"
 #include "test-internal.h"
 
+#define _CUPS_ARRAY_MAX_ELEM 0x1fffffff
+
 
 //
 // Local functions...
@@ -205,6 +207,35 @@ main(void)
   {
     testEndMessage(false, "returned %p with %d elements, expected pointer with 4 elements", (void *)dup_array, cupsArrayGetCount(dup_array));
     status ++;
+  }
+
+  // cupsArrayDup() limit check
+  testBegin("cupsArrayDup limit");
+  {
+    cups_array_t *limit_array = calloc(1, sizeof(cups_array_t));
+
+    if (!limit_array)
+    {
+      testEndMessage(false, "unable to allocate test array");
+      status ++;
+    }
+    else
+    {
+      limit_array->num_elements = _CUPS_ARRAY_MAX_ELEM + 1;
+      limit_array->elements     = NULL;
+
+      if (cupsArrayDup(limit_array) != NULL)
+      {
+        testEndMessage(false, "accepted an oversized element count");
+        status ++;
+      }
+      else
+      {
+        testEnd(true);
+      }
+
+      free(limit_array);
+    }
   }
 
   // cupsArrayRemove()
