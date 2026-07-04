@@ -4337,11 +4337,11 @@ fi
 esac
 
 
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for pdfio library" >&5
-printf %s "checking for pdfio library... " >&6; }
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for pdfio library v1.2+" >&5
+printf %s "checking for pdfio library v1.2+... " >&6; }
 
 
-if $PKGCONFIG --exists pdfio
+if $PKGCONFIG --exists pdfio --atleast-version=1.2
 then :
 
     # Use installed PDFio library...

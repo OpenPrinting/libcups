@@ -166,8 +166,8 @@ AS_CASE(["$use_pdfrip"], [coregraphics], [
 
 
 dnl PDFio library for ipptransform...
-AC_MSG_CHECKING([for pdfio library])
-AS_IF([$PKGCONFIG --exists pdfio], [
+AC_MSG_CHECKING([for pdfio library v1.2+])
+AS_IF([$PKGCONFIG --exists pdfio --atleast-version=1.2], [
     # Use installed PDFio library...
     AC_MSG_RESULT([yes])
     CPPFLAGS="$CPPFLAGS $($PKGCONFIG --cflags pdfio)"

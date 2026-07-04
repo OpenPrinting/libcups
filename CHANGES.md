@@ -7,6 +7,7 @@ v3.0.3 - YYYY-MM-DD
 - Now run `ldconfig` on Linux after installing the shared library (Issue #148)
 - Now use dateTime variants of Job attributes.
 - Added Chinese media sizes (Issue #152)
+- Updated the configure script to look for PDFio v1.2 or later.
 - Fixed a potential buffer overflow in `cupsFormEncode`.
 - Fixed long number string error handling in `cupsJSONImportXxx`.
 - Fixed HTTP state for POST/PUT with an empty message body (Issue #149)
