@@ -639,6 +639,18 @@ httpFieldValue(const char *name)	// I - String name
   return (HTTP_FIELD_UNKNOWN);
 }
 
+//
+// 'httpFieldName()' - Return the field name for a HTTP field enumeration.
+//
+
+const char *				// O - Field name
+httpFieldName(http_field_t field)	// I - Field index
+{
+  if (field >= HTTP_FIELD_ACCEPT && field < HTTP_FIELD_MAX)
+    return (http_fields[field]);
+  else
+    return (NULL);
+}
 
 //
 // 'httpFlush()' - Flush data read from a HTTP connection.
