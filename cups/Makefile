@@ -290,7 +290,7 @@ install:	all $(INSTALL_STATIC)
 	if test $(LIBCUPS) = "libcups.so.3" -o $(LIBCUPS) = "libcups3.so.3"; then \
 		$(RM) $(BUILDROOT)$(libdir)/`basename $(LIBCUPS) .3`; \
 		$(LN) $(LIBCUPS) $(BUILDROOT)$(libdir)/`basename $(LIBCUPS) .3`; \
-		test x`id -u` = x0 -a -x /usr/sbin/ldconfig && /usr/sbin/ldconfig; \
+		test "x$(BUILDROOT)" != x -a -x /usr/sbin/ldconfig && /usr/sbin/ldconfig; \
 	fi
 	if test $(LIBCUPS) = "libcups.3.dylib" -o $(LIBCUPS) = "libcups3.3.dylib"; then \
 		$(RM) $(BUILDROOT)$(libdir)/`basename $(LIBCUPS) .3.dylib`.dylib; \
