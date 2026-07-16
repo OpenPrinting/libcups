@@ -13,6 +13,7 @@ v3.0.3 - YYYY-MM-DD
 - Fixed long number string error handling in `cupsJSONImportXxx`.
 - Fixed HTTP state for POST/PUT with an empty message body (Issue #149)
 - Fixed the example RPM spec file (Issue #150)
+- Fixed the `ipptool` "get-printer-attributes-suite.test" test file (Issue #154)
 - Fixed potential buffer overflow in `cupsCopyDestConflicts`.
 
 
