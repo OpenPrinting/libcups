@@ -285,17 +285,14 @@ install:	all $(INSTALL_STATIC)
 		$(INSTALL_DATA) $$file $(BUILDROOT)$(includedir)/cups; \
 	done
 	echo "Installing library to $(BUILDROOT)$(libdir)..."
-	echo "$(INSTALL_DIR) $(BUILDROOT)$(libdir)"
 	$(INSTALL_DIR) $(BUILDROOT)$(libdir)
-	echo "$(INSTALL_LIB) $(LIBCUPS) $(BUILDROOT)$(libdir)"
 	$(INSTALL_LIB) $(LIBCUPS) $(BUILDROOT)$(libdir)
 	if test $(LIBCUPS) = "libcups.so.3" -o $(LIBCUPS) = "libcups3.so.3"; then \
-		echo "$(RM) $(BUILDROOT)$(libdir)/`basename $(LIBCUPS) .3`"; \
 		$(RM) $(BUILDROOT)$(libdir)/`basename $(LIBCUPS) .3`; \
-		echo "$(LN) $(LIBCUPS) $(BUILDROOT)$(libdir)/`basename $(LIBCUPS) .3`"; \
 		$(LN) $(LIBCUPS) $(BUILDROOT)$(libdir)/`basename $(LIBCUPS) .3`; \
-		echo "test \"x$(BUILDROOT)\" = x -a -x /usr/sbin/ldconfig && /usr/sbin/ldconfig"; \
-		test "x$(BUILDROOT)" = x -a -x /usr/sbin/ldconfig && /usr/sbin/ldconfig; \
+		if test "x$(BUILDROOT)" = x -a -x /usr/sbin/ldconfig; then \
+			/usr/sbin/ldconfig; \
+		fi; \
 	fi
 	if test $(LIBCUPS) = "libcups.3.dylib" -o $(LIBCUPS) = "libcups3.3.dylib"; then \
 		$(RM) $(BUILDROOT)$(libdir)/`basename $(LIBCUPS) .3.dylib`.dylib; \
