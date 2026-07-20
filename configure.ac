@@ -640,8 +640,8 @@ AC_ARG_WITH([ldflags], AS_HELP_STRING([--with-ldflags=...], [Specify additional 
     AS_CASE(["$host_os_name"], [darwin*], [
 	CFLAGS="$CFLAGS -fPIC -fPIE -Wl,-pie"
 	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[]])],[
-	    OLDCFLAGS="-fPIC $OLDCFLAGS"
 	    LDFLAGS="-fPIE -Wl,-pie $LDFLAGS"
+	    OPTIM="-fPIC $OPTIM"
 	    AC_MSG_RESULT([yes])
 	],[
 	    AC_MSG_RESULT([no])
@@ -649,8 +649,8 @@ AC_ARG_WITH([ldflags], AS_HELP_STRING([--with-ldflags=...], [Specify additional 
     ], [*], [
 	CFLAGS="$CFLAGS -fPIC -fPIE -pie"
 	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[]])],[
-	    OLDCFLAGS="-fPIC $OLDCFLAGS"
 	    LDFLAGS="-fPIE -pie $LDFLAGS"
+	    OPTIM="-fPIC $OPTIM"
 	    AC_MSG_RESULT([yes])
 	],[
 	    AC_MSG_RESULT([no])

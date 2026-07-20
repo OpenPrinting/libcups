@@ -5618,8 +5618,8 @@ _ACEOF
 if ac_fn_c_try_compile "$LINENO"
 then :
 
-	    OLDCFLAGS="-fPIC $OLDCFLAGS"
 	    LDFLAGS="-fPIE -Wl,-pie $LDFLAGS"
+	    OPTIM="-fPIC $OPTIM"
 	    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
 
@@ -5648,8 +5648,8 @@ _ACEOF
 if ac_fn_c_try_compile "$LINENO"
 then :
 
-	    OLDCFLAGS="-fPIC $OLDCFLAGS"
 	    LDFLAGS="-fPIE -pie $LDFLAGS"
+	    OPTIM="-fPIC $OPTIM"
 	    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
 
