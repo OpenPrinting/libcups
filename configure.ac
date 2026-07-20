@@ -597,41 +597,13 @@ AS_IF([test -n "$GCC"], [
 	WARNINGS="$WARNINGS -Werror"
     ])
 
-    dnl See if PIE options are supported...
-    AC_MSG_CHECKING(whether compiler supports -fPIE)
-    OLDCFLAGS="$CFLAGS"
-    AS_CASE(["$host_os_name"],
-    [darwin*], [
-	CFLAGS="$CFLAGS -fPIC -fPIE -Wl,-pie"
-	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[]])],[
-	    OLDCFLAGS="-fPIC $OLDCFLAGS"
-	    LDFLAGS="-fPIE -Wl,-pie $LDFLAGS"
-	    AC_MSG_RESULT([yes])
-	],[
-	    AC_MSG_RESULT([no])
-	])
-    ], [*], [
-	CFLAGS="$CFLAGS -fPIC -fPIE -pie"
-	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[]])],[
-	    OLDCFLAGS="-fPIC $OLDCFLAGS"
-	    LDFLAGS="-fPIE -pie $LDFLAGS"
-	    AC_MSG_RESULT([yes])
-	],[
-	    AC_MSG_RESULT([no])
-	])
-    ])
-    CFLAGS="$OLDCFLAGS"
-
     dnl OS-specific compiler options...
     AC_MSG_CHECKING([for OS-specific compiler options])
     AS_CASE(["$host_os_name"], [linux*], [
     	# Make sure we get the full set of Linux APIs from the headers...
 	CPPFLAGS="$CPPFLAGS -D__USE_MISC -D_GNU_SOURCE"
 
-	# Mark read-only sections as relocatable to random addresses...
-	LDFLAGS="$LDFLAGS -Wl,-z,relro,-z,now"
-
-        AC_MSG_RESULT([-D__USE_MISC -D_GNU_SOURCE -Wl,-z,relro,-z,now])
+        AC_MSG_RESULT([-D__USE_MISC -D_GNU_SOURCE])
     ], [darwin*], [
         # When not building for debug, target macOS 11 or later, "universal"
         # binaries when possible...
@@ -661,6 +633,41 @@ AC_ARG_WITH([dsoflags], AS_HELP_STRING([--with-dsoflags=...], [Specify additiona
 ])
 AC_ARG_WITH([ldflags], AS_HELP_STRING([--with-ldflags=...], [Specify additional LDFLAGS]), [
     LDFLAGS="$withval $LDFLAGS"
+], [
+    dnl See if PIE options are supported...
+    AC_MSG_CHECKING(whether compiler supports -fPIE)
+    OLDCFLAGS="$CFLAGS"
+    AS_CASE(["$host_os_name"], [darwin*], [
+	CFLAGS="$CFLAGS -fPIC -fPIE -Wl,-pie"
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[]])],[
+	    OLDCFLAGS="-fPIC $OLDCFLAGS"
+	    LDFLAGS="-fPIE -Wl,-pie $LDFLAGS"
+	    AC_MSG_RESULT([yes])
+	],[
+	    AC_MSG_RESULT([no])
+	])
+    ], [*], [
+	CFLAGS="$CFLAGS -fPIC -fPIE -pie"
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[]])],[
+	    OLDCFLAGS="-fPIC $OLDCFLAGS"
+	    LDFLAGS="-fPIE -pie $LDFLAGS"
+	    AC_MSG_RESULT([yes])
+	],[
+	    AC_MSG_RESULT([no])
+	])
+    ])
+    CFLAGS="$OLDCFLAGS"
+
+    dnl OS-specific compiler options...
+    AC_MSG_CHECKING([for OS-specific linker options])
+    AS_CASE(["$host_os_name"], [linux*], [
+	# Mark read-only sections as relocatable to random addresses...
+	LDFLAGS="$LDFLAGS -Wl,-z,relro,-z,now"
+
+        AC_MSG_RESULT([-Wl,-z,relro,-z,now])
+    ], [
+        AC_MSG_RESULT([none])
+    ])
 ])
 
 
