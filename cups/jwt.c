@@ -2132,12 +2132,18 @@ make_signature(cups_jwt_t    *jwt,	// I  - JWT
         s_len    = (unsigned)BN_num_bytes(s);
         *sigsize = sig_sizes[alg - CUPS_JWA_ES256];
         sig_len  = *sigsize / 2;
-        ret      = true;
 
-        // 0-pad raw coordinates
-        memset(signature, 0, *sigsize);
-        BN_bn2bin(r, signature + sig_len - r_len);
-        BN_bn2bin(s, signature + *sigsize - s_len);
+        // The key's curve has to match the algorithm - a larger curve gives
+        // coordinates that don't fit and `BN_bn2bin` would write before the
+        // buffer...
+        if (r_len <= sig_len && s_len <= sig_len)
+        {
+          // 0-pad raw coordinates
+          memset(signature, 0, *sigsize);
+          BN_bn2bin(r, signature + sig_len - r_len);
+          BN_bn2bin(s, signature + *sigsize - s_len);
+          ret = true;
+        }
 
         // Free the signature
         ECDSA_SIG_free(ec_sig);
@@ -2161,16 +2167,15 @@ make_signature(cups_jwt_t    *jwt,	// I  - JWT
 	sig_len  = *sigsize / 2;
         gnutls_decode_rs_value(&sig_datum, &r, &s);
 
-        memset(signature, 0, *sigsize);
-	if (r.size < sig_len)
+        // The key's curve has to match the algorithm - a larger curve gives
+        // coordinates that don't fit in the signature...
+	if (r.size <= sig_len && s.size <= sig_len)
+	{
+          memset(signature, 0, *sigsize);
           memcpy(signature + sig_len - r.size, r.data, r.size);
-	else
-          memcpy(signature, r.data + r.size - sig_len, sig_len);
-	if (s.size < sig_len)
           memcpy(signature + *sigsize - s.size, s.data, s.size);
-	else
-          memcpy(signature + sig_len, s.data + s.size - sig_len, sig_len);
-        ret = true;
+          ret = true;
+	}
 
 	gnutls_free(r.data);
 	gnutls_free(s.data);

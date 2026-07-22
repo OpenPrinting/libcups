@@ -15,6 +15,7 @@ v3.0.3 - YYYY-MM-DD
 - Fixed the example RPM spec file (Issue #150)
 - Fixed the `ipptool` "get-printer-attributes-suite.test" test file (Issue #154)
 - Fixed potential buffer overflow in `cupsCopyDestConflicts`.
+- Fixed a buffer overflow in `cupsJWTSign` when the EC key curve did not match the algorithm.
 
 
 v3.0.2 - 2026-06-05

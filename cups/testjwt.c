@@ -257,6 +257,13 @@ main(int  argc,				// I - Number of command-line arguments
     cupsJSONDelete(jwk);
     cupsJSONDelete(pubjwk);
 
+    // Signing with a key whose curve is larger than the algorithm (ES256 wants
+    // P-256, this is P-521) has to fail rather than write past the signature...
+    testBegin("cupsJWTSign(ES256 with mismatched P-521 key)");
+    jwk = cupsJWTMakePrivateKey(CUPS_JWA_ES512);
+    testEnd(!cupsJWTSign(jwt, CUPS_JWA_ES256, jwk));
+    cupsJSONDelete(jwk);
+
     testBegin("cupsJWTDelete()");
     cupsJWTDelete(jwt);
     testEnd(true);
