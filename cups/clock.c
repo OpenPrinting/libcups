@@ -87,7 +87,7 @@ cupsGetClock(void)
     }
 
     // Convert clock value to seconds...
-    if ((secs = curclock.tv_sec - cups_first_clock.tv_sec + 0.000000001 * (curclock.tv_nsec - cups_first_clock.tv_nsec)) < 0.0)
+    if ((secs = (double)(curclock.tv_sec - cups_first_clock.tv_sec) + 0.000000001 * (double)(curclock.tv_nsec - cups_first_clock.tv_nsec)) < 0.0)
       secs = 0.0;
   }
   else
@@ -103,7 +103,7 @@ cupsGetClock(void)
     }
 
     // Convert time value to seconds...
-    if ((secs = curtime.tv_sec - cups_first_time.tv_sec + 0.000001 * (curtime.tv_usec - cups_first_time.tv_usec)) < 0.0)
+    if ((secs = (double)(curtime.tv_sec - cups_first_time.tv_sec) + 0.000001 * (double)(curtime.tv_usec - cups_first_time.tv_usec)) < 0.0)
       secs = 0.0;
   }
 #endif // _WIN32

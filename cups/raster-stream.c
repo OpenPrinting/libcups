@@ -341,8 +341,8 @@ cupsRasterInitHeader(
   h->PageSize[1] = (unsigned)(72 * media->length / 2540);
 
   // This never gets written but is needed for some applications
-  h->cupsPageSize[0] = 72.0f * media->width / 2540.0f;
-  h->cupsPageSize[1] = 72.0f * media->length / 2540.0f;
+  h->cupsPageSize[0] = 72.0f * (float)media->width / 2540.0f;
+  h->cupsPageSize[1] = 72.0f * (float)media->length / 2540.0f;
 
   h->ImagingBoundingBox[0] = (unsigned)(72 * media->left / 2540);
   h->ImagingBoundingBox[1] = (unsigned)(72 * media->bottom / 2540);
@@ -1156,10 +1156,10 @@ cupsRasterWriteHeader(
     fh.cupsInteger[0]        = htonl(r->header.cupsInteger[0]);
     fh.cupsInteger[1]        = htonl(r->header.cupsInteger[1]);
     fh.cupsInteger[2]        = htonl(r->header.cupsInteger[2]);
-    fh.cupsInteger[3]        = htonl((unsigned)(r->header.cupsImagingBBox[0] * r->header.HWResolution[0] / 72.0));
-    fh.cupsInteger[4]        = htonl((unsigned)(r->header.cupsImagingBBox[1] * r->header.HWResolution[1] / 72.0));
-    fh.cupsInteger[5]        = htonl((unsigned)(r->header.cupsImagingBBox[2] * r->header.HWResolution[0] / 72.0));
-    fh.cupsInteger[6]        = htonl((unsigned)(r->header.cupsImagingBBox[3] * r->header.HWResolution[1] / 72.0));
+    fh.cupsInteger[3]        = htonl((unsigned)(r->header.cupsImagingBBox[0] * (float)r->header.HWResolution[0] / 72.0f));
+    fh.cupsInteger[4]        = htonl((unsigned)(r->header.cupsImagingBBox[1] * (float)r->header.HWResolution[1] / 72.0f));
+    fh.cupsInteger[5]        = htonl((unsigned)(r->header.cupsImagingBBox[2] * (float)r->header.HWResolution[0] / 72.0f));
+    fh.cupsInteger[6]        = htonl((unsigned)(r->header.cupsImagingBBox[3] * (float)r->header.HWResolution[1] / 72.0f));
     fh.cupsInteger[7]        = htonl(0xffffff);
 
     return (cups_raster_io(r, (unsigned char *)&fh, sizeof(fh)) == sizeof(fh));
