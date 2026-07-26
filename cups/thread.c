@@ -10,6 +10,7 @@
 
 #include "cups-private.h"
 #include "thread.h"
+#include <math.h>
 
 
 //
