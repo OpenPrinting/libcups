@@ -7,6 +7,7 @@ v3.0.3 - YYYY-MM-DD
 - Now run `ldconfig` on Linux after installing the shared library (Issue #148)
 - Now use dateTime variants of Job attributes.
 - Added Chinese media sizes (Issue #152)
+- Added length checks for JWT signatures (Issue #155)
 - Updated the configure script to look for PDFio v1.2 or later.
 - Fixed a non-blocking IO bug that impacted GNOME.
 - Fixed a potential buffer overflow in `cupsFormEncode`.
@@ -15,6 +16,7 @@ v3.0.3 - YYYY-MM-DD
 - Fixed the example RPM spec file (Issue #150)
 - Fixed the `ipptool` "get-printer-attributes-suite.test" test file (Issue #154)
 - Fixed potential buffer overflow in `cupsCopyDestConflicts`.
+- Fixed X.509 name checks using OpenSSL.
 
 
 v3.0.2 - 2026-06-05
