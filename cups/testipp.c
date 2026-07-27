@@ -705,6 +705,194 @@ main(int  argc,				// I - Number of command-line arguments
       testEnd(true);
     }
 
+    // Attribute validation tests...
+    testBegin("ippValidateAttribute(integer w/invalid name)");
+    attr = ippAddInteger(request, IPP_TAG_OPERATION, IPP_TAG_INTEGER, "bad attr name", 0);
+    if (!attr)
+    {
+      testEndMessage(false, "Unable to create integer attribute");
+      status = 1;
+    }
+    else if (ippValidateAttribute(attr))
+    {
+      testEndMessage(false, "accepted bad name");
+      status = 1;
+    }
+    else
+    {
+      testEnd(true);
+    }
+
+    testBegin("ippValidateAttribute(keyword)");
+    attr = ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD, "keyword-attr-1", /*lang*/NULL, "my-keyword");
+    if (!attr)
+    {
+      testEndMessage(false, "Unable to create keyword attribute");
+      status = 1;
+    }
+    else if (!ippValidateAttribute(attr))
+    {
+      testEndMessage(false, "%s", cupsGetErrorString());
+      status = 1;
+    }
+    else
+    {
+      testEnd(true);
+    }
+
+    testBegin("ippValidateAttribute(keyword w/invalid keyword)");
+    attr = ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD, "keyword-attr-2", /*lang*/NULL, "my keyword");
+    if (!attr)
+    {
+      testEndMessage(false, "Unable to create keyword attribute");
+      status = 1;
+    }
+    else if (ippValidateAttribute(attr))
+    {
+      testEndMessage(false, "accepted bad keyword");
+      status = 1;
+    }
+    else
+    {
+      testEnd(true);
+    }
+
+    testBegin("ippValidateAttribute(mimeMediaType)");
+    attr = ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_MIMETYPE, "mime-attr-1", /*lang*/NULL, "application/octet-stream");
+    if (!attr)
+    {
+      testEndMessage(false, "Unable to create mimeMediaType attribute");
+      status = 1;
+    }
+    else if (!ippValidateAttribute(attr))
+    {
+      testEndMessage(false, "%s", cupsGetErrorString());
+      status = 1;
+    }
+    else
+    {
+      testEnd(true);
+    }
+
+    testBegin("ippValidateAttribute(mimeMediaType w/invalid mimeMediaType)");
+    attr = ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_MIMETYPE, "mime-attr-2", /*lang*/NULL, "my mime type");
+    if (!attr)
+    {
+      testEndMessage(false, "Unable to create mimeMediaType attribute");
+      status = 1;
+    }
+    else if (ippValidateAttribute(attr))
+    {
+      testEndMessage(false, "accepted bad mimeMediaType");
+      status = 1;
+    }
+    else
+    {
+      testEnd(true);
+    }
+
+    testBegin("ippValidateAttribute(nameWithLanguage)");
+    attr = ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAMELANG, "name-attr-1", /*lang*/"en-US", "My Name");
+    if (!attr)
+    {
+      testEndMessage(false, "Unable to create nameWithLanguage attribute");
+      status = 1;
+    }
+    else if (!ippValidateAttribute(attr))
+    {
+      testEndMessage(false, "%s", cupsGetErrorString());
+      status = 1;
+    }
+    else
+    {
+      testEnd(true);
+    }
+
+    testBegin("ippValidateAttribute(nameWithLanguage w/invalid name)");
+    attr = ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAMELANG, "name-attr-2", /*lang*/"en-US", "My Name\nLine 2");
+    if (!attr)
+    {
+      testEndMessage(false, "Unable to create nameWithLanguage attribute");
+      status = 1;
+    }
+    else if (ippValidateAttribute(attr))
+    {
+      testEndMessage(false, "accepted bad name");
+      status = 1;
+    }
+    else
+    {
+      testEnd(true);
+    }
+
+    testBegin("ippValidateAttribute(nameWithLanguage w/invalid naturalLanguage)");
+    attr = ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAMELANG, "name-attr-3", /*lang*/"en\"\n*cupsFilter:", "My Name");
+    if (!attr)
+    {
+      testEndMessage(false, "Unable to create nameWithLanguage attribute");
+      status = 1;
+    }
+    else if (ippValidateAttribute(attr))
+    {
+      testEndMessage(false, "accepted bad naturalLanguage");
+      status = 1;
+    }
+    else
+    {
+      testEnd(true);
+    }
+
+    testBegin("ippValidateAttribute(textWithLanguage)");
+    attr = ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_TEXTLANG, "text-attr-1", /*lang*/"en-US", "My Text\nLine 2");
+    if (!attr)
+    {
+      testEndMessage(false, "Unable to create textWithLanguage attribute");
+      status = 1;
+    }
+    else if (!ippValidateAttribute(attr))
+    {
+      testEndMessage(false, "%s", cupsGetErrorString());
+      status = 1;
+    }
+    else
+    {
+      testEnd(true);
+    }
+
+    testBegin("ippValidateAttribute(textWithLanguage w/invalid text)");
+    attr = ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_TEXTLANG, "text-attr-2", /*lang*/"en-US", "My Text\nLine \002");
+    if (!attr)
+    {
+      testEndMessage(false, "Unable to create textWithLanguage attribute");
+      status = 1;
+    }
+    else if (ippValidateAttribute(attr))
+    {
+      testEndMessage(false, "accepted bad text");
+      status = 1;
+    }
+    else
+    {
+      testEnd(true);
+    }
+
+    testBegin("ippValidateAttribute(textWithLanguage w/invalid naturalLanguage)");
+    attr = ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_TEXTLANG, "text-attr-3", /*lang*/"en\"\n*cupsFilter:", "My Text\nLine 2");
+    if (!attr)
+    {
+      testEndMessage(false, "Unable to create textWithLanguage attribute");
+      status = 1;
+    }
+    else if (ippValidateAttribute(attr))
+    {
+      testEndMessage(false, "accepted bad naturalLanguage");
+      status = 1;
+    }
+    else
+    {
+      testEnd(true);
+    }
+
     ippDelete(request);
 
 #ifdef DEBUG
