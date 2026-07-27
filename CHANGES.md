@@ -8,6 +8,8 @@ v3.0.3 - YYYY-MM-DD
 - Now use dateTime variants of Job attributes.
 - Added Chinese media sizes (Issue #152)
 - Added length checks for JWT signatures (Issue #155)
+- Added language code validation to nameWithLanguage and textWithLanguage
+  values.
 - Updated the configure script to look for PDFio v1.2 or later.
 - Fixed a non-blocking IO bug that impacted GNOME.
 - Fixed a potential buffer overflow in `cupsFormEncode`.
