@@ -1823,10 +1823,23 @@ _httpTLSStart(http_t *http)		// I - Connection to server
           // Use the CA certs...
           cupsCopyString(crtfile, cacrtfile, sizeof(crtfile));
           cupsCopyString(keyfile, cakeyfile, sizeof(keyfile));
+
+          have_creds = true;
         }
       }
+      else
+      {
+        // CUPS-managed self-signed certs: use them only if they have
+        // not expired, otherwise let the auto-create code path below
+        // regenerate them (Issue #1519). cupsGetCredentialsExpiration()
+        // expects a PEM string, not a file path, so load the cert via
+        // cupsCopyCredentials() first.
+        char	*creds = cupsCopyCredentials(tls_keypath, cn);
+					// PEM-encoded certificate
 
-      have_creds = !access(crtfile, R_OK) && !access(keyfile, R_OK);
+        have_creds = cupsGetCredentialsExpiration(creds) > time(NULL);
+        free(creds);
+      }
     }
 
     if (!have_creds && tls_auto_create && cn)
@@ -2202,6 +2215,12 @@ gnutls_import_certs(
 
 
   DEBUG_printf("3gnutls_import_certs(credentials=\"%s\", num_certs=%p, certs=%p)", credentials, (void *)num_certs, (void *)certs);
+
+  if (!credentials)
+  {
+    *num_certs = 0;
+    return (NULL);
+  }
 
   // Import all certificates from the string...
   datum.data = (void *)credentials;
