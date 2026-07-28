@@ -13,13 +13,12 @@ v3.0.3 - YYYY-MM-DD
 - Updated the configure script to look for PDFio v1.2 or later.
 - Fixed a non-blocking IO bug that impacted GNOME.
 - Fixed a potential buffer overflow in `cupsFormEncode`.
-- Fixed a buffer over-read when parsing a `WWW-Authenticate` header containing an
-  unterminated quoted value.
 - Fixed long number string error handling in `cupsJSONImportXxx`.
 - Fixed HTTP state for POST/PUT with an empty message body (Issue #149)
 - Fixed the example RPM spec file (Issue #150)
 - Fixed the `ipptool` "get-printer-attributes-suite.test" test file (Issue #154)
 - Fixed potential buffer overflow in `cupsCopyDestConflicts`.
+- Fixed potential buffer overrun in `cupsDoAuthentication` (Issue #156)
 - Fixed X.509 name checks using OpenSSL.
 
 
