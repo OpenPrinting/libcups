@@ -19,6 +19,7 @@ v3.0.3 - YYYY-MM-DD
 - Fixed the `ipptool` "get-printer-attributes-suite.test" test file (Issue #154)
 - Fixed potential buffer overflow in `cupsCopyDestConflicts`.
 - Fixed potential buffer overrun in `cupsDoAuthentication` (Issue #156)
+- Fixed potential buffer overrun in `cupsSignCredentialsRequest`.
 - Fixed X.509 name checks using OpenSSL.
 
 
