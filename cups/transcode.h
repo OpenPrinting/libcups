@@ -1,7 +1,7 @@
 //
 // Transcoding definitions for CUPS.
 //
-// Copyright © 2022 by OpenPrinting.
+// Copyright © 2022-2026 by OpenPrinting.
 // Copyright © 2007-2011 by Apple Inc.
 // Copyright © 1997-2006 by Easy Software Products.
 //
@@ -79,7 +79,7 @@ typedef enum cups_encoding_e		// Language Encodings
   CUPS_ENCODING_VBCS_END = 191		// End of variable-length encodings @private@
 } cups_encoding_t;
 
-typedef unsigned long cups_utf32_t;	// UTF-32 Unicode/ISO-10646 unit
+typedef uint32_t cups_utf32_t;		// UTF-32 Unicode/ISO-10646 unit
 
 
 //

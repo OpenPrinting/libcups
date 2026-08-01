@@ -4,6 +4,8 @@ Changes in libcups
 v3.0.3 - YYYY-MM-DD
 -------------------
 
+- CVE-2026-NNNNN: The `cupsUTF32toUTF8` function incorrectly treated UTF-32
+  values as 64-bit.
 - Now run `ldconfig` on Linux after installing the shared library (Issue #148)
 - Now use dateTime variants of Job attributes.
 - Added Chinese media sizes (Issue #152)
