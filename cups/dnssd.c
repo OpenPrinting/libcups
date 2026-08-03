@@ -1,7 +1,7 @@
 //
 // DNS-SD API functions for CUPS.
 //
-// Copyright © 2022-2025 by OpenPrinting.
+// Copyright © 2022-2026 by OpenPrinting.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
 // information.
@@ -2546,7 +2546,7 @@ win32_resolve_cb(
 
   if (status == ERROR_SUCCESS)
   {
-    char			fullname[256],	// Full instance name
+    char		fullname[256],	// Full instance name
       			hostname[256],	// Hostname
 			txtname[256],	// TXT name
 			txtvalue[256];	// TXT value
@@ -2606,10 +2606,11 @@ win32_utf8cpy(char        *dst,		// I - Destination string
 	      size_t      dstsize)	// I - Size of destination string
 {
   int	ch;				// Current character
+  char	*dstend = dst + dstsize - 5;	// End of destination string
 
 
   // Loop until we run out of characters or buffer space...
-  while (*src && dstsize > 4)
+  while (*src && dst < dstend)
   {
     // Get the current character...
     ch = *src++;
