@@ -2223,7 +2223,10 @@ mdns_monitor(cups_dnssd_t *dnssd)	// I - DNS-SD context
       break;
 
     if (!(polldata.revents & POLLIN))
+    {
+      usleep(1000);
       continue;
+    }
 #  endif // !_WIN32
 
     if ((error = DNSServiceProcessResult(dnssd->ref)) != kDNSServiceErr_NoError)
@@ -2980,6 +2983,10 @@ avahi_poll_cb(struct pollfd *ufds,	// I - File descriptors for poll
 
   DEBUG_puts("4avahi_poll_cb: Locking mutex.");
   cupsMutexLock(&dnssd->mutex);
+
+  // Prevent fast loops consuming all CPU...
+  if (ret <= 0)
+    usleep(1000);
 
   return (ret);
 }
