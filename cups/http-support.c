@@ -1,7 +1,7 @@
 //
 // HTTP support routines for CUPS.
 //
-// Copyright © 2020-2025 by OpenPrinting
+// Copyright © 2020-2026 by OpenPrinting
 // Copyright © 2007-2019 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products, all rights reserved.
 //
@@ -1147,7 +1147,7 @@ const char *				// O - State string
 httpStateString(http_state_t state)	// I - HTTP state value
 {
   if (state < HTTP_STATE_ERROR || state >= HTTP_STATE_MAX)
-    return ("HTTP_STATE_???");
+    return ("???");
   else
     return (http_states[state - HTTP_STATE_ERROR]);
 }
