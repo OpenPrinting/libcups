@@ -131,6 +131,14 @@ static const char * const ippeve_preason_strings[] =
 
 
 //
+// Default space used for job files in the spool directory, in k-octets.
+//
+
+#define IPPEVE_DEFAULT_MAX_SPOOL_SIZE (1024 * 1024)
+#define IPPEVE_DEFAULT_SPOOL_RESERVE  (100 * 1024)
+
+
+//
 // Structures...
 //
 
@@ -168,7 +176,10 @@ typedef struct ippeve_printer_s		// Printer data
 			*device_uri,	// Device URI (if any)
 			*output_format,	// Output format
 			*command;	// Command to run with job file
-  int			port;		// Port
+  int			port,		// Port
+			max_spool_size,// Maximum spool size in k-octets
+			spool_reserve,	// Reserved filesystem space in k-octets
+			spool_size;	// Current spool size in k-octets
   bool			web_forms;	// Enable web interface forms?
   size_t		urilen;		// Length of printer URI
   ipp_t			*attrs;		// Static attributes
@@ -203,7 +214,8 @@ struct ippeve_job_s			// Job data
   char			password[256];	// Document password, if any
   int			cancel;		// Non-zero when job canceled
   char			*filename;	// Print file name
-  int			fd;		// Print file descriptor
+  int			fd,		// Print file descriptor
+			size;		// Size of print file in k-octets
   ippeve_printer_t	*printer;	// Printer
 };
 
@@ -243,7 +255,7 @@ static int		create_listener(const char *name, int port, int family);
 static ipp_t		*create_media_col(const char *media, const char *source, const char *type, ipp_t *media_size, int bottom, int left, int right, int top);
 static ipp_t		*create_media_size(int width, int length);
 static ipp_t		*create_media_size_range(int min_width, int max_width, int min_length, int max_length);
-static ippeve_printer_t	*create_printer(const char *servername, int serverport, const char *name, const char *location, const char *icons, const char *strings, cups_array_t *docformats, const char *subtypes, const char *directory, const char *command, const char *device_uri, const char *output_format, ipp_t *attrs);
+static ippeve_printer_t	*create_printer(const char *servername, int serverport, const char *name, const char *location, const char *icons, const char *strings, cups_array_t *docformats, const char *subtypes, const char *directory, const char *command, const char *device_uri, const char *output_format, int max_spool_size, int spool_reserve, ipp_t *attrs);
 static void		debug_attributes(const char *title, ipp_t *ipp, int response);
 static void		delete_client(ippeve_client_t *client);
 static void		delete_job(ippeve_job_t *job);
@@ -283,6 +295,9 @@ static void		*process_client(ippeve_client_t *client);
 static int		process_http(ippeve_client_t *client);
 static int		process_ipp(ippeve_client_t *client);
 static void		*process_job(ippeve_job_t *job);
+static int		get_spool_size(ippeve_printer_t *printer, bool maximum);
+static void		release_job_data(ippeve_job_t *job);
+static bool		reserve_job_data(ippeve_job_t *job, size_t bytes);
 static void		process_state_message(ippeve_printer_t *printer, const char *message);
 static bool		register_printer(ippeve_printer_t *printer);
 static bool		respond_http(ippeve_client_t *client, http_status_t code, const char *content_coding, const char *type, size_t length);
@@ -345,7 +360,11 @@ main(int  argc,				// I - Number of command-line args
 		duplex = false,		// Duplex mode
 		web_forms = true;	// Enable web site forms?
   int		ppm = 10,		// Pages per minute for mono
-		ppm_color = 0;		// Pages per minute for color
+		ppm_color = 0,		// Pages per minute for color
+		max_spool_size = IPPEVE_DEFAULT_MAX_SPOOL_SIZE,
+					// Maximum spool size in k-octets
+		spool_reserve = IPPEVE_DEFAULT_SPOOL_RESERVE;
+					// Reserved spool space in k-octets
   ipp_t		*attrs = NULL;		// Printer attributes
   char		directory[1024] = "";	// Spool directory
   cups_array_t	*docformats = NULL;	// Supported formats
@@ -367,6 +386,29 @@ main(int  argc,				// I - Number of command-line args
     {
       web_forms = false;
     }
+    else if (!strcmp(argv[i], "--max-spool-size"))
+    {
+      char	*endptr;			// Pointer after size value
+      long	value;			// Size value
+
+
+      i ++;
+      if (i >= argc)
+      {
+	cupsLangPrintf(stderr, _("%s: Missing size after '--max-spool-size'."), "ippeveprinter");
+	return (usage(stderr));
+      }
+
+      errno = 0;
+      value = strtol(argv[i], &endptr, 10);
+      if (errno || *endptr || value < 1 || value > INT_MAX)
+      {
+	cupsLangPrintf(stderr, _("%s: Bad spool size '%s'."), "ippeveprinter", argv[i]);
+	return (usage(stderr));
+      }
+
+      max_spool_size = (int)value;
+    }
     else if (!strcmp(argv[i], "--pam-service"))
     {
       i ++;
@@ -377,6 +419,29 @@ main(int  argc,				// I - Number of command-line args
       }
 
       PAMService = argv[i];
+    }
+    else if (!strcmp(argv[i], "--spool-reserve"))
+    {
+      char	*endptr;			// Pointer after size value
+      long	value;			// Size value
+
+
+      i ++;
+      if (i >= argc)
+      {
+	cupsLangPrintf(stderr, _("%s: Missing size after '--spool-reserve'."), "ippeveprinter");
+	return (usage(stderr));
+      }
+
+      errno = 0;
+      value = strtol(argv[i], &endptr, 10);
+      if (errno || *endptr || value < 0 || value > INT_MAX)
+      {
+	cupsLangPrintf(stderr, _("%s: Bad spool reserve '%s'."), "ippeveprinter", argv[i]);
+	return (usage(stderr));
+      }
+
+      spool_reserve = (int)value;
     }
     else if (!strcmp(argv[i], "--version"))
     {
@@ -696,7 +761,7 @@ main(int  argc,				// I - Number of command-line args
   if (!docformats && !ippFindAttribute(attrs, "document-format-supported", IPP_TAG_MIMETYPE))
     docformats = cupsArrayNewStrings(ppm_color > 0 ? "image/jpeg,image/pwg-raster,image/urf": "image/pwg-raster,image/urf", ',');
 
-  if ((printer = create_printer(servername, serverport, name, location, icon, strings, docformats, subtypes, directory, command, device_uri, output_format, attrs)) == NULL)
+  if ((printer = create_printer(servername, serverport, name, location, icon, strings, docformats, subtypes, directory, command, device_uri, output_format, max_spool_size, spool_reserve, attrs)) == NULL)
     return (1);
 
   printer->web_forms = web_forms;
@@ -1236,6 +1301,105 @@ create_job(ippeve_client_t *client)	// I - Client
 
 
 //
+// 'get_spool_size()' - Get the total or available spool space.
+//
+
+static int				// O - Spool size in k-octets
+get_spool_size(
+    ippeve_printer_t *printer,		// I - Printer
+    bool             maximum)		// I - Get maximum space?
+{
+#ifdef HAVE_STATVFS
+  struct statvfs	spoolinfo;		// Spool filesystem information
+  double		spoolsize;		// Spool size in k-octets
+
+
+  if (!statvfs(printer->directory, &spoolinfo))
+  {
+    spoolsize = (double)spoolinfo.f_frsize *
+		(maximum ? spoolinfo.f_blocks : spoolinfo.f_bavail);
+    spoolsize /= 1024.0;
+    if (spoolsize < INT_MAX)
+      return ((int)spoolsize);
+  }
+
+#elif defined(HAVE_STATFS)
+  struct statfs	spoolinfo;		// Spool filesystem information
+  double		spoolsize;		// Spool size in k-octets
+
+
+  if (!statfs(printer->directory, &spoolinfo))
+  {
+    spoolsize = (double)spoolinfo.f_bsize *
+		(maximum ? spoolinfo.f_blocks : spoolinfo.f_bavail);
+    spoolsize /= 1024.0;
+    if (spoolsize < INT_MAX)
+      return ((int)spoolsize);
+  }
+#endif // HAVE_STATVFS
+
+  return (INT_MAX);
+}
+
+
+//
+// 'release_job_data()' - Release the spool space used by a job.
+//
+
+static void
+release_job_data(ippeve_job_t *job)	// I - Job
+{
+  cupsRWLockWrite(&(job->printer->rwlock));
+
+  if (job->printer->spool_size >= job->size)
+    job->printer->spool_size -= job->size;
+  else
+    job->printer->spool_size = 0;
+
+  job->size = 0;
+
+  cupsRWUnlock(&(job->printer->rwlock));
+}
+
+
+//
+// 'reserve_job_data()' - Reserve spool space for document data.
+//
+
+static bool				// O - `true` if space is available
+reserve_job_data(
+    ippeve_job_t *job,			// I - Job
+    size_t       bytes)			// I - Number of bytes
+{
+  int		kbytes;			// Size in k-octets
+  int		available;		// Available spool space in k-octets
+  bool		result = false;		// Reservation result
+
+
+  if (bytes > (size_t)INT_MAX * 1024)
+    return (false);
+
+  kbytes = (int)((bytes + 1023) / 1024);
+
+  cupsRWLockWrite(&(job->printer->rwlock));
+
+  if (job->printer->spool_size <= job->printer->max_spool_size &&
+      kbytes <= (job->printer->max_spool_size - job->printer->spool_size) &&
+      (available = get_spool_size(job->printer, /*maximum*/false)) > job->printer->spool_reserve &&
+      kbytes <= (available - job->printer->spool_reserve))
+  {
+    job->printer->spool_size += kbytes;
+    job->size += kbytes;
+    result = true;
+  }
+
+  cupsRWUnlock(&(job->printer->rwlock));
+
+  return (result);
+}
+
+
+//
 // 'create_job_file()' - Create a file for the document in a job.
 //
 
@@ -1441,6 +1605,8 @@ create_printer(
     const char   *command,		// I - Command to run on job files, if any
     const char   *device_uri,		// I - Output device, if any
     const char   *output_format,	// I - Output format, if any
+    int          max_spool_size,	// I - Maximum spool size in k-octets
+    int          spool_reserve,	// I - Reserved spool space in k-octets
     ipp_t        *attrs)		// I - Capability attributes
 {
   ippeve_printer_t	*printer;	// Printer
@@ -1464,13 +1630,6 @@ create_printer(
   const char		*sup_attrs[100];// Supported attributes
   char			xxx_supported[256];
 					// Name of -supported attribute
-#ifdef HAVE_STATVFS
-  struct statvfs	spoolinfo;	// FS info for spool directory
-  double		spoolsize;	// FS size
-#elif defined(HAVE_STATFS)
-  struct statfs		spoolinfo;	// FS info for spool directory
-  double		spoolsize;	// FS size
-#endif // HAVE_STATVFS
   static const char * const versions[] =// ipp-versions-supported values
   {
     "1.1",
@@ -1691,7 +1850,19 @@ create_printer(
   printer->state_reasons  = IPPEVE_PREASON_NONE;
   printer->state_time     = printer->start_time;
   printer->jobs           = cupsArrayNew((cups_array_cb_t)compare_jobs, NULL, NULL, 0, NULL, NULL);
+  printer->max_spool_size = max_spool_size;
+  printer->spool_reserve  = spool_reserve;
   printer->next_job_id    = 1;
+
+  k_supported = get_spool_size(printer, /*maximum*/true);
+  if (k_supported <= printer->spool_reserve)
+    printer->max_spool_size = 0;
+  else
+  {
+    k_supported -= printer->spool_reserve;
+    if (printer->max_spool_size > k_supported)
+      printer->max_spool_size = k_supported;
+  }
 
   if (printer->icons[0])
   {
@@ -1783,30 +1954,8 @@ create_printer(
     fprintf(stderr, "printer-uuid=\"%s\"\n", uuid);
   }
 
-  // Get the maximum spool size based on the size of the filesystem used for
-  // the spool directory.  If the host OS doesn't support the statfs call
-  // or the filesystem is larger than 2TiB, always report INT_MAX.
-#ifdef HAVE_STATVFS
-  if (statvfs(printer->directory, &spoolinfo))
-    k_supported = INT_MAX;
-  else if ((spoolsize = (double)spoolinfo.f_frsize *
-                        spoolinfo.f_blocks / 1024) > INT_MAX)
-    k_supported = INT_MAX;
-  else
-    k_supported = (int)spoolsize;
-
-#elif defined(HAVE_STATFS)
-  if (statfs(printer->directory, &spoolinfo))
-    k_supported = INT_MAX;
-  else if ((spoolsize = (double)spoolinfo.f_bsize *
-                        spoolinfo.f_blocks / 1024) > INT_MAX)
-    k_supported = INT_MAX;
-  else
-    k_supported = (int)spoolsize;
-
-#else
-  k_supported = INT_MAX;
-#endif // HAVE_STATVFS
+  // The advertised maximum must match the configured spool limit.
+  k_supported = printer->max_spool_size;
 
   // Assemble the final list of document formats...
   if (docformats)
@@ -2206,8 +2355,13 @@ delete_job(ippeve_job_t *job)		// I - Job
 
   if (job->filename)
   {
-    if (!KeepFiles)
-      unlink(job->filename);
+    if (!KeepFiles && !unlink(job->filename))
+    {
+      if (job->printer->spool_size >= job->size)
+	job->printer->spool_size -= job->size;
+      else
+	job->printer->spool_size = 0;
+    }
 
     free(job->filename);
   }
@@ -2356,6 +2510,13 @@ finish_document_data(
 
   while ((bytes = httpRead(client->http, buffer, sizeof(buffer))) > 0)
   {
+    if (!reserve_job_data(job, (size_t)bytes))
+    {
+      flush_document_data(client);
+      respond_ipp(client, IPP_STATUS_ERROR_TEMPORARY, "Document exceeds available spool space.");
+      goto cleanup_and_abort;
+    }
+
     if (write(job->fd, buffer, (size_t)bytes) < bytes)
     {
       respond_ipp(client, IPP_STATUS_ERROR_INTERNAL, "Unable to write print file: %s", strerror(errno));
@@ -2418,7 +2579,8 @@ finish_document_data(
     job->fd = -1;
   }
 
-  unlink(filename);
+  if (!unlink(filename))
+    release_job_data(job);
 
   // If we get here we had to abort the job...
   abort_job:
@@ -2537,6 +2699,13 @@ finish_document_uri(
       {
         bytes = 1;
       }
+      else if (bytes > 0 && !reserve_job_data(job, (size_t)bytes))
+      {
+	respond_ipp(client, IPP_STATUS_ERROR_TEMPORARY, "Document exceeds available spool space.");
+	close(infile);
+
+        goto cleanup_and_abort;
+      }
       else if (bytes > 0 && write(job->fd, buffer, (size_t)bytes) < bytes)
       {
 	respond_ipp(client, IPP_STATUS_ERROR_INTERNAL, "Unable to write print file: %s", strerror(errno));
@@ -2584,6 +2753,14 @@ finish_document_uri(
 
     while ((bytes = httpRead(http, buffer, sizeof(buffer))) > 0)
     {
+      if (!reserve_job_data(job, (size_t)bytes))
+      {
+	respond_ipp(client, IPP_STATUS_ERROR_TEMPORARY, "Document exceeds available spool space.");
+	httpClose(http);
+
+        goto cleanup_and_abort;
+      }
+
       if (write(job->fd, buffer, (size_t)bytes) < bytes)
       {
 	respond_ipp(client, IPP_STATUS_ERROR_INTERNAL, "Unable to write print file: %s", strerror(errno));
@@ -2636,7 +2813,8 @@ finish_document_uri(
     job->fd = -1;
   }
 
-  unlink(filename);
+  if (!unlink(filename))
+    release_job_data(job);
 
   // If we get here we had to abort the job...
   abort_job:
@@ -7238,8 +7416,10 @@ usage(FILE *out)			// I - Output file
   cupsLangPuts(out, _("Usage: ippeveprinter [OPTIONS] \"NAME\""));
   cupsLangPuts(out, _("Options:"));
   cupsLangPuts(out, _("--help                         Show this help"));
+  cupsLangPuts(out, _("--max-spool-size K-OCTETS      Set maximum spool size (default=1048576)"));
   cupsLangPuts(out, _("--no-web-forms                 Disable web forms for media and supplies"));
   cupsLangPuts(out, _("--pam-service SERVICE          Use the named PAM service"));
+  cupsLangPuts(out, _("--spool-reserve K-OCTETS       Set spool space reserve (default=102400)"));
   cupsLangPuts(out, _("--version                      Show the program version"));
   cupsLangPuts(out, _("-2                             Set 2-sided printing support (default=1-sided)"));
   cupsLangPuts(out, _("-a FILENAME                    Load printer attributes from IPP file"));
