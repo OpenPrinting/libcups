@@ -445,6 +445,7 @@ extern char		*httpDecode64(char *out, size_t *outlen, const char *in, const char
 extern char		*httpEncode64(char *out, size_t outlen, const char *in, size_t inlen, bool url) _CUPS_PUBLIC;
 
 extern http_field_t	httpFieldValue(const char *name) _CUPS_PUBLIC;
+extern const char	*httpFieldString(http_field_t field) _CUPS_PUBLIC;
 extern void		httpFlush(http_t *http) _CUPS_PUBLIC;
 extern int		httpFlushWrite(http_t *http) _CUPS_PUBLIC;
 
