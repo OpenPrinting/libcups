@@ -169,7 +169,8 @@ typedef struct ippeve_printer_s		// Printer data
 			*output_format,	// Output format
 			*command;	// Command to run with job file
   int			port;		// Port
-  bool			web_forms;	// Enable web interface forms?
+  bool			print_by_ref,	// Enable Print-URI and Send-URI?
+			web_forms;	// Enable web interface forms?
   size_t		urilen;		// Length of printer URI
   ipp_t			*attrs;		// Static attributes
   time_t		start_time;	// Startup time
@@ -243,7 +244,7 @@ static int		create_listener(const char *name, int port, int family);
 static ipp_t		*create_media_col(const char *media, const char *source, const char *type, ipp_t *media_size, int bottom, int left, int right, int top);
 static ipp_t		*create_media_size(int width, int length);
 static ipp_t		*create_media_size_range(int min_width, int max_width, int min_length, int max_length);
-static ippeve_printer_t	*create_printer(const char *servername, int serverport, const char *name, const char *location, const char *icons, const char *strings, cups_array_t *docformats, const char *subtypes, const char *directory, const char *command, const char *device_uri, const char *output_format, ipp_t *attrs);
+static ippeve_printer_t	*create_printer(const char *servername, int serverport, const char *name, const char *location, const char *icons, const char *strings, cups_array_t *docformats, const char *subtypes, const char *directory, const char *command, const char *device_uri, const char *output_format, bool print_by_ref, ipp_t *attrs);
 static void		debug_attributes(const char *title, ipp_t *ipp, int response);
 static void		delete_client(ippeve_client_t *client);
 static void		delete_job(ippeve_job_t *job);
@@ -341,7 +342,8 @@ main(int  argc,				// I - Number of command-line args
 		*name = NULL,		// Printer name
 		*strings = NULL,	// Strings file
 		*subtypes = "_print";	// DNS-SD service subtype
-  bool		legacy = false,		// Legacy mode?
+  bool		print_by_ref = false,	// Enable Print-URI and Send-URI?
+		legacy = false,		// Legacy mode?
 		duplex = false,		// Duplex mode
 		web_forms = true;	// Enable web site forms?
   int		ppm = 10,		// Pages per minute for mono
@@ -366,6 +368,10 @@ main(int  argc,				// I - Number of command-line args
     else if (!strcmp(argv[i], "--no-web-forms"))
     {
       web_forms = false;
+    }
+    else if (!strcmp(argv[i], "--enable-print-by-reference"))
+    {
+      print_by_ref = true;
     }
     else if (!strcmp(argv[i], "--pam-service"))
     {
@@ -696,7 +702,7 @@ main(int  argc,				// I - Number of command-line args
   if (!docformats && !ippFindAttribute(attrs, "document-format-supported", IPP_TAG_MIMETYPE))
     docformats = cupsArrayNewStrings(ppm_color > 0 ? "image/jpeg,image/pwg-raster,image/urf": "image/pwg-raster,image/urf", ',');
 
-  if ((printer = create_printer(servername, serverport, name, location, icon, strings, docformats, subtypes, directory, command, device_uri, output_format, attrs)) == NULL)
+  if ((printer = create_printer(servername, serverport, name, location, icon, strings, docformats, subtypes, directory, command, device_uri, output_format, print_by_ref, attrs)) == NULL)
     return (1);
 
   printer->web_forms = web_forms;
@@ -1441,6 +1447,7 @@ create_printer(
     const char   *command,		// I - Command to run on job files, if any
     const char   *device_uri,		// I - Output device, if any
     const char   *output_format,	// I - Output format, if any
+    bool         print_by_ref,	// I - Enable Print-URI and Send-URI?
     ipp_t        *attrs)		// I - Capability attributes
 {
   ippeve_printer_t	*printer;	// Printer
@@ -1483,11 +1490,9 @@ create_printer(
   static const int	ops[] =		// operations-supported values
   {
     IPP_OP_PRINT_JOB,
-    IPP_OP_PRINT_URI,
     IPP_OP_VALIDATE_JOB,
     IPP_OP_CREATE_JOB,
     IPP_OP_SEND_DOCUMENT,
-    IPP_OP_SEND_URI,
     IPP_OP_CANCEL_JOB,
     IPP_OP_GET_JOB_ATTRIBUTES,
     IPP_OP_GET_JOBS,
@@ -1495,7 +1500,9 @@ create_printer(
     IPP_OP_CANCEL_JOBS,
     IPP_OP_CANCEL_MY_JOBS,
     IPP_OP_CLOSE_JOB,
-    IPP_OP_IDENTIFY_PRINTER
+    IPP_OP_IDENTIFY_PRINTER,
+    IPP_OP_PRINT_URI,
+    IPP_OP_SEND_URI
   };
   static const char * const charsets[] =// charset-supported values
   {
@@ -1682,6 +1689,7 @@ create_printer(
   printer->device_uri     = device_uri ? strdup(device_uri) : NULL;
   printer->output_format  = output_format ? strdup(output_format) : NULL;
   printer->directory      = strdup(directory);
+  printer->print_by_ref   = print_by_ref;
   printer->icons[0]       = icons ? strdup(icons) : NULL;
   printer->strings        = strings ? strdup(strings) : NULL;
   printer->port           = serverport;
@@ -1985,7 +1993,7 @@ create_printer(
   ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_LANGUAGE), "natural-language-configured", NULL, "en");
 
   // operations-supported
-  ippAddIntegers(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_ENUM, "operations-supported", sizeof(ops) / sizeof(ops[0]), ops);
+  ippAddIntegers(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_ENUM, "operations-supported", (int)(sizeof(ops) / sizeof(ops[0]) - (printer->print_by_ref ? 0 : 2)), ops);
 
   if (has_pdf)
   {
@@ -2076,7 +2084,8 @@ create_printer(
   ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_URI, "printer-uuid", NULL, uuid);
 
   // reference-uri-schemes-supported
-  ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_URISCHEME), "reference-uri-schemes-supported", (int)(sizeof(reference_uri_schemes_supported) / sizeof(reference_uri_schemes_supported[0])), NULL, reference_uri_schemes_supported);
+  if (printer->print_by_ref)
+    ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_URISCHEME), "reference-uri-schemes-supported", (int)(sizeof(reference_uri_schemes_supported) / sizeof(reference_uri_schemes_supported[0])), NULL, reference_uri_schemes_supported);
 
   // requesting-user-uri-supported
   ippAddBoolean(printer->attrs, IPP_TAG_PRINTER, "requesting-user-uri-supported", true);
@@ -3663,6 +3672,13 @@ ipp_print_uri(ippeve_client_t *client)	// I - Client
   ippeve_job_t		*job;		// New job
 
 
+  if (!client->printer->print_by_ref)
+  {
+    flush_document_data(client);
+    respond_ipp(client, IPP_STATUS_ERROR_OPERATION_NOT_SUPPORTED, "Print by reference is disabled.");
+    return;
+  }
+
   // Validate print job attributes...
   if (!valid_job_attributes(client))
   {
@@ -3780,6 +3796,13 @@ ipp_send_uri(ippeve_client_t *client)	// I - Client
   ippeve_job_t		*job;		// Job information
   ipp_attribute_t	*attr;		// Current attribute
 
+
+  if (!client->printer->print_by_ref)
+  {
+    flush_document_data(client);
+    respond_ipp(client, IPP_STATUS_ERROR_OPERATION_NOT_SUPPORTED, "Print by reference is disabled.");
+    return;
+  }
 
   // Get the job...
   if ((job = find_job(client)) == NULL)
@@ -7238,6 +7261,7 @@ usage(FILE *out)			// I - Output file
   cupsLangPuts(out, _("Usage: ippeveprinter [OPTIONS] \"NAME\""));
   cupsLangPuts(out, _("Options:"));
   cupsLangPuts(out, _("--help                         Show this help"));
+  cupsLangPuts(out, _("--enable-print-by-reference   Enable the Print-URI and Send-URI operations."));
   cupsLangPuts(out, _("--no-web-forms                 Disable web forms for media and supplies"));
   cupsLangPuts(out, _("--pam-service SERVICE          Use the named PAM service"));
   cupsLangPuts(out, _("--version                      Show the program version"));
