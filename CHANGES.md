@@ -25,6 +25,7 @@ v3.0.3 - YYYY-MM-DD
 - Fixed X.509 name checks using OpenSSL.
 - Fixed renewal of expired self-signed certificates.
 - Fixed potential buffer overflow in Windows DNS-SD code.
+- Fixed potential buffer underflow in `ippAdd/SetStringf(v)`.
 
 
 v3.0.2 - 2026-06-05
