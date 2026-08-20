@@ -1,7 +1,7 @@
 //
 // ipptool command for CUPS.
 //
-// Copyright © 2021-2025 by OpenPrinting.
+// Copyright © 2021-2026 by OpenPrinting.
 // Copyright © 2020 by The Printer Working Group.
 // Copyright © 2007-2021 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products.
@@ -1128,7 +1128,7 @@ copy_hex_string(char          *buffer,	// I - String buffer
   else
   {
     // No, copy as a string...
-    if ((size_t)datalen > bufsize)
+    if ((size_t)datalen >= bufsize)
       datalen = (int)bufsize - 1;
 
     memcpy(buffer, data, (size_t)datalen);
