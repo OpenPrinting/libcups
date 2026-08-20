@@ -1,7 +1,7 @@
 Changes in libcups
 ==================
 
-v3.0.3 - YYYY-MM-DD
+v3.0.3 - 2026-08-20
 -------------------
 
 - CVE-2026-NNNNN: The `cupsUTF32toUTF8` function incorrectly treated UTF-32
