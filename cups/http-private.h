@@ -1,7 +1,7 @@
 //
 // Private HTTP definitions for CUPS.
 //
-// Copyright © 2021-2023 by OpenPrinting.
+// Copyright © 2021-2026 by OpenPrinting.
 // Copyright © 2007-2018 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products, all rights reserved.
 //
@@ -125,7 +125,8 @@ struct _http_s				// HTTP connection structure
   			*default_fields[HTTP_FIELD_MAX];
 					// Default field values, if any
   char			*authstring;	// Current Authorization field
-  char			*cookie;	// Cookie value(s)
+  char			*cookie,	// Cookie value(s)
+			*set_cookie;	// Set-Cookie value(s);
   http_status_t		expect;		// Expect: header
   http_keepalive_t	keep_alive;	// Keep-alive supported?
   unsigned		nonce_count;	// Nonce count

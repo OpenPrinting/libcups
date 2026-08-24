@@ -1,6 +1,12 @@
 Changes in libcups
 ==================
 
+v3.0.4 - YYYY-MM-DD
+-------------------
+
+- Updated cookie handling to separate Cookie and Set-Cookie headers (Issue #161)
+
+
 v3.0.3 - 2026-08-20
 -------------------
 

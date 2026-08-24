@@ -228,6 +228,9 @@ httpClearCookie(http_t *http)		// I - HTTP connection
 
   free(http->cookie);
   http->cookie = NULL;
+
+  free(http->set_cookie);
+  http->set_cookie = NULL;
 }
 
 
@@ -294,6 +297,7 @@ httpClose(http_t *http)			// I - HTTP connection
 
   free(http->authstring);
   free(http->cookie);
+  free(http->set_cookie);
 
   _httpFreeCredentials(http->tls_credentials);
 
@@ -2216,27 +2220,27 @@ httpSetCookie(http_t     *http,		// I - Connection
     return;
 
   // Set or append the Set-Cookie value....
-  if (http->cookie)
+  if (http->set_cookie)
   {
     // Append with a newline between values...
     size_t	clen,			// Length of cookie string
 		ctotal;			// Total length of cookies
     char	*temp;			// Temporary value
 
-    clen   = strlen(http->cookie);
+    clen   = strlen(http->set_cookie);
     ctotal = clen + strlen(cookie) + 2;
 
-    if ((temp = realloc(http->cookie, ctotal)) == NULL)
+    if ((temp = realloc(http->set_cookie, ctotal)) == NULL)
       return;
 
-    http->cookie = temp;
-    temp[clen]   = '\n';
+    http->set_cookie = temp;
+    temp[clen]       = '\n';
     cupsCopyString(temp + clen + 1, cookie, ctotal - clen - 1);
   }
   else
   {
     // Just copy/set this cookie...
-    http->cookie = strdup(cookie);
+    http->set_cookie = strdup(cookie);
   }
 }
 
@@ -2636,7 +2640,8 @@ _httpUpdate(http_t        *http,	// I - HTTP connection
     else if (!_cups_strcasecmp(line, "cookie"))
     {
       // "Cookie: name=value[; name=value ...]" - replaces previous cookies...
-      httpSetCookie(http, value);
+      free(http->cookie);
+      http->cookie = strdup(value);
     }
     else if ((field = httpFieldValue(line)) != HTTP_FIELD_UNKNOWN)
     {
@@ -3102,12 +3107,12 @@ httpWriteResponse(http_t        *http,	// I - HTTP connection
       }
     }
 
-    if (http->cookie)
+    if (http->set_cookie)
     {
       char	*start,			// Start of cookie
 		*ptr;			// Pointer into cookie
 
-      for (start = http->cookie; start; start = ptr)
+      for (start = http->set_cookie; start; start = ptr)
       {
         if ((ptr = strchr(start, '\n')) != NULL)
           *ptr = '\0';
