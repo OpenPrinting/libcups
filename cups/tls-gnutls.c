@@ -3,7 +3,7 @@
 //
 // Note: This file is included from tls.c
 //
-// Copyright © 2020-2025 by OpenPrinting
+// Copyright © 2020-2026 by OpenPrinting
 // Copyright © 2007-2019 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products, all rights reserved.
 //
@@ -962,30 +962,53 @@ cupsGetCredentialsTrust(
   }
   else if (num_certs > 1)
   {
-    if (!http_check_roots(credentials))
+    trust = HTTP_TRUST_INVALID;
+
+    if ((tcreds = http_check_roots(credentials)) != NULL)
+    {
+      trust = HTTP_TRUST_OK;
+    }
+    else
     {
       // See if we have a site CA certificate we can compare...
       if ((tcreds = cupsCopyCredentials(path, "_site_")) != NULL)
       {
 	size_t	credslen,		// Length of credentials
-		  tcredslen;		// Length of trust root
+		tcredslen;		// Length of trust root
 
 
 	// Do a tail comparison of the root...
 	credslen  = strlen(credentials);
 	tcredslen = strlen(tcreds);
-	if (credslen <= tcredslen || strcmp(credentials + (credslen - tcredslen), tcreds))
+	if (credslen > tcredslen && !strcmp(credentials + (credslen - tcredslen), tcreds))
 	{
-	  // Certificate isn't directly generated from the CA cert...
-	  trust = HTTP_TRUST_INVALID;
+	  // Certificate is signed by the site CA cert...
+	  trust = HTTP_TRUST_OK;
 	}
-
-	if (trust != HTTP_TRUST_OK)
-	  _cupsSetError(IPP_STATUS_ERROR_CUPS_PKI, _("Credentials do not validate against site CA certificate."), true);
-
-	free(tcreds);
       }
     }
+
+    if (trust == HTTP_TRUST_OK && tcreds && *tcreds)
+    {
+      // Also validate the entire certificate chain...
+      unsigned		num_tcerts = 10;// Number of trust certificates
+      gnutls_x509_crt_t	tcerts[10];	// Trust certificates
+
+      if (gnutls_import_certs(tcreds, &num_tcerts, tcerts))
+      {
+        unsigned	verify;		// Verification results
+
+        if (gnutls_x509_crt_list_verify (certs, num_certs, tcerts, num_tcerts, /*CRL_list*/NULL, /*CRL_list_length*/0, /*flags*/0, &verify))
+          trust = HTTP_TRUST_INVALID;
+
+        gnutls_free_certs(num_tcerts, tcerts);
+      }
+    }
+
+    free(tcreds);
+
+    if (trust != HTTP_TRUST_OK)
+      _cupsSetError(IPP_STATUS_ERROR_CUPS_PKI, _("Credentials do not validate against CA certificates."), true);
   }
   else if (require_ca)
   {

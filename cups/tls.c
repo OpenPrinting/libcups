@@ -1,7 +1,7 @@
 //
 // TLS routines for CUPS.
 //
-// Copyright © 2021-2025 by OpenPrinting.
+// Copyright © 2021-2026 by OpenPrinting.
 // Copyright @ 2007-2014 by Apple Inc.
 // Copyright @ 1997-2007 by Easy Software Products, all rights reserved.
 //
@@ -54,7 +54,7 @@ static cups_array_t	*tls_root_certs = NULL;
 // Local functions...
 //
 
-static bool		http_check_roots(const char *creds);
+static char		*http_check_roots(const char *creds);
 static char		*http_copy_file(const char *path, const char *common_name, const char *ext);
 static const char	*http_default_path(char *buffer, size_t bufsize);
 static bool		http_default_san_cb(const char *common_name, const char *subject_alt_name, void *data);
@@ -306,10 +306,10 @@ _httpTLSSetOptions(int options,		// I - Options
 // 'http_check_roots()' - Check whether the supplied credentials use a trusted root CA.
 //
 
-static bool				// O - `true` if they use a trusted root, `false` otherwise
+static char *				// O - Trusted root certificate chain or `NULL` otherwise
 http_check_roots(const char *creds)	// I - Credentials
 {
-  bool		ret = false;		// Return value
+  char	*ret = NULL;			// Return value
 
 
 #ifdef __APPLE__
@@ -375,7 +375,9 @@ http_check_roots(const char *creds)	// I - Credentials
   {
     if (SecTrustCreateWithCertificates(certs, policy, &trust) == noErr)
     {
-      ret = SecTrustEvaluateWithError(trust, NULL);
+      if (SecTrustEvaluateWithError(trust, NULL))
+        ret = strdup("");
+
       CFRelease(trust);
     }
 
@@ -486,8 +488,8 @@ http_check_roots(const char *creds)	// I - Credentials
     // Compare the root against the tail of the current credentials...
     rcredslen = strlen(rcreds);
 
-    if (credslen >= rcredslen && !strcmp(creds + (credslen - rcredslen), rcreds))
-      ret = true;
+    if (credslen > rcredslen && !strcmp(creds + (credslen - rcredslen), rcreds))
+      ret = strdup(rcreds);
   }
 
   // Unlock access and return...

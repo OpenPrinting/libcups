@@ -35,6 +35,7 @@ static X509_EXTENSION	*openssl_create_san(const char *common_name, size_t num_al
 static time_t		openssl_get_date(X509 *cert, int which);
 //static void		openssl_load_crl(void);
 static STACK_OF(X509 *)	openssl_load_x509(const char *credentials);
+static bool		openssl_validate_name(X509 *cert, const char *common_name);
 
 
 //
@@ -90,89 +91,7 @@ cupsAreCredentialsValidForName(
   if ((certs = openssl_load_x509(credentials)) != NULL)
   {
     // Check the hostname against the primary certificate...
-    X509	*cert = sk_X509_value(certs, 0);
-					// Primary certificate
-    char 	subjectName[256];	// Common name from certificate
-    STACK_OF(GENERAL_NAME) *names = NULL;
-					// subjectAltName values
-
-    DEBUG_printf("1cupsAreCredentialsValidForName: certs=%p(num=%d), cert=%p", certs, sk_X509_num(certs), cert);
-
-    if (X509_NAME_get_text_by_NID(X509_get_subject_name(cert), NID_commonName, subjectName, sizeof(subjectName)) < 0)
-      cupsCopyString(subjectName, "unknown", sizeof(subjectName));
-
-    DEBUG_printf("1cupsAreCredentialsValidForName: subjectName=\"%s\"", subjectName);
-
-    if (!_cups_strcasecmp(common_name, subjectName))
-    {
-      DEBUG_puts("1cupsAreCredentialsValidForName: Match.");
-      result = true;
-    }
-
-#ifdef DEBUG
-    char issuerName[256];
-
-    if (X509_NAME_get_text_by_NID(X509_get_issuer_name(cert), NID_commonName, issuerName, sizeof(issuerName)) < 0)
-      cupsCopyString(issuerName, "unknown", sizeof(issuerName));
-
-    DEBUG_printf("1cupsAreCredentialsValidForName: issuerName=\"%s\"", issuerName);
-#endif // DEBUG
-
-    if (!result)
-    {
-      names = X509_get_ext_d2i(cert, NID_subject_alt_name, /*crit*/NULL, /*idx*/NULL);
-      DEBUG_printf("1cupsAreCredentialsValidForName: names=%p", names);
-    }
-
-    if (names)
-    {
-      // Got subjectAltName values, look at them...
-      int	i,			// Looping var
-		count;			// Number of values
-
-      for (i = 0, count = sk_GENERAL_NAME_num(names); i < count && !result; i ++)
-      {
-	const GENERAL_NAME *name = sk_GENERAL_NAME_value(names, i);
-					// subjectAltName value
-
-        if (!name)
-          continue;
-
-        DEBUG_printf("1cupsAreCredentialsValidForName: subjectAltName[%d/%d].type=%d", i + 1, count, name->type);
-	if (name->type == GEN_DNS)
-	{
-	  // Match a DNS name...
-	  char	*dNSName;		// DNS name value
-
-          if (ASN1_STRING_to_UTF8((unsigned char **)&dNSName, name->d.dNSName) > 0)
-          {
-            DEBUG_printf("1cupsAreCredentialsValidForName: subjectAltName[%d/%d].dNSName=\"%s\"", i + 1, count, dNSName);
-
-            if (!_cups_strcasecmp(common_name, dNSName))
-            {
-              // Direct name match...
-              DEBUG_puts("1cupsAreCredentialsValidForName: Match.");
-              result = true;
-	    }
-	    else if (!strncmp(dNSName, "*.", 2))
-	    {
-	      // Compare wildcard...
-	      const char *domain_name = strchr(common_name, '.');
-					// Domain name of common name
-              if (domain_name && !_cups_strcasecmp(domain_name, dNSName + 1))
-              {
-		DEBUG_puts("1cupsAreCredentialsValidForName: Match.");
-                result = true;
-	      }
-	    }
-
-	    OPENSSL_free(dNSName);
-          }
-        }
-      }
-
-      GENERAL_NAMES_free(names);
-    }
+    result = openssl_validate_name(sk_X509_value(certs, 0), common_name);
 
     sk_X509_free(certs);
   }
@@ -928,7 +847,7 @@ cupsGetCredentialsTrust(
     return (HTTP_TRUST_UNKNOWN);
   }
 
-  cert = sk_X509_value(certs, 0);
+  cert = sk_X509_shift(certs);
 
   if (!cg->client_conf_loaded)
   {
@@ -937,7 +856,7 @@ cupsGetCredentialsTrust(
   }
 
   // Look this common name up in the default keychains...
-  if (sk_X509_num(certs) == 1 && (tcreds = cupsCopyCredentials(path, common_name)) != NULL)
+  if (sk_X509_num(certs) == 0 && (tcreds = cupsCopyCredentials(path, common_name)) != NULL)
   {
     char	credentials_str[1024],	// String for incoming credentials
 		tcreds_str[1024];	// String for saved credentials
@@ -949,6 +868,9 @@ cupsGetCredentialsTrust(
     {
       // Credentials don't match, let's look at the expiration date of the new
       // credentials and allow if the new ones have a later expiration...
+      time_t tcreds_exp = cupsGetCredentialsExpiration(tcreds);
+					// Expiration of saved credentials
+
       if (!cg->trust_first || require_ca)
       {
         // Do not trust certificates on first use...
@@ -956,7 +878,7 @@ cupsGetCredentialsTrust(
 
         trust = HTTP_TRUST_INVALID;
       }
-      else if (cupsGetCredentialsExpiration(credentials) <= cupsGetCredentialsExpiration(tcreds))
+      else if (openssl_get_date(cert, 1) <= tcreds_exp)
       {
         // The new credentials are not newly issued...
         _cupsSetError(IPP_STATUS_ERROR_CUPS_PKI, _("New credentials are older than stored credentials."), true);
@@ -970,7 +892,7 @@ cupsGetCredentialsTrust(
 
         trust = HTTP_TRUST_INVALID;
       }
-      else if (cupsGetCredentialsExpiration(tcreds) < time(NULL))
+      else if (tcreds_exp < time(NULL))
       {
         // Save the renewed credentials...
 	trust = HTTP_TRUST_RENEWED;
@@ -986,32 +908,66 @@ cupsGetCredentialsTrust(
     _cupsSetError(IPP_STATUS_ERROR_CUPS_PKI, _("No stored credentials, not valid for name."), true);
     trust = HTTP_TRUST_INVALID;
   }
-  else if (sk_X509_num(certs) > 1)
+  else if (sk_X509_num(certs) > 0)
   {
-    if (!http_check_roots(credentials))
+    trust = HTTP_TRUST_INVALID;
+
+    if ((tcreds = http_check_roots(credentials)) != NULL)
+    {
+      trust = HTTP_TRUST_OK;
+    }
+    else
     {
       // See if we have a site CA certificate we can compare...
       if ((tcreds = cupsCopyCredentials(path, "_site_")) != NULL)
       {
 	size_t	credslen,		// Length of credentials
-		  tcredslen;		// Length of trust root
-
+		tcredslen;		// Length of trust root
 
 	// Do a tail comparison of the root...
 	credslen  = strlen(credentials);
 	tcredslen = strlen(tcreds);
-	if (credslen <= tcredslen || strcmp(credentials + (credslen - tcredslen), tcreds))
+	if (credslen > tcredslen && !strcmp(credentials + (credslen - tcredslen), tcreds))
 	{
-	  // Certificate isn't directly generated from the CA cert...
-	  trust = HTTP_TRUST_INVALID;
+	  // Certificate is signed by the site CA cert...
+	  trust = HTTP_TRUST_OK;
 	}
-
-	if (trust != HTTP_TRUST_OK)
-	  _cupsSetError(IPP_STATUS_ERROR_CUPS_PKI, _("Credentials do not validate against site CA certificate."), true);
-
-	free(tcreds);
       }
     }
+
+    if (trust == HTTP_TRUST_OK)
+    {
+      // Verify the full certificate chain...
+      X509_STORE_CTX	*ctx = X509_STORE_CTX_new();
+					// Context for certificate store
+      X509_STORE	*store = X509_STORE_new();
+      					// Certificate store
+
+      if (!ctx || !store)
+      {
+        // Unable to create store...
+        trust = HTTP_TRUST_INVALID;
+      }
+      else
+      {
+        // Verify the certificate chain signatures...
+	X509_STORE_add_cert(store, cert);
+	X509_STORE_CTX_init(ctx, store, cert, certs);
+
+	if (X509_verify_cert(ctx) != 1)
+	  trust = HTTP_TRUST_INVALID;
+      }
+
+      if (ctx)
+        X509_STORE_CTX_free(ctx);
+      if (store)
+        X509_STORE_free(store);
+    }
+
+    free(tcreds);
+
+    if (trust != HTTP_TRUST_OK)
+      _cupsSetError(IPP_STATUS_ERROR_CUPS_PKI, _("Credentials do not validate against CA certificates."), true);
   }
   else if (require_ca)
   {
@@ -1045,6 +1001,7 @@ cupsGetCredentialsTrust(
   }
 
   sk_X509_free(certs);
+  X509_free(cert);
 
   DEBUG_printf("1cupsGetCredentialsTrust: Returning %d.", trust);
 
@@ -2638,4 +2595,85 @@ openssl_load_x509(
   BIO_free(bio);
 
   return (certs);
+}
+
+
+//
+// 'openssl_validate_name()' - Check that the certificate is valid for the given name.
+//
+
+static bool				// O - `true` if valid, `false` otherwise
+openssl_validate_name(
+    X509       *cert,			// I - Certificate
+    const char *common_name)		// I - Common name
+{
+  bool		result = false;		// Return value
+  char		subjectName[256];	// Common name from certificate
+  STACK_OF(GENERAL_NAME) *names = NULL;
+				      // subjectAltName values
+
+
+  if (X509_NAME_get_text_by_NID(X509_get_subject_name(cert), NID_commonName, subjectName, sizeof(subjectName)) < 0)
+    cupsCopyString(subjectName, "unknown", sizeof(subjectName));
+
+  DEBUG_printf("1openssl_validate_name: subjectName=\"%s\"", subjectName);
+
+  if (!_cups_strcasecmp(common_name, subjectName))
+  {
+    DEBUG_puts("1openssl_validate_name: Match.");
+    return (true);
+  }
+
+  if ((names = X509_get_ext_d2i(cert, NID_subject_alt_name, /*crit*/NULL, /*idx*/NULL)) != NULL)
+  {
+    // Got subjectAltName values, look at them...
+    int	i,				// Looping var
+	count;				// Number of values
+
+    DEBUG_printf("1openssl_validate_name: names=%p", names);
+    for (i = 0, count = sk_GENERAL_NAME_num(names); i < count && !result; i ++)
+    {
+      const GENERAL_NAME *name = sk_GENERAL_NAME_value(names, i);
+					// subjectAltName value
+
+      if (!name)
+	continue;
+
+      DEBUG_printf("1openssl_validate_name: subjectAltName[%d/%d].type=%d", i + 1, count, name->type);
+      if (name->type == GEN_DNS)
+      {
+	// Match a DNS name...
+	char	*dNSName;		// DNS name value
+
+	if (ASN1_STRING_to_UTF8((unsigned char **)&dNSName, name->d.dNSName) > 0)
+	{
+	  DEBUG_printf("1openssl_validate_name: subjectAltName[%d/%d].dNSName=\"%s\"", i + 1, count, dNSName);
+
+	  if (!_cups_strcasecmp(common_name, dNSName))
+	  {
+	    // Direct name match...
+	    DEBUG_puts("1openssl_validate_name: Match.");
+	    result = true;
+	  }
+	  else if (!strncmp(dNSName, "*.", 2))
+	  {
+	    // Compare wildcard...
+	    const char *domain_name = strchr(common_name, '.');
+				      // Domain name of common name
+	    if (domain_name && !_cups_strcasecmp(domain_name, dNSName + 1))
+	    {
+	      DEBUG_puts("1openssl_validate_name: Match.");
+	      result = true;
+	    }
+	  }
+
+	  OPENSSL_free(dNSName);
+	}
+      }
+    }
+
+    GENERAL_NAMES_free(names);
+  }
+
+  return (result);
 }
