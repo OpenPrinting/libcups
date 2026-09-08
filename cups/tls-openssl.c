@@ -941,7 +941,7 @@ cupsGetCredentialsTrust(
       X509_STORE_CTX	*ctx = X509_STORE_CTX_new();
 					// Context for certificate store
       X509_STORE	*store = X509_STORE_new();
-      					// Certificate store
+					// Certificate store
 
       if (!ctx || !store)
       {
