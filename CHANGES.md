@@ -7,6 +7,7 @@ v3.0.4 - YYYY-MM-DD
 - Updated cookie handling to separate Cookie and Set-Cookie headers (Issue #161)
 - Updated `cupsJWTHasValidSignature` to use a constant-time comparison function
   for HMAC signatures.
+- Now explicitly limit IPP attribute names to 255 bytes.
 - Fixed an issue with `cupsGetCredentialsTrust` for credentials that are signed
   by an unknown CA.
 
