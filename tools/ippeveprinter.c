@@ -457,8 +457,10 @@ main(int  argc,				// I - Number of command-line args
 	      break;
 
           case 'A' : // -A (enable authentication)
+#if HAVE_LIBPAM
               if (!PAMService)
                 PAMService = "cups";
+#endif // HAVE_LIBPAM
 	      break;
 
           case 'c' : // -c command
@@ -705,7 +707,7 @@ main(int  argc,				// I - Number of command-line args
     return (usage(stderr));
   }
 
-#ifdef HAVE_LIBPAM
+#if HAVE_LIBPAM
   if ((OAuthURI && Password) || (OAuthURI && PAMService) || (PAMService && Password))
   {
     cupsLangPrintf(stderr, _("%s: Cannot specify --oauth-uri, --pam-service, and --password at the same time."), "ippeveprinter");
