@@ -4,6 +4,8 @@ Changes in libcups
 v3.0.4 - YYYY-MM-DD
 -------------------
 
+- SECURITY-3.5: Updated `cupsOAuthGetTokens` to do more validation of the access
+  token (GHSA-mq7v-g5c2-75fg)
 - Updated cookie handling to separate Cookie and Set-Cookie headers (Issue #161)
 - Updated `cupsJWTHasValidSignature` to use a constant-time comparison function
   for HMAC signatures.
