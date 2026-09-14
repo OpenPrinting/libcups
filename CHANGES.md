@@ -9,9 +9,12 @@ v3.0.4 - YYYY-MM-DD
 - Updated cookie handling to separate Cookie and Set-Cookie headers (Issue #161)
 - Updated `cupsJWTHasValidSignature` to use a constant-time comparison function
   for HMAC signatures.
+- Updated `ippeveprinter` to support a single test password.
+- Updated `ippeveprinter` to support OAuth/OpenID authorization.
 - Now explicitly limit IPP attribute names to 255 bytes.
 - Fixed an issue with `cupsGetCredentialsTrust` for credentials that are signed
   by an unknown CA.
+- Fixed PAM support in `ippeveprinter`.
 
 
 v3.0.3 - 2026-08-20

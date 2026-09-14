@@ -1,7 +1,7 @@
 #
 # IPP tools makefile for libcups.
 #
-# Copyright © 2021-2025 by OpenPrinting.
+# Copyright © 2021-2026 by OpenPrinting.
 #
 # Licensed under Apache License v2.0.  See the file "LICENSE" for more
 # information.
@@ -152,7 +152,7 @@ cups-x509:	cups-x509.o ../cups/$(LIBCUPS)
 
 ippeveprinter:	ippeveprinter.o ../cups/$(LIBCUPS) ippeveprinter-static
 	echo Linking $@...
-	$(CC) $(LDFLAGS) $(OPTIM) -o $@ ippeveprinter.o $(LINKCUPS) $(LIBS)
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ ippeveprinter.o $(PAMLIBS) $(LINKCUPS) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 

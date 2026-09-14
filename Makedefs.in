@@ -1,7 +1,7 @@
 #
 # Common makefile definitions for libcups.
 #
-# Copyright © 2021-2023 by OpenPrinting.
+# Copyright © 2021-2026 by OpenPrinting.
 #
 # Licensed under Apache License v2.0.  See the file "LICENSE" for more
 # information.
@@ -100,6 +100,7 @@ DSOFLAGS	=	@DSOFLAGS@
 XFORMLIBS	=	@XFORMLIBS@
 LDFLAGS		=	@LDFLAGS@
 LIBS		=	@LIBS@ -lm
+PAMLIBS		=	@PAMLIBS@
 
 
 #

@@ -658,6 +658,7 @@ CSFLAGS
 LIBCUPS_STATIC
 LIBCUPS
 INSTALL_STATIC
+PAMLIBS
 PKGCONFIG_AVAHI
 PDFIODIR
 subdirs
@@ -747,6 +748,7 @@ with_pdfrip
 with_dnssd
 with_tls
 enable_dbus
+enable_pam
 enable_static
 enable_shared
 enable_debug
@@ -1389,6 +1391,7 @@ Optional Features:
   --disable-libcups3-prefix
                           do not add libcups3 prefix to header/library files
   --disable-dbus          build without D-Bus support
+  --disable-pam           disable PAM support
   --disable-static        do not install static library
   --disable-shared        do not install shared library
   --enable-debug          turn on debugging, default=no
@@ -5313,6 +5316,151 @@ then :
 fi
 
 fi
+
+fi
+
+
+# Check whether --enable-pam was given.
+if test ${enable_pam+y}
+then :
+  enableval=$enable_pam;
+fi
+
+
+PAMLIBS=""
+
+
+if test x$enable_pam != xno
+then :
+
+    SAVELIBS="$LIBS"
+
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for dlopen in -ldl" >&5
+printf %s "checking for dlopen in -ldl... " >&6; }
+if test ${ac_cv_lib_dl_dlopen+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-ldl  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+char dlopen ();
+int
+main (void)
+{
+return dlopen ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
+then :
+  ac_cv_lib_dl_dlopen=yes
+else $as_nop
+  ac_cv_lib_dl_dlopen=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_dl_dlopen" >&5
+printf "%s\n" "$ac_cv_lib_dl_dlopen" >&6; }
+if test "x$ac_cv_lib_dl_dlopen" = xyes
+then :
+  printf "%s\n" "#define HAVE_LIBDL 1" >>confdefs.h
+
+  LIBS="-ldl $LIBS"
+
+fi
+
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for pam_start in -lpam" >&5
+printf %s "checking for pam_start in -lpam... " >&6; }
+if test ${ac_cv_lib_pam_pam_start+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lpam  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+char pam_start ();
+int
+main (void)
+{
+return pam_start ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
+then :
+  ac_cv_lib_pam_pam_start=yes
+else $as_nop
+  ac_cv_lib_pam_pam_start=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_pam_pam_start" >&5
+printf "%s\n" "$ac_cv_lib_pam_pam_start" >&6; }
+if test "x$ac_cv_lib_pam_pam_start" = xyes
+then :
+  printf "%s\n" "#define HAVE_LIBPAM 1" >>confdefs.h
+
+  LIBS="-lpam $LIBS"
+
+fi
+
+    ac_fn_c_check_header_compile "$LINENO" "security/pam_appl.h" "ac_cv_header_security_pam_appl_h" "$ac_includes_default"
+if test "x$ac_cv_header_security_pam_appl_h" = xyes
+then :
+
+fi
+
+    if test x$ac_cv_header_security_pam_appl_h != xyes
+then :
+
+	ac_fn_c_check_header_compile "$LINENO" "pam/pam_appl.h" "ac_cv_header_pam_pam_appl_h" "$ac_includes_default"
+if test "x$ac_cv_header_pam_pam_appl_h" = xyes
+then :
+
+
+printf "%s\n" "#define HAVE_PAM_PAM_APPL_H 1" >>confdefs.h
+
+
+fi
+
+
+fi
+
+    if test x$ac_cv_lib_pam_pam_start != xno
+then :
+
+	# Set the necessary libraries for PAM...
+	if test x$ac_cv_lib_dl_dlopen != xno
+then :
+
+	    PAMLIBS="-lpam -ldl"
+
+else $as_nop
+
+	    PAMLIBS="-lpam"
+
+fi
+
+fi
+
+    LIBS="$SAVELIBS"
 
 fi
 

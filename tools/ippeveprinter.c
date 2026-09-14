@@ -19,6 +19,7 @@
 #include <cups/cups-private.h>
 #include <cups/form.h>
 #include <cups/dnssd.h>
+#include <cups/oauth.h>
 
 #include <limits.h>
 #include <sys/stat.h>
@@ -134,13 +135,12 @@ static const char * const ippeve_preason_strings[] =
 // Structures...
 //
 
-#if HAVE_LIBPAM
 typedef struct ippeve_authdata_s	// Authentication data
 {
-  char	username[256],	// Username string
+  char	bearer[4096],			// Bearer token data
+	username[512],			// Username/password string
 	*password;			// Password string
 } ippeve_authdata_t;
-#endif // HAVE_LIBPAM
 
 typedef struct ippeve_filter_s		// Attribute filter
 {
@@ -221,7 +221,8 @@ typedef struct ippeve_client_s		// Client data
   int			host_port;	// Port number from Host: header
   http_addr_t		addr;		// Client address
   char			hostname[256],	// Client hostname
-			username[256];	// Authenticated username, if any
+			username[256],	// Authenticated username, if any
+			autherr[256];	// Authentication error, if any
   ippeve_printer_t	*printer;	// Printer
   ippeve_job_t		*job;		// Current job, if any
 } ippeve_client_t;
@@ -310,8 +311,18 @@ static bool		KeepFiles = false;
 					// Keep spooled job files?
 static int		MaxVersion = 20,// Maximum IPP version (20 = 2.0, 11 = 1.1, etc.)
 			Verbosity = 0;	// Verbosity level
+#if HAVE_LIBPAM
 static const char	*PAMService = NULL;
 					// PAM service
+#endif // HAVE_LIBPAM
+static const char	*Password = NULL;
+					// Test password, if any
+static const char	*OAuthURI = NULL;
+					// OAuth Authorization Server URI, if any
+static const char	*OAuthScopes = NULL;
+					// OAuth scopes, if any
+static cups_json_t	*OAuthMetadata = NULL;
+					// OAuth AS metadata, if any
 #ifndef _WIN32
 static bool		StopPrinter = false;
 					// Stop the printer server?
@@ -367,6 +378,29 @@ main(int  argc,				// I - Number of command-line args
     {
       web_forms = false;
     }
+    else if (!strcmp(argv[i], "--oauth-uri"))
+    {
+      i ++;
+      if (i >= argc || strncmp(argv[i], "https://", 8))
+      {
+        cupsLangPrintf(stderr, _("%s: Missing/bad URI after '--oauth-uri'."), "ippeveprinter");
+        return (usage(stderr));
+      }
+
+      OAuthURI = argv[i];
+    }
+    else if (!strcmp(argv[i], "--oauth-scopes"))
+    {
+      i ++;
+      if (i >= argc)
+      {
+        cupsLangPrintf(stderr, _("%s: Missing scope(s) after '--oauth-scopes'."), "ippeveprinter");
+        return (usage(stderr));
+      }
+
+      OAuthScopes = argv[i];
+    }
+#if HAVE_LIBPAM
     else if (!strcmp(argv[i], "--pam-service"))
     {
       i ++;
@@ -377,6 +411,18 @@ main(int  argc,				// I - Number of command-line args
       }
 
       PAMService = argv[i];
+    }
+#endif // HAVE_LIBPAM
+    else if (!strcmp(argv[i], "--password"))
+    {
+      i ++;
+      if (i >= argc)
+      {
+        cupsLangPrintf(stderr, _("%s: Missing password after '--password'."), "ippeveprinter");
+        return (usage(stderr));
+      }
+
+      Password = argv[i];
     }
     else if (!strcmp(argv[i], "--version"))
     {
@@ -659,6 +705,26 @@ main(int  argc,				// I - Number of command-line args
     return (usage(stderr));
   }
 
+#ifdef HAVE_LIBPAM
+  if ((OAuthURI && Password) || (OAuthURI && PAMService) || (PAMService && Password))
+  {
+    cupsLangPrintf(stderr, _("%s: Cannot specify --oauth-uri, --pam-service, and --password at the same time."), "ippeveprinter");
+    return (usage(stderr));
+  }
+#else
+  if (OAuthURI && Password)
+  {
+    cupsLangPrintf(stderr, _("%s: Cannot specify --oauth-uri and --password at the same time."), "ippeveprinter");
+    return (usage(stderr));
+  }
+#endif // HAVE_LIBPAM
+
+  if (OAuthURI && (OAuthMetadata = cupsOAuthGetMetadata(OAuthURI)) == NULL)
+  {
+    cupsLangPrintf(stderr, _("%s: Unable to get metadata for OAuth Authorization Server '%s': %s"), "ippeveprinter", OAuthURI, cupsGetErrorString());
+    return (1);
+  }
+
   // Apply defaults as needed...
   if (!directory[0])
   {
@@ -736,91 +802,158 @@ main(int  argc,				// I - Number of command-line args
 // 'authenticate_request()' - Try to authenticate the request.
 //
 
-static http_status_t			// O - HTTP_STATUS_CONTINUE to keep going, otherwise status to return
+static http_status_t			// O - `HTTP_STATUS_CONTINUE` to keep going, otherwise status to return
 authenticate_request(
     ippeve_client_t *client)		// I - Client
 {
-#if HAVE_LIBPAM
-  // If PAM isn't enabled, return 'continue' now...
   const char		*authorization;	// Pointer into Authorization string
-  int			userlen;	// Username:password length
-  pam_handle_t		*pamh;		// PAM authentication handle
-  int			pamerr;		// PAM error code
-  struct pam_conv	pamdata;	// PAM conversation data
+  size_t		datalen;	// Auth data length
   ippeve_authdata_t	data;		// Authentication data
 
 
-  if (!PAMService)
+  // This code handles HTTP Basic and Bearer (OAuth) authentication.
+  //
+  // If OAuth, PAM, or a static password are not set, then there is no
+  // authentication enabled.
+#if HAVE_LIBPAM
+  if (!OAuthURI && !PAMService && !Password)
     return (HTTP_STATUS_CONTINUE);
+#else
+  if (!OAuthURI && !Password)
+    return (HTTP_STATUS_CONTINUE);
+#endif // HAVE_LIBPAM
 
-  // Try authenticating using PAM...
+  // See what we have...
   authorization = httpGetField(client->http, HTTP_FIELD_AUTHORIZATION);
+
+  if (OAuthURI && !*authorization && httpGetCookieValue(client->http, "CUPS_BEARER", data.bearer, sizeof(data.bearer)) && data.bearer[0])
+    authorization = "Bearer COOKIE";
 
   if (!*authorization)
     return (HTTP_STATUS_UNAUTHORIZED);
 
-  if (strncmp(authorization, "Basic ", 6))
+  memset(&data, 0, sizeof(data));
+
+  if (OAuthURI)
+  {
+    cups_jwt_t	*jwt;			// JWT user information
+    const char	*sub,			// Subject/user ID
+		*prefname;		// Preferred username
+
+    if (strncmp(authorization, "Bearer ", 7))
+    {
+      fputs("Unsupported scheme in Authorization header.\n", stderr);
+      return (HTTP_STATUS_BAD_REQUEST);
+    }
+
+    authorization += 7;
+    while (isspace(*authorization & 255))
+      authorization ++;
+
+    if (!strcmp(authorization, "COOKIE"))
+      authorization = data.bearer;
+
+    // TODO: Validate OAuth credentials
+    if ((jwt = cupsOAuthGetUserId(OAuthURI, OAuthMetadata, authorization)) == NULL)
+    {
+      fprintf(stderr, "Unable to get user information from bearer token: %s\n", cupsGetErrorString());
+      cupsCopyString(client->autherr, cupsGetErrorString(), sizeof(client->autherr));
+      return (HTTP_STATUS_BAD_REQUEST);
+    }
+    else if ((sub = cupsJWTGetClaimString(jwt, CUPS_JWT_SUB)) == NULL)
+    {
+      fputs("Missing subject name in OAuth user information.\n", stderr);
+      cupsCopyString(client->autherr, "Missing subject name.", sizeof(client->autherr));
+      cupsJWTDelete(jwt);
+      return (HTTP_STATUS_BAD_REQUEST);
+    }
+
+    if ((prefname = cupsJWTGetClaimString(jwt, "preferred_username")) != NULL)
+      cupsCopyString(client->username, prefname, sizeof(client->username));
+    else
+      cupsCopyString(client->username, sub, sizeof(client->username));
+  }
+  else if (strncmp(authorization, "Basic ", 6))
   {
     fputs("Unsupported scheme in Authorization header.\n", stderr);
     return (HTTP_STATUS_BAD_REQUEST);
   }
-
-  authorization += 5;
-  while (isspace(*authorization & 255))
-    authorization ++;
-
-  userlen = sizeof(data.username);
-  httpDecode64_2(data.username, &userlen, authorization);
-
-  if ((data.password = strchr(data.username, ':')) == NULL)
+  else
   {
-    fputs("No password in Authorization header.\n", stderr);
-    return (HTTP_STATUS_BAD_REQUEST);
-  }
+    // Extract Base64-encoded username and password...
+    authorization += 6;
+    while (isspace(*authorization & 255))
+      authorization ++;
 
-  *(data.password)++ = '\0';
+    datalen = sizeof(data.username) - 1;
+    httpDecode64(data.username, &datalen, authorization, /*end*/NULL);
 
-  if (!data.username[0])
-  {
-    fputs("No username in Authorization header.\n", stderr);
-    return (HTTP_STATUS_BAD_REQUEST);
-  }
+    if ((data.password = strchr(data.username, ':')) == NULL)
+    {
+      fputs("No password in Authorization header.\n", stderr);
+      return (HTTP_STATUS_BAD_REQUEST);
+    }
 
-  pamdata.conv        = pam_func;
-  pamdata.appdata_ptr = &data;
+    *(data.password)++ = '\0';
 
-  if ((pamerr = pam_start(PAMService, data.username, &pamdata, &pamh)) != PAM_SUCCESS)
-  {
-    fprintf(stderr, "pam_start() returned %d (%s)\n", pamerr, pam_strerror(pamh, pamerr));
-    return (HTTP_STATUS_SERVER_ERROR);
-  }
+    if (!data.username[0])
+    {
+      fputs("No username in Authorization header.\n", stderr);
+      return (HTTP_STATUS_BAD_REQUEST);
+    }
 
-  if ((pamerr = pam_authenticate(pamh, PAM_SILENT)) != PAM_SUCCESS)
-  {
-    fprintf(stderr, "pam_authenticate() returned %d (%s)\n", pamerr, pam_strerror(pamh, pamerr));
-    pam_end(pamh, 0);
-    return (HTTP_STATUS_UNAUTHORIZED);
-  }
+    if (Password)
+    {
+      if (strcmp(data.password, Password))
+      {
+        fputs("Wrong password for user.\n", stderr);
+        return (HTTP_STATUS_UNAUTHORIZED);
+      }
 
-  if ((pamerr = pam_acct_mgmt(pamh, PAM_SILENT)) != PAM_SUCCESS)
-  {
-    fprintf(stderr, "pam_acct_mgmt() returned %d (%s)\n", pamerr, pam_strerror(pamh, pamerr));
-    pam_end(pamh, 0);
-    return (HTTP_STATUS_SERVER_ERROR);
-  }
+      cupsCopyString(client->username, data.username, sizeof(client->username));
+    }
+    else
+    {
+#if HAVE_LIBPAM
+      pam_handle_t	*pamh;		// PAM authentication handle
+      int		pamerr;		// PAM error code
+      struct pam_conv	pamdata;	// PAM conversation data
 
-  cupsCopyString(client->username, data.username, sizeof(client->username));
+      pamdata.conv        = pam_func;
+      pamdata.appdata_ptr = &data;
 
-  pam_end(pamh, PAM_SUCCESS);
+      if ((pamerr = pam_start(PAMService, data.username, &pamdata, &pamh)) != PAM_SUCCESS)
+      {
+	fprintf(stderr, "pam_start() returned %d (%s)\n", pamerr, pam_strerror(pamh, pamerr));
+	return (HTTP_STATUS_SERVER_ERROR);
+      }
 
-  return (HTTP_STATUS_CONTINUE);
+      if ((pamerr = pam_authenticate(pamh, PAM_SILENT)) != PAM_SUCCESS)
+      {
+	fprintf(stderr, "pam_authenticate() returned %d (%s)\n", pamerr, pam_strerror(pamh, pamerr));
+	pam_end(pamh, 0);
+	return (HTTP_STATUS_UNAUTHORIZED);
+      }
+
+      if ((pamerr = pam_acct_mgmt(pamh, PAM_SILENT)) != PAM_SUCCESS)
+      {
+	fprintf(stderr, "pam_acct_mgmt() returned %d (%s)\n", pamerr, pam_strerror(pamh, pamerr));
+	pam_end(pamh, 0);
+	return (HTTP_STATUS_SERVER_ERROR);
+      }
+
+      pam_end(pamh, PAM_SUCCESS);
+      cupsCopyString(client->username, data.username, sizeof(client->username));
 
 #else
-  // No authentication support built-in, return 'continue'...
-  (void)client;
+      // This shouldn't happen, but if it does just error out...
+      fputs("No test password defined.\n", stderr);
+      return (HTTP_STATUS_SERVER_ERROR);
+#endif // HAVE_LIBPAM
+    }
+  }
 
   return (HTTP_STATUS_CONTINUE);
-#endif // HAVE_LIBPAM
 }
 
 
@@ -1618,15 +1751,20 @@ create_printer(
     "http",
     "https"
   };
-  static const char * const uri_authentication_supported[] =
-  {					// uri-authentication-supported values
+  static const char * const uri_authentication_none[] =
+  {					// uri-authentication-supported values w/o authentication
     "none",
     "none"
   };
   static const char * const uri_authentication_basic[] =
-  {					// uri-authentication-supported values with authentication
+  {					// uri-authentication-supported values with Basic authentication
     "basic",
     "basic"
+  };
+  static const char * const uri_authentication_oauth[] =
+  {					// uri-authentication-supported values with OAuth authentication
+    "oauth",
+    "oauth"
   };
   static const char * const uri_security_supported[] =
   {					// uri-security-supported values
@@ -2085,10 +2223,16 @@ create_printer(
   ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_URISCHEME, "requesting-user-uri-schemes-supported", NULL, "mailto");
 
   // uri-authentication-supported
-  if (PAMService)
+#if HAVE_LIBPAM
+  if (PAMService || Password)
+#else
+  if (Password)
+#endif // HAVE_LIBPAM
     ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "uri-authentication-supported", 2, NULL, uri_authentication_basic);
+  else if (OAuthURI)
+    ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "uri-authentication-supported", 2, NULL, uri_authentication_oauth);
   else
-    ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "uri-authentication-supported", 2, NULL, uri_authentication_supported);
+    ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "uri-authentication-supported", 2, NULL, uri_authentication_none);
 
   // uri-security-supported
   ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "uri-security-supported", 2, NULL, uri_security_supported);
@@ -5986,7 +6130,7 @@ process_job(ippeve_job_t *job)		// I - Job
     // Report the total processing time...
     gettimeofday(&end, NULL);
 
-    fprintf(stderr, "[Job %d] Processing time was %.3f seconds.\n", job->id, end.tv_sec - start.tv_sec + 0.000001 * (end.tv_usec - start.tv_usec));
+    fprintf(stderr, "[Job %d] Processing time was %.3f seconds.\n", job->id, (double)end.tv_sec - (double)start.tv_sec + 0.000001 * (double)(end.tv_usec - start.tv_usec));
   }
   else
   {
@@ -6349,9 +6493,26 @@ respond_http(
 
   if (code == HTTP_STATUS_UNAUTHORIZED)
   {
-    char value[256];			// WWW-Authenticate value
+    char value[2048];			// WWW-Authenticate value
 
-    snprintf(value, sizeof(value), "Basic realm=\"%s\"", PAMService);
+    if (OAuthURI)
+    {
+      if (client->autherr[0])
+	snprintf(value, sizeof(value), "Bearer realm=\"%s\" scope=\"%s\" error=\"invalid_token\" error_description=\"%s\"", OAuthURI, OAuthScopes ? OAuthScopes : "", client->autherr);
+      else
+        snprintf(value, sizeof(value), "Bearer realm=\"%s\" scope=\"%s\"", OAuthURI, OAuthScopes ? OAuthScopes : "");
+    }
+#if HAVE_LIBPAM
+    else if (PAMService)
+    {
+      snprintf(value, sizeof(value), "Basic realm=\"%s\"", PAMService);
+    }
+#endif // HAVE_LIBPAM
+    else
+    {
+      cupsCopyString(value, "Basic realm=\"Test Password\"", sizeof(value));
+    }
+
     httpSetField(client->http, HTTP_FIELD_WWW_AUTHENTICATE, value);
   }
 
@@ -7237,7 +7398,12 @@ usage(FILE *out)			// I - Output file
   cupsLangPuts(out, _("Options:"));
   cupsLangPuts(out, _("--help                         Show this help"));
   cupsLangPuts(out, _("--no-web-forms                 Disable web forms for media and supplies"));
+  cupsLangPuts(out, _("--oauth-uri AS-URI             Use the specified OAuth Authorization Server"));
+  cupsLangPuts(out, _("--oauth-scopes SCOPE[,...]     Use the specified OAuth scopes"));
+#if HAVE_LIBPAM
   cupsLangPuts(out, _("--pam-service SERVICE          Use the named PAM service"));
+#endif // HAVE_LIBPAM
+  cupsLangPuts(out, _("--password PASSWORD            Use the specified password to authenticate"));
   cupsLangPuts(out, _("--version                      Show the program version"));
   cupsLangPuts(out, _("-2                             Set 2-sided printing support (default=1-sided)"));
   cupsLangPuts(out, _("-a FILENAME                    Load printer attributes from IPP file"));

@@ -48,6 +48,18 @@
 
 
 //
+// Do we have PAM stuff?
+//
+
+#if TARGET_OS_OSX
+#  define HAVE_LIBPAM 1
+#else
+#  define HAVE_LIBPAM 0
+#endif // TARGET_OS_OSX
+/* #undef HAVE_PAM_PAM_APPL_H */
+
+
+//
 // Do we have the long long type?
 //
 

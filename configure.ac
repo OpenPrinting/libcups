@@ -484,6 +484,37 @@ AS_IF([test "x$enable_dbus" != xno], [
 ])
 
 
+dnl PAM supports...
+AC_ARG_ENABLE([pam], AS_HELP_STRING([--disable-pam], [disable PAM support]))
+
+PAMLIBS=""
+AC_SUBST([PAMLIBS])
+
+AS_IF([test x$enable_pam != xno], [
+    SAVELIBS="$LIBS"
+
+    AC_CHECK_LIB([dl], [dlopen])
+    AC_CHECK_LIB([pam], [pam_start])
+    AC_CHECK_HEADER([security/pam_appl.h])
+    AS_IF([test x$ac_cv_header_security_pam_appl_h != xyes], [
+	AC_CHECK_HEADER([pam/pam_appl.h], [
+	    AC_DEFINE([HAVE_PAM_PAM_APPL_H], [1], [Have <pam/pam_appl.h> header?])
+	])
+    ])
+
+    AS_IF([test x$ac_cv_lib_pam_pam_start != xno], [
+	# Set the necessary libraries for PAM...
+	AS_IF([test x$ac_cv_lib_dl_dlopen != xno], [
+	    PAMLIBS="-lpam -ldl"
+	], [
+	    PAMLIBS="-lpam"
+	])
+    ])
+
+    LIBS="$SAVELIBS"
+])
+
+
 dnl Library targets...
 AC_ARG_ENABLE([static], AS_HELP_STRING([--disable-static], [do not install static library]))
 AC_ARG_ENABLE([shared], AS_HELP_STRING([--disable-shared], [do not install shared library]))

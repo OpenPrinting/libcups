@@ -128,6 +128,14 @@ typedef unsigned long useconds_t;
 
 
 //
+// Do we have PAM stuff?
+//
+
+#define HAVE_LIBPAM 0
+/* #undef HAVE_PAM_PAM_APPL_H */
+
+
+//
 // Do we have the long long type?
 //
 

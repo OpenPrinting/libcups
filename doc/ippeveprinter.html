@@ -106,8 +106,17 @@ blockquote {
 ] [
 <strong>--no-web-forms</strong>
 ] [
+<strong>--oauth-scopes</strong>
+<em>SCOPE[,...]</em>
+] [
+<strong>--oauth-uri</strong>
+<em>AS-URI</em>
+] [
 <strong>--pam-service</strong>
 <em>SERVICE</em>
+] [
+<strong>--password</strong>
+<em>PASSWORD</em>
 ] [
 <strong>--version</strong>
 ] [
@@ -190,11 +199,20 @@ Show program usage.
 Disable the web interface forms used to update the media, state, and supply levels.
 See the &quot;WEB INTERFACE FORMS&quot; section for more information.
 </p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>--oauth-scopes </strong><em>SCOPE[,...]</em><br>
+Set the OAuth scope(s) to use when authorizing.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>--oauth-uri </strong><em>AS-URI</em><br>
+Set the OAuth/OpenID Authorization Server URI.
+</p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>--pam-service </strong><em>SERVICE</em><br>
 Set the PAM service name.
 The default service is
 <em>cups</em>.
 
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>--password </strong><em>PASSWORD</em><br>
+Sets a test password to use for Basic authentication.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>--version</strong><br>
 Show the CUPS version.
