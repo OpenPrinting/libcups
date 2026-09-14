@@ -2383,16 +2383,14 @@ finish_document_data(
   job->state    = IPP_JSTATE_PENDING;
 
   // Process the job...
-  t = cupsThreadCreate((cups_thread_func_t)process_job, job);
-
-  if (t)
-  {
-    cupsThreadDetach(t);
-  }
-  else
+  if ((t = cupsThreadCreate((cups_thread_func_t)process_job, job)) == CUPS_THREAD_INVALID)
   {
     respond_ipp(client, IPP_STATUS_ERROR_INTERNAL, "Unable to process job.");
     goto abort_job;
+  }
+  else
+  {
+    cupsThreadDetach(t);
   }
 
   // Return the job info...
@@ -6520,17 +6518,17 @@ run_printer(ippeve_printer_t *printer)	// I - Printer
     {
       if ((client = create_client(printer, printer->ipv4)) != NULL)
       {
-        cups_thread_t t = cupsThreadCreate((cups_thread_func_t)process_client, client);
+        cups_thread_t t;		// Client thread
 
-        if (t)
+        if ((t = cupsThreadCreate((cups_thread_func_t)process_client, client)) == CUPS_THREAD_INVALID)
+        {
+	  perror("Unable to create client thread");
+	  delete_client(client);
+        }
+        else
         {
           cupsThreadDetach(t);
         }
-        else
-	{
-	  perror("Unable to create client thread");
-	  delete_client(client);
-	}
       }
     }
 
@@ -6538,17 +6536,17 @@ run_printer(ippeve_printer_t *printer)	// I - Printer
     {
       if ((client = create_client(printer, printer->ipv6)) != NULL)
       {
-        cups_thread_t t = cupsThreadCreate((cups_thread_func_t)process_client, client);
+        cups_thread_t t;		// Client thread
 
-        if (t)
+        if ((t = cupsThreadCreate((cups_thread_func_t)process_client, client)) == CUPS_THREAD_INVALID)
+        {
+	  perror("Unable to create client thread");
+	  delete_client(client);
+        }
+        else
         {
           cupsThreadDetach(t);
         }
-        else
-	{
-	  perror("Unable to create client thread");
-	  delete_client(client);
-	}
       }
     }
 
