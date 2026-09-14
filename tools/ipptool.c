@@ -865,7 +865,7 @@ alloc_data(void)
   data->errors         = cupsArrayNew(NULL, NULL, NULL, 0, _cupsArrayStrdup, _cupsArrayFree);
   data->pass           = true;
   data->prev_pass      = true;
-  data->request_id     = (cupsGetRand() % 1000) * 137;
+  data->request_id     = (cupsGetRand() % 1000) * 137 + 1;
   data->show_header    = true;
   data->monitor_thread = CUPS_THREAD_INVALID;
 
