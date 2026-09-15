@@ -213,7 +213,7 @@ typedef struct ippeve_client_s		// Client data
   ipp_t			*request,	// IPP request
 			*response;	// IPP response
   time_t		start;		// Request start time
-  http_state_t		operation;	// Request operation
+  http_state_t		method;		// Request method
   ipp_op_t		operation_id;	// IPP operation-id
   char			uri[1024],	// Request URI
 			*options,	// URI options
@@ -250,7 +250,7 @@ static void		delete_client(ippeve_client_t *client);
 static void		delete_job(ippeve_job_t *job);
 static void		delete_printer(ippeve_printer_t *printer);
 static void		dnssd_callback(cups_dnssd_service_t *service, ippeve_printer_t *printer, cups_dnssd_flags_t flags);
-static int		filter_cb(ippeve_filter_t *filter, ipp_t *dst, ipp_attribute_t *attr);
+static bool		filter_cb(ippeve_filter_t *filter, ipp_t *dst, ipp_attribute_t *attr);
 static ippeve_job_t	*find_job(ippeve_client_t *client);
 static void		finish_document_data(ippeve_client_t *client, ippeve_job_t *job);
 static void		finish_document_uri(ippeve_client_t *client, ippeve_job_t *job);
@@ -281,8 +281,8 @@ static int		pam_func(int, const struct pam_message **, struct pam_response **, v
 static size_t		parse_options(ippeve_client_t *client, cups_option_t **options);
 static void		process_attr_message(ippeve_job_t *job, char *message);
 static void		*process_client(ippeve_client_t *client);
-static int		process_http(ippeve_client_t *client);
-static int		process_ipp(ippeve_client_t *client);
+static bool		process_http(ippeve_client_t *client);
+static bool		process_ipp(ippeve_client_t *client);
 static void		*process_job(ippeve_job_t *job);
 static void		process_state_message(ippeve_printer_t *printer, const char *message);
 static bool		register_printer(ippeve_printer_t *printer);
@@ -291,9 +291,10 @@ static void		respond_ignored(ippeve_client_t *client, ipp_attribute_t *attr);
 static void		respond_ipp(ippeve_client_t *client, ipp_status_t status, const char *message, ...) _CUPS_FORMAT(3, 4);
 static void		respond_unsupported(ippeve_client_t *client, ipp_attribute_t *attr);
 static void		run_printer(ippeve_printer_t *printer);
-static int		show_media(ippeve_client_t *client);
-static int		show_status(ippeve_client_t *client);
-static int		show_supplies(ippeve_client_t *client);
+static bool		show_media(ippeve_client_t *client);
+static bool		show_oauth(ippeve_client_t *client);
+static bool		show_status(ippeve_client_t *client);
+static bool		show_supplies(ippeve_client_t *client);
 #ifndef _WIN32
 static void		signal_handler(int signum);
 #endif // !_WIN32
@@ -2419,8 +2420,8 @@ dnssd_callback(
 // 'filter_cb()' - Filter printer attributes based on the requested array.
 //
 
-static int				// O - 1 to copy, 0 to ignore
-filter_cb(ippeve_filter_t   *filter,	// I - Filter parameters
+static bool				// O - `true` to copy, `false` to ignore
+filter_cb(ippeve_filter_t *filter,	// I - Filter parameters
           ipp_t           *dst,		// I - Destination (unused)
 	  ipp_attribute_t *attr)	// I - Source attribute
 {
@@ -2433,7 +2434,7 @@ filter_cb(ippeve_filter_t   *filter,	// I - Filter parameters
   const char *name = ippGetName(attr);
 
   if ((filter->group_tag != IPP_TAG_ZERO && group != filter->group_tag && group != IPP_TAG_ZERO) || !name || (!strcmp(name, "media-col-database") && !cupsArrayFind(filter->ra, (void *)name)))
-    return (0);
+    return (false);
 
   return (!filter->ra || cupsArrayFind(filter->ra, (void *)name) != NULL);
 }
@@ -5126,7 +5127,7 @@ process_client(ippeve_client_t *client)	// I - Client
 // 'process_http()' - Process a HTTP request.
 //
 
-int					// O - 1 on success, 0 on failure
+static bool				// O - `true` on success, `false` on failure
 process_http(ippeve_client_t *client)	// I - Client connection
 {
   char			uri[1024];	// URI
@@ -5143,13 +5144,16 @@ process_http(ippeve_client_t *client)	// I - Client connection
 
   // Clear state variables...
   client->username[0] = '\0';
+  client->autherr[0]  = '\0';
 
   ippDelete(client->request);
   ippDelete(client->response);
 
   client->request   = NULL;
   client->response  = NULL;
-  client->operation = HTTP_STATE_WAITING;
+  client->method = HTTP_STATE_WAITING;
+  client->printer   = NULL;
+  client->job       = NULL;
 
   // Read a request from the connection...
   while ((http_state = httpReadRequest(client->http, uri, sizeof(uri))) == HTTP_STATE_WAITING)
@@ -5163,19 +5167,19 @@ process_http(ippeve_client_t *client)	// I - Client connection
     else
       fprintf(stderr, "%s Bad request line (%s).\n", client->hostname, strerror(httpGetError(client->http)));
 
-    return (0);
+    return (false);
   }
   else if (http_state == HTTP_STATE_UNKNOWN_METHOD)
   {
     fprintf(stderr, "%s Bad/unknown operation.\n", client->hostname);
     respond_http(client, HTTP_STATUS_BAD_REQUEST, NULL, NULL, 0);
-    return (0);
+    return (false);
   }
   else if (http_state == HTTP_STATE_UNKNOWN_VERSION)
   {
     fprintf(stderr, "%s Bad HTTP version.\n", client->hostname);
     respond_http(client, HTTP_STATUS_BAD_REQUEST, NULL, NULL, 0);
-    return (0);
+    return (false);
   }
 
   fprintf(stderr, "%s %s %s\n", client->hostname, httpStateString(http_state), uri);
@@ -5185,15 +5189,15 @@ process_http(ippeve_client_t *client)	// I - Client connection
   {
     fprintf(stderr, "%s Bad URI \"%s\".\n", client->hostname, uri);
     respond_http(client, HTTP_STATUS_BAD_REQUEST, NULL, NULL, 0);
-    return (0);
+    return (false);
   }
 
   if ((client->options = strchr(client->uri, '?')) != NULL)
     *(client->options)++ = '\0';
 
   // Process the request...
-  client->start     = time(NULL);
-  client->operation = httpGetState(client->http);
+  client->start  = time(NULL);
+  client->method = httpGetState(client->http);
 
   // Parse incoming parameters until the status changes...
   while ((http_status = httpUpdate(client->http)) == HTTP_STATUS_CONTINUE);
@@ -5201,7 +5205,7 @@ process_http(ippeve_client_t *client)	// I - Client connection
   if (http_status != HTTP_STATUS_OK)
   {
     respond_http(client, HTTP_STATUS_BAD_REQUEST, NULL, NULL, 0);
-    return (0);
+    return (false);
   }
 
   // Validate the host header...
@@ -5210,7 +5214,7 @@ process_http(ippeve_client_t *client)	// I - Client connection
     // HTTP/1.1 and higher require the "Host:" field...
     fprintf(stderr, "%s Missing Host: header.\n", client->hostname);
     respond_http(client, HTTP_STATUS_BAD_REQUEST, NULL, NULL, 0);
-    return (0);
+    return (false);
   }
 
   cupsCopyString(client->host_field, httpGetField(client->http, HTTP_FIELD_HOST), sizeof(client->host_field));
@@ -5234,7 +5238,7 @@ process_http(ippeve_client_t *client)	// I - Client connection
   {
     fprintf(stderr, "%s Bad Host: header '%s'.\n", client->hostname, client->host_field);
     respond_http(client, HTTP_STATUS_BAD_REQUEST, NULL, NULL, 0);
-    return (0);
+    return (false);
   }
 
   // Handle HTTP Upgrade...
@@ -5245,24 +5249,24 @@ process_http(ippeve_client_t *client)	// I - Client connection
       char	security[256];		// Security description
 
       if (!respond_http(client, HTTP_STATUS_SWITCHING_PROTOCOLS, NULL, NULL, 0))
-        return (0);
+        return (false);
 
       fprintf(stderr, "%s Upgrading to encrypted connection.\n", client->hostname);
 
       if (!httpSetEncryption(client->http, HTTP_ENCRYPTION_REQUIRED))
       {
         fprintf(stderr, "%s Unable to encrypt connection: %s\n", client->hostname, cupsGetErrorString());
-	return (0);
+	return (false);
       }
 
       fprintf(stderr, "%s Connection now encrypted (%s).\n", client->hostname, httpGetSecurity(client->http, security, sizeof(security)));
     }
     else if (!respond_http(client, HTTP_STATUS_NOT_IMPLEMENTED, NULL, NULL, 0))
-      return (0);
+      return (false);
   }
 
   // Handle new transfers...
-  switch (client->operation)
+  switch (client->method)
   {
     case HTTP_STATE_OPTIONS :
         // Do OPTIONS command...
@@ -5294,12 +5298,12 @@ process_http(ippeve_client_t *client)	// I - Client connection
 	      if (fstat(fd, &fileinfo))
 	      {
 		close(fd);
-		return (0);
+		return (false);
 	      }
 	      else if (!respond_http(client, HTTP_STATUS_OK, NULL, "text/strings", (size_t)fileinfo.st_size))
 	      {
 		close(fd);
-		return (0);
+		return (false);
 	      }
 
 	      while ((bytes = read(fd, buffer, sizeof(buffer))) > 0)
@@ -5330,12 +5334,12 @@ process_http(ippeve_client_t *client)	// I - Client connection
 	      if (fstat(fd, &fileinfo))
 	      {
 		close(fd);
-		return (0);
+		return (false);
 	      }
 	      else if (!respond_http(client, HTTP_STATUS_OK, NULL, "image/png", (size_t)fileinfo.st_size))
 	      {
 		close(fd);
-		return (0);
+		return (false);
 	      }
 
 	      while ((bytes = read(fd, buffer, sizeof(buffer))) > 0)
@@ -5353,7 +5357,7 @@ process_http(ippeve_client_t *client)	// I - Client connection
 	    fputs("Icon file is internal printer.png.\n", stderr);
 
 	    if (!respond_http(client, HTTP_STATUS_OK, NULL, "image/png", sizeof(printer_png)))
-	      return (0);
+	      return (false);
 
             httpWrite(client->http, (const char *)printer_png, sizeof(printer_png));
 	    httpFlushWrite(client->http);
@@ -5374,12 +5378,12 @@ process_http(ippeve_client_t *client)	// I - Client connection
 	      if (fstat(fd, &fileinfo))
 	      {
 		close(fd);
-		return (0);
+		return (false);
 	      }
 	      else if (!respond_http(client, HTTP_STATUS_OK, NULL, "image/png", (size_t)fileinfo.st_size))
 	      {
 		close(fd);
-		return (0);
+		return (false);
 	      }
 
 	      while ((bytes = read(fd, buffer, sizeof(buffer))) > 0)
@@ -5397,7 +5401,7 @@ process_http(ippeve_client_t *client)	// I - Client connection
 	    fputs("Icon file is internal printer-lg.png.\n", stderr);
 
 	    if (!respond_http(client, HTTP_STATUS_OK, NULL, "image/png", sizeof(printer_lg_png)))
-	      return (0);
+	      return (false);
 
             httpWrite(client->http, (const char *)printer_lg_png, sizeof(printer_lg_png));
 	    httpFlushWrite(client->http);
@@ -5418,12 +5422,12 @@ process_http(ippeve_client_t *client)	// I - Client connection
 	      if (fstat(fd, &fileinfo))
 	      {
 		close(fd);
-		return (0);
+		return (false);
 	      }
 	      else if (!respond_http(client, HTTP_STATUS_OK, NULL, "image/png", (size_t)fileinfo.st_size))
 	      {
 		close(fd);
-		return (0);
+		return (false);
 	      }
 
 	      while ((bytes = read(fd, buffer, sizeof(buffer))) > 0)
@@ -5441,7 +5445,7 @@ process_http(ippeve_client_t *client)	// I - Client connection
 	    fputs("Icon file is internal printer-sm.png.\n", stderr);
 
 	    if (!respond_http(client, HTTP_STATUS_OK, NULL, "image/png", sizeof(printer_sm_png)))
-	      return (0);
+	      return (false);
 
             httpWrite(client->http, (const char *)printer_sm_png, sizeof(printer_sm_png));
 	    httpFlushWrite(client->http);
@@ -5452,7 +5456,10 @@ process_http(ippeve_client_t *client)	// I - Client connection
 	  // Authenticate if needed...
 	  if ((http_status = authenticate_request(client)) != HTTP_STATUS_CONTINUE)
 	  {
-	    return (respond_http(client, http_status, NULL, NULL, 0));
+	    if (OAuthURI)
+	      return (show_oauth(client));
+	    else
+	      return (respond_http(client, http_status, NULL, NULL, 0));
 	  }
 
 	  if (!strcmp(client->uri, "/"))
@@ -5476,12 +5483,20 @@ process_http(ippeve_client_t *client)	// I - Client connection
 	break;
 
     case HTTP_STATE_POST :
+        // Only allow IPP POSTs...
 	if (strcmp(httpGetField(client->http, HTTP_FIELD_CONTENT_TYPE),
 	           "application/ipp"))
         {
 	  // Not an IPP request...
 	  return (respond_http(client, HTTP_STATUS_BAD_REQUEST, NULL, NULL, 0));
 	}
+
+	// Handle authentication...
+	if ((http_status = authenticate_request(client)) != HTTP_STATUS_CONTINUE)
+	  return (respond_http(client, http_status, NULL, NULL, 0));
+
+	if (httpGetExpect(client->http) == HTTP_STATUS_CONTINUE)
+	  respond_http(client, HTTP_STATUS_CONTINUE, /*content_encoding*/NULL, /*type*/NULL, /*length*/0);
 
         // Read the IPP request...
 	client->request = ippNew();
@@ -5492,7 +5507,7 @@ process_http(ippeve_client_t *client)	// I - Client connection
 	  {
             fprintf(stderr, "%s IPP read error (%s).\n", client->hostname, cupsGetErrorString());
 	    respond_http(client, HTTP_STATUS_BAD_REQUEST, NULL, NULL, 0);
-	    return (0);
+	    return (false);
 	  }
 	}
 
@@ -5503,7 +5518,7 @@ process_http(ippeve_client_t *client)	// I - Client connection
         break; // Anti-compiler-warning-code
   }
 
-  return (1);
+  return (true);
 }
 
 
@@ -5511,7 +5526,7 @@ process_http(ippeve_client_t *client)	// I - Client connection
 // 'process_ipp()' - Process an IPP request.
 //
 
-static int				// O - 1 on success, 0 on error
+static bool				// O - `true` on success, `false` on failure
 process_ipp(ippeve_client_t *client)	// I - Client
 {
   ipp_tag_t		group;		// Current group tag
@@ -5544,7 +5559,7 @@ process_ipp(ippeve_client_t *client)	// I - Client
       httpFlush(client->http);		// Flush trailing (junk) data
 
     respond_http(client, HTTP_STATUS_BAD_REQUEST, NULL, NULL, 0);
-    return (0);
+    return (false);
   }
   else if (ippGetRequestId(client->request) <= 0)
   {
@@ -5647,16 +5662,16 @@ process_ipp(ippeve_client_t *client)	// I - Client
 	    {
 	      // Send 100-continue header...
 	      if (!respond_http(client, HTTP_STATUS_CONTINUE, NULL, NULL, 0))
-		return (0);
+		return (false);
 	    }
 	    else
 	    {
 	      // Send 417-expectation-failed header...
 	      if (!respond_http(client, HTTP_STATUS_EXPECTATION_FAILED, NULL, NULL, 0))
-		return (0);
+		return (false);
 
 	      flush_document_data(client);
-	      return (1);
+	      return (true);
 	    }
 	  }
 
@@ -6490,7 +6505,7 @@ respond_http(
   // Send the HTTP response header...
   httpClearFields(client->http);
 
-  if (code == HTTP_STATUS_METHOD_NOT_ALLOWED || client->operation == HTTP_STATE_OPTIONS)
+  if (code == HTTP_STATUS_METHOD_NOT_ALLOWED || client->method == HTTP_STATE_OPTIONS)
     httpSetField(client->http, HTTP_FIELD_ALLOW, "GET, HEAD, OPTIONS, POST");
 
   if (code == HTTP_STATUS_UNAUTHORIZED)
@@ -6726,7 +6741,7 @@ run_printer(ippeve_printer_t *printer)	// I - Printer
 // 'show_media()' - Show media load state.
 //
 
-static int				// O - 1 on success, 0 on failure
+static bool				// O - `true` on success, `false` on failure
 show_media(ippeve_client_t  *client)	// I - Client connection
 {
   ippeve_printer_t *printer = client->printer;
@@ -6769,7 +6784,7 @@ show_media(ippeve_client_t  *client)	// I - Client connection
 
 
   if (!respond_http(client, HTTP_STATUS_OK, NULL, "text/html", 0))
-    return (0);
+    return (false);
 
   html_header(client, printer->name, 0);
 
@@ -6777,7 +6792,7 @@ show_media(ippeve_client_t  *client)	// I - Client connection
   {
     html_printf(client, "<p>Error: No media-col-ready defined for printer.</p>\n");
     html_footer(client);
-    return (1);
+    return (true);
   }
 
   media_ready = ippFindAttribute(printer->attrs, "media-ready", IPP_TAG_ZERO);
@@ -6786,28 +6801,28 @@ show_media(ippeve_client_t  *client)	// I - Client connection
   {
     html_printf(client, "<p>Error: No media-supported defined for printer.</p>\n");
     html_footer(client);
-    return (1);
+    return (true);
   }
 
   if ((media_sources = ippFindAttribute(printer->attrs, "media-source-supported", IPP_TAG_ZERO)) == NULL)
   {
     html_printf(client, "<p>Error: No media-source-supported defined for printer.</p>\n");
     html_footer(client);
-    return (1);
+    return (true);
   }
 
   if ((media_types = ippFindAttribute(printer->attrs, "media-type-supported", IPP_TAG_ZERO)) == NULL)
   {
     html_printf(client, "<p>Error: No media-type-supported defined for printer.</p>\n");
     html_footer(client);
-    return (1);
+    return (true);
   }
 
   if ((input_tray = ippFindAttribute(printer->attrs, "printer-input-tray", IPP_TAG_STRING)) == NULL)
   {
     html_printf(client, "<p>Error: No printer-input-tray defined for printer.</p>\n");
     html_footer(client);
-    return (1);
+    return (true);
   }
 
   num_ready   = ippGetCount(media_col_ready);
@@ -6819,7 +6834,7 @@ show_media(ippeve_client_t  *client)	// I - Client connection
   {
     html_printf(client, "<p>Error: Different number of trays in media-source-supported and printer-input-tray defined for printer.</p>\n");
     html_footer(client);
-    return (1);
+    return (true);
   }
 
   // Process form data if present...
@@ -7038,7 +7053,20 @@ show_media(ippeve_client_t  *client)	// I - Client connection
 
   html_footer(client);
 
-  return (1);
+  return (true);
+}
+
+
+//
+// 'show_oauth()' - Show the OAuth authorization page.
+//
+
+static bool				// O - `true` on success, `false` on failure
+show_oauth(ippeve_client_t *client)	// I - Client connection
+{
+  (void)client;
+
+  return (true);
 }
 
 
@@ -7046,7 +7074,7 @@ show_media(ippeve_client_t  *client)	// I - Client connection
 // 'show_status()' - Show printer/system state.
 //
 
-static int				// O - 1 on success, 0 on failure
+static bool				// O - `true` on success, `false` on failure
 show_status(ippeve_client_t  *client)	// I - Client connection
 {
   ippeve_printer_t *printer = client->printer;
@@ -7105,7 +7133,7 @@ show_status(ippeve_client_t  *client)	// I - Client connection
   }
 
   if (!respond_http(client, HTTP_STATUS_OK, NULL, "text/html", 0))
-    return (0);
+    return (false);
 
   html_header(client, printer->name, printer->state == IPP_PSTATE_PROCESSING ? 5 : 15);
   html_printf(client, "<h1><img style=\"background: %s; border-radius: 10px; float: left; margin-right: 10px; padding: 10px;\" src=\"/icon.png\" width=\"64\" height=\"64\">%s Jobs</h1>\n", state_colors[printer->state - IPP_PSTATE_IDLE], printer->name);
@@ -7162,7 +7190,7 @@ show_status(ippeve_client_t  *client)	// I - Client connection
 
   html_footer(client);
 
-  return (1);
+  return (true);
 }
 
 
@@ -7170,7 +7198,7 @@ show_status(ippeve_client_t  *client)	// I - Client connection
 // 'show_supplies()' - Show printer supplies.
 //
 
-static int				// O - 1 on success, 0 on failure
+static bool				// O - `true` on success, `false` on failure
 show_supplies(
     ippeve_client_t  *client)		// I - Client connection
 {
@@ -7219,7 +7247,7 @@ show_supplies(
 
 
   if (!respond_http(client, HTTP_STATUS_OK, NULL, "text/html", 0))
-    return (0);
+    return (false);
 
   html_header(client, printer->name, 0);
 
@@ -7227,7 +7255,7 @@ show_supplies(
   {
     html_printf(client, "<p>Error: No printer-supply defined for printer.</p>\n");
     html_footer(client);
-    return (1);
+    return (true);
   }
 
   num_supply = ippGetCount(supply);
@@ -7236,14 +7264,14 @@ show_supplies(
   {
     html_printf(client, "<p>Error: No printer-supply-description defined for printer.</p>\n");
     html_footer(client);
-    return (1);
+    return (true);
   }
 
   if (num_supply != ippGetCount(supply_desc))
   {
     html_printf(client, "<p>Error: Different number of values for printer-supply and printer-supply-description defined for printer.</p>\n");
     html_footer(client);
-    return (1);
+    return (true);
   }
 
   if (printer->web_forms)
@@ -7351,7 +7379,7 @@ show_supplies(
 
   html_footer(client);
 
-  return (1);
+  return (true);
 }
 
 
