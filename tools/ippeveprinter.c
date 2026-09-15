@@ -183,6 +183,9 @@ typedef struct ippeve_printer_s		// Printer data
   ippeve_job_t		*active_job;	// Current active/pending job
   int			next_job_id;	// Next job-id value
   cups_rwlock_t		rwlock;		// Printer lock
+
+  unsigned		next_client_number;
+					// Next client number value
 } ippeve_printer_t;
 
 struct ippeve_job_s			// Job data
@@ -209,6 +212,7 @@ struct ippeve_job_s			// Job data
 
 typedef struct ippeve_client_s		// Client data
 {
+  unsigned		number;		// Client number
   http_t		*http;		// HTTP connection
   ipp_t			*request,	// IPP request
 			*response;	// IPP response
@@ -245,7 +249,7 @@ static ipp_t		*create_media_col(const char *media, const char *source, const cha
 static ipp_t		*create_media_size(int width, int length);
 static ipp_t		*create_media_size_range(int min_width, int max_width, int min_length, int max_length);
 static ippeve_printer_t	*create_printer(const char *servername, int serverport, const char *name, const char *location, const char *icons, const char *strings, cups_array_t *docformats, const char *subtypes, const char *directory, const char *command, const char *device_uri, const char *output_format, ipp_t *attrs);
-static void		debug_attributes(const char *title, ipp_t *ipp, int response);
+static void		debug_attributes(ippeve_client_t *client, const char *title, ipp_t *ipp, int response);
 static void		delete_client(ippeve_client_t *client);
 static void		delete_job(ippeve_job_t *job);
 static void		delete_printer(ippeve_printer_t *printer);
@@ -275,6 +279,7 @@ static void		ipp_send_uri(ippeve_client_t *client);
 static void		ipp_validate_job(ippeve_client_t *client);
 static ipp_t		*load_ippfile_attributes(const char *servername, int serverport, const char *filename, cups_array_t *docformats);
 static ipp_t		*load_legacy_attributes(const char *make, const char *model, int ppm, int ppm_color, int duplex, cups_array_t *docformats);
+static void		log_message(ippeve_client_t *client, const char *message, ...) _CUPS_FORMAT(2,3);
 #if HAVE_LIBPAM
 static int		pam_func(int, const struct pam_message **, struct pam_response **, void *);
 #endif // HAVE_LIBPAM
@@ -312,6 +317,7 @@ static bool		KeepFiles = false;
 					// Keep spooled job files?
 static int		MaxVersion = 20,// Maximum IPP version (20 = 2.0, 11 = 1.1, etc.)
 			Verbosity = 0;	// Verbosity level
+static FILE		*LogFile;	// Log file
 #if HAVE_LIBPAM
 static const char	*PAMService = NULL;
 					// PAM service
@@ -728,6 +734,30 @@ main(int  argc,				// I - Number of command-line args
     return (1);
   }
 
+  // Logging...
+  if (logfile)
+  {
+    // Open the log file, either to append ("-L +FILENAME") or overwrite
+    // ("-L FILENAME")...
+    if (*logfile == '+')
+      LogFile = fopen(logfile + 1, "a");
+    else
+      LogFile = fopen(logfile, "w");
+
+    if (!LogFile)
+    {
+      perror(logfile);
+      return (1);
+    }
+
+    setbuf(LogFile, NULL);
+  }
+  else
+  {
+    // Just send log messages to stderr...
+    LogFile = stderr;
+  }
+
   // Apply defaults as needed...
   if (!directory[0])
   {
@@ -751,12 +781,12 @@ main(int  argc,				// I - Number of command-line args
       cupsLangPrintf(stderr, _("%s: Unable to create spool directory '%s': %s"), "ippeveprinter", directory, strerror(errno));
       return (usage(stderr));
     }
-
-    if (Verbosity)
-      cupsLangPrintf(stderr, _("Using spool directory '%s'."), directory);
   }
 
   // Create the printer...
+  if (Verbosity)
+    log_message(/*client*/NULL, "Using spool directory '%s'.", directory);
+
   if (attrfile)
     attrs = load_ippfile_attributes(servername, serverport, attrfile, docformats);
   else
@@ -771,25 +801,6 @@ main(int  argc,				// I - Number of command-line args
   printer->web_forms = web_forms;
 
   cupsSetServerCredentials(keypath, printer->hostname, true);
-
-  // If a log file is set, redirect stderr to the file now...
-  if (logfile)
-  {
-    FILE *fp;				// New stderr, if any
-
-    if (*logfile == '+')
-      fp = freopen(logfile + 1, "a", stderr);
-    else
-      fp = freopen(logfile, "w", stderr);
-
-    if (!fp)
-    {
-      perror(logfile);
-      return (1);
-    }
-
-    setbuf(fp, NULL);
-  }
 
   // Run the print service...
   run_printer(printer);
@@ -845,7 +856,7 @@ authenticate_request(
 
     if (strncmp(authorization, "Bearer ", 7))
     {
-      fputs("Unsupported scheme in Authorization header.\n", stderr);
+      log_message(client, "Unsupported scheme in Authorization header.");
       return (HTTP_STATUS_BAD_REQUEST);
     }
 
@@ -859,13 +870,13 @@ authenticate_request(
     // TODO: Validate OAuth credentials
     if ((jwt = cupsOAuthGetUserId(OAuthURI, OAuthMetadata, authorization)) == NULL)
     {
-      fprintf(stderr, "Unable to get user information from bearer token: %s\n", cupsGetErrorString());
+      log_message(client, "Unable to get user information from bearer token: %s", cupsGetErrorString());
       cupsCopyString(client->autherr, cupsGetErrorString(), sizeof(client->autherr));
       return (HTTP_STATUS_BAD_REQUEST);
     }
     else if ((sub = cupsJWTGetClaimString(jwt, CUPS_JWT_SUB)) == NULL)
     {
-      fputs("Missing subject name in OAuth user information.\n", stderr);
+      log_message(client, "Missing subject name in OAuth user information.");
       cupsCopyString(client->autherr, "Missing subject name.", sizeof(client->autherr));
       cupsJWTDelete(jwt);
       return (HTTP_STATUS_BAD_REQUEST);
@@ -878,7 +889,7 @@ authenticate_request(
   }
   else if (strncmp(authorization, "Basic ", 6))
   {
-    fputs("Unsupported scheme in Authorization header.\n", stderr);
+    log_message(client, "Unsupported scheme in Authorization header.");
     return (HTTP_STATUS_BAD_REQUEST);
   }
   else
@@ -893,7 +904,7 @@ authenticate_request(
 
     if ((data.password = strchr(data.username, ':')) == NULL)
     {
-      fputs("No password in Authorization header.\n", stderr);
+      log_message(client, "No password in Authorization header.");
       return (HTTP_STATUS_BAD_REQUEST);
     }
 
@@ -901,7 +912,7 @@ authenticate_request(
 
     if (!data.username[0])
     {
-      fputs("No username in Authorization header.\n", stderr);
+      log_message(client, "No username in Authorization header.");
       return (HTTP_STATUS_BAD_REQUEST);
     }
 
@@ -909,7 +920,7 @@ authenticate_request(
     {
       if (strcmp(data.password, Password))
       {
-        fputs("Wrong password for user.\n", stderr);
+        log_message(client, "Wrong password for user.");
         return (HTTP_STATUS_UNAUTHORIZED);
       }
 
@@ -927,20 +938,20 @@ authenticate_request(
 
       if ((pamerr = pam_start(PAMService, data.username, &pamdata, &pamh)) != PAM_SUCCESS)
       {
-	fprintf(stderr, "pam_start() returned %d (%s)\n", pamerr, pam_strerror(pamh, pamerr));
+	log_message(client, "pam_start() returned %d (%s)", pamerr, pam_strerror(pamh, pamerr));
 	return (HTTP_STATUS_SERVER_ERROR);
       }
 
       if ((pamerr = pam_authenticate(pamh, PAM_SILENT)) != PAM_SUCCESS)
       {
-	fprintf(stderr, "pam_authenticate() returned %d (%s)\n", pamerr, pam_strerror(pamh, pamerr));
+	log_message(client, "pam_authenticate() returned %d (%s)", pamerr, pam_strerror(pamh, pamerr));
 	pam_end(pamh, 0);
 	return (HTTP_STATUS_UNAUTHORIZED);
       }
 
       if ((pamerr = pam_acct_mgmt(pamh, PAM_SILENT)) != PAM_SUCCESS)
       {
-	fprintf(stderr, "pam_acct_mgmt() returned %d (%s)\n", pamerr, pam_strerror(pamh, pamerr));
+	log_message(client, "pam_acct_mgmt() returned %d (%s)", pamerr, pam_strerror(pamh, pamerr));
 	pam_end(pamh, 0);
 	return (HTTP_STATUS_SERVER_ERROR);
       }
@@ -950,7 +961,7 @@ authenticate_request(
 
 #else
       // This shouldn't happen, but if it does just error out...
-      fputs("No test password defined.\n", stderr);
+      log_message(client, "No test password defined.");
       return (HTTP_STATUS_SERVER_ERROR);
 #endif // HAVE_LIBPAM
     }
@@ -1195,11 +1206,12 @@ copy_job_attributes(
 //                     object.
 //
 
-static ippeve_client_t *			// O - Client
-create_client(ippeve_printer_t *printer,	// I - Printer
-              int            sock)	// I - Listen socket
+static ippeve_client_t *		// O - Client
+create_client(
+    ippeve_printer_t *printer,		// I - Printer
+    int              sock)		// I - Listen socket
 {
-  ippeve_client_t	*client;		// Client
+  ippeve_client_t *client;		// Client
 
 
   if ((client = calloc(1, sizeof(ippeve_client_t))) == NULL)
@@ -1209,11 +1221,12 @@ create_client(ippeve_printer_t *printer,	// I - Printer
   }
 
   client->printer = printer;
+  client->number  = printer->next_client_number ++;
 
   // Accept the client and get the remote address...
   if ((client->http = httpAcceptConnection(sock, 1)) == NULL)
   {
-    perror("Unable to accept client connection");
+    log_message(client, "Unable to accept client connection: %s", strerror(errno));
 
     free(client);
 
@@ -1222,8 +1235,7 @@ create_client(ippeve_printer_t *printer,	// I - Printer
 
   httpGetHostname(client->http, client->hostname, sizeof(client->hostname));
 
-  if (Verbosity)
-    fprintf(stderr, "Accepted connection from %s\n", client->hostname);
+  log_message(client, "Accepted connection from '%s'.", client->hostname);
 
   return (client);
 }
@@ -1813,26 +1825,27 @@ create_printer(
     return (NULL);
   }
 
-  printer->ipv4           = -1;
-  printer->ipv6           = -1;
-  printer->name           = strdup(name);
-  printer->dnssd          = cupsDNSSDNew(NULL, NULL);
-  printer->dnssd_name     = strdup(name);
-  printer->dnssd_subtypes = subtypes ? strdup(subtypes) : NULL;
-  printer->command        = command ? strdup(command) : NULL;
-  printer->device_uri     = device_uri ? strdup(device_uri) : NULL;
-  printer->output_format  = output_format ? strdup(output_format) : NULL;
-  printer->directory      = strdup(directory);
-  printer->icons[0]       = icons ? strdup(icons) : NULL;
-  printer->strings        = strings ? strdup(strings) : NULL;
-  printer->port           = serverport;
-  printer->start_time     = time(NULL);
-  printer->config_time    = printer->start_time;
-  printer->state          = IPP_PSTATE_IDLE;
-  printer->state_reasons  = IPPEVE_PREASON_NONE;
-  printer->state_time     = printer->start_time;
-  printer->jobs           = cupsArrayNew((cups_array_cb_t)compare_jobs, NULL, NULL, 0, NULL, NULL);
-  printer->next_job_id    = 1;
+  printer->ipv4               = -1;
+  printer->ipv6               = -1;
+  printer->name               = strdup(name);
+  printer->dnssd              = cupsDNSSDNew(NULL, NULL);
+  printer->dnssd_name         = strdup(name);
+  printer->dnssd_subtypes     = subtypes ? strdup(subtypes) : NULL;
+  printer->command            = command ? strdup(command) : NULL;
+  printer->device_uri         = device_uri ? strdup(device_uri) : NULL;
+  printer->output_format      = output_format ? strdup(output_format) : NULL;
+  printer->directory          = strdup(directory);
+  printer->icons[0]           = icons ? strdup(icons) : NULL;
+  printer->strings            = strings ? strdup(strings) : NULL;
+  printer->port               = serverport;
+  printer->start_time         = time(NULL);
+  printer->config_time        = printer->start_time;
+  printer->state              = IPP_PSTATE_IDLE;
+  printer->state_reasons      = IPPEVE_PREASON_NONE;
+  printer->state_time         = printer->start_time;
+  printer->jobs               = cupsArrayNew((cups_array_cb_t)compare_jobs, NULL, NULL, 0, NULL, NULL);
+  printer->next_job_id        = 1;
+  printer->next_client_number = 1;
 
   if (printer->icons[0])
   {
@@ -1871,7 +1884,7 @@ create_printer(
   {
     if ((printer->ipv4 = create_listener(servername, printer->port, AF_INET)) < 0)
     {
-      perror("Unable to create IPv4 listener");
+      log_message(/*client*/NULL, "Unable to create IPv4 listener: %s", strerror(errno));
       goto bad_printer;
     }
   }
@@ -1897,19 +1910,19 @@ create_printer(
 
     if (serverport < 10000)
     {
-      cupsLangPrintf(stderr, _("Listening on port %d."), serverport);
+      log_message(/*client*/NULL, "Listening on port %d.", serverport);
       printer->port = serverport;
     }
     else
     {
-      perror("Unable to create IPv4 listener");
+      log_message(/*client*/NULL, "Unable to create IPv4 listener: %s", strerror(errno));
       goto bad_printer;
     }
   }
 
   if ((printer->ipv6 = create_listener(servername, printer->port, AF_INET6)) < 0)
   {
-    perror("Unable to create IPv6 listener");
+    log_message(/*client*/NULL, "Unable to create IPv6 listener: %s", strerror(errno));
     goto bad_printer;
   }
 
@@ -1920,8 +1933,8 @@ create_printer(
 
   if (Verbosity)
   {
-    fprintf(stderr, "printer-uri-supported=\"ipp://%s:%d/ipp/print\",\"ipps://%s:%d/ipp/print\"\n", printer->hostname, printer->port, printer->hostname, printer->port);
-    fprintf(stderr, "printer-uuid=\"%s\"\n", uuid);
+    log_message(/*client*/NULL, "printer-uri-supported='ipp://%s:%d/ipp/print','ipps://%s:%d/ipp/print'", printer->hostname, printer->port, printer->hostname, printer->port);
+    log_message(/*client*/NULL, "printer-uuid='%s'", uuid);
   }
 
   // Get the maximum spool size based on the size of the filesystem used for
@@ -2243,7 +2256,7 @@ create_printer(
   // which-jobs-supported
   ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "which-jobs-supported", sizeof(which_jobs) / sizeof(which_jobs[0]), NULL, which_jobs);
 
-  debug_attributes("Printer", printer->attrs, 0);
+  debug_attributes(/*client*/NULL, "Printer", printer->attrs, 0);
 
   // Register the printer with DNS-SD...
   if (!register_printer(printer))
@@ -2267,9 +2280,11 @@ create_printer(
 //
 
 static void
-debug_attributes(const char *title,	// I - Title
-                 ipp_t      *ipp,	// I - Request/response
-                 int        type)	// I - 0 = object, 1 = request, 2 = response
+debug_attributes(
+    ippeve_client_t *client,		// I - Client connection or `NULL` for none
+    const char      *title,		// I - Title
+    ipp_t           *ipp,		// I - Request/response
+    int             type)		// I - 0 = object, 1 = request, 2 = response
 {
   ipp_tag_t		group_tag;	// Current group
   ipp_attribute_t	*attr;		// Current attribute
@@ -2277,36 +2292,34 @@ debug_attributes(const char *title,	// I - Title
   int			major, minor;	// Version
 
 
-  if (Verbosity <= 1)
+  if (Verbosity < 2)
     return;
 
-  fprintf(stderr, "%s:\n", title);
+  log_message(client, "%s:", title);
   major = ippGetVersion(ipp, &minor);
-  fprintf(stderr, "  version=%d.%d\n", major, minor);
+  if (type)
+    log_message(client, "  version=%d.%d", major, minor);
   if (type == 1)
-    fprintf(stderr, "  operation-id=%s(%04x)\n",
+    log_message(client, "  operation-id=%s(%04x)",
             ippOpString(ippGetOperation(ipp)), ippGetOperation(ipp));
   else if (type == 2)
-    fprintf(stderr, "  status-code=%s(%04x)\n",
+    log_message(client, "  status-code=%s(%04x)",
             ippErrorString(ippGetStatusCode(ipp)), ippGetStatusCode(ipp));
-  fprintf(stderr, "  request-id=%d\n\n", ippGetRequestId(ipp));
+  if (type)
+    log_message(client, "  request-id=%d", ippGetRequestId(ipp));
 
-  for (attr = ippGetFirstAttribute(ipp), group_tag = IPP_TAG_ZERO;
-       attr;
-       attr = ippGetNextAttribute(ipp))
+  for (attr = ippGetFirstAttribute(ipp), group_tag = IPP_TAG_ZERO; attr; attr = ippGetNextAttribute(ipp))
   {
     if (ippGetGroupTag(attr) != group_tag)
     {
       group_tag = ippGetGroupTag(attr);
-      fprintf(stderr, "  %s\n", ippTagString(group_tag));
+      log_message(client, "  %s", ippTagString(group_tag));
     }
 
     if (ippGetName(attr))
     {
       ippAttributeString(attr, buffer, sizeof(buffer));
-      fprintf(stderr, "    %s (%s%s) %s\n", ippGetName(attr),
-	      ippGetCount(attr) > 1 ? "1setOf " : "",
-	      ippTagString(ippGetValueTag(attr)), buffer);
+      log_message(client, "    %s (%s%s) %s", ippGetName(attr), ippGetCount(attr) > 1 ? "1setOf " : "", ippTagString(ippGetValueTag(attr)), buffer);
     }
   }
 }
@@ -2320,9 +2333,6 @@ debug_attributes(const char *title,	// I - Title
 static void
 delete_client(ippeve_client_t *client)	// I - Client
 {
-  if (Verbosity)
-    fprintf(stderr, "Closing connection from %s\n", client->hostname);
-
   // Flush pending writes before closing...
   httpFlushWrite(client->http);
 
@@ -2345,7 +2355,7 @@ static void
 delete_job(ippeve_job_t *job)		// I - Job
 {
   if (Verbosity)
-    fprintf(stderr, "[Job %d] Removing job from history.\n", job->id);
+    log_message(/*client*/NULL, "[Job %d] Removing job from history.", job->id);
 
   ippDelete(job->attrs);
 
@@ -2410,7 +2420,7 @@ dnssd_callback(
 
   if (flags & CUPS_DNSSD_FLAGS_COLLISION)
   {
-    fputs("DNS-SD service name collision detected.\n", stderr);
+    log_message(/*client*/NULL, "DNS-SD service name collision detected.");
     printer->dnssd_collision = 1;
   }
 }
@@ -2499,7 +2509,7 @@ finish_document_data(
   }
 
   if (Verbosity)
-    fprintf(stderr, "Created job file \"%s\", format \"%s\".\n", filename, job->format);
+    log_message(client, "Created job file '%s', format '%s'", filename, job->format);
 
   while ((bytes = httpRead(client->http, buffer, sizeof(buffer))) > 0)
   {
@@ -3434,7 +3444,8 @@ ipp_get_jobs(ippeve_client_t *client)	// I - Client
   if ((attr = ippFindAttribute(client->request, "which-jobs", IPP_TAG_KEYWORD)) != NULL)
   {
     which_jobs = ippGetString(attr, 0, NULL);
-    fprintf(stderr, "%s Get-Jobs which-jobs=%s", client->hostname, which_jobs);
+    if (Verbosity)
+      log_message(client, "Get-Jobs which-jobs='%s'", which_jobs);
   }
 
   if (!which_jobs || !strcmp(which_jobs, "not-completed"))
@@ -3496,7 +3507,8 @@ ipp_get_jobs(ippeve_client_t *client)	// I - Client
   {
     limit = ippGetInteger(attr, 0);
 
-    fprintf(stderr, "%s Get-Jobs limit=%d", client->hostname, limit);
+    if (Verbosity)
+      log_message(client, "Get-Jobs limit=%d", limit);
   }
   else
   {
@@ -3507,7 +3519,8 @@ ipp_get_jobs(ippeve_client_t *client)	// I - Client
   {
     first_i = (size_t)first_index - 1;
 
-    fprintf(stderr, "%s Get-Jobs first-index=%d", client->hostname, first_index);
+    if (Verbosity)
+      log_message(client, "Get-Jobs first-index=%d", first_index);
   }
   else
   {
@@ -3521,19 +3534,27 @@ ipp_get_jobs(ippeve_client_t *client)	// I - Client
   {
     int my_jobs = ippGetBoolean(attr, 0);
 
-    fprintf(stderr, "%s Get-Jobs my-jobs=%s\n", client->hostname, my_jobs ? "true" : "false");
+    if (Verbosity)
+      log_message(client, "Get-Jobs my-jobs=%s", my_jobs ? "true" : "false");
 
     if (my_jobs)
     {
-      if ((attr = ippFindAttribute(client->request, "requesting-user-name", IPP_TAG_NAME)) == NULL)
+      if (client->username[0])
+      {
+        username = client->username;
+      }
+      else if ((attr = ippFindAttribute(client->request, "requesting-user-name", IPP_TAG_NAME)) == NULL)
       {
 	respond_ipp(client, IPP_STATUS_ERROR_BAD_REQUEST, "Need requesting-user-name with my-jobs.");
 	return;
       }
+      else
+      {
+        username = ippGetString(attr, 0, NULL);
+      }
 
-      username = ippGetString(attr, 0, NULL);
-
-      fprintf(stderr, "%s Get-Jobs requesting-user-name=\"%s\"\n", client->hostname, username);
+      if (Verbosity)
+	log_message(client, "Get-Jobs username='%s'", username);
     }
   }
 
@@ -4943,6 +4964,67 @@ load_legacy_attributes(
 }
 
 
+//
+// 'log_message()' - Log a formatted message.
+//
+
+static void
+log_message(ippeve_client_t *client,	// I - Client connection or `NULL` for none
+            const char      *message,	// I - Message string
+            ...)			// I - Additional arguments as needed
+{
+  va_list	ap;			// Pointer to additional arguments
+  struct timeval curtime;		// Current time
+  struct tm	curdate;		// Current date
+  char		buffer[8192],		// Output buffer
+		*bufptr,		// Pointer into buffer
+		*bufend;		// End of buffer
+
+
+  bufptr = buffer;
+  bufend = buffer + sizeof(buffer) - 1;
+
+  if (LogFile != stderr)
+  {
+    // Start each log line with the date and time when logging to a file...
+    gettimeofday(&curtime, NULL);
+#if _WIN32
+    time_t curtemp = (time_t)curtime.tv_sec;
+    gmtime_s(&curdate, &curtemp);
+#else
+    gmtime_r(&curtime.tv_sec, &curdate);
+#endif // _WIN32
+
+    snprintf(bufptr, (size_t)(bufend - bufptr), "[%04d-%02d-%02dT%02d:%02d:%02d.%03dZ] ", curdate.tm_year + 1900, curdate.tm_mon + 1, curdate.tm_mday, curdate.tm_hour, curdate.tm_min, curdate.tm_sec, (int)(curtime.tv_usec / 1000));
+    bufptr += 27;
+  }
+
+  // If this is for a client connection, include the client number...
+  if (client)
+  {
+    snprintf(bufptr, (size_t)(bufend - bufptr), "[Client %u] ", client->number);
+    bufptr += strlen(bufptr);
+  }
+
+  // Then add the (safely) formatted message...
+  va_start(ap, message);
+  cupsFormatStringv(bufptr, (size_t)(bufend - bufptr), message, ap);
+  va_end(ap);
+
+  bufptr += strlen(bufptr);
+
+  // Then see if we need to add a newline...
+  if (bufptr > buffer && bufptr[-1] != '\n')
+  {
+    *bufptr++ = '\n';
+    *bufptr   = '\0';
+  }
+
+  // Write the resulting string...
+  fputs(buffer, LogFile);
+}
+
+
 #if HAVE_LIBPAM
 //
 // 'pam_func()' - PAM conversation function.
@@ -5069,7 +5151,7 @@ process_attr_message(
     else
     {
       // Something else that isn't currently supported...
-      fprintf(stderr, "[Job %d] Ignoring update of attribute \"%s\" with value \"%s\".\n", job->id, option->name, option->value);
+      log_message(/*client*/NULL, "[Job %d] Ignoring update of attribute \"%s\" with value \"%s\".\n", job->id, option->name, option->value);
     }
   }
 
@@ -5098,15 +5180,17 @@ process_client(ippeve_client_t *client)	// I - Client
       {
         char	security[256];		// Security description
 
-        fprintf(stderr, "%s Starting HTTPS session.\n", client->hostname);
+        if (Verbosity)
+	  log_message(client, "Starting HTTPS session.");
 
 	if (!httpSetEncryption(client->http, HTTP_ENCRYPTION_ALWAYS))
 	{
-	  fprintf(stderr, "%s Unable to encrypt connection: %s\n", client->hostname, cupsGetErrorString());
+	  log_message(client, "Unable to encrypt connection: %s", cupsGetErrorString());
 	  break;
         }
 
-	fprintf(stderr, "%s Connection now encrypted (%s).\n", client->hostname, httpGetSecurity(client->http, security, sizeof(security)));
+	if (Verbosity)
+	  log_message(client, "Connection now encrypted (%s).", httpGetSecurity(client->http, security, sizeof(security)));
       }
 
       first_time = false;
@@ -5149,10 +5233,9 @@ process_http(ippeve_client_t *client)	// I - Client connection
   ippDelete(client->request);
   ippDelete(client->response);
 
+  client->method    = HTTP_STATE_WAITING;
   client->request   = NULL;
   client->response  = NULL;
-  client->method = HTTP_STATE_WAITING;
-  client->printer   = NULL;
   client->job       = NULL;
 
   // Read a request from the connection...
@@ -5163,34 +5246,35 @@ process_http(ippeve_client_t *client)	// I - Client connection
   if (http_state == HTTP_STATE_ERROR)
   {
     if (httpGetError(client->http) == EPIPE)
-      fprintf(stderr, "%s Client closed connection.\n", client->hostname);
+      log_message(client, "Client closed connection.");
     else
-      fprintf(stderr, "%s Bad request line (%s).\n", client->hostname, strerror(httpGetError(client->http)));
+      log_message(client, "Bad request line (%s).", strerror(httpGetError(client->http)));
 
     return (false);
   }
   else if (http_state == HTTP_STATE_UNKNOWN_METHOD)
   {
-    fprintf(stderr, "%s Bad/unknown operation.\n", client->hostname);
+    log_message(client, "Bad/unknown operation.");
     respond_http(client, HTTP_STATUS_BAD_REQUEST, NULL, NULL, 0);
     return (false);
   }
   else if (http_state == HTTP_STATE_UNKNOWN_VERSION)
   {
-    fprintf(stderr, "%s Bad HTTP version.\n", client->hostname);
+    log_message(client, "Bad HTTP version.");
     respond_http(client, HTTP_STATUS_BAD_REQUEST, NULL, NULL, 0);
     return (false);
   }
-
-  fprintf(stderr, "%s %s %s\n", client->hostname, httpStateString(http_state), uri);
 
   // Separate the URI into its components...
   if (httpSeparateURI(HTTP_URI_CODING_MOST, uri, scheme, sizeof(scheme), userpass, sizeof(userpass), hostname, sizeof(hostname), &port, client->uri, sizeof(client->uri)) < HTTP_URI_STATUS_OK && (http_state != HTTP_STATE_OPTIONS || strcmp(uri, "*")))
   {
-    fprintf(stderr, "%s Bad URI \"%s\".\n", client->hostname, uri);
+    log_message(client, "Bad URI '%s'.", uri);
     respond_http(client, HTTP_STATUS_BAD_REQUEST, NULL, NULL, 0);
     return (false);
   }
+
+  if (Verbosity)
+    log_message(client, "%s %s HTTP/%d.%d", httpStateString(http_state), uri, httpGetVersion(client->http) / 100, httpGetVersion(client->http) % 100);
 
   if ((client->options = strchr(client->uri, '?')) != NULL)
     *(client->options)++ = '\0';
@@ -5212,7 +5296,7 @@ process_http(ippeve_client_t *client)	// I - Client connection
   if (!httpGetField(client->http, HTTP_FIELD_HOST)[0] && httpGetVersion(client->http) >= HTTP_VERSION_1_1)
   {
     // HTTP/1.1 and higher require the "Host:" field...
-    fprintf(stderr, "%s Missing Host: header.\n", client->hostname);
+    log_message(client, "Missing Host: header.");
     respond_http(client, HTTP_STATUS_BAD_REQUEST, NULL, NULL, 0);
     return (false);
   }
@@ -5233,10 +5317,9 @@ process_http(ippeve_client_t *client)	// I - Client connection
   if ((ptr = strstr(client->host_field, ".local")) == NULL)
     ptr = strrchr(client->host_field, '.');
 
-  if (!isdigit(client->host_field[0] & 255) && client->host_field[0] != '[' && strcmp(client->host_field, client->printer->hostname) && strcmp(client->host_field, "localhost") &&
-      (!ptr || (strcmp(ptr, ".local") && strcmp(ptr, ".local."))))
+  if (!isdigit(client->host_field[0] & 255) && client->host_field[0] != '[' && strcmp(client->host_field, client->printer->hostname) && strcmp(client->host_field, "localhost") && (!ptr || (strcmp(ptr, ".local") && strcmp(ptr, ".local."))))
   {
-    fprintf(stderr, "%s Bad Host: header '%s'.\n", client->hostname, client->host_field);
+    log_message(client, "Bad Host: header '%s'.", client->host_field);
     respond_http(client, HTTP_STATUS_BAD_REQUEST, NULL, NULL, 0);
     return (false);
   }
@@ -5251,15 +5334,16 @@ process_http(ippeve_client_t *client)	// I - Client connection
       if (!respond_http(client, HTTP_STATUS_SWITCHING_PROTOCOLS, NULL, NULL, 0))
         return (false);
 
-      fprintf(stderr, "%s Upgrading to encrypted connection.\n", client->hostname);
+      if (Verbosity)
+	log_message(client, "Upgrading to encrypted connection.");
 
       if (!httpSetEncryption(client->http, HTTP_ENCRYPTION_REQUIRED))
       {
-        fprintf(stderr, "%s Unable to encrypt connection: %s\n", client->hostname, cupsGetErrorString());
+        log_message(client, "Unable to encrypt connection: %s", cupsGetErrorString());
 	return (false);
       }
 
-      fprintf(stderr, "%s Connection now encrypted (%s).\n", client->hostname, httpGetSecurity(client->http, security, sizeof(security)));
+      log_message(client, "Connection now encrypted (%s).", httpGetSecurity(client->http, security, sizeof(security)));
     }
     else if (!respond_http(client, HTTP_STATUS_NOT_IMPLEMENTED, NULL, NULL, 0))
       return (false);
@@ -5354,7 +5438,8 @@ process_http(ippeve_client_t *client)	// I - Client connection
 	  }
 	  else
 	  {
-	    fputs("Icon file is internal printer.png.\n", stderr);
+	    if (Verbosity)
+	      log_message(client, "Icon file is internal printer.png.");
 
 	    if (!respond_http(client, HTTP_STATUS_OK, NULL, "image/png", sizeof(printer_png)))
 	      return (false);
@@ -5398,7 +5483,8 @@ process_http(ippeve_client_t *client)	// I - Client connection
 	  }
 	  else
 	  {
-	    fputs("Icon file is internal printer-lg.png.\n", stderr);
+	    if (Verbosity)
+	      log_message(client, "Icon file is internal printer-lg.png.");
 
 	    if (!respond_http(client, HTTP_STATUS_OK, NULL, "image/png", sizeof(printer_lg_png)))
 	      return (false);
@@ -5442,7 +5528,8 @@ process_http(ippeve_client_t *client)	// I - Client connection
 	  }
 	  else
 	  {
-	    fputs("Icon file is internal printer-sm.png.\n", stderr);
+	    if (Verbosity)
+	      log_message(client, "Icon file is internal printer-sm.png.");
 
 	    if (!respond_http(client, HTTP_STATUS_OK, NULL, "image/png", sizeof(printer_sm_png)))
 	      return (false);
@@ -5505,7 +5592,7 @@ process_http(ippeve_client_t *client)	// I - Client connection
 	{
 	  if (ipp_state == IPP_STATE_ERROR)
 	  {
-            fprintf(stderr, "%s IPP read error (%s).\n", client->hostname, cupsGetErrorString());
+            log_message(client, "IPP read error (%s).", cupsGetErrorString());
 	    respond_http(client, HTTP_STATUS_BAD_REQUEST, NULL, NULL, 0);
 	    return (false);
 	  }
@@ -5539,7 +5626,7 @@ process_ipp(ippeve_client_t *client)	// I - Client
   http_status_t		status;		// Authentication status
 
 
-  debug_attributes("Request", client->request, 1);
+  debug_attributes(client, "Request", client->request, 1);
 
   // First build an empty response message for this request...
   client->operation_id = ippGetOperation(client->request);
@@ -5790,7 +5877,7 @@ process_job(ippeve_job_t *job)		// I - Job
     ssize_t		bytes;		// Bytes read
 #endif // !_WIN32
 
-    fprintf(stderr, "[Job %d] Running command \"%s %s\".\n", job->id, job->printer->command, job->filename);
+    log_message(/*client*/NULL, "[Job %d] Running command '%s %s'.", job->id, job->printer->command, job->filename);
     gettimeofday(&start, NULL);
 
     // Setup the command-line arguments...
@@ -5805,7 +5892,7 @@ process_job(ippeve_job_t *job)		// I - Job
 
     if (myenvc > (int)(sizeof(myenvp) / sizeof(myenvp[0]) - 32))
     {
-      fprintf(stderr, "[Job %d] Too many environment variables to process job.\n", job->id);
+      log_message(/*client*/NULL, "[Job %d] Too many environment variables to process job.", job->id);
       job->state = IPP_JSTATE_ABORTED;
       goto error;
     }
@@ -5902,7 +5989,7 @@ process_job(ippeve_job_t *job)		// I - Job
 
     if (attr)
     {
-      fprintf(stderr, "[Job %d] Too many environment variables to process job.\n", job->id);
+      log_message(/*client*/NULL, "[Job %d] Too many environment variables to process job.", job->id);
       job->state = IPP_JSTATE_ABORTED;
       goto error;
     }
@@ -5925,7 +6012,7 @@ process_job(ippeve_job_t *job)		// I - Job
 
       if (httpSeparateURI(HTTP_URI_CODING_ALL, job->printer->device_uri, scheme, sizeof(scheme), userpass, sizeof(userpass), host, sizeof(host), &port, resource, sizeof(resource)) < HTTP_URI_STATUS_OK)
       {
-        fprintf(stderr, "[Job %d] Bad device URI '%s'.\n", job->id, job->printer->device_uri);
+        log_message(/*client*/NULL, "[Job %d] Bad device URI '%s'.", job->id, job->printer->device_uri);
       }
       else if (!strcmp(scheme, "file"))
       {
@@ -5936,36 +6023,36 @@ process_job(ippeve_job_t *job)		// I - Job
           if (errno == ENOENT)
           {
             if ((mystdout = open(resource, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0666)) >= 0)
-	      fprintf(stderr, "[Job %d] Saving print command output to '%s'.\n", job->id, resource);
+	      log_message(/*client*/NULL, "[Job %d] Saving print command output to '%s'.", job->id, resource);
 	    else
-	      fprintf(stderr, "[Job %d] Unable to create '%s': %s\n", job->id, resource, strerror(errno));
+	      log_message(/*client*/NULL, "[Job %d] Unable to create '%s': %s", job->id, resource, strerror(errno));
           }
           else
           {
-            fprintf(stderr, "[Job %d] Unable to access '%s': %s\n", job->id, resource, strerror(errno));
+            log_message(/*client*/NULL, "[Job %d] Unable to access '%s': %s", job->id, resource, strerror(errno));
           }
         }
         else if (S_ISDIR(fileinfo.st_mode))
         {
           if ((mystdout = create_job_file(job, line, sizeof(line), resource, "prn")) >= 0)
-	    fprintf(stderr, "[Job %d] Saving print command output to '%s'.\n", job->id, line);
+	    log_message(/*client*/NULL, "[Job %d] Saving print command output to '%s'.", job->id, line);
           else
-            fprintf(stderr, "[Job %d] Unable to create '%s': %s\n", job->id, line, strerror(errno));
+            log_message(/*client*/NULL, "[Job %d] Unable to create '%s': %s", job->id, line, strerror(errno));
         }
 	else if (!S_ISREG(fileinfo.st_mode))
 	{
 	  if ((mystdout = open(resource, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0666)) >= 0)
-	    fprintf(stderr, "[Job %d] Saving print command output to '%s'.\n", job->id, resource);
+	    log_message(/*client*/NULL, "[Job %d] Saving print command output to '%s'.", job->id, resource);
 	  else
-            fprintf(stderr, "[Job %d] Unable to create '%s': %s\n", job->id, resource, strerror(errno));
+            log_message(/*client*/NULL, "[Job %d] Unable to create '%s': %s", job->id, resource, strerror(errno));
 	}
         else if ((mystdout = open(resource, O_WRONLY | O_BINARY)) >= 0)
         {
-	  fprintf(stderr, "[Job %d] Saving print command output to '%s'.\n", job->id, resource);
+	  log_message(/*client*/NULL, "[Job %d] Saving print command output to '%s'.", job->id, resource);
 	}
 	else
 	{
-	  fprintf(stderr, "[Job %d] Unable to open '%s': %s\n", job->id, resource, strerror(errno));
+	  log_message(/*client*/NULL, "[Job %d] Unable to open '%s': %s", job->id, resource, strerror(errno));
 	}
       }
       else if (!strcmp(scheme, "socket"))
@@ -5976,31 +6063,31 @@ process_job(ippeve_job_t *job)		// I - Job
         snprintf(service, sizeof(service), "%d", port);
 
         if ((addrlist = httpAddrGetList(host, AF_UNSPEC, service)) == NULL)
-          fprintf(stderr, "[Job %d] Unable to find '%s': %s\n", job->id, host, cupsGetErrorString());
+          log_message(/*client*/NULL, "[Job %d] Unable to find '%s': %s", job->id, host, cupsGetErrorString());
         else if (!httpAddrConnect(addrlist, &mystdout, 30000, &(job->cancel)))
-          fprintf(stderr, "[Job %d] Unable to connect to '%s' on port %d: %s\n", job->id, host, port, cupsGetErrorString());
+          log_message(/*client*/NULL, "[Job %d] Unable to connect to '%s' on port %d: %s", job->id, host, port, cupsGetErrorString());
 
         httpAddrFreeList(addrlist);
       }
       else
       {
-        fprintf(stderr, "[Job %d] Unsupported device URI scheme '%s'.\n", job->id, scheme);
+        log_message(/*client*/NULL, "[Job %d] Unsupported device URI scheme '%s'.", job->id, scheme);
       }
     }
     else if ((mystdout = create_job_file(job, line, sizeof(line), job->printer->directory, "prn")) >= 0)
     {
-      fprintf(stderr, "[Job %d] Saving print command output to '%s'.\n", job->id, line);
+      log_message(/*client*/NULL, "[Job %d] Saving print command output to '%s'.", job->id, line);
     }
 
     if (mystdout < 0)
     {
       if ((mystdout = open("/dev/null", O_WRONLY | O_BINARY)) < 0)
-        fprintf(stderr, "[Job %d] Unable to redirect command output to /dev/null: %s", job->id, strerror(errno));
+        log_message(/*client*/NULL, "[Job %d] Unable to redirect command output to /dev/null: %s", job->id, strerror(errno));
     }
 
     if (pipe(mypipe))
     {
-      fprintf(stderr, "[Job %d] Unable to create pipe for stderr: %s\n", job->id, strerror(errno));
+      log_message(/*client*/NULL, "[Job %d] Unable to create pipe for stderr: %s", job->id, strerror(errno));
       mypipe[0] = mypipe[1] = -1;
     }
 
@@ -6028,7 +6115,7 @@ process_job(ippeve_job_t *job)		// I - Job
     else if (pid < 0)
     {
       // Unable to fork process...
-      fprintf(stderr, "[Job %d] Unable to start job processing command: %s\n", job->id, strerror(errno));
+      log_message(/*client*/NULL, "[Job %d] Unable to start job processing command: %s", job->id, strerror(errno));
       status = -1;
 
       if (mystdout >= 0)
@@ -6105,7 +6192,7 @@ process_job(ippeve_job_t *job)		// I - Job
 	    }
 
 	    if (Verbosity >= level)
-	      fprintf(stderr, "[Job %d] Command - %s\n", job->id, line);
+	      log_message(/*client*/NULL, "[Job %d] Command - %s", job->id, line);
 
 	    bytes = ptr - line;
             if (ptr < endptr)
@@ -6132,22 +6219,22 @@ process_job(ippeve_job_t *job)		// I - Job
 #ifndef _WIN32
       if (WIFEXITED(status))
 #endif // !_WIN32
-	fprintf(stderr, "[Job %d] Command \"%s\" exited with status %d.\n", job->id,  job->printer->command, WEXITSTATUS(status));
+	log_message(/*client*/NULL, "[Job %d] Command \"%s\" exited with status %d.", job->id,  job->printer->command, WEXITSTATUS(status));
 #ifndef _WIN32
       else
-	fprintf(stderr, "[Job %d] Command \"%s\" terminated with signal %d.\n", job->id, job->printer->command, WTERMSIG(status));
+	log_message(/*client*/NULL, "[Job %d] Command \"%s\" terminated with signal %d.", job->id, job->printer->command, WTERMSIG(status));
 #endif // !_WIN32
       job->state = IPP_JSTATE_ABORTED;
     }
     else
     {
-      fprintf(stderr, "[Job %d] Command \"%s\" completed successfully.\n", job->id, job->printer->command);
+      log_message(/*client*/NULL, "[Job %d] Command \"%s\" completed successfully.", job->id, job->printer->command);
     }
 
     // Report the total processing time...
     gettimeofday(&end, NULL);
 
-    fprintf(stderr, "[Job %d] Processing time was %.3f seconds.\n", job->id, (double)end.tv_sec - (double)start.tv_sec + 0.000001 * (double)(end.tv_usec - start.tv_usec));
+    log_message(/*client*/NULL, "[Job %d] Processing time was %.3f seconds.", job->id, (double)end.tv_sec - (double)start.tv_sec + 0.000001 * (double)(end.tv_usec - start.tv_usec));
   }
   else
   {
@@ -6386,7 +6473,7 @@ register_printer(
     free(printer->dnssd_name);
     printer->dnssd_name = strdup(new_dnssd_name);
 
-    fprintf(stderr, "DNS-SD name collision, trying new DNS-SD service name '%s'.\n", printer->dnssd_name);
+    log_message(/*client*/NULL, "DNS-SD name collision, trying new DNS-SD service name '%s'.", printer->dnssd_name);
 
     cupsRWUnlock(&printer->rwlock);
 
@@ -6451,7 +6538,8 @@ register_printer(
   if (!cupsDNSSDServicePublish(printer->services))
     goto error;
 
-  fprintf(stderr, "Registered printer '%s' for discovery using DNS-SD.\n", printer->dnssd_name);
+  if (Verbosity)
+    log_message(/*client*/NULL, "Registered printer '%s' for discovery using DNS-SD.", printer->dnssd_name);
 
   cupsFreeOptions(num_txt, txt);
 
@@ -6460,7 +6548,7 @@ register_printer(
   // If we get here there was a problem...
   error:
 
-  fprintf(stderr, "Unable to register printer '%s' for discovery using DNS-SD: %s\n", printer->dnssd_name, cupsGetErrorString());
+  log_message(/*client*/NULL, "Unable to register printer '%s' for discovery using DNS-SD: %s", printer->dnssd_name, cupsGetErrorString());
 
   cupsFreeOptions(num_txt, txt);
 
@@ -6475,15 +6563,16 @@ register_printer(
 bool					// O - `true` on success, `false` on failure
 respond_http(
     ippeve_client_t *client,		// I - Client
-    http_status_t code,			// I - HTTP status of response
-    const char    *content_encoding,	// I - Content-Encoding of response
-    const char    *type,		// I - MIME media type of response
-    size_t        length)		// I - Length of response
+    http_status_t   code,		// I - HTTP status of response
+    const char      *content_encoding,	// I - Content-Encoding of response
+    const char      *type,		// I - MIME media type of response
+    size_t          length)		// I - Length of response
 {
   char	message[1024];			// Text message
 
 
-  fprintf(stderr, "%s %s\n", client->hostname, httpStatusString(code));
+  if (Verbosity)
+    log_message(client, "HTTP/%d.%d %d %s", httpGetVersion(client->http) / 100, httpGetVersion(client->http) % 100, code, httpStatusString(code));
 
   if (code == HTTP_STATUS_CONTINUE)
   {
@@ -6562,7 +6651,7 @@ respond_http(
   else if (client->response)
   {
     // Send an IPP response...
-    debug_attributes("Response", client->response, 2);
+    debug_attributes(client, "Response", client->response, 2);
 
     ippSetState(client->response, IPP_STATE_IDLE);
 
@@ -6626,9 +6715,9 @@ respond_ipp(ippeve_client_t *client,	// I - Client
   }
 
   if (formatted)
-    fprintf(stderr, "%s %s %s (%s)\n", client->hostname, ippOpString(client->operation_id), ippErrorString(status), formatted);
+    log_message(client, "%s %s (%s)", ippOpString(client->operation_id), ippErrorString(status), formatted);
   else
-    fprintf(stderr, "%s %s %s\n", client->hostname, ippOpString(client->operation_id), ippErrorString(status));
+    log_message(client, "%s %s", ippOpString(client->operation_id), ippErrorString(status));
 }
 
 
@@ -7506,14 +7595,15 @@ valid_doc_attributes(
     }
     else
     {
-      fprintf(stderr, "%s %s compression=\"%s\"\n", client->hostname, op_name, compression);
+      if (Verbosity)
+	log_message(client, "%s compression='%s'", op_name, compression);
 
       ippAddString(client->request, IPP_TAG_JOB, IPP_TAG_KEYWORD, "compression-supplied", NULL, compression);
 
       if (strcmp(compression, "none"))
       {
 	if (Verbosity)
-	  fprintf(stderr, "Receiving job file with \"%s\" compression.\n", compression);
+	  log_message(client, "Receiving job file with '%s' compression.", compression);
         httpSetField(client->http, HTTP_FIELD_CONTENT_ENCODING, compression);
       }
     }
@@ -7532,7 +7622,8 @@ valid_doc_attributes(
     {
       format = ippGetString(attr, 0, NULL);
 
-      fprintf(stderr, "%s %s document-format=\"%s\"\n", client->hostname, op_name, format);
+      if (Verbosity)
+	log_message(client, "%s document-format='%s'", op_name, format);
 
       ippAddString(client->request, IPP_TAG_JOB, IPP_TAG_MIMETYPE, "document-format-supplied", NULL, format);
     }
@@ -7554,7 +7645,8 @@ valid_doc_attributes(
     memset(header, 0, sizeof(header));
     httpPeek(client->http, (char *)header, sizeof(header));
 
-    fprintf(stderr, "%s %s Auto-type header: %02X%02X%02X%02X%02X%02X%02X%02X\n", client->hostname, op_name, header[0], header[1], header[2], header[3], header[4], header[5], header[6], header[7]);
+    if (Verbosity)
+      log_message(client, "%s Auto-type header: %02X%02X%02X%02X%02X%02X%02X%02X", op_name, header[0], header[1], header[2], header[3], header[4], header[5], header[6], header[7]);
     if (!memcmp(header, "%PDF", 4))
       format = "application/pdf";
     else if (!memcmp(header, "%!", 2))
@@ -7572,7 +7664,8 @@ valid_doc_attributes(
 
     if (format)
     {
-      fprintf(stderr, "%s %s Auto-typed document-format=\"%s\"\n", client->hostname, op_name, format);
+      if (Verbosity)
+	log_message(client, "%s Auto-typed document-format='%s'", op_name, format);
 
       ippAddString(client->request, IPP_TAG_JOB, IPP_TAG_MIMETYPE, "document-format-detected", NULL, format);
     }
