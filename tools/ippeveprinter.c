@@ -296,6 +296,7 @@ static void		respond_ignored(ippeve_client_t *client, ipp_attribute_t *attr);
 static void		respond_ipp(ippeve_client_t *client, ipp_status_t status, const char *message, ...) _CUPS_FORMAT(3, 4);
 static void		respond_unsupported(ippeve_client_t *client, ipp_attribute_t *attr);
 static void		run_printer(ippeve_printer_t *printer);
+static void		set_cookie(ippeve_client_t *client, const char *name, const char *value, int expires);
 static bool		show_media(ippeve_client_t *client);
 static bool		show_oauth(ippeve_client_t *client);
 static bool		show_status(ippeve_client_t *client);
@@ -307,6 +308,7 @@ static char		*time_string(time_t tv, char *buffer, size_t bufsize);
 static int		usage(FILE *out);
 static bool		valid_doc_attributes(ippeve_client_t *client);
 static bool		valid_job_attributes(ippeve_client_t *client);
+static bool		valid_oauth(ippeve_client_t *client, const char *token);
 
 
 //
@@ -840,7 +842,7 @@ authenticate_request(
   // See what we have...
   authorization = httpGetField(client->http, HTTP_FIELD_AUTHORIZATION);
 
-  if (OAuthURI && !*authorization && httpGetCookieValue(client->http, "CUPS_BEARER", data.bearer, sizeof(data.bearer)) && data.bearer[0])
+  if (OAuthURI && !*authorization && httpGetCookieValue(client->http, "_TOKEN", data.bearer, sizeof(data.bearer)) && data.bearer[0])
     authorization = "Bearer COOKIE";
 
   if (!*authorization)
@@ -850,10 +852,6 @@ authenticate_request(
 
   if (OAuthURI)
   {
-    cups_jwt_t	*jwt;			// JWT user information
-    const char	*sub,			// Subject/user ID
-		*prefname;		// Preferred username
-
     if (strncmp(authorization, "Bearer ", 7))
     {
       log_message(client, "Unsupported scheme in Authorization header.");
@@ -867,25 +865,8 @@ authenticate_request(
     if (!strcmp(authorization, "COOKIE"))
       authorization = data.bearer;
 
-    // TODO: Validate OAuth credentials
-    if ((jwt = cupsOAuthGetUserId(OAuthURI, OAuthMetadata, authorization)) == NULL)
-    {
-      log_message(client, "Unable to get user information from bearer token: %s", cupsGetErrorString());
-      cupsCopyString(client->autherr, cupsGetErrorString(), sizeof(client->autherr));
-      return (HTTP_STATUS_BAD_REQUEST);
-    }
-    else if ((sub = cupsJWTGetClaimString(jwt, CUPS_JWT_SUB)) == NULL)
-    {
-      log_message(client, "Missing subject name in OAuth user information.");
-      cupsCopyString(client->autherr, "Missing subject name.", sizeof(client->autherr));
-      cupsJWTDelete(jwt);
-      return (HTTP_STATUS_BAD_REQUEST);
-    }
-
-    if ((prefname = cupsJWTGetClaimString(jwt, "preferred_username")) != NULL)
-      cupsCopyString(client->username, prefname, sizeof(client->username));
-    else
-      cupsCopyString(client->username, sub, sizeof(client->username));
+    if (!valid_oauth(client, authorization))
+      return (HTTP_STATUS_UNAUTHORIZED);
   }
   else if (strncmp(authorization, "Basic ", 6))
   {
@@ -2921,8 +2902,8 @@ html_footer(ippeve_client_t *client)	// I - Client
 
 static bool				// O - `true` on success, `false` on error
 html_header(ippeve_client_t *client,	// I - Client
-            const char    *title,	// I - Title
-            int           refresh)	// I - Refresh timer, if any
+            const char      *title,	// I - Title
+            int             refresh)	// I - Refresh timer, if any
 {
   bool ret = true;			// Return value
 
@@ -2959,6 +2940,17 @@ html_header(ippeve_client_t *client,	// I - Client
 		     "td.nav.sel { background: #fff; color: #000; font-weight: bold; }\n"
 		     "td.nav:hover { background: #666; color: #fff; }\n"
 		     "td.nav:active { background: #000; color: #ff0; }\n"
+		     "a.copy { text-decoration: none; }\n"
+		     "a.copy::after { content: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgZmlsbD0iY3VycmVudENvbG9yIiBjbGFzcz0iYmkgYmktY29weSIgdmlld0JveD0iMCAwIDE2IDE2Ij4KICA8cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik00IDJhMiAyIDAgMCAxIDItMmg4YTIgMiAwIDAgMSAyIDJ2OGEyIDIgMCAwIDEtMiAySDZhMiAyIDAgMCAxLTItMnptMi0xYTEgMSAwIDAgMC0xIDF2OGExIDEgMCAwIDAgMSAxaDhhMSAxIDAgMCAwIDEtMVYyYTEgMSAwIDAgMC0xLTF6TTIgNWExIDEgMCAwIDAtMSAxdjhhMSAxIDAgMCAwIDEgMWg4YTEgMSAwIDAgMCAxLTF2LTFoMXYxYTIgMiAwIDAgMS0yIDJIMmEyIDIgMCAwIDEtMi0yVjZhMiAyIDAgMCAxIDItMmgxdjF6Ii8+Cjwvc3ZnPg==); cursor: pointer; padding-left: 5px; vertical-align: baseline; }\n"
+		     "a.btn, a.btn:visited, button, input[type=submit], select { border: none; border-radius: 5px; cursor: pointer; font-family: inherit; font-size: 14px; font-weight: normal; padding: 4px 8px; text-decoration: none; white-space: nowrap; -moz-appearance: none; -webkit-appearance: none; }\n"
+		     "a.btn, a.btn:visited, button, input[type=submit] { background: #333; color: #ccc; }\n"
+		     "a.btn:hover, button:hover, input[type=submit]:hover { background: #333; color: #eee; }\n"
+		     "a.btn:active, button:active, input[type=submit]:active { background: #444; color: #fff; }\n"
+		     "input[type=text] { padding: 4px 8px; }\n"
+		     "input[type=number] { appearance: textfield; padding: 4px 0 4px 8px; }\n"
+		     "input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }\n"
+		     "select { background: #ccc url(data:image/svg+xml,%%3csvg xmlns='http://www.w3.org/2000/svg' width='4' height='5' viewBox='0 0 4 5'%%3e%%3cpath fill='%%23000000' d='M2 0L0 2h4zm0 5L0 3h4z'/%%3e%%3c/svg%%3e) no-repeat right 0.75rem center/8px 10px; color: black; padding: 4px 32px 4px 8px; }\n"
+		     "select:hover { background: #ddd url(data:image/svg+xml,%%3csvg xmlns='http://www.w3.org/2000/svg' width='4' height='5' viewBox='0 0 4 5'%%3e%%3cpath fill='%%23000000' d='M2 0L0 2h4zm0 5L0 3h4z'/%%3e%%3c/svg%%3e) no-repeat right 0.75rem center/8px 10px; }\n"
 		     "</style>\n"
 		     "</head>\n"
 		     "<body>\n"
@@ -5544,9 +5536,16 @@ process_http(ippeve_client_t *client)	// I - Client connection
 	  if ((http_status = authenticate_request(client)) != HTTP_STATUS_CONTINUE)
 	  {
 	    if (OAuthURI)
-	      return (show_oauth(client));
+	    {
+	      // Try doing a device grant...
+	      if (!show_oauth(client))
+	        return (true);
+	    }
 	    else
+	    {
+	      // HTTP Basic auth just uses 401 statuses...
 	      return (respond_http(client, http_status, NULL, NULL, 0));
+	    }
 	  }
 
 	  if (!strcmp(client->uri, "/"))
@@ -6827,6 +6826,33 @@ run_printer(ippeve_printer_t *printer)	// I - Printer
 
 
 //
+// 'set_cookie()' - Set a cookie value.
+//
+
+static void
+set_cookie(
+    ippeve_client_t *client,		// I - Client
+    const char      *name,		// I - Cookie name
+    const char      *value,		// I - Cookie value
+    int             expires)		// I - Expiration in seconds from now, `0` for a session cookie
+{
+  char		cookie[1536],		// New authorization cookie
+		expireTime[64];		// Expiration date/time
+
+
+  if (!name || !value)
+    return;
+
+  if (expires > 0)
+    snprintf(cookie, sizeof(cookie), "%s=%s; expires=%s; httponly;%s", name, value, httpGetDateString(time(NULL) + expires, expireTime, sizeof(expireTime)), httpIsEncrypted(client->http) ? " secure;" : "");
+  else
+    snprintf(cookie, sizeof(cookie), "%s=%s; httponly; %s", name, value, httpIsEncrypted(client->http) ? " secure;" : "");
+
+  httpSetCookie(client->http, cookie);
+}
+
+
+//
 // 'show_media()' - Show media load state.
 //
 
@@ -7150,12 +7176,132 @@ show_media(ippeve_client_t  *client)	// I - Client connection
 // 'show_oauth()' - Show the OAuth authorization page.
 //
 
-static bool				// O - `true` on success, `false` on failure
+static bool				// O - `true` when authenticate, `false` otherwise
 show_oauth(ippeve_client_t *client)	// I - Client connection
 {
-  (void)client;
+  char		devgrant_cookie[1536],	// Device grant ("_DEVGRANT") cookie
+		devgrant_data[1024];	// Device grant data
+  size_t	devgrant_size;		// Number of bytes
+  cups_json_t	*devgrant = NULL;	// Device grant
+  const char	*verify_url;		// Verification URL
 
-  return (true);
+
+  // See if we have an active device grant?
+  if (httpGetCookieValue(client->http, "_DEVGRANT", devgrant_cookie, sizeof(devgrant_cookie)) && devgrant_cookie[0])
+  {
+    // Yes, try to extract the device grant JSON data...
+    devgrant_size = sizeof(devgrant_data) - 1;
+    httpDecode64(devgrant_data, &devgrant_size, devgrant_cookie, /*end*/NULL);
+    if (devgrant_size > 0)
+    {
+      devgrant_data[devgrant_size] = '\0';
+      devgrant = cupsJSONImportString(devgrant_data);
+    }
+
+    if (devgrant)
+    {
+      const char	*device_code;	// Device code
+
+      if ((device_code = cupsJSONGetString(cupsJSONFind(devgrant, CUPS_ODEVGRANT_DEVICE_CODE))) != NULL)
+      {
+        // See if we have an access token...
+        time_t access_expires;		// Expiration date
+        char *access_token = cupsOAuthGetTokens(OAuthURI, OAuthMetadata, /*resource_uri*/NULL, device_code, CUPS_OGRANT_DEVICE_CODE, /*redirect_uri*/NULL, &access_expires);
+
+        if (access_token)
+        {
+          // Save this access token as a cookie and return...
+	  set_cookie(client, "_DEVGRANT", "", 1);
+
+          if (valid_oauth(client, access_token))
+          {
+	    set_cookie(client, "_TOKEN", access_token, access_expires - time(NULL));
+	    return (true);
+	  }
+	  else
+	  {
+	    // Show an error
+	    respond_http(client, HTTP_STATUS_OK, /*content_encoding*/NULL, "text/html", 0);
+	    html_header(client, "Authorization Error", /*refresh*/0);
+	    html_printf(client, "<h1>Authorization Error</h1>\n"
+				"<p>Unable to validate the authorization: %s</p>\n", client->autherr);
+	    html_footer(client);
+	    return (false);
+	  }
+	}
+	else
+	{
+	  // Unable to use device code, try a new grant...
+	  log_message(client, "Unable to get access token using device code: %s", cupsGetErrorString());
+	  cupsJSONDelete(devgrant);
+	  devgrant = NULL;
+	}
+      }
+      else
+      {
+        // No device code in grant JSON, so just toss this one...
+	cupsJSONDelete(devgrant);
+	devgrant = NULL;
+      }
+    }
+  }
+
+  if (!devgrant)
+  {
+    // Create a new device grant...
+    if ((devgrant = cupsOAuthGetDeviceGrant(OAuthURI, OAuthMetadata, /*resource_uri*/NULL, OAuthScopes)) == NULL)
+    {
+      // Show an error
+      respond_http(client, HTTP_STATUS_OK, /*content_encoding*/NULL, "text/html", 0);
+      html_header(client, "Authorization Error", /*refresh*/0);
+      html_printf(client, "<h1>Authorization Error</h1>\n"
+                          "<p>Unable to create an authorization request for this printer: %s</p>\n", cupsGetErrorString());
+      html_footer(client);
+      return (false);
+    }
+
+    // Save it as a cookie...
+    char *temp = cupsJSONExportString(devgrant);
+
+    if (temp)
+    {
+      httpEncode64(devgrant_data, sizeof(devgrant_data), temp, strlen(temp), /*url*/true);
+      set_cookie(client, "_DEVGRANT", devgrant_data, (int)cupsJSONGetNumber(cupsJSONFind(devgrant, CUPS_ODEVGRANT_EXPIRES_IN)));
+      free(temp);
+    }
+    else
+    {
+      // Show an error
+      respond_http(client, HTTP_STATUS_OK, /*content_encoding*/NULL, "text/html", 0);
+      html_header(client, "Authorization Error", /*refresh*/0);
+      html_printf(client, "<h1>Authorization Error</h1>\n"
+                          "<p>Unable to save the authorization request for this printer.</p>\n");
+      html_footer(client);
+      return (false);
+    }
+  }
+
+  // Show the login page...
+  respond_http(client, HTTP_STATUS_OK, /*content_encoding*/NULL, "text/html", 0);
+  html_header(client, "Authorize Access", /*refresh*/(int)cupsJSONGetNumber(cupsJSONFind(devgrant, CUPS_ODEVGRANT_INTERVAL)));
+
+  html_printf(client, "<h1>Authorize Access</h1>\n"
+                      "<p>This printer requires authorization for access.</p>\n");
+
+  html_printf(client, "<p>Copy the following code: <a class=\"copy\" href=\"#\" onClick=\"return copy_text(this);\">%s</a></p>\n", cupsJSONGetString(cupsJSONFind(devgrant, CUPS_ODEVGRANT_USER_CODE)));
+
+  verify_url = cupsJSONGetString(cupsJSONFind(devgrant, CUPS_ODEVGRANT_VERIFICATION_URI));
+  html_printf(client, "<p>and go to the following URL: <a href=\"%s\" target=\"_blank\">%s</a></p>\n", verify_url, verify_url);
+
+  // TODO: Add QR code
+  verify_url = cupsJSONGetString(cupsJSONFind(devgrant, CUPS_ODEVGRANT_VERIFICATION_URI_COMPLETE));
+  html_printf(client, "<p>or click/tap the following URL: <a href=\"%s\" target=\"_blank\">%s</a></p>\n", verify_url, verify_url);
+
+  html_footer(client);
+
+  cupsJSONDelete(devgrant);
+
+  return (false);
 }
 
 
@@ -8186,3 +8332,46 @@ valid_job_attributes(
 
   return (valid);
 }
+
+
+//
+// 'valid_oauth()' - Determine whether the OAuth bearer token is valid.
+//
+// If so, the sub/preferred_username value is copied to the authenticated
+// username member...
+//
+
+static bool				// O - `true` if good, `false` otherwise
+valid_oauth(ippeve_client_t *client,	// I - Client connection
+            const char      *token)	// I - Access token
+{
+  cups_jwt_t	*jwt;			// JWT user information
+  const char	*sub,			// Subject/user ID
+		*prefname;		// Preferred username
+
+
+  // TODO: Validate OAuth credentials
+  if ((jwt = cupsOAuthGetUserId(OAuthURI, OAuthMetadata, token)) == NULL)
+  {
+    log_message(client, "Unable to get user information from bearer token: %s", cupsGetErrorString());
+    cupsCopyString(client->autherr, cupsGetErrorString(), sizeof(client->autherr));
+    return (false);
+  }
+  else if ((sub = cupsJWTGetClaimString(jwt, CUPS_JWT_SUB)) == NULL)
+  {
+    log_message(client, "Missing subject name in OAuth user information.");
+    cupsCopyString(client->autherr, "Missing subject name.", sizeof(client->autherr));
+    cupsJWTDelete(jwt);
+    return (false);
+  }
+
+  if ((prefname = cupsJWTGetClaimString(jwt, "preferred_username")) != NULL)
+    cupsCopyString(client->username, prefname, sizeof(client->username));
+  else
+    cupsCopyString(client->username, sub, sizeof(client->username));
+
+  cupsJWTDelete(jwt);
+
+  return (true);
+}
+

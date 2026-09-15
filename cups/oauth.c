@@ -815,8 +815,8 @@ cupsOAuthGetClientId(
 //
 // - `CUPS_ODEVGRANT_DEVICE_CODE`: The device code string to be used in
 //   subsequent @link cupsOAuthGetTokens@ calls.
-// - `CUPS_ODEVGRANT_EXPIRES_IN`: The expiration date/time as a number of
-//   seconds since the Unix epoch.
+// - `CUPS_ODEVGRANT_EXPIRES_IN`: The number of seconds before the grant
+//   expires.
 // - `CUPS_ODEVGRANT_INTERVAL`: The number of seconds to wait between calls to
 //   @link cupsOAuthGetTokens@.
 // - `CUPS_ODEVGRANT_USER_CODE`: The user code to enter on the verification
