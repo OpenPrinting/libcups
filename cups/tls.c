@@ -312,6 +312,8 @@ http_check_roots(const char *creds)	// I - Credentials
   char	*ret = NULL;			// Return value
 
 
+  DEBUG_printf("4http_check_roots(creds=\"%u bytes...\")", (unsigned)strlen(creds));
+
 #ifdef __APPLE__
   // Apple hides all of the keychain stuff (all deprecated) so the best we can
   // do is use the SecTrust API to evaluate the certificate...
@@ -329,14 +331,23 @@ http_check_roots(const char *creds)	// I - Credentials
 
   // Convert PEM-encoded credentials to an array of DER-encoded certificates...
   if ((tcreds = strdup(creds)) == NULL)
+  {
+    DEBUG_puts("5http_check_roots: Unable to duplicate credentials.");
     goto done;
+  }
 
   if ((certs = CFArrayCreateMutable(kCFAllocatorDefault, /*capacity*/0, &kCFTypeArrayCallBacks)) == NULL)
+  {
+    DEBUG_puts("5http_check_roots: Unable to create credentials array.");
     goto done;
+  }
 
   dersize = 3 * strlen(tcreds) / 4;
   if ((der = malloc(dersize)) == NULL)
+  {
+    DEBUG_printf("5http_check_roots: Unable to allocate %u byte buffer for certificate.", (unsigned)dersize);
     goto done;
+  }
 
   for (tstart = strstr(tcreds, "-----BEGIN CERTIFICATE-----\n"); tstart; tstart = strstr(tend, "-----BEGIN CERTIFICATE-----\n"))
   {
@@ -353,6 +364,7 @@ http_check_roots(const char *creds)	// I - Credentials
     if (httpDecode64(der, &derlen, tstart, /*end*/NULL))
     {
       // Create a CFData object for the data...
+      DEBUG_printf("5http_check_roots: Allocating %u bytes for certificate.", (unsigned)derlen);
       CFDataRef data = CFDataCreate(kCFAllocatorDefault, (const UInt8 *)der, (CFIndex)derlen);
 
       if (data)
@@ -364,8 +376,16 @@ http_check_roots(const char *creds)	// I - Credentials
           CFArrayAppendValue(certs, cert);
           CFRelease(cert);
 	}
+	else
+	{
+	  DEBUG_puts("5http_check_roots: Unable to create certificate.");
+	}
 
         CFRelease(data);
+      }
+      else
+      {
+	DEBUG_puts("5http_check_roots: Unable to create certificate data.");
       }
     }
   }
@@ -373,10 +393,21 @@ http_check_roots(const char *creds)	// I - Credentials
   // Test the certificate list against the macOS/iOS trust store...
   if ((policy = SecPolicyCreateBasicX509()) != NULL)
   {
+    DEBUG_puts("5http_check_roots: Created basic X.509 trust policy.");
+
     if (SecTrustCreateWithCertificates(certs, policy, &trust) == noErr)
     {
+      DEBUG_puts("5http_check_roots: Created trust object with policy.");
+
       if (SecTrustEvaluateWithError(trust, NULL))
+      {
+        DEBUG_puts("5http_check_roots: Certificate is trusted.");
         ret = strdup("");
+      }
+      else
+      {
+        DEBUG_puts("5http_check_roots: Certificate is not trusted.");
+      }
 
       CFRelease(trust);
     }
