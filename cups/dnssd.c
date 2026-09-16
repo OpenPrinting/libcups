@@ -54,7 +54,7 @@
 struct _cups_dnssd_s			// DNS-SD context
 {
   cups_rwlock_t		rwlock;		// R/W lock for context
-  size_t			config_changes;	// Number of hostname/network changes
+  size_t		config_changes;	// Number of hostname/network changes
   cups_dnssd_error_cb_t	cb;		// Error callback function
   void			*cb_data;	// Error callback data
   cups_array_t		*browses,	// Browse requests

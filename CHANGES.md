@@ -12,7 +12,7 @@ v3.0.4 - YYYY-MM-DD
 - Updated `ippeveprinter` to support a single test password.
 - Updated `ippeveprinter` to support OAuth/OpenID authorization.
 - Updated `ippeveprinter` to add a date/time stamp when logging to a file.
-- Now explicitly limit IPP attribute names to 255 bytes.
+- Now explicitly validate IPP attribute names as keyword strings.
 - Fixed an issue with `cupsGetCredentialsTrust` for credentials that are signed
   by an unknown CA.
 - Fixed PAM support in `ippeveprinter`.
