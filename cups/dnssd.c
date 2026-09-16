@@ -66,7 +66,7 @@ struct _cups_dnssd_s			// DNS-SD context
   DNSServiceRef		ref;		// Master service reference
   char			hostname[256];	// Current mDNS hostname
   DNSServiceRef		hostname_ref;	// Hostname monitoring reference
-  cups_thread_t		monitor;		// Monitoring thread
+  cups_thread_t		monitor;	// Monitoring thread
 
 #elif _WIN32
   char			hostname[256];	// Current mDNS hostname
@@ -96,9 +96,9 @@ struct _cups_dnssd_browse_s		// DNS-SD browse request
   size_t		num_browsers;	// Number of browsers
   struct
   {					// Browsers
-    WCHAR		name[256];		// Browse name as a UTF-16 string
-    DNS_SERVICE_BROWSE_REQUEST req;		// Browse request
-    DNS_SERVICE_CANCEL	cancel;			// Cancellation structure
+    WCHAR		name[256];	// Browse name as a UTF-16 string
+    DNS_SERVICE_BROWSE_REQUEST req;	// Browse request
+    DNS_SERVICE_CANCEL	cancel;		// Cancellation structure
   }			browsers[_CUPS_DNSSD_MAX];
 
 #else // HAVE_AVAHI
@@ -373,21 +373,6 @@ cupsDNSSDBrowseNew(
   browse->cb      = browse_cb;
   browse->cb_data = cb_data;
 
-  DEBUG_puts("2cupsDNSSDBrowseNew: Write locking rwlock.");
-  cupsRWLockWrite(&dnssd->rwlock);
-
-  if (!dnssd->browses)
-  {
-    // Create an array of browsers...
-    if ((dnssd->browses = cupsArrayNew(NULL, NULL, NULL, 0, NULL, (cups_afree_cb_t)delete_browse)) == NULL)
-    {
-      // Unable to create...
-      free(browse);
-      browse = NULL;
-      goto done;
-    }
-  }
-
 #ifdef HAVE_MDNSRESPONDER
   DNSServiceErrorType error;		// Error, if any
 
@@ -396,8 +381,7 @@ cupsDNSSDBrowseNew(
   {
     report_error(dnssd, "Unable to create DNS-SD browse request: %s", mdns_strerror(error));
     free(browse);
-    browse = NULL;
-    goto done;
+    return (NULL);
   }
 
 #elif _WIN32
@@ -450,9 +434,8 @@ cupsDNSSDBrowseNew(
         DnsServiceBrowseCancel(&browse->browsers[i].cancel);
       }
       free(browse);
-      browse = NULL;
       cupsArrayDelete(tarray);
-      goto done;
+      return (NULL);
     }
   }
 
@@ -471,8 +454,7 @@ cupsDNSSDBrowseNew(
   {
     report_error(dnssd, "Unable to create types array: %s", strerror(errno));
     free(browse);
-    browse = NULL;
-    goto done;
+    return (NULL);
   }
 
   base  = (const char *)cupsArrayGetElement(tarray, 0);
@@ -505,11 +487,11 @@ cupsDNSSDBrowseNew(
         avahi_service_browser_free(browse->browsers[browse->num_browsers]);
       }
       free(browse);
-      browse = NULL;
 
       cupsArrayDelete(tarray);
+      avahi_unlock(dnssd, "cupsDNSSDBrowseNew");
 
-      goto avahi_done;
+      return (NULL);
     }
 
     if (!domain && dnssd->num_domains > 0)
@@ -525,10 +507,23 @@ cupsDNSSDBrowseNew(
 
   cupsArrayDelete(tarray);
 
-  avahi_done:
-
   avahi_unlock(dnssd, "cupsDNSSDBrowseNew");
 #endif // HAVE_MDNSRESPONDER
+
+  DEBUG_puts("2cupsDNSSDBrowseNew: Write locking rwlock.");
+  cupsRWLockWrite(&dnssd->rwlock);
+
+  if (!dnssd->browses)
+  {
+    // Create an array of browsers...
+    if ((dnssd->browses = cupsArrayNew(NULL, NULL, NULL, 0, NULL, (cups_afree_cb_t)delete_browse)) == NULL)
+    {
+      // Unable to create...
+      free(browse);
+      browse = NULL;
+      goto done;
+    }
+  }
 
   DEBUG_printf("2cupsDNSSDBrowseNew: Adding browse=%p", (void *)browse);
   cupsArrayAdd(dnssd->browses, browse);
@@ -1018,22 +1013,6 @@ cupsDNSSDQueryNew(
   query->cb      = query_cb;
   query->cb_data = cb_data;
 
-  DEBUG_puts("2cupsDNSSDQueryNew: Write locking rwlock.");
-  cupsRWLockWrite(&dnssd->rwlock);
-
-  if (!dnssd->queries)
-  {
-    // Create an array of resolvers...
-    DEBUG_puts("2cupsDNSSDQueryNew: Creating queries array.");
-    if ((dnssd->queries = cupsArrayNew(NULL, NULL, NULL, 0, NULL, (cups_afree_cb_t)delete_query)) == NULL)
-    {
-      // Unable to create...
-      free(query);
-      query = NULL;
-      goto done;
-    }
-  }
-
 #ifdef HAVE_MDNSRESPONDER
   DNSServiceErrorType error;		// Error, if any
 
@@ -1042,8 +1021,7 @@ cupsDNSSDQueryNew(
   {
     report_error(dnssd, "Unable to create DNS-SD query request: %s", mdns_strerror(error));
     free(query);
-    query = NULL;
-    goto done;
+    return (NULL);
   }
 
 #elif _WIN32
@@ -1062,8 +1040,7 @@ cupsDNSSDQueryNew(
   {
     report_error(dnssd, "Unable to start mDNS query request: %d", status);
     free(query);
-    query = NULL;
-    goto done;
+    return (NULL);
   }
 
 #else // HAVE_AVAHI
@@ -1077,10 +1054,25 @@ cupsDNSSDQueryNew(
   {
     report_error(dnssd, "Unable to create DNS-SD query request: %s", avahi_strerror(avahi_client_errno(dnssd->client)));
     free(query);
-    query = NULL;
-    goto done;
+    return (NULL);
   }
 #endif // HAVE_MDNSRESPONDER
+
+  DEBUG_puts("2cupsDNSSDQueryNew: Write locking rwlock.");
+  cupsRWLockWrite(&dnssd->rwlock);
+
+  if (!dnssd->queries)
+  {
+    // Create an array of resolvers...
+    DEBUG_puts("2cupsDNSSDQueryNew: Creating queries array.");
+    if ((dnssd->queries = cupsArrayNew(NULL, NULL, NULL, 0, NULL, (cups_afree_cb_t)delete_query)) == NULL)
+    {
+      // Unable to create...
+      free(query);
+      query = NULL;
+      goto done;
+    }
+  }
 
   DEBUG_printf("2cupsDNSSDQueryNew: Adding query=%p", (void *)query);
   cupsArrayAdd(dnssd->queries, query);
