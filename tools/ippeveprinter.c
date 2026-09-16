@@ -2119,6 +2119,30 @@ create_printer(
   // natural-language-configured
   ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_LANGUAGE), "natural-language-configured", NULL, "en");
 
+  if (OAuthURI)
+  {
+    // oauth-authorization-scope
+    if (OAuthScopes)
+    {
+      cups_array_t *scopes = cupsArrayNewStrings(OAuthScopes, ',');
+      size_t num_scopes = cupsArrayGetCount(scopes);
+
+      attr = ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_NAME, "oauth-authorization-scope", num_scopes, NULL, NULL);
+
+      for (i = 0; i < num_scopes; i ++)
+        ippSetString(printer->attrs, &attr, i, (char *)cupsArrayGetElement(scopes, i));
+
+      cupsArrayDelete(scopes);
+    }
+    else
+    {
+      ippAddOutOfBand(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_NOVALUE, "oauth-authorization-scope");
+    }
+
+    // oauth-authorization-server-uri
+    ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_URI), "oauth-authorization-server-uri", NULL, OAuthURI);
+  }
+
   // operations-supported
   ippAddIntegers(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_ENUM, "operations-supported", sizeof(ops) / sizeof(ops[0]), ops);
 
@@ -2952,6 +2976,9 @@ html_header(ippeve_client_t *client,	// I - Client
 		     "select { background: #ccc url(data:image/svg+xml,%%3csvg xmlns='http://www.w3.org/2000/svg' width='4' height='5' viewBox='0 0 4 5'%%3e%%3cpath fill='%%23000000' d='M2 0L0 2h4zm0 5L0 3h4z'/%%3e%%3c/svg%%3e) no-repeat right 0.75rem center/8px 10px; color: black; padding: 4px 32px 4px 8px; }\n"
 		     "select:hover { background: #ddd url(data:image/svg+xml,%%3csvg xmlns='http://www.w3.org/2000/svg' width='4' height='5' viewBox='0 0 4 5'%%3e%%3cpath fill='%%23000000' d='M2 0L0 2h4zm0 5L0 3h4z'/%%3e%%3c/svg%%3e) no-repeat right 0.75rem center/8px 10px; }\n"
 		     "</style>\n"
+		     "<script>\n"
+		     "function copy_text(elem) { if (navigator.clipboard) { navigator.clipboard.writeText(elem.textContent); } return false; }\n"
+		     "</script>\n"
 		     "</head>\n"
 		     "<body>\n"
 		     "<table class=\"nav\"><tr>"
@@ -5219,6 +5246,9 @@ process_http(ippeve_client_t *client)	// I - Client connection
 
 
   // Clear state variables...
+  httpClearFields(client->http);
+  httpClearCookie(client->http);
+
   client->username[0] = '\0';
   client->autherr[0]  = '\0';
 
@@ -6836,7 +6866,7 @@ set_cookie(
     const char      *value,		// I - Cookie value
     int             expires)		// I - Expiration in seconds from now, `0` for a session cookie
 {
-  char		cookie[1536],		// New authorization cookie
+  char		cookie[3072],		// New authorization cookie
 		expireTime[64];		// Expiration date/time
 
 
@@ -7179,8 +7209,8 @@ show_media(ippeve_client_t  *client)	// I - Client connection
 static bool				// O - `true` when authenticate, `false` otherwise
 show_oauth(ippeve_client_t *client)	// I - Client connection
 {
-  char		devgrant_cookie[1536],	// Device grant ("_DEVGRANT") cookie
-		devgrant_data[1024];	// Device grant data
+  char		devgrant_cookie[3072],	// Device grant ("_DEVGRANT") cookie
+		devgrant_data[2048];	// Device grant data
   size_t	devgrant_size;		// Number of bytes
   cups_json_t	*devgrant = NULL;	// Device grant
   const char	*verify_url;		// Verification URL
@@ -7229,7 +7259,7 @@ show_oauth(ippeve_client_t *client)	// I - Client connection
 	    return (false);
 	  }
 	}
-	else
+	else if (access_expires == 0)
 	{
 	  // Unable to use device code, try a new grant...
 	  log_message(client, "Unable to get access token using device code: %s", cupsGetErrorString());
@@ -7265,6 +7295,9 @@ show_oauth(ippeve_client_t *client)	// I - Client connection
 
     if (temp)
     {
+      fprintf(stderr, "Device Grant JSON (%u bytes):\n", (unsigned)strlen(temp));
+      fputs(temp, stderr);
+
       httpEncode64(devgrant_data, sizeof(devgrant_data), temp, strlen(temp), /*url*/true);
       set_cookie(client, "_DEVGRANT", devgrant_data, (int)cupsJSONGetNumber(cupsJSONFind(devgrant, CUPS_ODEVGRANT_EXPIRES_IN)));
       free(temp);

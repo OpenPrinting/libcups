@@ -1312,7 +1312,7 @@ cupsOAuthGetTokens(
 
   if (error)
   {
-    if (access_expires)
+    if (!strcmp(error, "authorization_pending") && access_expires)
     {
       // Handle "soft" device access token errors by setting access_expires to
       // the next call time...
@@ -1805,6 +1805,8 @@ oauth_copy_response(http_t *http)	// I - HTTP connection
   if (httpGetState(http) == initial_state)
     httpFlush(http);
 
+  DEBUG_printf("3oauth_copy_response: Returning \"%s\".", body);
+
   return (body);
 }
 
@@ -1904,7 +1906,10 @@ oauth_do_post(const char *ep,		// I - Endpoint URI
 
   // Connect to the endpoint...
   if ((http = httpConnectURI(ep, host, sizeof(host), &port, resource, sizeof(resource), /*blocking*/true, /*msec*/30000, /*cancel*/NULL, /*require_ca*/true)) == NULL)
+  {
+    DEBUG_puts("4oauth_do_post: Unable to connect to endpoint.");
     return (NULL);
+  }
 
   // Send a POST request with the request data...
   req_length = strlen(request);
@@ -1916,18 +1921,32 @@ oauth_do_post(const char *ep,		// I - Endpoint URI
 
   if (!httpWriteRequest(http, "POST", resource))
   {
+    DEBUG_puts("4oauth_do_post: POST failed.");
+
     if (!httpConnectAgain(http, 30000, NULL))
+    {
+      DEBUG_puts("4oauth_do_post: Reconnect failed.");
       goto done;
+    }
 
     if (!httpWriteRequest(http, "POST", resource))
+    {
+      DEBUG_puts("4oauth_do_post: Second POST failed.");
       goto done;
+    }
   }
 
   if (httpWrite(http, request, req_length) < (ssize_t)req_length)
+  {
+    DEBUG_puts("4oauth_do_post: Write of request body failed.");
     goto done;
+  }
 
   // Get the response...
-  while ((status = httpUpdate(http)) == HTTP_STATUS_CONTINUE);
+  while ((status = httpUpdate(http)) == HTTP_STATUS_CONTINUE)
+    ;
+
+  DEBUG_printf("4oauth_do_post: Got status %d.", status);
 
   response  = oauth_copy_response(http);
   resp_json = cupsJSONImportString(response);
@@ -1952,6 +1971,8 @@ oauth_do_post(const char *ep,		// I - Endpoint URI
   done:
 
   httpClose(http);
+
+  DEBUG_printf("4oauth_do_post: Returning %p.", (void *)resp_json);
 
   return (resp_json);
 }
@@ -2340,6 +2361,8 @@ oauth_set_error(cups_json_t   *json,	// I - JSON response
     error      = cupsGetOption("error", num_form, form);
     error_desc = cupsGetOption("error_description", num_form, form);
   }
+
+  DEBUG_printf("3oauth_set_error: error=\"%s\", error_description=\"%s\"", error, error_desc);
 
   if (error && strcmp(error, "authorization_pending") && strcmp(error, "slow_down"))
   {
