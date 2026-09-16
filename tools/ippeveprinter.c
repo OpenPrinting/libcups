@@ -7214,6 +7214,7 @@ show_oauth(ippeve_client_t *client)	// I - Client connection
   size_t	devgrant_size;		// Number of bytes
   cups_json_t	*devgrant = NULL;	// Device grant
   const char	*verify_url;		// Verification URL
+  char		qr_url[1024];		// QR code URL
 
 
   // See if we have an active device grant?
@@ -7326,9 +7327,10 @@ show_oauth(ippeve_client_t *client)	// I - Client connection
   verify_url = cupsJSONGetString(cupsJSONFind(devgrant, CUPS_ODEVGRANT_VERIFICATION_URI));
   html_printf(client, "<p>and go to the following URL: <a href=\"%s\" target=\"_blank\">%s</a></p>\n", verify_url, verify_url);
 
-  // TODO: Add QR code
   verify_url = cupsJSONGetString(cupsJSONFind(devgrant, CUPS_ODEVGRANT_VERIFICATION_URI_COMPLETE));
-  html_printf(client, "<p>or click/tap the following URL: <a href=\"%s\" target=\"_blank\">%s</a></p>\n", verify_url, verify_url);
+  httpAssembleURIf(HTTP_URI_CODING_ALL, qr_url, sizeof(qr_url), "https", NULL, "u2l.ai", 443, "/api/tools/qr?data=%s", verify_url);
+
+  html_printf(client, "<p>or click/tap the following URL:<br><a href=\"%s\" target=\"_blank\"><img src=\"%s\" width=\"256\" height=\"256\"></a></p>\n", verify_url, qr_url);
 
   html_footer(client);
 
