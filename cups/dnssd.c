@@ -73,7 +73,6 @@ struct _cups_dnssd_s			// DNS-SD context
 
 #else // HAVE_AVAHI
   cups_mutex_t		mutex;		// Avahi poll mutex
-  bool			in_callback;	// Doing a callback?
   AvahiClient		*client;	// Avahi client connection
   AvahiSimplePoll	*poll;		// Avahi poll class
   cups_thread_t		monitor;	// Monitoring thread
@@ -749,14 +748,20 @@ cupsDNSSDDelete(cups_dnssd_t *dnssd)	// I - DNS-SD context
 #elif _WIN32
 
 #else // HAVE_AVAHI
+  if (dnssd->monitor != CUPS_THREAD_INVALID)
+  {
+    avahi_lock(dnssd, "cupsDNSSDDelete");
+    avahi_simple_poll_quit(dnssd->poll);
+    avahi_unlock(dnssd, "cupsDNSSDDelete");
+
+    cupsThreadWait(dnssd->monitor);
+  }
+
   if (dnssd->dbrowser)
     avahi_domain_browser_free(dnssd->dbrowser);
 
-  if (dnssd->monitor != CUPS_THREAD_INVALID)
-  {
-    cupsThreadCancel(dnssd->monitor);
-    cupsThreadWait(dnssd->monitor);
-  }
+  if (dnssd->client)
+    avahi_client_free(dnssd->client);
 
   if (dnssd->poll)
     avahi_simple_poll_free(dnssd->poll);
@@ -2793,9 +2798,7 @@ avahi_browse_cb(
         return;
   }
 
-  browse->dnssd->in_callback = true;
   (browse->cb)(browse, browse->cb_data, cups_flags, (uint32_t)if_index, name, type, domain);
-  browse->dnssd->in_callback = false;
 }
 
 
@@ -2933,7 +2936,7 @@ avahi_lock(cups_dnssd_t *dnssd,		// I - DNS-SD context
 {
   (void)name;
 
-  if (!dnssd->in_callback)
+  if (!pthread_equal(pthread_self(), dnssd->monitor))
   {
     DEBUG_printf("2avahi_lock: Locking mutex for %s.", name);
     cupsMutexLock(&dnssd->mutex);
@@ -3020,9 +3023,7 @@ avahi_query_cb(
 
   DEBUG_printf("3avahi_query_cb(..., event=%s, fullname=\"%s\", ..., query=%p)", avahi_events[event], fullname, query);
 
-  query->dnssd->in_callback = true;
   (query->cb)(query, query->cb_data, event == AVAHI_BROWSER_FAILURE ? CUPS_DNSSD_FLAGS_ERROR : event == AVAHI_BROWSER_NEW ? CUPS_DNSSD_FLAGS_ADD : CUPS_DNSSD_FLAGS_NONE, (uint32_t)if_index, fullname, rrtype, rdata, rdlen);
-  query->dnssd->in_callback = false;
 }
 
 
@@ -3138,7 +3139,7 @@ avahi_unlock(cups_dnssd_t *dnssd,	// I - DNS-SD context
 {
   (void)name;
 
-  if (!dnssd->in_callback)
+  if (!pthread_equal(pthread_self(), dnssd->monitor))
   {
     DEBUG_printf("2avahi_unlock: Unlocking mutex for %s.", name);
     cupsMutexUnlock(&dnssd->mutex);
