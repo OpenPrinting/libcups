@@ -5901,23 +5901,23 @@ fi
 if test "$sysconfdir" = "\${prefix}/etc"
 then :
 
-    if test "$prefix" = "/"
+    if test "$host_os_name" = darwin
 then :
 
-	if test "$host_os_name" = darwin
-then :
-
-	    sysconfdir="/private/etc"
+	sysconfdir="/private/etc"
 
 else $as_nop
 
-	    sysconfdir="/etc"
+	if test "$prefix" = "/"
+then :
+
+		sysconfdir="/etc"
+
+else $as_nop
+
+	    sysconfdir="$realprefix/etc"
 
 fi
-
-else $as_nop
-
-	sysconfdir="$realprefix/etc"
 
 fi
 

@@ -736,14 +736,14 @@ AS_IF([test "$includedir" != "/usr/include" -a "$includedir" != "/usr/local/incl
 ])
 
 AS_IF([test "$sysconfdir" = "\${prefix}/etc"], [
-    AS_IF([test "$prefix" = "/"], [
-	AS_IF([test "$host_os_name" = darwin], [
-	    sysconfdir="/private/etc"
-	], [
-	    sysconfdir="/etc"
-	])
+    AS_IF([test "$host_os_name" = darwin], [
+	sysconfdir="/private/etc"
     ], [
-	sysconfdir="$realprefix/etc"
+	AS_IF([test "$prefix" = "/"], [
+		sysconfdir="/etc"
+	], [
+	    sysconfdir="$realprefix/etc"
+	])
     ])
 ])
 
