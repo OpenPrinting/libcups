@@ -137,7 +137,7 @@ static const char * const ippeve_preason_strings[] =
 
 typedef struct ippeve_authdata_s	// Authentication data
 {
-  char	bearer[4096],			// Bearer token data
+  char	bearer[2048],			// Bearer token data
 	username[512],			// Username/password string
 	*password;			// Password string
 } ippeve_authdata_t;
@@ -847,8 +847,6 @@ authenticate_request(
 
   if (!*authorization)
     return (HTTP_STATUS_UNAUTHORIZED);
-
-  memset(&data, 0, sizeof(data));
 
   if (OAuthURI)
   {
@@ -6874,9 +6872,9 @@ set_cookie(
     return;
 
   if (expires > 0)
-    snprintf(cookie, sizeof(cookie), "%s=%s; expires=%s; httponly;%s", name, value, httpGetDateString(time(NULL) + expires, expireTime, sizeof(expireTime)), httpIsEncrypted(client->http) ? " secure;" : "");
+    snprintf(cookie, sizeof(cookie), "%s=%s; path=/; expires=%s; httponly;%s", name, value, httpGetDateString(time(NULL) + expires, expireTime, sizeof(expireTime)), httpIsEncrypted(client->http) ? " secure;" : "");
   else
-    snprintf(cookie, sizeof(cookie), "%s=%s; httponly; %s", name, value, httpIsEncrypted(client->http) ? " secure;" : "");
+    snprintf(cookie, sizeof(cookie), "%s=%s; path=/; httponly; %s", name, value, httpIsEncrypted(client->http) ? " secure;" : "");
 
   httpSetCookie(client->http, cookie);
 }
@@ -7213,7 +7211,7 @@ show_oauth(ippeve_client_t *client)	// I - Client connection
 		devgrant_data[2048];	// Device grant data
   size_t	devgrant_size;		// Number of bytes
   cups_json_t	*devgrant = NULL;	// Device grant
-  const char	*verify_url;		// Verification URL
+  const char	*verify_uri;		// Verification URL
   char		qr_url[1024];		// QR code URL
 
 
@@ -7324,13 +7322,13 @@ show_oauth(ippeve_client_t *client)	// I - Client connection
 
   html_printf(client, "<p>Copy the following code: <a class=\"copy\" href=\"#\" onClick=\"return copy_text(this);\">%s</a></p>\n", cupsJSONGetString(cupsJSONFind(devgrant, CUPS_ODEVGRANT_USER_CODE)));
 
-  verify_url = cupsJSONGetString(cupsJSONFind(devgrant, CUPS_ODEVGRANT_VERIFICATION_URI));
-  html_printf(client, "<p>and go to the following URL: <a href=\"%s\" target=\"_blank\">%s</a></p>\n", verify_url, verify_url);
+  verify_uri = cupsJSONGetString(cupsJSONFind(devgrant, CUPS_ODEVGRANT_VERIFICATION_URI));
+  html_printf(client, "<p>and go to the following URL: <a href=\"%s\" target=\"_blank\">%s</a></p>\n", verify_uri, verify_uri);
 
-  verify_url = cupsJSONGetString(cupsJSONFind(devgrant, CUPS_ODEVGRANT_VERIFICATION_URI_COMPLETE));
-  httpAssembleURIf(HTTP_URI_CODING_ALL, qr_url, sizeof(qr_url), "https", NULL, "u2l.ai", 443, "/api/tools/qr?data=%s", verify_url);
+  verify_uri = cupsJSONGetString(cupsJSONFind(devgrant, CUPS_ODEVGRANT_VERIFICATION_URI_COMPLETE));
+  httpAssembleURIf(HTTP_URI_CODING_ALL, qr_url, sizeof(qr_url), "https", NULL, "u2l.ai", 443, "/api/tools/qr?data=%s", verify_uri);
 
-  html_printf(client, "<p>or click/tap the following URL:<br><a href=\"%s\" target=\"_blank\"><img src=\"%s\" width=\"256\" height=\"256\"></a></p>\n", verify_url, qr_url);
+  html_printf(client, "<p>or click/tap the following URL:<br><a href=\"%s\" target=\"_blank\"><img src=\"%s\" width=\"256\" height=\"256\"></a></p>\n", verify_uri, qr_url);
 
   html_footer(client);
 
