@@ -16,6 +16,7 @@ v3.0.4 - YYYY-MM-DD
 - Fixed an issue with `cupsGetCredentialsTrust` for credentials that are signed
   by an unknown CA.
 - Fixed PAM support in `ippeveprinter`.
+- Updated dateTime parsing in IPP files.
 
 
 v3.0.3 - 2026-08-20
