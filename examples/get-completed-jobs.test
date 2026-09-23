@@ -18,7 +18,7 @@
 	ATTR keyword which-jobs completed
 	ATTR name requesting-user-name $user
 	ATTR keyword requested-attributes
-	     job-id,job-uri,job-printer-uri,job-state,job-state-reasons,job-name,job-originating-user-name,job-media-sheets-completed
+	     job-id,job-uri,job-printer-uri,job-state,job-state-reasons,job-name,job-originating-user-name,job-media-sheets-completed,time-at-creation,time-at-processing,time-at-completed
 
 	# What statuses are OK?
 	STATUS successful-ok
