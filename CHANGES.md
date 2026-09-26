@@ -18,6 +18,8 @@ v3.0.4 - YYYY-MM-DD
   by an unknown CA.
 - Fixed PAM support in `ippeveprinter`.
 - Updated dateTime parsing in IPP files.
+- Fixed use of an uninitialized `struct tm` in `httpGetDateString` when
+  `gmtime_r` fails for an out-of-range time value.
 
 
 v3.0.3 - 2026-08-20
