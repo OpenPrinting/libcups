@@ -639,7 +639,7 @@ httpGetDateString(time_t t,		// I - Time in seconds
   if (!gmtime_r(&t, &tdate))
   {
     memset(&tdate, 0, sizeof(tdate));
-    tdate->tm_mday = 1;
+    tdate.tm_mday = 1;
   }
 
   snprintf(s, slen, "%s, %02d %s %d %02d:%02d:%02d GMT", http_days[tdate.tm_wday], tdate.tm_mday, http_months[tdate.tm_mon], tdate.tm_year + 1900, tdate.tm_hour, tdate.tm_min, tdate.tm_sec);
