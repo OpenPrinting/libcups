@@ -375,6 +375,7 @@ httpCopyPeerCredentials
 httpDecode64
 httpEncode64
 httpFieldValue
+httpFieldString
 httpFlush
 httpFlushWrite
 httpGetActivity
