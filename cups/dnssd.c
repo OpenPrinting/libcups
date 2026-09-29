@@ -271,6 +271,9 @@ cupsDNSSDAssembleFullName(
     }
     else
     {
+      if (fullptr >= fullend)
+        return (false);
+
       *fullptr++ = *name;
     }
   }
