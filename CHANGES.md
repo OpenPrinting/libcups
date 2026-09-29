@@ -15,6 +15,8 @@ v3.0.4 - YYYY-MM-DD
 - Updated `ippeveprinter` to add a date/time stamp when logging to a file.
 - Now explicitly validate IPP attribute names as keyword strings.
 - Fixed `httpGetDateString` with bad date/time values (Issue #167)
+- Fixed a potential buffer overflow in `cupsDNSSDAssembleFullName` on Windows
+  (Issue #170)
 - Fixed an issue with `cupsGetCredentialsTrust` for credentials that are signed
   by an unknown CA.
 - Fixed PAM support in `ippeveprinter`.
