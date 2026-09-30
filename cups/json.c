@@ -933,7 +933,49 @@ cupsJSONImportString(const char *s)	// I - JSON string
                 ch |= tolower(*s) - 'a' + 10;
             }
 
-            // Convert 16-bit Unicode character to UTF-8...
+            // Combine UTF-16 surrogate pairs into a single code point so the
+            // output is valid UTF-8 and not CESU-8...
+            if (ch >= 0xd800 && ch <= 0xdbff)
+            {
+              // High surrogate, look for the low surrogate that follows...
+              if (s[1] == '\\' && s[2] == 'u')
+              {
+                const char *save = s;	// Restore point if not a low surrogate
+                int	   lo;		// Low surrogate value
+
+                for (lo = 0, digit = 0, s += 2; digit < 4; digit ++)
+                {
+                  s ++;
+                  lo <<= 4;
+                  if (isdigit(*s))
+                    lo |= *s - '0';
+                  else
+                    lo |= tolower(*s) - 'a' + 10;
+                }
+
+                if (lo >= 0xdc00 && lo <= 0xdfff)
+                {
+                  // Valid low surrogate, combine into a single code point...
+                  ch = 0x10000 + ((ch - 0xd800) << 10) + (lo - 0xdc00);
+                }
+                else
+                {
+                  // Not a low surrogate, replace and reparse it...
+                  ch = 0xfffd;
+                  s  = save;
+                }
+              }
+              else
+              {
+                ch = 0xfffd;		// Unpaired high surrogate
+              }
+            }
+            else if (ch >= 0xdc00 && ch <= 0xdfff)
+            {
+              ch = 0xfffd;		// Unpaired low surrogate
+            }
+
+            // Convert Unicode character to UTF-8...
             if (ch < 0x80)
             {
               // ASCII
@@ -945,10 +987,18 @@ cupsJSONImportString(const char *s)	// I - JSON string
               *ptr++ = (char)(0xc0 | (ch >> 6));
               *ptr++ = (char)(0x80 | (ch & 0x3f));
             }
-            else
+            else if (ch < 0x10000)
             {
               // 3-byte UTF-8
               *ptr++ = (char)(0xe0 | (ch >> 12));
+              *ptr++ = (char)(0x80 | ((ch >> 6) & 0x3f));
+              *ptr++ = (char)(0x80 | (ch & 0x3f));
+            }
+            else
+            {
+              // 4-byte UTF-8
+              *ptr++ = (char)(0xf0 | (ch >> 18));
+              *ptr++ = (char)(0x80 | ((ch >> 12) & 0x3f));
               *ptr++ = (char)(0x80 | ((ch >> 6) & 0x3f));
               *ptr++ = (char)(0x80 | (ch & 0x3f));
             }
