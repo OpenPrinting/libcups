@@ -528,7 +528,8 @@ cupsLangLoadStrings(
       break;
     }
 
-    dataptr ++;
+    // Leave `dataptr` on the ';'; the loop's own `dataptr ++` steps past it.
+    // Skipping it here as well overran the buffer when ';' was the last byte.
 
     // Add the message if it doesn't already exist...
     if (lang->num_messages > 0 && bsearch(&mkey, lang->messages, lang->num_messages, sizeof(_cups_message_t), (int (*)(const void *, const void *))cups_message_compare))

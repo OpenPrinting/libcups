@@ -26,6 +26,7 @@
 
 static int	test_language(const char *locale);
 static int	test_string(cups_lang_t *language, const char *msgid);
+static int	test_strings(void);
 static void	usage(void);
 
 
@@ -92,6 +93,9 @@ main(int  argc,				// I - Number of command-line arguments
 
   if (dotests)
   {
+    // Regression test for the in-memory strings parser...
+    errors += test_strings();
+
     if (lang)
     {
       // Test a single language...
@@ -271,6 +275,68 @@ test_string(cups_lang_t *language,	// I - Language
   testEndMessage(true, "\"%s\"", msgstr);
 
   return (0);
+}
+
+
+//
+// 'test_strings()' - Test parsing of in-memory ".strings" data.
+//
+
+static int				// O - Number of errors
+test_strings(void)
+{
+  int		errors = 0;		// Number of errors
+  cups_lang_t	*language;		// Message catalog
+  char		*strings;		// Copy of ".strings" data
+  const char	*text;			// Localized text
+  // Two entries with no separator between them and no trailing newline, so the
+  // final byte is the ';' terminator - this walked off the end of the buffer
+  // before the fix, and dropped the second entry.
+  static const char catalog[] =
+      "\"testlang-key1\" = \"value one\";"
+      "\"testlang-key2\" = \"value two\";";
+
+
+  testBegin("cupsLangLoadStrings(';'-terminated)");
+
+  if ((language = cupsLangFind("qaa")) == NULL)
+  {
+    testEndMessage(false, "cupsLangFind failed");
+    return (1);
+  }
+
+  // Copy into an exactly-sized heap buffer to match the file code path...
+  if ((strings = strdup(catalog)) == NULL)
+  {
+    testEndMessage(false, "out of memory");
+    return (1);
+  }
+
+  if (!cupsLangLoadStrings(language, NULL, strings))
+  {
+    testEndMessage(false, "%s", cupsGetErrorString());
+    errors ++;
+  }
+  else
+  {
+    testEnd(true);
+  }
+
+  free(strings);
+
+  testBegin("cupsLangGetString(\"testlang-key2\")");
+  text = cupsLangGetString(language, "testlang-key2");
+  if (strcmp(text, "value two"))
+  {
+    testEndMessage(false, "got \"%s\"", text);
+    errors ++;
+  }
+  else
+  {
+    testEndMessage(true, "\"%s\"", text);
+  }
+
+  return (errors);
 }
 
 

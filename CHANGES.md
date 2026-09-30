@@ -14,6 +14,8 @@ v3.0.4 - YYYY-MM-DD
 - Updated `ippeveprinter` to support OAuth/OpenID authorization.
 - Updated `ippeveprinter` to add a date/time stamp when logging to a file.
 - Now explicitly validate IPP attribute names as keyword strings.
+- Fixed a heap over-read in `cupsLangLoadStrings` when parsing a ".strings"
+  catalog ending in ";".
 - Fixed `httpGetDateString` with bad date/time values (Issue #167)
 - Fixed a potential buffer overflow in `cupsDNSSDAssembleFullName` on Windows
   (Issue #170)
