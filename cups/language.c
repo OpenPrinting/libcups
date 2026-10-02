@@ -528,8 +528,6 @@ cupsLangLoadStrings(
       break;
     }
 
-    dataptr ++;
-
     // Add the message if it doesn't already exist...
     if (lang->num_messages > 0 && bsearch(&mkey, lang->messages, lang->num_messages, sizeof(_cups_message_t), (int (*)(const void *, const void *))cups_message_compare))
       continue;

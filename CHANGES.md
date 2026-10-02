@@ -17,6 +17,7 @@ v3.0.4 - YYYY-MM-DD
 - Fixed `httpGetDateString` with bad date/time values (Issue #167)
 - Fixed a potential buffer overflow in `cupsDNSSDAssembleFullName` on Windows
   (Issue #170)
+- Fixed a potential string overrun when loading .strings files (Issue #171)
 - Fixed an issue with `cupsGetCredentialsTrust` for credentials that are signed
   by an unknown CA.
 - Fixed PAM support in `ippeveprinter`.
