@@ -8,6 +8,7 @@ v3.0.4 - YYYY-MM-DD
   token (GHSA-mq7v-g5c2-75fg)
 - Added `cupsDNSSDSetHostName` function.
 - Updated cookie handling to separate Cookie and Set-Cookie headers (Issue #161)
+- Updated JSON code to support escaped Unicode surrogate pairs (Issue #169)
 - Updated `cupsJWTHasValidSignature` to use a constant-time comparison function
   for HMAC signatures.
 - Updated `ippeveprinter` to support a single test password.
