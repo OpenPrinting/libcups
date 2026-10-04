@@ -840,6 +840,8 @@ authenticate_request(
 #endif // HAVE_LIBPAM
 
   // See what we have...
+  memset(&data, 0, sizeof(data));
+
   authorization = httpGetField(client->http, HTTP_FIELD_AUTHORIZATION);
 
   if (OAuthURI && !*authorization && httpGetCookieValue(client->http, "_TOKEN", data.bearer, sizeof(data.bearer)) && data.bearer[0])
@@ -860,7 +862,7 @@ authenticate_request(
     while (isspace(*authorization & 255))
       authorization ++;
 
-    if (!strcmp(authorization, "COOKIE"))
+    if (!strcmp(authorization, "COOKIE") && data.bearer[0])
       authorization = data.bearer;
 
     if (!valid_oauth(client, authorization))
