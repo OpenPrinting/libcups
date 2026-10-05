@@ -7,6 +7,7 @@ v3.0.4 - YYYY-MM-DD
 - SECURITY-3.5: Updated `cupsOAuthGetTokens` to do more validation of the access
   token (GHSA-mq7v-g5c2-75fg)
 - Added `cupsDNSSDSetHostName` function.
+- Added Swedish localization (Issue #174)
 - Updated cookie handling to separate Cookie and Set-Cookie headers (Issue #161)
 - Updated JSON code to support escaped Unicode surrogate pairs (Issue #169)
 - Updated `cupsJWTHasValidSignature` to use a constant-time comparison function
@@ -20,7 +21,7 @@ v3.0.4 - YYYY-MM-DD
   (Issue #170)
 - Fixed a potential string overrun when loading .strings files (Issue #171)
 - Fixed `cupsSignCredentialsRequest` to reject requests with a bad signature
-  when using OpenSSL.
+  (Issue 172)
 - Fixed an issue with `cupsGetCredentialsTrust` for credentials that are signed
   by an unknown CA.
 - Fixed PAM support in `ippeveprinter`.
