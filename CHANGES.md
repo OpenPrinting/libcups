@@ -9,6 +9,7 @@ v3.0.4 - YYYY-MM-DD
 - Added `cupsDNSSDSetHostName` function.
 - Added Swedish localization (Issue #174)
 - Updated cookie handling to separate Cookie and Set-Cookie headers (Issue #161)
+- Updated `cupsOAuthGetTokens` to support multiple audience values (Issue #166)
 - Updated JSON code to support escaped Unicode surrogate pairs (Issue #169)
 - Updated `cupsJWTHasValidSignature` to use a constant-time comparison function
   for HMAC signatures.
