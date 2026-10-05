@@ -133,6 +133,7 @@ STRINGS	=	\
 		ja.strings \
 		pt_BR.strings \
 		ru.strings \
+		sv.strings \
 		zh_CN.strings
 
 

@@ -28,6 +28,7 @@
 #include "strings/ja_strings.h"
 #include "strings/pt_BR_strings.h"
 #include "strings/ru_strings.h"
+#include "strings/sv_strings.h"
 #include "strings/zh_CN_strings.h"
 
 
@@ -639,6 +640,8 @@ cups_lang_new(const char *language)	// I - Language name
     status = cupsLangLoadStrings(lang, NULL, pt_BR_strings);
   else if (!_cups_strncasecmp(language, "ru", 2))
     status = cupsLangLoadStrings(lang, NULL, ru_strings);
+  else if (!_cups_strncasecmp(language, "sv", 2))
+    status = cupsLangLoadStrings(lang, NULL, sv_strings);
   else if (!_cups_strncasecmp(language, "zh", 2))
     status = cupsLangLoadStrings(lang, NULL, zh_CN_strings);
   else
