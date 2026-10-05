@@ -3008,7 +3008,7 @@ ps_start_page(xform_raster_t   *ras,	// I - Raster information
   if (ras->header.NumCopies > 1)
     pclps_printf(cb, ctx, "<</NumCopies %u>>setpagedevice\n", ras->header.NumCopies);
   pclps_printf(cb, ctx, "gsave\n");
-  pclps_printf(cb, ctx, "%.6f %.6f scale\n", 72.0f / ras->header.HWResolution[0], 72.0f / ras->header.HWResolution[1]);
+  pclps_printf(cb, ctx, "%.6f %.6f scale\n", 72.0f / (float)ras->header.HWResolution[0], 72.0f / (float)ras->header.HWResolution[1]);
 
   switch (ras->header.cupsColorSpace)
   {
@@ -3680,16 +3680,16 @@ prepare_number_up(xform_prepare_t *p)	// I - Preparation data
   }
 
   // Then arrange the page rectangles evenly across the page...
-  width  = (p->crop.x2 - p->crop.x1) / cols;
-  height = (p->crop.y2 - p->crop.y1) / rows;
+  width  = (p->crop.x2 - p->crop.x1) / (double)cols;
+  height = (p->crop.y2 - p->crop.y1) / (double)rows;
 
   switch (p->options->orientation_requested)
   {
     default : // Portrait or "none"...
         for (i = 0, r = p->layout; i < p->num_layout; i ++, r ++)
         {
-          r->x1 = p->crop.x1 + width * (i % cols);
-          r->y1 = p->crop.y1 + height * (rows - 1 - i / cols);
+          r->x1 = p->crop.x1 + width * (double)(i % cols);
+          r->y1 = p->crop.y1 + height * (double)(rows - 1 - i / cols);
           r->x2 = r->x1 + width;
           r->y2 = r->y1 + height;
         }
@@ -3698,8 +3698,8 @@ prepare_number_up(xform_prepare_t *p)	// I - Preparation data
     case IPP_ORIENT_LANDSCAPE : // Landscape
         for (i = 0, r = p->layout; i < p->num_layout; i ++, r ++)
         {
-          r->x1 = p->crop.x1 + width * (cols - 1 - i / rows);
-          r->y1 = p->crop.y1 + height * (rows - 1 - (i % rows));
+          r->x1 = p->crop.x1 + width * (double)(cols - 1 - i / rows);
+          r->y1 = p->crop.y1 + height * (double)(rows - 1 - (i % rows));
           r->x2 = r->x1 + width;
           r->y2 = r->y1 + height;
         }
@@ -3708,8 +3708,8 @@ prepare_number_up(xform_prepare_t *p)	// I - Preparation data
     case IPP_ORIENT_REVERSE_PORTRAIT : // Reverse portrait
         for (i = 0, r = p->layout; i < p->num_layout; i ++, r ++)
         {
-          r->x1 = p->crop.x1 + width * (cols - 1 - (i % cols));
-          r->y1 = p->crop.y1 + height * (i / cols);
+          r->x1 = p->crop.x1 + width * (double)(cols - 1 - (i % cols));
+          r->y1 = p->crop.y1 + height * (double)(i / cols);
           r->x2 = r->x1 + width;
           r->y2 = r->y1 + height;
         }
@@ -3718,8 +3718,8 @@ prepare_number_up(xform_prepare_t *p)	// I - Preparation data
     case IPP_ORIENT_REVERSE_LANDSCAPE : // Reverse landscape
         for (i = 0, r = p->layout; i < p->num_layout; i ++, r ++)
         {
-          r->x1 = p->crop.x1 + width * (i / rows);
-          r->y1 = p->crop.y1 + height * (i % rows);
+          r->x1 = p->crop.x1 + width * (double)(i / rows);
+          r->y1 = p->crop.y1 + height * (double)(i % rows);
           r->x2 = r->x1 + width;
           r->y2 = r->y1 + height;
         }
