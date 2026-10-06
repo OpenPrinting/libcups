@@ -2972,7 +2972,15 @@ iso_date(const ipp_uchar_t *date)	// I - IPP (RFC 1903) date/time value
 
 
   utctime = ippDateToTime(date);
-  gmtime_r(&utctime, &utcdate);
+#if _WIN32
+  if (gmtime_s(&utcdate, &utctime))
+#else
+  if (!gmtime_r(&utctime, &utcdate))
+#endif // _WIN32
+  {
+    memset(&utcdate, 0, sizeof(utcdate));
+    utcdate.tm_mday = 1;
+  }
 
   snprintf(buffer, sizeof(buffer), "%04d-%02d-%02dT%02d:%02d:%02dZ",
 	   utcdate.tm_year + 1900, utcdate.tm_mon + 1, utcdate.tm_mday,

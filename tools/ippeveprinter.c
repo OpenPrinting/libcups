@@ -5010,7 +5010,7 @@ log_message(ippeve_client_t *client,	// I - Client connection or `NULL` for none
 
 #if _WIN32
     time_t curtemp = (time_t)curtime.tv_sec;
-    if (_gmtime_s(&curdate, &curtemp))
+    if (gmtime_s(&curdate, &curtemp))
 #else
     if (!gmtime_r(&curtime.tv_sec, &curdate))
 #endif // _WIN32
@@ -7696,7 +7696,7 @@ time_string(time_t tv,			// I - Time value
 
 
 #if _WIN32
-  if (_localtime_s(&date, &tv))
+  if (localtime_s(&date, &tv))
 #else
   if (!localtime_r(&tv, &date))
 #endif // _WIN32

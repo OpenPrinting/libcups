@@ -637,7 +637,7 @@ httpGetDateString(time_t t,		// I - Time in seconds
 
 
 #if _WIN32
-  if (_gmtime_s(&tdate, &t))
+  if (gmtime_s(&tdate, &t))
 #else
   if (!gmtime_r(&t, &tdate))
 #endif // _WIN32
