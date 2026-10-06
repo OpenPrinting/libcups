@@ -636,7 +636,11 @@ httpGetDateString(time_t t,		// I - Time in seconds
   struct tm	tdate;			// UNIX date/time data
 
 
+#if _WIN32
+  if (_gmtime_s(&tdate, &t))
+#else
   if (!gmtime_r(&t, &tdate))
+#endif // _WIN32
   {
     memset(&tdate, 0, sizeof(tdate));
     tdate.tm_mday = 1;

@@ -1263,7 +1263,15 @@ ippFileWriteAttributes(
             struct tm	utcdate;	// Date/time components
 
 	    // Get the UTC date and time corresponding to this date value...
-            gmtime_r(&utctime, &utcdate);
+#if _WIN32
+            if (_gmtime_s(&utcdate, &utctime))
+#else
+            if (!gmtime_r(&utctime, &utcdate))
+#endif // _WIN32
+	    {
+	      memset(&utcdate, 0, sizeof(utcdate));
+	      utcdate.tm_mday = 1;
+	    }
 
 	    ret &= cupsFilePrintf(file->fp, "%s%04d-%02d-%02dT%02d:%02d:%02dZ", i ? "," : " ", utcdate.tm_year + 1900, utcdate.tm_mon + 1, utcdate.tm_mday, utcdate.tm_hour, utcdate.tm_min, utcdate.tm_sec);
 	  }

@@ -5007,12 +5007,17 @@ log_message(ippeve_client_t *client,	// I - Client connection or `NULL` for none
   {
     // Start each log line with the date and time when logging to a file...
     gettimeofday(&curtime, NULL);
+
 #if _WIN32
     time_t curtemp = (time_t)curtime.tv_sec;
-    gmtime_s(&curdate, &curtemp);
+    if (_gmtime_s(&curdate, &curtemp))
 #else
-    gmtime_r(&curtime.tv_sec, &curdate);
+    if (!gmtime_r(&curtime.tv_sec, &curdate))
 #endif // _WIN32
+    {
+      memset(&curdate, 0, sizeof(curdate));
+      curdate.tm_mday = 1;
+    }
 
     snprintf(bufptr, (size_t)(bufend - bufptr), "[%04d-%02d-%02dT%02d:%02d:%02d.%03dZ] ", curdate.tm_year + 1900, curdate.tm_mon + 1, curdate.tm_mday, curdate.tm_hour, curdate.tm_min, curdate.tm_sec, (int)(curtime.tv_usec / 1000));
     bufptr += 27;
@@ -7689,7 +7694,16 @@ time_string(time_t tv,			// I - Time value
 {
   struct tm	date;			// Local time and date
 
-  localtime_r(&tv, &date);
+
+#if _WIN32
+  if (_localtime_s(&date, &tv))
+#else
+  if (!localtime_r(&tv, &date))
+#endif // _WIN32
+  {
+    memset(&date, 0, sizeof(date));
+    date.tm_mday = 1;
+  }
 
   strftime(buffer, bufsize, "%X", &date);
 

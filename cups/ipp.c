@@ -3526,7 +3526,11 @@ ippTimeToDate(time_t t)			// I - Time in seconds
   //   8        +/- UTC
   //   9        UTC hours (0 to 11)
   //   10       UTC minutes (0 to 59)
+#if _WIN32
+  if (_gmtime_s(&unixdate, &t))
+#else
   if (!gmtime_r(&t, &unixdate))
+#endif // _WIN32
   {
     memset(&unixdate, 0, sizeof(unixdate));
     unixdate.tm_mday = 1;
