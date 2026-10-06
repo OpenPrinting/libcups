@@ -612,6 +612,8 @@ cups_lang_new(const char *language)	// I - Language name
   bool		status;			// Load status
 
 
+  DEBUG_printf("cups_lang_new(language=\"%s\")", language);
+
   // Create an empty language data structure...
   if ((lang = calloc(1, sizeof(cups_lang_t))) == NULL)
     return (NULL);
@@ -646,6 +648,8 @@ cups_lang_new(const char *language)	// I - Language name
     status = cupsLangLoadStrings(lang, NULL, zh_CN_strings);
   else
     status = cupsLangLoadStrings(lang, NULL, en_strings);
+
+  DEBUG_printf("2cups_lang_new: status=%s", status ? "true" : "false");
 
   if (status && lang_directory)
   {

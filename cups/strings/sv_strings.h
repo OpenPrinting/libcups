@@ -480,7 +480,7 @@ static const char *sv_strings = "\"\" = \"\";\n"
 "\"application/vnd.hp-pcl         HP Page Control Language (PCL) document\" = \"application/vnd.hp-pcl         HP Page Control Language-dokument\";\n"
 "\"applications/postscript        Adobe PostScript document\" = \"applications/postscript        Adobe PostScript-dokument\";\n"
 "\"authorize [RESOURCE]           Authorize access to a resource\" = \"authorize [RESURS]             Auktorisera åtkomst till en resurs\";\n"
-"/* IPP attribute, keyword, and enum (integer) localizations */\n"
+/* IPP attribute, keyword, and enum (integer) localizations */
 "\"baling\" = \"Bunta utmatning\";\n"
 "\"baling-type\" = \"Bunta med\";\n"
 "\"baling-type.band\" = \"Band\";\n"

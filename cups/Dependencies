@@ -138,7 +138,8 @@ language.o: language.c cups-private.h string-private.h ../config.h base.h \
   strings/ca_strings.h strings/cs_strings.h strings/da_strings.h \
   strings/de_strings.h strings/en_strings.h strings/es_strings.h \
   strings/fr_strings.h strings/it_strings.h strings/ja_strings.h \
-  strings/pt_BR_strings.h strings/ru_strings.h strings/zh_CN_strings.h
+  strings/pt_BR_strings.h strings/ru_strings.h strings/sv_strings.h \
+  strings/zh_CN_strings.h
 md5.o: md5.c md5-internal.h base.h string-private.h ../config.h
 notify.o: notify.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
@@ -198,7 +199,7 @@ tls.o: tls.c cups-private.h string-private.h ../config.h base.h \
   ../cups/language.h \
   pwg-private.h thread.h dir.h \
   tls-openssl.c \
- 
+
 transcode.o: transcode.c cups.h file.h base.h ipp.h http.h array.h \
   language.h transcode.h pwg.h thread.h debug-internal.h debug-private.h \
   string-private.h ../config.h
@@ -207,7 +208,7 @@ usersys.o: usersys.c cups-private.h string-private.h ../config.h base.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
   ../cups/language.h \
   pwg-private.h thread.h \
- 
+
 util.o: util.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
