@@ -1264,7 +1264,7 @@ ippFileWriteAttributes(
 
 	    // Get the UTC date and time corresponding to this date value...
 #if _WIN32
-            if (_gmtime_s(&utcdate, &utctime))
+            if (gmtime_s(&utcdate, &utctime))
 #else
             if (!gmtime_r(&utctime, &utcdate))
 #endif // _WIN32
