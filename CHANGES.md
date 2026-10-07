@@ -18,6 +18,7 @@ v3.0.4 - YYYY-MM-DD
 - Updated `ippeveprinter` to add a date/time stamp when logging to a file.
 - Now explicitly validate IPP attribute names as keyword strings.
 - Fixed `httpGetDateString` with bad date/time values (Issue #167)
+- Fixed the number of bytes reported by `httpPeek` for content-encoded data.
 - Fixed a potential buffer overflow in `cupsDNSSDAssembleFullName` on Windows
   (Issue #170)
 - Fixed a potential string overrun when loading .strings files (Issue #171)

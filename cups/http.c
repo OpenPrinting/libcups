@@ -1687,7 +1687,7 @@ httpPeek(http_t *http,			// I - HTTP connection
       return (-1);
     }
 
-    bytes = (ssize_t)(length - ((z_stream *)http->stream)->avail_out);
+    bytes = (ssize_t)(length - stream.avail_out);
   }
   else if (http->used > 0)
   {
