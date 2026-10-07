@@ -1680,14 +1680,14 @@ httpPeek(http_t *http,			// I - HTTP connection
     {
       DEBUG_printf("2httpPeek: zerr=%d", zerr);
 #ifdef DEBUG
-      http_debug_hex("2httpPeek", (char *)http->sbuffer, (int)((z_stream *)http->stream)->avail_in);
+      http_debug_hex("2httpPeek", (char *)http->sbuffer, (int)stream.avail_in);
 #endif // DEBUG
 
       http->error = EIO;
       return (-1);
     }
 
-    bytes = (ssize_t)(length - ((z_stream *)http->stream)->avail_out);
+    bytes = (ssize_t)(length - stream.avail_out);
   }
   else if (http->used > 0)
   {

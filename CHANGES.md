@@ -23,6 +23,7 @@ v3.0.4 - YYYY-MM-DD
 - Fixed a potential string overrun when loading .strings files (Issue #171)
 - Fixed `cupsSignCredentialsRequest` to reject requests with a bad signature
   (Issue 172)
+- Fixed `httpPeek` return value with compressed message bodies (Issue #175)
 - Fixed an issue with `cupsGetCredentialsTrust` for credentials that are signed
   by an unknown CA.
 - Fixed PAM support in `ippeveprinter`.
