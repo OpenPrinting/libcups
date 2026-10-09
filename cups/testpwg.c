@@ -68,6 +68,22 @@ main(int  argc,				// I - Number of command-line args
   else
     testEndMessage(true, "%dx%d", pwg->width, pwg->length);
 
+  testBegin("pwgMediaForPWG(\"custom_max_1000000x1000000in\")");
+  if ((pwg = pwgMediaForPWG("custom_max_1000000x1000000in")) == NULL)
+    testEndMessage(false, "not found");
+  else if (pwg->width <= 0 || pwg->length <= 0)
+    testEndMessage(false, "%dx%d", pwg->width, pwg->length);
+  else
+    testEndMessage(true, "%dx%d", pwg->width, pwg->length);
+
+  testBegin("pwgMediaForPWG(\"custom_max_9999999999x9999999999mm\")");
+  if ((pwg = pwgMediaForPWG("custom_max_9999999999x9999999999mm")) == NULL)
+    testEndMessage(false, "not found");
+  else if (pwg->width <= 0 || pwg->length <= 0)
+    testEndMessage(false, "%dx%d", pwg->width, pwg->length);
+  else
+    testEndMessage(true, "%dx%d", pwg->width, pwg->length);
+
   testBegin("pwgMediaForPWG(\"disc_test_10x100mm\")");
   if ((pwg = pwgMediaForPWG("disc_test_10x100mm")) == NULL)
     testEndMessage(false, "not found");

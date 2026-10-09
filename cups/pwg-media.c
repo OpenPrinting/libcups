@@ -1054,15 +1054,22 @@ pwg_scan_measurement(
     int        numer,			// I - Numerator from units
     int        denom)			// I - Denominator from units
 {
-  int	value = 0,			// Measurement value
-	fractional = 0,			// Fractional value
-	divisor = 1,			// Fractional divisor
-	digits = 10 * numer * denom;	// Maximum fractional value to read
+  long long	value = 0,		// Measurement value
+		fractional = 0,		// Fractional value
+		divisor = 1,		// Fractional divisor
+		digits = 10LL * numer * denom;
+					// Maximum fractional value to read
 
 
-  // Scan integer portion...
+  // Scan integer portion, ignoring any digits beyond the range of the return
+  // value...
   while (*buf >= '0' && *buf <= '9')
-    value = value * 10 + (*buf++) - '0';
+  {
+    if (value < INT_MAX)
+      value = value * 10 + *buf - '0';
+
+    buf ++;
+  }
 
   if (*buf == '.')
   {
@@ -1083,5 +1090,7 @@ pwg_scan_measurement(
   if (bufptr)
     *bufptr = (char *)buf;
 
-  return (value * numer / denom + fractional * numer / denom / divisor);
+  value = value * numer / denom + fractional * numer / denom / divisor;
+
+  return (value < INT_MAX ? (int)value : INT_MAX);
 }
