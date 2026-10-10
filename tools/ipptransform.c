@@ -3665,6 +3665,10 @@ prepare_number_up(xform_prepare_t *p)	// I - Preparation data
         cols = 2;
         rows = 3;
         break;
+    case 8 : // 8-up
+        cols = 2;
+        rows = 4;
+        break;
     case 9 : // 9-up
         cols = 3;
         rows = 3;
