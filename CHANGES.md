@@ -24,6 +24,7 @@ v3.0.4 - YYYY-MM-DD
 - Fixed `cupsSignCredentialsRequest` to reject requests with a bad signature
   (Issue 172)
 - Fixed `httpPeek` return value with compressed message bodies (Issue #175)
+- Fixed a potential integer overflow with `pwgMediaForPWG` (Issue #176)
 - Fixed an issue with `cupsGetCredentialsTrust` for credentials that are signed
   by an unknown CA.
 - Fixed PAM support in `ippeveprinter`.
