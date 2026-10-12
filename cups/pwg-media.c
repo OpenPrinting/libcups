@@ -1061,7 +1061,7 @@ pwg_scan_measurement(
 
 
   // Scan integer portion...
-  while (*buf >= '0' && *buf <= '9' && value < 1000000)
+  while (*buf >= '0' && *buf <= '9' && value < 100000)
     value = value * 10 + (*buf++) - '0';
 
   if (*buf >= '0' && *buf <= '9')
