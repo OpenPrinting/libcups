@@ -27,6 +27,7 @@ v3.0.4 - YYYY-MM-DD
 - Fixed an issue with `cupsGetCredentialsTrust` for credentials that are signed
   by an unknown CA.
 - Fixed PAM support in `ippeveprinter`.
+- Fixed a typo in the JWT HS verification code.
 - Updated dateTime parsing in IPP files.
 
 
