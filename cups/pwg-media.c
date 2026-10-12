@@ -1065,7 +1065,9 @@ pwg_scan_measurement(
     value = value * 10 + (*buf++) - '0';
 
   if (*buf >= '0' && *buf <= '9')
+  {
     return (INT_MAX);
+  }
   else if (*buf == '.')
   {
     // Scan fractional portion...
