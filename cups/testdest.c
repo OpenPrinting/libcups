@@ -8,9 +8,7 @@
 // information.
 //
 
-#include <stdio.h>
-#include <errno.h>
-#include "cups.h"
+#include "cups-private.h"
 
 
 //

@@ -1,44 +1,59 @@
-cups-oauth.o: cups-oauth.c ../config.h ../cups/cups.h ../cups/file.h \
-  ../cups/base.h ../cups/ipp.h ../cups/http.h ../cups/array.h \
-  ../cups/language.h ../cups/transcode.h ../cups/pwg.h ../cups/oauth.h \
-  ../cups/jwt.h ../cups/json.h
-cups-x509.o: cups-x509.c ../config.h ../cups/cups.h ../cups/file.h \
-  ../cups/base.h ../cups/ipp.h ../cups/http.h ../cups/array.h \
-  ../cups/language.h ../cups/transcode.h ../cups/pwg.h
-ipp-options.o: ipp-options.c ipp-options.h ../cups/cups.h ../cups/file.h \
+cups-oauth.o: \
+  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
+  cups-oauth.c ../config.h ../cups/cups.h ../cups/file.h ../cups/base.h \
+  ../cups/ipp.h ../cups/http.h ../cups/array.h ../cups/language.h \
+  ../cups/transcode.h ../cups/pwg.h ../cups/oauth.h ../cups/jwt.h \
+  ../cups/json.h
+cups-x509.o: \
+  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
+  cups-x509.c ../config.h ../cups/cups.h ../cups/file.h ../cups/base.h \
+  ../cups/ipp.h ../cups/http.h ../cups/array.h ../cups/language.h \
+  ../cups/transcode.h ../cups/pwg.h
+ipp-options.o: \
+  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
+  ipp-options.c ipp-options.h ../cups/cups.h ../cups/file.h \
   ../cups/base.h ../cups/ipp.h ../cups/http.h ../cups/array.h \
   ../cups/language.h ../cups/transcode.h ../cups/pwg.h \
   ../cups/string-private.h ../config.h
-ippeveprinter.o: ippeveprinter.c ../cups/cups-private.h \
-  ../cups/string-private.h ../config.h ../cups/base.h \
-  ../cups/debug-internal.h ../cups/debug-private.h ../cups/array.h \
-  ../cups/ipp-private.h ../cups/cups.h ../cups/file.h ../cups/ipp.h \
-  ../cups/http.h ../cups/language.h ../cups/transcode.h ../cups/pwg.h \
-  ../cups/http-private.h \
-  ../cups/pwg-private.h \
-  ../cups/thread.h ../cups/dnssd.h printer-png.h printer-lg-png.h \
-  printer-sm-png.h
-ippfind.o: ippfind.c ../cups/cups-private.h ../cups/string-private.h \
+ippeveprinter.o: \
+  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
+  ippeveprinter.c ../cups/cups-private.h ../cups/string-private.h \
   ../config.h ../cups/base.h ../cups/debug-internal.h \
   ../cups/debug-private.h ../cups/array.h ../cups/ipp-private.h \
   ../cups/cups.h ../cups/file.h ../cups/ipp.h ../cups/http.h \
   ../cups/language.h ../cups/transcode.h ../cups/pwg.h \
   ../cups/http-private.h \
+  ../cups/pwg-private.h \
+  ../cups/thread.h ../cups/form.h ../cups/dnssd.h ../cups/oauth.h \
+  ../cups/jwt.h ../cups/json.h printer-png.h printer-lg-png.h \
+  printer-sm-png.h
+ippfind.o: \
+  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
+  ippfind.c ../cups/cups-private.h ../cups/string-private.h ../config.h \
+  ../cups/base.h ../cups/debug-internal.h ../cups/debug-private.h \
+  ../cups/array.h ../cups/ipp-private.h ../cups/cups.h ../cups/file.h \
+  ../cups/ipp.h ../cups/http.h ../cups/language.h ../cups/transcode.h \
+  ../cups/pwg.h ../cups/http-private.h \
   ../cups/pwg-private.h \
   ../cups/thread.h ../cups/dnssd.h
-ipptool.o: ipptool.c ../cups/cups-private.h ../cups/string-private.h \
-  ../config.h ../cups/base.h ../cups/debug-internal.h \
-  ../cups/debug-private.h ../cups/array.h ../cups/ipp-private.h \
-  ../cups/cups.h ../cups/file.h ../cups/ipp.h ../cups/http.h \
-  ../cups/language.h ../cups/transcode.h ../cups/pwg.h \
-  ../cups/http-private.h \
+ipptool.o: \
+  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
+  ipptool.c ../cups/cups-private.h ../cups/string-private.h ../config.h \
+  ../cups/base.h ../cups/debug-internal.h ../cups/debug-private.h \
+  ../cups/array.h ../cups/ipp-private.h ../cups/cups.h ../cups/file.h \
+  ../cups/ipp.h ../cups/http.h ../cups/language.h ../cups/transcode.h \
+  ../cups/pwg.h ../cups/http-private.h \
   ../cups/pwg-private.h \
   ../cups/thread.h ../cups/raster-testpage.h ../cups/raster-private.h \
   ../cups/raster.h
-ipptransform.o: ipptransform.c ../cups/cups-private.h \
-  ../cups/string-private.h ../config.h ../cups/base.h \
-  ../cups/debug-internal.h ../cups/debug-private.h ../cups/array.h \
-  ../cups/ipp-private.h ../cups/cups.h ../cups/file.h ../cups/ipp.h \
-  ../cups/http.h ../cups/language.h ../cups/transcode.h ../cups/pwg.h \
-  ../cups/http-private.h ../cups/pwg-private.h \
-  ../cups/thread.h ../cups/raster.h ipp-options.h dither.h
+ipptransform.o: \
+  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
+  ipptransform.c ../cups/cups-private.h ../cups/string-private.h \
+  ../config.h ../cups/base.h ../cups/debug-internal.h \
+  ../cups/debug-private.h ../cups/array.h ../cups/ipp-private.h \
+  ../cups/cups.h ../cups/file.h ../cups/ipp.h ../cups/http.h \
+  ../cups/language.h ../cups/transcode.h ../cups/pwg.h \
+  ../cups/http-private.h \
+  ../cups/pwg-private.h \
+  ../cups/thread.h ../cups/raster.h ipp-options.h \
+  dither.h
