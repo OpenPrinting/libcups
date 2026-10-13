@@ -124,6 +124,19 @@ _cups_toupper(int ch)			// I - Character to convert
 {
   return (_cups_islower(ch) ? ch - 'a' + 'A' : ch);
 }
+
+_CUPS_INLINE int			// O - Hex value from 0 to 15
+_cups_xdigit(int ch)			// I - Character to convert
+{
+  if (ch >= '0' && ch <= '9')
+    return (ch - '0');
+  else if (ch >= 'a' && ch <= 'f')
+    return (ch - 'a' + 10);
+  else if (ch >= 'A' && ch <= 'F')
+    return (ch - 'A' + 10);
+  else
+    return (-1);
+}
 #  else
 extern bool	_cups_isalnum(int ch);
 extern bool	_cups_isalpha(int ch);
@@ -136,6 +149,7 @@ extern bool	_cups_isupper(int ch);
 extern bool	_cups_isxdigit(int ch);
 extern int	_cups_tolower(int ch);
 extern int	_cups_toupper(int ch);
+extern int	_cups_xdigit(int ch);
 #  endif // _CUPS_INLINE
 
 

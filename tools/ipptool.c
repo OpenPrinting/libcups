@@ -7684,23 +7684,12 @@ with_value(ipptool_test_t  *data,	// I - Test data
 
             for (valptr = value + 1, adata = withdata; *valptr; valptr += 2)
             {
-              int ch;			// Current character/byte
+              int	x1, x2;		// Current hex digits
 
-	      if (_cups_isdigit(valptr[0]))
-	        ch = (valptr[0] - '0') << 4;
-	      else if (_cups_isxdigit(valptr[0]))
-	        ch = (_cups_tolower(valptr[0]) - 'a' + 10) << 4;
-	      else
+	      if ((x1 = _cups_xdigit(valptr[0])) < 0 || (x2 = _cups_xdigit(valptr[1])) < 0)
 	        break;
 
-	      if (_cups_isdigit(valptr[1]))
-	        ch |= valptr[1] - '0';
-	      else if (_cups_isxdigit(valptr[1]))
-	        ch |= _cups_tolower(valptr[1]) - 'a' + 10;
-	      else
-	        break;
-
-	      *adata++ = (unsigned char)ch;
+	      *adata++ = (unsigned char)((x1 << 4) | x2);
 	    }
 
 	    if (*valptr)

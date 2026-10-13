@@ -920,25 +920,22 @@ cupsJSONImportString(const char *s)	// I - JSON string
           {
             // Unicode character
             int ch,			// Unicode character
-		digit;			// Current digit
+		digit,			// Current digit
+		x;			// Current hex digit value
 
             // Convert hex digits to a 16-bit Unicode character
             for (ch = 0, digit = 0; digit < 4; digit ++)
             {
               s ++;
-              ch <<= 4;
-              if (_cups_isdigit(*s))
-              {
-                ch |= *s - '0';
-              }
-              else if (_cups_isxdigit(*s))
-              {
-                ch |= _cups_tolower(*s) - 'a' + 10;
-              }
-              else
+
+              if ((x = _cups_xdigit(*s)) < 0)
               {
 		_cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad Unicode escape."), true);
 		goto error;
+              }
+              else
+              {
+		ch = (ch << 4) | x;
               }
             }
 
@@ -959,11 +956,7 @@ cupsJSONImportString(const char *s)	// I - JSON string
               {
                 // Already know we have "\uXXXX"...
                 s ++;
-                lch <<= 4;
-                if (_cups_isdigit(*s))
-                  lch |= *s - '0';
-		else
-		  lch |= _cups_tolower(*s) - 'a' + 10;
+                lch = (lch << 4) | _cups_xdigit(*s);
               }
 
 	      // Make sure the second escape character is the surrogate...

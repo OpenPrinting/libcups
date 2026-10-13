@@ -1155,7 +1155,8 @@ read_hex(cups_file_t *fp,		// I - File to read from
       }
     }
 
-    *buffer++ = (ipp_uchar_t)strtol(hexptr, &hexptr, 16);
+    *buffer++ = (ipp_uchar_t)((_cups_xdigit(hexptr[0]) << 4) | _cups_xdigit(hexptr[1]));
+    hexptr += 2;
     total ++;
   }
 

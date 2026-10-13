@@ -1779,17 +1779,7 @@ parse_value(ipp_file_t      *file,	// I  - IPP data file
 	      return (false);
 	    }
 
-            if (valueptr[0] >= '0' && valueptr[0] <= '9')
-              *tempptr = (char)((valueptr[0] - '0') << 4);
-	    else
-              *tempptr = (char)((tolower(valueptr[0]) - 'a' + 10) << 4);
-
-            if (valueptr[1] >= '0' && valueptr[1] <= '9')
-              *tempptr |= (valueptr[1] - '0');
-	    else
-              *tempptr |= (tolower(valueptr[1]) - 'a' + 10);
-
-            tempptr ++;
+	    *tempptr++ = (char)((_cups_xdigit(valueptr[0]) << 4) | _cups_xdigit(valueptr[1]));
             valueptr += 2;
           }
 

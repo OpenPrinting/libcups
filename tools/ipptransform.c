@@ -1495,7 +1495,8 @@ copy_page(xform_prepare_t *p,		// I - Preparation data
 		else if (*bufptr == '#')
 		{
 		  int	j,			// Looping var
-			ch = 0;			// Escaped character
+			ch = 0,			// Escaped character
+			x;			// Current hex digit value
 
                   for (j = 0; j < 2; j ++)
                   {
@@ -1510,12 +1511,10 @@ copy_page(xform_prepare_t *p,		// I - Preparation data
 		      bufend = buffer + bytes;
 		    }
 
-		    if (!_cups_isxdigit(*bufptr))
+		    if ((x = _cups_xdigit(*bufptr)) < 0)
 		      break;
-		    else if (_cups_isdigit(*bufptr))
-		      ch = (ch << 4) | (*bufptr - '0');
 		    else
-		      ch = (ch << 4) | (_cups_tolower(*bufptr) - 'a' + 10);
+		      ch = (ch << 4) | x;
 		  }
 
                   if (nameptr < (name + sizeof(name) - 1))

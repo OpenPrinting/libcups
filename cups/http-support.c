@@ -1665,7 +1665,6 @@ http_copy_decode(char       *dst,	// O - Destination buffer
 {
   char	*ptr,				// Pointer into buffer
 	*end;				// End of buffer
-  int	quoted;				// Quoted character
 
 
   // Copy the src to the destination until we hit a terminating character
@@ -1679,19 +1678,8 @@ http_copy_decode(char       *dst,	// O - Destination buffer
         if (_cups_isxdigit(src[1]) && _cups_isxdigit(src[2]))
 	{
 	  // Grab a hex-encoded character...
-          src ++;
-	  if (_cups_isalpha(*src))
-	    quoted = (_cups_tolower(*src) - 'a' + 10) << 4;
-	  else
-	    quoted = (*src - '0') << 4;
-
-          src ++;
-	  if (_cups_isalpha(*src))
-	    quoted |= _cups_tolower(*src) - 'a' + 10;
-	  else
-	    quoted |= *src - '0';
-
-          *ptr++ = (char)quoted;
+	  *ptr++ = (char)((_cups_xdigit(src[1]) << 4) | _cups_xdigit(src[2]));
+	  src += 2;
 	}
 	else
 	{

@@ -244,17 +244,8 @@ decode_string(const char *data,         // I - Pointer into data string
 
       if (_cups_isxdigit(data[1]) && _cups_isxdigit(data[2]))
       {
-        data ++;
-        if (_cups_isalpha(*data))
-          ch = (_cups_tolower(*data) - 'a' + 10) << 4;
-        else
-          ch = (*data - '0') << 4;
-
-        data ++;
-        if (_cups_isalpha(*data))
-          ch += _cups_tolower(*data) - 'a' + 10;
-        else
-          ch += *data - '0';
+        ch = (_cups_xdigit(data[1]) << 4) | _cups_xdigit(data[2]);
+        data += 2;
 
         if (ch == 0)
           return (NULL);		// Nul characters are not allowed
