@@ -437,7 +437,7 @@ cupsFormatStringv(
 		  *bufptr++ = '\"';
 		bytes += 2;
 	      }
-	      else if ((*s & 255) < ' ')
+	      else if (_cups_iscntrl(*s))
 	      {
 	        *bufptr++ = '\\';
 	        if (bufptr < bufend)

@@ -1106,7 +1106,7 @@ copy_hex_string(char          *buffer,	// I - String buffer
   // First see if there are any non-ASCII bytes in the octetString...
   for (dataptr = data; dataptr < dataend; dataptr ++)
   {
-    if (*dataptr < 0x20 || *dataptr >= 0x7f)
+    if (_cups_iscntrl(*dataptr))
       break;
   }
 
@@ -4899,7 +4899,7 @@ print_json_string(
 	  break;
 
       default :
-          if (*s < ' ' && *s >= 0)
+          if (_cups_iscntrl(*s))
             cupsFilePrintf(data->outfile, "\\%03o", *s);
           else
 	    cupsFilePutChar(data->outfile, *s);
@@ -5105,7 +5105,7 @@ print_xml_string(cups_file_t *outfile,	// I - Test data
         cupsFilePutChar(outfile, *s);
       }
     }
-    else if ((*s & 0x80) || (*s < ' ' && !_cups_isspace(*s)))
+    else if ((*s & 0x80) || (_cups_iscntrl(*s) && !_cups_isspace(*s)))
     {
       // Invalid control character...
       cupsFilePutChar(outfile, '?');

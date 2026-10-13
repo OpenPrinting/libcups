@@ -72,6 +72,12 @@ _cups_isalpha(int ch)			// I - Character to test
 }
 
 _CUPS_INLINE bool			// O - `true` on match, `false` otherwise
+_cups_iscntrl(int ch)			// I - Character to test
+{
+  return (ch < ' ' || ch == 0x7f);
+}
+
+_CUPS_INLINE bool			// O - `true` on match, `false` otherwise
 _cups_isdigit(int ch)			// I - Character to test
 {
   return ((ch >= '0' && ch <= '9'));
@@ -121,9 +127,13 @@ _cups_toupper(int ch)			// I - Character to convert
 #  else
 extern bool	_cups_isalnum(int ch);
 extern bool	_cups_isalpha(int ch);
+extern bool	_cups_iscntrl(int ch);
+extern bool	_cups_isdigit(int ch);
 extern bool	_cups_islower(int ch);
+extern bool	_cups_isprint(int ch);
 extern bool	_cups_isspace(int ch);
 extern bool	_cups_isupper(int ch);
+extern bool	_cups_isxdigit(int ch);
 extern int	_cups_tolower(int ch);
 extern int	_cups_toupper(int ch);
 #  endif // _CUPS_INLINE

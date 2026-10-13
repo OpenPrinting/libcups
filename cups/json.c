@@ -281,7 +281,7 @@ cupsJSONExportString(cups_json_t *json)	// I - JSON root node
           {
 	    if (strchr("\\\"\b\f\n\r\t", *value))
 	      length += 2;		// Simple escaped char
-            else if ((*value & 255) < ' ')
+            else if (_cups_iscntrl(*value))
               length += 6;		// Worst case for control char
 	    else
 	      length ++;		// Literal char
@@ -414,7 +414,7 @@ cupsJSONExportString(cups_json_t *json)	// I - JSON root node
 	      *ptr++ = '\\';
 	      *ptr++ = 't';
 	    }
-            else if ((*value & 255) < ' ')
+            else if (_cups_iscntrl(*value))
             {
               snprintf(ptr, length - (size_t)(ptr - s), "\\u%04x", *value);
               ptr += 6;
@@ -847,7 +847,7 @@ cupsJSONImportString(const char *s)	// I - JSON string
             goto invalid;
           }
         }
-        else if ((*s & 255) < ' ')
+        else if (_cups_iscntrl(*s))
         {
           // Control characters are not allowed in a string...
 	  DEBUG_printf("2cupsJSONImportString: Bad control character 0x%02x in string.", *s);

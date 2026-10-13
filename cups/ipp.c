@@ -3779,7 +3779,7 @@ ippValidateAttribute(
 	    {
 	      break;
 	    }
-	    else if ((*ptr < ' ' && *ptr != '\n' && *ptr != '\r' && *ptr != '\t') || *ptr == 0x7f)
+	    else if (_cups_iscntrl(*ptr) && *ptr != '\n' && *ptr != '\r' && *ptr != '\t')
 	    {
 	      break;
 	    }
@@ -3790,7 +3790,7 @@ ippValidateAttribute(
 	    if (value_tag == IPP_TAG_TEXTLANG)
 	      ipp_regex_end();
 
-	    if (*ptr < ' ' || *ptr == 0x7f)
+	    if (_cups_iscntrl(*ptr))
 	    {
 	      ipp_set_error(IPP_STATUS_ERROR_BAD_REQUEST, _("\"%s\": Bad text value \"%s\" - bad control character (PWG 5100.14 section 8.3)."), attr->name, value->string.text);
 	      return (false);
@@ -3859,7 +3859,7 @@ ippValidateAttribute(
 	    {
 	      break;
 	    }
-	    else if (*ptr < ' ' || *ptr == 0x7f)
+	    else if (_cups_iscntrl(*ptr))
 	    {
 	      break;
 	    }
@@ -3870,7 +3870,7 @@ ippValidateAttribute(
 	    if (value_tag == IPP_TAG_NAMELANG)
 	      ipp_regex_end();
 
-	    if (*ptr < ' ' || *ptr == 0x7f)
+	    if (_cups_iscntrl(*ptr))
 	    {
 	      ipp_set_error(IPP_STATUS_ERROR_BAD_REQUEST, _("\"%s\": Bad name value \"%s\" - bad control character (PWG 5100.14 section 8.1)."), attr->name, value->string.text);
 	      return (false);

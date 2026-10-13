@@ -704,7 +704,7 @@ _cupsGetPassword(const char *prompt)	// I - Prompt string
       passptr = cg->password;
       break;
     }
-    else if ((passch & 255) < 0x20 || passptr >= passend)
+    else if (_cups_iscntrl(passch) || passptr >= passend)
     {
       putchar(0x07);
     }
@@ -823,7 +823,7 @@ _cupsGetPassword(const char *prompt)	// I - Prompt string
       passptr = cg->password;
       break;
     }
-    else if ((passch & 255) < 0x20 || passptr >= passend)
+    else if (_cups_iscntrl(passch) || passptr >= passend)
     {
       putchar(0x07);
     }

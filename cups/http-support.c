@@ -1700,7 +1700,7 @@ http_copy_decode(char       *dst,	// O - Destination buffer
 	  return (NULL);
 	}
       }
-      else if ((*src & 255) <= 0x20 || (*src & 255) >= 0x7f)
+      else if (!_cups_isprint(*src))
       {
         // Bad control character...
         *ptr = '\0';
