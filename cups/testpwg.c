@@ -1,16 +1,14 @@
 //
 // PWG unit test program for CUPS.
 //
-// Copyright © 2023 by OpenPrinting.
+// Copyright © 2023-2026 by OpenPrinting.
 // Copyright © 2009-2016 by Apple Inc.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more information.
 //
 
-#include "cups.h"
-#include "pwg-private.h"
+#include "cups-private.h"
 #include "test-internal.h"
-#include <ctype.h>
 
 
 //
@@ -36,7 +34,7 @@ main(int  argc,				// I - Number of command-line args
     {
       int	width, length;		// Width and length
 
-      if (isdigit(argv[j][0] & 255) && sscanf(argv[j], "%d,%d", &width, &length) == 2)
+      if (_cups_isdigit(argv[j][0]) && sscanf(argv[j], "%d,%d", &width, &length) == 2)
         pwg = pwgMediaForSize(width, length);
       else if ((pwg = pwgMediaForLegacy(argv[j])) == NULL)
         pwg = pwgMediaForPWG(argv[j]);

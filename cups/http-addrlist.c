@@ -1,7 +1,7 @@
 //
 // HTTP address list routines for CUPS.
 //
-// Copyright © 2021-2025 by OpenPrinting.
+// Copyright © 2021-2026 by OpenPrinting.
 // Copyright © 2007-2021 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products, all rights reserved.
 //
@@ -581,7 +581,7 @@ httpAddrGetList(const char *hostname,	// I - Hostname, IP address, or NULL for p
     {
       portnum = 0;
     }
-    else if (isdigit(*service & 255))
+    else if (_cups_isdigit(*service))
     {
       portnum = atoi(service);
     }

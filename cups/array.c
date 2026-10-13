@@ -1,7 +1,7 @@
 //
 // Sorted array routines for CUPS.
 //
-// Copyright © 2021-2025 by OpenPrinting.
+// Copyright © 2021-2026 by OpenPrinting.
 // Copyright © 2007-2014 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products.
 //
@@ -118,7 +118,7 @@ cupsArrayAddStrings(cups_array_t *a,	// I - Array
   if (delim == ' ')
   {
     // Skip leading whitespace...
-    while (*s && isspace(*s & 255))
+    while (*s && _cups_isspace(*s))
       s ++;
   }
 
@@ -168,7 +168,7 @@ cupsArrayAddStrings(cups_array_t *a,	// I - Array
           if (spos == 0)
             _cups_strcpy(end, end + 1);
         }
-        else if (*end == delim || (delim == ' ' && isspace(*end & 255)))
+        else if (*end == delim || (delim == ' ' && _cups_isspace(*end)))
         {
           // Delimiter
           *end++ = '\0';

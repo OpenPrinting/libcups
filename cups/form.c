@@ -242,17 +242,17 @@ decode_string(const char *data,         // I - Pointer into data string
       if (!strncasecmp(data, "%0D%0A", 6))
         data += 3;			// Convert CR LF to just LF
 
-      if (isxdigit(data[1] & 255) && isxdigit(data[2] & 255))
+      if (_cups_isxdigit(data[1]) && _cups_isxdigit(data[2]))
       {
         data ++;
-        if (isalpha(*data & 255))
-          ch = (tolower(*data & 255) - 'a' + 10) << 4;
+        if (_cups_isalpha(*data))
+          ch = (_cups_tolower(*data) - 'a' + 10) << 4;
         else
           ch = (*data - '0') << 4;
 
         data ++;
-        if (isalpha(*data & 255))
-          ch += tolower(*data & 255) - 'a' + 10;
+        if (_cups_isalpha(*data))
+          ch += _cups_tolower(*data) - 'a' + 10;
         else
           ch += *data - '0';
 
@@ -330,7 +330,7 @@ encode_string(const char *s,            // I - String to encode
       else
 	bufptr ++;
     }
-    else if (!isalnum(*s & 255))
+    else if (!_cups_isalnum(*s))
     {
       // Characters other than letters and numbers get percent-encoded
       if (bufptr < bufend)

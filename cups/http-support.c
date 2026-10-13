@@ -196,7 +196,7 @@ httpAssembleURI(
     // too...
     for (hostptr = host, have_ipv6 = strchr(host, ':') && !strstr(host, "._tcp"); *hostptr && have_ipv6; hostptr ++)
     {
-      if (*hostptr != ':' && !isxdigit(*hostptr & 255))
+      if (*hostptr != ':' && !_cups_isxdigit(*hostptr))
       {
         have_ipv6 = *hostptr == '%';
         break;
@@ -488,7 +488,7 @@ httpDecode64(char       *out,		// I  - String to write to
       base64 = 63;
     else if (*in == '=')
       break;
-    else if (isspace(*in & 255))
+    else if (_cups_isspace(*in))
       continue;
     else
       break;
@@ -848,7 +848,7 @@ httpSeparateURI(
         // Skip IPvFuture ("vXXXX.") prefix...
         uri ++;
 
-        while (isxdigit(*uri & 255))
+        while (_cups_isxdigit(*uri))
           uri ++;
 
         if (*uri != '.')
@@ -890,7 +890,7 @@ httpSeparateURI(
 	  // Stop at zone separator (RFC 6874)
 	  break;
 	}
-	else if (*ptr != ':' && *ptr != '.' && !isxdigit(*ptr & 255))
+	else if (*ptr != ':' && *ptr != '.' && !_cups_isxdigit(*ptr))
 	{
 	  *host = '\0';
 	  return (HTTP_URI_STATUS_BAD_HOSTNAME);
@@ -939,7 +939,7 @@ httpSeparateURI(
     if (*uri == ':')
     {
       // Yes, collect the port number...
-      if (!isdigit(uri[1] & 255))
+      if (!_cups_isdigit(uri[1]))
       {
         *port = 0;
         return (HTTP_URI_STATUS_BAD_PORT);
@@ -1676,18 +1676,18 @@ http_copy_decode(char       *dst,	// O - Destination buffer
     {
       if (*src == '%' && decode)
       {
-        if (isxdigit(src[1] & 255) && isxdigit(src[2] & 255))
+        if (_cups_isxdigit(src[1]) && _cups_isxdigit(src[2]))
 	{
 	  // Grab a hex-encoded character...
           src ++;
-	  if (isalpha(*src))
-	    quoted = (tolower(*src) - 'a' + 10) << 4;
+	  if (_cups_isalpha(*src))
+	    quoted = (_cups_tolower(*src) - 'a' + 10) << 4;
 	  else
 	    quoted = (*src - '0') << 4;
 
           src ++;
-	  if (isalpha(*src))
-	    quoted |= tolower(*src) - 'a' + 10;
+	  if (_cups_isalpha(*src))
+	    quoted |= _cups_tolower(*src) - 'a' + 10;
 	  else
 	    quoted |= *src - '0';
 

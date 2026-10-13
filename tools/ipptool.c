@@ -466,7 +466,7 @@ main(int  argc,				// I - Number of command-line args
 		snprintf(filename, sizeof(filename), "%s.gz", argv[i]);
                 if (access(filename, 0) && filename[0] != '/'
 #ifdef _WIN32
-                    && (!isalpha(filename[0] & 255) || filename[1] != ':')
+                    && (!_cups_isalpha(filename[0]) || filename[1] != ':')
 #endif // _WIN32
                     )
 		{
@@ -743,7 +743,7 @@ main(int  argc,				// I - Number of command-line args
 
       if (access(argv[i], 0) && argv[i][0] != '/'
 #ifdef _WIN32
-          && (!isalpha(argv[i][0] & 255) || argv[i][1] != ':')
+          && (!_cups_isalpha(argv[i][0]) || argv[i][1] != ':')
 #endif // _WIN32
           )
       {
@@ -2849,7 +2849,7 @@ get_filename(const char *testfile,	// I - Current test file
   }
   else if (!access(src, R_OK) || *src == '/'
 #ifdef _WIN32
-           || (isalpha(*src & 255) && src[1] == ':')
+           || (_cups_isalpha(*src) && src[1] == ':')
 #endif // _WIN32
            )
   {
@@ -5105,7 +5105,7 @@ print_xml_string(cups_file_t *outfile,	// I - Test data
         cupsFilePutChar(outfile, *s);
       }
     }
-    else if ((*s & 0x80) || (*s < ' ' && !isspace(*s & 255)))
+    else if ((*s & 0x80) || (*s < ' ' && !_cups_isspace(*s)))
     {
       // Invalid control character...
       cupsFilePutChar(outfile, '?');
@@ -5400,7 +5400,7 @@ token_cb(ipp_file_t     *f,		// I - IPP file data
       // REQUEST-ID random
       if (ippFileReadToken(f, temp, sizeof(temp)))
       {
-	if (isdigit(temp[0] & 255))
+	if (_cups_isdigit(temp[0]))
 	{
 	  data->request_id = atoi(temp) - 1;
 	}
@@ -7264,12 +7264,12 @@ with_value(ipptool_test_t  *data,	// I - Test data
 
           valptr = value;
 
-	  while (isspace(*valptr & 255) || isdigit(*valptr & 255) ||
+	  while (_cups_isspace(*valptr) || _cups_isdigit(*valptr) ||
 		 *valptr == '-' || *valptr == ',' || *valptr == '!' || *valptr == '<' ||
 		 *valptr == '=' || *valptr == '>')
 	  {
 	    op = '=';
-	    while (*valptr && !isdigit(*valptr & 255) && *valptr != '-')
+	    while (*valptr && !_cups_isdigit(*valptr) && *valptr != '-')
 	    {
 	      if (*valptr == '<' || *valptr == '>' || *valptr == '=' || *valptr == '!')
 		op = *valptr;
@@ -7332,12 +7332,12 @@ with_value(ipptool_test_t  *data,	// I - Test data
 	  lower = ippGetRange(attr, i, &upper);
           valptr = value;
 
-	  while (isspace(*valptr & 255) || isdigit(*valptr & 255) ||
+	  while (_cups_isspace(*valptr) || _cups_isdigit(*valptr) ||
 		 *valptr == '-' || *valptr == ',' || *valptr == '<' ||
 		 *valptr == '=' || *valptr == '>' || *valptr == '!')
 	  {
 	    op = '=';
-	    while (*valptr && !isdigit(*valptr & 255) && *valptr != '-')
+	    while (*valptr && !_cups_isdigit(*valptr) && *valptr != '-')
 	    {
 	      if (*valptr == '<' || *valptr == '>' || *valptr == '=' || *valptr == '!')
 		op = *valptr;
@@ -7686,17 +7686,17 @@ with_value(ipptool_test_t  *data,	// I - Test data
             {
               int ch;			// Current character/byte
 
-	      if (isdigit(valptr[0]))
+	      if (_cups_isdigit(valptr[0]))
 	        ch = (valptr[0] - '0') << 4;
-	      else if (isalpha(valptr[0]))
-	        ch = (tolower(valptr[0]) - 'a' + 10) << 4;
+	      else if (_cups_isxdigit(valptr[0]))
+	        ch = (_cups_tolower(valptr[0]) - 'a' + 10) << 4;
 	      else
 	        break;
 
-	      if (isdigit(valptr[1]))
+	      if (_cups_isdigit(valptr[1]))
 	        ch |= valptr[1] - '0';
-	      else if (isalpha(valptr[1]))
-	        ch |= tolower(valptr[1]) - 'a' + 10;
+	      else if (_cups_isxdigit(valptr[1]))
+	        ch |= _cups_tolower(valptr[1]) - 'a' + 10;
 	      else
 	        break;
 

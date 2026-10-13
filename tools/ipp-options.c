@@ -223,7 +223,7 @@ ippOptionsNew(size_t        num_options,// I - Number of command-line options
     const char	*ptr;			// Pointer into value
 
     ptr = value;
-    while (ptr && *ptr && isdigit(*ptr & 255) && ippo->num_force_front_side < (sizeof(ippo->force_front_side) / sizeof(ippo->force_front_side[0])))
+    while (ptr && *ptr && _cups_isdigit(*ptr) && ippo->num_force_front_side < (sizeof(ippo->force_front_side) / sizeof(ippo->force_front_side[0])))
     {
       ippo->force_front_side[ippo->num_force_front_side ++] = (int)strtol(ptr, (char **)&ptr, 10);
 
@@ -344,7 +344,7 @@ ippOptionsNew(size_t        num_options,// I - Number of command-line options
     int		first, last;		// First and last page
 
     ptr = value;
-    while (ptr && *ptr && isdigit(*ptr & 255))
+    while (ptr && *ptr && _cups_isdigit(*ptr))
     {
       first = (int)strtol(ptr, (char **)&ptr, 10);
 

@@ -1510,12 +1510,12 @@ copy_page(xform_prepare_t *p,		// I - Preparation data
 		      bufend = buffer + bytes;
 		    }
 
-		    if (!isxdigit(*bufptr & 255))
+		    if (!_cups_isxdigit(*bufptr))
 		      break;
-		    else if (isdigit(*bufptr))
+		    else if (_cups_isdigit(*bufptr))
 		      ch = (ch << 4) | (*bufptr - '0');
 		    else
-		      ch = (ch << 4) | (tolower(*bufptr) - 'a' + 10);
+		      ch = (ch << 4) | (_cups_tolower(*bufptr) - 'a' + 10);
 		  }
 
                   if (nameptr < (name + sizeof(name) - 1))

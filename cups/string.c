@@ -1,7 +1,7 @@
 //
 // String functions for CUPS.
 //
-// Copyright © 2022-2024 by OpenPrinting.
+// Copyright © 2022-2026 by OpenPrinting.
 // Copyright © 2007-2019 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products.
 //
@@ -230,7 +230,7 @@ cupsFormatStringv(
       {
 	width = 0;
 
-	while (isdigit(*format & 255))
+	while (_cups_isdigit(*format))
 	{
 	  if (tptr < (tformat + sizeof(tformat) - 1))
 	    *tptr++ = *format;
@@ -259,7 +259,7 @@ cupsFormatStringv(
 	{
 	  prec = 0;
 
-	  while (isdigit(*format & 255))
+	  while (_cups_isdigit(*format))
 	  {
 	    if (tptr < (tformat + sizeof(tformat) - 1))
 	      *tptr++ = *format;
@@ -780,7 +780,7 @@ _cupsStrScand(const char   *buf,	// I - Pointer to number
   if (*buf == '-' || *buf == '+')
     *tempptr++ = *buf++;
 
-  while (isdigit(*buf & 255))
+  while (_cups_isdigit(*buf))
   {
     if (tempptr < (temp + sizeof(temp) - 1))
     {
@@ -817,7 +817,7 @@ _cupsStrScand(const char   *buf,	// I - Pointer to number
       return (0.0);
     }
 
-    while (isdigit(*buf & 255))
+    while (_cups_isdigit(*buf))
     {
       if (tempptr < (temp + sizeof(temp) - 1))
       {
@@ -863,7 +863,7 @@ _cupsStrScand(const char   *buf,	// I - Pointer to number
       }
     }
 
-    while (isdigit(*buf & 255))
+    while (_cups_isdigit(*buf))
     {
       if (tempptr < (temp + sizeof(temp) - 1))
       {

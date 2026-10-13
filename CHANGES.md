@@ -16,6 +16,7 @@ v3.0.4 - YYYY-MM-DD
 - Updated `ippeveprinter` to support a single test password.
 - Updated `ippeveprinter` to support OAuth/OpenID authorization.
 - Updated `ippeveprinter` to add a date/time stamp when logging to a file.
+- Updated dateTime parsing in IPP files.
 - Now explicitly validate IPP attribute names as keyword strings.
 - Fixed `httpGetDateString` with bad date/time values (Issue #167)
 - Fixed a potential buffer overflow in `cupsDNSSDAssembleFullName` on Windows
@@ -29,7 +30,8 @@ v3.0.4 - YYYY-MM-DD
   by an unknown CA.
 - Fixed PAM support in `ippeveprinter`.
 - Fixed a typo in the JWT HS verification code.
-- Updated dateTime parsing in IPP files.
+- Fixed some character testing that wasn't safe on platforms with a signed
+  `char` type (Issue #177)
 
 
 v3.0.3 - 2026-08-20

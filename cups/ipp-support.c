@@ -1,7 +1,7 @@
 //
 // Internet Printing Protocol support functions for CUPS.
 //
-// Copyright © 2022-2025 by OpenPrinting.
+// Copyright © 2022-2026 by OpenPrinting.
 // Copyright © 2007-2018 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products, all rights reserved.
 //
@@ -785,7 +785,7 @@ ippAttributeString(
                 *bufptr = *ptr;
               bufptr ++;
             }
-            else if (!isprint(*ptr & 255))
+            else if (!_cups_isprint(*ptr))
             {
               if (buffer && bufptr < bufend)
                 bufptr += snprintf(bufptr, (size_t)(bufend - bufptr + 1), "\\%03o", *ptr & 255);
@@ -2187,7 +2187,7 @@ ippEnumValue(const char *attrname,	// I - Attribute name
 
 
   // If the string is just a number, return it...
-  if (isdigit(*enumstring & 255))
+  if (_cups_isdigit(*enumstring))
     return ((int)strtol(enumstring, NULL, 0));
 
   // Otherwise look up the string...

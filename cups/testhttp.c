@@ -1,7 +1,7 @@
 //
 // HTTP test program for CUPS.
 //
-// Copyright © 2021-2025 by OpenPrinting.
+// Copyright © 2021-2026 by OpenPrinting.
 // Copyright © 2007-2018 by Apple Inc.
 // Copyright © 1997-2006 by Easy Software Products.
 //
@@ -372,11 +372,11 @@ main(int  argc,				// I - Number of command-line arguments
 
       httpAddrFreeList(addrlist);
     }
-    else if (isdigit(hostname[0] & 255))
+    else if (_cups_isdigit(hostname[0]))
     {
       testEndMessage(true, "ignored because hostname is numeric");
     }
-    else if (!strncmp(hostname, "mac-", 4) && isdigit(hostname[4]))
+    else if (!strncmp(hostname, "mac-", 4) && _cups_isdigit(hostname[4]))
     {
       testEndMessage(true, "ignored because GitHub Actions macOS runner doesn't resolve its own hostname");
     }

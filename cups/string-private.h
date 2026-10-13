@@ -1,7 +1,7 @@
 //
 // Private string definitions for CUPS.
 //
-// Copyright © 2021-2025 by OpenPrinting.
+// Copyright © 2021-2026 by OpenPrinting.
 // Copyright © 2007-2018 by Apple Inc.
 // Copyright © 1997-2006 by Easy Software Products.
 //
@@ -59,34 +59,52 @@ typedef struct _cups_sp_item_s		// String Pool Item
 #  endif // __GNUC__ || __STDC_VERSION__
 
 #  ifdef _CUPS_INLINE
-_CUPS_INLINE int			// O - 1 on match, 0 otherwise
+_CUPS_INLINE bool			// O - `true` on match, `false` otherwise
 _cups_isalnum(int ch)			// I - Character to test
 {
   return ((ch >= '0' && ch <= '9') || (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z'));
 }
 
-_CUPS_INLINE int			// O - 1 on match, 0 otherwise
+_CUPS_INLINE bool			// O - `true` on match, `false` otherwise
 _cups_isalpha(int ch)			// I - Character to test
 {
   return ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z'));
 }
 
-_CUPS_INLINE int			// O - 1 on match, 0 otherwise
+_CUPS_INLINE bool			// O - `true` on match, `false` otherwise
+_cups_isdigit(int ch)			// I - Character to test
+{
+  return ((ch >= '0' && ch <= '9'));
+}
+
+_CUPS_INLINE bool			// O - `true` on match, `false` otherwise
 _cups_islower(int ch)			// I - Character to test
 {
   return (ch >= 'a' && ch <= 'z');
 }
 
-_CUPS_INLINE int			// O - 1 on match, 0 otherwise
+_CUPS_INLINE bool			// O - `true` on match, `false` otherwise
+_cups_isprint(int ch)			// I - Character to test
+{
+  return (ch >= ' ' && ch <= '~');
+}
+
+_CUPS_INLINE bool			// O - `true` on match, `false` otherwise
 _cups_isspace(int ch)			// I - Character to test
 {
   return (ch == ' ' || ch == '\f' || ch == '\n' || ch == '\r' || ch == '\t' || ch == '\v');
 }
 
-_CUPS_INLINE int			// O - 1 on match, 0 otherwise
+_CUPS_INLINE bool			// O - `true` on match, `false` otherwise
 _cups_isupper(int ch)			// I - Character to test
 {
   return (ch >= 'A' && ch <= 'Z');
+}
+
+_CUPS_INLINE bool			// O - `true` on match, `false` otherwise
+_cups_isxdigit(int ch)			// I - Character to test
+{
+  return ((ch >= '0' && ch <= '9') || (ch >= 'A' && ch <= 'F') || (ch >= 'a' && ch <= 'f'));
 }
 
 _CUPS_INLINE int			// O - Converted character
@@ -101,13 +119,13 @@ _cups_toupper(int ch)			// I - Character to convert
   return (_cups_islower(ch) ? ch - 'a' + 'A' : ch);
 }
 #  else
-extern int _cups_isalnum(int ch);
-extern int _cups_isalpha(int ch);
-extern int _cups_islower(int ch);
-extern int _cups_isspace(int ch);
-extern int _cups_isupper(int ch);
-extern int _cups_tolower(int ch);
-extern int _cups_toupper(int ch);
+extern bool	_cups_isalnum(int ch);
+extern bool	_cups_isalpha(int ch);
+extern bool	_cups_islower(int ch);
+extern bool	_cups_isspace(int ch);
+extern bool	_cups_isupper(int ch);
+extern int	_cups_tolower(int ch);
+extern int	_cups_toupper(int ch);
 #  endif // _CUPS_INLINE
 
 

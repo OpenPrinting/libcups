@@ -1,7 +1,7 @@
 //
 // I18N/language support for CUPS.
 //
-// Copyright © 2022-2025 by OpenPrinting.
+// Copyright © 2022-2026 by OpenPrinting.
 // Copyright © 2007-2017 by Apple Inc.
 // Copyright © 1997-2007 by Easy Software Products.
 //
@@ -327,7 +327,7 @@ cupsLangLoadStrings(
   for (dataptr = data, linenum = 1; *dataptr; dataptr ++)
   {
     // Skip leading whitespace...
-    while (*dataptr && isspace(*dataptr & 255))
+    while (*dataptr && _cups_isspace(*dataptr))
     {
       if (*dataptr == '\n')
         linenum ++;
@@ -427,7 +427,7 @@ cupsLangLoadStrings(
     *ptr = '\0';
 
     // Parse separator...
-    while (*dataptr && isspace(*dataptr & 255))
+    while (*dataptr && _cups_isspace(*dataptr))
     {
       if (*dataptr == '\n')
         linenum ++;
@@ -444,7 +444,7 @@ cupsLangLoadStrings(
     }
 
     dataptr ++;
-    while (*dataptr && isspace(*dataptr & 255))
+    while (*dataptr && _cups_isspace(*dataptr))
     {
       if (*dataptr == '\n')
         linenum ++;

@@ -3926,11 +3926,11 @@ ippValidateAttribute(
         for (i = attr->num_values, value = attr->values; i > 0; i --, value ++)
 	{
 	  ptr = value->string.text;
-	  if (islower(*ptr & 255))
+	  if (_cups_islower(*ptr))
 	  {
 	    for (ptr ++; *ptr; ptr ++)
 	    {
-	      if (!islower(*ptr & 255) && !isdigit(*ptr & 255) && *ptr != '+' && *ptr != '-' && *ptr != '.')
+	      if (!_cups_islower(*ptr) && !_cups_isdigit(*ptr) && *ptr != '+' && *ptr != '-' && *ptr != '.')
                 break;
 	    }
 	  }
@@ -3954,7 +3954,7 @@ ippValidateAttribute(
 	{
 	  for (ptr = value->string.text; *ptr; ptr ++)
 	  {
-	    if (!isprint(*ptr & 255) || isupper(*ptr & 255) || isspace(*ptr & 255))
+	    if (!_cups_isprint(*ptr) || _cups_isupper(*ptr) || _cups_isspace(*ptr))
 	      break;
 	  }
 
@@ -4992,7 +4992,7 @@ ipp_is_valid_keyword(
 
   for (ptr = keyword; *ptr; ptr ++)
   {
-    if (!isalnum(*ptr & 255) && *ptr != '-' && *ptr != '.' && *ptr != '_')
+    if (!_cups_isalnum(*ptr) && *ptr != '-' && *ptr != '.' && *ptr != '_')
       break;
   }
 
