@@ -250,7 +250,6 @@ usersys.o: \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
   ../cups/language.h \
   pwg-private.h thread.h \
-  /usr/local/lib/dbus-1.0/include/dbus/dbus-arch-deps.h \
  
 util.o: \
   util.c cups-private.h string-private.h ../config.h base.h \
