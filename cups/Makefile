@@ -272,7 +272,7 @@ clean:
 #
 
 depend:
-	$(CC) -MM -I.. -D_CUPS_SOURCE $(CPPFLAGS) $(OPTIONS) $(OBJS:.o=.c) | sed -e '1,$$s/ \/usr\/[^ ]*//g' | grep -e '^  \\$$' -v >Dependencies
+	$(CC) -MM -I.. -D_CUPS_SOURCE $(CPPFLAGS) $(OPTIONS) $(OBJS:.o=.c) | sed -e '1,$$s/ \/usr\/include\/[^ ]*//g' -e '1,$$s/ \/usr\/local\/include\/[^ ]*//g' -e '1,$$s/ \.\.\/pdfio\/[^ ]*//g' -e '1,$$s/\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/SDKSettings.json//g' | grep -e '^   \\$$' -v | grep -e '^  \\$$' -v >Dependencies
 
 
 #

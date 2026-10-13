@@ -1,109 +1,93 @@
 array.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   array.c ../cups/cups.h ../cups/file.h ../cups/base.h ../cups/ipp.h \
   ../cups/http.h ../cups/array.h ../cups/language.h ../cups/transcode.h \
   ../cups/pwg.h string-private.h ../config.h base.h debug-internal.h \
   debug-private.h
 auth.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   auth.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
   ../cups/language.h \
   pwg-private.h thread.h
 clock.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   clock.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
   ../cups/language.h \
   pwg-private.h thread.h
 debug.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   debug.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
   ../cups/language.h \
   pwg-private.h thread.h
 dest.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   dest.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
   ../cups/language.h \
   pwg-private.h thread.h dnssd.h
 dest-job.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   dest-job.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
   ../cups/language.h \
   pwg-private.h thread.h
 dest-localization.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   dest-localization.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
   ../cups/language.h \
   pwg-private.h thread.h
 dest-options.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   dest-options.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
   ../cups/language.h \
   pwg-private.h thread.h
 dir.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   dir.c string-private.h ../config.h base.h debug-internal.h \
   debug-private.h cups-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
   ../cups/language.h \
   pwg-private.h thread.h dir.h
 dnssd.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   dnssd.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
   ../cups/language.h \
   pwg-private.h thread.h dnssd.h
 encode.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   encode.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
   ../cups/language.h \
   pwg-private.h thread.h
 file.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   file.c file-private.h cups-private.h string-private.h ../config.h \
   base.h debug-internal.h debug-private.h array.h ipp-private.h cups.h \
   file.h ipp.h http.h language.h transcode.h pwg.h http-private.h \
   ../cups/language.h \
   pwg-private.h thread.h
 form.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   form.c form.h cups.h file.h base.h ipp.h http.h array.h language.h \
   transcode.h pwg.h cups-private.h string-private.h ../config.h \
   debug-internal.h debug-private.h ipp-private.h http-private.h \
   ../cups/language.h \
   pwg-private.h thread.h
 getputfile.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   getputfile.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
   ../cups/language.h \
   pwg-private.h thread.h
 globals.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   globals.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
   ../cups/language.h \
   pwg-private.h thread.h
 hash.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   hash.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
@@ -111,56 +95,48 @@ hash.o: \
   pwg-private.h thread.h \
   md5-internal.h
 http.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   http.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
   ../cups/language.h \
   pwg-private.h thread.h
 http-addr.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   http-addr.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
   ../cups/language.h \
   pwg-private.h thread.h
 http-addrlist.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   http-addrlist.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
   ../cups/language.h \
   pwg-private.h thread.h
 http-support.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   http-support.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
   ../cups/language.h \
   pwg-private.h thread.h dnssd.h
 ipp.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   ipp.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
   ../cups/language.h \
   pwg-private.h thread.h
 ipp-file.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   ipp-file.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
   ../cups/language.h \
   pwg-private.h thread.h
 ipp-support.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   ipp-support.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
   ../cups/language.h \
   pwg-private.h thread.h
 json.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   json.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
@@ -168,7 +144,6 @@ json.o: \
   pwg-private.h thread.h \
   json-private.h json.h
 jwt.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   jwt.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
@@ -176,14 +151,12 @@ jwt.o: \
   pwg-private.h thread.h jwt.h json.h \
   json-private.h
 langprintf.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   langprintf.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
   ../cups/language.h \
   pwg-private.h thread.h
 language.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   language.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
@@ -195,17 +168,14 @@ language.o: \
   strings/pt_BR_strings.h strings/ru_strings.h strings/sv_strings.h \
   strings/zh_CN_strings.h
 md5.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   md5.c md5-internal.h base.h string-private.h ../config.h
 notify.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   notify.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
   ../cups/language.h \
   pwg-private.h thread.h
 oauth.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   oauth.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
@@ -213,25 +183,21 @@ oauth.o: \
   pwg-private.h thread.h oauth.h jwt.h \
   json.h form.h
 options.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   options.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
   ../cups/language.h \
   pwg-private.h thread.h
 pwg-media.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   pwg-media.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
   ../cups/language.h \
   pwg-private.h thread.h
 rand.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   rand.c cups.h file.h base.h ipp.h http.h array.h language.h \
   transcode.h pwg.h
 raster-error.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   raster-error.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
@@ -239,40 +205,34 @@ raster-error.o: \
   pwg-private.h thread.h \
   raster-private.h raster.h
 raster-stream.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   raster-stream.c raster-private.h raster.h cups.h file.h base.h ipp.h \
   http.h array.h language.h transcode.h pwg.h debug-private.h \
   string-private.h ../config.h debug-internal.h
 request.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   request.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
   ../cups/language.h \
   pwg-private.h thread.h
 string.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   string.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
   ../cups/language.h \
   pwg-private.h thread.h
 tempfile.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   tempfile.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
   ../cups/language.h \
   pwg-private.h thread.h
 thread.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   thread.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
   ../cups/language.h \
   pwg-private.h thread.h
 tls.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   tls.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
@@ -281,52 +241,44 @@ tls.o: \
   tls-openssl.c \
  
 transcode.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   transcode.c cups.h file.h base.h ipp.h http.h array.h language.h \
   transcode.h pwg.h thread.h debug-internal.h debug-private.h \
   string-private.h ../config.h
 usersys.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   usersys.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
   ../cups/language.h \
   pwg-private.h thread.h \
+  /usr/local/lib/dbus-1.0/include/dbus/dbus-arch-deps.h \
  
 util.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   util.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
   ../cups/language.h \
   pwg-private.h thread.h
 fuzzipp.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   fuzzipp.c file.h base.h string-private.h ../config.h ipp-private.h \
   cups.h ipp.h http.h array.h language.h transcode.h pwg.h \
   test-internal.h
 rasterbench.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   rasterbench.c ../config.h ../cups/raster.h ../cups/cups.h \
   ../cups/file.h ../cups/base.h ../cups/ipp.h ../cups/http.h \
   ../cups/array.h ../cups/language.h ../cups/transcode.h ../cups/pwg.h
 testarray.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   testarray.c string-private.h ../config.h base.h debug-private.h cups.h \
   file.h ipp.h http.h array.h language.h transcode.h pwg.h dir.h \
   test-internal.h
 testclient.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   testclient.c ../config.h ../cups/cups.h ../cups/file.h ../cups/base.h \
   ../cups/ipp.h ../cups/http.h ../cups/array.h ../cups/language.h \
   ../cups/transcode.h ../cups/pwg.h ../cups/raster.h \
   ../cups/string-private.h ../cups/thread.h
 testclock.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   testclock.c cups.h file.h base.h ipp.h http.h array.h language.h \
   transcode.h pwg.h test-internal.h
 testcreds.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   testcreds.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
@@ -334,7 +286,6 @@ testcreds.o: \
   pwg-private.h thread.h \
   test-internal.h
 testcups.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   testcups.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
@@ -342,36 +293,29 @@ testcups.o: \
   pwg-private.h thread.h \
   test-internal.h
 testdest.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   testdest.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
   ../cups/language.h \
   pwg-private.h thread.h
 testdnssd.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   testdnssd.c ../config.h test-internal.h dnssd.h cups.h file.h base.h \
   ipp.h http.h array.h language.h transcode.h pwg.h string-private.h \
   thread.h
 testfile.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   testfile.c string-private.h ../config.h base.h debug-private.h cups.h \
   file.h ipp.h http.h array.h language.h transcode.h pwg.h dir.h \
   test-internal.h
 testform.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   testform.c form.h cups.h file.h base.h ipp.h http.h array.h language.h \
   transcode.h pwg.h test-internal.h
 testgetdests.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   testgetdests.c cups.h file.h base.h ipp.h http.h array.h language.h \
   transcode.h pwg.h test-internal.h
 testhash.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   testhash.c cups.h file.h base.h ipp.h http.h array.h language.h \
   transcode.h pwg.h test-internal.h
 testhttp.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   testhttp.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
@@ -379,32 +323,25 @@ testhttp.o: \
   pwg-private.h thread.h \
   test-internal.h
 testi18n.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   testi18n.c string-private.h ../config.h base.h language.h transcode.h \
   test-internal.h cups.h file.h ipp.h http.h array.h pwg.h
 testipp.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   testipp.c file.h base.h string-private.h ../config.h ipp-private.h \
   cups.h ipp.h http.h array.h language.h transcode.h pwg.h \
   test-internal.h
 testjson.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   testjson.c cups.h file.h base.h ipp.h http.h array.h language.h \
   transcode.h pwg.h json.h test-internal.h
 testjwt.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   testjwt.c cups.h file.h base.h ipp.h http.h array.h language.h \
   transcode.h pwg.h jwt.h json.h test-internal.h
 testlang.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   testlang.c ../config.h cups.h file.h base.h ipp.h http.h array.h \
   language.h transcode.h pwg.h dir.h test-internal.h
 testoauth.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   testoauth.c cups.h file.h base.h ipp.h http.h array.h language.h \
   transcode.h pwg.h oauth.h jwt.h json.h test-internal.h
 testoptions.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   testoptions.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
@@ -412,7 +349,6 @@ testoptions.o: \
   pwg-private.h thread.h \
   test-internal.h
 testpwg.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   testpwg.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
@@ -420,17 +356,14 @@ testpwg.o: \
   pwg-private.h thread.h \
   test-internal.h
 testraster.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   testraster.c raster-private.h raster.h cups.h file.h base.h ipp.h \
   http.h array.h language.h transcode.h pwg.h debug-private.h \
   string-private.h ../config.h test-internal.h
 testtestpage.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   testtestpage.c raster-testpage.h raster-private.h raster.h cups.h \
   file.h base.h ipp.h http.h array.h language.h transcode.h pwg.h \
   debug-private.h string-private.h ../config.h test-internal.h
 testthreads.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   testthreads.c ../cups/cups-private.h ../cups/string-private.h \
   ../config.h ../cups/base.h ../cups/debug-internal.h \
   ../cups/debug-private.h ../cups/array.h ../cups/ipp-private.h \
@@ -440,7 +373,6 @@ testthreads.o: \
   ../cups/pwg-private.h \
   ../cups/thread.h
 tlscheck.o: \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.json \
   tlscheck.c cups-private.h string-private.h ../config.h base.h \
   debug-internal.h debug-private.h array.h ipp-private.h cups.h file.h \
   ipp.h http.h language.h transcode.h pwg.h http-private.h \
