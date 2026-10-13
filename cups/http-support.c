@@ -1675,17 +1675,19 @@ http_copy_decode(char       *dst,	// O - Destination buffer
     {
       if (*src == '%' && decode)
       {
-        if (_cups_isxdigit(src[1]) && _cups_isxdigit(src[2]))
-	{
-	  // Grab a hex-encoded character...
-	  *ptr++ = (char)((_cups_xdigit(src[1]) << 4) | _cups_xdigit(src[2]));
-	  src += 2;
-	}
-	else
+        int	x1, x2;			// Hex digit values
+
+        if ((x1 = _cups_xdigit(src[1])) < 0 || (x2 = _cups_xdigit(src[2])) < 0)
 	{
 	  // Bad hex-encoded character...
 	  *ptr = '\0';
 	  return (NULL);
+	}
+	else
+	{
+	  // Grab a hex-encoded character...
+	  *ptr++ = (char)((x1 << 4) | x2);
+	  src += 2;
 	}
       }
       else if ((*src & 255) <= 0x20 || (*src & 255) >= 0x7f)
