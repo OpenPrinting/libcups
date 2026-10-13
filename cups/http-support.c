@@ -920,7 +920,7 @@ httpSeparateURI(
       // Then copy the hostname or IPv4 address to the buffer...
       uri = http_copy_decode(host, uri, hostlen, ":?/", decoding & HTTP_URI_CODING_HOSTNAME);
 
-      if (!uri)
+      if (!uri || *host == '/')
       {
         *host = '\0';
         return (HTTP_URI_STATUS_BAD_HOSTNAME);
@@ -1700,7 +1700,7 @@ http_copy_decode(char       *dst,	// O - Destination buffer
 	  return (NULL);
 	}
       }
-      else if (!_cups_isprint(*src))
+      else if ((*src & 255) <= 0x20 || (*src & 255) >= 0x7f)
       {
         // Bad control character...
         *ptr = '\0';
