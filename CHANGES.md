@@ -29,6 +29,8 @@ v3.0.4 - YYYY-MM-DD
   by an unknown CA.
 - Fixed PAM support in `ippeveprinter`.
 - Fixed a typo in the JWT HS verification code.
+- Fixed `isxdigit`/`isdigit` calls in `http_create` and `_cupsEncodeOption` that
+  passed an unmasked signed `char`.
 - Updated dateTime parsing in IPP files.
 
 

@@ -3600,7 +3600,7 @@ http_create(
       if ((zoneid = strchr(http->hostname, '%')) != NULL)
         *zoneid = '+';
     }
-    else if (isxdigit(host[0]) && isxdigit(host[1]) && isxdigit(host[2]) && isxdigit(host[3]) && host[4] == ':')
+    else if (isxdigit(host[0] & 255) && isxdigit(host[1] & 255) && isxdigit(host[2] & 255) && isxdigit(host[3] & 255) && host[4] == ':')
     {
       // IPv6 address, convert to URI format...
       snprintf(http->hostname, sizeof(http->hostname), "[%s]", host);

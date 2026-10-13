@@ -421,7 +421,7 @@ _cupsEncodeOption(
       case IPP_TAG_INTEGER :
       case IPP_TAG_ENUM :
 	  // Integer/enumeration value...
-	  if (isdigit(*val) || *val == '-' || *val == '+')
+	  if (isdigit(*val & 255) || *val == '-' || *val == '+')
 	    ippSetInteger(ipp, &attr, i, (int)strtol(val, &s, 10));
 	  else
 	    ippSetInteger(ipp, &attr, i, ippEnumValue(name, val));
