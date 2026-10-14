@@ -14,6 +14,7 @@ libdir=@libdir@
 
 cups_api_version="@LIBCUPS_VERSION_MAJOR@.@LIBCUPS_VERSION_MINOR@"
 cups_build="cups-@LIBCUPS_VERSION@"
+cups_serverroot="@CUPS_SERVERROOT@
 
 Name: CUPS
 Description: CUPS API Library

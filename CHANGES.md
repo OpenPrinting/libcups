@@ -8,6 +8,7 @@ v3.0.4 - YYYY-MM-DD
   token (GHSA-mq7v-g5c2-75fg)
 - Added `cupsDNSSDSetHostName` function.
 - Added Swedish localization (Issue #174)
+- Added missing `cups_serverroot` variable to "pkg-config" file.
 - Updated cookie handling to separate Cookie and Set-Cookie headers (Issue #161)
 - Updated `cupsOAuthGetTokens` to support multiple audience values (Issue #166)
 - Updated JSON code to support escaped Unicode surrogate pairs (Issue #169)
