@@ -147,7 +147,8 @@ struct _cups_dnssd_resolve_s		// DNS-SD resolve request
 #endif // HAVE_MDNSRESPONDER
 };
 
-#if _WIN32
+#ifdef HAVE_MDNSRESPONDER
+#elif _WIN32
 struct _win32_srv_s			// Service
 {
   DNS_SERVICE_REGISTER_REQUEST req;	// Registration request
