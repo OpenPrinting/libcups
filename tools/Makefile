@@ -54,7 +54,7 @@ unittests:
 
 clean:
 	$(RM) $(TARGETS) $(OBJS)
-	$(RM) test.log test-cups.log
+	$(RM) test.log test-cups.log test-ipptransform.log
 
 
 #
@@ -115,7 +115,7 @@ uninstall:
 # Unit test programs (not built when cross-compiling...)
 #
 
-unittests:	ippeveprinter-static ippfind-static ipptool-static
+unittests:	ippeveprinter-static ippfind-static ipptool-static ipptransform-static
 
 
 #
@@ -124,6 +124,7 @@ unittests:	ippeveprinter-static ippfind-static ipptool-static
 
 test:		unittests
 	./run-tests.sh
+	./test-ipptransform.sh
 
 
 #
