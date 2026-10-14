@@ -32,6 +32,7 @@ v3.0.4 - YYYY-MM-DD
 - Fixed a typo in the JWT HS verification code.
 - Fixed some character testing that wasn't safe on platforms with a signed
   `char` type (Issue #177)
+- Fixed support for mDNSResponder on Windows (Issue #178)
 
 
 v3.0.3 - 2026-08-20
