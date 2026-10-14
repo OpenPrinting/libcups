@@ -191,6 +191,9 @@ static uri_test_t	uri_tests[] =	// URI test data
 			  { HTTP_URI_STATUS_BAD_PORT, "http://127.0.0.1:9999a/index.html",
 			    "http", "", "127.0.0.1", "", 0, 0,
 			    HTTP_URI_CODING_MOST  },
+			  { HTTP_URI_STATUS_BAD_PORT, "http://127.0.0.1:4294967377/index.html",
+			    "http", "", "127.0.0.1", "", 0, 0,
+			    HTTP_URI_CODING_MOST  },
 
 			  // Bad resource
 			  { HTTP_URI_STATUS_BAD_RESOURCE, "mailto:\r\nbla",

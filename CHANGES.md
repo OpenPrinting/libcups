@@ -34,6 +34,8 @@ v3.0.4 - YYYY-MM-DD
 - Fixed some character testing that wasn't safe on platforms with a signed
   `char` type (Issue #177)
 - Fixed support for mDNSResponder on Windows (Issue #178)
+- Fixed `httpSeparateURI` to reject URI port numbers whose value was truncated
+  when converted to `int`.
 
 
 v3.0.3 - 2026-08-20
