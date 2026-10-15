@@ -3756,22 +3756,22 @@ ippValidateAttribute(
 	  {
 	    if ((*ptr & 0xe0) == 0xc0)
 	    {
-	      if ((ptr[1] & 0xc0) != 0x80)
-	        break;
+	      if ((*ptr & 0xfe) == 0xc0 || (ptr[1] & 0xc0) != 0x80)
+	        break;				// Overlong or bad continuation
 
 	      ptr ++;
 	    }
 	    else if ((*ptr & 0xf0) == 0xe0)
 	    {
-	      if ((ptr[1] & 0xc0) != 0x80 || (ptr[2] & 0xc0) != 0x80)
-	        break;
+	      if ((ptr[1] & 0xc0) != 0x80 || (ptr[2] & 0xc0) != 0x80 || ((*ptr & 255) == 0xe0 && (ptr[1] & 255) < 0xa0) || ((*ptr & 255) == 0xed && (ptr[1] & 255) > 0x9f))
+	        break;				// Overlong, surrogate, or bad continuation
 
 	      ptr += 2;
 	    }
 	    else if ((*ptr & 0xf8) == 0xf0)
 	    {
-	      if ((ptr[1] & 0xc0) != 0x80 || (ptr[2] & 0xc0) != 0x80 || (ptr[3] & 0xc0) != 0x80)
-	        break;
+	      if ((*ptr & 255) > 0xf4 || (ptr[1] & 0xc0) != 0x80 || (ptr[2] & 0xc0) != 0x80 || (ptr[3] & 0xc0) != 0x80 || ((*ptr & 255) == 0xf0 && (ptr[1] & 255) < 0x90) || ((*ptr & 255) == 0xf4 && (ptr[1] & 255) > 0x8f))
+	        break;				// Overlong, > U+10FFFF, or bad continuation
 
 	      ptr += 3;
 	    }
@@ -3836,22 +3836,22 @@ ippValidateAttribute(
 	  {
 	    if ((*ptr & 0xe0) == 0xc0)
 	    {
-	      if ((ptr[1] & 0xc0) != 0x80)
-	        break;
+	      if ((*ptr & 0xfe) == 0xc0 || (ptr[1] & 0xc0) != 0x80)
+	        break;				// Overlong or bad continuation
 
 	      ptr ++;
 	    }
 	    else if ((*ptr & 0xf0) == 0xe0)
 	    {
-	      if ((ptr[1] & 0xc0) != 0x80 || (ptr[2] & 0xc0) != 0x80)
-	        break;
+	      if ((ptr[1] & 0xc0) != 0x80 || (ptr[2] & 0xc0) != 0x80 || ((*ptr & 255) == 0xe0 && (ptr[1] & 255) < 0xa0) || ((*ptr & 255) == 0xed && (ptr[1] & 255) > 0x9f))
+	        break;				// Overlong, surrogate, or bad continuation
 
 	      ptr += 2;
 	    }
 	    else if ((*ptr & 0xf8) == 0xf0)
 	    {
-	      if ((ptr[1] & 0xc0) != 0x80 || (ptr[2] & 0xc0) != 0x80 || (ptr[3] & 0xc0) != 0x80)
-	        break;
+	      if ((*ptr & 255) > 0xf4 || (ptr[1] & 0xc0) != 0x80 || (ptr[2] & 0xc0) != 0x80 || (ptr[3] & 0xc0) != 0x80 || ((*ptr & 255) == 0xf0 && (ptr[1] & 255) < 0x90) || ((*ptr & 255) == 0xf4 && (ptr[1] & 255) > 0x8f))
+	        break;				// Overlong, > U+10FFFF, or bad continuation
 
 	      ptr += 3;
 	    }

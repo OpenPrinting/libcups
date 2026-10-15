@@ -820,6 +820,40 @@ main(int  argc,				// I - Number of command-line arguments
       testEnd(true);
     }
 
+    testBegin("ippValidateAttribute(nameWithLanguage w/UTF-8 name)");
+    attr = ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAMELANG, "name-attr-4", /*lang*/"en-US", "Caf\303\251 \342\202\254 \360\237\226\250");
+    if (!attr)
+    {
+      testEndMessage(false, "Unable to create nameWithLanguage attribute");
+      status = 1;
+    }
+    else if (!ippValidateAttribute(attr))
+    {
+      testEndMessage(false, "%s", cupsGetErrorString());
+      status = 1;
+    }
+    else
+    {
+      testEnd(true);
+    }
+
+    testBegin("ippValidateAttribute(nameWithLanguage w/overlong UTF-8 name)");
+    attr = ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAMELANG, "name-attr-5", /*lang*/"en-US", "My Name\300\212Line 2");
+    if (!attr)
+    {
+      testEndMessage(false, "Unable to create nameWithLanguage attribute");
+      status = 1;
+    }
+    else if (ippValidateAttribute(attr))
+    {
+      testEndMessage(false, "accepted bad name");
+      status = 1;
+    }
+    else
+    {
+      testEnd(true);
+    }
+
     testBegin("ippValidateAttribute(nameWithLanguage w/invalid naturalLanguage)");
     attr = ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAMELANG, "name-attr-3", /*lang*/"en\"\n*cupsFilter:", "My Name");
     if (!attr)
@@ -856,6 +890,23 @@ main(int  argc,				// I - Number of command-line arguments
 
     testBegin("ippValidateAttribute(textWithLanguage w/invalid text)");
     attr = ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_TEXTLANG, "text-attr-2", /*lang*/"en-US", "My Text\nLine \002");
+    if (!attr)
+    {
+      testEndMessage(false, "Unable to create textWithLanguage attribute");
+      status = 1;
+    }
+    else if (ippValidateAttribute(attr))
+    {
+      testEndMessage(false, "accepted bad text");
+      status = 1;
+    }
+    else
+    {
+      testEnd(true);
+    }
+
+    testBegin("ippValidateAttribute(textWithLanguage w/surrogate UTF-8 text)");
+    attr = ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_TEXTLANG, "text-attr-4", /*lang*/"en-US", "My Text \355\240\200");
     if (!attr)
     {
       testEndMessage(false, "Unable to create textWithLanguage attribute");
