@@ -938,9 +938,9 @@ httpSeparateURI(
     // See if we have a port number...
     if (*uri == ':')
     {
+      // Yes, collect the port number...
       long	portnum;		// Port number
 
-      // Yes, collect the port number...
       if (!_cups_isdigit(uri[1]))
       {
         *port = 0;
