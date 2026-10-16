@@ -33,6 +33,8 @@ v3.0.4 - YYYY-MM-DD
 - Fixed a potential integer overflow with `pwgMediaForPWG` (Issue #176)
 - Fixed an issue with `cupsGetCredentialsTrust` for credentials that are signed
   by an unknown CA.
+- Fixed `cupsGetCredentialsTrust` to verify CA-signed credentials against the
+  trusted root certificate.
 - Fixed PAM support in `ippeveprinter`.
 - Fixed a typo in the JWT HS verification code.
 - Fixed some character testing that wasn't safe on platforms with a signed
