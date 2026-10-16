@@ -938,20 +938,26 @@ cupsGetCredentialsTrust(
     if (trust == HTTP_TRUST_OK && *tcreds)
     {
       // Verify the full certificate chain...
+      STACK_OF(X509)	*tcerts = openssl_load_x509(tcreds);
+					// Trusted certificates
       X509_STORE_CTX	*ctx = X509_STORE_CTX_new();
 					// Context for certificate store
       X509_STORE	*store = X509_STORE_new();
 					// Certificate store
 
-      if (!ctx || !store)
+      if (!tcerts || !ctx || !store)
       {
         // Unable to create store...
         trust = HTTP_TRUST_INVALID;
       }
       else
       {
-        // Verify the certificate chain signatures...
-	X509_STORE_add_cert(store, cert);
+        // Verify the certificate chain signatures against the trusted root...
+        int	i;			// Looping var
+
+	for (i = 0; i < sk_X509_num(tcerts); i ++)
+	  X509_STORE_add_cert(store, sk_X509_value(tcerts, i));
+
 	X509_STORE_CTX_init(ctx, store, cert, certs);
 
 	if (X509_verify_cert(ctx) != 1)
@@ -962,6 +968,8 @@ cupsGetCredentialsTrust(
         X509_STORE_CTX_free(ctx);
       if (store)
         X509_STORE_free(store);
+      if (tcerts)
+        sk_X509_pop_free(tcerts, X509_free);
     }
 
     free(tcreds);
