@@ -701,7 +701,7 @@ cupsGetCredentialsInfo(
 
 
   // Range check input...
-  DEBUG_printf("cupsGetCredentialsInfo(credentials=%p, buffer=%p, bufsize=" CUPS_LLFMT ")", credentials, (void *)buffer, CUPS_LLCAST bufsize);
+  DEBUG_printf("cupsGetCredentialsInfo(credentials=%p, buffer=%p, bufsize=" CUPS_LLFMT ")", (void *)credentials, (void *)buffer, CUPS_LLCAST bufsize);
 
   if (buffer)
     *buffer = '\0';
@@ -1706,6 +1706,7 @@ _httpTLSRead(http_t *http,		// I - Connection to server
   if (bytes > 0)
     return (bytes);
 
+  // For now, make difference only for error after which we can retry, EPIPE otherwise...
   if (SSL_get_error(http->tls, bytes) == SSL_ERROR_WANT_READ)
     errno = EAGAIN;
   else
@@ -2065,6 +2066,7 @@ _httpTLSWrite(http_t     *http,		// I - Connection to server
   if (bytes > 0)
     return (bytes);
 
+  // For now, make difference only for error after which we can retry, EPIPE otherwise...
   if (SSL_get_error(http->tls, bytes) == SSL_ERROR_WANT_WRITE)
     errno = EAGAIN;
   else

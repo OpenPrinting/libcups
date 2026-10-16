@@ -80,7 +80,7 @@ static bool		http_save_file(const char *path, const char *common_name, const cha
 // 'cupsCopyCredentials()' - Copy the X.509 certificate chain to a string.
 //
 
-char *
+char *					// O - PEM-encoded certificate(s)
 cupsCopyCredentials(
     const char *path,			// I - Directory path for certificate/key store or `NULL` for default
     const char *common_name)		// I - Common name
@@ -157,7 +157,7 @@ cupsSaveCredentials(
 
 
   // Validate input...
-  DEBUG_printf("cupsSaveCredentials(path=\"%s\", common_name=\"%s\", credentials=%p(%u), key=%p(%u))", path, common_name, credentials, credentials ? (unsigned)strlen(credentials) : 0, key, key ? (unsigned)strlen(key) : 0);
+  DEBUG_printf("cupsSaveCredentials(path=\"%s\", common_name=\"%s\", credentials=%p(%u), key=%p(%u))", path, common_name, (void *)credentials, credentials ? (unsigned)strlen(credentials) : 0, (void *)key, key ? (unsigned)strlen(key) : 0);
 
   if (!path)
     path = http_default_path(defpath, sizeof(defpath));
