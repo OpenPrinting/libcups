@@ -849,6 +849,33 @@ main(int  argc,				// I - Number of command-line arguments
       testEndMessage(false, "accepted bad name");
       status = 1;
     }
+    else if (!strstr(cupsGetErrorString(), "overlong UTF-8 sequence"))
+    {
+      testEndMessage(false, "wrong error \"%s\"", cupsGetErrorString());
+      status = 1;
+    }
+    else
+    {
+      testEnd(true);
+    }
+
+    testBegin("ippValidateAttribute(nameWithLanguage w/C1 control character)");
+    attr = ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAMELANG, "name-attr-6", /*lang*/"en-US", "My Name\302\205Line 2");
+    if (!attr)
+    {
+      testEndMessage(false, "Unable to create nameWithLanguage attribute");
+      status = 1;
+    }
+    else if (ippValidateAttribute(attr))
+    {
+      testEndMessage(false, "accepted bad name");
+      status = 1;
+    }
+    else if (!strstr(cupsGetErrorString(), "bad control character U+0085"))
+    {
+      testEndMessage(false, "wrong error \"%s\"", cupsGetErrorString());
+      status = 1;
+    }
     else
     {
       testEnd(true);
@@ -915,6 +942,72 @@ main(int  argc,				// I - Number of command-line arguments
     else if (ippValidateAttribute(attr))
     {
       testEndMessage(false, "accepted bad text");
+      status = 1;
+    }
+    else if (!strstr(cupsGetErrorString(), "UTF-16 surrogate U+D800"))
+    {
+      testEndMessage(false, "wrong error \"%s\"", cupsGetErrorString());
+      status = 1;
+    }
+    else
+    {
+      testEnd(true);
+    }
+
+    testBegin("ippValidateAttribute(textWithLanguage w/CR LF line ending)");
+    attr = ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_TEXTLANG, "text-attr-5", /*lang*/"en-US", "My Text\r\nLine 2");
+    if (!attr)
+    {
+      testEndMessage(false, "Unable to create textWithLanguage attribute");
+      status = 1;
+    }
+    else if (!ippValidateAttribute(attr))
+    {
+      testEndMessage(false, "%s", cupsGetErrorString());
+      status = 1;
+    }
+    else
+    {
+      testEnd(true);
+    }
+
+    testBegin("ippValidateAttribute(textWithLanguage w/CR without LF)");
+    attr = ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_TEXTLANG, "text-attr-6", /*lang*/"en-US", "My Text\rLine 2");
+    if (!attr)
+    {
+      testEndMessage(false, "Unable to create textWithLanguage attribute");
+      status = 1;
+    }
+    else if (ippValidateAttribute(attr))
+    {
+      testEndMessage(false, "accepted bad text");
+      status = 1;
+    }
+    else if (!strstr(cupsGetErrorString(), "CR without LF"))
+    {
+      testEndMessage(false, "wrong error \"%s\"", cupsGetErrorString());
+      status = 1;
+    }
+    else
+    {
+      testEnd(true);
+    }
+
+    testBegin("ippValidateAttribute(textWithLanguage w/leading BOM)");
+    attr = ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_TEXTLANG, "text-attr-7", /*lang*/"en-US", "\357\273\277My Text");
+    if (!attr)
+    {
+      testEndMessage(false, "Unable to create textWithLanguage attribute");
+      status = 1;
+    }
+    else if (ippValidateAttribute(attr))
+    {
+      testEndMessage(false, "accepted bad text");
+      status = 1;
+    }
+    else if (!strstr(cupsGetErrorString(), "leading byte order mark"))
+    {
+      testEndMessage(false, "wrong error \"%s\"", cupsGetErrorString());
       status = 1;
     }
     else

@@ -47,6 +47,7 @@ static bool		ipp_regex_begin(void);
 static void		ipp_regex_end(void);
 static void		ipp_set_error(ipp_status_t status, const char *format, ...);
 static _ipp_value_t	*ipp_set_value(ipp_t *ipp, ipp_attribute_t **attr, size_t element);
+static bool		ipp_validate_string(ipp_attribute_t *attr, const char *s, bool is_text);
 static ssize_t		ipp_write_file(int *fd, ipp_uchar_t *buffer, size_t length);
 
 
@@ -3752,62 +3753,11 @@ ippValidateAttribute(
 	    return (false);
 	  }
 
-	  for (ptr = value->string.text; *ptr; ptr ++)
-	  {
-	    if ((*ptr & 0xe0) == 0xc0)
-	    {
-	      if ((*ptr & 0xfe) == 0xc0 || (ptr[1] & 0xc0) != 0x80)
-	        break;				// Overlong or bad continuation
-
-	      ptr ++;
-	    }
-	    else if ((*ptr & 0xf0) == 0xe0)
-	    {
-	      if ((ptr[1] & 0xc0) != 0x80 || (ptr[2] & 0xc0) != 0x80 || ((*ptr & 255) == 0xe0 && (ptr[1] & 255) < 0xa0) || ((*ptr & 255) == 0xed && (ptr[1] & 255) > 0x9f))
-	        break;				// Overlong, surrogate, or bad continuation
-
-	      ptr += 2;
-	    }
-	    else if ((*ptr & 0xf8) == 0xf0)
-	    {
-	      if ((*ptr & 255) > 0xf4 || (ptr[1] & 0xc0) != 0x80 || (ptr[2] & 0xc0) != 0x80 || (ptr[3] & 0xc0) != 0x80 || ((*ptr & 255) == 0xf0 && (ptr[1] & 255) < 0x90) || ((*ptr & 255) == 0xf4 && (ptr[1] & 255) > 0x8f))
-	        break;				// Overlong, > U+10FFFF, or bad continuation
-
-	      ptr += 3;
-	    }
-	    else if (*ptr & 0x80)
-	    {
-	      break;
-	    }
-	    else if (_cups_iscntrl(*ptr) && *ptr != '\n' && *ptr != '\r' && *ptr != '\t')
-	    {
-	      break;
-	    }
-	  }
-
-          if (*ptr)
-          {
-	    if (value_tag == IPP_TAG_TEXTLANG)
-	      ipp_regex_end();
-
-	    if (_cups_iscntrl(*ptr))
-	    {
-	      ipp_set_error(IPP_STATUS_ERROR_BAD_REQUEST, _("\"%s\": Bad text value \"%s\" - bad control character (PWG 5100.14 section 8.3)."), attr->name, value->string.text);
-	      return (false);
-	    }
-	    else
-	    {
-	      ipp_set_error(IPP_STATUS_ERROR_BAD_REQUEST, _("\"%s\": Bad text value \"%s\" - bad UTF-8 sequence (RFC 8011 section 5.1.2)."), attr->name, value->string.text);
-	      return (false);
-	    }
-          }
-
-	  if ((ptr - value->string.text) > (IPP_MAX_TEXT - 1))
+	  if (!ipp_validate_string(attr, value->string.text, /*is_text*/true))
 	  {
 	    if (value_tag == IPP_TAG_TEXTLANG)
 	      ipp_regex_end();
 
-	    ipp_set_error(IPP_STATUS_ERROR_BAD_REQUEST, _("\"%s\": Bad text value \"%s\" - bad length %d (RFC 8011 section 5.1.2)."), attr->name, value->string.text, (int)(ptr - value->string.text));
 	    return (false);
 	  }
 	}
@@ -3832,62 +3782,11 @@ ippValidateAttribute(
 	    return (false);
 	  }
 
-	  for (ptr = value->string.text; *ptr; ptr ++)
-	  {
-	    if ((*ptr & 0xe0) == 0xc0)
-	    {
-	      if ((*ptr & 0xfe) == 0xc0 || (ptr[1] & 0xc0) != 0x80)
-	        break;				// Overlong or bad continuation
-
-	      ptr ++;
-	    }
-	    else if ((*ptr & 0xf0) == 0xe0)
-	    {
-	      if ((ptr[1] & 0xc0) != 0x80 || (ptr[2] & 0xc0) != 0x80 || ((*ptr & 255) == 0xe0 && (ptr[1] & 255) < 0xa0) || ((*ptr & 255) == 0xed && (ptr[1] & 255) > 0x9f))
-	        break;				// Overlong, surrogate, or bad continuation
-
-	      ptr += 2;
-	    }
-	    else if ((*ptr & 0xf8) == 0xf0)
-	    {
-	      if ((*ptr & 255) > 0xf4 || (ptr[1] & 0xc0) != 0x80 || (ptr[2] & 0xc0) != 0x80 || (ptr[3] & 0xc0) != 0x80 || ((*ptr & 255) == 0xf0 && (ptr[1] & 255) < 0x90) || ((*ptr & 255) == 0xf4 && (ptr[1] & 255) > 0x8f))
-	        break;				// Overlong, > U+10FFFF, or bad continuation
-
-	      ptr += 3;
-	    }
-	    else if (*ptr & 0x80)
-	    {
-	      break;
-	    }
-	    else if (_cups_iscntrl(*ptr))
-	    {
-	      break;
-	    }
-	  }
-
-	  if (*ptr)
+	  if (!ipp_validate_string(attr, value->string.text, /*is_text*/false))
 	  {
 	    if (value_tag == IPP_TAG_NAMELANG)
 	      ipp_regex_end();
 
-	    if (_cups_iscntrl(*ptr))
-	    {
-	      ipp_set_error(IPP_STATUS_ERROR_BAD_REQUEST, _("\"%s\": Bad name value \"%s\" - bad control character (PWG 5100.14 section 8.1)."), attr->name, value->string.text);
-	      return (false);
-	    }
-	    else
-	    {
-	      ipp_set_error(IPP_STATUS_ERROR_BAD_REQUEST, _("\"%s\": Bad name value \"%s\" - bad UTF-8 sequence (RFC 8011 section 5.1.3)."), attr->name, value->string.text);
-	      return (false);
-	    }
-          }
-
-	  if ((ptr - value->string.text) > (IPP_MAX_NAME - 1))
-	  {
-	    if (value_tag == IPP_TAG_NAMELANG)
-	      ipp_regex_end();
-
-	    ipp_set_error(IPP_STATUS_ERROR_BAD_REQUEST, _("\"%s\": Bad name value \"%s\" - bad length %d (RFC 8011 section 5.1.3)."), attr->name, value->string.text, (int)(ptr - value->string.text));
 	    return (false);
 	  }
 	}
@@ -6161,6 +6060,146 @@ ipp_set_value(ipp_t           *ipp,	// IO - IPP message
     temp->num_values = element + 1;
 
   return (temp->values + element);
+}
+
+
+//
+// 'ipp_validate_string()' - Validate a name or text value.
+//
+// Name and text values use the Net-Unicode format defined in RFC 5198: UTF-8
+// with no overlong sequences, surrogates, or characters above U+10FFFF, no C0
+// or C1 control characters (text values may contain HT and CR LF/LF line
+// endings), and no leading byte order mark.
+//
+
+static bool				// O - `true` if valid, `false` otherwise
+ipp_validate_string(
+    ipp_attribute_t *attr,		// I - Attribute
+    const char      *s,			// I - String value
+    bool            is_text)		// I - `true` for text, `false` for name
+{
+  const unsigned char	*ptr,		// Pointer into string
+			*start;		// Start of current character
+  int			ch,		// Current Unicode character
+			minch;		// Minimum character for sequence length
+  size_t		len;		// Length of string
+
+
+  for (ptr = (const unsigned char *)s; *ptr; ptr ++)
+  {
+    // Decode the next UTF-8 sequence...
+    start = ptr;
+
+    if (*ptr < 0x80)
+    {
+      ch    = *ptr;
+      minch = 0;
+    }
+    else if ((ptr[0] & 0xe0) == 0xc0 && (ptr[1] & 0xc0) == 0x80)
+    {
+      ch    = ((ptr[0] & 0x1f) << 6) | (ptr[1] & 0x3f);
+      minch = 0x80;
+      ptr   += 1;
+    }
+    else if ((ptr[0] & 0xf0) == 0xe0 && (ptr[1] & 0xc0) == 0x80 && (ptr[2] & 0xc0) == 0x80)
+    {
+      ch    = ((ptr[0] & 0x0f) << 12) | ((ptr[1] & 0x3f) << 6) | (ptr[2] & 0x3f);
+      minch = 0x800;
+      ptr   += 2;
+    }
+    else if ((ptr[0] & 0xf8) == 0xf0 && (ptr[1] & 0xc0) == 0x80 && (ptr[2] & 0xc0) == 0x80 && (ptr[3] & 0xc0) == 0x80)
+    {
+      ch    = ((ptr[0] & 0x07) << 18) | ((ptr[1] & 0x3f) << 12) | ((ptr[2] & 0x3f) << 6) | (ptr[3] & 0x3f);
+      minch = 0x10000;
+      ptr   += 3;
+    }
+    else
+    {
+      if (is_text)
+        ipp_set_error(IPP_STATUS_ERROR_BAD_REQUEST, _("\"%s\": Bad text value \"%s\" - bad UTF-8 sequence (RFC 8011 section 5.1.2)."), attr->name, s);
+      else
+        ipp_set_error(IPP_STATUS_ERROR_BAD_REQUEST, _("\"%s\": Bad name value \"%s\" - bad UTF-8 sequence (RFC 8011 section 5.1.3)."), attr->name, s);
+
+      return (false);
+    }
+
+    // Then check the character value...
+    if (ch < minch)
+    {
+      if (is_text)
+        ipp_set_error(IPP_STATUS_ERROR_BAD_REQUEST, _("\"%s\": Bad text value \"%s\" - overlong UTF-8 sequence (RFC 3629 section 3)."), attr->name, s);
+      else
+        ipp_set_error(IPP_STATUS_ERROR_BAD_REQUEST, _("\"%s\": Bad name value \"%s\" - overlong UTF-8 sequence (RFC 3629 section 3)."), attr->name, s);
+
+      return (false);
+    }
+    else if (ch >= 0xd800 && ch <= 0xdfff)
+    {
+      if (is_text)
+        ipp_set_error(IPP_STATUS_ERROR_BAD_REQUEST, _("\"%s\": Bad text value \"%s\" - UTF-16 surrogate U+%04X (RFC 3629 section 3)."), attr->name, s, ch);
+      else
+        ipp_set_error(IPP_STATUS_ERROR_BAD_REQUEST, _("\"%s\": Bad name value \"%s\" - UTF-16 surrogate U+%04X (RFC 3629 section 3)."), attr->name, s, ch);
+
+      return (false);
+    }
+    else if (ch > 0x10ffff)
+    {
+      if (is_text)
+        ipp_set_error(IPP_STATUS_ERROR_BAD_REQUEST, _("\"%s\": Bad text value \"%s\" - character U+%04X out of range (RFC 3629 section 3)."), attr->name, s, ch);
+      else
+        ipp_set_error(IPP_STATUS_ERROR_BAD_REQUEST, _("\"%s\": Bad name value \"%s\" - character U+%04X out of range (RFC 3629 section 3)."), attr->name, s, ch);
+
+      return (false);
+    }
+    else if (ch == 0xfeff && start == (const unsigned char *)s)
+    {
+      if (is_text)
+        ipp_set_error(IPP_STATUS_ERROR_BAD_REQUEST, _("\"%s\": Bad text value \"%s\" - leading byte order mark (RFC 5198)."), attr->name, s);
+      else
+        ipp_set_error(IPP_STATUS_ERROR_BAD_REQUEST, _("\"%s\": Bad name value \"%s\" - leading byte order mark (RFC 5198)."), attr->name, s);
+
+      return (false);
+    }
+    else if (is_text && ch == '\r' && ptr[1] != '\n')
+    {
+      ipp_set_error(IPP_STATUS_ERROR_BAD_REQUEST, _("\"%s\": Bad text value \"%s\" - CR without LF (RFC 5198 section 2)."), attr->name, s);
+      return (false);
+    }
+    else if ((ch < ' ' && (!is_text || (ch != '\t' && ch != '\n' && ch != '\r'))) || ch == 0x7f)
+    {
+      if (is_text)
+        ipp_set_error(IPP_STATUS_ERROR_BAD_REQUEST, _("\"%s\": Bad text value \"%s\" - bad control character (PWG 5100.14 section 8.3)."), attr->name, s);
+      else
+        ipp_set_error(IPP_STATUS_ERROR_BAD_REQUEST, _("\"%s\": Bad name value \"%s\" - bad control character (PWG 5100.14 section 8.1)."), attr->name, s);
+
+      return (false);
+    }
+    else if (ch >= 0x80 && ch <= 0x9f)
+    {
+      if (is_text)
+        ipp_set_error(IPP_STATUS_ERROR_BAD_REQUEST, _("\"%s\": Bad text value \"%s\" - bad control character U+%04X (RFC 5198 section 2)."), attr->name, s, ch);
+      else
+        ipp_set_error(IPP_STATUS_ERROR_BAD_REQUEST, _("\"%s\": Bad name value \"%s\" - bad control character U+%04X (RFC 5198 section 2)."), attr->name, s, ch);
+
+      return (false);
+    }
+  }
+
+  // Check the length...
+  len = (size_t)(ptr - (const unsigned char *)s);
+
+  if (is_text && len > (IPP_MAX_TEXT - 1))
+  {
+    ipp_set_error(IPP_STATUS_ERROR_BAD_REQUEST, _("\"%s\": Bad text value \"%s\" - bad length %d (RFC 8011 section 5.1.2)."), attr->name, s, (int)len);
+    return (false);
+  }
+  else if (!is_text && len > (IPP_MAX_NAME - 1))
+  {
+    ipp_set_error(IPP_STATUS_ERROR_BAD_REQUEST, _("\"%s\": Bad name value \"%s\" - bad length %d (RFC 8011 section 5.1.3)."), attr->name, s, (int)len);
+    return (false);
+  }
+
+  return (true);
 }
 
 
