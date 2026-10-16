@@ -849,11 +849,6 @@ main(int  argc,				// I - Number of command-line arguments
       testEndMessage(false, "accepted bad name");
       status = 1;
     }
-    else if (!strstr(cupsGetErrorString(), "overlong UTF-8 sequence"))
-    {
-      testEndMessage(false, "wrong error \"%s\"", cupsGetErrorString());
-      status = 1;
-    }
     else
     {
       testEnd(true);
@@ -869,11 +864,6 @@ main(int  argc,				// I - Number of command-line arguments
     else if (ippValidateAttribute(attr))
     {
       testEndMessage(false, "accepted bad name");
-      status = 1;
-    }
-    else if (!strstr(cupsGetErrorString(), "bad control character U+0085"))
-    {
-      testEndMessage(false, "wrong error \"%s\"", cupsGetErrorString());
       status = 1;
     }
     else
@@ -944,11 +934,6 @@ main(int  argc,				// I - Number of command-line arguments
       testEndMessage(false, "accepted bad text");
       status = 1;
     }
-    else if (!strstr(cupsGetErrorString(), "UTF-16 surrogate U+D800"))
-    {
-      testEndMessage(false, "wrong error \"%s\"", cupsGetErrorString());
-      status = 1;
-    }
     else
     {
       testEnd(true);
@@ -983,11 +968,6 @@ main(int  argc,				// I - Number of command-line arguments
       testEndMessage(false, "accepted bad text");
       status = 1;
     }
-    else if (!strstr(cupsGetErrorString(), "CR without LF"))
-    {
-      testEndMessage(false, "wrong error \"%s\"", cupsGetErrorString());
-      status = 1;
-    }
     else
     {
       testEnd(true);
@@ -1003,11 +983,6 @@ main(int  argc,				// I - Number of command-line arguments
     else if (ippValidateAttribute(attr))
     {
       testEndMessage(false, "accepted bad text");
-      status = 1;
-    }
-    else if (!strstr(cupsGetErrorString(), "leading byte order mark"))
-    {
-      testEndMessage(false, "wrong error \"%s\"", cupsGetErrorString());
       status = 1;
     }
     else

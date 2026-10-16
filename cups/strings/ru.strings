@@ -2,6 +2,10 @@
 "  No Errors\n" = "  Без ошибок\n";
 "  No Warnings\n" = "  Нет предупреждений\n";
 "! EXPRESSION                   Unary NOT of expression" = "! ВЫРАЖЕНИЕ                     не является унарным";
+"\"%s\": Bad %s value \"%s\" - UTF-16 surrogate U+%04X (RFC 3629 section 3)." = "\"%s\": Bad %s value \"%s\" - UTF-16 surrogate U+%04X (RFC 3629 section 3).";
+"\"%s\": Bad %s value \"%s\" - character U+%04X out of range (RFC 3629 section 3)." = "\"%s\": Bad %s value \"%s\" - character U+%04X out of range (RFC 3629 section 3).";
+"\"%s\": Bad %s value \"%s\" - leading byte order mark (RFC 5198)." = "\"%s\": Bad %s value \"%s\" - leading byte order mark (RFC 5198).";
+"\"%s\": Bad %sd value \"%s\" - overlong UTF-8 sequence (RFC 3629 section 3)." = "\"%s\": Bad %sd value \"%s\" - overlong UTF-8 sequence (RFC 3629 section 3).";
 "\"%s\": Bad URI value \"%s\" - %s (RFC 8011 section 5.1.6)." = "\"%s\": Неверное значение URI \"%s\" — %s (RFC 8011, раздел 5.1.6).";
 "\"%s\": Bad URI value \"%s\" - bad length %d (RFC 8011 section 5.1.6)." = "\"%s\": Неверное значение URI \"%s\" — неправильная длина %d (RFC 8011, раздел 5.1.6).";
 "\"%s\": Bad attribute name - bad length %d (RFC 8011 section 5.1.4)." = "\"%s\": Неправильное имя атрибута — неправильная длина %d (RFC 8011, раздел 5.1.4).";
@@ -33,6 +37,7 @@
 "\"%s\": Bad resolution value %dx%d%s - bad units value (RFC 8011 section 5.1.16)." = "\"%s\": Неверное разрешение %dx%d%s — неправильная единица измерения (RFC 8011, раздел 5.1.16).";
 "\"%s\": Bad resolution value %dx%d%s - cross feed resolution must be positive (RFC 8011 section 5.1.16)." = "\"%s\": Неверное разрешение %dx%d%s — поперечное разрешение должно быть положительным (RFC 8011, раздел 5.1.16).";
 "\"%s\": Bad resolution value %dx%d%s - feed resolution must be positive (RFC 8011 section 5.1.16)." = "\"%s\": Неверное разрешение %dx%d%s — разрешение подачи должно быть положительным (RFC 8011, раздел 5.1.16).";
+"\"%s\": Bad text value \"%s\" - CR without LF (RFC 5198 section 2)." = "\"%s\": Bad text value \"%s\" - CR without LF (RFC 5198 section 2).";
 "\"%s\": Bad text value \"%s\" - bad UTF-8 sequence (RFC 8011 section 5.1.2)." = "\"%s\": Неверное текстовое значение \"%s\" — ошибка в кодировке UTF-8 (RFC 8011, раздел 5.1.2).";
 "\"%s\": Bad text value \"%s\" - bad control character (PWG 5100.14 section 8.3)." = "\"%s\": Неверное текстовое значение \"%s\" — неправильный управляющий символ (PWG 5100.14, раздел 8.3).";
 "\"%s\": Bad text value \"%s\" - bad length %d (RFC 8011 section 5.1.2)." = "\"%s\": Неверное текстовое значение \"%s\" — неправильная длина %d (RFC 8011, раздел 5.1.2).";
@@ -51,6 +56,8 @@
 "%s: Bad page header - <%02X%02X%02X%02X%02X%02X%02X%02X>" = "%s: Неверный заголовок страницы — <%02X%02X%02X%02X%02X%02X%02X%02X>";
 "%s: Bad regular expression: %s" = "%s: Неверное регулярное выражение: %s";
 "%s: Bad resolution value '%s'." = "%s: Неверное разрешение '%s'.";
+"%s: Cannot specify --oauth-uri and --password at the same time." = "%s: Cannot specify --oauth-uri and --password at the same time.";
+"%s: Cannot specify --oauth-uri, --pam-service, and --password at the same time." = "%s: Cannot specify --oauth-uri, --pam-service, and --password at the same time.";
 "%s: Cannot use '--and' after '--or'." = "%s: Нельзя использовать '--and' после '--or'.";
 "%s: Cannot use '-a' with '-2', '-f', '-m', '-M', or '-s'." = "%s: Невозможно использовать '-a' с '-2', '-f', '-m', '-M', or '-s'.";
 "%s: File '%s' is too large to load in memory." = "%s: Файл '%s' слишком большой для загрузки в память.";
@@ -84,12 +91,14 @@
 "%s: Missing output MIME media type after '-m'." = "%s: Отсутствует указание вывода MIME-типа после '-m'.";
 "%s: Missing output filename after '-f'." = "%s: Отсутствует имя файла вывода после '-f'.";
 "%s: Missing output format after '-F'." = "%s: Отсутствует формат вывода после '-F'.";
+"%s: Missing password after '--password'." = "%s: Missing password after '--password'.";
 "%s: Missing port number after '-p'." = "%s: Отсутствует номер порта после '-p'.";
 "%s: Missing port range after '%s'." = "%s: Отсутствует диапазон портов после '%s'.";
 "%s: Missing printer name." = "%s: Отсутствует имя принтера.";
 "%s: Missing program after '%s'." = "%s: Отсутствует программа после '%s'.";
 "%s: Missing regular expression after '%s'." = "%s: Пропущенное регулярное выражение после '%s'.";
 "%s: Missing resolution list after '-r'." = "%s: Отсутствует список разрешений после '-r'.";
+"%s: Missing scope(s) after '--oauth-scopes'." = "%s: Missing scope(s) after '--oauth-scopes'.";
 "%s: Missing seconds after '-i'." = "%s:Пропущены секунды после '-i'.";
 "%s: Missing semi-colon after '%s'." = "%s: Пропущена точка с запятой после '%s'.";
 "%s: Missing server name after '-n'." = "%s: Отсутствует имя сервера после '-n'.";
@@ -103,6 +112,7 @@
 "%s: Missing type list after '-t'." = "%s: Отсутствует список типов после '-t'.";
 "%s: Missing user agent after '--user-agent'." = "%s: Отсутствует указание user-agent после '--user-agent'.";
 "%s: Missing version after '-V'." = "%s: Отсутствует версия после '-V'.";
+"%s: Missing/bad URI after '--oauth-uri'." = "%s: Missing/bad URI after '--oauth-uri'.";
 "%s: No job-id for created print job." = "%s:  Нет идентификатора задачи для созданного задания печати.";
 "%s: No supported raster types are available." = "%s: Поддерживаемые типы растров недоступны.";
 "%s: Out of memory." = "%s: Недостаточно памяти.";
@@ -119,6 +129,7 @@
 "%s: Unable to execute \"%s\": %s" = "%s: Не удается выполнить \"%s\": %s";
 "%s: Unable to find pdftoppm helper program." = "%s: Не удается найти вспомогательную программу pdftoppm.";
 "%s: Unable to get list of supported operations from printer." = "%s: Не удается с принтера получить список поддерживаемых операций.";
+"%s: Unable to get metadata for OAuth Authorization Server '%s': %s" = "%s: Unable to get metadata for OAuth Authorization Server '%s': %s";
 "%s: Unable to get printer capabilities: %s" = "%s: Не удалось получить сведения о возможностях принтера: %s";
 "%s: Unable to initialize back side raster context: %s" = "%s: Не удается инициализировать контекст растра на обратной стороне: %s";
 "%s: Unable to initialize raster context: %s" = "%s: Не удается инициализировать контекст растра: %s";
@@ -158,7 +169,10 @@
 "--name REGEX                   Match service name to regular expression" = "--name REGEX                   Сопоставить имя службы с регулярным выражением";
 "--no-web-forms                 Disable web forms for media and supplies" = "--no-web-forms                 Отключить веб-формы для носителей и расходных материалов";
 "--not EXPRESSION               Unary NOT of expression" = "--not EXPRESSION               Унарное выражение NOT";
+"--oauth-scopes SCOPE[,...]     Use the specified OAuth scopes" = "--oauth-scopes SCOPE[,...]     Use the specified OAuth scopes";
+"--oauth-uri AS-URI             Use the specified OAuth Authorization Server" = "--oauth-uri AS-URI             Use the specified OAuth Authorization Server";
 "--pam-service SERVICE          Use the named PAM service" = "--pam-service SERVICE          Использование указанной службы PAM";
+"--password PASSWORD            Use the specified password to authenticate" = "--password PASSWORD            Use the specified password to authenticate";
 "--path REGEX                   Match resource path to regular expression" = "--path REGEX                   Сопоставление пути к ресурсу с регулярным выражением";
 "--pin                          Pin certificate found by client command" = "--pin                          Сертификат привязки найден по команде клиента";
 "--port NUMBER[-NUMBER]         Match port to number or range" = "--port НОМЕР[-НОМЕР]         Сопоставление порта с номером или диапазоном";
@@ -259,6 +273,7 @@
 "Bad NULL dests pointer" = "Неверный указатель NULL dests";
 "Bad Request" = "Неверный запрос";
 "Bad URI." = "Не верный URI.";
+"Bad Unicode escape." = "Bad Unicode escape.";
 "Bad arguments to function" = "Неверные аргументы для функции";
 "Bad certificate." = "Некорректный сертификат.";
 "Bad extKeyUsage extension in X.509 certificate request." = "Неверное расширение extKeyUsage в запросе сертификата X.509.";
@@ -277,7 +292,7 @@
 "Continue" = "Продолжить";
 "Created" = "Создано";
 "Credentials are not CA-signed." = "Учетные данные не подписаны центром сертификации.";
-"Credentials do not validate against site CA certificate." = "Учётные данные не проходят проверку по сертификату удостоверяющего центра сайта.";
+"Credentials do not validate against CA certificates." = "Credentials do not validate against CA certificates.";
 "Credentials have expired." = "Срок действия учетных данных истек.";
 "DEBUG: Converting PDF to PostScript with pdftops." = "ОТЛАДКА: Конвертация PDF в PostScript с помощью pdftops.";
 "DEBUG: pdftops completed successfully." = "ОТЛАДКА: работа pdftops успешно завершилась.";
@@ -343,7 +358,6 @@
 "JSON file too large." = "Файл JSON слишком велик.";
 "LPDEST environment variable names default destination that does not exist." = "Переменная среды LPDEST указывает на не существующий пункт назначения по умолчанию.";
 "Length Required" = "Требуемая длина";
-"Listening on port %d." = "Прослушивание по порту  %d.";
 "Locked" = "Заблокировано";
 "Loop Detected" = "Обнаружена петля";
 "Message:" = "Message:";
@@ -468,7 +482,6 @@
 "Use Proxy" = "Использовать прокси";
 "User Code: %s" = "User Code: %s";
 "User:" = "User:";
-"Using spool directory '%s'." = "Использование каталога диспетчера печати '%s'.";
 "Validation of subjectAltName in X.509 certificate request failed." = "Не удалось проверить subjectAltName в запросе сертификата X.509.";
 "Warnings:\n" = "Предупреждения:\n";
 "Web Page: %s" = "Web Page: %s";

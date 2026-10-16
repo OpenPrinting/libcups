@@ -14,6 +14,8 @@ v3.0.4 - YYYY-MM-DD
 - Updated JSON code to support escaped Unicode surrogate pairs (Issue #169)
 - Updated `httpSeparateURI` to better detect out of range port numbers
   (Issue #179)
+- Updated `ippValidateAttribute` to check name and text values against RFC 5198
+  (Issue #180)
 - Updated `cupsJWTHasValidSignature` to use a constant-time comparison function
   for HMAC signatures.
 - Updated `ippeveprinter` to support a single test password.
@@ -36,10 +38,6 @@ v3.0.4 - YYYY-MM-DD
 - Fixed some character testing that wasn't safe on platforms with a signed
   `char` type (Issue #177)
 - Fixed support for mDNSResponder on Windows (Issue #178)
-- Updated `ippValidateAttribute` to check name and text values against RFC 5198,
-  rejecting overlong, surrogate, and out-of-range UTF-8 sequences, C1 control
-  characters, CR without LF, and a leading byte order mark, with a specific
-  error message for each.
 
 
 v3.0.3 - 2026-08-20

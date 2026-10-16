@@ -2,6 +2,10 @@
 "  No Errors\n" = "  Inga fel\n";
 "  No Warnings\n" = "  Inga varningar\n";
 "! EXPRESSION                   Unary NOT of expression" = "! EXPRESSION                   Unärt INTE för uttryck";
+"\"%s\": Bad %s value \"%s\" - UTF-16 surrogate U+%04X (RFC 3629 section 3)." = "\"%s\": Bad %s value \"%s\" - UTF-16 surrogate U+%04X (RFC 3629 section 3).";
+"\"%s\": Bad %s value \"%s\" - character U+%04X out of range (RFC 3629 section 3)." = "\"%s\": Bad %s value \"%s\" - character U+%04X out of range (RFC 3629 section 3).";
+"\"%s\": Bad %s value \"%s\" - leading byte order mark (RFC 5198)." = "\"%s\": Bad %s value \"%s\" - leading byte order mark (RFC 5198).";
+"\"%s\": Bad %sd value \"%s\" - overlong UTF-8 sequence (RFC 3629 section 3)." = "\"%s\": Bad %sd value \"%s\" - overlong UTF-8 sequence (RFC 3629 section 3).";
 "\"%s\": Bad URI value \"%s\" - %s (RFC 8011 section 5.1.6)." = "\"%s\": Felaktigt URI-värde \"%s\" – %s (RFC 8011 avsnitt 5.1.6).";
 "\"%s\": Bad URI value \"%s\" - bad length %d (RFC 8011 section 5.1.6)." = "\"%s\": Felaktigt URI-värde \"%s\" – felaktig längd %d (RFC 8011 avsnitt 5.1.6).";
 "\"%s\": Bad attribute name - bad length %d (RFC 8011 section 5.1.4)." = "\"%s\": Felaktigt attributnamn – felaktig längd %d (RFC 8011 avsnitt 5.1.4).";
@@ -33,6 +37,7 @@
 "\"%s\": Bad resolution value %dx%d%s - bad units value (RFC 8011 section 5.1.16)." = "\"%s\": Felaktigt upplösningsvärde %dx%d%s – felaktigt enhetsvärde (RFC 8011 avsnitt 5.1.16).";
 "\"%s\": Bad resolution value %dx%d%s - cross feed resolution must be positive (RFC 8011 section 5.1.16)." = "\"%s\": Felaktigt upplösningsvärde %dx%d%s – tvärmatarupplösningen måste vara positiv (RFC 8011 avsnitt 5.1.16).";
 "\"%s\": Bad resolution value %dx%d%s - feed resolution must be positive (RFC 8011 section 5.1.16)." = "\"%s\": Felaktigt upplösningsvärde %dx%d%s – matarupplösningen måste vara positiv (RFC 8011 avsnitt 5.1.16).";
+"\"%s\": Bad text value \"%s\" - CR without LF (RFC 5198 section 2)." = "\"%s\": Bad text value \"%s\" - CR without LF (RFC 5198 section 2).";
 "\"%s\": Bad text value \"%s\" - bad UTF-8 sequence (RFC 8011 section 5.1.2)." = "\"%s\": Felaktigt textvärde \"%s\" – felaktig UTF-8-sekvens (RFC 8011 avsnitt 5.1.2).";
 "\"%s\": Bad text value \"%s\" - bad control character (PWG 5100.14 section 8.3)." = "\"%s\": Felaktigt textvärde \"%s\" – felaktigt kontrolltecken (PWG 5100.14 avsnitt 8.3).";
 "\"%s\": Bad text value \"%s\" - bad length %d (RFC 8011 section 5.1.2)." = "\"%s\": Felaktigt textvärde \"%s\" – felaktig längd %d (RFC 8011 avsnitt 5.1.2).";
@@ -51,6 +56,8 @@
 "%s: Bad page header - <%02X%02X%02X%02X%02X%02X%02X%02X>" = "%s: Felaktigt sidhuvud – <%02X%02X%02X%02X%02X%02X%02X%02X>";
 "%s: Bad regular expression: %s" = "%s: Felaktigt reguljärt uttryck: %s";
 "%s: Bad resolution value '%s'." = "%s: Felaktigt upplösningsvärde '%s'.";
+"%s: Cannot specify --oauth-uri and --password at the same time." = "%s: Cannot specify --oauth-uri and --password at the same time.";
+"%s: Cannot specify --oauth-uri, --pam-service, and --password at the same time." = "%s: Cannot specify --oauth-uri, --pam-service, and --password at the same time.";
 "%s: Cannot use '--and' after '--or'." = "%s: Det går inte att använda '--and' efter '--or'.";
 "%s: Cannot use '-a' with '-2', '-f', '-m', '-M', or '-s'." = "%s: Det går inte att använda '-a' med '-2', '-f', '-m', '-M' eller '-s'.";
 "%s: File '%s' is too large to load in memory." = "%s: Filen '%s' är för stor för att läsas in i minnet.";
@@ -84,12 +91,14 @@
 "%s: Missing output MIME media type after '-m'." = "%s: MIME-typ för utdata saknas efter '-m'.";
 "%s: Missing output filename after '-f'." = "%s: Filnamn för utdata saknas efter '-f'.";
 "%s: Missing output format after '-F'." = "%s: Utdataformat saknas efter '-F'.";
+"%s: Missing password after '--password'." = "%s: Missing password after '--password'.";
 "%s: Missing port number after '-p'." = "%s: Portnummer saknas efter '-p'.";
 "%s: Missing port range after '%s'." = "%s: Portintervall saknas efter '%s'.";
 "%s: Missing printer name." = "%s: Skrivarnamn saknas.";
 "%s: Missing program after '%s'." = "%s: Program saknas efter '%s'.";
 "%s: Missing regular expression after '%s'." = "%s: Reguljärt uttryck saknas efter '%s'.";
 "%s: Missing resolution list after '-r'." = "%s: Upplösningslista saknas efter '-r'.";
+"%s: Missing scope(s) after '--oauth-scopes'." = "%s: Missing scope(s) after '--oauth-scopes'.";
 "%s: Missing seconds after '-i'." = "%s: Sekunder saknas efter '-i'.";
 "%s: Missing semi-colon after '%s'." = "%s: Semikolon saknas efter '%s'.";
 "%s: Missing server name after '-n'." = "%s: Servernamn saknas efter '-n'.";
@@ -103,6 +112,7 @@
 "%s: Missing type list after '-t'." = "%s: Typlista saknas efter '-t'.";
 "%s: Missing user agent after '--user-agent'." = "%s: Användaragent saknas efter '--user-agent'.";
 "%s: Missing version after '-V'." = "%s: Version saknas efter '-V'.";
+"%s: Missing/bad URI after '--oauth-uri'." = "%s: Missing/bad URI after '--oauth-uri'.";
 "%s: No job-id for created print job." = "%s: Det skapade utskriftsjobbet saknar jobb-ID.";
 "%s: No supported raster types are available." = "%s: Det finns inga tillgängliga rastertyper som stöds.";
 "%s: Out of memory." = "%s: Slut på minne.";
@@ -119,6 +129,7 @@
 "%s: Unable to execute \"%s\": %s" = "%s: Det går inte att köra \"%s\": %s";
 "%s: Unable to find pdftoppm helper program." = "%s: Det går inte att hitta hjälpprogrammet pdftoppm.";
 "%s: Unable to get list of supported operations from printer." = "%s: Det går inte att hämta listan över funktioner som skrivaren stöder.";
+"%s: Unable to get metadata for OAuth Authorization Server '%s': %s" = "%s: Unable to get metadata for OAuth Authorization Server '%s': %s";
 "%s: Unable to get printer capabilities: %s" = "%s: Det går inte att hämta skrivarens funktioner: %s";
 "%s: Unable to initialize back side raster context: %s" = "%s: Det går inte att initiera rasterkontexten för baksidan: %s";
 "%s: Unable to initialize raster context: %s" = "%s: Det går inte att initiera rasterkontexten: %s";
@@ -158,7 +169,10 @@
 "--name REGEX                   Match service name to regular expression" = "--name REGEX                   Matcha tjänstnamn mot reguljärt uttryck";
 "--no-web-forms                 Disable web forms for media and supplies" = "--no-web-forms                 Inaktivera webbformulär för medier och förbrukningsmaterial";
 "--not EXPRESSION               Unary NOT of expression" = "--not EXPRESSION               Unärt INTE för uttryck";
+"--oauth-scopes SCOPE[,...]     Use the specified OAuth scopes" = "--oauth-scopes SCOPE[,...]     Use the specified OAuth scopes";
+"--oauth-uri AS-URI             Use the specified OAuth Authorization Server" = "--oauth-uri AS-URI             Use the specified OAuth Authorization Server";
 "--pam-service SERVICE          Use the named PAM service" = "--pam-service SERVICE          Använd angiven PAM-tjänst";
+"--password PASSWORD            Use the specified password to authenticate" = "--password PASSWORD            Use the specified password to authenticate";
 "--path REGEX                   Match resource path to regular expression" = "--path REGEX                   Matcha resurssökväg mot reguljärt uttryck";
 "--pin                          Pin certificate found by client command" = "--pin                          Fäst certifikatet som klientkommandot hittade";
 "--port NUMBER[-NUMBER]         Match port to number or range" = "--port NUMBER[-NUMBER]         Matcha port mot nummer eller intervall";
@@ -259,6 +273,7 @@
 "Bad NULL dests pointer" = "Felaktig NULL-pekare för dests";
 "Bad Request" = "Felaktig begäran";
 "Bad URI." = "Felaktig URI.";
+"Bad Unicode escape." = "Bad Unicode escape.";
 "Bad arguments to function" = "Felaktiga argument till funktion";
 "Bad certificate." = "Felaktigt certifikat.";
 "Bad extKeyUsage extension in X.509 certificate request." = "Felaktig extKeyUsage-tilläggsmodul i X.509-certifikatbegäran.";
@@ -277,7 +292,7 @@
 "Continue" = "Fortsätt";
 "Created" = "Skapad";
 "Credentials are not CA-signed." = "Inloggningsuppgifterna är inte CA-signerade.";
-"Credentials do not validate against site CA certificate." = "Inloggningsuppgifterna valideras inte mot webbplatsens CA-certifikat.";
+"Credentials do not validate against CA certificates." = "Credentials do not validate against CA certificates.";
 "Credentials have expired." = "Inloggningsuppgifterna har gått ut.";
 "DEBUG: Converting PDF to PostScript with pdftops." = "DEBUG: Konverterar PDF till PostScript med pdftops.";
 "DEBUG: pdftops completed successfully." = "DEBUG: pdftops slutfördes.";
@@ -343,7 +358,6 @@
 "JSON file too large." = "JSON-filen är för stor.";
 "LPDEST environment variable names default destination that does not exist." = "Miljövariabeln LPDEST anger en standarddestination som inte finns.";
 "Length Required" = "Längd krävs";
-"Listening on port %d." = "Lyssnar på port %d.";
 "Locked" = "Låst";
 "Loop Detected" = "Slinga upptäcktes";
 "Message:" = "Meddelande:";
@@ -468,7 +482,6 @@
 "Use Proxy" = "Använd proxy";
 "User Code: %s" = "Användarkod: %s";
 "User:" = "Användare:";
-"Using spool directory '%s'." = "Använder spoolkatalogen ”%s”.";
 "Validation of subjectAltName in X.509 certificate request failed." = "Valideringen av subjectAltName i begäran om X.509-certifikat misslyckades.";
 "Warnings:\n" = "Varningar:\n";
 "Web Page: %s" = "Webbsida: %s";
