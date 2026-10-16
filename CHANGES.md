@@ -31,15 +31,13 @@ v3.0.4 - YYYY-MM-DD
   (Issue 172)
 - Fixed `httpPeek` return value with compressed message bodies (Issue #175)
 - Fixed a potential integer overflow with `pwgMediaForPWG` (Issue #176)
-- Fixed an issue with `cupsGetCredentialsTrust` for credentials that are signed
-  by an unknown CA.
-- Fixed `cupsGetCredentialsTrust` to verify CA-signed credentials against the
-  trusted root certificate.
-- Fixed PAM support in `ippeveprinter`.
-- Fixed a typo in the JWT HS verification code.
 - Fixed some character testing that wasn't safe on platforms with a signed
   `char` type (Issue #177)
 - Fixed support for mDNSResponder on Windows (Issue #178)
+- Fixed `cupsGetCredentialsTrust` to properly validate the signatures of
+  CA-signed credentials (Issue #181)
+- Fixed PAM support in `ippeveprinter`.
+- Fixed a typo in the JWT HS verification code.
 
 
 v3.0.3 - 2026-08-20

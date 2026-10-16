@@ -1189,8 +1189,8 @@ cupsSignCredentialsRequest(
     int			datalen;		// Length of extension data
 
     ext     = sk_X509_EXTENSION_value(exts, i);
-    obj     = X509_EXTENSION_get_object(ext);
-    extdata = X509_EXTENSION_get_data(ext);
+    obj     = (ASN1_OBJECT *)X509_EXTENSION_get_object(ext);
+    extdata = (ASN1_OCTET_STRING *)X509_EXTENSION_get_data(ext);
     datalen = i2d_ASN1_OCTET_STRING(extdata, &data);
 
 #ifdef DEBUG
