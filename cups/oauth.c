@@ -164,6 +164,7 @@ static const char *github_metadata =	// Github.com OAuth metadata
 static char	*oauth_copy_response(http_t *http);
 static char	*oauth_copy_scopes(cups_json_t *metadata);
 static cups_json_t *oauth_do_post(const char *ep, const char *content_type, const char *data);
+static const char *oauth_html_escape(const char *s, char *buffer, size_t bufsize);
 static char	*oauth_load_value(const char *auth_uri, const char *secondary_uri, _cups_otype_t otype, bool try_sysconfig);
 static char	*oauth_make_access_uri(const char *access_token);
 static char	*oauth_make_path(char *buffer, size_t bufsize, const char *auth_uri, const char *secondary_uri, _cups_otype_t otype, bool use_sysconfig);
@@ -616,6 +617,9 @@ cupsOAuthGetAuthorizationCode(
                   else
                   {
                     // Got an error...
+		    char	error_html[256],	// HTML-escaped error code
+				desc_html[1024];	// HTML-escaped error description
+
 		    hbody = message;
                     snprintf(message, sizeof(message),
                              "<!DOCTYPE html>\n"
@@ -625,7 +629,7 @@ cupsOAuthGetAuthorizationCode(
 			     "    <h1>Authorization Failed</h1>\n"
 			     "    <p>%s: %s</p>\n"
 			     "  </body>\n"
-			     "</html>\n", error_code ? error_code : "bad_response", error_desc ? error_desc : "The authorization server's response was not understood.");
+			     "</html>\n", oauth_html_escape(error_code ? error_code : "bad_response", error_html, sizeof(error_html)), oauth_html_escape(error_desc ? error_desc : "The authorization server's response was not understood.", desc_html, sizeof(desc_html)));
                   }
 		  cupsFreeOptions(num_form, form);
 
@@ -2042,6 +2046,69 @@ oauth_do_post(const char *ep,		// I - Endpoint URI
   DEBUG_printf("4oauth_do_post: Returning %p.", (void *)resp_json);
 
   return (resp_json);
+}
+
+
+//
+// 'oauth_html_escape()' - Copy a string, escaping HTML special characters.
+//
+
+static const char *			// O - Escaped string
+oauth_html_escape(const char *s,	// I - String to escape
+                  char       *buffer,	// I - String buffer
+                  size_t     bufsize)	// I - Size of string buffer
+{
+  char		*bufptr,		// Pointer into buffer
+		*bufend;		// End of buffer
+  const char	*entity;		// Entity for current character
+  size_t	entlen;			// Length of entity
+
+
+  for (bufptr = buffer, bufend = buffer + bufsize - 1; *s; s ++)
+  {
+    switch (*s)
+    {
+      case '&' :
+          entity = "&amp;";
+          break;
+      case '<' :
+          entity = "&lt;";
+          break;
+      case '>' :
+          entity = "&gt;";
+          break;
+      case '\"' :
+          entity = "&quot;";
+          break;
+      case '\'' :
+          entity = "&#39;";
+          break;
+      default :
+          entity = NULL;
+          break;
+    }
+
+    if (entity)
+    {
+      if ((entlen = strlen(entity)) > (size_t)(bufend - bufptr))
+        break;
+
+      memcpy(bufptr, entity, entlen);
+      bufptr += entlen;
+    }
+    else if (bufptr < bufend)
+    {
+      *bufptr++ = *s;
+    }
+    else
+    {
+      break;
+    }
+  }
+
+  *bufptr = '\0';
+
+  return (buffer);
 }
 
 
