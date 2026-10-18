@@ -37,6 +37,7 @@ v3.0.4 - YYYY-MM-DD
 - Fixed support for mDNSResponder on Windows (Issue #178)
 - Fixed `cupsGetCredentialsTrust` to properly validate the signatures of
   CA-signed credentials (Issue #181)
+- Fixed error checking in `cupsOAuthGetAuthorizationCode` (Issue #182)
 - Fixed PAM support in `ippeveprinter`.
 - Fixed a typo in the JWT HS verification code.
 - Fixed `ippValidateAttribute` not returning `false` for too-long URIs.

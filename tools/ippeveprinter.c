@@ -2869,7 +2869,7 @@ html_escape(ippeve_client_t *client,	// I - Client
 
   while (*s && s < end)
   {
-    if (*s == '&' || *s == '<')
+    if (*s == '&' || *s == '<' || *s == '\"')
     {
       if (s > start)
       {
@@ -2882,8 +2882,15 @@ html_escape(ippeve_client_t *client,	// I - Client
         if (httpWrite(client->http, "&amp;", 5) < 0)
           return (false);
       }
+      else if (*s == '\"')
+      {
+        if (httpWrite(client->http, "&quot;", 5) < 0)
+          return (false);
+      }
       else if (httpWrite(client->http, "&lt;", 4) < 0)
+      {
         return (false);
+      }
 
       start = s + 1;
     }
