@@ -51,6 +51,7 @@ extern "C" {
 //
 
 #  define _HTTP_MAX_BUFFER	32768	// Max length of data buffer
+#  define _HTTP_MAX_PRINTF	65536	// Max size of httpPrintf buffer
 #  define _HTTP_MAX_SBUFFER	65536	// Size of (de)compression buffer
 #  define _HTTP_MAX_VALUE	256	// Max header field value length
 
@@ -166,6 +167,8 @@ struct _http_s				// HTTP connection structure
   _http_coding_t	coding;		// _HTTP_CODING_xxx
   void			*stream;	// (De)compression stream
   unsigned char		*sbuffer;	// (De)compression buffer
+  char			*fbuffer;	// httpPrintf buffer
+  size_t		fbufsize;	// Size of httpPrintf buffer
 };
 
 
