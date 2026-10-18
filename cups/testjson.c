@@ -267,6 +267,39 @@ main(int  argc,				// I - Number of command-line arguments
       testEndMessage(false, "unable to load Unicode surrogate escapes");
     }
 
+    testBegin("cupsJSONImportString('{\"a\":\"Jos\\303\\251\"}')");
+    if ((json = cupsJSONImportString("{\"a\":\"Jos\xc3\xa9\"}")) != NULL)
+    {
+      if ((s = (char *)cupsJSONGetString(cupsJSONFind(json, "a"))) == NULL)
+      {
+        testEndMessage(false, "no string imported");
+      }
+      else if (strcmp(s, "Jos\xc3\xa9"))
+      {
+        testEndMessage(false, "wrong string imported");
+      }
+      else if ((s = cupsJSONExportString(json)) == NULL)
+      {
+        testEndMessage(false, "unable to export: %s", cupsGetErrorString());
+      }
+      else if (strcmp(s, "{\"a\":\"Jos\xc3\xa9\"}"))
+      {
+        testEndMessage(false, "wrong string exported '%s'", s);
+        free(s);
+      }
+      else
+      {
+        testEndMessage(true, "got UTF-8 string");
+        free(s);
+      }
+
+      cupsJSONDelete(json);
+    }
+    else
+    {
+      testEndMessage(false, "unable to load UTF-8 string: %s", cupsGetErrorString());
+    }
+
     testBegin("cupsJSONImportURL('https://accounts.google.com/.well-known/openid-configuration', no last modified)");
     json = cupsJSONImportURL("https://accounts.google.com/.well-known/openid-configuration", &last_modified);
 
