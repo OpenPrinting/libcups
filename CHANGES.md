@@ -25,6 +25,8 @@ v3.0.4 - YYYY-MM-DD
 - Updated the HTTP implementation to reduce stack usage.
 - Now explicitly validate IPP attribute names as keyword strings.
 - Fixed `httpGetDateString` with bad date/time values (Issue #167)
+- Fixed a potential buffer overflow when reading a long "xxx-default" attribute
+  name from a server in `cupsGetDests`/`cupsEnumDests`.
 - Fixed a potential buffer overflow in `cupsDNSSDAssembleFullName` on Windows
   (Issue #170)
 - Fixed a potential string overrun when loading .strings files (Issue #171)

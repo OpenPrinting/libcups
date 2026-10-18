@@ -1252,7 +1252,8 @@ _cupsGetDests(http_t       *http,	// I  - Connection to server or `CUPS_HTTP_DEF
 	{
 	  // Add a default option...
           cupsCopyString(optname, attr->name, sizeof(optname));
-	  optname[ptr - attr->name] = '\0';
+	  if ((ptr = strstr(optname, "-default")) != NULL)
+	    *ptr = '\0';
 
 	  if (_cups_strcasecmp(optname, "media") || !cupsGetOption("media", num_options, options))
 	    num_options = cupsAddOption(optname, cups_make_string(attr, value, sizeof(value)), num_options, &options);
