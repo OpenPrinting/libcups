@@ -39,6 +39,7 @@ v3.0.4 - YYYY-MM-DD
   CA-signed credentials (Issue #181)
 - Fixed PAM support in `ippeveprinter`.
 - Fixed a typo in the JWT HS verification code.
+- Fixed `ippValidateAttribute` not returning `false` for too-long URIs.
 
 
 v3.0.3 - 2026-08-20
