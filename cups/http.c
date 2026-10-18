@@ -3129,7 +3129,7 @@ httpWriteResponse(http_t        *http,	// I - HTTP connection
     {
       char	*start,			// Start of cookie
 		*end,			// Pointer into cookie
-		*semi;		// Pointer to semicolon in cookie
+		*semi;			// Pointer to semicolon in cookie
 
       for (start = http->set_cookie; start && *start; start = end)
       {
@@ -4226,7 +4226,7 @@ http_tls_upgrade(http_t *http)		// I - HTTP connection
   httpSetField(http, HTTP_FIELD_CONNECTION, "upgrade");
   httpSetField(http, HTTP_FIELD_UPGRADE, "TLS/1.3,TLS/1.2");
 
-  if ((ret = httpWriteRequest(http, "OPTIONS", "*")) == 0)
+  if ((ret = httpWriteRequest(http, "OPTIONS", "*")) == true)
   {
     // Wait for the secure connection...
     while (httpUpdate(http) == HTTP_STATUS_CONTINUE)
@@ -4255,8 +4255,8 @@ http_tls_upgrade(http_t *http)		// I - HTTP connection
 
     return (false);
   }
-  else
-    return (ret);
+
+  return (ret);
 }
 
 
