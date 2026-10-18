@@ -40,6 +40,7 @@ v3.0.4 - YYYY-MM-DD
 - Fixed PAM support in `ippeveprinter`.
 - Fixed a typo in the JWT HS verification code.
 - Fixed `ippValidateAttribute` not returning `false` for too-long URIs.
+- Fixed a memory leak in `httpGetSecurity` when using GNU TLS.
 
 
 v3.0.3 - 2026-08-20
