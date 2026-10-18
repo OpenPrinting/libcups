@@ -167,6 +167,8 @@ struct _http_s				// HTTP connection structure
   _http_coding_t	coding;		// _HTTP_CODING_xxx
   void			*stream;	// (De)compression stream
   unsigned char		*sbuffer;	// (De)compression buffer
+  char			line[_HTTP_MAX_BUFFER];
+					// Line buffer for headers
   char			*fbuffer;	// httpPrintf buffer
   size_t		fbufsize;	// Size of httpPrintf buffer
 };
