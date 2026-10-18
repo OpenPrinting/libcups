@@ -270,6 +270,7 @@
 "Accepted" = "Accepterad";
 "Already Reported" = "Redan rapporterad";
 "Bad Gateway" = "Felaktig gateway";
+"Bad JWT signature." = "Bad JWT signature.";
 "Bad NULL dests pointer" = "Felaktig NULL-pekare för dests";
 "Bad Request" = "Felaktig begäran";
 "Bad URI." = "Felaktig URI.";
@@ -349,7 +350,6 @@
 "Input Formats:" = "Indataformat:";
 "Insufficient Storage" = "Otillräckligt lagringsutrymme";
 "Invalid JSON data." = "Ogiltiga JSON-data.";
-"Invalid JSON web token." = "Ogiltig JSON-webbtoken.";
 "Invalid form data." = "Ogiltiga formulärdata.";
 "Invalid group tag." = "Ogiltig grupptagg.";
 "Invalid media name arguments." = "Ogiltiga argument för medianamn.";
@@ -435,6 +435,7 @@
 "Types:" = "Typer:";
 "URI Too Long" = "URI:n är för lång";
 "URI too large" = "URI:n är för stor";
+"Unable allocate memory for signature." = "Unable allocate memory for signature.";
 "Unable to add extension to X.509 certificate." = "Det går inte att lägga till utökning i X.509-certifikatet.";
 "Unable to compile mimeMediaType regular expression: %s." = "Det går inte att kompilera det reguljära uttrycket mimeMediaType: %s.";
 "Unable to compile naturalLanguage regular expression: %s." = "Det går inte att kompilera det reguljära uttrycket naturalLanguage: %s.";
@@ -446,7 +447,15 @@
 "Unable to create private key context." = "Det går inte att skapa ett sammanhang för den privata nyckeln.";
 "Unable to create private key." = "Det går inte att skapa en privat nyckel.";
 "Unable to create server credentials." = "Det går inte att skapa serverns autentiseringsuppgifter.";
+"Unable to decode JOSE header." = "Unable to decode JOSE header.";
+"Unable to decode JWT claims." = "Unable to decode JWT claims.";
+"Unable to decode JWT payload data." = "Unable to decode JWT payload data.";
+"Unable to decode JWT protected data." = "Unable to decode JWT protected data.";
+"Unable to decode JWT signature." = "Unable to decode JWT signature.";
 "Unable to execute \"%s\": %s" = "Det går inte att köra \"%s\": %s";
+"Unable to find JWT payload data." = "Unable to find JWT payload data.";
+"Unable to find JWT protected data." = "Unable to find JWT protected data.";
+"Unable to find JWT signature." = "Unable to find JWT signature.";
 "Unable to finish request." = "Det går inte att slutföra begäran.";
 "Unable to import X.509 certificate request." = "Det går inte att importera begäran om X.509-certifikat.";
 "Unable to import credentials." = "Det går inte att importera autentiseringsuppgifter.";

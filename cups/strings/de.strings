@@ -270,6 +270,7 @@
 "Accepted" = "Akzeptiert";
 "Already Reported" = "Already Reported";
 "Bad Gateway" = "Bad Gateway";
+"Bad JWT signature." = "Bad JWT signature.";
 "Bad NULL dests pointer" = "Ungültiger NULL-Dests-Zeiger";
 "Bad Request" = "Ungültige Anfrage";
 "Bad URI." = "Ungültige URI.";
@@ -349,7 +350,6 @@
 "Input Formats:" = "Input Formats:";
 "Insufficient Storage" = "Insufficient Storage";
 "Invalid JSON data." = "Invalid JSON data.";
-"Invalid JSON web token." = "Invalid JSON web token.";
 "Invalid form data." = "Invalid form data.";
 "Invalid group tag." = "Ungültiges Gruppen-Tag.";
 "Invalid media name arguments." = "Ungültige Argumente des Mediennamens.";
@@ -435,6 +435,7 @@
 "Types:" = "Types:";
 "URI Too Long" = "URI zu lang";
 "URI too large" = "URI zu groß";
+"Unable allocate memory for signature." = "Unable allocate memory for signature.";
 "Unable to add extension to X.509 certificate." = "Unable to add extension to X.509 certificate.";
 "Unable to compile mimeMediaType regular expression: %s." = "Der regulären Ausdruck für mimeMediaType kann nicht kompiliert werden: %s.";
 "Unable to compile naturalLanguage regular expression: %s." = "Der natualLanguage regulärer Ausdruck kann nicht kompiliert werden: %s.";
@@ -446,7 +447,15 @@
 "Unable to create private key context." = "Unable to create private key context.";
 "Unable to create private key." = "Unable to create private key.";
 "Unable to create server credentials." = "Die Server-Anmeldedaten können nicht erzeugt werden.";
+"Unable to decode JOSE header." = "Unable to decode JOSE header.";
+"Unable to decode JWT claims." = "Unable to decode JWT claims.";
+"Unable to decode JWT payload data." = "Unable to decode JWT payload data.";
+"Unable to decode JWT protected data." = "Unable to decode JWT protected data.";
+"Unable to decode JWT signature." = "Unable to decode JWT signature.";
 "Unable to execute \"%s\": %s" = "Unable to execute \"%s\": %s";
+"Unable to find JWT payload data." = "Unable to find JWT payload data.";
+"Unable to find JWT protected data." = "Unable to find JWT protected data.";
+"Unable to find JWT signature." = "Unable to find JWT signature.";
 "Unable to finish request." = "Unable to finish request.";
 "Unable to import X.509 certificate request." = "Unable to import X.509 certificate request.";
 "Unable to import credentials." = "Unable to import credentials.";

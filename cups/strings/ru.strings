@@ -270,6 +270,7 @@
 "Accepted" = "Принято";
 "Already Reported" = "Уже сообщено";
 "Bad Gateway" = "Неверный шлюз";
+"Bad JWT signature." = "Bad JWT signature.";
 "Bad NULL dests pointer" = "Неверный указатель NULL dests";
 "Bad Request" = "Неверный запрос";
 "Bad URI." = "Не верный URI.";
@@ -349,7 +350,6 @@
 "Input Formats:" = "Форматы ввода:";
 "Insufficient Storage" = "Недостаточно места для хранения";
 "Invalid JSON data." = "Недопустимые данные JSON.";
-"Invalid JSON web token." = "Недопустимый веб-токен JSON.";
 "Invalid form data." = "Неверные данные формы.";
 "Invalid group tag." = "Недопустимый тег группы.";
 "Invalid media name arguments." = "Неверные аргументы имени бумаги.";
@@ -435,6 +435,7 @@
 "Types:" = "Типы:";
 "URI Too Long" = "Слишком длинный адрес URI";
 "URI too large" = "Слишком большой адрес URI";
+"Unable allocate memory for signature." = "Unable allocate memory for signature.";
 "Unable to add extension to X.509 certificate." = "Не удалось добавить расширение к сертификату X.509.";
 "Unable to compile mimeMediaType regular expression: %s." = "Не удается компилировать mimeMediaType регулярное выражение: %s.";
 "Unable to compile naturalLanguage regular expression: %s." = "Не удается компилировать naturalLanguage регулярное выражение: %s.";
@@ -446,7 +447,15 @@
 "Unable to create private key context." = "Не удаётся создать контекст закрытого ключа.";
 "Unable to create private key." = "Не удаётся создать закрытый ключ.";
 "Unable to create server credentials." = "Не удается создать учетные данные сервера.";
+"Unable to decode JOSE header." = "Unable to decode JOSE header.";
+"Unable to decode JWT claims." = "Unable to decode JWT claims.";
+"Unable to decode JWT payload data." = "Unable to decode JWT payload data.";
+"Unable to decode JWT protected data." = "Unable to decode JWT protected data.";
+"Unable to decode JWT signature." = "Unable to decode JWT signature.";
 "Unable to execute \"%s\": %s" = "Невозможно выполнить \"%s\": %s";
+"Unable to find JWT payload data." = "Unable to find JWT payload data.";
+"Unable to find JWT protected data." = "Unable to find JWT protected data.";
+"Unable to find JWT signature." = "Unable to find JWT signature.";
 "Unable to finish request." = "Не удаётся завершить запрос.";
 "Unable to import X.509 certificate request." = "Не удаётся импортировать запрос сертификата X.509.";
 "Unable to import credentials." = "Не удаётся импортировать учётные данные.";

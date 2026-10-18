@@ -554,34 +554,50 @@ cupsJWTImportString(
     // Extract the JOSE header...
     datalen = sizeof(data) - 1;
     if (!httpDecode64(data, &datalen, s, &tokptr) || !tokptr || *tokptr != '.')
+    {
+      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to decode JOSE header."), true);
       goto import_error;
+    }
 
     tokptr ++;
     data[datalen] = '\0';
     jwt->jose_string = strdup(data);
     if ((jwt->jose = cupsJSONImportString(data)) == NULL)
+    {
       goto import_error;
+    }
 
     // Extract the JWT claims...
     datalen = sizeof(data) - 1;
     if (!httpDecode64(data, &datalen, tokptr, &tokptr) || !tokptr || *tokptr != '.')
+    {
+      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to decode JWT claims."), true);
       goto import_error;
+    }
 
     tokptr ++;
     data[datalen] = '\0';
     jwt->claims_string = strdup(data);
     if ((jwt->claims = cupsJSONImportString(data)) == NULL)
+    {
       goto import_error;
+    }
 
     // Extract the signature, if any...
     datalen = sizeof(data);
     if (!httpDecode64(data, &datalen, tokptr, &tokptr) || !tokptr || *tokptr)
+    {
+      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to decode JWT signature."), true);
       goto import_error;
+    }
 
     if (datalen > 0)
     {
       if ((jwt->signature = malloc(datalen)) == NULL)
+      {
+	_cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable allocate memory for signature."), true);
 	goto import_error;
+      }
 
       memcpy(jwt->signature, data, datalen);
       jwt->sigsize = datalen;
@@ -598,11 +614,15 @@ cupsJWTImportString(
 		*valueptr;		// Pointer into value
 
     if ((json = cupsJSONImportString(s)) == NULL)
-      goto import_error;
+    {
+      cupsJWTDelete(jwt);
+      return (NULL);
+    }
 
     // Copy the payload...
     if ((json_value = cupsJSONFind(json, "payload")) == NULL || (value = cupsJSONGetString(json_value)) == NULL)
     {
+      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to find JWT payload data."), true);
       cupsJSONDelete(json);
       goto import_error;
     }
@@ -610,6 +630,7 @@ cupsJWTImportString(
     datalen = sizeof(data) - 1;
     if (!httpDecode64(data, &datalen, value, &valueptr) || !valueptr || *valueptr)
     {
+      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to decode JWT protected data."), true);
       cupsJSONDelete(json);
       goto import_error;
     }
@@ -637,6 +658,7 @@ cupsJWTImportString(
     // Copy the protected header and signature values...
     if ((json_value = cupsJSONFind(signature, "protected")) == NULL || (value = cupsJSONGetString(json_value)) == NULL)
     {
+      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to find JWT protected data."), true);
       cupsJSONDelete(json);
       goto import_error;
     }
@@ -644,6 +666,7 @@ cupsJWTImportString(
     datalen = sizeof(data) - 1;
     if (!httpDecode64(data, &datalen, value, &valueptr) || !valueptr || *valueptr)
     {
+      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to decode JWT payload data."), true);
       cupsJSONDelete(json);
       goto import_error;
     }
@@ -658,6 +681,7 @@ cupsJWTImportString(
 
     if ((json_value = cupsJSONFind(signature, "signature")) == NULL || (value = cupsJSONGetString(json_value)) == NULL)
     {
+      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to find JWT signature."), true);
       cupsJSONDelete(json);
       goto import_error;
     }
@@ -665,6 +689,7 @@ cupsJWTImportString(
     datalen = sizeof(data);
     if (!httpDecode64(data, &datalen, value, &valueptr) || !valueptr || *valueptr)
     {
+      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to decode JWT signature."), true);
       cupsJSONDelete(json);
       goto import_error;
     }
@@ -672,11 +697,16 @@ cupsJWTImportString(
     if (datalen > 0)
     {
       if ((jwt->signature = malloc(datalen)) == NULL)
+      {
+	_cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable allocate memory for signature."), true);
 	goto import_error;
+      }
 
       memcpy(jwt->signature, data, datalen);
       jwt->sigsize = datalen;
     }
+
+    cupsJSONDelete(json);
   }
 
 #ifdef DEBUG
@@ -712,14 +742,16 @@ cupsJWTImportString(
 
   // Can't have signature with none or no signature for !none...
   if ((jwt->sigalg == CUPS_JWA_NONE) != (jwt->sigsize == 0))
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad JWT signature."), true);
     goto import_error;
+  }
 
   // Return the new JWT...
   return (jwt);
 
   import_error:
 
-  _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Invalid JSON web token."), 1);
   cupsJWTDelete(jwt);
 
   return (NULL);
