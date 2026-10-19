@@ -385,6 +385,7 @@ span.string {
 <li><a href="#cupsDNSSDServiceNew">cupsDNSSDServiceNew</a></li>
 <li><a href="#cupsDNSSDServicePublish">cupsDNSSDServicePublish</a></li>
 <li><a href="#cupsDNSSDServiceSetLocation">cupsDNSSDServiceSetLocation</a></li>
+<li><a href="#cupsDNSSDSetHostName">cupsDNSSDSetHostName</a></li>
 <li><a href="#cupsDirClose">cupsDirClose</a></li>
 <li><a href="#cupsDirOpen">cupsDirOpen</a></li>
 <li><a href="#cupsDirRead">cupsDirRead</a></li>
@@ -594,6 +595,7 @@ span.string {
 <li><a href="#cupsUTF8ToCharset">cupsUTF8ToCharset</a></li>
 <li><a href="#cupsUTF8ToUTF32">cupsUTF8ToUTF32</a></li>
 <li><a href="#cupsWriteRequestData">cupsWriteRequestData</a></li>
+<li><a href="#encode_options">encode_options</a></li>
 <li><a href="#httpAcceptConnection">httpAcceptConnection</a></li>
 <li><a href="#httpAddrClose">httpAddrClose</a></li>
 <li><a href="#httpAddrConnect">httpAddrConnect</a></li>
@@ -2840,7 +2842,7 @@ The caller can pass <code>CUPS_DEST_FLAGS_DEVICE</code> for the &quot;flags&quot
 connect directly to the device associated with the destination.  Otherwise,
 the connection is made to the CUPS scheduler associated with the destination.</p>
 <h3 class="function"><a id="cupsCopyCredentials">cupsCopyCredentials</a></h3>
-<p class="description"></p>
+<p class="description">Copy the X.509 certificate chain to a string.</p>
 <p class="code">
 <span class="reserved">char</span> *cupsCopyCredentials(<span class="reserved">const</span> <span class="reserved">char</span> *path, <span class="reserved">const</span> <span class="reserved">char</span> *common_name);</p>
 <h4 class="parameters">Parameters</h4>
@@ -2851,7 +2853,7 @@ the connection is made to the CUPS scheduler associated with the destination.</p
 <td class="description">Common name</td></tr>
 </tbody></table>
 <h4 class="returnvalue">Return Value</h4>
-<p class="description">Copy the X.509 certificate chain to a string.</p>
+<p class="description">PEM-encoded certificate(s)</p>
 <h3 class="function"><a id="cupsCopyCredentialsKey">cupsCopyCredentialsKey</a></h3>
 <p class="description">Copy the private key to a string.</p>
 <p class="code">
@@ -3791,6 +3793,23 @@ specified coordinates and uncertainty are converted into a DNS LOC record
 for the service name label.  Only the &quot;wgs84&quot; CRSLABEL string is supported.<br>
 <br>
 You must call this function prior to <a href="#cupsDNSSDServiceAdd"><code>cupsDNSSDServiceAdd</code></a>.</p>
+<h3 class="function"><span class="info">&#160;libcups v3.0.4&#160;</span><a id="cupsDNSSDSetHostName">cupsDNSSDSetHostName</a></h3>
+<p class="description">Set the mDNS hostname of the system.</p>
+<p class="code">
+<span class="reserved">bool</span> cupsDNSSDSetHostName(<a href="#cups_dnssd_t">cups_dnssd_t</a> *dnssd, <span class="reserved">const</span> <span class="reserved">char</span> *hostname);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>dnssd</th>
+<td class="description">DNS-SD context</td></tr>
+<tr><th>hostname</th>
+<td class="description">mDNS hostname</td></tr>
+</tbody></table>
+<h4 class="returnvalue">Return Value</h4>
+<p class="description"><code>true</code> on success, <code>false</code> on error</p>
+<h4 class="discussion">Discussion</h4>
+<p class="discussion">This function sets the mDNS hostname of the system.
+
+</p>
 <h3 class="function"><a id="cupsDirClose">cupsDirClose</a></h3>
 <p class="description">Close a directory.</p>
 <p class="code">
@@ -4287,7 +4306,7 @@ not supported for the &quot;a&quot; (append) mode.</p>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description"><code>true</code> on success, <code>false</code> on error</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">This function handles any comment escaping of the value.</p>
+<p class="discussion">This function handles any escaping of the value.</p>
 <h3 class="function"><a id="cupsFilePuts">cupsFilePuts</a></h3>
 <p class="description">Write a string.</p>
 <p class="code">
@@ -6423,8 +6442,8 @@ function and contains the following information:
 <li><code>CUPS_ODEVGRANT_DEVICE_CODE</code>: The device code string to be used in
   subsequent <a href="#cupsOAuthGetTokens"><code>cupsOAuthGetTokens</code></a> calls.
 </li>
-<li><code>CUPS_ODEVGRANT_EXPIRES_IN</code>: The expiration date/time as a number of
-  seconds since the Unix epoch.
+<li><code>CUPS_ODEVGRANT_EXPIRES_IN</code>: The number of seconds before the grant
+  expires.
 </li>
 <li><code>CUPS_ODEVGRANT_INTERVAL</code>: The number of seconds to wait between calls to
   <a href="#cupsOAuthGetTokens"><code>cupsOAuthGetTokens</code></a>.
@@ -6547,7 +6566,7 @@ When authorizing using a device code (<code>CUPS_OGRANT_DEVICE_CODE</code>) and 
 access token is not yet ready, a <code>NULL</code> access token is returned with the
 expiration time set to the next recommended query time.  If the
 &quot;access_expires&quot; value is set to <code>0</code> then the device authorization failed.</p>
-<h3 class="function"><span class="info">&#160;CUPS 2.5&#160;</span><a id="cupsOAuthGetUserId">cupsOAuthGetUserId</a></h3>
+<h3 class="function"><a id="cupsOAuthGetUserId">cupsOAuthGetUserId</a></h3>
 <p class="description">Get the user ID token associated with the given access token.</p>
 <p class="code">
 <a href="#cups_jwt_t">cups_jwt_t</a> *cupsOAuthGetUserId(<span class="reserved">const</span> <span class="reserved">char</span> *auth_uri, <a href="#cups_json_t">cups_json_t</a> *metadata, <span class="reserved">const</span> <span class="reserved">char</span> *access_token);</p>
@@ -6565,9 +6584,7 @@ expiration time set to the next recommended query time.  If the
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">This function retrieves the user ID token associated with a given access
 token.  The user ID information is cached until the token expires to minimize
-the overhead of communicating with the Authorization Server.
-
-</p>
+the overhead of communicating with the Authorization Server.</p>
 <h3 class="function"><a id="cupsOAuthMakeAuthorizationURL">cupsOAuthMakeAuthorizationURL</a></h3>
 <p class="description">Make an authorization URL.</p>
 <p class="code">
@@ -7556,6 +7573,23 @@ stream content to the receiving IPP server.<br>
 <br>
 Call the <a href="#cupsGetResponse"><code>cupsGetResponse</code></a> or <a href="#cupsFinishDestDocument"><code>cupsFinishDestDocument</code></a> functions
 to complete the current request and get the corresponding response.</p>
+<h3 class="function"><a id="encode_options">encode_options</a></h3>
+<p class="description">Encode options to the specified depth.</p>
+<p class="code">
+<span class="reserved">void</span> encode_options(<a href="#ipp_t">ipp_t</a> *ipp, size_t num_options, <a href="#cups_option_t">cups_option_t</a> *options, ipp_tag_t group_tag, <span class="reserved">int</span> depth);</p>
+<h4 class="parameters">Parameters</h4>
+<table class="list"><tbody>
+<tr><th>ipp</th>
+<td class="description">IPP request/response</td></tr>
+<tr><th>num_options</th>
+<td class="description">Number of options</td></tr>
+<tr><th>options</th>
+<td class="description">Options</td></tr>
+<tr><th>group_tag</th>
+<td class="description">Group to encode</td></tr>
+<tr><th>depth</th>
+<td class="description">Depth of options/collections</td></tr>
+</tbody></table>
 <h3 class="function"><a id="httpAcceptConnection">httpAcceptConnection</a></h3>
 <p class="description">Accept a new HTTP client connection.</p>
 <p class="code">
@@ -9847,7 +9881,7 @@ the value of &quot;dstsize&quot;.</p>
 <h4 class="returnvalue">Return Value</h4>
 <p class="description">Attribute or <code>NULL</code> if none</p>
 <h4 class="discussion">Discussion</h4>
-<p class="discussion">This function finds the first occurence of a named attribute in the current
+<p class="discussion">This function finds the first occurrence of a named attribute in the current
 IPP attributes in the specified data file.</p>
 <h3 class="function"><a id="ippFileGetAttributes">ippFileGetAttributes</a></h3>
 <p class="description">Get the current set of attributes from an IPP data file.</p>
@@ -11475,7 +11509,7 @@ typedef enum <a href="#cups_edge_e">cups_edge_e</a> cups_edge_t;
 <h3 class="typedef"><a id="cups_utf32_t">cups_utf32_t</a></h3>
 <p class="description">Language Encodings</p>
 <p class="code">
-typedef typedef unsigned long cups_utf32_t;
+typedef typedef uint32_t cups_utf32_t;
 </p>
 <h3 class="typedef"><a id="cups_file_t">cups_file_t</a></h3>
 <p class="description">CUPS file type</p>
