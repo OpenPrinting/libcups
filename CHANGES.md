@@ -43,6 +43,8 @@ v3.0.4 - YYYY-MM-DD
 - Fixed `ippValidateAttribute` not returning `false` for too-long URIs.
 - Fixed a memory leak in `httpGetSecurity` when using GNU TLS.
 - Fixed a memory leak in `cupsJWTImportString`.
+- Fixed a buffer overflow in `cupsJSONExportString` when exporting a child
+  node.
 - Fixed a bug in `cupsJWTExportString` with JSON output.
 
 
