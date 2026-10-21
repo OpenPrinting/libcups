@@ -23,6 +23,8 @@ v3.0.4 - YYYY-MM-DD
 - Updated `ippeveprinter` to add a date/time stamp when logging to a file.
 - Updated dateTime parsing in IPP files.
 - Updated the HTTP implementation to reduce stack usage.
+- Updated `cupsGetRand` and `cupsOAuthMakeBase64Random` to use better random
+  data, when available.
 - Now explicitly validate IPP attribute names as keyword strings.
 - Fixed `httpGetDateString` with bad date/time values (Issue #167)
 - Fixed a potential buffer overflow in `cupsDNSSDAssembleFullName` on Windows
