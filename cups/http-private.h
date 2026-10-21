@@ -35,6 +35,7 @@
 #    include <openssl/ssl.h>
 #  elif defined(HAVE_GNUTLS)
 #    include <gnutls/gnutls.h>
+#    include <gnutls/crypto.h>
 #    include <gnutls/x509.h>
 #  endif // HAVE_OPENSSL
 #  ifndef _WIN32
