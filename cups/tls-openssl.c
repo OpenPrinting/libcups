@@ -1086,6 +1086,7 @@ cupsSignCredentialsRequest(
   bool		result = false;		// Return value
   X509		*cert = NULL;		// Certificate
   X509_REQ	*crq = NULL;		// Certificate request
+  const X509_NAME *subject;		// Subject name of request
   X509		*root_cert = NULL;	// Root certificate, if any
   EVP_PKEY	*root_key = NULL;	// Root private key, if any
   char		defpath[1024],		// Default path
@@ -1142,6 +1143,22 @@ cupsSignCredentialsRequest(
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to verify X.509 certificate request."), true);
     goto done;
+  }
+
+  // The subject is copied to the certificate, so any commonName values must
+  // match the common name we are signing for...
+  subject = X509_REQ_get_subject_name(crq);
+
+  for (i = -1; (i = X509_NAME_get_index_by_NID(subject, NID_commonName, i)) >= 0;)
+  {
+    const ASN1_STRING *cn = X509_NAME_ENTRY_get_data(X509_NAME_get_entry(subject, i));
+					// commonName value
+
+    if ((size_t)ASN1_STRING_length(cn) != strlen(common_name) || _cups_strncasecmp((const char *)ASN1_STRING_get0_data(cn), common_name, strlen(common_name)))
+    {
+      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Validation of commonName in X.509 certificate request failed."), true);
+      goto done;
+    }
   }
 
   // Create the X.509 certificate...
