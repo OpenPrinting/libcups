@@ -7,7 +7,7 @@
 // information.
 //
 
-#include "cups.h"
+#include "cups-private.h"
 #if !defined(_WIN32) && !defined(__APPLE__)
 #  include <unistd.h>
 #  include <fcntl.h>
@@ -51,7 +51,7 @@ cupsGetRand(void)
 
   // Try getting random data from the TLS library...
 #  ifdef HAVE_OPENSSL
-  if (RAND_bytes(&i, (int)sizeof(i)) > 0)
+  if (RAND_bytes((unsigned char *)&i, (int)sizeof(i)) > 0)
     return (i);
 
 #  else
