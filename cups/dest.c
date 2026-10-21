@@ -1084,7 +1084,8 @@ _cupsGetDests(http_t       *http,	// I  - Connection to server or `CUPS_HTTP_DEF
 #ifdef __APPLE__
   char		media_default[41];	// Default paper size
 #endif // __APPLE__
-  char		optname[1024],		// Option name
+  char		optname[IPP_MAX_KEYWORD],
+					// Option name
 		value[2048],		// Option value
 		*ptr;			// Pointer into name/value
   _cups_globals_t *cg = _cupsGlobals();	// Pointer to library globals
@@ -1252,7 +1253,8 @@ _cupsGetDests(http_t       *http,	// I  - Connection to server or `CUPS_HTTP_DEF
 	{
 	  // Add a default option...
           cupsCopyString(optname, attr->name, sizeof(optname));
-	  optname[ptr - attr->name] = '\0';
+	  if ((ptr = strstr(optname, "-default")) != NULL)
+	    *ptr = '\0';
 
 	  if (_cups_strcasecmp(optname, "media") || !cupsGetOption("media", num_options, options))
 	    num_options = cupsAddOption(optname, cups_make_string(attr, value, sizeof(value)), num_options, &options);
