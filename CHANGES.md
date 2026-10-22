@@ -48,6 +48,8 @@ v3.0.4 - YYYY-MM-DD
 - Fixed a memory leak in `httpGetSecurity` when using GNU TLS.
 - Fixed a memory leak in `cupsJWTImportString`.
 - Fixed a bug in `cupsJWTExportString` with JSON output.
+- Fixed `cupsOAuthMakeAuthorizationURL` to only accept HTTPS authorization
+  endpoints.
 
 
 v3.0.3 - 2026-08-20
