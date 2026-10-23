@@ -3366,6 +3366,15 @@ prepare_documents(
     p.num_inpages += d->num_pages;
   }
 
+  // Reject a job with more pages than the fixed-size output page array can
+  // hold - prepare_pages() walks p.outpages without a bounds check and
+  // num_outpages never exceeds num_inpages...
+  if (p.num_inpages > XFORM_MAX_PAGES)
+  {
+    cupsLangPrintf(stderr, _("%s: Too many pages to transform (%d maximum)."), Prefix, XFORM_MAX_PAGES);
+    goto done;
+  }
+
   // When doing N-up or booklet printing, the default is to scale to fit unless
   // fill is explicitly chosen...
   if (p.num_layout > 1 && options->print_scaling != IPPOPT_SCALING_FILL)
