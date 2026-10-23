@@ -1163,6 +1163,21 @@ cupsSignCredentialsRequest(
     goto done;
   }
 
+  // The subject is copied to the certificate, so any commonName values must
+  // match the common name we are signing for...
+  for (i = 0; i < 100; i ++)
+  {
+    tempsize = sizeof(temp) - 1;
+    if ((err = gnutls_x509_crq_get_dn_by_oid(crq, GNUTLS_OID_X520_COMMON_NAME, (unsigned)i, 0, temp, &tempsize)) == GNUTLS_E_REQUESTED_DATA_NOT_AVAILABLE)
+      break;
+
+    if (err < 0 || tempsize != strlen(common_name) || _cups_strncasecmp(temp, common_name, tempsize))
+    {
+      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Validation of commonName in X.509 certificate request failed."), true);
+      goto done;
+    }
+  }
+
   // Create the certificate...
   DEBUG_puts("1cupsSignCredentialsRequest: Generating X.509 certificate.");
 
