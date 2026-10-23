@@ -2314,10 +2314,16 @@ pcl_start_page(xform_raster_t   *ras,	// I - Raster information
                xform_write_cb_t cb,	// I - Write callback
                void             *ctx)	// I - Write context
 {
+  unsigned	hmargin = ras->header.HWResolution[0] / 4,
+					// Left/right margin
+		vmargin = ras->header.HWResolution[1] / 6;
+					// Top/bottom margin
+
+
   // Setup margins to be 1/6" top and bottom and 1/4" or .135" on the
-  // left and right.
-  ras->top    = ras->header.HWResolution[1] / 6;
-  ras->bottom = ras->header.cupsHeight - ras->header.HWResolution[1] / 6;
+  // left and right, dropping a margin when the page is too small for it...
+  ras->top    = ras->header.cupsHeight > (2 * vmargin) ? vmargin : 0;
+  ras->bottom = ras->header.cupsHeight - ras->top;
 
   if ((ras->header.PageSize[1] == 841 || ras->header.PageSize[1] == 842) && ras->header.cupsWidth >= (8 * ras->header.HWResolution[0]))
   {
@@ -2328,8 +2334,8 @@ pcl_start_page(xform_raster_t   *ras,	// I - Raster information
   else
   {
     // All other sizes get 1/4" margins
-    ras->left  = ras->header.HWResolution[0] / 4;
-    ras->right = ras->header.cupsWidth - ras->header.HWResolution[0] / 4;
+    ras->left  = ras->header.cupsWidth > (2 * hmargin) ? hmargin : 0;
+    ras->right = ras->header.cupsWidth - ras->left;
   }
 
   if (!ras->header.Duplex || (page & 1))
@@ -2983,14 +2989,19 @@ ps_start_page(xform_raster_t   *ras,	// I - Raster information
               void             *ctx)	// I - Write context
 {
   const char	*decode;		// Image decoding values
+  unsigned	hmargin = ras->header.HWResolution[0] / 6,
+					// Left/right margin
+		vmargin = ras->header.HWResolution[1] / 6;
+					// Top/bottom margin
 
 
   fprintf(stderr, "DEBUG: Page %d: %ux%ux%u\n", page, ras->header.cupsWidth, ras->header.cupsHeight, ras->header.cupsBitsPerPixel);
 
-  ras->left   = ras->header.HWResolution[0] / 6;
-  ras->right  = ras->header.cupsWidth - ras->header.HWResolution[0] / 6;
-  ras->top    = ras->header.HWResolution[1] / 6;
-  ras->bottom = ras->header.cupsHeight - ras->header.HWResolution[1] / 6;
+  // Setup 1/6" margins, dropping a margin when the page is too small for it...
+  ras->left   = ras->header.cupsWidth > (2 * hmargin) ? hmargin : 0;
+  ras->right  = ras->header.cupsWidth - ras->left;
+  ras->top    = ras->header.cupsHeight > (2 * vmargin) ? vmargin : 0;
+  ras->bottom = ras->header.cupsHeight - ras->top;
 
   if (ras->header.cupsColorSpace != CUPS_CSPACE_W && ras->header.cupsColorSpace != CUPS_CSPACE_SW && ras->header.cupsColorSpace != CUPS_CSPACE_K && ras->header.cupsColorSpace != CUPS_CSPACE_RGB && ras->header.cupsColorSpace != CUPS_CSPACE_SRGB)
   {
