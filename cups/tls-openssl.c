@@ -1153,8 +1153,12 @@ cupsSignCredentialsRequest(
   {
     const ASN1_STRING *cn = X509_NAME_ENTRY_get_data(X509_NAME_get_entry(subject, i));
 					// commonName value
+    size_t	cnlen = (size_t)ASN1_STRING_length(cn);
+					// Length of commonName value
 
-    if ((size_t)ASN1_STRING_length(cn) != strlen(common_name) || _cups_strncasecmp((const char *)ASN1_STRING_get0_data(cn), common_name, strlen(common_name)))
+    // The ASN.1 data is not necessarily nul-terminated, so compare only the
+    // encoded length and never read past it...
+    if (cnlen != strlen(common_name) || _cups_strncasecmp((const char *)ASN1_STRING_get0_data(cn), common_name, cnlen))
     {
       _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Validation of commonName in X.509 certificate request failed."), true);
       goto done;

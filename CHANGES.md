@@ -30,8 +30,6 @@ v3.0.4 - YYYY-MM-DD
 - Fixed a potential string overrun when loading .strings files (Issue #171)
 - Fixed `cupsSignCredentialsRequest` to reject requests with a bad signature
   (Issue 172)
-- Fixed `cupsSignCredentialsRequest` to reject requests whose subject common
-  name does not match the common name being signed.
 - Fixed `httpPeek` return value with compressed message bodies (Issue #175)
 - Fixed a potential integer overflow with `pwgMediaForPWG` (Issue #176)
 - Fixed some character testing that wasn't safe on platforms with a signed
