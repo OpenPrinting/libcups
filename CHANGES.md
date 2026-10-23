@@ -42,6 +42,8 @@ v3.0.4 - YYYY-MM-DD
 - Fixed error checking in `cupsOAuthGetAuthorizationCode` (Issue #182)
 - Fixed a potential race condition in `cupsEnumDests` (Issue #186)
 - Fixed a bug in `cupsJSONExportString` when exporting a child node (Issue #187)
+- Fixed the ECDSA P-256 curve used for JWT and X.509 certificates and signatures
+  (Issue #188)
 - Fixed PAM support in `ippeveprinter`.
 - Fixed a typo in the JWT HS verification code.
 - Fixed `ippValidateAttribute` not returning `false` for too-long URIs.
