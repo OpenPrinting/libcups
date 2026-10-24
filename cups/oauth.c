@@ -1648,16 +1648,8 @@ cupsOAuthMakeAuthorizationURL(
 
 
   // Range check input...
-  if (!auth_uri || !metadata || (authorization_ep = cupsJSONGetString(cupsJSONFind(metadata, "authorization_endpoint"))) == NULL || !redirect_uri || !client_id)
+  if (!auth_uri || !metadata || (authorization_ep = cupsJSONGetString(cupsJSONFind(metadata, "authorization_endpoint"))) == NULL || strncmp(authorization_ep, "https://", 8) || !redirect_uri || !client_id)
     return (NULL);
-
-  // The authorization endpoint is opened in the user's web browser, so only
-  // allow HTTPS URLs (RFC 6749 section 3.1)...
-  if (strncmp(authorization_ep, "https://", 8))
-  {
-    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Authorization endpoint is not an HTTPS URL."), true);
-    return (NULL);
-  }
 
   // Make the authorization URL using the information supplied...
   if (oauth_metadata_contains(metadata, "response_type_supported", "code id_token"))
