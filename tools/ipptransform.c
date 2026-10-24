@@ -213,7 +213,7 @@ static pdfio_stream_t *pdfio_start_page(xform_prepare_t *p, pdfio_dict_t *dict);
 static bool	prepare_documents(size_t num_documents, xform_document_t *documents, ipp_options_t *options, const char *sheet_back, char *outfile, size_t outsize, const char *outformat, unsigned *outpages, bool generate_copies);
 static void	prepare_log(xform_prepare_t *p, bool error, const char *message, ...);
 static void	prepare_number_up(xform_prepare_t *p);
-static void	prepare_pages(xform_prepare_t *p, size_t num_documents, xform_document_t *documents);
+static bool	prepare_pages(xform_prepare_t *p, size_t num_documents, xform_document_t *documents);
 static void	raster_end_job(xform_raster_t *ras, xform_write_cb_t cb, void *ctx);
 static void	raster_end_page(xform_raster_t *ras, unsigned page, xform_write_cb_t cb, void *ctx);
 static void	raster_init(xform_raster_t *ras);
@@ -3366,22 +3366,17 @@ prepare_documents(
     p.num_inpages += d->num_pages;
   }
 
-  // Reject a job with more pages than the fixed-size output page array can
-  // hold - prepare_pages() walks p.outpages without a bounds check and
-  // num_outpages never exceeds num_inpages...
-  if (p.num_inpages > XFORM_MAX_PAGES)
-  {
-    cupsLangPrintf(stderr, _("%s: Too many pages to transform (%d maximum)."), Prefix, XFORM_MAX_PAGES);
-    goto done;
-  }
-
   // When doing N-up or booklet printing, the default is to scale to fit unless
   // fill is explicitly chosen...
   if (p.num_layout > 1 && options->print_scaling != IPPOPT_SCALING_FILL)
     options->print_scaling = IPPOPT_SCALING_FIT;
 
   // Prepare output pages...
-  prepare_pages(&p, num_documents, documents);
+  if (!prepare_pages(&p, num_documents, documents))
+  {
+    cupsLangPrintf(stderr, _("%s: Too many pages to transform (%d maximum)."), Prefix, XFORM_MAX_PAGES);
+    goto done;
+  }
 
   // Add job-sheets content...
   if (options->job_sheets[0] && strcmp(options->job_sheets, "none"))
@@ -3740,7 +3735,7 @@ prepare_number_up(xform_prepare_t *p)	// I - Preparation data
 // 'prepare_pages()' - Prepare the pages for the output document.
 //
 
-static void
+static bool				// O - `true` on success, `false` if too many pages
 prepare_pages(
     xform_prepare_t  *p,		// I - Preparation data
     size_t           num_documents,	// I - Number of documents
@@ -3762,6 +3757,9 @@ prepare_pages(
     p->num_outpages = (size_t)(p->num_inpages + 1) / 2;
     if (p->num_outpages & 1)
       p->num_outpages ++;
+
+    if (p->num_outpages > XFORM_MAX_PAGES)
+      return (false);
 
     for (current = 0, layout = 0, page = 1, i = num_documents, d = documents; i > 0; i --, d ++)
     {
@@ -3806,6 +3804,9 @@ prepare_pages(
 
         if (use_page)
         {
+          if (current >= XFORM_MAX_PAGES)
+            return (false);
+
           outpage->pdf           = p->pdf;
           outpage->input[layout] = pdfioFileGetPage(d->pdf, (size_t)(page - d->first_page));
 
@@ -3848,6 +3849,8 @@ prepare_pages(
 
     p->num_outpages = current;
   }
+
+  return (true);
 }
 
 
