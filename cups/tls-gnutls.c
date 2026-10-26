@@ -231,7 +231,7 @@ cupsCreateCredentials(
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, gnutls_strerror(err), 0);
     goto done;
   }
-  else if ((fp = cupsFileOpen(keyfile, "w")) != NULL)
+  else if ((fp = cupsFileOpen(keyfile, "wm600")) != NULL)
   {
     DEBUG_printf("1cupsCreateCredentials: Writing private key to \"%s\".", keyfile);
     cupsFileWrite(fp, (char *)buffer, bytes);
@@ -586,7 +586,7 @@ cupsCreateCredentialsRequest(
     DEBUG_printf("1cupsCreateCredentialsRequest: Unable to export private key: %s", gnutls_strerror(err));
     goto done;
   }
-  else if ((fp = cupsFileOpen(keyfile, "w")) != NULL)
+  else if ((fp = cupsFileOpen(keyfile, "wm600")) != NULL)
   {
     DEBUG_printf("1cupsCreateCredentialsRequest: Writing private key to \"%s\".", keyfile);
     cupsFileWrite(fp, (char *)buffer, bytes);

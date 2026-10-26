@@ -35,6 +35,7 @@ static X509_EXTENSION	*openssl_create_san(const char *common_name, size_t num_al
 static time_t		openssl_get_date(X509 *cert, int which);
 //static void		openssl_load_crl(void);
 static STACK_OF(X509 *)	openssl_load_x509(const char *credentials);
+static BIO		*openssl_open_key(const char *keyfile);
 static bool		openssl_validate_name(X509 *cert, const char *common_name);
 
 
@@ -370,7 +371,7 @@ cupsCreateCredentials(
   http_make_path(keyfile, sizeof(keyfile), path, common_name, "key");
   http_make_path(pubfile, sizeof(pubfile), path, common_name, "pub");
 
-  if ((bio = BIO_new_file(keyfile, "wb")) == NULL)
+  if ((bio = openssl_open_key(keyfile)) == NULL)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
     goto done;
@@ -606,7 +607,7 @@ cupsCreateCredentialsRequest(
   sk_X509_EXTENSION_pop_free(exts, X509_EXTENSION_free);
 
   // Save them...
-  if ((bio = BIO_new_file(keyfile, "wb")) == NULL)
+  if ((bio = openssl_open_key(keyfile)) == NULL)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
     goto done;
@@ -2606,6 +2607,27 @@ openssl_load_x509(
   BIO_free(bio);
 
   return (certs);
+}
+
+
+//
+// 'openssl_open_key()' - Create a private key file that only the owner can read.
+//
+
+static BIO *				// O - Key file BIO or `NULL` on error
+openssl_open_key(const char *keyfile)	// I - Key filename
+{
+  int	fd;				// File descriptor
+  BIO	*bio;				// Key file BIO
+
+
+  if ((fd = open(keyfile, O_CREAT | O_WRONLY | O_TRUNC, 0600)) < 0)
+    return (NULL);
+
+  if ((bio = BIO_new_fd(fd, BIO_CLOSE)) == NULL)
+    close(fd);
+
+  return (bio);
 }
 
 

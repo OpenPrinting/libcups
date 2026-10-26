@@ -811,7 +811,7 @@ http_save_file(const char *path,	// I - Directory path for certificate/key store
     return (true);
   }
 
-  if ((fd = open(filename, O_CREAT | O_WRONLY | O_TRUNC, 0644)) < 0)
+  if ((fd = open(filename, O_CREAT | O_WRONLY | O_TRUNC, strcmp(ext, "key") ? 0644 : 0600)) < 0)
     return (false);
 
   if (write(fd, value, strlen(value)) < 0)
