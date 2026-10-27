@@ -1253,6 +1253,7 @@ cupsJSONImportURL(
 		*dataptr,		// Pointer into data
 		*dataend;		// Pointer to end of data (less nul byte)
   cups_json_t	*json = NULL;		// Root JSON node
+  time_t	modified = 0;		// Last-Modified value for a successful load
 
 
   // Range check input...
@@ -1363,9 +1364,8 @@ cupsJSONImportURL(
 
   if (status == HTTP_STATUS_OK)
   {
-    // Save the content date...
-    if (last_modified)
-      *last_modified = httpGetDateTime(httpGetField(http, HTTP_FIELD_LAST_MODIFIED));
+    // Keep the content date until the JSON has been loaded successfully...
+    modified = httpGetDateTime(httpGetField(http, HTTP_FIELD_LAST_MODIFIED));
 
     // Allocate memory for string...
     if ((length = (size_t)httpGetLength(http)) == 0 || length > 65536)
@@ -1400,6 +1400,9 @@ cupsJSONImportURL(
     json = cupsJSONImportString(data);
     free(data);
   }
+
+  if (json && last_modified)
+    *last_modified = modified;
 
   return (json);
 }
