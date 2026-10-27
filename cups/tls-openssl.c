@@ -35,7 +35,7 @@ static X509_EXTENSION	*openssl_create_san(const char *common_name, size_t num_al
 static time_t		openssl_get_date(X509 *cert, int which);
 //static void		openssl_load_crl(void);
 static STACK_OF(X509 *)	openssl_load_x509(const char *credentials);
-static BIO		*openssl_open_key(const char *keyfile);
+static BIO		*openssl_open_file(const char *filename, int mode);
 static bool		openssl_validate_name(X509 *cert, const char *common_name);
 
 
@@ -371,7 +371,7 @@ cupsCreateCredentials(
   http_make_path(keyfile, sizeof(keyfile), path, common_name, "key");
   http_make_path(pubfile, sizeof(pubfile), path, common_name, "pub");
 
-  if ((bio = openssl_open_key(keyfile)) == NULL)
+  if ((bio = openssl_open_file(keyfile, 0600)) == NULL)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
     goto done;
@@ -386,7 +386,7 @@ cupsCreateCredentials(
 
   BIO_free(bio);
 
-  if ((bio = BIO_new_file(pubfile, "wb")) == NULL)
+  if ((bio = openssl_open_file(pubfile, 0644)) == NULL)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
     goto done;
@@ -401,7 +401,7 @@ cupsCreateCredentials(
 
   BIO_free(bio);
 
-  if ((bio = BIO_new_file(crtfile, "wb")) == NULL)
+  if ((bio = openssl_open_file(crtfile, 0644)) == NULL)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
     goto done;
@@ -607,7 +607,7 @@ cupsCreateCredentialsRequest(
   sk_X509_EXTENSION_pop_free(exts, X509_EXTENSION_free);
 
   // Save them...
-  if ((bio = openssl_open_key(keyfile)) == NULL)
+  if ((bio = openssl_open_file(keyfile, 0600)) == NULL)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
     goto done;
@@ -622,7 +622,7 @@ cupsCreateCredentialsRequest(
 
   BIO_free(bio);
 
-  if ((bio = BIO_new_file(pubfile, "wb")) == NULL)
+  if ((bio = openssl_open_file(pubfile, 0644)) == NULL)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
     goto done;
@@ -637,7 +637,7 @@ cupsCreateCredentialsRequest(
 
   BIO_free(bio);
 
-  if ((bio = BIO_new_file(csrfile, "wb")) == NULL)
+  if ((bio = openssl_open_file(csrfile, 0644)) == NULL)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
     goto done;
@@ -1412,7 +1412,7 @@ cupsSignCredentialsRequest(
   // Save the certificate...
   http_make_path(crtfile, sizeof(crtfile), path, common_name, "crt");
 
-  if ((bio = BIO_new_file(crtfile, "wb")) == NULL)
+  if ((bio = openssl_open_file(crtfile, 0644)) == NULL)
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
     goto done;
@@ -2611,17 +2611,18 @@ openssl_load_x509(
 
 
 //
-// 'openssl_open_key()' - Create a private key file that only the owner can read.
+// 'openssl_open_file()' - Create a file for writing with the given permissions.
 //
 
-static BIO *				// O - Key file BIO or `NULL` on error
-openssl_open_key(const char *keyfile)	// I - Key filename
+static BIO *				// O - File BIO or `NULL` on error
+openssl_open_file(const char *filename,	// I - Filename
+                  int        mode)	// I - Permissions
 {
   int	fd;				// File descriptor
-  BIO	*bio;				// Key file BIO
+  BIO	*bio;				// File BIO
 
 
-  if ((fd = open(keyfile, O_CREAT | O_WRONLY | O_TRUNC, 0600)) < 0)
+  if ((fd = open(filename, O_CREAT | O_WRONLY | O_TRUNC, mode)) < 0)
     return (NULL);
 
   if ((bio = BIO_new_fd(fd, BIO_CLOSE)) == NULL)

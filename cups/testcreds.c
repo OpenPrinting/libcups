@@ -445,7 +445,12 @@ do_unit_tests(void)
       free(data);
 
       testBegin("_site_.key permissions");
-      testEnd(!stat(TEST_CERT_PATH "/_site_.key", &fileinfo) && !(fileinfo.st_mode & 077));
+      if (stat(TEST_CERT_PATH "/_site_.key", &fileinfo))
+        testEndMessage(false, "%s", strerror(errno));
+      else if (fileinfo.st_mode & 077)
+        testEndMessage(false, "wrong permissions, got %03o expected %03o.", (unsigned)(fileinfo.st_mode & 0777), (unsigned)(fileinfo.st_mode & 0700));
+      else
+        testEnd(true);
     }
     else
     {
@@ -525,7 +530,12 @@ do_unit_tests(void)
       free(data);
 
       testBegin("altprinter.ktm permissions");
-      testEnd(!stat(TEST_CERT_PATH "/altprinter.ktm", &fileinfo) && !(fileinfo.st_mode & 077));
+      if (stat(TEST_CERT_PATH "/altprinter.ktm", &fileinfo))
+        testEndMessage(false, "%s", strerror(errno));
+      else if (fileinfo.st_mode & 077)
+        testEndMessage(false, "wrong permissions, got %03o expected %03o.", (unsigned)(fileinfo.st_mode & 0777), (unsigned)(fileinfo.st_mode & 0700));
+      else
+        testEnd(true);
 
       testBegin("cupsCopyCredentialsRequest(altprinter w/alt names)");
       data = cupsCopyCredentialsRequest(TEST_CERT_PATH, "altprinter");
