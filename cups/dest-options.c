@@ -1719,6 +1719,9 @@ cups_create_media_db(
   cups_array_t		*db;		// New media database array
   _cups_media_db_t	mdb;		// Media entry
   char			media_key[256];	// Synthesized media-key value
+  pwg_media_t		temppwg;	// Temporary PWG media info
+  char			keyword[128],	// PWG size keyword
+			ppdname[41];	// PPD size name
 
 
   db = cupsArrayNew((cups_array_cb_t)cups_compare_media_db, NULL, NULL, 0, (cups_acopy_cb_t)cups_copy_media_db, (cups_afree_cb_t)cups_free_media_db);
@@ -1839,12 +1842,8 @@ cups_create_media_db(
 
       if (!mdb.key)
       {
-        pwg_media_t	temppwg;	// PWG media info
-	char		keyword[128],	// PWG size keyword
-			ppdname[41];	// PPD size name
-
-        if (!mdb.size_name && _pwgMediaNearSize(&temppwg, keyword, sizeof(keyword), ppdname, sizeof(ppdname), mdb.width, mdb.length, _PWG_EPSILON))
-	  mdb.size_name = keyword;
+        if (!mdb.size_name && (pwg = _pwgMediaNearSize(&temppwg, keyword, sizeof(keyword), ppdname, sizeof(ppdname), mdb.width, mdb.length, _PWG_EPSILON)) != NULL)
+	  mdb.size_name = (char *)pwg->pwg;
 
         if (!mdb.size_name)
         {
