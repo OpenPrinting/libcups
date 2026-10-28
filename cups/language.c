@@ -117,7 +117,7 @@ cupsLangFind(const char *language)	// I - Language or locale name, `NULL` for th
   cupsMutexLock(&lang_mutex);
 
   cupsCopyString(langname, language, sizeof(langname));
-  if (langname[2] == '-')
+  if (strlen(langname) > 2 && langname[2] == '-')
     langname[2] = '_';
 
   for (lang = lang_cache; lang; lang = lang->next)
