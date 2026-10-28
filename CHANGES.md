@@ -46,6 +46,8 @@ v3.0.4 - YYYY-MM-DD
 - Fixed a bug in `cupsJSONExportString` when exporting a child node (Issue #187)
 - Fixed the ECDSA P-256 curve used for JWT and X.509 certificates and signatures
   (Issue #188)
+- Fixed `cupsLangFind` issue with POSIX locale (Issue #196)
+- Fixed custom media size buffering (Issue #198)
 - Fixed a DNS-SD browsing issue on Windows (Issue #199)
 - Fixed `httpGetHostname` on Windows (Issue #200)
 - Fixed handling of "%c" formatting in `cupsFormatString` (Issue #201)
