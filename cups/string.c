@@ -371,18 +371,28 @@ cupsFormatStringv(
         case 'c' : // Character or character array
 	    bytes += width;
 
-	    if (bufptr < bufend)
+	    if (width <= 1)
 	    {
-	      if (width <= 1)
-	      {
-	        *bufptr++ = (char)va_arg(ap, int);
-	      }
-	      else
+	      // Single character - consume the argument even when the buffer is
+	      // full so the remaining arguments stay in sync...
+	      int ch = va_arg(ap, int);	// Character
+
+	      if (bufptr < bufend)
+	        *bufptr++ = (char)ch;
+	    }
+	    else
+	    {
+	      // Character array - consume the argument even when the buffer is
+	      // full so the remaining arguments stay in sync...
+	      const char *cptr = va_arg(ap, char *);
+					// Character array pointer
+
+	      if (bufptr < bufend)
 	      {
 		if ((bufptr + width) > bufend)
 		  width = (int)(bufend - bufptr);
 
-		memcpy(bufptr, va_arg(ap, char *), (size_t)width);
+		memcpy(bufptr, cptr, (size_t)width);
 		bufptr += width;
 	      }
 	    }

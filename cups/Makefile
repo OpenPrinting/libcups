@@ -82,6 +82,7 @@ TESTOBJS	= \
 		testoptions.o \
 		testpwg.o \
 		testraster.o \
+		teststring.o \
 		testtestpage.o \
 		testthreads.o \
 		tlscheck.o
@@ -169,6 +170,7 @@ UNITTARGETS =	\
 		testoptions \
 		testpwg \
 		testraster \
+		teststring \
 		testtestpage \
 		testthreads \
 		tlscheck
@@ -241,6 +243,9 @@ test:		$(UNITTARGETS)
 	echo Running raster API tests...
 	./testraster 2>>test.log
 	./testtestpage 2>>test.log
+	echo ""
+	echo Running string API tests...
+	./teststring 2>>test.log
 	rm -rf test.log test-debug.log .testssl
 
 fuzz:		$(UNITTARGETS)
@@ -641,6 +646,16 @@ testpwg:	testpwg.o $(LIBCUPS_STATIC)
 testraster:	testraster.o $(LIBCUPS_STATIC)
 	echo Linking $@...
 	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testraster.o $(LIBCUPS_STATIC) $(LIBS)
+	$(CODE_SIGN) $(CSFLAGS) $@
+
+
+#
+# teststring (dependency on static CUPS library is intentional)
+#
+
+teststring:	teststring.o $(LIBCUPS_STATIC)
+	echo Linking $@...
+	$(CC) $(LDFLAGS) $(OPTIM) -o $@ teststring.o $(LIBCUPS_STATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
 
 
