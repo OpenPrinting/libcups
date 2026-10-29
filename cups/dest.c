@@ -1162,6 +1162,14 @@ _cupsGetDests(http_t       *http,	// I  - Connection to server or `CUPS_HTTP_DEF
   // Do the request and get back a response...
   if ((response = cupsDoRequest(http, request, "/")) != NULL)
   {
+    // Make sure the server is OK...
+    if (!ippValidateAttributes(response))
+    {
+      // No, don't try to use any of its response...
+      ippDelete(response);
+      return (num_dests);
+    }
+
     for (attr = response->attrs; attr != NULL; attr = attr->next)
     {
       // Skip leading attributes until we hit a printer...

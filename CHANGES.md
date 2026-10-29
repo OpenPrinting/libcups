@@ -6,6 +6,8 @@ v3.0.4 - YYYY-MM-DD
 
 - SECURITY-3.5: Updated `cupsOAuthGetTokens` to do more validation of the access
   token (GHSA-mq7v-g5c2-75fg)
+- SECURITY-2.3: `cupsGetDests` did not validate printer/server responses
+  (GHSA-hp44-ph36-rc52)
 - Added `cupsDNSSDSetHostName` function.
 - Added Swedish localization (Issue #174)
 - Added missing `cups_serverroot` variable to "pkg-config" file.
