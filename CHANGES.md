@@ -45,6 +45,7 @@ v3.0.4 - YYYY-MM-DD
 - Fixed the ECDSA P-256 curve used for JWT and X.509 certificates and signatures
   (Issue #188)
 - Fixed a DNS-SD browsing issue on Windows (Issue #199)
+- Fixed `httpGetHostname` on Windows (Issue #200)
 - Fixed handling of "%c" formatting in `cupsFormatString` (Issue #201)
 - Fixed PAM support in `ippeveprinter`.
 - Fixed a typo in the JWT HS verification code.
