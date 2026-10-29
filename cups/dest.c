@@ -1249,7 +1249,7 @@ _cupsGetDests(http_t       *http,	// I  - Connection to server or `CUPS_HTTP_DEF
 	{
 	  printer_name = attr->values[0].string.text;
         }
-        else if (strncmp(attr->name, "notify-", 7) && strncmp(attr->name, "print-quality-", 14) && (attr->value_tag == IPP_TAG_BOOLEAN || attr->value_tag == IPP_TAG_ENUM || attr->value_tag == IPP_TAG_INTEGER || attr->value_tag == IPP_TAG_KEYWORD || attr->value_tag == IPP_TAG_NAME || attr->value_tag == IPP_TAG_RANGE) && (ptr = strstr(attr->name, "-default")) != NULL)
+        else if (strncmp(attr->name, "notify-", 7) && strncmp(attr->name, "print-quality-", 14) && (attr->value_tag == IPP_TAG_BOOLEAN || attr->value_tag == IPP_TAG_ENUM || attr->value_tag == IPP_TAG_INTEGER || attr->value_tag == IPP_TAG_KEYWORD || attr->value_tag == IPP_TAG_NAME || attr->value_tag == IPP_TAG_RANGE) && strstr(attr->name, "-default") != NULL)
 	{
 	  // Add a default option...
           cupsCopyString(optname, attr->name, sizeof(optname));
