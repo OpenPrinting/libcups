@@ -18,6 +18,8 @@ v3.0.4 - YYYY-MM-DD
   (Issue #179)
 - Updated `ippValidateAttribute` to check name and text values against RFC 5198
   (Issue #180)
+- Updated `cupsOAuthMakeAuthorizationURL` to require the authorization endpoint
+  to be a "https" URL (Issue #193)
 - Updated `cupsJWTHasValidSignature` to use a constant-time comparison function
   for HMAC signatures.
 - Updated `ippeveprinter` to support a single test password.
