@@ -654,7 +654,7 @@ cups_lang_new(const char *language)	// I - Language name
   if (status && lang_directory)
   {
     snprintf(filename, sizeof(filename), "%s/%s.strings", lang_directory, language);
-    if (access(filename, 0) && language[2])
+    if (access(filename, 0) && strlen(language) > 2)
     {
       char	baselang[3];		// Base language name
 
