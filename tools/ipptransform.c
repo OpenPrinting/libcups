@@ -2324,11 +2324,17 @@ pcl_start_page(xform_raster_t   *ras,	// I - Raster information
     ras->left  = (ras->header.cupsWidth - 8 * ras->header.HWResolution[0]) / 2;
     ras->right = ras->left + 8 * ras->header.HWResolution[0];
   }
-  else
+  else if (ras->header.cupsWidth > (ras->header.HWResolution[0] / 2))
   {
-    // All other sizes get 1/4" margins
+    // All other regular sizes get 1/4" margins
     ras->left  = ras->header.HWResolution[0] / 4;
     ras->right = ras->header.cupsWidth - ras->header.HWResolution[0] / 4;
+  }
+  else
+  {
+    // Narrow custom sizes have no margins
+    ras->left  = 0;
+    ras->right = ras->header.cupsWidth;
   }
 
   if (!ras->header.Duplex || (page & 1))
@@ -2986,10 +2992,31 @@ ps_start_page(xform_raster_t   *ras,	// I - Raster information
 
   fprintf(stderr, "DEBUG: Page %d: %ux%ux%u\n", page, ras->header.cupsWidth, ras->header.cupsHeight, ras->header.cupsBitsPerPixel);
 
-  ras->left   = ras->header.HWResolution[0] / 6;
-  ras->right  = ras->header.cupsWidth - ras->header.HWResolution[0] / 6;
-  ras->top    = ras->header.HWResolution[1] / 6;
-  ras->bottom = ras->header.cupsHeight - ras->header.HWResolution[1] / 6;
+  if (ras->header.cupsWidth > (ras->header.HWResolution[0] / 3))
+  {
+    // Regular sizes have 1/6" margins
+    ras->left   = ras->header.HWResolution[0] / 6;
+    ras->right  = ras->header.cupsWidth - ras->header.HWResolution[0] / 6;
+  }
+  else
+  {
+    // Narrow custom sizes have no margins
+    ras->left  = 0;
+    ras->right = ras->header.cupsWidth;
+  }
+
+  if (ras->header.cupsHeight > (ras->header.HWResolution[1] / 3))
+  {
+    // Regular sizes have 1/6" margins
+    ras->top    = ras->header.HWResolution[1] / 6;
+    ras->bottom = ras->header.cupsHeight - ras->header.HWResolution[1] / 6;
+  }
+  else
+  {
+    // Narrow custom sizes have no margins
+    ras->top    = 0;
+    ras->bottom = ras->header.cupsHeight;
+  }
 
   if (ras->header.cupsColorSpace != CUPS_CSPACE_W && ras->header.cupsColorSpace != CUPS_CSPACE_SW && ras->header.cupsColorSpace != CUPS_CSPACE_K && ras->header.cupsColorSpace != CUPS_CSPACE_RGB && ras->header.cupsColorSpace != CUPS_CSPACE_SRGB)
   {

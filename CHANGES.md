@@ -48,6 +48,7 @@ v3.0.4 - YYYY-MM-DD
 - Fixed a bug in `cupsJSONExportString` when exporting a child node (Issue #187)
 - Fixed the ECDSA P-256 curve used for JWT and X.509 certificates and signatures
   (Issue #188)
+- Fixed `ipptransform` margins for small media sizes (Issue #191)
 - Fixed `ipptransform` output of more than 10000 pages (Issue #194)
 - Fixed `cupsLangFind` issue with POSIX locale (Issue #196)
 - Fixed custom media size buffering (Issue #198)
