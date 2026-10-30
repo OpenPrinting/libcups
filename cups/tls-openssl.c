@@ -1139,8 +1139,7 @@ cupsSignCredentialsRequest(
     goto done;
   }
 
-  // The subject is copied to the certificate, so any commonName values must
-  // match the common name we are signing for...
+  // Verify that any commonName values match the common name we are signing for...
   subject = X509_REQ_get_subject_name(crq);
 
   for (i = -1; (i = X509_NAME_get_index_by_NID(subject, NID_commonName, i)) >= 0;)

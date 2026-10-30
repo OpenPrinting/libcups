@@ -1144,8 +1144,7 @@ cupsSignCredentialsRequest(
     goto done;
   }
 
-  // The subject is copied to the certificate, so any commonName values must
-  // match the common name we are signing for...
+  // Verify that any commonName values match the common name we are signing for...
   for (i = 0; i < 100; i ++)
   {
     tempsize = sizeof(temp) - 1;
@@ -1174,46 +1173,6 @@ cupsSignCredentialsRequest(
 
   gnutls_x509_crt_init(&crt);
   gnutls_x509_crt_set_crq(crt, crq);
-
-#if 0
-  tempsize = sizeof(temp) - 1;
-  if (gnutls_x509_crq_get_dn_by_oid(crq, GNUTLS_OID_X520_COUNTRY_NAME, 0, 0, temp, &tempsize) >= 0)
-    temp[tempsize] = '\0';
-  else
-    cupsCopyString(temp, "US", sizeof(temp));
-  gnutls_x509_crt_set_dn_by_oid(crt, GNUTLS_OID_X520_COUNTRY_NAME, 0, temp, (unsigned)strlen(temp));
-
-  gnutls_x509_crt_set_dn_by_oid(crt, GNUTLS_OID_X520_COMMON_NAME, 0, common_name, strlen(common_name));
-
-  tempsize = sizeof(temp) - 1;
-  if (gnutls_x509_crq_get_dn_by_oid(crq, GNUTLS_OID_X520_ORGANIZATION_NAME, 0, 0, temp, &tempsize) >= 0)
-  {
-    temp[tempsize] = '\0';
-    gnutls_x509_crt_set_dn_by_oid(crt, GNUTLS_OID_X520_ORGANIZATION_NAME, 0, temp, (unsigned)strlen(temp));
-  }
-
-  tempsize = sizeof(temp) - 1;
-  if (gnutls_x509_crq_get_dn_by_oid(crq, GNUTLS_OID_X520_ORGANIZATIONAL_UNIT_NAME, 0, 0, temp, &tempsize) >= 0)
-  {
-    temp[tempsize] = '\0';
-    gnutls_x509_crt_set_dn_by_oid(crt, GNUTLS_OID_X520_ORGANIZATIONAL_UNIT_NAME, 0, temp, (unsigned)strlen(temp));
-  }
-
-  tempsize = sizeof(temp) - 1;
-  if (gnutls_x509_crq_get_dn_by_oid(crq, GNUTLS_OID_X520_STATE_OR_PROVINCE_NAME, 0, 0, temp, &tempsize) >= 0)
-    temp[tempsize] = '\0';
-  else
-    cupsCopyString(temp, "Unknown", sizeof(temp));
-  gnutls_x509_crt_set_dn_by_oid(crt, GNUTLS_OID_X520_STATE_OR_PROVINCE_NAME, 0, temp, strlen(temp));
-
-  tempsize = sizeof(temp) - 1;
-  if (gnutls_x509_crq_get_dn_by_oid(crq, GNUTLS_OID_X520_LOCALITY_NAME, 0, 0, temp, &tempsize) >= 0)
-    temp[tempsize] = '\0';
-  else
-    cupsCopyString(temp, "Unknown", sizeof(temp));
-  gnutls_x509_crt_set_dn_by_oid(crt, GNUTLS_OID_X520_LOCALITY_NAME, 0, temp, strlen(temp));
-#endif // 0
-
   gnutls_x509_crt_set_serial(crt, serial, sizeof(serial));
   gnutls_x509_crt_set_activation_time(crt, curtime);
   gnutls_x509_crt_set_expiration_time(crt, expiration_date);
@@ -1231,12 +1190,7 @@ cupsSignCredentialsRequest(
 
     DEBUG_printf("1cupsSignCredentialsRequest: SAN %s", temp);
 
-    if (type != GNUTLS_SAN_DNSNAME || (cb)(common_name, temp, cb_data))
-    {
-      // Good subjectAltName
-//      gnutls_x509_crt_set_subject_alt_name(crt, type, temp, (unsigned)strlen(temp), i ? GNUTLS_FSAN_APPEND : GNUTLS_FSAN_SET);
-    }
-    else
+    if (type == GNUTLS_SAN_DNSNAME && !(cb)(common_name, temp, cb_data))
     {
       _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Validation of subjectAltName in X.509 certificate request failed."), true);
       goto done;
@@ -1268,19 +1222,6 @@ cupsSignCredentialsRequest(
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad keyUsage extension in X.509 certificate request."), true);
     goto done;
   }
-
-#if 0
-  if (purpose == 0 || (purpose & CUPS_CREDPURPOSE_SERVER_AUTH))
-    gnutls_x509_crt_set_key_purpose_oid(crt, GNUTLS_KP_TLS_WWW_SERVER, 0);
-  if (purpose & CUPS_CREDPURPOSE_CLIENT_AUTH)
-    gnutls_x509_crt_set_key_purpose_oid(crt, GNUTLS_KP_TLS_WWW_CLIENT, 0);
-  if (purpose & CUPS_CREDPURPOSE_CODE_SIGNING)
-    gnutls_x509_crt_set_key_purpose_oid(crt, GNUTLS_KP_CODE_SIGNING, 0);
-  if (purpose & CUPS_CREDPURPOSE_EMAIL_PROTECTION)
-    gnutls_x509_crt_set_key_purpose_oid(crt, GNUTLS_KP_EMAIL_PROTECTION, 0);
-  if (purpose & CUPS_CREDPURPOSE_OCSP_SIGNING)
-    gnutls_x509_crt_set_key_purpose_oid(crt, GNUTLS_KP_OCSP_SIGNING, 0);
-#endif // 0
 
   if (gnutls_x509_crq_get_key_usage(crq, &gnutls_usage, NULL) < 0)
   {
@@ -1318,7 +1259,6 @@ cupsSignCredentialsRequest(
       goto done;
     }
   }
-//  gnutls_x509_crt_set_key_usage(crt, gnutls_usage);
 
   gnutls_x509_crt_set_version(crt, 3);
 

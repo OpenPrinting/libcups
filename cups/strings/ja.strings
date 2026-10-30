@@ -355,6 +355,7 @@
 "Invalid media name arguments." = "無効なメディア名引数です。";
 "Invalid media size." = "無効なメディアサイズです。";
 "Invalid named IPP attribute in collection." = "Invalid named IPP attribute in collection.";
+"Invalidate Base64 data." = "Invalidate Base64 data.";
 "JSON file too large." = "JSON file too large.";
 "LPDEST environment variable names default destination that does not exist." = "LPDEST environment variable names default destination that does not exist.";
 "Length Required" = "Length Required";
@@ -363,6 +364,7 @@
 "Message:" = "Message:";
 "Method Now Allowed" = "Method Now Allowed";
 "Misdirected Request" = "Misdirected Request";
+"Missing JWT separator." = "Missing JWT separator.";
 "Missing media or media-col." = "media または media-col がありません。";
 "Missing media-size in media-col." = "media-col に media-size がありません。";
 "Missing resource in URI" = "URI のリソースがない";
@@ -447,11 +449,6 @@
 "Unable to create private key context." = "Unable to create private key context.";
 "Unable to create private key." = "Unable to create private key.";
 "Unable to create server credentials." = "サーバー証明書を作成できません。";
-"Unable to decode JOSE header." = "Unable to decode JOSE header.";
-"Unable to decode JWT claims." = "Unable to decode JWT claims.";
-"Unable to decode JWT payload data." = "Unable to decode JWT payload data.";
-"Unable to decode JWT protected data." = "Unable to decode JWT protected data.";
-"Unable to decode JWT signature." = "Unable to decode JWT signature.";
 "Unable to execute \"%s\": %s" = "Unable to execute \"%s\": %s";
 "Unable to find JWT payload data." = "Unable to find JWT payload data.";
 "Unable to find JWT protected data." = "Unable to find JWT protected data.";
@@ -471,6 +468,7 @@
 "Unable to write public key." = "Unable to write public key.";
 "Unauthorized" = "未許可";
 "Unavailable for Legal Reasons" = "Unavailable for Legal Reasons";
+"Unexpected trailing data." = "Unexpected trailing data.";
 "Unknown" = "未知";
 "Unknown hash algorithm." = "Unknown hash algorithm.";
 "Unknown media size name." = "未知のメディアサイズ名称です。";
@@ -491,6 +489,7 @@
 "Use Proxy" = "Use Proxy";
 "User Code: %s" = "User Code: %s";
 "User:" = "User:";
+"Validation of commonName in X.509 certificate request failed." = "Validation of commonName in X.509 certificate request failed.";
 "Validation of subjectAltName in X.509 certificate request failed." = "Validation of subjectAltName in X.509 certificate request failed.";
 "Warnings:\n" = "Warnings:\n";
 "Web Page: %s" = "Web Page: %s";

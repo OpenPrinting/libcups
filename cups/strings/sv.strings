@@ -1,4 +1,4 @@
-
+"" = "";
 "  No Errors\n" = "  Inga fel\n";
 "  No Warnings\n" = "  Inga varningar\n";
 "! EXPRESSION                   Unary NOT of expression" = "! EXPRESSION                   Unärt INTE för uttryck";
@@ -355,6 +355,7 @@
 "Invalid media name arguments." = "Ogiltiga argument för medianamn.";
 "Invalid media size." = "Ogiltigt medieformat.";
 "Invalid named IPP attribute in collection." = "Ogiltigt namngivet IPP-attribut i samlingen.";
+"Invalidate Base64 data." = "Invalidate Base64 data.";
 "JSON file too large." = "JSON-filen är för stor.";
 "LPDEST environment variable names default destination that does not exist." = "Miljövariabeln LPDEST anger en standarddestination som inte finns.";
 "Length Required" = "Längd krävs";
@@ -363,6 +364,7 @@
 "Message:" = "Meddelande:";
 "Method Now Allowed" = "Metoden är inte längre tillåten";
 "Misdirected Request" = "Felriktad begäran";
+"Missing JWT separator." = "Missing JWT separator.";
 "Missing media or media-col." = "Mediet media eller media-col saknas.";
 "Missing media-size in media-col." = "Attributet media-size saknas i media-col.";
 "Missing resource in URI" = "Resurs saknas i URI:n";
@@ -447,11 +449,6 @@
 "Unable to create private key context." = "Det går inte att skapa ett sammanhang för den privata nyckeln.";
 "Unable to create private key." = "Det går inte att skapa en privat nyckel.";
 "Unable to create server credentials." = "Det går inte att skapa serverns autentiseringsuppgifter.";
-"Unable to decode JOSE header." = "Det gick inte att avkoda JOSE-huvudet.";
-"Unable to decode JWT claims." = "Det gick inte att avkoda JWT-anspråken.";
-"Unable to decode JWT payload data." = "Det gick inte att avkoda JWT-nyttolastdata.";
-"Unable to decode JWT protected data." = "Det gick inte att avkoda JWT-skyddade data.";
-"Unable to decode JWT signature." = "Det gick inte att avkoda JWT-signaturen.";
 "Unable to execute \"%s\": %s" = "Det går inte att köra \"%s\": %s";
 "Unable to find JWT payload data." = "Det gick inte att hitta JWT-nyttolastdata.";
 "Unable to find JWT protected data." = "Det gick inte att hitta JWT-skyddade data.";
@@ -471,6 +468,7 @@
 "Unable to write public key." = "Det går inte att skriva den offentliga nyckeln.";
 "Unauthorized" = "Obehörig";
 "Unavailable for Legal Reasons" = "Inte tillgängligt av juridiska skäl";
+"Unexpected trailing data." = "Unexpected trailing data.";
 "Unknown" = "Okänd";
 "Unknown hash algorithm." = "Okänd hashalgoritm.";
 "Unknown media size name." = "Okänt namn på mediestorlek.";
@@ -491,6 +489,7 @@
 "Use Proxy" = "Använd proxy";
 "User Code: %s" = "Användarkod: %s";
 "User:" = "Användare:";
+"Validation of commonName in X.509 certificate request failed." = "Validation of commonName in X.509 certificate request failed.";
 "Validation of subjectAltName in X.509 certificate request failed." = "Valideringen av subjectAltName i begäran om X.509-certifikat misslyckades.";
 "Warnings:\n" = "Varningar:\n";
 "Web Page: %s" = "Webbsida: %s";

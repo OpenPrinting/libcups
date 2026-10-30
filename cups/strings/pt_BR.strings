@@ -355,6 +355,7 @@
 "Invalid media name arguments." = "Argumentos de nome de mídia inválidos.";
 "Invalid media size." = "Tamanho de mídia inválido.";
 "Invalid named IPP attribute in collection." = "Invalid named IPP attribute in collection.";
+"Invalidate Base64 data." = "Invalidate Base64 data.";
 "JSON file too large." = "JSON file too large.";
 "LPDEST environment variable names default destination that does not exist." = "LPDEST environment variable names default destination that does not exist.";
 "Length Required" = "Length Required";
@@ -363,6 +364,7 @@
 "Message:" = "Message:";
 "Method Now Allowed" = "Method Now Allowed";
 "Misdirected Request" = "Misdirected Request";
+"Missing JWT separator." = "Missing JWT separator.";
 "Missing media or media-col." = "Faltando media ou media-col.";
 "Missing media-size in media-col." = "Faltando media-size em media-col.";
 "Missing resource in URI" = "Faltando rescurso na URI";
@@ -447,11 +449,6 @@
 "Unable to create private key context." = "Unable to create private key context.";
 "Unable to create private key." = "Unable to create private key.";
 "Unable to create server credentials." = "Não foi possível criar credenciais no servidor.";
-"Unable to decode JOSE header." = "Unable to decode JOSE header.";
-"Unable to decode JWT claims." = "Unable to decode JWT claims.";
-"Unable to decode JWT payload data." = "Unable to decode JWT payload data.";
-"Unable to decode JWT protected data." = "Unable to decode JWT protected data.";
-"Unable to decode JWT signature." = "Unable to decode JWT signature.";
 "Unable to execute \"%s\": %s" = "Unable to execute \"%s\": %s";
 "Unable to find JWT payload data." = "Unable to find JWT payload data.";
 "Unable to find JWT protected data." = "Unable to find JWT protected data.";
@@ -471,6 +468,7 @@
 "Unable to write public key." = "Unable to write public key.";
 "Unauthorized" = "Não autorizado";
 "Unavailable for Legal Reasons" = "Unavailable for Legal Reasons";
+"Unexpected trailing data." = "Unexpected trailing data.";
 "Unknown" = "Desconhecido";
 "Unknown hash algorithm." = "Unknown hash algorithm.";
 "Unknown media size name." = "Nome de tamanho de mídia desconhecido.";
@@ -491,6 +489,7 @@
 "Use Proxy" = "Use Proxy";
 "User Code: %s" = "User Code: %s";
 "User:" = "User:";
+"Validation of commonName in X.509 certificate request failed." = "Validation of commonName in X.509 certificate request failed.";
 "Validation of subjectAltName in X.509 certificate request failed." = "Validation of subjectAltName in X.509 certificate request failed.";
 "Warnings:\n" = "Warnings:\n";
 "Web Page: %s" = "Web Page: %s";
