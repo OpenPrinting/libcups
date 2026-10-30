@@ -44,7 +44,7 @@ extern char **environ;
 
 // Constants...
 #define XFORM_MAX_LAYOUT	16
-#define XFORM_MAX_PAGES		10000
+#define XFORM_MAX_OUTPAGES	1000000
 #define XFORM_MAX_RASTER	16777216
 
 #define XFORM_TEXT_SIZE		10.0	// Point size of plain text output
@@ -100,8 +100,7 @@ typedef struct xform_prepare_s		// Preparation data
   pdfio_rect_t	media;			// Default media box
   pdfio_rect_t	crop;			// Default crop box
   size_t	num_outpages;		// Number of output pages
-  xform_page_t	outpages[XFORM_MAX_PAGES];
-					// Output pages
+  xform_page_t	*outpages;		// Output pages
   size_t	num_layout;		// Number of layout rectangles
   pdfio_rect_t	layout[XFORM_MAX_LAYOUT];
 					// Layout rectangles
@@ -3754,6 +3753,18 @@ prepare_pages(
     if (p->num_outpages & 1)
       p->num_outpages ++;
 
+    if (p->num_outpages > XFORM_MAX_OUTPAGES)
+    {
+      fprintf(stderr, "ERROR: Too many output pages (%lu > %d)\n", (unsigned long)p->num_outpages, XFORM_MAX_OUTPAGES);
+      exit(1);
+    }
+
+    if ((p->outpages = (xform_page_t *)calloc(p->num_outpages, sizeof(xform_page_t))) == NULL)
+    {
+      fprintf(stderr, "ERROR: Unable to allocate memory for %lu output pages: %s\n", (unsigned long)p->num_outpages, strerror(errno));
+      exit(1);
+    }
+
     for (current = 0, layout = 0, page = 1, i = num_documents, d = documents; i > 0; i --, d ++)
     {
       while (page <= d->last_page)
@@ -3785,7 +3796,65 @@ prepare_pages(
   }
   else
   {
-    // Normal printing lays out N input pages on each output page...
+    // Normal printing lays out N input pages on each output page...  Figure out
+    // how many pages are required...
+    for (current = 0, layout = 0, page = 1, i = num_documents, d = documents; i > 0; i --, d ++)
+    {
+      while (page <= d->last_page)
+      {
+	if (p->options->multiple_document_handling < IPPOPT_HANDLING_SINGLE_DOCUMENT)
+	  use_page = ippOptionsCheckPage(p->options, page - d->first_page + 1);
+	else
+	  use_page = ippOptionsCheckPage(p->options, page);
+
+        if (use_page)
+        {
+          layout ++;
+          if (layout == p->num_layout)
+          {
+            current ++;
+            layout = 0;
+          }
+        }
+
+        page ++;
+      }
+
+      if (p->options->multiple_document_handling < IPPOPT_HANDLING_SINGLE_DOCUMENT)
+      {
+        page = 1;
+
+        if (layout)
+        {
+	  current ++;
+	  layout = 0;
+        }
+      }
+      else if (p->options->multiple_document_handling == IPPOPT_HANDLING_SINGLE_NEW_SHEET && (current & 1))
+      {
+	current ++;
+	layout = 0;
+      }
+    }
+
+    if (layout)
+      current ++;
+
+    p->num_outpages = current;
+
+    // Allocate memory for the pages...
+    if (p->num_outpages > XFORM_MAX_OUTPAGES)
+    {
+      fprintf(stderr, "ERROR: Too many output pages (%lu > %d)\n", (unsigned long)p->num_outpages, XFORM_MAX_OUTPAGES);
+      exit(1);
+    }
+
+    if ((p->outpages = (xform_page_t *)calloc(p->num_outpages, sizeof(xform_page_t))) == NULL)
+    {
+      fprintf(stderr, "ERROR: Unable to allocate memory for %lu output pages: %s\n", (unsigned long)p->num_outpages, strerror(errno));
+      exit(1);
+    }
+
     for (current = 0, outpage = p->outpages, layout = 0, page = 1, i = num_documents, d = documents; i > 0; i --, d ++)
     {
       while (page <= d->last_page)
@@ -3833,11 +3902,6 @@ prepare_pages(
 	layout = 0;
       }
     }
-
-    if (layout)
-      current ++;
-
-    p->num_outpages = current;
   }
 }
 
