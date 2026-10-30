@@ -1648,7 +1648,7 @@ cupsOAuthMakeAuthorizationURL(
 
 
   // Range check input...
-  if (!auth_uri || !metadata || (authorization_ep = cupsJSONGetString(cupsJSONFind(metadata, "authorization_endpoint"))) == NULL || !redirect_uri || !client_id)
+  if (!auth_uri || !metadata || (authorization_ep = cupsJSONGetString(cupsJSONFind(metadata, "authorization_endpoint"))) == NULL || strncmp(authorization_ep, "https://", 8) || !redirect_uri || !client_id)
     return (NULL);
 
   // Make the authorization URL using the information supplied...
