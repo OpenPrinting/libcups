@@ -68,6 +68,8 @@ main(int  argc,				// I - Number of command-line arguments
 
   // Clear test data...
   memset(&testdata, 0, sizeof(testdata));
+  cupsMutexInit(&testdata.mutex);
+
   testdata.messages = cupsArrayNew(NULL, NULL, NULL, 0, _cupsArrayStrdup, _cupsArrayFree);
 #if _WIN32
   snprintf(testdata.name, sizeof(testdata.name), "Test Service %d", (int)GetCurrentProcessId());
