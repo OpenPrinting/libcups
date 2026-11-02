@@ -5150,7 +5150,7 @@ ipp_length(ipp_t *ipp,			// I - IPP message or collection
 
     DEBUG_printf("5ipp_length: attr->name=\"%s\", attr->num_values=%u, bytes=" CUPS_LLFMT, attr->name, (unsigned)attr->num_values, CUPS_LLCAST bytes);
 
-    if ((attr->value_tag & ~IPP_TAG_CUPS_CONST) < IPP_TAG_EXTENSION)
+    if ((attr->value_tag & ~IPP_TAG_CUPS_CONST) <= 0xff)
       bytes += (size_t)attr->num_values;// Value tag for each value
     else
       bytes += (size_t)(5 * attr->num_values);

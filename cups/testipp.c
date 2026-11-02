@@ -279,6 +279,25 @@ static ipp_uchar_t mixed[] =		// Mixed value buffer
 		  IPP_TAG_END		// end tag
 		};
 
+static ipp_uchar_t extension[] =	// Extension value buffer
+		{
+		  0x02, 0x00,		// IPP version
+		  0x00, 0x0b,		// Get-Printer-Attributes operation
+		  0x00, 0x00, 0x00, 0x01,
+					// Request ID
+
+		  IPP_TAG_OPERATION,
+
+		  IPP_TAG_EXTENSION,	// extension tag
+		  0x00, 0x05,		// Name length + name
+		  'x', '-', 'e', 'x', 't',
+		  0x00, 0x06,		// Value length + value
+		  0x40, 0x00, 0x00, 0x01,
+		  'h', 'i',
+
+		  IPP_TAG_END		// end tag
+		};
+
 
 //
 // Local functions...
@@ -639,6 +658,41 @@ main(int  argc,				// I - Number of command-line arguments
       testEndMessage(false, "read successful");
     else
       testEnd(true);
+
+    // Read the extension data and confirm ippGetLength() matches...
+    testBegin("Read Extension Value from Memory");
+
+    request = ippNew();
+    data.rpos    = 0;
+    data.wused   = sizeof(extension);
+    data.wsize   = sizeof(extension);
+    data.wbuffer = extension;
+
+    while ((state = ippReadIO(&data, (ipp_io_cb_t)read_cb, 1, NULL, request)) != IPP_STATE_DATA)
+    {
+      if (state == IPP_STATE_ERROR)
+	break;
+    }
+
+    length = ippGetLength(request);
+
+    if (state != IPP_STATE_DATA)
+    {
+      testEndMessage(false, "%d bytes read", (int)data.rpos);
+      status = 1;
+    }
+    else if (length != sizeof(extension))
+    {
+      testEndMessage(false, "wrong ippGetLength(), %d instead of %d bytes", (int)length, (int)sizeof(extension));
+      print_attributes(request, 8);
+      status = 1;
+    }
+    else
+    {
+      testEnd(true);
+    }
+
+    ippDelete(request);
 
     // Read the mixed data and confirm we converted everything to rangeOfInteger
     // values...
