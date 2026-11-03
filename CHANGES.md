@@ -56,6 +56,7 @@ v3.0.4 - YYYY-MM-DD
 - Fixed a DNS-SD browsing issue on Windows (Issue #199)
 - Fixed `httpGetHostname` on Windows (Issue #200)
 - Fixed handling of "%c" formatting in `cupsFormatString` (Issue #201)
+- Fixed the loading of the default DigestOptions value (Issue #206)
 - Fixed PAM support in `ippeveprinter`.
 - Fixed a typo in the JWT HS verification code.
 - Fixed `ippValidateAttribute` not returning `false` for too-long URIs.
