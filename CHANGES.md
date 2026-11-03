@@ -45,6 +45,7 @@ v3.0.4 - YYYY-MM-DD
 - Fixed `cupsGetCredentialsTrust` to properly validate the signatures of
   CA-signed credentials (Issue #181)
 - Fixed error checking in `cupsOAuthGetAuthorizationCode` (Issue #182)
+- Fixed the handling of `ATTR-IF-[NOT-]DEFINED` in IPP files (Issue #185)
 - Fixed a potential race condition in `cupsEnumDests` (Issue #186)
 - Fixed a bug in `cupsJSONExportString` when exporting a child node (Issue #187)
 - Fixed the ECDSA P-256 curve used for JWT and X.509 certificates and signatures
