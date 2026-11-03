@@ -2362,6 +2362,11 @@ delete_job(ippeve_job_t *job)		// I - Job
   if (Verbosity)
     log_message(/*client*/NULL, "[Job %d] Removing job from history.", job->id);
 
+  // Jobs that are canceled or aborted before processing are still the active
+  // job, so clear that pointer before freeing the job...
+  if (job->printer->active_job == job)
+    job->printer->active_job = NULL;
+
   ippDelete(job->attrs);
 
   free(job->message);
