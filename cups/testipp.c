@@ -293,7 +293,7 @@ static ipp_uchar_t extension[] =	// Extension value buffer
 		  'x', '-', 'e', 'x', 't',
 		  0x00, 0x06,		// Value length + value
 		  0x40, 0x00, 0x00, 0x01,
-		  			// Extension tag identifier
+					// Extension tag identifier
 		  'h', 'i',		// Extension tag value
 
 		  IPP_TAG_END		// end tag
