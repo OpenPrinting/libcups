@@ -3867,7 +3867,11 @@ prepare_pages(
     if (layout)
       current ++;
 
-    p->num_outpages = current;
+    if ((p->num_outpages = current) == 0)
+    {
+      fputs("ERROR: No pages found.\n", stderr);
+      exit(1);
+    }
 
     // Allocate memory for the pages...
     if (p->num_outpages > XFORM_MAX_OUTPAGES)

@@ -57,6 +57,7 @@ v3.0.4 - YYYY-MM-DD
 - Fixed a DNS-SD browsing issue on Windows (Issue #199)
 - Fixed `httpGetHostname` on Windows (Issue #200)
 - Fixed handling of "%c" formatting in `cupsFormatString` (Issue #201)
+- Fixed DNS-SD threading issues on Windows (Issue #204)
 - Fixed issues related to extension tag values (Issue #205)
 - Fixed the loading of the default DigestOptions value (Issue #206)
 - Fixed cancellation of the current active job in `ippeveprinter` (Issue #207)
