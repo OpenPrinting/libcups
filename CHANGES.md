@@ -1,7 +1,7 @@
 Changes in libcups
 ==================
 
-v3.0.4 - YYYY-MM-DD
+v3.0.4 - 2026-11-05
 -------------------
 
 - SECURITY-3.5: Updated `cupsOAuthGetTokens` to do more validation of the access
