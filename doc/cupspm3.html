@@ -6583,8 +6583,10 @@ expiration time set to the next recommended query time.  If the
 <p class="description">Identification information or <code>NULL</code> if none</p>
 <h4 class="discussion">Discussion</h4>
 <p class="discussion">This function retrieves the user ID token associated with a given access
-token.  The user ID information is cached until the token expires to minimize
-the overhead of communicating with the Authorization Server.</p>
+token.  The user ID information is cached until the token expires, as saved
+by <a href="#cupsOAuthSaveTokens"><code>cupsOAuthSaveTokens</code></a>, or for 5 minutes when retreived from the
+Authorization Server to minimize communication overhead.  Only user
+information containing a subject (&quot;sub&quot;) is returned or cached.</p>
 <h3 class="function"><a id="cupsOAuthMakeAuthorizationURL">cupsOAuthMakeAuthorizationURL</a></h3>
 <p class="description">Make an authorization URL.</p>
 <p class="code">

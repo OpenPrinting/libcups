@@ -19,6 +19,8 @@ v3.0.4 - YYYY-MM-DD
 - Updated `ippValidateAttribute` to check name and text values against RFC 5198
   (Issue #180)
 - Updated `cupsSignCredentialsRequest` to validate all common names (Issue #189)
+- Updated `cupsOAuthGetUserId` to properly expire stale user information
+  (Issue #190)
 - Updated `cupsOAuthMakeAuthorizationURL` to require the authorization endpoint
   to be a "https" URL (Issue #193)
 - Updated `cupsJWTHasValidSignature` to use a constant-time comparison function
