@@ -766,31 +766,31 @@ main(int  argc,				// I - Number of command-line arguments
     testBegin("ippFind(x-ext, IPP_TAG_EXTENSION)");
     if ((attr = ippFindAttribute(request, "x-ext", IPP_TAG_EXTENSION)) != NULL)
     {
-      unsigned char	*data;		// Value
-      size_t		datalen;	// Length of value
+      unsigned char	*octet;		// Value
+      size_t		octetlen;	// Length of value
 
       if (ippGetCount(attr) != 1)
       {
         testEndMessage(false, "got %u values, expected 1)", (unsigned)ippGetCount(attr));
       }
-      else if ((data = ippGetOctetString(attr, 0, &datalen)) != NULL && datalen == 6)
+      else if ((octet = ippGetOctetString(attr, 0, &octetlen)) != NULL && octetlen == 6)
       {
-        unsigned exttag = (unsigned)(data[0] << 24) | (unsigned)(data[1] << 16) | (unsigned)(data[2] << 8) | data[3];
+        unsigned exttag = (unsigned)(octet[0] << 24) | (unsigned)(octet[1] << 16) | (unsigned)(octet[2] << 8) | octet[3];
 
 	if (exttag != 0x40000001)
 	  testEndMessage(false, "got extension 0x%08x, expected 0x40000001", exttag);
-	else if (data[4] != 'h' || data[5] != 'i')
-	  testEndMessage(false, "got '%c%c', expected 'hi'", data[4], data[5]);
+	else if (octet[4] != 'h' || octet[5] != 'i')
+	  testEndMessage(false, "got '%c%c', expected 'hi'", octet[4], octet[5]);
 	else
 	  testEnd(true);
       }
-      else if (data == NULL)
+      else if (octet == NULL)
       {
         testEndMessage(false, "no data");
       }
       else
       {
-        testEndMessage(false, "got %u bytes of data, expected 6", (unsigned)datalen);
+        testEndMessage(false, "got %u bytes of data, expected 6", (unsigned)octetlen);
       }
     }
     else

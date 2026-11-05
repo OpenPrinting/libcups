@@ -106,7 +106,6 @@
 		270696381CADF3E200FFE5FB /* libiconv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 728FB7EF1536167A005426E1 /* libiconv.dylib */; };
 		270696391CADF3E200FFE5FB /* libresolv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 728FB7F01536167A005426E1 /* libresolv.dylib */; };
 		2706963A1CADF3E200FFE5FB /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 728FB7EC1536161C005426E1 /* libz.dylib */; };
-		2706963B1CADF3E200FFE5FB /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 278C58E7136B64B000836530 /* Security.framework */; };
 		2706963E1CADF3E200FFE5FB /* array.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220EB91333056300FCA411 /* array.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		270696401CADF3E200FFE5FB /* cups-private.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220EC01333056300FCA411 /* cups-private.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		270696421CADF3E200FFE5FB /* file-private.h in Headers */ = {isa = PBXBuildFile; fileRef = 72220ED7133305BB00FCA411 /* file-private.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -350,7 +349,6 @@
 		27BF22C92CBEC717003AAB6D /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D3967A27BB389C003D3D8E /* libz.tbd */; };
 		27BF22CA2CBEC720003AAB6D /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC591926750C000F61D3 /* CoreFoundation.framework */; };
 		27BF22CB2CBEC720003AAB6D /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27312F302AC9C30A000F6392 /* CoreGraphics.framework */; };
-		27C61E962C12780E00750E71 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5D1926750C000F61D3 /* Security.framework */; };
 		27C61E972C12782B00750E71 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5D1926750C000F61D3 /* Security.framework */; };
 		27C61E982C12785300750E71 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5D1926750C000F61D3 /* Security.framework */; };
 		27C61E992C1278CE00750E71 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2767FC5D1926750C000F61D3 /* Security.framework */; };
@@ -529,7 +527,6 @@
 		72BFD605191AF1270005DA37 /* libiconv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 728FB7EF1536167A005426E1 /* libiconv.dylib */; };
 		72BFD606191AF1270005DA37 /* libresolv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 728FB7F01536167A005426E1 /* libresolv.dylib */; };
 		72BFD607191AF1270005DA37 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 728FB7EC1536161C005426E1 /* libz.dylib */; };
-		72BFD608191AF1270005DA37 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 278C58E7136B64B000836530 /* Security.framework */; };
 		72BFD609191AF14C0005DA37 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 278C58E8136B64B000836530 /* SystemConfiguration.framework */; };
 		72CF95E318A13543000FCAE4 /* dest-job.c in Sources */ = {isa = PBXBuildFile; fileRef = 72CF95E018A13543000FCAE4 /* dest-job.c */; };
 		72CF95E418A13543000FCAE4 /* dest-localization.c in Sources */ = {isa = PBXBuildFile; fileRef = 72CF95E118A13543000FCAE4 /* dest-localization.c */; };
@@ -1475,7 +1472,6 @@
 				270696381CADF3E200FFE5FB /* libiconv.dylib in Frameworks */,
 				270696391CADF3E200FFE5FB /* libresolv.dylib in Frameworks */,
 				2706963A1CADF3E200FFE5FB /* libz.dylib in Frameworks */,
-				2706963B1CADF3E200FFE5FB /* Security.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1616,7 +1612,6 @@
 				72BFD605191AF1270005DA37 /* libiconv.dylib in Frameworks */,
 				72BFD606191AF1270005DA37 /* libresolv.dylib in Frameworks */,
 				72BFD607191AF1270005DA37 /* libz.dylib in Frameworks */,
-				72BFD608191AF1270005DA37 /* Security.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1776,7 +1771,6 @@
 				728FB7ED1536161C005426E1 /* libz.dylib in Frameworks */,
 				728FB7E91536161C005426E1 /* CoreFoundation.framework in Frameworks */,
 				2707FC072C0E17340035BBFC /* CoreServices.framework in Frameworks */,
-				27C61E962C12780E00750E71 /* Security.framework in Frameworks */,
 				2707FC052C0E16AA0035BBFC /* SystemConfiguration.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -49,7 +49,7 @@ main(int  argc,				// I - Number of command-line arguments
     gettimeofday(&start, NULL);
     num_dests = cupsGetDests(CUPS_HTTP_DEFAULT, &dests);
     gettimeofday(&end, NULL);
-    secs = end.tv_sec - start.tv_sec + 0.000001 * (end.tv_usec - start.tv_usec);
+    secs = (double)end.tv_sec - (double)start.tv_sec + 0.000001 * (double)(end.tv_usec - start.tv_usec);
 
     if (cupsGetError() != IPP_STATUS_OK)
       testEndMessage(false, "%s", cupsGetErrorString());

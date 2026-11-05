@@ -287,7 +287,7 @@ main(void)
       }
       else
       {
-	testEndMessage(true, "%d words in %.3f seconds - %.0f words/sec", cupsArrayGetCount(array), end - start, cupsArrayGetCount(array) / (end - start));
+	testEndMessage(true, "%u words in %.3f seconds - %.0f words/sec", (unsigned)cupsArrayGetCount(array), end - start, (double)cupsArrayGetCount(array) / (end - start));
       }
     }
   }
@@ -480,7 +480,7 @@ get_seconds(void)
 
 
   gettimeofday(&curtime, NULL);
-  return (curtime.tv_sec + 0.000001 * curtime.tv_usec);
+  return ((double)curtime.tv_sec + 0.000001 * (double)curtime.tv_usec);
 }
 #endif // _WIN32
 
