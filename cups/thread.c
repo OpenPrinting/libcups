@@ -247,6 +247,11 @@ cupsThreadCreate(
 
   thread->func = func;
   thread->arg  = arg;
+
+  // Mark the handle as "not yet created" so win32_wrapper() won't free
+  // this object out from under us if the new thread's function returns
+  // before we've stored its real handle below...
+  thread->h    = (HANDLE)-1;
   thread->h    = (HANDLE)_beginthreadex(NULL, 0, (LPTHREAD_START_ROUTINE)win32_wrapper, thread, 0, NULL);
 
   if (thread->h == 0 || thread->h == (HANDLE)-1)
