@@ -36,7 +36,16 @@ struct _ipp_file_s			// IPP data file
   void			*cb_data;	// Callback data
   char			*buffer;	// Output buffer
   size_t		alloc_buffer;	// Size of output buffer
+  size_t		collection_depth;
+					// Current nesting depth of collection values
 };
+
+
+//
+// Limits...
+//
+
+#define _IPP_MAX_COLLECTION_DEPTH 32	// Maximum nesting depth of collection values
 
 
 //
@@ -675,6 +684,14 @@ ippFileReadCollection(ipp_file_t *file)	// I - IPP data file
     return (NULL);
   }
 
+  if (file->collection_depth >= _IPP_MAX_COLLECTION_DEPTH)
+  {
+    report_error(file, "Too many nested collection values on line %d of '%s'.", file->linenum, file->filename);
+    return (NULL);
+  }
+
+  file->collection_depth ++;
+
   // Parse the collection value...
   col = ippNew();
 
@@ -757,6 +774,8 @@ ippFileReadCollection(ipp_file_t *file)	// I - IPP data file
 
     }
   }
+
+  file->collection_depth --;
 
   return (col);
 }
