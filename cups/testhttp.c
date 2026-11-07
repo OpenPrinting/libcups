@@ -228,6 +228,7 @@ static const char * const base64_tests[][2] =
 //
 
 static bool	test_date(time_t t);
+static bool	test_transfer_encoding(const char *te, bool chunked);
 
 
 //
@@ -481,6 +482,16 @@ main(int  argc,				// I - Number of command-line arguments
     }
     else
       testEndMessage(true, "%s", buffer);
+
+    // httpUpdate()/httpGetLength() with Transfer-Encoding
+    if (!test_transfer_encoding("chunked", true))
+      failures ++;
+    if (!test_transfer_encoding("chunked ", true))
+      failures ++;
+    if (!test_transfer_encoding("gzip", false))
+      failures ++;
+    if (!test_transfer_encoding("chunked, chunked", false))
+      failures ++;
 
     return (failures);
   }
@@ -941,4 +952,75 @@ test_date(time_t t)			// I - Time in seconds since Jan 1, 1970
     testEndMessage(false, "got %lu, expected %lu", (unsigned long)timeval, (unsigned long)t);
     return (false);
   }
+}
+
+
+//
+// 'test_transfer_encoding()' - Test request framing for a Transfer-Encoding value.
+//
+
+static bool				// O - `true` on success, `false` on failure
+test_transfer_encoding(
+    const char *te,			// I - Transfer-Encoding value
+    bool       chunked)			// I - `true` if chunked, `false` if the request must be rejected
+{
+  bool			ret = false;	// Return value
+  http_addrlist_t	*addrlist;	// Loopback address
+  socklen_t		addrlen;	// Length of address
+  int			lfd = -1,	// Listen socket
+			cfd = -1;	// Client socket
+  http_t		*http = NULL;	// Server connection
+  char			request[1024],	// Request
+			resource[256];	// Resource path
+  http_status_t		status;		// HTTP status
+  off_t			length;		// Content length
+
+
+  testBegin("httpUpdate(Transfer-Encoding: \"%s\")", te);
+
+  if ((addrlist = httpAddrGetList("127.0.0.1", AF_INET, "0")) == NULL)
+  {
+    testEndMessage(false, "httpAddrGetList: %s", cupsGetErrorString());
+    return (false);
+  }
+
+  addrlen = (socklen_t)sizeof(addrlist->addr);
+
+  if ((lfd = httpAddrListen(&addrlist->addr, 0)) < 0 || getsockname(lfd, (struct sockaddr *)&addrlist->addr, &addrlen) || !httpAddrConnect(addrlist, &cfd, 10000, NULL))
+  {
+    testEndMessage(false, "unable to connect: %s", cupsGetErrorString());
+    goto done;
+  }
+
+  snprintf(request, sizeof(request), "POST / HTTP/1.1\r\nHost: localhost\r\nTransfer-Encoding: %s\r\nContent-Length: 4\r\n\r\n", te);
+  if (send(cfd, request, strlen(request), 0) < 0 || (http = httpAcceptConnection(lfd, true)) == NULL || httpReadRequest(http, resource, sizeof(resource)) != HTTP_STATE_POST)
+  {
+    testEndMessage(false, "unable to send request: %s", cupsGetErrorString());
+    goto done;
+  }
+
+  while ((status = httpUpdate(http)) == HTTP_STATUS_CONTINUE);
+
+  length = httpGetLength(http);
+
+  if (chunked && (status != HTTP_STATUS_OK || length != 0))
+    testEndMessage(false, "got status %d, length %ld, expected chunked", status, (long)length);
+  else if (!chunked && status != HTTP_STATUS_ERROR)
+    testEndMessage(false, "got status %d, length %ld, expected error", status, (long)length);
+  else
+    ret = true;
+
+  if (ret)
+    testEnd(true);
+
+  done:
+
+  httpClose(http);
+  if (cfd >= 0)
+    httpAddrClose(NULL, cfd);
+  if (lfd >= 0)
+    httpAddrClose(NULL, lfd);
+  httpAddrFreeList(addrlist);
+
+  return (ret);
 }
