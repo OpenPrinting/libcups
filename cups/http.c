@@ -1066,6 +1066,13 @@ httpGetLength(http_t *http)		// I - HTTP connection
     DEBUG_puts("4httpGetLength: chunked request!");
     remaining = 0;
   }
+  else if (http->fields[HTTP_FIELD_TRANSFER_ENCODING] && http->fields[HTTP_FIELD_TRANSFER_ENCODING][0])
+  {
+    // Don't fall back on Content-Length for an unsupported Transfer-Encoding
+    // (RFC 9112 section 6.1)...
+    DEBUG_printf("4httpGetLength: Unsupported Transfer-Encoding \"%s\".", http->fields[HTTP_FIELD_TRANSFER_ENCODING]);
+    remaining = -1;
+  }
   else
   {
     // The following is a hack for HTTP servers that don't send a Content-Length
@@ -2639,9 +2646,15 @@ _httpUpdate(http_t        *http,	// I - HTTP connection
   else if ((value = strchr(http->line, ':')) != NULL)
   {
     // Got a value...
+    char *valend;			// End of value
+
     *value++ = '\0';
     while (_cups_isspace(*value))
       value ++;
+
+    // Strip trailing whitespace (RFC 9110 section 5.5)...
+    for (valend = value + strlen(value); valend > value && _cups_isspace(valend[-1]); valend --)
+      valend[-1] = '\0';
 
     DEBUG_printf("1_httpUpdate: Header %s: %s", http->line, value);
 
