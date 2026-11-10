@@ -450,6 +450,14 @@ AS_IF([test $have_tls = 0], [
 		CPPFLAGS="$CPPFLAGS `$PKGCONFIG --cflags gnutls`"
 		LIBS="$LIBS `$PKGCONFIG --libs gnutls`"
 		PKGCONFIG_REQUIRES_PRIVATE="gnutls >= 3.0, $PKGCONFIG_REQUIRES_PRIVATE"
+
+		AC_CHECK_FUNC([gnutls_priority_set_direct], [
+		    AC_DEFINE([HAVE_GNUTLS_PRIORITY_SET_DIRECT], [1], [Do we have the gnutls_priority_set_direct function?])
+		])
+
+		AC_CHECK_FUNC([gnutls_transport_set_pull_timeout_function], [
+		    AC_DEFINE([HAVE_GNUTLS_TRANSPORT_SET_PULL_TIMEOUT_FUNCTION], [1], [Do we have the gnutls_transport_set_pull_timeout_function function?])
+		])
 	    ], [
 		AC_MSG_RESULT([no])
 	    ])

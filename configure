@@ -5257,6 +5257,28 @@ printf "%s\n" "#define HAVE_GNUTLS 1" >>confdefs.h
 		LIBS="$LIBS `$PKGCONFIG --libs gnutls`"
 		PKGCONFIG_REQUIRES_PRIVATE="gnutls >= 3.0, $PKGCONFIG_REQUIRES_PRIVATE"
 
+		ac_fn_c_check_func "$LINENO" "gnutls_priority_set_direct" "ac_cv_func_gnutls_priority_set_direct"
+if test "x$ac_cv_func_gnutls_priority_set_direct" = xyes
+then :
+
+
+printf "%s\n" "#define HAVE_GNUTLS_PRIORITY_SET_DIRECT 1" >>confdefs.h
+
+
+fi
+
+
+		ac_fn_c_check_func "$LINENO" "gnutls_transport_set_pull_timeout_function" "ac_cv_func_gnutls_transport_set_pull_timeout_function"
+if test "x$ac_cv_func_gnutls_transport_set_pull_timeout_function" = xyes
+then :
+
+
+printf "%s\n" "#define HAVE_GNUTLS_TRANSPORT_SET_PULL_TIMEOUT_FUNCTION 1" >>confdefs.h
+
+
+fi
+
+
 else $as_nop
 
 		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
