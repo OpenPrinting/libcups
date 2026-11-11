@@ -7,7 +7,7 @@
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH ippeveprinter 1 "CUPS" "2026-09-14" "OpenPrinting"
+.TH ippeveprinter 1 "CUPS" "2026-11-10" "OpenPrinting"
 .SH NAME
 ippeveprinter \- an ipp everywhere printer application for cups
 .SH SYNOPSIS
@@ -127,6 +127,11 @@ Show the CUPS version.
 .TP 5
 .B \-2
 Report support for two-sided (duplex) printing.
+This option cannot be used with the
+.B \-a
+(attribute file) or
+.B \-P
+(PPD) options.
 .TP 5
 \fB\-a \fIFILENAME\fR
 Specifies an IPP file that defines the attributes for the printer.
@@ -158,6 +163,11 @@ will create an output file using the job ID and name.
 \fB\-f \fIINPUT-TYPE/SUBTYPE[,...]\fR
 Specifies a list of MIME media types that the server will accept.
 The default depends on the type of printer created.
+This option cannot be used with the
+.B \-a
+(attribute file) or
+.B \-P
+(PPD) options.
 .TP 5
 \fB\-F \fIOUTPUT-TYPE/SUBTYPE[,...]\fR
 Specifies the output MIME media type.
@@ -191,11 +201,21 @@ The default is to send log messages to the standard error.
 Specifies the model name of the printer.
 The default is
 .IR Printer .
+This option cannot be used with the
+.B \-a
+(attribute file) or
+.B \-P
+(PPD) options.
 .TP 5
 \fB\-M \fIMANUFACTURER\fR
 Set the manufacturer of the printer.
 The default is
 .IR Example .
+This option cannot be used with the
+.B \-a
+(attribute file) or
+.B \-P
+(PPD) options.
 .TP 5
 \fB\-n \fIHOSTNAME\fR
 Specifies the hostname that is reported by the server.
@@ -221,6 +241,11 @@ Specifies the printer speed in pages per minute.
 If two numbers are specified and the second number is greater than zero, the server will report support for color printing.
 The default is
 .IR 10,0 .
+This option cannot be used with the
+.B \-a
+(attribute file) or
+.B \-P
+(PPD) options.
 .TP 5
 \fB\-S \fIFILENAME.strings\fR
 Specifies a strings file for localization.

@@ -219,6 +219,11 @@ Show the CUPS version.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-2</strong><br>
 Report support for two-sided (duplex) printing.
+This option cannot be used with the
+<strong>-a</strong>
+(attribute file) or
+<strong>-P</strong>
+(PPD) options.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-a </strong><em>FILENAME</em><br>
 Specifies an IPP file that defines the attributes for the printer.
@@ -251,6 +256,11 @@ will create an output file using the job ID and name.
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-f </strong><em>INPUT-TYPE/SUBTYPE[,...]</em><br>
 Specifies a list of MIME media types that the server will accept.
 The default depends on the type of printer created.
+This option cannot be used with the
+<strong>-a</strong>
+(attribute file) or
+<strong>-P</strong>
+(PPD) options.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-F </strong><em>OUTPUT-TYPE/SUBTYPE[,...]</em><br>
 Specifies the output MIME media type.
@@ -285,12 +295,22 @@ Specifies the model name of the printer.
 The default is
 <em>Printer</em>.
 
+This option cannot be used with the
+<strong>-a</strong>
+(attribute file) or
+<strong>-P</strong>
+(PPD) options.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-M </strong><em>MANUFACTURER</em><br>
 Set the manufacturer of the printer.
 The default is
 <em>Example</em>.
 
+This option cannot be used with the
+<strong>-a</strong>
+(attribute file) or
+<strong>-P</strong>
+(PPD) options.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-n </strong><em>HOSTNAME</em><br>
 Specifies the hostname that is reported by the server.
@@ -319,6 +339,11 @@ If two numbers are specified and the second number is greater than zero, the ser
 The default is
 <em>10,0</em>.
 
+This option cannot be used with the
+<strong>-a</strong>
+(attribute file) or
+<strong>-P</strong>
+(PPD) options.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-S </strong><em>FILENAME.strings</em><br>
 Specifies a strings file for localization.
