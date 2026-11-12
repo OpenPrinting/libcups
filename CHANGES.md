@@ -4,6 +4,8 @@ Changes in libcups
 v3.0.5 - YYYY-MM-DD
 -------------------
 
+- SECURITY-4.3: The IPP parser workaround for broken out-of-band values could
+  yield NULL string pointers that later caused a crash (GHSA-x75c-fjjg-wmmp)
 
 
 v3.0.4 - 2026-11-05
