@@ -1,0 +1,60 @@
+#
+# Test 8-up printing through an IPP Everywhere printer.
+#
+# Copyright © 2026 by OpenPrinting.
+#
+# Licensed under Apache License v2.0.  See the file "LICENSE" for more
+# information.
+#
+
+{
+    NAME "Get 8-up printer capabilities"
+    OPERATION Get-Printer-Attributes
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR keyword requested-attributes number-up-default,number-up-supported
+
+    STATUS successful-ok
+    EXPECT number-up-default OF-TYPE integer COUNT 1 IN-GROUP printer-attributes-tag WITH-VALUE 1
+    EXPECT number-up-supported OF-TYPE integer IN-GROUP printer-attributes-tag WITH-VALUE 8
+}
+
+{
+    NAME "Print 8-up PDF"
+    OPERATION Print-Job
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR name requesting-user-name $user
+    ATTR name job-name "8-Up Test"
+    ATTR boolean ipp-attribute-fidelity true
+    ATTR name document-name $filename
+    ATTR mimeMediaType document-format application/pdf
+    GROUP job-attributes-tag
+    ATTR integer number-up 8
+    FILE $filename
+
+    STATUS successful-ok
+    EXPECT job-id OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE >0
+    EXPECT job-uri OF-TYPE uri COUNT 1 IN-GROUP job-attributes-tag
+}
+
+{
+    NAME "Wait for 8-up job to complete"
+    OPERATION Get-Job-Attributes
+    GROUP operation-attributes-tag
+    ATTR charset attributes-charset utf-8
+    ATTR naturalLanguage attributes-natural-language en
+    ATTR uri printer-uri $uri
+    ATTR integer job-id $job-id
+    ATTR name requesting-user-name $user
+
+    STATUS successful-ok
+    EXPECT number-up OF-TYPE integer COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 8
+    EXPECT job-state OF-TYPE enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 7,8,9 REPEAT-NO-MATCH REPEAT-LIMIT 30
+    EXPECT job-state OF-TYPE enum COUNT 1 IN-GROUP job-attributes-tag WITH-VALUE 9
+    EXPECT job-state-reasons OF-TYPE keyword IN-GROUP job-attributes-tag WITH-VALUE job-completed-successfully
+}
