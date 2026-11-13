@@ -369,7 +369,11 @@ addr->un.sun_path, strerror(errno));
   {
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), false);
 
+#ifdef _WIN32
+    closesocket(fd);
+#else
     close(fd);
+#endif // _WIN32
 
     return (-1);
   }
@@ -380,7 +384,11 @@ addr->un.sun_path, strerror(errno));
     DEBUG_printf("1httpAddrListen: Unable to listen on socket: %s", strerror(errno));
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), false);
 
+#ifdef _WIN32
+    closesocket(fd);
+#else
     close(fd);
+#endif // _WIN32
 
     return (-1);
   }

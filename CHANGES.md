@@ -8,6 +8,7 @@ v3.0.5 - YYYY-MM-DD
   yield NULL string pointers that later caused a crash (GHSA-x75c-fjjg-wmmp)
 - Updated the HTTP parser to strip trailing whitespace in header values, reject
   unknown transfer encodings (Issue #208)
+- Fixed `httpAddrListen` error handling on Windows (Issue #210)
 
 
 v3.0.4 - 2026-11-05
