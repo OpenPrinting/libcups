@@ -35,10 +35,12 @@ static http_t		*http_create(const char *host, int port, http_addrlist_t *addrlis
 #ifdef DEBUG
 static void		http_debug_hex(const char *prefix, const char *buffer, int bytes);
 #endif // DEBUG
+static bool		http_gets_chunk(http_t *http, char *line, size_t linesize);
 static ssize_t		http_read(http_t *http, char *buffer, size_t length, int timeout);
 static ssize_t		http_read_buffered(http_t *http, char *buffer, size_t length);
 static ssize_t		http_read_chunk(http_t *http, char *buffer, size_t length);
 static bool		http_send(http_t *http, http_state_t request, const char *uri);
+static void		http_skip_trailer(http_t *http);
 static off_t		http_set_length(http_t *http);
 static void		http_set_timeout(int fd, double timeout);
 static void		http_set_wait(http_t *http);
@@ -1543,7 +1545,7 @@ httpPeek(http_t *http,			// I - HTTP connection
   {
     DEBUG_puts("2httpPeek: Getting chunk length...");
 
-    if (httpGets(http, len, sizeof(len)) == NULL)
+    if (!http_gets_chunk(http, len, sizeof(len)))
     {
       DEBUG_puts("1httpPeek: Could not get length!");
       return (0);
@@ -1552,7 +1554,7 @@ httpPeek(http_t *http,			// I - HTTP connection
     if (!len[0])
     {
       DEBUG_puts("1httpPeek: Blank chunk length, trying again...");
-      if (!httpGets(http, len, sizeof(len)))
+      if (!http_gets_chunk(http, len, sizeof(len)))
       {
 	DEBUG_puts("1httpPeek: Could not get chunk length.");
 	return (0);
@@ -1577,7 +1579,7 @@ httpPeek(http_t *http,			// I - HTTP connection
       http_content_coding_finish(http);
 
     if (http->data_encoding == HTTP_ENCODING_CHUNKED)
-      httpGets(http, len, sizeof(len));
+      http_skip_trailer(http);
 
     if (http->state == HTTP_STATE_LOCK_RECV || http->state == HTTP_STATE_POST_RECV || http->state == HTTP_STATE_PROPFIND_RECV || http->state == HTTP_STATE_PROPPATCH_RECV)
       http->state ++;
@@ -1891,10 +1893,10 @@ httpRead(http_t *http,			// I - HTTP connection
 
 	  if (http->data_remaining <= 0 && http->data_encoding == HTTP_ENCODING_CHUNKED)
 	  {
-	    // Read the trailing blank line now...
+	    // Consume the trailing line for this chunk now...
 	    char	len[32];		// Length string
 
-	    httpGets(http, len, sizeof(len));
+	    http_gets_chunk(http, len, sizeof(len));
 	  }
 
           bytes = 0;
@@ -1915,10 +1917,10 @@ httpRead(http_t *http,			// I - HTTP connection
 
       if (http->data_remaining <= 0)
       {
-        // Read the trailing blank line now...
+        // Consume the trailing line for this chunk now...
         char	len[32];		// Length string
 
-        httpGets(http, len, sizeof(len));
+        http_gets_chunk(http, len, sizeof(len));
       }
     }
   }
@@ -1940,10 +1942,10 @@ httpRead(http_t *http,			// I - HTTP connection
 
       if (http->data_remaining <= 0 && http->data_encoding == HTTP_ENCODING_CHUNKED)
       {
-        // Read the trailing blank line now...
+        // Consume the trailing line for this chunk now...
         char	len[32];		// Length string
 
-        httpGets(http, len, sizeof(len));
+        http_gets_chunk(http, len, sizeof(len));
       }
     }
   }
@@ -3878,7 +3880,7 @@ http_read_chunk(http_t *http,		// I - HTTP connection
   {
     char	len[32];		// Length string
 
-    if (!httpGets(http, len, sizeof(len)))
+    if (!http_gets_chunk(http, len, sizeof(len)))
     {
       DEBUG_puts("8http_read_chunk: Could not get chunk length.");
       return (0);
@@ -3887,7 +3889,7 @@ http_read_chunk(http_t *http,		// I - HTTP connection
     if (!len[0])
     {
       DEBUG_puts("8http_read_chunk: Blank chunk length, trying again...");
-      if (!httpGets(http, len, sizeof(len)))
+      if (!http_gets_chunk(http, len, sizeof(len)))
       {
 	DEBUG_puts("8http_read_chunk: Could not get chunk length.");
 	return (0);
@@ -3906,8 +3908,8 @@ http_read_chunk(http_t *http,		// I - HTTP connection
 
     if (http->data_remaining == 0)
     {
-      // 0-length chunk, grab trailing blank line...
-      httpGets(http, len, sizeof(len));
+      // 0-length chunk, consume the trailer section...
+      http_skip_trailer(http);
     }
   }
 
@@ -3919,6 +3921,66 @@ http_read_chunk(http_t *http,		// I - HTTP connection
     length = (size_t)http->data_remaining;
 
   return (http_read_buffered(http, buffer, length));
+}
+
+
+//
+// 'http_gets_chunk()' - Read a complete chunked transfer-coding control line.
+//
+// This reads one CR LF or LF terminated line used by the "chunked" transfer
+// coding (a chunk-size line or a trailer field line), copying up to
+// "linesize - 1" bytes into "line" and consuming (discarding) the rest of the
+// line when it is longer than the buffer.  httpGets() leaves the remainder of
+// an over-long line in the read buffer; consuming the whole line here keeps a
+// long chunk extension or trailer field from being misparsed as the start of
+// the next message on a persistent connection.
+//
+
+static bool				// O - `true` if a line was read, `false` on EOF/error
+http_gets_chunk(http_t *http,		// I - HTTP connection
+                char   *line,		// O - Line buffer
+                size_t linesize)	// I - Size of line buffer
+{
+  char	discard[256];			// Overflow discard buffer
+
+
+  if (httpGets(http, line, linesize))
+    return (true);
+
+  // httpGets() returns NULL without setting http->error when the line is
+  // longer than the buffer, so keep reading (and discarding) until we consume
+  // the line terminator or hit a real EOF/error...
+  while (!http->error)
+  {
+    if (httpGets(http, discard, sizeof(discard)))
+      return (true);
+  }
+
+  return (false);
+}
+
+
+//
+// 'http_skip_trailer()' - Consume the trailer section following a chunked body.
+//
+// After the final (zero-length) chunk, the "chunked" transfer coding allows an
+// optional trailer section of header field lines terminated by an empty line.
+// Read and discard the whole section so that no trailer bytes are left in the
+// read buffer to be misparsed as the start of the next message on a persistent
+// connection.
+//
+
+static void
+http_skip_trailer(http_t *http)		// I - HTTP connection
+{
+  char	line[256];			// Trailer line buffer
+
+
+  while (http_gets_chunk(http, line, sizeof(line)))
+  {
+    if (!line[0])
+      break;
+  }
 }
 
 

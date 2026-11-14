@@ -227,6 +227,7 @@ static const char * const base64_tests[][2] =
 // Local functions...
 //
 
+static bool	test_chunk_desync(void);
 static bool	test_date(time_t t);
 
 
@@ -481,6 +482,10 @@ main(int  argc,				// I - Number of command-line arguments
     }
     else
       testEndMessage(true, "%s", buffer);
+
+    // Chunked transfer-coding trailer handling (request smuggling)
+    if (!test_chunk_desync())
+      failures ++;
 
     return (failures);
   }
@@ -941,4 +946,127 @@ test_date(time_t t)			// I - Time in seconds since Jan 1, 1970
     testEndMessage(false, "got %lu, expected %lu", (unsigned long)timeval, (unsigned long)t);
     return (false);
   }
+}
+
+
+//
+// 'test_chunk_desync()' - Test that a chunked trailer section cannot smuggle a
+//                         second request on a persistent connection.
+//
+
+static bool				// O - `true` on success, `false` on failure
+test_chunk_desync(void)
+{
+#ifdef _WIN32
+  // Raw socket plumbing below is POSIX-only; skip on Windows...
+  return (true);
+
+#else
+  // The trailer section after the final chunk is longer than the small buffer
+  // used to consume chunk control lines.  It must be fully consumed so its
+  // bytes are not left to be parsed as a second (smuggled) request; the only
+  // request after the body is the legitimately pipelined "GET /after".
+  static const char	request[] =
+      "POST /ipp/print HTTP/1.1\r\n"
+      "Host: localhost\r\n"
+      "Transfer-Encoding: chunked\r\n"
+      "\r\n"
+      "5\r\nhello\r\n"
+      "0\r\n"
+      "X-Long-Trailer-Field-Padding: this-must-not-become-a-request\r\n"
+      "\r\n"
+      "GET /after HTTP/1.1\r\n"
+      "Host: localhost\r\n"
+      "\r\n";
+  int			lfd = -1,	// Listen socket
+			cfd = -1;	// Client socket
+  http_t		*http = NULL;	// Server-side connection
+  http_addr_t		addr;		// Listen/connect address
+  socklen_t		addrlen;	// Address length
+  char			uri[1024],	// Request URI
+			body[1024];	// Request body
+  http_state_t		state;		// Request state
+  bool			pass = true;	// Test result
+
+
+  testBegin("httpRead chunked trailer (request smuggling)");
+
+  memset(&addr, 0, sizeof(addr));
+  addr.ipv4.sin_family      = AF_INET;
+  addr.ipv4.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+
+  if ((lfd = socket(AF_INET, SOCK_STREAM, 0)) < 0 || bind(lfd, (struct sockaddr *)&addr, sizeof(addr.ipv4)) || listen(lfd, 1))
+  {
+    testEndMessage(false, "listen: %s", strerror(errno));
+    pass = false;
+    goto done;
+  }
+
+  addrlen = sizeof(addr.ipv4);
+  getsockname(lfd, (struct sockaddr *)&addr, &addrlen);
+
+  if ((cfd = socket(AF_INET, SOCK_STREAM, 0)) < 0 || connect(cfd, (struct sockaddr *)&addr, addrlen))
+  {
+    testEndMessage(false, "connect: %s", strerror(errno));
+    pass = false;
+    goto done;
+  }
+
+  if (write(cfd, request, sizeof(request) - 1) < 0)
+  {
+    testEndMessage(false, "write: %s", strerror(errno));
+    pass = false;
+    goto done;
+  }
+
+  shutdown(cfd, SHUT_WR);
+
+  if ((http = httpAcceptConnection(lfd, true)) == NULL)
+  {
+    testEndMessage(false, "httpAcceptConnection failed");
+    pass = false;
+    goto done;
+  }
+
+  // Read the chunked POST and its body...
+  while ((state = httpReadRequest(http, uri, sizeof(uri))) == HTTP_STATE_WAITING);
+
+  if (state != HTTP_STATE_POST)
+  {
+    testEndMessage(false, "request 1 was %s, expected POST", httpStateString(state));
+    pass = false;
+    goto done;
+  }
+
+  while (httpUpdate(http) == HTTP_STATUS_CONTINUE);
+  while (httpRead(http, body, sizeof(body)) > 0);
+
+  // Return to the waiting state with an empty response...
+  httpClearFields(http);
+  httpSetField(http, HTTP_FIELD_CONTENT_LENGTH, "0");
+  httpWriteResponse(http, HTTP_STATUS_OK);
+
+  // The next request must be the pipelined GET /after, not trailer bytes...
+  while ((state = httpReadRequest(http, uri, sizeof(uri))) == HTTP_STATE_WAITING);
+
+  if (state != HTTP_STATE_GET || strcmp(uri, "/after"))
+  {
+    testEndMessage(false, "request 2 was %s \"%s\", expected GET \"/after\"", httpStateString(state), uri);
+    pass = false;
+    goto done;
+  }
+
+  testEnd(true);
+
+  done:
+
+  if (http)
+    httpClose(http);
+  if (cfd >= 0)
+    close(cfd);
+  if (lfd >= 0)
+    close(lfd);
+
+  return (pass);
+#endif // _WIN32
 }
