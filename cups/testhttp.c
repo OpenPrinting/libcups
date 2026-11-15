@@ -228,6 +228,7 @@ static const char * const base64_tests[][2] =
 //
 
 static bool	test_date(time_t t);
+static bool	test_length(const char *name, const char *fields, off_t expected);
 
 
 //
@@ -291,6 +292,22 @@ main(int  argc,				// I - Number of command-line arguments
     if (!test_date(INT_MAX))
       failures ++;
     if (!test_date(UINT_MAX))
+      failures ++;
+
+    // httpGetLength() with Content-Length request fields
+    if (!test_length("single", "Content-Length: 5\r\n", 5))
+      failures ++;
+    if (!test_length("repeated", "Content-Length: 5\r\nContent-Length: 5\r\n", 5))
+      failures ++;
+    if (!test_length("list", "Content-Length: 5, 5\r\n", 5))
+      failures ++;
+    if (!test_length("conflicting", "Content-Length: 5\r\nContent-Length: 50\r\n", -1))
+      failures ++;
+    if (!test_length("conflicting list", "Content-Length: 5, 50\r\n", -1))
+      failures ++;
+    if (!test_length("trailing junk", "Content-Length: 5abc\r\n", -1))
+      failures ++;
+    if (!test_length("sign", "Content-Length: +5\r\n", -1))
       failures ++;
 
     // httpDecode64()/httpEncode64()
@@ -941,4 +958,99 @@ test_date(time_t t)			// I - Time in seconds since Jan 1, 1970
     testEndMessage(false, "got %lu, expected %lu", (unsigned long)timeval, (unsigned long)t);
     return (false);
   }
+}
+
+
+//
+// 'test_length()' - Test the Content-Length handling for a request.
+//
+
+static bool				// O - `true` on success, `false` on failure
+test_length(const char *name,		// I - Test name
+            const char *fields,		// I - Request header fields
+            off_t      expected)	// I - Expected length or `-1` for a bad request
+{
+  bool			ret = false;	// Return value
+  http_addrlist_t	*addrlist;	// Loopback address
+  int			lfd = -1,	// Listener socket
+			port;		// Listener port
+  http_t		*client = NULL,	// Client connection
+			*server = NULL;	// Server connection
+  char			request[1024],	// Request
+			resource[256];	// Request resource
+  http_status_t		status;		// Status from httpUpdate
+  off_t			length;		// Request length
+
+
+  testBegin("httpGetLength(%s)", name);
+
+  // Listen on a loopback port and connect to it...
+  if ((addrlist = httpAddrGetList("127.0.0.1", AF_INET, NULL)) == NULL)
+  {
+    testEndMessage(false, "httpAddrGetList: %s", cupsGetErrorString());
+    return (false);
+  }
+
+  for (port = 18631; port < 18731; port ++)
+  {
+    if ((lfd = httpAddrListen(&addrlist->addr, port)) >= 0)
+      break;
+  }
+
+  if (lfd < 0)
+  {
+    testEndMessage(false, "httpAddrListen: %s", cupsGetErrorString());
+    goto done;
+  }
+
+  if ((client = httpConnect("127.0.0.1", port, NULL, AF_INET, HTTP_ENCRYPTION_NEVER, true, 10000, NULL)) == NULL)
+  {
+    testEndMessage(false, "httpConnect: %s", cupsGetErrorString());
+    goto done;
+  }
+
+  // Send the request and read it back...
+  snprintf(request, sizeof(request), "POST / HTTP/1.1\r\nHost: localhost\r\n%s\r\n", fields);
+
+  if (httpWrite(client, request, strlen(request)) < 0 || httpFlushWrite(client) < 0)
+  {
+    testEndMessage(false, "Unable to send request: %s", cupsGetErrorString());
+    goto done;
+  }
+
+  if ((server = httpAcceptConnection(lfd, true)) == NULL)
+  {
+    testEndMessage(false, "httpAcceptConnection: %s", cupsGetErrorString());
+    goto done;
+  }
+
+  if (httpReadRequest(server, resource, sizeof(resource)) != HTTP_STATE_POST)
+  {
+    testEndMessage(false, "httpReadRequest failed");
+    goto done;
+  }
+
+  while ((status = httpUpdate(server)) == HTTP_STATUS_CONTINUE);
+
+  length = status == HTTP_STATUS_OK ? httpGetLength(server) : -1;
+
+  if (length == expected)
+  {
+    testEndMessage(true, "%ld", (long)length);
+    ret = true;
+  }
+  else
+  {
+    testEndMessage(false, "got %ld, expected %ld", (long)length, (long)expected);
+  }
+
+  done:
+
+  httpClose(server);
+  httpClose(client);
+  if (lfd >= 0)
+    httpAddrClose(NULL, lfd);
+  httpAddrFreeList(addrlist);
+
+  return (ret);
 }

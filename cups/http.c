@@ -1078,9 +1078,47 @@ httpGetLength(http_t *http)		// I - HTTP connection
   }
   else if (http->fields[HTTP_FIELD_CONTENT_LENGTH] && http->fields[HTTP_FIELD_CONTENT_LENGTH][0])
   {
-    // Fixed length content...
-    if ((remaining = strtoll(http->fields[HTTP_FIELD_CONTENT_LENGTH], NULL, 10)) < 0)
-      remaining = -1;
+    // Fixed length content.  The value must be 1*DIGIT, and repeated
+    // Content-Length fields (combined as "N, N, ...") must all have the same
+    // value (RFC 9110 section 8.6, RFC 9112 section 6.3)...
+    const char	*valptr;		// Pointer into value
+    char	*valend;		// End of number
+    off_t	length;			// Current length value
+
+    for (remaining = -1, valptr = http->fields[HTTP_FIELD_CONTENT_LENGTH];;)
+    {
+      if (!_cups_isdigit(*valptr))
+      {
+        remaining = -1;
+        break;
+      }
+
+      errno  = 0;
+      length = strtoll(valptr, &valend, 10);
+
+      if (errno == ERANGE || (remaining >= 0 && length != remaining))
+      {
+        remaining = -1;
+        break;
+      }
+
+      remaining = length;
+
+      if (!*valend)
+      {
+        break;
+      }
+      else if (*valend != ',')
+      {
+        remaining = -1;
+        break;
+      }
+
+      for (valptr = valend + 1; *valptr == ' ' || *valptr == '\t'; valptr ++);
+    }
+
+    if (remaining < 0)
+      DEBUG_printf("4httpGetLength: Bad Content-Length '%s'.", http->fields[HTTP_FIELD_CONTENT_LENGTH]);
   }
   else
   {
@@ -3268,7 +3306,7 @@ http_add_field(http_t       *http,	// I - HTTP connection
     }
   }
 
-  if (append && field != HTTP_FIELD_ACCEPT_ENCODING && field != HTTP_FIELD_ACCEPT_LANGUAGE && field != HTTP_FIELD_ACCEPT_RANGES && field != HTTP_FIELD_ALLOW && field != HTTP_FIELD_LINK && field != HTTP_FIELD_TRANSFER_ENCODING && field != HTTP_FIELD_UPGRADE && field != HTTP_FIELD_WWW_AUTHENTICATE)
+  if (append && field != HTTP_FIELD_ACCEPT_ENCODING && field != HTTP_FIELD_ACCEPT_LANGUAGE && field != HTTP_FIELD_ACCEPT_RANGES && field != HTTP_FIELD_ALLOW && field != HTTP_FIELD_CONTENT_LENGTH && field != HTTP_FIELD_LINK && field != HTTP_FIELD_TRANSFER_ENCODING && field != HTTP_FIELD_UPGRADE && field != HTTP_FIELD_WWW_AUTHENTICATE)
     append = false;
 
   if (!append && http->fields[field])
