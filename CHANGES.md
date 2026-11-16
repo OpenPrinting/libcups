@@ -10,6 +10,7 @@ v3.0.5 - YYYY-MM-DD
   unknown transfer encodings (Issue #208)
 - Updated the HTTP parser to skip trailer headers and chunk extensions
   (Issue #211)
+- Updated `cupsGetCrentialsTrust` validation of site certificates (Issue #213)
 - Fixed `httpAddrListen` error handling on Windows (Issue #210)
 
 
