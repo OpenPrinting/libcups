@@ -12,6 +12,7 @@ v3.0.5 - YYYY-MM-DD
   (Issue #211)
 - Updated `cupsGetCrentialsTrust` validation of site certificates (Issue #213)
 - Fixed `httpAddrListen` error handling on Windows (Issue #210)
+- Fixed an `ippfind` quoting issue on Windows (Issue #212)
 
 
 v3.0.4 - 2026-11-05
