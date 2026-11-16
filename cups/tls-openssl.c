@@ -2652,13 +2652,24 @@ openssl_verify_cb(int            ok,	// I - Default return value
 
     if (X509_NAME_get_text_by_NID(X509_get_issuer_name(cert), NID_commonName, issuer, sizeof(issuer)) >= 0 && !strcmp(issuer, "_site_"))
     {
-      // Yes, verify we have a local _site_ certificate...
+      // Yes, but the issuer name above is just a text field in the
+      // certificate we're trying to verify, so it proves nothing by
+      // itself - make sure this certificate was actually signed with our
+      // local _site_ certificate's key before trusting it...
+      X509	*sitecert = (X509 *)X509_STORE_CTX_get_ex_data(ctx, 0);
+      EVP_PKEY	*sitekey;
+
       DEBUG_puts("5openssl_verify_cb: Issuer is '_site_'.");
 
-      if (X509_STORE_CTX_get_ex_data(ctx, 0))
+      if (sitecert && (sitekey = X509_get_pubkey(sitecert)) != NULL)
       {
-	DEBUG_puts("5openssl_verify_cb: Local site certificate, OK.");
-	ok = 1;
+        if (X509_verify(cert, sitekey) == 1)
+        {
+	  DEBUG_puts("5openssl_verify_cb: Verified signature against local site certificate, OK.");
+	  ok = 1;
+	}
+
+	EVP_PKEY_free(sitekey);
       }
     }
   }
