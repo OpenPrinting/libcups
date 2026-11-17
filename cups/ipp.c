@@ -5740,7 +5740,7 @@ ipp_read_io(void        *src,		// I - Data source
 		if (n > 0)
 		{
 		  DEBUG_printf("1ipp_read_io: Invalid out-of-band value of length %d, discarding.", n);
-		  if ((*cb)(src, buffer, n) < n)
+		  if ((*cb)(src, buffer, (size_t)n) < n)
 		  {
 		    DEBUG_puts("1ipp_read_io: Unable to read out-of-band value.");
 		    goto rollback;
