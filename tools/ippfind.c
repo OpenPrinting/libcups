@@ -901,7 +901,7 @@ main(int  argc,				// I - Number of command-line args
     {
       regtype = buf;
     }
-    else if ((regtype = strstr(buf, "._")) != NULL)
+    else if ((regtype = (char *)strstr(buf, "._")) != NULL)
     {
       if (strcmp(regtype, "._tcp"))
       {

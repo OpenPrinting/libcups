@@ -222,7 +222,7 @@ cupsOAuthCopyAccessToken(
 
   if ((token = oauth_load_value(auth_uri, resource_uri, _CUPS_OTYPE_ACCESS, /*try_sysconfig*/false)) != NULL)
   {
-    if ((tokptr = strchr(token, '\n')) != NULL)
+    if ((tokptr = (char *)strchr(token, '\n')) != NULL)
     {
       *tokptr++ = '\0';
 
@@ -1509,7 +1509,7 @@ cupsOAuthGetUserId(
   if ((user_id_value = oauth_load_value(auth_uri, access_uri, _CUPS_OTYPE_USER_ID, /*try_sysconfig*/false)) != NULL)
   {
     // Yes, use it only if it hasn't expired...
-    if ((expires_ptr = strchr(user_id_value, '\n')) != NULL && strtol(expires_ptr + 1, NULL, 10) > time(NULL))
+    if ((expires_ptr = (char *)strchr(user_id_value, '\n')) != NULL && strtol(expires_ptr + 1, NULL, 10) > time(NULL))
     {
       *expires_ptr = '\0';
 
@@ -2073,7 +2073,7 @@ oauth_do_post(const char *ep,		// I - Endpoint URI
     // "verification_url" (URL)!  I agree that this is an ugly hack of a fix
     // but this is better than having all users of device grants lookup two
     // different names...
-    char *verification_url = strstr(response, "\"verification_url\":");
+    char *verification_url = (char *)strstr(response, "\"verification_url\":");
 
     DEBUG_printf("4oauth_do_post: verification_url=\"%s\"", verification_url);
 
@@ -2274,7 +2274,7 @@ oauth_make_path(
 
   // Build the hashed versions of the auth and resource URIs...
   cupsCopyString(auth_temp, auth_uri + 8, sizeof(auth_temp));
-  if ((ptr = strchr(auth_temp, '/')) != NULL)
+  if ((ptr = (char *)strchr(auth_temp, '/')) != NULL)
     *ptr = '\0';			// Strip resource path
   if (!strchr(auth_temp, ':'))		// Add :443 if no port is present
     cupsConcatString(auth_temp, ":443", sizeof(auth_temp));
@@ -2291,7 +2291,7 @@ oauth_make_path(
     {
       // HTTP URI
       cupsCopyString(secondary_temp, secondary_uri + 7, sizeof(secondary_temp));
-      if ((ptr = strchr(secondary_temp, '/')) != NULL)
+      if ((ptr = (char *)strchr(secondary_temp, '/')) != NULL)
         *ptr = '\0';			// Strip resource path
       if (!strchr(secondary_temp, ':'))	// Add :80 if no port is present
         cupsConcatString(secondary_temp, ":80", sizeof(secondary_temp));
@@ -2300,7 +2300,7 @@ oauth_make_path(
     {
       // HTTPS URI
       cupsCopyString(secondary_temp, secondary_uri + 8, sizeof(secondary_temp));
-      if ((ptr = strchr(secondary_temp, '/')) != NULL)
+      if ((ptr = (char *)strchr(secondary_temp, '/')) != NULL)
         *ptr = '\0';			// Strip resource path
       if (!strchr(secondary_temp, ':'))	// Add :443 if no port is present
         cupsConcatString(secondary_temp, ":443", sizeof(secondary_temp));
@@ -2309,7 +2309,7 @@ oauth_make_path(
     {
       // IPPS URI
       cupsCopyString(secondary_temp, secondary_uri + 7, sizeof(secondary_temp));
-      if ((ptr = strchr(secondary_temp, '/')) != NULL)
+      if ((ptr = (char *)strchr(secondary_temp, '/')) != NULL)
         *ptr = '\0';			// Strip resource path
       if (!strchr(secondary_temp, ':'))	// Add :631 if no port is present
         cupsConcatString(secondary_temp, ":631", sizeof(secondary_temp));

@@ -675,7 +675,7 @@ cupsFileOpen(const char *filename,	// I - Name of file
 
     case 's' : // Read/write socket
         cupsCopyString(hostname, filename, sizeof(hostname));
-	if ((portname = strrchr(hostname, ':')) != NULL)
+	if ((portname = (char *)strrchr(hostname, ':')) != NULL)
 	  *portname++ = '\0';
 	else
 	  return (NULL);

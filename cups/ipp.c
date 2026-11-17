@@ -331,7 +331,7 @@ ippAddCredentialsString(
       num_values ++;
 
     cstart = cptr;
-    if ((cptr = strchr(cstart, '\r')) != NULL)
+    if ((cptr = (char *)strchr(cstart, '\r')) != NULL)
     {
       // Skip CR or CR LF
       if (cptr[1] == '\n')
@@ -339,7 +339,7 @@ ippAddCredentialsString(
       else
         cptr ++;
     }
-    else if ((cptr = strchr(cstart, '\n')) != NULL)
+    else if ((cptr = (char *)strchr(cstart, '\n')) != NULL)
     {
       // Skip LF
       cptr ++;
@@ -352,14 +352,14 @@ ippAddCredentialsString(
     for (i = 0, cptr = cvalue; cptr && i < num_values;)
     {
       cstart = cptr;
-      if ((cptr = strchr(cptr, '\r')) != NULL)
+      if ((cptr = (char *)strchr(cptr, '\r')) != NULL)
       {
         // Terminate on CR
         *cptr++ = '\0';
         if (*cptr == '\n')
           cptr ++;			// Skip LF
       }
-      else if ((cptr = strchr(cstart, '\n')) != NULL)
+      else if ((cptr = (char *)strchr(cstart, '\n')) != NULL)
       {
         // Terminate on LF
         *cptr++ = '\0';
@@ -1890,7 +1890,7 @@ ippFindNextAttribute(ipp_t      *ipp,	// I - IPP message
   {
     // Search for child attribute...
     cupsCopyString(parent, name, sizeof(parent));
-    if ((child = strchr(parent, '/')) == NULL)
+    if ((child = (char *)strchr(parent, '/')) == NULL)
     {
       DEBUG_puts("3ippFindNextAttribute: Attribute name too long.");
       return (NULL);

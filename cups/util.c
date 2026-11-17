@@ -280,7 +280,7 @@ cupsGetJobs(http_t           *http,	// I - Connection to server or `CUPS_HTTP_DE
         }
         else if (!strcmp(attr->name, "job-printer-uri") && attr->value_tag == IPP_TAG_URI)
 	{
-	  if ((dest = strrchr(attr->values[0].string.text, '/')) != NULL)
+	  if ((dest = (char *)strrchr(attr->values[0].string.text, '/')) != NULL)
 	    dest ++;
         }
         else if (!strcmp(attr->name, "job-originating-user-name") && attr->value_tag == IPP_TAG_NAME)

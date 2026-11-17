@@ -2639,7 +2639,7 @@ _httpUpdate(http_t        *http,	// I - HTTP connection
     http->version = (http_version_t)(major * 100 + minor);
     *status       = http->status = (http_status_t)intstatus;
   }
-  else if ((value = strchr(http->line, ':')) != NULL)
+  else if ((value = (char *)strchr(http->line, ':')) != NULL)
   {
     // Got a value...
     *value++ = '\0';
@@ -3144,10 +3144,10 @@ httpWriteResponse(http_t        *http,	// I - HTTP connection
 
       for (start = http->set_cookie; start && *start; start = end)
       {
-        if ((end = strchr(start, '\n')) == NULL)
+        if ((end = (char *)strchr(start, '\n')) == NULL)
           end = start + strlen(start);
 
-	if ((semi = strchr(start, ';')) != NULL && semi < end)
+	if ((semi = (char *)strchr(start, ';')) != NULL && semi < end)
 	{
 	  if (httpWrite(http, "Set-Cookie: ", 12) < 0 ||
 	      httpWrite(http, start, (size_t)(end - start)) < 0 ||
@@ -3245,7 +3245,7 @@ http_add_field(http_t       *http,	// I - HTTP connection
   {
     // Special-case for Host: as we don't want a trailing "." on the hostname
     // and need to bracket IPv6 numeric addresses.
-    char *ptr = strchr(value, ':');
+    char *ptr = (char *)strchr(value, ':');
 
     if (value[0] != '[' && ptr && strchr(ptr + 1, ':'))
     {
@@ -3633,7 +3633,7 @@ http_create(
       char	*zoneid;		// Pointer to zoneid separator
 
       snprintf(http->hostname, sizeof(http->hostname), "[v1.%s]", host);
-      if ((zoneid = strchr(http->hostname, '%')) != NULL)
+      if ((zoneid = (char *)strchr(http->hostname, '%')) != NULL)
         *zoneid = '+';
     }
     else if (isxdigit(host[0]) && isxdigit(host[1]) && isxdigit(host[2]) && isxdigit(host[3]) && host[4] == ':')

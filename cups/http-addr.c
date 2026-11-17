@@ -184,7 +184,7 @@ httpAddrGetString(
 
       return (NULL);
     }
-    else if ((sptr = strchr(temps, '%')) != NULL)
+    else if ((sptr = (char *)strchr(temps, '%')) != NULL)
     {
       // Convert "%zone" to "+zone" to match URI form...
       *sptr = '+';

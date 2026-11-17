@@ -2432,7 +2432,7 @@ openssl_create_san(
 		*localptr;		// Pointer into localname
 
     cupsCopyString(localname, common_name, sizeof(localname));
-    if ((localptr = strchr(localname, '.')) != NULL)
+    if ((localptr = (char *)strchr(localname, '.')) != NULL)
       *localptr = '\0';
 
     snprintf(tempptr, sizeof(temp) - (size_t)(tempptr - temp), ",DNS:%s.local", localname);

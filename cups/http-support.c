@@ -301,7 +301,7 @@ httpAssembleURI(
     char	*query;			// Pointer to query string
 
     // Copy the resource string up to the query string if present...
-    query = strchr(resource, '?');
+    query = (char *)strchr(resource, '?');
     ptr   = http_copy_encode(ptr, resource, end, NULL, "?", encoding & HTTP_URI_CODING_RESOURCE);
     if (!ptr)
       goto assemble_overflow;
@@ -1045,7 +1045,7 @@ _httpSetDigestAuthString(
   }
 
   cupsCopyString(username, http->userpass, sizeof(username));
-  if ((password = strchr(username, ':')) != NULL)
+  if ((password = (char *)strchr(username, ':')) != NULL)
     *password++ = '\0';
   else
     return (false);
@@ -1586,11 +1586,11 @@ httpResolveURI(
       return (NULL);
     }
 
-    if ((uuid = strstr(resource, "?uuid=")) != NULL)
+    if ((uuid = (char *)strstr(resource, "?uuid=")) != NULL)
     {
       *uuid = '\0';
       uuid  += 6;
-      if ((uuidend = strchr(uuid, '&')) != NULL)
+      if ((uuidend = (char *)strchr(uuid, '&')) != NULL)
         *uuidend = '\0';
     }
 

@@ -5,7 +5,7 @@
 //
 //   ./testlang [-l locale] ["String to localize"]
 //
-// Copyright © 2021-2024 by OpenPrinting.
+// Copyright © 2021-2026 by OpenPrinting.
 // Copyright © 2007-2017 by Apple Inc.
 // Copyright © 1997-2006 by Easy Software Products.
 //
@@ -113,7 +113,7 @@ main(int  argc,				// I - Number of command-line arguments
 	  		*tempptr;	// Pointer into temporary language
 
             cupsCopyString(temp, dent->filename, sizeof(temp));
-            if ((tempptr = strchr(temp, '.')) != NULL)
+            if ((tempptr = (char *)strchr(temp, '.')) != NULL)
               *tempptr = '\0';
 
 	    errors += test_language(temp);

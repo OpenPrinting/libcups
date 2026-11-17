@@ -805,7 +805,7 @@ cupsJWTLoadCredentials(
 
   x5c = cupsJSONNew(/*parent*/NULL, /*after*/NULL, CUPS_JTYPE_ARRAY);
 
-  for (current = strstr(creds, "-----BEGIN CERTIFICATE-----\n"); current; current = strstr(current, "-----BEGIN CERTIFICATE-----\n"))
+  for (current = (char *)strstr(creds, "-----BEGIN CERTIFICATE-----\n"); current; current = (char *)strstr(current, "-----BEGIN CERTIFICATE-----\n"))
   {
     // Extract this certificate...
     current += 28;
@@ -813,7 +813,7 @@ cupsJWTLoadCredentials(
 
     while (*current && strncmp(current, "-----", 5))
     {
-      if ((next = strchr(current, '\n')) == NULL)
+      if ((next = (char *)strchr(current, '\n')) == NULL)
         break;
 
       len  = (size_t)(next - current);

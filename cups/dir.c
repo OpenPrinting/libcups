@@ -3,7 +3,7 @@
 //
 // This set of APIs abstracts enumeration of directory entries.
 //
-// Copyright © 2022-2024 by OpenPrinting.
+// Copyright © 2022-2026 by OpenPrinting.
 // Copyright © 2007-2021 by Apple Inc.
 // Copyright © 1997-2005 by Easy Software Products, all rights reserved.
 //
@@ -35,7 +35,7 @@ _cupsDirCreate(const char *path,	// I - Directory path
     return (false);
 
   // Create any intermediate paths as needed...
-  for (ptr = strchr(copypath + 1, '/'); ptr; ptr = strchr(ptr + 1, '/'))
+  for (ptr = (char *)strchr(copypath + 1, '/'); ptr; ptr = (char *)strchr(ptr + 1, '/'))
   {
     // Truncate path for the subdir and create it modulo the umask...
     *ptr = '\0';

@@ -1,7 +1,7 @@
 //
 // Localized printf/puts functions for CUPS.
 //
-// Copyright © 2022-2024 by OpenPrinting.
+// Copyright © 2022-2026 by OpenPrinting.
 // Copyright © 2007-2014 by Apple Inc.
 // Copyright © 2002-2007 by Easy Software Products.
 //
@@ -168,7 +168,7 @@ cupsLangSetLocale(char *argv[])		// IO - Command-line arguments
   if (lc_time)
   {
     cupsCopyString(new_lc_time, lc_time, sizeof(new_lc_time));
-    if ((charset = strchr(new_lc_time, '.')) == NULL)
+    if ((charset = (char *)strchr(new_lc_time, '.')) == NULL)
       charset = new_lc_time + strlen(new_lc_time);
 
     cupsCopyString(charset, ".UTF-8", sizeof(new_lc_time) - (size_t)(charset - new_lc_time));
@@ -453,7 +453,7 @@ cups_lang_default(void)
 
         DEBUG_printf("3cups_lang_default: Charset set to \"%s\" via setlocale().", charset);
 
-        if ((csptr = strchr(cg->lang_name, '.')) != NULL)
+        if ((csptr = (char *)strchr(cg->lang_name, '.')) != NULL)
           *csptr = '\0';		// Strip charset from locale name...
       }
     }

@@ -363,7 +363,7 @@ cupsSetServer(const char *server)	// I - Server name
   {
     cupsCopyString(cg->server, server, sizeof(cg->server));
 
-    if (cg->server[0] != '/' && (options = strrchr(cg->server, '/')) != NULL)
+    if (cg->server[0] != '/' && (options = (char *)strrchr(cg->server, '/')) != NULL)
     {
       *options++ = '\0';
 
@@ -381,7 +381,7 @@ cupsSetServer(const char *server)	// I - Server name
     else
       cg->server_version = 20;
 
-    if (cg->server[0] != '/' && (port = strrchr(cg->server, ':')) != NULL && !strchr(port, ']') && _cups_isdigit(port[1]))
+    if (cg->server[0] != '/' && (port = (char *)strrchr(cg->server, ':')) != NULL && !strchr(port, ']') && _cups_isdigit(port[1]))
     {
       int	portnum;		// Port number
 
@@ -1013,7 +1013,7 @@ _cupsSetDefaults(void)
 
     for (ptr = cc.filter_type; ptr && *ptr; ptr = next)
     {
-      if ((next = strchr(ptr, ',')) != NULL)
+      if ((next = (char *)strchr(ptr, ',')) != NULL)
         *next++ = '\0';
 
       if (!_cups_strcasecmp(ptr, "mono"))

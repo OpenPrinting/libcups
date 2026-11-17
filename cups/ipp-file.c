@@ -1093,7 +1093,7 @@ ippFileSetVar(ipp_file_t *file,		// I - IPP data file
     else
     {
       // Valid URI...
-      if ((password = strchr(userpass, ':')) != NULL)
+      if ((password = (char *)strchr(userpass, ':')) != NULL)
       {
         // Separate and save password from URI...
         *password++ = '\0';

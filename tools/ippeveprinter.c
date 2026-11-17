@@ -883,7 +883,7 @@ authenticate_request(
     datalen = sizeof(data.username) - 1;
     httpDecode64(data.username, &datalen, authorization, /*end*/NULL);
 
-    if ((data.password = strchr(data.username, ':')) == NULL)
+    if ((data.password = (char *)strchr(data.username, ':')) == NULL)
     {
       log_message(client, "No password in Authorization header.");
       return (HTTP_STATUS_BAD_REQUEST);
@@ -1835,7 +1835,7 @@ create_printer(
   if (printer->icons[0])
   {
     // Extract up to 3 icons...
-    for (i = 1, iconsptr = strchr(printer->icons[0], ','); iconsptr && i < 3; i ++, iconsptr = strchr(iconsptr, ','))
+    for (i = 1, iconsptr = (char *)strchr(printer->icons[0], ','); iconsptr && i < 3; i ++, iconsptr = (char *)strchr(iconsptr, ','))
     {
       *iconsptr++ = '\0';
       printer->icons[i] = iconsptr;
@@ -5320,7 +5320,7 @@ process_http(ippeve_client_t *client)	// I - Client connection
   if (Verbosity)
     log_message(client, "%s %s HTTP/%d.%d", httpStateString(http_state), uri, httpGetVersion(client->http) / 100, httpGetVersion(client->http) % 100);
 
-  if ((client->options = strchr(client->uri, '?')) != NULL)
+  if ((client->options = (char *)strchr(client->uri, '?')) != NULL)
     *(client->options)++ = '\0';
 
   // Process the request...
@@ -5346,7 +5346,7 @@ process_http(ippeve_client_t *client)	// I - Client connection
   }
 
   cupsCopyString(client->host_field, httpGetField(client->http, HTTP_FIELD_HOST), sizeof(client->host_field));
-  if ((ptr = strrchr(client->host_field, ':')) != NULL)
+  if ((ptr = (char *)strrchr(client->host_field, ':')) != NULL)
   {
     // Grab port number from Host: header...
     *ptr++ = '\0';
@@ -5358,8 +5358,8 @@ process_http(ippeve_client_t *client)	// I - Client connection
     client->host_port = client->printer->port;
   }
 
-  if ((ptr = strstr(client->host_field, ".local")) == NULL)
-    ptr = strrchr(client->host_field, '.');
+  if ((ptr = (char *)strstr(client->host_field, ".local")) == NULL)
+    ptr = (char *)strrchr(client->host_field, '.');
 
   if (!_cups_isdigit(client->host_field[0]) && client->host_field[0] != '[' && strcmp(client->host_field, client->printer->hostname) && strcmp(client->host_field, "localhost") && (!ptr || (strcmp(ptr, ".local") && strcmp(ptr, ".local."))))
   {
@@ -6203,7 +6203,7 @@ process_job(ippeve_job_t *job)		// I - Job
 	  endptr += bytes;
 	  *endptr = '\0';
 
-          while ((ptr = strchr(line, '\n')) != NULL)
+          while ((ptr = (char *)strchr(line, '\n')) != NULL)
 	  {
 	    int level = 3;		// Message log level
 
@@ -6377,11 +6377,11 @@ process_state_message(
     if (*message == ',')
       message ++;
 
-    if ((keyptr = strstr(keyword, "-error")) != NULL)
+    if ((keyptr = (char *)strstr(keyword, "-error")) != NULL)
       *keyptr = '\0';
-    else if ((keyptr = strstr(keyword, "-report")) != NULL)
+    else if ((keyptr = (char *)strstr(keyword, "-report")) != NULL)
       *keyptr = '\0';
-    else if ((keyptr = strstr(keyword, "-warning")) != NULL)
+    else if ((keyptr = (char *)strstr(keyword, "-warning")) != NULL)
       *keyptr = '\0';
 
     if (!strcmp(keyword, "none"))

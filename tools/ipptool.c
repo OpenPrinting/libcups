@@ -439,7 +439,7 @@ main(int  argc,				// I - Number of command-line args
               }
 
               cupsCopyString(name, argv[i], sizeof(name));
-	      if ((value = strchr(name, '=')) != NULL)
+	      if ((value = (char *)strchr(name, '=')) != NULL)
 	        *value++ = '\0';
 	      else
 	        value = name + strlen(name);
@@ -1165,7 +1165,7 @@ create_file(const char *filespec,	// I - Filespec string or NULL
   else
     cupsCopyString(base_resource, resource, sizeof(base_resource));
 
-  if ((base_ext = strrchr(base_resource, '.')) != NULL)
+  if ((base_ext = (char *)strrchr(base_resource, '.')) != NULL)
     *base_ext++ = '\0';
   else
     base_ext = base_resource + strlen(base_resource);
@@ -2004,7 +2004,7 @@ do_test(ipp_file_t     *f,		// I - IPP data file
 			*group_ptr;	// Pointer into parent attribute name
 
 	    cupsCopyString(group_name, expect->name, sizeof(group_name));
-	    if ((group_ptr = strchr(group_name, '/')) != NULL)
+	    if ((group_ptr = (char *)strchr(group_name, '/')) != NULL)
 	      *group_ptr = '\0';
 
 	    group_found = ippFindAttribute(response, group_name, IPP_TAG_ZERO);
@@ -2588,7 +2588,7 @@ expect_matches(
       *next = '\0';
 
     // Support some meta-types to make it easier to write the test file.
-    if ((paren = strchr(of_type, '(')) != NULL)
+    if ((paren = (char *)strchr(of_type, '(')) != NULL)
     {
       char *ptr;			// Pointer into syntax string
 
@@ -2599,7 +2599,7 @@ expect_matches(
         lower = INT_MIN;
         ptr   = paren + 5;
       }
-      else if ((ptr = strchr(paren + 1, ':')) != NULL)
+      else if ((ptr = (char *)strchr(paren + 1, ':')) != NULL)
       {
         lower = atoi(paren + 1);
         ptr ++;
@@ -6297,7 +6297,7 @@ token_cb(ipp_file_t     *f,		// I - IPP file data
       data->file[0]        = '\0';
       data->ignore_errors  = data->def_ignore_errors;
       cupsCopyString(data->name, ippFileGetFilename(f), sizeof(data->name));
-      if ((ptr = strrchr(data->name, '.')) != NULL)
+      if ((ptr = (char *)strrchr(data->name, '.')) != NULL)
         *ptr = '\0';
       data->repeat_interval = 5000000;
       cupsCopyString(data->resource, resource, sizeof(data->resource));
@@ -6834,7 +6834,7 @@ with_content(
       continue;
     }
 
-    if ((resptr = strchr(resource, '#')) != NULL)
+    if ((resptr = (char *)strchr(resource, '#')) != NULL)
       *resptr = '\0';			// Strip HTML target ("...#target")
 
     if (strcmp(scheme, "http") && strcmp(scheme, "https") && strcmp(scheme, "ipp") && strcmp(scheme, "ipps"))

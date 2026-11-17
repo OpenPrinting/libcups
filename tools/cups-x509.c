@@ -1,7 +1,7 @@
 //
 // X.509 credentials utiltiy for CUPS.
 //
-// Copyright © 2022-2025 by OpenPrinting.
+// Copyright © 2022-2026 by OpenPrinting.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
 // information.
@@ -717,7 +717,7 @@ do_server(const char *host_port)	// I - Hostname/port
 
   // Get the host and port...
   cupsCopyString(host, host_port, sizeof(host));
-  if ((hostptr = strrchr(host, ':')) != NULL)
+  if ((hostptr = (char *)strrchr(host, ':')) != NULL)
   {
     // Extract the port number from the argument...
     *hostptr++ = '\0';

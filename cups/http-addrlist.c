@@ -502,7 +502,7 @@ httpAddrGetList(const char *hostname,	// I - Hostname, IP address, or NULL for p
 	  hostname      = ipv6;
 
           // Convert "+zone" in address to "%zone"...
-          if ((ipv6zone = strrchr(ipv6, '+')) != NULL)
+          if ((ipv6zone = (char *)strrchr(ipv6, '+')) != NULL)
 	    *ipv6zone = '%';
 	}
       }

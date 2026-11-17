@@ -608,7 +608,7 @@ cupsDNSSDCopyComputerName(
   DEBUG_puts("2cupsDNSSDCopyComputerName: Unlocking rwlock.");
   cupsRWUnlock(&dnssd->rwlock);
 
-  if ((bufptr = strchr(buffer, '.')) != NULL)
+  if ((bufptr = (char *)strchr(buffer, '.')) != NULL)
     *bufptr = '\0';
 
 #elif _WIN32
@@ -710,7 +710,7 @@ cupsDNSSDDecodeTXT(
     memcpy(key, txtptr, keylen);
     key[keylen] = '\0';
 
-    if ((value = strchr(key, '=')) != NULL)
+    if ((value = (char *)strchr(key, '=')) != NULL)
     {
       // Got value separator, add it...
       *value++ = '\0';
@@ -1621,7 +1621,7 @@ cupsDNSSDServiceAdd(
     goto done;
   }
 
-  if ((subtypes = strchr(regtype, ',')) != NULL)
+  if ((subtypes = (char *)strchr(regtype, ',')) != NULL)
     *subtypes++ = '\0';
 
   // Add the service entry...
@@ -1643,7 +1643,7 @@ cupsDNSSDServiceAdd(
 
     for (start = subtypes; ret && start && *start; start = end)
     {
-      if ((end = strchr(start, ',')) != NULL)
+      if ((end = (char *)strchr(start, ',')) != NULL)
 	*end++ = '\0';
       else
 	end = start + strlen(start);
@@ -1982,7 +1982,7 @@ cupsDNSSDSetHostName(
 
   // Get the base hostname without domain...
   cupsCopyString(hostbase, hostname, sizeof(hostbase));
-  if ((hostptr = strchr(hostbase, '.')) != NULL)
+  if ((hostptr = (char *)strchr(hostbase, '.')) != NULL)
     *hostptr = '\0';
 
 #ifdef HAVE_MDNSRESPONDER

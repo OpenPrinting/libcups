@@ -904,7 +904,7 @@ test_server(const char *host_port)	// I - Hostname/port
 
   // Get the host and port...
   cupsCopyString(host, host_port, sizeof(host));
-  if ((hostptr = strrchr(host, ':')) != NULL)
+  if ((hostptr = (char *)strrchr(host, ':')) != NULL)
   {
     // Extract the port number from the argument...
     *hostptr++ = '\0';

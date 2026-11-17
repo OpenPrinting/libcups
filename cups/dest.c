@@ -993,7 +993,7 @@ cupsGetDestWithURI(const char *name,	// I - Desired printer name or `NULL`
     if (strstr(hostname, "._tcp"))
     {
       // Use the service instance name...
-      if ((ptr = strstr(hostname, "._")) != NULL)
+      if ((ptr = (char *)strstr(hostname, "._")) != NULL)
         *ptr = '\0';
 
       cups_queue_name(temp, hostname, sizeof(temp));
@@ -1261,7 +1261,7 @@ _cupsGetDests(http_t       *http,	// I  - Connection to server or `CUPS_HTTP_DEF
 	{
 	  // Add a default option...
           cupsCopyString(optname, attr->name, sizeof(optname));
-	  if ((ptr = strstr(optname, "-default")) != NULL)
+	  if ((ptr = (char *)strstr(optname, "-default")) != NULL)
 	    *ptr = '\0';
 
 	  if (_cups_strcasecmp(optname, "media") || !cupsGetOption("media", num_options, options))
@@ -1442,7 +1442,7 @@ cupsGetNamedDest(http_t     *http,	// I - Connection to server or @code CUPS_HTT
     {
       char	*ptr;			// Temporary pointer...
 
-      if ((ptr = strchr(defname, '/')) != NULL)
+      if ((ptr = (char *)strchr(defname, '/')) != NULL)
       {
         *ptr++   = '\0';
 	instance = ptr;
@@ -2295,7 +2295,7 @@ cups_dest_query_cb(
   // Lookup the service in the devices array.
   cups_dnssd_unquote(serviceName, fullname, sizeof(serviceName));
 
-  if ((ptr = strstr(serviceName, "._")) != NULL)
+  if ((ptr = (char *)strstr(serviceName, "._")) != NULL)
     *ptr = '\0';
 
   cups_queue_name(name, serviceName, sizeof(name));
@@ -2391,7 +2391,7 @@ cups_dest_query_cb(
       {
 	cupsCopyString(model, value, sizeof(model));
 
-	if ((ptr = strchr(model, ',')) != NULL)
+	if ((ptr = (char *)strchr(model, ',')) != NULL)
 	  *ptr = '\0';
       }
       else if (!_cups_strcasecmp(key, "note"))
@@ -2759,7 +2759,7 @@ cups_enum_dests(
   if (data.def_name[0])
   {
     // Separate printer and instance name...
-    if ((data.def_instance = strchr(data.def_name, '/')) != NULL)
+    if ((data.def_instance = (char *)strchr(data.def_name, '/')) != NULL)
       *data.def_instance++ = '\0';
   }
 
@@ -2834,11 +2834,11 @@ cups_enum_dests(
 
         if (httpSeparateURI(HTTP_URI_CODING_ALL, device_uri, scheme, sizeof(scheme), userpass, sizeof(userpass), serviceName, sizeof(serviceName), &port, resource, sizeof(resource)) >= HTTP_URI_STATUS_OK)
         {
-          if ((regtype = strstr(serviceName, "._ipp")) != NULL)
+          if ((regtype = (char *)strstr(serviceName, "._ipp")) != NULL)
           {
             *regtype++ = '\0';
 
-            if ((replyDomain = strstr(regtype, "._tcp.")) != NULL)
+            if ((replyDomain = (char *)strstr(regtype, "._tcp.")) != NULL)
             {
               replyDomain[5] = '\0';
               replyDomain += 6;
@@ -3243,12 +3243,12 @@ cups_get_default(const char *filename,	// I - File to read
       {
         cupsCopyString(namebuf, value, namesize);
 
-	if ((nameptr = strchr(namebuf, ' ')) != NULL)
+	if ((nameptr = (char *)strchr(namebuf, ' ')) != NULL)
 	  *nameptr = '\0';
-	if ((nameptr = strchr(namebuf, '\t')) != NULL)
+	if ((nameptr = (char *)strchr(namebuf, '\t')) != NULL)
 	  *nameptr = '\0';
 
-	if ((nameptr = strchr(namebuf, '/')) != NULL)
+	if ((nameptr = (char *)strchr(namebuf, '/')) != NULL)
 	  *nameptr++ = '\0';
 
         *instance = nameptr;

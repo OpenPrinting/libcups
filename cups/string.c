@@ -642,9 +642,9 @@ _cupsStrFormatd(char         *buf,	// I - String
   }
 
   if (declen == 1)
-    tempdec = strchr(temp, *dec);
+    tempdec = (char *)strchr(temp, *dec);
   else
-    tempdec = strstr(temp, dec);
+    tempdec = (char *)strstr(temp, dec);
 
   // Copy everything up to the decimal point...
   if (tempdec)
