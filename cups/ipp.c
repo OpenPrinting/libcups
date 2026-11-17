@@ -1435,7 +1435,7 @@ ippCopyAttribute(
 	  // Can safely quick-copy these string values...
 	  memcpy(dstattr->values, srcattr->values, (size_t)srcattr->num_values * sizeof(_ipp_value_t));
         }
-	else if (srcattr->value_tag & IPP_TAG_CUPS_CONST)
+	else
 	{
 	  // Otherwise do a normal reference counted copy...
 	  for (i = srcattr->num_values, srcval = srcattr->values, dstval = dstattr->values; i > 0; i --, srcval ++, dstval ++)

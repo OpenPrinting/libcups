@@ -319,6 +319,36 @@ static ipp_uchar_t extension[] =	// Extension value buffer
 		  IPP_TAG_END		// end tag
 		};
 
+static ipp_uchar_t with_language[] =	// textWithLanguage/nameWithLanguage buffer
+		{
+		  0x02, 0x00,		// IPP version
+		  0x00, 0x02,		// Print-Job operation
+		  0x00, 0x00, 0x00, 0x01,
+					// Request ID
+
+		  IPP_TAG_OPERATION,
+
+		  IPP_TAG_NAMELANG,	// nameWithLanguage tag
+		  0x00, 0x08,		// Name length + name
+		  'j', 'o', 'b', '-', 'n', 'a', 'm', 'e',
+		  0x00, 0x0d,		// Value length
+		  0x00, 0x02,		// Language length + language
+		  'f', 'r',
+		  0x00, 0x07,		// Text length + text
+		  'R', 'a', 'p', 'p', 'o', 'r', 't',
+
+		  IPP_TAG_TEXTLANG,	// textWithLanguage tag
+		  0x00, 0x0b,		// Name length + name
+		  'j', 'o', 'b', '-', 'm', 'e', 's', 's', 'a', 'g', 'e',
+		  0x00, 0x0b,		// Value length
+		  0x00, 0x02,		// Language length + language
+		  'e', 'n',
+		  0x00, 0x05,		// Text length + text
+		  'h', 'e', 'l', 'l', 'o',
+
+		  IPP_TAG_END		// end tag
+		};
+
 
 //
 // Local functions...
@@ -798,6 +828,73 @@ main(int  argc,				// I - Number of command-line arguments
     else
     {
       testEnd(false);
+    }
+
+    ippDelete(request);
+
+    // Read textWithLanguage/nameWithLanguage values and copy them...
+    testBegin("Read textWithLanguage/nameWithLanguage from Memory");
+
+    request = ippNew();
+    data.rpos    = 0;
+    data.wused   = sizeof(with_language);
+    data.wsize   = sizeof(with_language);
+    data.wbuffer = with_language;
+
+    while ((state = ippReadIO(&data, (ipp_io_cb_t)read_cb, 1, NULL, request)) != IPP_STATE_DATA)
+    {
+      if (state == IPP_STATE_ERROR)
+	break;
+    }
+
+    if (state != IPP_STATE_DATA)
+    {
+      testEndMessage(false, "%d bytes read", (int)data.rpos);
+      status = 1;
+    }
+    else
+    {
+      testEnd(true);
+    }
+
+    for (i = 0; i < 2; i ++)
+    {
+      ipp_t		*copy;		// Copy of request
+      ipp_attribute_t	*copyattr;	// Copied attribute
+      const char	*text,		// Copied text
+			*language;	// Copied language
+      static const char * const names[] = { "job-name", "job-message" };
+      static const char * const texts[] = { "Rapport", "hello" };
+      static const char * const languages[] = { "fr", "en" };
+
+      testBegin("ippCopyAttribute(%s)", names[i]);
+
+      copy     = ippNew();
+      copyattr = ippCopyAttribute(copy, ippFindAttribute(request, names[i], IPP_TAG_ZERO), /*quickcopy*/false);
+      language = NULL;
+      text     = ippGetString(copyattr, 0, &language);
+
+      if (!copyattr)
+      {
+        testEndMessage(false, "unable to copy");
+        status = 1;
+      }
+      else if (!text || strcmp(text, texts[i]))
+      {
+        testEndMessage(false, "got text \"%s\", expected \"%s\"", text ? text : "(null)", texts[i]);
+        status = 1;
+      }
+      else if (!language || strcmp(language, languages[i]))
+      {
+        testEndMessage(false, "got language \"%s\", expected \"%s\"", language ? language : "(null)", languages[i]);
+        status = 1;
+      }
+      else
+      {
+        testEnd(true);
+      }
+
+      ippDelete(copy);
     }
 
     ippDelete(request);
