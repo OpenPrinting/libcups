@@ -329,22 +329,38 @@ static ipp_uchar_t with_language[] =	// textWithLanguage/nameWithLanguage buffer
 		  IPP_TAG_OPERATION,
 
 		  IPP_TAG_NAMELANG,	// nameWithLanguage tag
-		  0x00, 0x08,		// Name length + name
-		  'j', 'o', 'b', '-', 'n', 'a', 'm', 'e',
+		  0x00, 0x06,		// Name length + name
+		  'x', '-', 'n', 'a', 'm', 'e',
 		  0x00, 0x0d,		// Value length
 		  0x00, 0x02,		// Language length + language
 		  'f', 'r',
 		  0x00, 0x07,		// Text length + text
 		  'R', 'a', 'p', 'p', 'o', 'r', 't',
 
+		  IPP_TAG_NAMELANG,	// nameWithLanguage tag
+		  0x00, 0x00,		// Name length 0 (1setOf)
+		  0x00, 0x0c,		// Value length
+		  0x00, 0x02,		// Language length + language
+		  'e', 'n',
+		  0x00, 0x06,		// Text length + text
+		  'R', 'e', 'p', 'o', 'r', 't',
+
 		  IPP_TAG_TEXTLANG,	// textWithLanguage tag
-		  0x00, 0x0b,		// Name length + name
-		  'j', 'o', 'b', '-', 'm', 'e', 's', 's', 'a', 'g', 'e',
+		  0x00, 0x06,		// Name length + name
+		  'x', '-', 't', 'e', 'x', 't',
 		  0x00, 0x0b,		// Value length
 		  0x00, 0x02,		// Language length + language
 		  'e', 'n',
 		  0x00, 0x05,		// Text length + text
 		  'h', 'e', 'l', 'l', 'o',
+
+		  IPP_TAG_TEXTLANG,	// textWithLanguage tag
+		  0x00, 0x00,		// Name length 0 (1setOf)
+		  0x00, 0x0a,		// Value length
+		  0x00, 0x02,		// Language length + language
+		  'i', 't',
+		  0x00, 0x04,		// Text length + text
+		  'c', 'i', 'a', 'o',
 
 		  IPP_TAG_END		// end tag
 		};
@@ -382,7 +398,7 @@ main(int  argc,				// I - Number of command-line arguments
   ipp_state_t	state;			// State
   size_t	length;			// Length of data
   cups_file_t	*fp;			// File pointer
-  size_t	i;			// Looping var
+  size_t	i, j;			// Looping vars
   int		status = 0;		// Status of tests (0 = success, 1 = fail)
   time_t	tv;			// Time value
   const ipp_uchar_t *dv;		// Date value
@@ -431,7 +447,7 @@ main(int  argc,				// I - Number of command-line arguments
     length = ippGetLength(request);
     if (length != sizeof(collection))
     {
-      testEndMessage(false, "wrong ippGetLength(), %d instead of %d bytes", (int)length, (int)sizeof(collection));
+      testEndMessage(false, "wrong ippGetLength(), %u instead of %u bytes", (unsigned)length, (unsigned)sizeof(collection));
       status = 1;
     }
     else
@@ -450,12 +466,12 @@ main(int  argc,				// I - Number of command-line arguments
 
     if (state != IPP_STATE_DATA)
     {
-      testEndMessage(false, "%d bytes written", (int)data.wused);
+      testEndMessage(false, "%u bytes written of %u", (unsigned)data.wused, (unsigned)sizeof(collection));
       status = 1;
     }
     else if (data.wused != sizeof(collection))
     {
-      testEndMessage(false, "wrote %d bytes, expected %d bytes", (int)data.wused, (int)sizeof(collection));
+      testEndMessage(false, "wrote %u bytes, expected %u bytes", (unsigned)data.wused, (unsigned)sizeof(collection));
       testError("Bytes Written");
       testHexDump(data.wbuffer, data.wused);
       testError("Baseline");
@@ -500,18 +516,18 @@ main(int  argc,				// I - Number of command-line arguments
 
     if (state != IPP_STATE_DATA)
     {
-      testEndMessage(false, "%d bytes read", (int)data.rpos);
+      testEndMessage(false, "%u bytes read of %u", (unsigned)data.rpos, (unsigned)data.wused);
       status = 1;
     }
     else if (data.rpos != data.wused)
     {
-      testEndMessage(false, "read %d bytes, expected %d bytes", (int)data.rpos, (int)data.wused);
+      testEndMessage(false, "read %u bytes, expected %u bytes", (unsigned)data.rpos, (unsigned)data.wused);
       print_attributes(request, 8);
       status = 1;
     }
     else if (length != sizeof(collection))
     {
-      testEndMessage(false, "wrong ippLength(), %d instead of %d bytes", (int)length, (int)sizeof(collection));
+      testEndMessage(false, "wrong ippLength(), %u instead of %u bytes", (unsigned)length, (unsigned)sizeof(collection));
       print_attributes(request, 8);
       status = 1;
     }
@@ -730,18 +746,18 @@ main(int  argc,				// I - Number of command-line arguments
 
     if (state != IPP_STATE_DATA)
     {
-      testEndMessage(false, "%d bytes read", (int)data.rpos);
+      testEndMessage(false, "%u bytes read of %u", (unsigned)data.rpos, (unsigned)data.wused);
       status = 1;
     }
     else if (data.rpos != sizeof(mixed))
     {
-      testEndMessage(false, "read %d bytes, expected %d bytes", (int)data.rpos, (int)sizeof(mixed));
+      testEndMessage(false, "read %u bytes, expected %u bytes", (unsigned)data.rpos, (unsigned)sizeof(mixed));
       print_attributes(request, 8);
       status = 1;
     }
     else if (length != (sizeof(mixed) + 4))
     {
-      testEndMessage(false, "wrong ippLength(), %d instead of %d bytes", (int)length, (int)sizeof(mixed) + 4);
+      testEndMessage(false, "wrong ippLength(), %u instead of %u bytes", (unsigned)length, (unsigned)sizeof(mixed) + 4);
       print_attributes(request, 8);
       status = 1;
     }
@@ -796,12 +812,12 @@ main(int  argc,				// I - Number of command-line arguments
 
     if (state != IPP_STATE_DATA)
     {
-      testEndMessage(false, "%d bytes read", (int)data.rpos);
+      testEndMessage(false, "%u bytes read of %u", (unsigned)data.rpos, (unsigned)data.wused);
       status = 1;
     }
     else if (length != (sizeof(bad_out_of_band) - 1))
     {
-      testEndMessage(false, "wrong ippGetLength(), %d instead of %d bytes", (int)length, (int)sizeof(bad_out_of_band) - 1);
+      testEndMessage(false, "wrong ippGetLength(), %u instead of %u bytes", (unsigned)length, (unsigned)sizeof(bad_out_of_band) - 1);
       print_attributes(request, 8);
       status = 1;
     }
@@ -833,6 +849,26 @@ main(int  argc,				// I - Number of command-line arguments
     ippDelete(request);
 
     // Read textWithLanguage/nameWithLanguage values and copy them...
+    ipp_t		*copy;		// Copy of request
+    ipp_attribute_t	*copyattr;	// Copied attribute
+    const char		*text,		// Copied text
+			*language;	// Copied language
+    static const char * const names[] =	// Attribute names
+    {
+      "x-name",
+      "x-text"
+    };
+    static const char * const texts[][2] =
+    {					// Attribute string values
+      { "Rapport", "Report" },
+      { "hello", "ciao" }
+    };
+    static const char * const languages[][2] =
+    {					// Attribute language values
+      { "fr", "en" },
+      { "en", "it" }
+    };
+
     testBegin("Read textWithLanguage/nameWithLanguage from Memory");
 
     request = ippNew();
@@ -849,7 +885,13 @@ main(int  argc,				// I - Number of command-line arguments
 
     if (state != IPP_STATE_DATA)
     {
-      testEndMessage(false, "%d bytes read", (int)data.rpos);
+      testEndMessage(false, "%u bytes read of %u", (unsigned)data.rpos, (unsigned)data.wused);
+      status = 1;
+    }
+    else if (data.rpos != data.wused)
+    {
+      testEndMessage(false, "read %u bytes, expected %u bytes", (unsigned)data.rpos, (unsigned)data.wused);
+      print_attributes(request, 8);
       status = 1;
     }
     else
@@ -859,39 +901,33 @@ main(int  argc,				// I - Number of command-line arguments
 
     for (i = 0; i < 2; i ++)
     {
-      ipp_t		*copy;		// Copy of request
-      ipp_attribute_t	*copyattr;	// Copied attribute
-      const char	*text,		// Copied text
-			*language;	// Copied language
-      static const char * const names[] = { "job-name", "job-message" };
-      static const char * const texts[] = { "Rapport", "hello" };
-      static const char * const languages[] = { "fr", "en" };
+      testBegin("ippFindAttribute(%s)", names[i]);
+      testEnd((attr = ippFindAttribute(request, names[i], IPP_TAG_ZERO)) != NULL);
+
+      for (j = 0; j < 2; j ++)
+      {
+        testBegin("ippGetString(%s, %u)", names[i], (unsigned)j);
+        text = ippGetString(attr, j, &language);
+
+        if (text && !strcmp(text, texts[i][j]) && language && !strcmp(language, languages[i][j]))
+          testEndMessage(true, "'%s'(%s)", text, language);
+        else
+          testEndMessage(false, "got '%s'(%s), expected '%s'(%s)", text, language, texts[i][j], languages[i][j]);
+      }
 
       testBegin("ippCopyAttribute(%s)", names[i]);
+      copy = ippNew();
+      testEnd((copyattr = ippCopyAttribute(copy, attr, /*quickcopy*/false)) != NULL);
 
-      copy     = ippNew();
-      copyattr = ippCopyAttribute(copy, ippFindAttribute(request, names[i], IPP_TAG_ZERO), /*quickcopy*/false);
-      language = NULL;
-      text     = ippGetString(copyattr, 0, &language);
+      for (j = 0; j < 2; j ++)
+      {
+        testBegin("ippGetString(copy of %s, %u)", names[i], (unsigned)j);
+        text = ippGetString(copyattr, j, &language);
 
-      if (!copyattr)
-      {
-        testEndMessage(false, "unable to copy");
-        status = 1;
-      }
-      else if (!text || strcmp(text, texts[i]))
-      {
-        testEndMessage(false, "got text \"%s\", expected \"%s\"", text ? text : "(null)", texts[i]);
-        status = 1;
-      }
-      else if (!language || strcmp(language, languages[i]))
-      {
-        testEndMessage(false, "got language \"%s\", expected \"%s\"", language ? language : "(null)", languages[i]);
-        status = 1;
-      }
-      else
-      {
-        testEnd(true);
+        if (text && !strcmp(text, texts[i][j]) && language && !strcmp(language, languages[i][j]))
+          testEndMessage(true, "'%s'(%s)", text, language);
+        else
+          testEndMessage(false, "got '%s'(%s), expected '%s'(%s)", text, language, texts[i][j], languages[i][j]);
       }
 
       ippDelete(copy);
