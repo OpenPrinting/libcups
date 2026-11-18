@@ -104,6 +104,9 @@ blockquote {
 [
 <strong>--help</strong>
 ] [
+<strong>--max-spool-size</strong>
+<em>K-OCTETS</em>
+] [
 <strong>--no-web-forms</strong>
 ] [
 <strong>--oauth-scopes</strong>
@@ -117,6 +120,9 @@ blockquote {
 ] [
 <strong>--password</strong>
 <em>PASSWORD</em>
+] [
+<strong>--spool-reserve</strong>
+<em>K-OCTETS</em>
 ] [
 <strong>--version</strong>
 ] [
@@ -195,6 +201,10 @@ is a simple Internet Printing Protocol (IPP) server conforming to the IPP Everyw
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>--help</strong><br>
 Show program usage.
 </p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>--max-spool-size </strong><em>K-OCTETS</em><br>
+Set the maximum space for print files in the spool directory in k-octets.
+The default is 1048576 k-octets.
+</p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>--no-web-forms</strong><br>
 Disable the web interface forms used to update the media, state, and supply levels.
 See the &quot;WEB INTERFACE FORMS&quot; section for more information.
@@ -213,6 +223,10 @@ The default service is
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>--password </strong><em>PASSWORD</em><br>
 Sets a test password to use for Basic authentication.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>--spool-reserve </strong><em>K-OCTETS</em><br>
+Set the filesystem space to reserve in the spool directory in k-octets.
+The default is 102400 k-octets.
 </p>
     <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>--version</strong><br>
 Show the CUPS version.
