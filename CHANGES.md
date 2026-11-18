@@ -13,6 +13,9 @@ v3.0.5 - YYYY-MM-DD
 - Updated `cupsGetCrentialsTrust` validation of site certificates (Issue #213)
 - Fixed `httpAddrListen` error handling on Windows (Issue #210)
 - Fixed an `ippfind` quoting issue on Windows (Issue #212)
+- Fixed a page counting issue in `ipptransform` (Issue #216)
+- Fixed error handling in `cupsJWTMakePrivateKey` and
+  `cupsOAuthMakeBase64Random` when generating random data (Issue #217)
 
 
 v3.0.4 - 2026-11-05
