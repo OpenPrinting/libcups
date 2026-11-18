@@ -3353,6 +3353,7 @@ prepare_documents(
 
     if (options->multiple_document_handling < IPPOPT_HANDLING_SINGLE_DOCUMENT)
     {
+      page          = 1;
       d->first_page = 1;
       d->last_page  = (int)pdfioFileGetNumPages(d->pdf);
     }
