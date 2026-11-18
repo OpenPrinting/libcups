@@ -242,17 +242,18 @@ cupsThreadCreate(
   if (!func)
     return (CUPS_THREAD_INVALID);
 
+  // Allocate a thread structure to track the Windows thread...
   if ((thread = (cups_thread_t)calloc(1, sizeof(struct _cups_thread_s))) == NULL)
     return (CUPS_THREAD_INVALID);
 
   thread->func = func;
   thread->arg  = arg;
-
-  // Mark the handle as "not yet created" so win32_wrapper() won't free
-  // this object out from under us if the new thread's function returns
-  // before we've stored its real handle below...
   thread->h    = (HANDLE)-1;
-  thread->h    = (HANDLE)_beginthreadex(NULL, 0, (LPTHREAD_START_ROUTINE)win32_wrapper, thread, 0, NULL);
+
+  // Start the thread; yes, we are initializing the thread HANDLE twice - this
+  // prevents the win32_wrapper function from prematurely freeing the structure
+  // if the thread function returns immediately...
+  thread->h = (HANDLE)_beginthreadex(NULL, 0, (LPTHREAD_START_ROUTINE)win32_wrapper, thread, 0, NULL);
 
   if (thread->h == 0 || thread->h == (HANDLE)-1)
   {
