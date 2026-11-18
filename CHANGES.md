@@ -14,6 +14,7 @@ v3.0.5 - YYYY-MM-DD
 - Fixed `httpAddrListen` error handling on Windows (Issue #210)
 - Fixed an `ippfind` quoting issue on Windows (Issue #212)
 - Fixed issue with subjectAltName matching with OpenSSL (Issue #214)
+- Fixed management of name/textWithLanguage language identifiers (Issue #215)
 - Fixed a page counting issue in `ipptransform` (Issue #216)
 - Fixed error handling in `cupsJWTMakePrivateKey` and
   `cupsOAuthMakeBase64Random` when generating random data (Issue #217)
