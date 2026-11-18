@@ -2560,7 +2560,7 @@ openssl_validate_name(
   bool		result = false;		// Return value
   char		subjectName[256];	// Common name from certificate
   STACK_OF(GENERAL_NAME) *names = NULL;
-				      // subjectAltName values
+					// subjectAltName values
 
 
   if (X509_NAME_get_text_by_NID(X509_get_subject_name(cert), NID_commonName, subjectName, sizeof(subjectName)) < 0)
@@ -2617,6 +2617,7 @@ openssl_validate_name(
 	      // Compare wildcard...
 	      const char *domain_name = strchr(common_name, '.');
 					// Domain name of common name
+
 	      if (domain_name && !_cups_strcasecmp(domain_name, dNSName + 1))
 	      {
 		DEBUG_puts("1openssl_validate_name: Match.");
