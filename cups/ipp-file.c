@@ -45,9 +45,6 @@ struct _ipp_file_s			// IPP data file
 // Limits...
 //
 
-#define _IPP_MAX_COLLECTION_DEPTH 32	// Maximum nesting depth of collection values
-
-
 //
 // Local functions...
 //
@@ -684,7 +681,7 @@ ippFileReadCollection(ipp_file_t *file)	// I - IPP data file
     return (NULL);
   }
 
-  if (file->collection_depth >= _IPP_MAX_COLLECTION_DEPTH)
+  if (file->collection_depth >= _IPP_MAX_DEPTH)
   {
     report_error(file, "Too many nested collection values on line %d of '%s'.", file->linenum, file->filename);
     return (NULL);
