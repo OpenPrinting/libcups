@@ -11,6 +11,7 @@ v3.0.5 - YYYY-MM-DD
 - Updated the HTTP parser to skip trailer headers and chunk extensions
   (Issue #211)
 - Updated `cupsGetCrentialsTrust` validation of site certificates (Issue #213)
+- Updated the HTTP parser to validate Content-Length values (Issue #219)
 - Fixed `httpAddrListen` error handling on Windows (Issue #210)
 - Fixed an `ippfind` quoting issue on Windows (Issue #212)
 - Fixed issue with subjectAltName matching with OpenSSL (Issue #214)
