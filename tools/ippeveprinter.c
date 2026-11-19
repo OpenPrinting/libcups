@@ -776,9 +776,17 @@ main(int  argc,				// I - Number of command-line args
       tmpdir = "/tmp";
 #endif // _WIN32
 
+#ifdef _WIN32
     snprintf(directory, sizeof(directory), "%s/ippeveprinter.%d", tmpdir, (int)getpid());
 
     if (mkdir(directory, 0755) && errno != EEXIST)
+#else
+    // Use mkdtemp so that the directory is new, private (0700), and has an
+    // unpredictable name in the shared temporary directory...
+    snprintf(directory, sizeof(directory), "%s/ippeveprinter.XXXXXX", tmpdir);
+
+    if (!mkdtemp(directory))
+#endif // _WIN32
     {
       cupsLangPrintf(stderr, _("%s: Unable to create spool directory '%s': %s"), "ippeveprinter", directory, strerror(errno));
       return (usage(stderr));
