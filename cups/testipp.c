@@ -935,6 +935,76 @@ main(int  argc,				// I - Number of command-line arguments
 
     ippDelete(request);
 
+    // Convert name/text values to nameWithLanguage/textWithLanguage...
+    static const char * const plain_texts[] =
+    {					// Plain string values
+      "one",
+      "two",
+      "three"
+    };
+    static const ipp_tag_t plain_tags[][2] =
+    {					// Original and converted value tags
+      { IPP_TAG_NAME, IPP_TAG_NAMELANG },
+      { IPP_TAG_TEXT, IPP_TAG_TEXTLANG }
+    };
+
+    request = ippNew();
+    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_CHARSET, "attributes-charset", NULL, "utf-8");
+    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_LANGUAGE, "attributes-natural-language", NULL, "en");
+
+    for (i = 0; i < 2; i ++)
+    {
+      testBegin("ippSetValueTag(%s, %s)", ippTagString(plain_tags[i][0]), ippTagString(plain_tags[i][1]));
+      attr = ippAddStrings(request, IPP_TAG_JOB, plain_tags[i][0], names[i], 3, NULL, plain_texts);
+
+      if (!ippSetValueTag(request, &attr, plain_tags[i][1]))
+      {
+        testEndMessage(false, "unable to convert");
+        status = 1;
+      }
+      else if (ippGetValueTag(attr) != plain_tags[i][1])
+      {
+        testEndMessage(false, "got %s", ippTagString(ippGetValueTag(attr)));
+        status = 1;
+      }
+      else
+      {
+        for (j = 0; j < 3; j ++)
+        {
+          text = ippGetString(attr, j, &language);
+
+          if (!text || strcmp(text, plain_texts[j]) || !language || strcmp(language, "en"))
+            break;
+        }
+
+        if (j < 3)
+        {
+          testEndMessage(false, "got '%s'(%s) for value %u", text, language, (unsigned)j);
+          status = 1;
+        }
+        else
+        {
+          testEnd(true);
+        }
+      }
+
+      ippDeleteAttribute(request, attr);
+    }
+
+    testBegin("ippGetString(attributes-natural-language)");
+    text = ippGetString(ippFindAttribute(request, "attributes-natural-language", IPP_TAG_LANGUAGE), 0, NULL);
+    if (text && !strcmp(text, "en"))
+    {
+      testEndMessage(true, "'%s'", text);
+    }
+    else
+    {
+      testEndMessage(false, "got '%s', expected 'en'", text);
+      status = 1;
+    }
+
+    ippDelete(request);
+
     // Read the extension data and confirm ippGetLength() matches...
     testBegin("Read Extension Value from Memory");
 

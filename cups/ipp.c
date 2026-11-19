@@ -3424,7 +3424,7 @@ ippSetValueTag(
 
         for (i = (*attr)->num_values - 1, value = (*attr)->values + 1; i > 0; i --, value ++)
         {
-          value->string.language = (*attr)->values[0].string.language;
+          value->string.language = _cupsStrAlloc((*attr)->values[0].string.language);
           DEBUG_printf("2ippSetValueTag: values[%u].string.language=\"%s\"(%s)", (unsigned)((*attr)->num_values - i), value->string.language, value->string.language);
         }
 
@@ -3438,7 +3438,7 @@ ippSetValueTag(
 	  }
         }
 
-        (*attr)->value_tag = IPP_TAG_NAMELANG;
+        (*attr)->value_tag = value_tag;
         break;
 
     case IPP_TAG_KEYWORD :
