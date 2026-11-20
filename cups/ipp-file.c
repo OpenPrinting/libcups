@@ -36,14 +36,10 @@ struct _ipp_file_s			// IPP data file
   void			*cb_data;	// Callback data
   char			*buffer;	// Output buffer
   size_t		alloc_buffer;	// Size of output buffer
-  size_t		collection_depth;
+  int			collection_depth;
 					// Current nesting depth of collection values
 };
 
-
-//
-// Limits...
-//
 
 //
 // Local functions...

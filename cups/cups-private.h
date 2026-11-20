@@ -45,7 +45,6 @@ typedef int mode_t;			// Windows doesn't support mode_t type @private@
 //
 
 #  define _CUPS_MAX_OPTION_DEPTH 4	// Maximum depth of nested options/collections
-#  define _IPP_MAX_DEPTH 10		// Maximum depth of nested IPP collections
 
 
 //
