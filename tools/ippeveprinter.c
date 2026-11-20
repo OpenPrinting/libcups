@@ -5361,7 +5361,8 @@ process_http(ippeve_client_t *client)	// I - Client connection
   if ((ptr = (char *)strstr(client->host_field, ".local")) == NULL)
     ptr = (char *)strrchr(client->host_field, '.');
 
-  if (!_cups_isdigit(client->host_field[0]) && client->host_field[0] != '[' && strcmp(client->host_field, client->printer->hostname) && strcmp(client->host_field, "localhost") && (!ptr || (strcmp(ptr, ".local") && strcmp(ptr, ".local."))))
+  // Only allow numeric (IPv4 or IPv6) addresses, the printer's hostname, "localhost", or a ".local" hostname...
+  if ((!client->host_field[0] || client->host_field[strspn(client->host_field, "0123456789.")]) && client->host_field[0] != '[' && strcmp(client->host_field, client->printer->hostname) && strcmp(client->host_field, "localhost") && (!ptr || (strcmp(ptr, ".local") && strcmp(ptr, ".local."))))
   {
     log_message(client, "Bad Host: header '%s'.", client->host_field);
     respond_http(client, HTTP_STATUS_BAD_REQUEST, NULL, NULL, 0);
