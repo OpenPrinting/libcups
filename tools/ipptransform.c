@@ -108,6 +108,13 @@ typedef struct xform_prepare_s		// Preparation data
   pdfio_matrix_t duplex_xform;		// Back side transform matrix
 } xform_prepare_t;
 
+typedef struct xform_annot_s		// Annotation copy data
+{
+  pdfio_file_t	*pdf;			// Output PDF file
+  pdfio_dict_t	*dict;			// Output annotation dictionary
+  double	scaling;		// Scaling factor for border widths
+} xform_annot_t;
+
 typedef struct xform_raster_s xform_raster_t;
 					// Raster context
 
@@ -172,10 +179,14 @@ static int		Verbosity = 0;	// Log level
 static bool	convert_image(xform_prepare_t *p, xform_document_t *d, int document);
 static bool	convert_raster(xform_prepare_t *p, xform_document_t *d, int document);
 static bool	convert_text(xform_prepare_t *p, xform_document_t *d, int document);
+static bool	annot_dict_cb(pdfio_dict_t *dict, const char *key, xform_annot_t *a);
+static pdfio_array_t *annot_scale_array(pdfio_file_t *pdf, pdfio_array_t *a, double scaling);
+static void	copy_annots(xform_prepare_t *p, xform_page_t *outpage, size_t layout);
 static void	copy_page(xform_prepare_t *p, xform_page_t *outpage, size_t layout);
 static void	dither_gray(xform_raster_t *ras, unsigned y, unsigned char *row, size_t num_pixels);
 static bool	generate_job_error_sheet(xform_prepare_t *p);
 static bool	generate_job_sheets(xform_prepare_t *p);
+static void	get_cell_matrix(xform_prepare_t *p, xform_page_t *outpage, size_t layout, pdfio_matrix_t cm);
 static void	media_to_rect(cups_media_t *size, pdfio_rect_t *media, pdfio_rect_t *crop);
 static void	*monitor_ipp(const char *device_uri);
 static void	pack_black(unsigned char *row, size_t num_pixels);
@@ -1325,6 +1336,338 @@ convert_text(
 
 
 //
+// 'annot_dict_cb()' - Copy an annotation dictionary value to the output file.
+//
+// The Rect and QuadPoints values are transformed by @link copy_annots@, and
+// references back to the input page (P) and to other annotations (IRT, Parent,
+// and Popup) are dropped since copying them would pull in the input page
+// objects.
+// Border widths and dash patterns (Border and BS) are scaled to match the
+// page content.
+//
+
+static bool				// O - `true` to continue, `false` to stop
+annot_dict_cb(pdfio_dict_t  *dict,	// I - Input annotation dictionary
+              const char    *key,	// I - Dictionary key
+              xform_annot_t *a)		// I - Annotation copy data
+{
+  const char	*okey;			// Output key
+  const unsigned char *data;		// Binary data
+  size_t	datalen;		// Length of binary data
+  pdfio_obj_t	*obj;			// Object value
+  pdfio_dict_t	*bs;			// Border style dictionary
+  pdfio_array_t	*dash;			// Dash array
+
+
+  if (!strcmp(key, "IRT") || !strcmp(key, "P") || !strcmp(key, "Parent") || !strcmp(key, "Popup") || !strcmp(key, "QuadPoints") || !strcmp(key, "Rect"))
+    return (true);
+
+  if ((okey = pdfioStringCreate(a->pdf, key)) == NULL)
+    return (false);
+
+  if (!strcmp(key, "Border") && pdfioDictGetType(dict, key) == PDFIO_VALTYPE_ARRAY)
+  {
+    // Scale the corner radii, border width, and dash array...
+    pdfioDictSetArray(a->dict, okey, annot_scale_array(a->pdf, pdfioDictGetArray(dict, key), a->scaling));
+    return (true);
+  }
+  else if (!strcmp(key, "BS"))
+  {
+    // Scale the border width and dash array in the border style dictionary...
+    if ((bs = pdfioDictGetDict(dict, key)) == NULL)
+      bs = pdfioObjGetDict(pdfioDictGetObj(dict, key));
+
+    if (bs && (bs = pdfioDictCopy(a->pdf, bs)) != NULL)
+    {
+      if (pdfioDictGetType(bs, "W") == PDFIO_VALTYPE_NUMBER)
+        pdfioDictSetNumber(bs, "W", pdfioDictGetNumber(bs, "W") * a->scaling);
+      if ((dash = pdfioDictGetArray(bs, "D")) != NULL)
+        pdfioDictSetArray(bs, "D", annot_scale_array(a->pdf, dash, a->scaling));
+
+      pdfioDictSetDict(a->dict, okey, bs);
+    }
+    return (true);
+  }
+
+  switch (pdfioDictGetType(dict, key))
+  {
+    case PDFIO_VALTYPE_ARRAY :
+        pdfioDictSetArray(a->dict, okey, pdfioArrayCopy(a->pdf, pdfioDictGetArray(dict, key)));
+        break;
+
+    case PDFIO_VALTYPE_BINARY :
+        if ((data = pdfioDictGetBinary(dict, key, &datalen)) != NULL)
+          pdfioDictSetBinary(a->dict, okey, data, datalen);
+        break;
+
+    case PDFIO_VALTYPE_BOOLEAN :
+        pdfioDictSetBoolean(a->dict, okey, pdfioDictGetBoolean(dict, key));
+        break;
+
+    case PDFIO_VALTYPE_DATE :
+        pdfioDictSetDate(a->dict, okey, pdfioDictGetDate(dict, key));
+        break;
+
+    case PDFIO_VALTYPE_DICT :
+        pdfioDictSetDict(a->dict, okey, pdfioDictCopy(a->pdf, pdfioDictGetDict(dict, key)));
+        break;
+
+    case PDFIO_VALTYPE_INDIRECT :
+        if ((obj = pdfioObjCopy(a->pdf, pdfioDictGetObj(dict, key))) != NULL)
+          pdfioDictSetObj(a->dict, okey, obj);
+        break;
+
+    case PDFIO_VALTYPE_NAME :
+        pdfioDictSetName(a->dict, okey, pdfioStringCreate(a->pdf, pdfioDictGetName(dict, key)));
+        break;
+
+    case PDFIO_VALTYPE_NULL :
+        pdfioDictSetNull(a->dict, okey);
+        break;
+
+    case PDFIO_VALTYPE_NUMBER :
+        pdfioDictSetNumber(a->dict, okey, pdfioDictGetNumber(dict, key));
+        break;
+
+    case PDFIO_VALTYPE_STRING :
+        pdfioDictSetString(a->dict, okey, pdfioStringCreate(a->pdf, pdfioDictGetString(dict, key)));
+        break;
+
+    default :
+        break;
+  }
+
+  return (true);
+}
+
+
+//
+// 'annot_scale_array()' - Copy an array of numbers (and nested arrays of
+//                         numbers) and scale them.
+//
+// This is used for the Border array ("[hradius vradius width [dash]]") and for
+// BS dash arrays.  Non-numeric values are dropped.
+//
+
+static pdfio_array_t *			// O - Scaled array
+annot_scale_array(pdfio_file_t  *pdf,	// I - Output PDF file
+                  pdfio_array_t *a,	// I - Input array
+                  double        scaling)// I - Scaling factor
+{
+  pdfio_array_t	*sa;			// Scaled array
+  size_t	i,			// Looping var
+		count;			// Number of values
+
+
+  if ((sa = pdfioArrayCreate(pdf)) == NULL)
+    return (NULL);
+
+  for (i = 0, count = pdfioArrayGetSize(a); i < count; i ++)
+  {
+    switch (pdfioArrayGetType(a, i))
+    {
+      case PDFIO_VALTYPE_NUMBER :
+          pdfioArrayAppendNumber(sa, pdfioArrayGetNumber(a, i) * scaling);
+          break;
+
+      case PDFIO_VALTYPE_ARRAY :
+          pdfioArrayAppendArray(sa, annot_scale_array(pdf, pdfioArrayGetArray(a, i), scaling));
+          break;
+
+      default :
+          break;
+    }
+  }
+
+  return (sa);
+}
+
+
+//
+// 'copy_annots()' - Copy the annotations of an input page to the output page.
+//
+// Each annotation's Rect and QuadPoints are transformed using the same matrix
+// that @link copy_page@ uses for the page content (plus the back side
+// transform, if any), and annotations that end up outside the layout cell are
+// dropped.  Popup annotations are not copied since they reference their parent
+// annotation in the input file.
+//
+// This function must be called before the output page is created with
+// @link pdfio_start_page@ since PDFio writes the page dictionary at that time.
+//
+
+static void
+copy_annots(xform_prepare_t *p,		// I - Preparation data
+            xform_page_t    *outpage,	// I - Output page
+            size_t          layout)	// I - Layout cell
+{
+  pdfio_rect_t	*cell = p->layout + layout;
+					// Layout cell
+  pdfio_dict_t	*idict;			// Input page dictionary
+  pdfio_array_t	*iannots;		// Input Annots array
+  pdfio_obj_t	*aobj;			// Annotation object
+  pdfio_dict_t	*adict;			// Input annotation dictionary
+  pdfio_array_t	*iquad,			// Input QuadPoints
+		*oquad;			// Output QuadPoints
+  const char	*subtype;		// Annotation subtype
+  pdfio_rect_t	irect,			// Input annotation rectangle
+		orect;			// Output annotation rectangle
+  pdfio_matrix_t cm;			// Cell transform matrix
+  bool		back;			// Apply the back side transform?
+  xform_annot_t	a;			// Annotation copy data
+  size_t	i, j,			// Looping vars
+		count,			// Number of annotations
+		qcount;			// Number of QuadPoints values
+  double	x, y,			// Input coordinates
+		tx, ty,			// Transformed coordinates
+		corners[4][2];		// Rect corners
+
+
+  if (!outpage->input[layout])
+    return;
+
+  idict = pdfioObjGetDict(outpage->input[layout]);
+
+  if ((iannots = pdfioDictGetArray(idict, "Annots")) == NULL)
+    iannots = pdfioObjGetArray(pdfioDictGetObj(idict, "Annots"));
+
+  if (!iannots || (count = pdfioArrayGetSize(iannots)) == 0)
+    return;
+
+  get_cell_matrix(p, outpage, layout, cm);
+
+  // The output page has not been created yet, so it will be an even (back
+  // side) page if the current number of pages is odd...
+  back = p->use_duplex_xform && (pdfioFileGetNumPages(p->pdf) & 1);
+
+  for (i = 0; i < count; i ++)
+  {
+    if ((aobj = pdfioArrayGetObj(iannots, i)) != NULL)
+      adict = pdfioObjGetDict(aobj);
+    else
+      adict = pdfioArrayGetDict(iannots, i);
+
+    if (!adict || !pdfioDictGetRect(adict, "Rect", &irect))
+      continue;
+
+    if ((subtype = pdfioDictGetName(adict, "Subtype")) != NULL && !strcmp(subtype, "Popup"))
+      continue;
+
+    // Transform the corners of the annotation rectangle and compute the new
+    // bounding box, clipped to the layout cell...
+    corners[0][0] = irect.x1; corners[0][1] = irect.y1;
+    corners[1][0] = irect.x2; corners[1][1] = irect.y1;
+    corners[2][0] = irect.x1; corners[2][1] = irect.y2;
+    corners[3][0] = irect.x2; corners[3][1] = irect.y2;
+
+    for (j = 0; j < 4; j ++)
+    {
+      x  = corners[j][0];
+      y  = corners[j][1];
+      tx = cm[0][0] * x + cm[1][0] * y + cm[2][0];
+      ty = cm[0][1] * x + cm[1][1] * y + cm[2][1];
+
+      if (j == 0 || tx < orect.x1)
+        orect.x1 = tx;
+      if (j == 0 || tx > orect.x2)
+        orect.x2 = tx;
+      if (j == 0 || ty < orect.y1)
+        orect.y1 = ty;
+      if (j == 0 || ty > orect.y2)
+        orect.y2 = ty;
+    }
+
+    if (orect.x1 < cell->x1)
+      orect.x1 = cell->x1;
+    if (orect.x2 > cell->x2)
+      orect.x2 = cell->x2;
+    if (orect.y1 < cell->y1)
+      orect.y1 = cell->y1;
+    if (orect.y2 > cell->y2)
+      orect.y2 = cell->y2;
+
+    if (orect.x1 >= orect.x2 || orect.y1 >= orect.y2)
+    {
+      if (Verbosity)
+        fprintf(stderr, "DEBUG: Dropping annotation %u for cell %u since it is outside the cell.\n", (unsigned)i + 1, (unsigned)layout + 1);
+      continue;
+    }
+
+    if (back)
+    {
+      // Apply the back side transform to the clipped rectangle...
+      corners[0][0] = orect.x1; corners[0][1] = orect.y1;
+      corners[1][0] = orect.x2; corners[1][1] = orect.y2;
+
+      for (j = 0; j < 2; j ++)
+      {
+        x = corners[j][0];
+        y = corners[j][1];
+        corners[j][0] = p->duplex_xform[0][0] * x + p->duplex_xform[1][0] * y + p->duplex_xform[2][0];
+        corners[j][1] = p->duplex_xform[0][1] * x + p->duplex_xform[1][1] * y + p->duplex_xform[2][1];
+      }
+
+      orect.x1 = corners[0][0] < corners[1][0] ? corners[0][0] : corners[1][0];
+      orect.x2 = corners[0][0] < corners[1][0] ? corners[1][0] : corners[0][0];
+      orect.y1 = corners[0][1] < corners[1][1] ? corners[0][1] : corners[1][1];
+      orect.y2 = corners[0][1] < corners[1][1] ? corners[1][1] : corners[0][1];
+    }
+
+    // Copy the annotation dictionary...
+    a.pdf     = p->pdf;
+    a.scaling = cm[0][0] != 0.0 ? cm[0][0] : cm[0][1];
+					// Cell matrix is a uniform scale with an optional 90 degree rotation
+    if (a.scaling < 0.0)
+      a.scaling = -a.scaling;
+
+    if ((a.dict = pdfioDictCreate(p->pdf)) == NULL)
+      return;
+
+    pdfioDictIterateKeys(adict, (pdfio_dict_cb_t)annot_dict_cb, &a);
+    pdfioDictSetRect(a.dict, "Rect", &orect);
+
+    if ((iquad = pdfioDictGetArray(adict, "QuadPoints")) != NULL && (qcount = pdfioArrayGetSize(iquad)) > 0 && !(qcount & 7) && (oquad = pdfioArrayCreate(p->pdf)) != NULL)
+    {
+      // Transform QuadPoints...
+      for (j = 0; j < qcount; j += 2)
+      {
+        x  = pdfioArrayGetNumber(iquad, j);
+        y  = pdfioArrayGetNumber(iquad, j + 1);
+        tx = cm[0][0] * x + cm[1][0] * y + cm[2][0];
+        ty = cm[0][1] * x + cm[1][1] * y + cm[2][1];
+
+        if (back)
+        {
+          x  = tx;
+          y  = ty;
+          tx = p->duplex_xform[0][0] * x + p->duplex_xform[1][0] * y + p->duplex_xform[2][0];
+          ty = p->duplex_xform[0][1] * x + p->duplex_xform[1][1] * y + p->duplex_xform[2][1];
+        }
+
+        pdfioArrayAppendNumber(oquad, tx);
+        pdfioArrayAppendNumber(oquad, ty);
+      }
+
+      pdfioDictSetArray(a.dict, "QuadPoints", oquad);
+    }
+
+    // Add the annotation to the output page...
+    if (!outpage->annots && (outpage->annots = pdfioArrayCreate(p->pdf)) == NULL)
+      return;
+
+    if ((aobj = pdfioFileCreateObj(p->pdf, a.dict)) == NULL)
+      return;
+
+    pdfioObjClose(aobj);
+    pdfioArrayAppendObj(outpage->annots, aobj);
+
+    if (Verbosity)
+      fprintf(stderr, "DEBUG: Annotation %u for cell %u: Rect [%g %g %g %g] -> [%g %g %g %g]\n", (unsigned)i + 1, (unsigned)layout + 1, irect.x1, irect.y1, irect.x2, irect.y2, orect.x1, orect.y1, orect.x2, orect.y2);
+  }
+}
+
+
+//
 // 'copy_page()' - Copy the input page to the output page.
 //
 
@@ -1335,14 +1678,6 @@ copy_page(xform_prepare_t *p,		// I - Preparation data
 {
   pdfio_rect_t	*cell = p->layout + layout;
 					// Layout cell
-  pdfio_dict_t	*idict;			// Input page dictionary
-  pdfio_rect_t	irect;			// Input page rectangle
-  double	cwidth,			// Cell width
-		cheight,		// Cell height
-		iwidth,			// Input page width
-		iheight,		// Input page height
-		scaling;		// Scaling factor
-  bool		rotate;			// Rotate 90 degrees?
   pdfio_matrix_t cm;			// Cell transform matrix
   size_t	i,			// Looping var
 		count;			// Number of input page streams
@@ -1378,71 +1713,7 @@ copy_page(xform_prepare_t *p,		// I - Preparation data
   pdfioContentPathEnd(outpage->output);
 
   // Transform input page to output cell...
-  idict = pdfioObjGetDict(outpage->input[layout]);
-
-  if (!pdfioDictGetRect(idict, "CropBox", &irect))
-  {
-    // No crop box, use media box...
-    if (!pdfioDictGetRect(idict, "MediaBox", &irect))
-    {
-      // No media box, use output page size...
-      irect = p->media;
-    }
-  }
-
-  cwidth  = cell->x2 - cell->x1;
-  cheight = cell->y2 - cell->y1;
-
-  iwidth  = irect.x2 - irect.x1;
-  iheight = irect.y2 - irect.y1;
-
-  if ((iwidth > iheight && cwidth < cheight) || (iwidth < iheight && cwidth > cheight))
-  {
-    // Need to rotate...
-    rotate  = true;
-    iwidth  = irect.y2 - irect.y1;
-    iheight = irect.x2 - irect.x1;
-  }
-  else
-  {
-    // No rotation...
-    rotate = false;
-  }
-
-  fprintf(stderr, "DEBUG: iwidth=%g, iheight=%g, cwidth=%g, cheight=%g, rotate=%s\n", iwidth, iheight, cwidth, cheight, rotate ? "true" : "false");
-
-  scaling = cwidth / iwidth;
-  if (p->options->print_scaling == IPPOPT_SCALING_FILL)
-  {
-    // Scale to fill...
-    if ((iheight * scaling) < cheight)
-      scaling = cheight / iheight;
-  }
-  else
-  {
-    // Scale to fit...
-    if ((iheight * scaling) > cheight)
-      scaling = cheight / iheight;
-  }
-
-  if (rotate)
-  {
-    cm[0][0] = 0.0;
-    cm[0][1] = -scaling;
-    cm[1][0] = scaling;
-    cm[1][1] = 0.0;
-    cm[2][0] = cell->x1 + 0.5 * (cwidth - iwidth * scaling);
-    cm[2][1] = cell->y2 + 0.5 * (cheight - iheight * scaling);
-  }
-  else
-  {
-    cm[0][0] = scaling;
-    cm[0][1] = 0.0;
-    cm[1][0] = 0.0;
-    cm[1][1] = scaling;
-    cm[2][0] = cell->x1 + 0.5 * (cwidth - iwidth * scaling);
-    cm[2][1] = cell->y1 + 0.5 * (cheight - iheight * scaling);
-  }
+  get_cell_matrix(p, outpage, layout, cm);
 
   if (Verbosity)
     fprintf(stderr, "DEBUG: Page %u, cell %u/%u, cm=[%g %g %g %g %g %g], input=%p\n", (unsigned)(outpage - p->outpages + 1), (unsigned)layout + 1, (unsigned)p->num_layout, cm[0][0], cm[0][1], cm[1][0], cm[1][1], cm[2][0], cm[2][1], (void *)outpage->input[layout]);
@@ -1889,6 +2160,98 @@ generate_job_sheets(
   }
 
   return (true);
+}
+
+
+//
+// 'get_cell_matrix()' - Compute the transform matrix for an input page in a
+//                       layout cell.
+//
+
+static void
+get_cell_matrix(
+    xform_prepare_t *p,			// I - Preparation data
+    xform_page_t    *outpage,		// I - Output page
+    size_t          layout,		// I - Layout cell
+    pdfio_matrix_t  cm)			// O - Cell transform matrix
+{
+  pdfio_rect_t	*cell = p->layout + layout;
+					// Layout cell
+  pdfio_dict_t	*idict;			// Input page dictionary
+  pdfio_rect_t	irect;			// Input page rectangle
+  double	cwidth,			// Cell width
+		cheight,		// Cell height
+		iwidth,			// Input page width
+		iheight,		// Input page height
+		scaling;		// Scaling factor
+  bool		rotate;			// Rotate 90 degrees?
+
+
+  idict = pdfioObjGetDict(outpage->input[layout]);
+
+  if (!pdfioDictGetRect(idict, "CropBox", &irect))
+  {
+    // No crop box, use media box...
+    if (!pdfioDictGetRect(idict, "MediaBox", &irect))
+    {
+      // No media box, use output page size...
+      irect = p->media;
+    }
+  }
+
+  cwidth  = cell->x2 - cell->x1;
+  cheight = cell->y2 - cell->y1;
+
+  iwidth  = irect.x2 - irect.x1;
+  iheight = irect.y2 - irect.y1;
+
+  if ((iwidth > iheight && cwidth < cheight) || (iwidth < iheight && cwidth > cheight))
+  {
+    // Need to rotate...
+    rotate  = true;
+    iwidth  = irect.y2 - irect.y1;
+    iheight = irect.x2 - irect.x1;
+  }
+  else
+  {
+    // No rotation...
+    rotate = false;
+  }
+
+  fprintf(stderr, "DEBUG: iwidth=%g, iheight=%g, cwidth=%g, cheight=%g, rotate=%s\n", iwidth, iheight, cwidth, cheight, rotate ? "true" : "false");
+
+  scaling = cwidth / iwidth;
+  if (p->options->print_scaling == IPPOPT_SCALING_FILL)
+  {
+    // Scale to fill...
+    if ((iheight * scaling) < cheight)
+      scaling = cheight / iheight;
+  }
+  else
+  {
+    // Scale to fit...
+    if ((iheight * scaling) > cheight)
+      scaling = cheight / iheight;
+  }
+
+  if (rotate)
+  {
+    cm[0][0] = 0.0;
+    cm[0][1] = -scaling;
+    cm[1][0] = scaling;
+    cm[1][1] = 0.0;
+    cm[2][0] = cell->x1 + 0.5 * (cwidth - iwidth * scaling);
+    cm[2][1] = cell->y2 + 0.5 * (cheight - iheight * scaling);
+  }
+  else
+  {
+    cm[0][0] = scaling;
+    cm[0][1] = 0.0;
+    cm[1][0] = 0.0;
+    cm[1][1] = scaling;
+    cm[2][0] = cell->x1 + 0.5 * (cwidth - iwidth * scaling);
+    cm[2][1] = cell->y1 + 0.5 * (cheight - iheight * scaling);
+  }
 }
 
 
@@ -3482,13 +3845,19 @@ prepare_documents(
 	    // Create the page dictionary using the source page's resources...
 	    outpage->pagedict = pdfioDictCreate(p.pdf);
 	    outpage->resdict  = pdfioDictCopy(p.pdf, pdfioDictGetDict(pdfioObjGetDict(outpage->input[0]), "Resources"));
-	    outpage->annots   = pdfioArrayCopy(p.pdf, pdfioDictGetArray(pdfioObjGetDict(outpage->input[0]), "Annots"));
 
 	    pdfioDictSetRect(outpage->pagedict, "CropBox", &p.media);
 	    pdfioDictSetRect(outpage->pagedict, "MediaBox", &p.media);
 	    pdfioDictSetDict(outpage->pagedict, "Resources", outpage->resdict);
-	    pdfioDictSetArray(outpage->pagedict, "Annots", outpage->annots);
 	    pdfioDictSetName(outpage->pagedict, "Type", "Page");
+
+	    // Copy any annotations, scaled to match the page content...
+	    outpage->annots = NULL;		// Output pages are reused for each copy
+
+	    copy_annots(&p, outpage, /*layout*/0);
+
+	    if (outpage->annots)
+	      pdfioDictSetArray(outpage->pagedict, "Annots", outpage->annots);
 
 	    // Now copy the content stream to build the page...
 	    outpage->output = pdfio_start_page(&p, outpage->pagedict);
@@ -3516,6 +3885,7 @@ prepare_documents(
 
 	outpage->pagedict = pdfioDictCreate(p.pdf);
 	outpage->resdict  = pdfioDictCreate(p.pdf);
+	outpage->annots   = NULL;	// Output pages are reused for each copy
 
 	pdfioDictSetRect(outpage->pagedict, "CropBox", &p.media);
 	pdfioDictSetRect(outpage->pagedict, "MediaBox", &p.media);
@@ -3543,7 +3913,13 @@ prepare_documents(
             fprintf(stderr, "DEBUG: No Resources for cell %u.\n", (unsigned)layout);
 
 	  // TODO: Handle inherited resources from parent page objects...
+
+	  // Copy any annotations for this cell...
+	  copy_annots(&p, outpage, layout);
 	}
+
+	if (outpage->annots)
+	  pdfioDictSetArray(outpage->pagedict, "Annots", outpage->annots);
 
 	// Now copy the content streams to build the composite page, using the
 	// resource map for any named resources...
