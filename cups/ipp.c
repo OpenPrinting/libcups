@@ -5768,6 +5768,12 @@ ipp_read_io(void        *src,		// I - Data source
 		buffer[n] = '\0';
 		value->string.text = _cupsStrAlloc((char *)buffer);
 		DEBUG_printf("2ipp_read_io: value=\"%s\"(%p)", value->string.text, value->string.text);
+
+		if ((attr->value_tag == IPP_TAG_TEXTLANG || attr->value_tag == IPP_TAG_NAMELANG) && value > attr->values)
+		{
+		  // Additional value in a name/textWithLanguage attribute, use the language of the first value...
+		  value->string.language = _cupsStrAlloc(attr->values[0].string.language);
+		}
 	        break;
 
 	    case IPP_TAG_DATE :
