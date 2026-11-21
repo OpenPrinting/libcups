@@ -1310,6 +1310,41 @@ main(int  argc,				// I - Number of command-line arguments
 
     ippDelete(request);
 
+    // Test that ippSetStringf() does not leak string pool references...
+    size_t	num_strings;		// Number of pooled strings
+
+    testBegin("ippSetStringf(status-message)");
+
+    num_strings = _cupsStrStatistics(NULL, NULL);
+    request     = ippNew();
+    attr        = ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_TEXT, "status-message", NULL, "first");
+
+    for (i = 0; i < 10; i ++)
+      ippSetStringf(request, &attr, 0, "Unsupported attribute-%u value.", (unsigned)i);
+
+    text = ippGetString(attr, 0, NULL);
+
+    if (!text || strcmp(text, "Unsupported attribute-9 value."))
+    {
+      testEndMessage(false, "got '%s', expected 'Unsupported attribute-9 value.'", text);
+      status = 1;
+      ippDelete(request);
+    }
+    else
+    {
+      ippDelete(request);
+
+      if ((length = _cupsStrStatistics(NULL, NULL)) != num_strings)
+      {
+        testEndMessage(false, "%u pooled strings after ippDelete, expected %u", (unsigned)length, (unsigned)num_strings);
+        status = 1;
+      }
+      else
+      {
+        testEnd(true);
+      }
+    }
+
 #ifdef DEBUG
     // Test that private option array is sorted...
     testBegin("_ippCheckOptions");
