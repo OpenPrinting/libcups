@@ -436,6 +436,17 @@ do_unit_tests(void)
     "qVydDfe8KEn/S5FenVMlAiEAzHItj++UctdqVHD4c8Uv2Du0exSxQ4RvKUoNb7At\n"
     "a4I=\n"
     "-----END CERTIFICATE REQUEST-----\n";
+  static const char * const badsan_request =
+					// CSR for CN=altprinter, DNS:altprinter, IP:192.168.1.1
+    "-----BEGIN CERTIFICATE REQUEST-----\n"
+    "MIIBIzCBygIBADAVMRMwEQYDVQQDDAphbHRwcmludGVyMFkwEwYHKoZIzj0CAQYI\n"
+    "KoZIzj0DAQcDQgAE8fgYRl3/bj3rQ4o0mtEQ9fYhfRKISGzwAVFCif3G8KHVXzHb\n"
+    "cGjhCvpDJIi3qJUudtA9oQqzFsHb0pU+JLrpfaBTMFEGCSqGSIb3DQEJDjFEMEIw\n"
+    "GwYDVR0RBBQwEoIKYWx0cHJpbnRlcocEwKgBATAOBgNVHQ8BAf8EBAMCBaAwEwYD\n"
+    "VR0lBAwwCgYIKwYBBQUHAwEwCgYIKoZIzj0EAwIDSAAwRQIgJWOfl2jjaCU040EB\n"
+    "isPxlNpB8lvD9paiVtx39UI6ECsCIQDzAoZ6gbszNEFruJqecVAgEHYmX2IhYOuD\n"
+    "DfIfYRHoEQ==\n"
+    "-----END CERTIFICATE REQUEST-----\n";
 
 
   for (type = CUPS_CREDTYPE_DEFAULT; type <= CUPS_CREDTYPE_ECDSA_P521_SHA256; type ++)
@@ -635,6 +646,14 @@ do_unit_tests(void)
   // A request whose subject CN names another host must not be signed...
   testBegin("cupsSignCredentialsRequest(altprinter w/CN=badprinter)");
   if (cupsSignCredentialsRequest(TEST_CERT_PATH, "altprinter", badcn_request, "_site_", CUPS_CREDPURPOSE_ALL, CUPS_CREDUSAGE_ALL, /*cb*/NULL, /*cb_data*/NULL, time(NULL) + 30 * 86400))
+    testEndMessage(false, "Expected a failure");
+  else
+    testEndMessage(true, "%s", cupsGetErrorString());
+
+  // A request with a subjectAltName the callback cannot validate (here an IP
+  // address) must not be signed...
+  testBegin("cupsSignCredentialsRequest(altprinter w/IP:192.168.1.1)");
+  if (cupsSignCredentialsRequest(TEST_CERT_PATH, "altprinter", badsan_request, "_site_", CUPS_CREDPURPOSE_ALL, CUPS_CREDUSAGE_ALL, /*cb*/NULL, /*cb_data*/NULL, time(NULL) + 30 * 86400))
     testEndMessage(false, "Expected a failure");
   else
     testEndMessage(true, "%s", cupsGetErrorString());
