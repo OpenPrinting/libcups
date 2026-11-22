@@ -23,6 +23,8 @@ v3.0.5 - YYYY-MM-DD
 - Fixed Host: validation of IP addresses in `ippeveprinter` (Issue #225)
 - Fixed a potential TXT record overflow in the Windows version of
   `cupsDNSSDServiceAdd` (Issue #228)
+- Fixed an out-of-bounds read in `cups_dnssd_unquote` for a DNS-SD service
+  name ending in an unescaped backslash
 
 
 v3.0.4 - 2026-11-05
