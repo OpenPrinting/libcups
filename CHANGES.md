@@ -20,6 +20,8 @@ v3.0.5 - YYYY-MM-DD
 - Fixed error handling in `cupsJWTMakePrivateKey` and
   `cupsOAuthMakeBase64Random` when generating random data (Issue #217)
 - Fixed a race condition with `cupsThreadCreate` on Windows (Issue #218)
+- Fixed a potential TXT record overflow in the Windows version of
+  `cupsDNSSDServiceAdd` (Issue #228)
 
 
 v3.0.4 - 2026-11-05
