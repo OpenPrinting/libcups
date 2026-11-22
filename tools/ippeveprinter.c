@@ -5265,6 +5265,8 @@ process_http(ippeve_client_t *client)	// I - Client connection
 					// Hostname
 			*ptr;		// Pointer into value
   int			port;		// Port number
+  bool			host_is_ip = false;
+					// Does the Host: header contain an IP address?
 
 
   // Clear state variables...
@@ -5361,7 +5363,37 @@ process_http(ippeve_client_t *client)	// I - Client connection
   if ((ptr = (char *)strstr(client->host_field, ".local")) == NULL)
     ptr = (char *)strrchr(client->host_field, '.');
 
-  if (!_cups_isdigit(client->host_field[0]) && client->host_field[0] != '[' && strcmp(client->host_field, client->printer->hostname) && strcmp(client->host_field, "localhost") && (!ptr || (strcmp(ptr, ".local") && strcmp(ptr, ".local."))))
+  if (client->host_field[0] == '[' && client->host_field[strlen(client->host_field) - 1] == ']')
+  {
+    // IPv6 numeric address...
+    host_is_ip = true;
+  }
+  else if (_cups_isdigit(client->host_field[0]))
+  {
+    // Possible IPv4 numeric address...
+    long	number;			// Current number
+    char	*nptr;			// Pointer into field
+
+    if ((number = strtol(client->host_field, &nptr, 10)) >= 0 && number <= 255 && nptr && *nptr == '.')
+    {
+      // NNN.
+      if ((number = strtol(nptr + 1, &nptr, 10)) >= 0 && number <= 255 && nptr && *nptr == '.')
+      {
+	// NNN.NNN.
+	if ((number = strtol(nptr + 1, &nptr, 10)) >= 0 && number <= 255 && nptr && *nptr == '.')
+	{
+	  // NNN.NNN.NNN.
+	  if ((number = strtol(nptr + 1, &nptr, 10)) >= 0 && number <= 255 && nptr && !*nptr)
+	  {
+	    // NNN.NNN.NNN.NNN
+	    host_is_ip = true;
+	  }
+	}
+      }
+    }
+  }
+
+  if (!host_is_ip && strcmp(client->host_field, client->printer->hostname) && (strcmp(client->host_field, "localhost") || httpAddrIsLocalhost(httpGetAddress(client->http))) && (!ptr || (strcmp(ptr, ".local") && strcmp(ptr, ".local."))))
   {
     log_message(client, "Bad Host: header '%s'.", client->host_field);
     respond_http(client, HTTP_STATUS_BAD_REQUEST, NULL, NULL, 0);
