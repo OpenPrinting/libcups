@@ -5265,6 +5265,7 @@ process_http(ippeve_client_t *client)	// I - Client connection
 					// Hostname
 			*ptr;		// Pointer into value
   int			port;		// Port number
+  size_t		hostlen;	// Length of hostname
   bool			host_is_ip = false;
 					// Does the Host: header contain an IP address?
 
@@ -5360,7 +5361,14 @@ process_http(ippeve_client_t *client)	// I - Client connection
     client->host_port = client->printer->port;
   }
 
-  if (client->host_field[0] == '[' && client->host_field[strlen(client->host_field) - 1] == ']')
+  if ((hostlen = strlen(client->host_field)) == 0)
+  {
+    fprintf(stderr, "%s Bad Host: header '%s'.\n", client->hostname, client->host_field);
+    respond_http(client, HTTP_STATUS_BAD_REQUEST, NULL, NULL, 0);
+    return (0);
+  }
+
+  if (client->host_field[0] == '[' && client->host_field[hostlen - 1] == ']')
   {
     // IPv6 numeric address...
     host_is_ip = true;
@@ -5390,10 +5398,14 @@ process_http(ippeve_client_t *client)	// I - Client connection
     }
   }
 
-  if ((ptr = (char *)strstr(client->host_field, ".local")) == NULL)
-    ptr = (char *)strrchr(client->host_field, '.');
+  if (hostlen > 6 && !_cups_strcasecmp(client->host_field + hostlen - 6, ".local"))
+    ptr = client->host_field + hostlen - 6;
+  else if (hostlen > 7 && !_cups_strcasecmp(client->host_field + hostlen - 7, ".local."))
+    ptr = client->host_field + hostlen - 7;
+  else
+    ptr = strrchr(client->host_field, '.');
 
-  if ((httpAddrIsLocalhost(httpGetAddress(client->http)) && _cups_strcasecmp(client->host_field, "localhost") && _cups_strcasecmp(client->host_field, "localhost.") && strcmp(client->host_field, "127.0.0.1") && strcmp(client->host_field, "[::1]")) || (!host_is_ip && strcmp(client->host_field, client->printer->hostname) && (!ptr || (_cups_strcasecmp(ptr, ".local") && _cups_strcasecmp(ptr, ".local.")))))
+  if ((httpAddrIsLocalhost(httpGetAddress(client->http)) && _cups_strcasecmp(client->host_field, "localhost") && _cups_strcasecmp(client->host_field, "localhost.") && strcmp(client->host_field, "127.0.0.1") && strcmp(client->host_field, "[::1]")) || (!host_is_ip && _cups_strcasecmp(client->host_field, client->printer->hostname) && (!ptr || (_cups_strcasecmp(ptr, ".local") && _cups_strcasecmp(ptr, ".local.")))))
   {
     log_message(client, "Bad Host: header '%s'.", client->host_field);
     respond_http(client, HTTP_STATUS_BAD_REQUEST, NULL, NULL, 0);
