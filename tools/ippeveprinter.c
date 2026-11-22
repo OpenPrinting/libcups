@@ -5348,7 +5348,7 @@ process_http(ippeve_client_t *client)	// I - Client connection
   }
 
   cupsCopyString(client->host_field, httpGetField(client->http, HTTP_FIELD_HOST), sizeof(client->host_field));
-  if ((ptr = (char *)strrchr(client->host_field, ':')) != NULL)
+  if ((ptr = (char *)strrchr(client->host_field, ':')) != NULL && !strchr(ptr, ']'))
   {
     // Grab port number from Host: header...
     *ptr++ = '\0';
