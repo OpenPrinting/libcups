@@ -5360,9 +5360,6 @@ process_http(ippeve_client_t *client)	// I - Client connection
     client->host_port = client->printer->port;
   }
 
-  if ((ptr = (char *)strstr(client->host_field, ".local")) == NULL)
-    ptr = (char *)strrchr(client->host_field, '.');
-
   if (client->host_field[0] == '[' && client->host_field[strlen(client->host_field) - 1] == ']')
   {
     // IPv6 numeric address...
@@ -5393,7 +5390,10 @@ process_http(ippeve_client_t *client)	// I - Client connection
     }
   }
 
-  if (!host_is_ip && strcmp(client->host_field, client->printer->hostname) && (strcmp(client->host_field, "localhost") || httpAddrIsLocalhost(httpGetAddress(client->http))) && (!ptr || (strcmp(ptr, ".local") && strcmp(ptr, ".local."))))
+  if ((ptr = (char *)strstr(client->host_field, ".local")) == NULL)
+    ptr = (char *)strrchr(client->host_field, '.');
+
+  if ((httpAddrIsLocalhost(httpGetAddress(client->http)) && _cups_strcasecmp(client->host_field, "localhost") && _cups_strcasecmp(client->host_field, "localhost.") && strcmp(client->host_field, "127.0.0.1") && strcmp(client->host_field, "[::1]")) || (!host_is_ip && strcmp(client->host_field, client->printer->hostname) && (!ptr || (_cups_strcasecmp(ptr, ".local") && _cups_strcasecmp(ptr, ".local.")))))
   {
     log_message(client, "Bad Host: header '%s'.", client->host_field);
     respond_http(client, HTTP_STATUS_BAD_REQUEST, NULL, NULL, 0);
