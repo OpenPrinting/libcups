@@ -1078,9 +1078,6 @@ cupsGetCredentialsTrust(
 // If `NULL`, a default validation function is used that allows "localhost" and
 // variations of the common name.
 //
-// Only DNS names are supported; requests containing other subjectAltName
-// types (IP addresses, URIs, email addresses, etc.) are rejected.
-//
 // The "expiration_date" argument specifies the expiration date and time as a
 // Unix `time_t` value in seconds.
 //
@@ -1182,7 +1179,7 @@ cupsSignCredentialsRequest(
   gnutls_x509_crt_set_expiration_time(crt, expiration_date);
   gnutls_x509_crt_set_ca_status(crt, 0);
 
-  for (i = 0; ; i ++)
+  for (i = 0; i < 1000; i ++)
   {
     unsigned type;			// Name type
 
@@ -1190,9 +1187,19 @@ cupsSignCredentialsRequest(
     if ((err = gnutls_x509_crq_get_subject_alt_name(crq, i, temp, &tempsize, &type, NULL)) == GNUTLS_E_REQUESTED_DATA_NOT_AVAILABLE)
       break;
 
-    // Only non-empty DNS names can be validated by the callback, so reject
-    // anything else...
-    if (err < 0 || type != GNUTLS_SAN_DNSNAME || tempsize == 0 || memchr(temp, '\0', tempsize))
+    if (err < 0)
+    {
+      // Malformed or oversized subjectAltName value...
+      _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad subjectAltName extension in X.509 certificate request."), true);
+      goto done;
+    }
+
+    if (type != GNUTLS_SAN_DNSNAME)
+      continue;				// Only DNS names go through the callback
+
+    // Reject empty names and names with embedded nul bytes since the callback
+    // would not see the whole value...
+    if (tempsize == 0 || memchr(temp, '\0', tempsize))
     {
       _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad subjectAltName extension in X.509 certificate request."), true);
       goto done;

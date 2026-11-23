@@ -1061,9 +1061,6 @@ cupsGetCredentialsTrust(
 // If `NULL`, a default validation function is used that allows "localhost" and
 // variations of the common name.
 //
-// Only DNS names are supported; requests containing other subjectAltName
-// types (IP addresses, URIs, email addresses, etc.) are rejected.
-//
 // The "expiration_date" argument specifies the expiration date and time as a
 // Unix `time_t` value in seconds.
 //
@@ -1333,9 +1330,17 @@ cupsSignCredentialsRequest(
 	      goto done;
 	    }
 
-            if (data[j] == 0x82 && data[j + 1] && !memchr(data + j + 2, '\0', data[j + 1]))
+            if (data[j] == 0x82)
             {
-              // GENERAL_STRING for DNS
+              // GENERAL_STRING for DNS - reject empty names and names with
+              // embedded nul bytes since the callback would not see the whole
+              // value...
+              if (!data[j + 1] || memchr(data + j + 2, '\0', data[j + 1]))
+              {
+                _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad subjectAltName extension in X.509 certificate request."), true);
+                goto done;
+              }
+
               memcpy(temp, data + j + 2, data[j + 1]);
               temp[data[j + 1]] = '\0';
 
@@ -1346,13 +1351,6 @@ cupsSignCredentialsRequest(
                 _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Validation of subjectAltName in X.509 certificate request failed."), true);
                 goto done;
               }
-	    }
-	    else
-	    {
-	      // Only DNS names can be validated by the callback, so reject IP
-	      // addresses, URIs, email addresses, etc...
-              _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad subjectAltName extension in X.509 certificate request."), true);
-	      goto done;
 	    }
           }
           break;
