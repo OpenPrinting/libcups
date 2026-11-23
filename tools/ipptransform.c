@@ -176,11 +176,11 @@ static int		Verbosity = 0;	// Log level
 
 
 // Local functions...
+static bool	annot_dict_cb(pdfio_dict_t *dict, const char *key, xform_annot_t *a);
+static pdfio_array_t *annot_scale_array(pdfio_file_t *pdf, pdfio_array_t *a, double scaling);
 static bool	convert_image(xform_prepare_t *p, xform_document_t *d, int document);
 static bool	convert_raster(xform_prepare_t *p, xform_document_t *d, int document);
 static bool	convert_text(xform_prepare_t *p, xform_document_t *d, int document);
-static bool	annot_dict_cb(pdfio_dict_t *dict, const char *key, xform_annot_t *a);
-static pdfio_array_t *annot_scale_array(pdfio_file_t *pdf, pdfio_array_t *a, double scaling);
 static void	copy_annots(xform_prepare_t *p, xform_page_t *outpage, size_t layout);
 static void	copy_page(xform_prepare_t *p, xform_page_t *outpage, size_t layout);
 static void	dither_gray(xform_raster_t *ras, unsigned y, unsigned char *row, size_t num_pixels);
@@ -824,6 +824,154 @@ main(int  argc,				// I - Number of command-line args
 
 
 //
+// 'annot_dict_cb()' - Copy an annotation dictionary value to the output file.
+//
+// The Rect and QuadPoints values are transformed by @link copy_annots@, and
+// references back to the input page (P) and to other annotations (IRT, Parent,
+// and Popup) are dropped since copying them would pull in the input page
+// objects.
+// Border widths and dash patterns (Border and BS) are scaled to match the
+// page content.
+//
+
+static bool				// O - `true` to continue, `false` to stop
+annot_dict_cb(pdfio_dict_t  *dict,	// I - Input annotation dictionary
+              const char    *key,	// I - Dictionary key
+              xform_annot_t *a)		// I - Annotation copy data
+{
+  const char	*okey;			// Output key
+  const unsigned char *data;		// Binary data
+  size_t	datalen;		// Length of binary data
+  pdfio_obj_t	*obj;			// Object value
+  pdfio_dict_t	*bs;			// Border style dictionary
+  pdfio_array_t	*dash;			// Dash array
+
+
+  if (!strcmp(key, "IRT") || !strcmp(key, "P") || !strcmp(key, "Parent") || !strcmp(key, "Popup") || !strcmp(key, "QuadPoints") || !strcmp(key, "Rect"))
+    return (true);
+
+  if ((okey = pdfioStringCreate(a->pdf, key)) == NULL)
+    return (false);
+
+  if (!strcmp(key, "Border") && pdfioDictGetType(dict, key) == PDFIO_VALTYPE_ARRAY)
+  {
+    // Scale the corner radii, border width, and dash array...
+    pdfioDictSetArray(a->dict, okey, annot_scale_array(a->pdf, pdfioDictGetArray(dict, key), a->scaling));
+    return (true);
+  }
+  else if (!strcmp(key, "BS"))
+  {
+    // Scale the border width and dash array in the border style dictionary...
+    if ((bs = pdfioDictGetDict(dict, key)) == NULL)
+      bs = pdfioObjGetDict(pdfioDictGetObj(dict, key));
+
+    if (bs && (bs = pdfioDictCopy(a->pdf, bs)) != NULL)
+    {
+      if (pdfioDictGetType(bs, "W") == PDFIO_VALTYPE_NUMBER)
+        pdfioDictSetNumber(bs, "W", pdfioDictGetNumber(bs, "W") * a->scaling);
+      if ((dash = pdfioDictGetArray(bs, "D")) != NULL)
+        pdfioDictSetArray(bs, "D", annot_scale_array(a->pdf, dash, a->scaling));
+
+      pdfioDictSetDict(a->dict, okey, bs);
+    }
+    return (true);
+  }
+
+  switch (pdfioDictGetType(dict, key))
+  {
+    case PDFIO_VALTYPE_ARRAY :
+        pdfioDictSetArray(a->dict, okey, pdfioArrayCopy(a->pdf, pdfioDictGetArray(dict, key)));
+        break;
+
+    case PDFIO_VALTYPE_BINARY :
+        if ((data = pdfioDictGetBinary(dict, key, &datalen)) != NULL)
+          pdfioDictSetBinary(a->dict, okey, data, datalen);
+        break;
+
+    case PDFIO_VALTYPE_BOOLEAN :
+        pdfioDictSetBoolean(a->dict, okey, pdfioDictGetBoolean(dict, key));
+        break;
+
+    case PDFIO_VALTYPE_DATE :
+        pdfioDictSetDate(a->dict, okey, pdfioDictGetDate(dict, key));
+        break;
+
+    case PDFIO_VALTYPE_DICT :
+        pdfioDictSetDict(a->dict, okey, pdfioDictCopy(a->pdf, pdfioDictGetDict(dict, key)));
+        break;
+
+    case PDFIO_VALTYPE_INDIRECT :
+        if ((obj = pdfioObjCopy(a->pdf, pdfioDictGetObj(dict, key))) != NULL)
+          pdfioDictSetObj(a->dict, okey, obj);
+        break;
+
+    case PDFIO_VALTYPE_NAME :
+        pdfioDictSetName(a->dict, okey, pdfioStringCreate(a->pdf, pdfioDictGetName(dict, key)));
+        break;
+
+    case PDFIO_VALTYPE_NULL :
+        pdfioDictSetNull(a->dict, okey);
+        break;
+
+    case PDFIO_VALTYPE_NUMBER :
+        pdfioDictSetNumber(a->dict, okey, pdfioDictGetNumber(dict, key));
+        break;
+
+    case PDFIO_VALTYPE_STRING :
+        pdfioDictSetString(a->dict, okey, pdfioStringCreate(a->pdf, pdfioDictGetString(dict, key)));
+        break;
+
+    default :
+        break;
+  }
+
+  return (true);
+}
+
+
+//
+// 'annot_scale_array()' - Copy an array of numbers (and nested arrays of
+//                         numbers) and scale them.
+//
+// This is used for the Border array ("[hradius vradius width [dash]]") and for
+// BS dash arrays.  Non-numeric values are dropped.
+//
+
+static pdfio_array_t *			// O - Scaled array
+annot_scale_array(pdfio_file_t  *pdf,	// I - Output PDF file
+                  pdfio_array_t *a,	// I - Input array
+                  double        scaling)// I - Scaling factor
+{
+  pdfio_array_t	*sa;			// Scaled array
+  size_t	i,			// Looping var
+		count;			// Number of values
+
+
+  if ((sa = pdfioArrayCreate(pdf)) == NULL)
+    return (NULL);
+
+  for (i = 0, count = pdfioArrayGetSize(a); i < count; i ++)
+  {
+    switch (pdfioArrayGetType(a, i))
+    {
+      case PDFIO_VALTYPE_NUMBER :
+          pdfioArrayAppendNumber(sa, pdfioArrayGetNumber(a, i) * scaling);
+          break;
+
+      case PDFIO_VALTYPE_ARRAY :
+          pdfioArrayAppendArray(sa, annot_scale_array(pdf, pdfioArrayGetArray(a, i), scaling));
+          break;
+
+      default :
+          break;
+    }
+  }
+
+  return (sa);
+}
+
+
+//
 // 'convert_image()' - Convert an image to a PDF file.
 //
 // This function handles scaling and cropping the image to the output media
@@ -1332,154 +1480,6 @@ convert_text(
   d->pdf_filename = d->tempfile;
 
   return (true);
-}
-
-
-//
-// 'annot_dict_cb()' - Copy an annotation dictionary value to the output file.
-//
-// The Rect and QuadPoints values are transformed by @link copy_annots@, and
-// references back to the input page (P) and to other annotations (IRT, Parent,
-// and Popup) are dropped since copying them would pull in the input page
-// objects.
-// Border widths and dash patterns (Border and BS) are scaled to match the
-// page content.
-//
-
-static bool				// O - `true` to continue, `false` to stop
-annot_dict_cb(pdfio_dict_t  *dict,	// I - Input annotation dictionary
-              const char    *key,	// I - Dictionary key
-              xform_annot_t *a)		// I - Annotation copy data
-{
-  const char	*okey;			// Output key
-  const unsigned char *data;		// Binary data
-  size_t	datalen;		// Length of binary data
-  pdfio_obj_t	*obj;			// Object value
-  pdfio_dict_t	*bs;			// Border style dictionary
-  pdfio_array_t	*dash;			// Dash array
-
-
-  if (!strcmp(key, "IRT") || !strcmp(key, "P") || !strcmp(key, "Parent") || !strcmp(key, "Popup") || !strcmp(key, "QuadPoints") || !strcmp(key, "Rect"))
-    return (true);
-
-  if ((okey = pdfioStringCreate(a->pdf, key)) == NULL)
-    return (false);
-
-  if (!strcmp(key, "Border") && pdfioDictGetType(dict, key) == PDFIO_VALTYPE_ARRAY)
-  {
-    // Scale the corner radii, border width, and dash array...
-    pdfioDictSetArray(a->dict, okey, annot_scale_array(a->pdf, pdfioDictGetArray(dict, key), a->scaling));
-    return (true);
-  }
-  else if (!strcmp(key, "BS"))
-  {
-    // Scale the border width and dash array in the border style dictionary...
-    if ((bs = pdfioDictGetDict(dict, key)) == NULL)
-      bs = pdfioObjGetDict(pdfioDictGetObj(dict, key));
-
-    if (bs && (bs = pdfioDictCopy(a->pdf, bs)) != NULL)
-    {
-      if (pdfioDictGetType(bs, "W") == PDFIO_VALTYPE_NUMBER)
-        pdfioDictSetNumber(bs, "W", pdfioDictGetNumber(bs, "W") * a->scaling);
-      if ((dash = pdfioDictGetArray(bs, "D")) != NULL)
-        pdfioDictSetArray(bs, "D", annot_scale_array(a->pdf, dash, a->scaling));
-
-      pdfioDictSetDict(a->dict, okey, bs);
-    }
-    return (true);
-  }
-
-  switch (pdfioDictGetType(dict, key))
-  {
-    case PDFIO_VALTYPE_ARRAY :
-        pdfioDictSetArray(a->dict, okey, pdfioArrayCopy(a->pdf, pdfioDictGetArray(dict, key)));
-        break;
-
-    case PDFIO_VALTYPE_BINARY :
-        if ((data = pdfioDictGetBinary(dict, key, &datalen)) != NULL)
-          pdfioDictSetBinary(a->dict, okey, data, datalen);
-        break;
-
-    case PDFIO_VALTYPE_BOOLEAN :
-        pdfioDictSetBoolean(a->dict, okey, pdfioDictGetBoolean(dict, key));
-        break;
-
-    case PDFIO_VALTYPE_DATE :
-        pdfioDictSetDate(a->dict, okey, pdfioDictGetDate(dict, key));
-        break;
-
-    case PDFIO_VALTYPE_DICT :
-        pdfioDictSetDict(a->dict, okey, pdfioDictCopy(a->pdf, pdfioDictGetDict(dict, key)));
-        break;
-
-    case PDFIO_VALTYPE_INDIRECT :
-        if ((obj = pdfioObjCopy(a->pdf, pdfioDictGetObj(dict, key))) != NULL)
-          pdfioDictSetObj(a->dict, okey, obj);
-        break;
-
-    case PDFIO_VALTYPE_NAME :
-        pdfioDictSetName(a->dict, okey, pdfioStringCreate(a->pdf, pdfioDictGetName(dict, key)));
-        break;
-
-    case PDFIO_VALTYPE_NULL :
-        pdfioDictSetNull(a->dict, okey);
-        break;
-
-    case PDFIO_VALTYPE_NUMBER :
-        pdfioDictSetNumber(a->dict, okey, pdfioDictGetNumber(dict, key));
-        break;
-
-    case PDFIO_VALTYPE_STRING :
-        pdfioDictSetString(a->dict, okey, pdfioStringCreate(a->pdf, pdfioDictGetString(dict, key)));
-        break;
-
-    default :
-        break;
-  }
-
-  return (true);
-}
-
-
-//
-// 'annot_scale_array()' - Copy an array of numbers (and nested arrays of
-//                         numbers) and scale them.
-//
-// This is used for the Border array ("[hradius vradius width [dash]]") and for
-// BS dash arrays.  Non-numeric values are dropped.
-//
-
-static pdfio_array_t *			// O - Scaled array
-annot_scale_array(pdfio_file_t  *pdf,	// I - Output PDF file
-                  pdfio_array_t *a,	// I - Input array
-                  double        scaling)// I - Scaling factor
-{
-  pdfio_array_t	*sa;			// Scaled array
-  size_t	i,			// Looping var
-		count;			// Number of values
-
-
-  if ((sa = pdfioArrayCreate(pdf)) == NULL)
-    return (NULL);
-
-  for (i = 0, count = pdfioArrayGetSize(a); i < count; i ++)
-  {
-    switch (pdfioArrayGetType(a, i))
-    {
-      case PDFIO_VALTYPE_NUMBER :
-          pdfioArrayAppendNumber(sa, pdfioArrayGetNumber(a, i) * scaling);
-          break;
-
-      case PDFIO_VALTYPE_ARRAY :
-          pdfioArrayAppendArray(sa, annot_scale_array(pdf, pdfioArrayGetArray(a, i), scaling));
-          break;
-
-      default :
-          break;
-    }
-  }
-
-  return (sa);
 }
 
 
