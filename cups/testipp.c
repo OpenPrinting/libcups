@@ -989,13 +989,13 @@ main(int  argc,				// I - Number of command-line arguments
 
     testBegin("ippGetString(x-name, 1)");
     text = ippGetString(ippFindAttribute(request, "x-name", IPP_TAG_NAMELANG), 1, &language);
-    if (text && !strcmp(text, "none") && language && !strcmp(language, "fr"))
+    if (text && !strcmp(text, "none") && language && !strcmp(language, "en-us"))
     {
       testEndMessage(true, "'%s'(%s)", text, language);
     }
     else
     {
-      testEndMessage(false, "got '%s'(%s), expected 'none'(fr)", text, language);
+      testEndMessage(false, "got '%s'(%s), expected 'none'(en-us)", text, language);
       status = 1;
     }
 
