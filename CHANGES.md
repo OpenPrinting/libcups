@@ -12,14 +12,13 @@ v3.0.5 - YYYY-MM-DD
   (Issue #211)
 - Updated `cupsGetCrentialsTrust` validation of site certificates (Issue #213)
 - Updated the HTTP parser to validate Content-Length values (Issue #219)
+- Fixed `ipptransform` annotation support (Issue #71)
 - Fixed `httpAddrListen` error handling on Windows (Issue #210)
 - Fixed an `ippfind` quoting issue on Windows (Issue #212)
 - Fixed issue with subjectAltName matching with OpenSSL (Issue #214)
 - Fixed management of name/textWithLanguage language identifiers (Issue #215,
   Issue #230)
 - Fixed a page counting issue in `ipptransform` (Issue #216)
-- Fixed `ipptransform` placement of annotations on scaled pages and copying of
-  annotations for N-up pages (Issue #71)
 - Fixed error handling in `cupsJWTMakePrivateKey` and
   `cupsOAuthMakeBase64Random` when generating random data (Issue #217)
 - Fixed a race condition with `cupsThreadCreate` on Windows (Issue #218)
