@@ -15,15 +15,16 @@ v3.0.5 - YYYY-MM-DD
 - Fixed `httpAddrListen` error handling on Windows (Issue #210)
 - Fixed an `ippfind` quoting issue on Windows (Issue #212)
 - Fixed issue with subjectAltName matching with OpenSSL (Issue #214)
-- Fixed management of name/textWithLanguage language identifiers (Issue #215)
+- Fixed management of name/textWithLanguage language identifiers (Issue #215,
+  Issue #230)
 - Fixed a page counting issue in `ipptransform` (Issue #216)
 - Fixed error handling in `cupsJWTMakePrivateKey` and
   `cupsOAuthMakeBase64Random` when generating random data (Issue #217)
 - Fixed a race condition with `cupsThreadCreate` on Windows (Issue #218)
 - Fixed Host: validation of IP addresses in `ippeveprinter` (Issue #225)
+- Fixed validation of CSRs (Issue #227)
 - Fixed a potential TXT record overflow in the Windows version of
   `cupsDNSSDServiceAdd` (Issue #228)
-- Fixed conversion of keyword values to nameWithLanguage (Issue #230)
 - Fixed potential spool directory issues in `ippeveprinter` (Issue #231)
 
 
