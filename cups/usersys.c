@@ -1113,7 +1113,7 @@ _cupsSetDefaults(void)
   DEBUG_printf("1_cupsSetDefaults: DigestOptions %s", cg->digestoptions == _CUPS_DIGESTOPTIONS_DENYMD5 ? "DenyMD5" : "None");
   DEBUG_printf("1_cupsSetDefaults: Encryption %s", encryptions[cg->encryption]);
   DEBUG_printf("1_cupsSetDefaults: ServerName %s", cg->servername);
-  DEBUG_printf("1_cupsSetDefaults: SSLOptions%s%s%s%s Min%s Max%s", cc.ssl_options == _HTTP_TLS_NONE ? " none" : "", (cc.ssl_options & _HTTP_TLS_ALLOW_RC4) ? " AllowRC4" : "", (cc.ssl_options & _HTTP_TLS_ALLOW_DH) ? " AllowDH" : "", (cc.ssl_options & _HTTP_TLS_DENY_CBC) ? " DenyCBC" : "", tls_versions[cc.ssl_min_version], tls_versions[cc.ssl_max_version]);
+  DEBUG_printf("1_cupsSetDefaults: SSLOptions%s%s%s%s%s%s Min%s Max%s", cc.ssl_options == _HTTP_TLS_NONE ? " none" : "", (cc.ssl_options & _HTTP_TLS_ALLOW_RC4) ? " AllowRC4" : "", (cc.ssl_options & _HTTP_TLS_ALLOW_DH) ? " AllowDH" : "", (cc.ssl_options & _HTTP_TLS_DENY_CBC) ? " DenyCBC" : "", (cc.ssl_options & _HTTP_TLS_DENY_ECC) ? " DenyECC" : "", (cc.ssl_options & _HTTP_TLS_DENY_RSA) ? " DenyRSA" : "", tls_versions[cc.ssl_min_version], tls_versions[cc.ssl_max_version]);
   DEBUG_printf("1_cupsSetDefaults: TrustOnFirstUse %s", cg->trust_first ? "Yes" : "No");
   DEBUG_printf("1_cupsSetDefaults: User %s", cg->user);
   DEBUG_printf("1_cupsSetDefaults: UserAgentTokens %s", uatokens[cg->uatokens]);
@@ -1621,7 +1621,7 @@ cups_set_ssl_options(
     _cups_client_conf_t *cc,		// I - client.conf values
     const char          *value)		// I - Value
 {
-  // SSLOptions [AllowRC4] [AllowSSL3] [AllowDH] [DenyTLS1.0] [None]
+  // SSLOptions [AllowRC4] [AllowSSL3] [AllowDH] [DenyCBC] [DenyECC] [DenyRSA] [DenyTLS1.0] [None]
   int	options = _HTTP_TLS_NONE,	// TLS options
 	min_version = _HTTP_TLS_1_0,	// Minimum TLS version
 	max_version = _HTTP_TLS_MAX;	// Maximum TLS version
@@ -1651,6 +1651,10 @@ cups_set_ssl_options(
       options |= _HTTP_TLS_ALLOW_DH;
     else if (!_cups_strcasecmp(start, "DenyCBC"))
       options |= _HTTP_TLS_DENY_CBC;
+    else if (!_cups_strcasecmp(start, "DenyECC"))
+      options |= _HTTP_TLS_DENY_ECC;
+    else if (!_cups_strcasecmp(start, "DenyRSA"))
+      options |= _HTTP_TLS_DENY_RSA;
     else if (!_cups_strcasecmp(start, "DenyTLS1.0"))
       min_version = _HTTP_TLS_1_1;
     else if (!_cups_strcasecmp(start, "MaxTLS1.0"))

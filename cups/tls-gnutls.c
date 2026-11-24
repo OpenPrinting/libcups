@@ -1807,9 +1807,11 @@ _httpTLSStart(http_t *http)		// I - Connection to server
 
     if (!have_creds && tls_auto_create && cn)
     {
+      cups_credtype_t	credtype;	// Type of credentials to create
+
       DEBUG_printf("4_httpTLSStart: Auto-create credentials for \"%s\".", cn);
 
-      if (!cupsCreateCredentials(tls_keypath, false, CUPS_CREDPURPOSE_SERVER_AUTH, CUPS_CREDTYPE_DEFAULT, CUPS_CREDUSAGE_DEFAULT_TLS, NULL, NULL, NULL, NULL, NULL, cn, /*email*/NULL, 0, NULL, NULL, time(NULL) + 3650 * 86400))
+      if (!http_default_credtype(&credtype) || !cupsCreateCredentials(tls_keypath, false, CUPS_CREDPURPOSE_SERVER_AUTH, credtype, CUPS_CREDUSAGE_DEFAULT_TLS, NULL, NULL, NULL, NULL, NULL, cn, /*email*/NULL, 0, NULL, NULL, time(NULL) + 3650 * 86400))
       {
 	DEBUG_printf("4_httpTLSStart: cupsCreateCredentials failed: %s", cupsGetErrorString());
 	http->error  = errno = EINVAL;
@@ -1900,8 +1902,33 @@ _httpTLSStart(http_t *http)		// I - Connection to server
   if (tls_options & _HTTP_TLS_DENY_CBC)
     cupsConcatString(priority_string, ":!AES-128-CBC:!AES-256-CBC:!CAMELLIA-128-CBC:!CAMELLIA-256-CBC:!3DES-CBC", sizeof(priority_string));
 
+  if (tls_options & _HTTP_TLS_DENY_RSA)
+  {
+    // Disable RSA key exchange/authentication and RSA signatures...
+    cupsConcatString(priority_string, ":-RSA:-DHE-RSA:-ECDHE-RSA:-SIGN-RSA-SHA1:-SIGN-RSA-SHA224:-SIGN-RSA-SHA256:-SIGN-RSA-SHA384:-SIGN-RSA-SHA512", sizeof(priority_string));
+#  if GNUTLS_VERSION_NUMBER >= 0x03060c
+    cupsConcatString(priority_string, ":-SIGN-RSA-PSS-SHA256:-SIGN-RSA-PSS-SHA384:-SIGN-RSA-PSS-SHA512:-SIGN-RSA-PSS-RSAE-SHA256:-SIGN-RSA-PSS-RSAE-SHA384:-SIGN-RSA-PSS-RSAE-SHA512", sizeof(priority_string));
+#  endif // GNUTLS_VERSION_NUMBER >= 0x03060c
+  }
+
+  if (tls_options & _HTTP_TLS_DENY_ECC)
+  {
+    // Disable ECDSA authentication and ECDSA/EdDSA signatures...
+    cupsConcatString(priority_string, ":-ECDHE-ECDSA:-SIGN-ECDSA-SHA1:-SIGN-ECDSA-SHA224:-SIGN-ECDSA-SHA256:-SIGN-ECDSA-SHA384:-SIGN-ECDSA-SHA512", sizeof(priority_string));
+#  if GNUTLS_VERSION_NUMBER >= 0x03060c
+    cupsConcatString(priority_string, ":-SIGN-ECDSA-SECP256R1-SHA256:-SIGN-ECDSA-SECP384R1-SHA384:-SIGN-ECDSA-SECP521R1-SHA512:-SIGN-EDDSA-ED25519:-SIGN-EDDSA-ED448", sizeof(priority_string));
+#  endif // GNUTLS_VERSION_NUMBER >= 0x03060c
+  }
+
+  DEBUG_printf("4_httpTLSStart: priority_string=\"%s\"", priority_string);
+
 #ifdef HAVE_GNUTLS_PRIORITY_SET_DIRECT
-  gnutls_priority_set_direct(http->tls, priority_string, NULL);
+  {
+    const char *priority_error = NULL;	// Location of priority string error
+
+    if ((status = gnutls_priority_set_direct(http->tls, priority_string, &priority_error)) != GNUTLS_E_SUCCESS)
+      DEBUG_printf("4_httpTLSStart: gnutls_priority_set_direct returned %d (%s) at \"%s\"", status, gnutls_strerror(status), priority_error ? priority_error : "");
+  }
 
 #else
   gnutls_priority_t priority;		// Priority

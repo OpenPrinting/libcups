@@ -61,6 +61,8 @@ extern "C" {
 #  define _HTTP_TLS_ALLOW_DH	2	// Allow DH/DHE key negotiation
 #  define _HTTP_TLS_DENY_CBC	4	// Deny CBC cipher suites
 #  define _HTTP_TLS_NO_SYSTEM	8	// No system crypto policy
+#  define _HTTP_TLS_DENY_RSA	16	// Deny RSA certificates/signatures
+#  define _HTTP_TLS_DENY_ECC	32	// Deny ECDSA/EdDSA certificates/signatures
 #  define _HTTP_TLS_SET_DEFAULT 128     // Setting the default TLS options
 
 #  define _HTTP_TLS_SSL3	0	// Min/max version is SSL/3.0

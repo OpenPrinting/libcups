@@ -1915,9 +1915,11 @@ _httpTLSStart(http_t *http)		// I - Connection to server
 
     if (!have_creds && tls_auto_create && cn)
     {
+      cups_credtype_t	credtype;	// Type of credentials to create
+
       DEBUG_printf("4_httpTLSStart: Auto-create credentials for \"%s\".", cn);
 
-      if (!cupsCreateCredentials(tls_keypath, false, CUPS_CREDPURPOSE_SERVER_AUTH, CUPS_CREDTYPE_DEFAULT, CUPS_CREDUSAGE_DEFAULT_TLS, NULL, NULL, NULL, NULL, NULL, cn, NULL, 0, NULL, NULL, time(NULL) + 3650 * 86400))
+      if (!http_default_credtype(&credtype) || !cupsCreateCredentials(tls_keypath, false, CUPS_CREDPURPOSE_SERVER_AUTH, credtype, CUPS_CREDUSAGE_DEFAULT_TLS, NULL, NULL, NULL, NULL, NULL, cn, NULL, 0, NULL, NULL, time(NULL) + 3650 * 86400))
       {
 	DEBUG_printf("4_httpTLSStart: cupsCreateCredentials failed: %s", cupsGetErrorString());
 	http->error  = errno = EINVAL;
@@ -1958,6 +1960,10 @@ _httpTLSStart(http_t *http)		// I - Connection to server
     cupsConcatString(cipherlist, ":!RC4", sizeof(cipherlist));
   if (tls_options & _HTTP_TLS_DENY_CBC)
     cupsConcatString(cipherlist, ":!SHA1:!SHA256:!SHA384", sizeof(cipherlist));
+  if (tls_options & _HTTP_TLS_DENY_RSA)
+    cupsConcatString(cipherlist, ":!aRSA", sizeof(cipherlist));
+  if (tls_options & _HTTP_TLS_DENY_ECC)
+    cupsConcatString(cipherlist, ":!aECDSA", sizeof(cipherlist));
   cupsConcatString(cipherlist, ":@STRENGTH", sizeof(cipherlist));
 
   DEBUG_printf("4_httpTLSStart: cipherlist='%s', tls_min_version=%d, tls_max_version=%d", cipherlist, tls_min_version, tls_max_version);
@@ -1965,6 +1971,46 @@ _httpTLSStart(http_t *http)		// I - Connection to server
   SSL_CTX_set_min_proto_version(context, versions[tls_min_version]);
   SSL_CTX_set_max_proto_version(context, versions[tls_max_version]);
   SSL_CTX_set_cipher_list(context, cipherlist);
+
+  if (tls_options & (_HTTP_TLS_DENY_RSA | _HTTP_TLS_DENY_ECC))
+  {
+    // Limit the signature algorithms used for authentication.  The cipher
+    // list above only covers TLS/1.2 and earlier; TLS/1.3 negotiates the
+    // certificate/signature type separately.  LibreSSL does not support
+    // setting the signature algorithms, so fail rather than silently
+    // allowing RSA/ECC with TLS/1.3...
+    bool	ok = false;		// Were the signature algorithms set?
+
+#  ifdef SSL_CTX_set1_sigalgs_list
+    char	sigalgs[512] = "";	// List of signature algorithms
+
+#    if OPENSSL_VERSION_NUMBER >= 0x30500000L
+    cupsConcatString(sigalgs, ":mldsa65:mldsa87:mldsa44", sizeof(sigalgs));
+#    endif // OPENSSL_VERSION_NUMBER >= 0x30500000L
+    if (!(tls_options & _HTTP_TLS_DENY_ECC))
+      cupsConcatString(sigalgs, ":ecdsa_secp256r1_sha256:ecdsa_secp384r1_sha384:ecdsa_secp521r1_sha512:ed25519:ed448", sizeof(sigalgs));
+    if (!(tls_options & _HTTP_TLS_DENY_RSA))
+      cupsConcatString(sigalgs, ":rsa_pss_rsae_sha256:rsa_pss_rsae_sha384:rsa_pss_rsae_sha512:rsa_pss_pss_sha256:rsa_pss_pss_sha384:rsa_pss_pss_sha512:rsa_pkcs1_sha256:rsa_pkcs1_sha384:rsa_pkcs1_sha512", sizeof(sigalgs));
+
+    DEBUG_printf("4_httpTLSStart: sigalgs='%s'", sigalgs);
+
+    ok = sigalgs[0] && SSL_CTX_set1_sigalgs_list(context, sigalgs + 1);
+#  endif // SSL_CTX_set1_sigalgs_list
+
+    if (!ok)
+    {
+      // No allowed signature algorithms...
+      DEBUG_puts("4_httpTLSStart: No allowed signature algorithms.");
+      _cupsSetError(IPP_STATUS_ERROR_CUPS_PKI, _("No allowed signature algorithms."), true);
+
+      http->status = HTTP_STATUS_ERROR;
+      http->error  = EINVAL;
+
+      SSL_CTX_free(context);
+
+      return (false);
+    }
+  }
 
   // Setup a TLS session
   cupsMutexLock(&tls_mutex);

@@ -51,6 +51,7 @@ static int		tls_options = -1,// Options for TLS connections
 //
 
 static char		*http_copy_file(const char *path, const char *common_name, const char *ext);
+static bool		http_default_credtype(cups_credtype_t *type);
 static const char	*http_default_path(char *buffer, size_t bufsize);
 static bool		http_default_san_cb(const char *common_name, const char *subject_alt_name, void *data);
 #if defined(_WIN32) || defined(HAVE_GNUTLS)
@@ -362,6 +363,43 @@ http_copy_file(const char *path,	// I - Directory
   DEBUG_printf("4http_copy_file: Returning \"%s\"", s);
 
   return (s);
+}
+
+
+//
+// 'http_default_credtype()' - Get the key type for auto-created server credentials.
+//
+// The type is chosen so that the server can still negotiate when the
+// "DenyRSA" or "DenyECC" SSLOptions are in effect.
+//
+
+static bool				// O - `true` on success, `false` if no allowed type
+http_default_credtype(
+    cups_credtype_t *type)		// O - Credential type
+{
+  int	options = tls_options < 0 ? _HTTP_TLS_NONE : tls_options;
+					// TLS options
+
+
+  if ((options & _HTTP_TLS_DENY_RSA) && (options & _HTTP_TLS_DENY_ECC))
+  {
+    // No traditional key type is allowed...
+    *type = CUPS_CREDTYPE_DEFAULT;
+    _cupsSetError(IPP_STATUS_ERROR_CUPS_PKI, _("No allowed key type for server credentials."), true);
+    return (false);
+  }
+  else if (options & _HTTP_TLS_DENY_RSA)
+  {
+    // Use ECDSA...
+    *type = CUPS_CREDTYPE_ECDSA_P384_SHA256;
+  }
+  else
+  {
+    // Use the default (RSA) type...
+    *type = CUPS_CREDTYPE_DEFAULT;
+  }
+
+  return (true);
 }
 
 

@@ -90,6 +90,14 @@ main(int  argc,				// I - Number of command-line arguments
     {
       tls_options |= _HTTP_TLS_DENY_CBC;
     }
+    else if (!strcmp(argv[i], "--no-ecc"))
+    {
+      tls_options |= _HTTP_TLS_DENY_ECC;
+    }
+    else if (!strcmp(argv[i], "--no-rsa"))
+    {
+      tls_options |= _HTTP_TLS_DENY_RSA;
+    }
     else if (!strcmp(argv[i], "--no-tls10"))
     {
       tls_min_version = _HTTP_TLS_1_1;
@@ -250,6 +258,8 @@ usage(FILE *fp)				// I - Output file
   fputs("  --dh        Allow DH/DHE key exchange\n", fp);
   fputs("  --help      Show help\n", fp);
   fputs("  --no-cbc    Disable CBC cipher suites\n", fp);
+  fputs("  --no-ecc    Disable ECDSA/EdDSA certificates\n", fp);
+  fputs("  --no-rsa    Disable RSA certificates\n", fp);
   fputs("  --no-tls10  Disable TLS/1.0\n", fp);
   fputs("  --rc4       Allow RC4 encryption\n", fp);
   fputs("  --tls10     Only use TLS/1.0\n", fp);
