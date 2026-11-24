@@ -103,6 +103,7 @@ struct _ipp_s				// IPP Request/Response/Notification
   _ipp_find_t		fstack[_IPP_MAX_FIND];
 					// Find stack
   _ipp_find_t		*find;		// Current find
+  char			*def_language;	// Default language code
 };
 
 typedef struct _ipp_option_s		// Attribute mapping data
