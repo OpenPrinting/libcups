@@ -5768,6 +5768,13 @@ ipp_read_io(void        *src,		// I - Data source
 		buffer[n] = '\0';
 		value->string.text = _cupsStrAlloc((char *)buffer);
 		DEBUG_printf("2ipp_read_io: value=\"%s\"(%p)", value->string.text, value->string.text);
+
+		if (attr->value_tag == IPP_TAG_TEXTLANG || attr->value_tag == IPP_TAG_NAMELANG)
+		{
+		  // Additional keyword/name/text value in a name/textWithLanguage
+		  // attribute; keywords are US English per RFC 8011...
+		  value->string.language = _cupsStrAlloc("en-us");
+		}
 	        break;
 
 	    case IPP_TAG_DATE :
