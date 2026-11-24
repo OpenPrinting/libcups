@@ -778,7 +778,7 @@ main(int  argc,				// I - Number of command-line args
 
     snprintf(directory, sizeof(directory), "%s/ippeveprinter.%d", tmpdir, (int)getpid());
 
-    if (mkdir(directory, 0755) && errno != EEXIST)
+    if (mkdir(directory, 0700))
     {
       cupsLangPrintf(stderr, _("%s: Unable to create spool directory '%s': %s"), "ippeveprinter", directory, strerror(errno));
       return (usage(stderr));
@@ -1430,7 +1430,7 @@ create_job_file(
   // Create a filename with the job-id, job-name, and document-format (extension)...
   snprintf(fname, fnamesize, "%s/%d-%s.%s", directory, job->id, name, ext);
 
-  return (open(fname, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0666));
+  return (open(fname, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY | O_NOFOLLOW, 0600));
 }
 
 
@@ -2688,7 +2688,7 @@ finish_document_uri(
 
   if (!strcmp(scheme, "file"))
   {
-    if ((infile = open(resource, O_RDONLY | O_BINARY)) < 0)
+    if ((infile = open(resource, O_RDONLY | O_BINARY | O_NOFOLLOW)) < 0)
     {
       respond_ipp(client, IPP_STATUS_ERROR_DOCUMENT_ACCESS, "Unable to access URI '%s': %s", ippGetString(uri, 0, NULL), strerror(errno));
 
@@ -6117,7 +6117,7 @@ process_job(ippeve_job_t *job)		// I - Job
         {
           if (errno == ENOENT)
           {
-            if ((mystdout = open(resource, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0666)) >= 0)
+            if ((mystdout = open(resource, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY | O_NOFOLLOW, 0600)) >= 0)
 	      log_message(/*client*/NULL, "[Job %d] Saving print command output to '%s'.", job->id, resource);
 	    else
 	      log_message(/*client*/NULL, "[Job %d] Unable to create '%s': %s", job->id, resource, strerror(errno));
@@ -6134,14 +6134,14 @@ process_job(ippeve_job_t *job)		// I - Job
           else
             log_message(/*client*/NULL, "[Job %d] Unable to create '%s': %s", job->id, line, strerror(errno));
         }
-	else if (!S_ISREG(fileinfo.st_mode))
+	else if (S_ISREG(fileinfo.st_mode))
 	{
-	  if ((mystdout = open(resource, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0666)) >= 0)
+	  if ((mystdout = open(resource, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY | O_NOFOLLOW, 0600)) >= 0)
 	    log_message(/*client*/NULL, "[Job %d] Saving print command output to '%s'.", job->id, resource);
 	  else
             log_message(/*client*/NULL, "[Job %d] Unable to create '%s': %s", job->id, resource, strerror(errno));
 	}
-        else if ((mystdout = open(resource, O_WRONLY | O_BINARY)) >= 0)
+        else if ((mystdout = open(resource, O_WRONLY | O_BINARY | O_NOFOLLOW)) >= 0)
         {
 	  log_message(/*client*/NULL, "[Job %d] Saving print command output to '%s'.", job->id, resource);
 	}

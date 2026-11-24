@@ -23,6 +23,7 @@ v3.0.5 - YYYY-MM-DD
 - Fixed Host: validation of IP addresses in `ippeveprinter` (Issue #225)
 - Fixed a potential TXT record overflow in the Windows version of
   `cupsDNSSDServiceAdd` (Issue #228)
+- Fixed potential spool directory issues in `ippeveprinter` (Issue #231)
 
 
 v3.0.4 - 2026-11-05
