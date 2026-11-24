@@ -23,6 +23,7 @@ v3.0.5 - YYYY-MM-DD
 - Fixed error handling in `cupsJWTMakePrivateKey` and
   `cupsOAuthMakeBase64Random` when generating random data (Issue #217)
 - Fixed a race condition with `cupsThreadCreate` on Windows (Issue #218)
+- Fixed a DNS-SD unquoting issue when enumerating destinations (Issue #224)
 - Fixed Host: validation of IP addresses in `ippeveprinter` (Issue #225)
 - Fixed validation of CSRs (Issue #227)
 - Fixed a potential TXT record overflow in the Windows version of
