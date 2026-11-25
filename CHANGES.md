@@ -30,6 +30,7 @@ v3.0.5 - YYYY-MM-DD
 - Fixed a potential TXT record overflow in the Windows version of
   `cupsDNSSDServiceAdd` (Issue #228)
 - Fixed potential spool directory issues in `ippeveprinter` (Issue #231)
+- Fixed SYSTEM crypto options for GNU TLS (Issue #234)
 
 
 v3.0.4 - 2026-11-05
