@@ -1638,20 +1638,20 @@ cups_raster_update(cups_raster_t *r)	// I - Raster stream
 
       default :
           // Unknown color space
-          _cupsRasterAddError("Unknown color space in page header.");
+          _cupsRasterAddError("Unknown color space %u in page header.", r->header.cupsColorSpace);
 
           r->header.cupsNumColors = 0;
           ret                     = false;
           break;
     }
 
-    DEBUG_printf("6cups_raster_update: cupsNumColors=%u", r->header.cupsNumColors);
   }
 
   // Set the number of bytes per pixel/color...
   DEBUG_printf("6cups_raster_update: cupsColorOrder=%u", r->header.cupsColorOrder);
   DEBUG_printf("6cups_raster_update: cupsBitsPerPixel=%u", r->header.cupsBitsPerPixel);
   DEBUG_printf("6cups_raster_update: cupsBitsPerColor=%u", r->header.cupsBitsPerColor);
+  DEBUG_printf("6cups_raster_update: cupsNumColors=%u", r->header.cupsNumColors);
 
   if (r->header.cupsColorOrder == CUPS_ORDER_CHUNKED)
     r->bpp = (r->header.cupsBitsPerPixel + 7) / 8;
@@ -1675,6 +1675,12 @@ cups_raster_update(cups_raster_t *r)	// I - Raster stream
   DEBUG_printf("6cups_raster_update: remaining=%u", r->remaining);
 
   // Validate the page header...
+  if (r->header.cupsNumColors > 15)
+  {
+    _cupsRasterAddError("Invalid number colors %u.", r->header.cupsNumColors);
+    ret = 0;
+  }
+
   if (r->header.cupsBitsPerColor != 1 &&  r->header.cupsBitsPerColor != 2 &&  r->header.cupsBitsPerColor != 4 &&  r->header.cupsBitsPerColor != 8 &&  r->header.cupsBitsPerColor != 16)
   {
     _cupsRasterAddError("Invalid bits per color %u.", r->header.cupsBitsPerColor);
