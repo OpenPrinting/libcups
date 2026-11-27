@@ -1,7 +1,7 @@
 Changes in libcups
 ==================
 
-v3.0.5 - YYYY-MM-DD
+v3.0.5 - 2026-11-27
 -------------------
 
 - SECURITY-4.3: The IPP parser workaround for broken out-of-band values could
